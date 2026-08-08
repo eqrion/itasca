@@ -1,0 +1,19 @@
+[package]
+name = "veriwasm"
+version = "0.1.0"
+edition = "2021"
+description = "Formally verified WebAssembly 1.0 module validator"
+
+[features]
+default = ["std"]
+std = []
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(charon)'] }
+
+[dev-dependencies]
+wasmparser = "=0.252.0"
+wast = "=252.0.0"
+wasm-smith = "=0.252.0"
+arbitrary = "1"
+anyhow = "1"

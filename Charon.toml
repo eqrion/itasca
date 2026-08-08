@@ -1,0 +1,13 @@
+[charon]
+# Nothing clones, so no Clone impl is ever called. They would still be
+# translated, and Aeneas's Coq backend emits a core_clone_Clone record without
+# the clone_from field that its own Primitives.v declares, which does not
+# typecheck. Copy goes too: a derived Copy impl carries Clone as a supertrait
+# clause, so excluding only Clone leaves it dangling.
+exclude = [
+    "{impl core::clone::Clone for _}",
+    "{impl core::marker::Copy for _}",
+]
+
+[rustc]
+flags = ["--cfg", "charon"]

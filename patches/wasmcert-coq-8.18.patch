@@ -1,0 +1,33 @@
+WasmCert-Coq v2.0 caps Coq at <8.18, but the formalisation builds unchanged on
+8.18, which is the version this project uses. Relax the bound in the two build
+metadata files.
+
+Carried as a patch so vendor/WasmCert-Coq stays pinned to canonical upstream
+and the trust base is visibly unaffected: nothing here touches a theory file.
+
+diff --git a/coq-wasm.opam b/coq-wasm.opam
+index 5a2751d..4a742ce 100644
+--- a/coq-wasm.opam
++++ b/coq-wasm.opam
+@@ -13,7 +13,7 @@ homepage: "https://github.com/WasmCert/WasmCert-Coq"
+ bug-reports: "https://github.com/WasmCert/WasmCert-Coq/issues"
+ depends: [
+   "dune" {>= "3.0"}
+-  "coq" {>= "8.16" & < "8.18~"}
++  "coq" {>= "8.16" & < "8.19~"}
+   "coq-compcert" {>= "3.11"}
+   "coq-ext-lib" {>= "0.11.8"}
+   "coq-mathcomp-ssreflect" {>= "1.16.0" & <= "1.18.0"}
+diff --git a/dune-project b/dune-project
+index 852c901..6c9ebd7 100644
+--- a/dune-project
++++ b/dune-project
+@@ -13,7 +13,7 @@
+   (synopsis "Wasm formalisation in Coq")
+   (description "Wasm formalisation in Coq, following the AFP formalisation of Conrad Watt")
+   (depends
+-    (coq (and (>= 8.16) (< 8.18~)))
++    (coq (and (>= 8.16) (< 8.19~)))
+     (coq-compcert (>= 3.11))
+     (coq-ext-lib (>= 0.11.8))
+     (coq-mathcomp-ssreflect (and (>= 1.16.0) (<= 1.18.0)))

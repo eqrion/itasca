@@ -1,0 +1,15 @@
+/target
+*.vo
+*.vok
+*.vos
+*.glob
+.depend
+*.llbc
+.lia.cache
+theories/.*.aux
+Makefile.coq
+Makefile.coq.conf
+.Makefile.coq.d
+.DS_Store
+theories/Scratch.v
+theories/*_Template.v

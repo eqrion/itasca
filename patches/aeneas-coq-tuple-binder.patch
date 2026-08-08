@@ -1,0 +1,42 @@
+Aeneas's Coq backend emits type-annotated lambda binders as `fun (pat : T) =>`,
+which does not parse when `pat` is a destructuring pattern: Coq's
+[closed_binder] grammar accepts only a name there, in every version through at
+least 8.18.
+
+    fun ('(a, b) : (nat * nat)) => a   (* Syntax error *)
+    fun '((a, b) : (nat * nat)) => a   (* parses       *)
+
+Move the quote outside the annotation, and stop extract_adt_g_value from
+emitting its own quote for the >2-element case by clearing is_let for the
+subtree. Every multi-variable loop lowered to the `loop` combinator hits this,
+so the Coq backend cannot currently extract such a loop at all.
+
+Reported upstream; drop this patch once it lands.
+
+diff --git a/src/extract/Extract.ml b/src/extract/Extract.ml
+index b074ac05..cfea0af6 100644
+--- a/src/extract/Extract.ml
++++ b/src/extract/Extract.ml
+@@ -347,9 +347,21 @@ let fun_builtin_filter_types_trait_clauses (ty_to_string : 'a -> string)
+ let rec extract_tpat (span : Meta.span) (ctx : extraction_ctx)
+     (fmt : F.formatter) ~(is_let : bool) ~(inside : bool) ?(with_type = false)
+     (v : tpat) : extraction_ctx =
+-  if with_type then F.pp_print_string fmt "(";
++  (* Coq's [closed_binder] grammar does not accept a pattern, so an annotated
++     destructuring binder has to be written ['((a, b) : T)]: the quote goes
++     outside the annotation, and the pattern itself must not carry its own. *)
++  let quote_pattern =
++    with_type && backend () = Coq
++    &&
++    match v.pat with
++    | PAdt _ -> true
++    | _ -> false
++  in
++  if with_type then
++    F.pp_print_string fmt (if quote_pattern then "'(" else "(");
+   let is_pattern = true in
+   let inside = inside && not with_type in
++  let is_let = is_let && not quote_pattern in
+   let ctx =
+     match v.pat with
+     | PConstant cv ->

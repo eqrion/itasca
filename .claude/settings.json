@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "permissions": {
+    "allow": [
+      "Bash(cargo build:*)",
+      "Bash(cargo test:*)",
+      "Bash(cargo clippy:*)",
+      "Bash(cargo fmt:*)",
+      "Bash(cargo check:*)",
+      "Bash(make:*)",
+      "Bash(just:*)",
+      "Bash(dune build:*)",
+      "Bash(opam var:*)",
+      "Bash(opam env:*)",
+      "Bash(opam switch list:*)",
+      "Bash(git submodule:*)",
+      "Bash(git apply:*)"
+    ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true,
+    "filesystem": {
+      "allowWrite": [
+        "~/.cargo",
+        "~/.rustup",
+        "~/.opam"
+      ]
+    }
+  }
+}

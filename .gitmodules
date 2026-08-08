@@ -1,0 +1,19 @@
+[submodule "vendor/WasmCert-Coq"]
+	path = vendor/WasmCert-Coq
+	url = https://github.com/WasmCert/WasmCert-Coq
+	# The build applies patches/wasmcert-coq-8.18.patch in place, so the
+	# working tree is expected to be dirty. Only commit changes matter.
+	ignore = dirty
+[submodule "vendor/aeneas"]
+	path = vendor/aeneas
+	url = https://github.com/AeneasVerif/aeneas.git
+	# Same as above: the build patches this checkout in place, and
+	# `gmake setup-charon` and `dune build` leave artifacts behind.
+	ignore = dirty
+[submodule "tests/third_party/wasm-spec"]
+	path = tests/third_party/wasm-spec
+	url = https://github.com/WebAssembly/spec.git
+	# Pinned to the commit tagged wg-1.0: the last point before bulk memory,
+	# reference types and other post-MVP proposals were merged into test/core.
+	# It's a tag, not a branch, so `git submodule update --remote` won't track
+	# it; re-pin by hand and check test/core is still Wasm 1.0 only.

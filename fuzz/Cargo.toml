@@ -1,0 +1,31 @@
+[package]
+name = "veriwasm-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[workspace]
+
+[dependencies]
+libfuzzer-sys = "0.4"
+veriwasm = { path = ".." }
+wasmparser = "=0.252.0"
+wasm-smith = "=0.252.0"
+arbitrary = "1"
+
+[[bin]]
+name = "raw_bytes"
+path = "fuzz_targets/raw_bytes.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "wasm1_smith"
+path = "fuzz_targets/wasm1_smith.rs"
+test = false
+doc = false
+bench = false
