@@ -119,3 +119,199 @@ fn spec_suite_agrees_with_wasmparser() {
         valid_files.len() + invalid_files.len(),
     );
 }
+
+// --- The types a validated module reports for its imports and exports ---
+//
+// `import_types` / `export_types` are what an embedder links against, so they
+// are checked the same way as accept/reject: against wasmparser over the same
+// corpus. Both sides are projected to a small string form, so a mismatch reads
+// clearly and the comparison doesn't depend on either crate's type layout.
+
+fn valtype(t: veriwasm::types::ValueType) -> &'static str {
+    use veriwasm::types::ValueType;
+    match t {
+        ValueType::I32 => "i32",
+        ValueType::I64 => "i64",
+        ValueType::F32 => "f32",
+        ValueType::F64 => "f64",
+    }
+}
+
+fn limits(min: u64, max: Option<u64>) -> String {
+    match max {
+        Some(m) => format!("{min}..{m}"),
+        None => format!("{min}.."),
+    }
+}
+
+fn ours(t: &veriwasm::ExternType) -> String {
+    use veriwasm::types::Mut;
+    use veriwasm::ExternType;
+    match t {
+        ExternType::Func(ft) => {
+            let ps: Vec<&str> = ft.params.iter().map(|t| valtype(*t)).collect();
+            let rs: Vec<&str> = ft.results.iter().map(|t| valtype(*t)).collect();
+            format!("func({})->({})", ps.join(","), rs.join(","))
+        }
+        ExternType::Table(tt) => format!(
+            "table funcref {}",
+            limits(tt.limits.min.into(), tt.limits.max.map(u64::from))
+        ),
+        ExternType::Memory(mt) => format!(
+            "memory {}",
+            limits(mt.limits.min.into(), mt.limits.max.map(u64::from))
+        ),
+        ExternType::Global(gt) => format!(
+            "global {} {}",
+            if gt.mutability == Mut::Var { "var" } else { "const" },
+            valtype(gt.valtype)
+        ),
+    }
+}
+
+fn wp_valtype(t: wasmparser::ValType) -> &'static str {
+    use wasmparser::ValType;
+    match t {
+        ValType::I32 => "i32",
+        ValType::I64 => "i64",
+        ValType::F32 => "f32",
+        ValType::F64 => "f64",
+        _ => panic!("not a Wasm 1.0 value type"),
+    }
+}
+
+fn wp_func(ft: &wasmparser::FuncType) -> String {
+    let ps: Vec<&str> = ft.params().iter().map(|t| wp_valtype(*t)).collect();
+    let rs: Vec<&str> = ft.results().iter().map(|t| wp_valtype(*t)).collect();
+    format!("func({})->({})", ps.join(","), rs.join(","))
+}
+
+fn wp_table(tt: &wasmparser::TableType) -> String {
+    format!("table funcref {}", limits(tt.initial, tt.maximum))
+}
+
+fn wp_memory(mt: &wasmparser::MemoryType) -> String {
+    format!("memory {}", limits(mt.initial, mt.maximum))
+}
+
+fn wp_global(gt: &wasmparser::GlobalType) -> String {
+    format!(
+        "global {} {}",
+        if gt.mutable { "var" } else { "const" },
+        wp_valtype(gt.content_type)
+    )
+}
+
+/// The import and export types wasmparser assigns, in declaration order.
+/// `None` if it rejects the module or the module reaches past Wasm 1.0.
+fn wasmparser_extern_types(bytes: &[u8]) -> Option<(Vec<String>, Vec<String>)> {
+    use wasmparser::{ExternalKind, Parser, Payload, TypeRef};
+
+    let types = Validator::new_with_features(WasmFeatures::WASM1)
+        .validate_all(bytes)
+        .ok()?;
+    let spaces = types.as_ref();
+    let mut imports = Vec::new();
+    let mut exports = Vec::new();
+
+    for payload in Parser::new(0).parse_all(bytes) {
+        match payload.ok()? {
+            Payload::ImportSection(reader) => {
+                for import in reader.into_imports() {
+                    imports.push(match import.ok()?.ty {
+                        TypeRef::Func(i) => {
+                            wp_func(types[spaces.core_type_at_in_module(i)].unwrap_func())
+                        }
+                        TypeRef::Table(tt) => wp_table(&tt),
+                        TypeRef::Memory(mt) => wp_memory(&mt),
+                        TypeRef::Global(gt) => wp_global(&gt),
+                        _ => return None,
+                    });
+                }
+            }
+            Payload::ExportSection(reader) => {
+                for export in reader {
+                    let export = export.ok()?;
+                    exports.push(match export.kind {
+                        ExternalKind::Func => {
+                            wp_func(types[spaces.core_function_at(export.index)].unwrap_func())
+                        }
+                        ExternalKind::Table => wp_table(&spaces.table_at(export.index)),
+                        ExternalKind::Memory => wp_memory(&spaces.memory_at(export.index)),
+                        ExternalKind::Global => wp_global(&spaces.global_at(export.index)),
+                        _ => return None,
+                    });
+                }
+            }
+            _ => {}
+        }
+    }
+    Some((imports, exports))
+}
+
+#[test]
+fn extern_types_agree_with_wasmparser() {
+    let root = workspace_root();
+    let files = collect_wasm_files(&root.join("tests/spec/valid"));
+    assert!(
+        !files.is_empty(),
+        "no extracted spec tests found; run `cargo run --example wast_extract` first"
+    );
+
+    let mut mismatches = Vec::new();
+    let mut with_imports = 0usize;
+    let mut with_exports = 0usize;
+
+    for path in &files {
+        let name = path.file_name().unwrap().to_string_lossy().to_string();
+        let bytes = std::fs::read(path).unwrap();
+        let Ok(module) = veriwasm::validate_module(&bytes) else {
+            continue;
+        };
+        let Some((their_imports, their_exports)) = wasmparser_extern_types(&bytes) else {
+            continue;
+        };
+
+        let our_imports: Vec<String> = veriwasm::import_types(&module.env)
+            .expect("a validated module resolves every import type")
+            .iter()
+            .map(ours)
+            .collect();
+        let our_exports: Vec<String> = veriwasm::export_types(&module.env)
+            .expect("a validated module resolves every export type")
+            .iter()
+            .map(ours)
+            .collect();
+
+        if our_imports != their_imports {
+            mismatches.push(format!(
+                "{name}: imports {our_imports:?}, wasmparser {their_imports:?}"
+            ));
+        }
+        if our_exports != their_exports {
+            mismatches.push(format!(
+                "{name}: exports {our_exports:?}, wasmparser {their_exports:?}"
+            ));
+        }
+        if !their_imports.is_empty() {
+            with_imports += 1;
+        }
+        if !their_exports.is_empty() {
+            with_exports += 1;
+        }
+    }
+
+    for m in &mismatches {
+        eprintln!("  {m}");
+    }
+    assert!(
+        mismatches.is_empty(),
+        "{} extern-type mismatches out of {} files",
+        mismatches.len(),
+        files.len(),
+    );
+    assert!(
+        with_imports > 0 && with_exports > 0,
+        "vacuous: {with_imports} files with imports, {with_exports} with exports"
+    );
+}

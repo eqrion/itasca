@@ -1794,6 +1794,31 @@ Lemma resolved_types_app : forall tys xs ys,
   resolved_types tys (xs ++ ys) = resolved_types tys xs ++ resolved_types tys ys.
 Proof. intros tys xs ys. apply List.flat_map_app. Qed.
 
+(** No [Clone] impl reaches the extraction, so a type-section entry is handed
+    out by copying its two vectors. The copy denotes the same WasmCert type,
+    which is all anything downstream needs of it. *)
+Lemma copy_func_type_same : forall ft ft',
+  module_copy_func_type ft = Ok ft' ->
+  translate_functype ft' = translate_functype ft.
+Proof.
+  intros ft ft' H. unfold module_copy_func_type in H.
+  destruct (module_copy_value_types
+              (alloc_vec_Vec_deref ft.(types_FuncType_params))) as [ps|] eqn:Hp;
+    cbn [bind] in H; [|discriminate].
+  destruct (module_copy_value_types
+              (alloc_vec_Vec_deref ft.(types_FuncType_results))) as [rs|] eqn:Hr;
+    cbn [bind] in H; [|discriminate].
+  injection H as <-.
+  pose proof (copy_value_types_sound _ _ Hp) as Hps.
+  pose proof (copy_value_types_sound _ _ Hr) as Hrs.
+  (* [translate_functype] reads the vectors through [proj1_sig] *)
+  unfold vec_list in Hps, Hrs.
+  unfold translate_functype.
+  cbn [types_FuncType_params types_FuncType_results].
+  rewrite Hps. rewrite Hrs.
+  rewrite vec_deref_spec. rewrite vec_deref_spec. reflexivity.
+Qed.
+
 Lemma lookup_type_sound : forall env idx ft,
   module_lookup_type env idx = Ok (Core_result_Result_Ok ft) ->
   idx_in_range (vec_list env.(env_Env_types)) idx
@@ -1818,30 +1843,10 @@ Proof.
   destruct (module_copy_func_type ft1) as [ft2|] eqn:Hcopy; cbn [bind] in H;
     [|discriminate].
   injection H as <-.
-  unfold module_copy_func_type in Hcopy.
-  destruct (module_copy_value_types
-              (alloc_vec_Vec_deref ft1.(types_FuncType_params))) as [ps|] eqn:Hp;
-    cbn [bind] in Hcopy; [|discriminate].
-  destruct (module_copy_value_types
-              (alloc_vec_Vec_deref ft1.(types_FuncType_results))) as [rs|] eqn:Hr;
-    cbn [bind] in Hcopy; [|discriminate].
-  injection Hcopy as <-.
-  assert (Hsame : translate_functype
-                    {| types_FuncType_params := ps;
-                       types_FuncType_results := rs |}
-                  = translate_functype ft1).
-  { pose proof (copy_value_types_sound _ _ Hp) as Hps.
-    pose proof (copy_value_types_sound _ _ Hr) as Hrs.
-    (* [translate_functype] reads the vectors through [proj1_sig] *)
-    unfold vec_list in Hps, Hrs.
-    unfold translate_functype.
-    cbn [types_FuncType_params types_FuncType_results].
-    rewrite Hps. rewrite Hrs.
-    rewrite vec_deref_spec. rewrite vec_deref_spec. reflexivity. }
   split.
   - unfold idx_in_range. rewrite Hnth. discriminate.
   - unfold resolved_types. cbn [List.flat_map]. rewrite Hnth.
-    rewrite Hsame. reflexivity.
+    rewrite (copy_func_type_same _ _ Hcopy). reflexivity.
 Qed.
 
 (** What a section that writes the function index space did to it: it
@@ -6101,7 +6106,9 @@ Definition module_of (env : env_Env_t) (fs : list module_func)
 Theorem validate_module_parts : forall data vm,
   module_validate_module data = Ok (Core_result_Result_Ok vm) ->
   exists env code_pos tail_pos tl fs tabs mems,
-    module_decode_env data = Ok (Core_result_Result_Ok (env, code_pos))
+    vm = {| module_ValidatedModule_env := env;
+            module_ValidatedModule_tail := tl |}
+    /\ module_decode_env data = Ok (Core_result_Result_Ok (env, code_pos))
     /\ module_validate_code data code_pos env
          = Ok (Core_result_Result_Ok tail_pos)
     /\ module_decode_tail data tail_pos env = Ok (Core_result_Result_Ok tl)
@@ -6147,6 +6154,12 @@ Proof.
   destruct (module_decode_tail data tail_pos env) as [r2|] eqn:Htail;
     cbn [bind] in H; [|discriminate].
   destruct r2 as [tl|e2]; [|try_err_rw_in H; discriminate].
+  (* the value the run returned is built from these two parts, which is what
+     lets the theorems downstream talk about [vm] rather than about [env] *)
+  assert (Hvm : vm = {| module_ValidatedModule_env := env;
+                        module_ValidatedModule_tail := tl |}).
+  { rewrite branch_ok in H. cbn [bind] in H. injection H as H.
+    symmetry. exact H. }
   clear H.
   destruct (decode_env_sound _ _ _ Henv) as [p0 [env0 [Hmagic [Hnew Hchain]]]].
   destruct (validate_code_sound _ _ _ _ (decode_env_wasm10 _ _ _ Henv) Hcode)
@@ -6337,6 +6350,7 @@ Proof.
               (ltac:(rewrite List.map_length; rewrite Hcodelen;
                      rewrite Kfti; reflexivity))) as [fs Hfs].
   exists env, code_pos, tail_pos, tl, fs, tabs, mems.
+  split; [exact Hvm|].
   (* [destruct ... eqn:] rewrote the first of the three in the goal already *)
   split; [reflexivity|]. split; [exact Hcode|]. split; [exact Htail|].
   split; [rewrite Kimports; exact Ktables|].

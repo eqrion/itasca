@@ -30,6 +30,7 @@ Require Import Veriwasm.Translate.
 Require Import Veriwasm.OpIter_Decode.
 Require Import Veriwasm.Spec_Module.
 Require Import Veriwasm.Module_Sound.
+Require Import Veriwasm.Module_Externs.
 
 From Wasm Require Import datatypes datatypes_properties list_extra
                          operations typing type_checker
@@ -116,24 +117,10 @@ Qed.
 (** ** [module_imports_typer]                                          *)
 (* ================================================================== *)
 
-(** What the checker makes of the import list. The three arms that carry a
-    type outright are decided by spec 3.2.1, which is [env_limits_valid]; the
-    function arm is a type-index lookup, which is [idx_in_range]. *)
-Definition import_externs (tys : list types_FuncType_t)
-                          (imps : list env_Import_t) : list extern_type :=
-  List.flat_map
-    (fun im => match im.(env_Import_desc) with
-               | Env_ImportDesc_Func idx =>
-                   match List.nth_error tys (Z.to_nat (to_Z idx)) with
-                   | Some ft => [ET_func (translate_functype ft)]
-                   | None => []
-                   end
-               | Env_ImportDesc_Table t => [ET_table (translate_tabletype t)]
-               | Env_ImportDesc_Memory m => [ET_mem (translate_memtype m)]
-               | Env_ImportDesc_Global g => [ET_global (translate_globaltype g)]
-               end)
-    imps.
-
+(** The checker makes [import_externs] of the import list. The three arms that
+    carry a type outright are decided by spec 3.2.1, which is
+    [env_limits_valid]; the function arm is a type-index lookup, which is
+    [idx_in_range]. *)
 Lemma module_imports_typer_ok : forall tys imps,
   List.Forall import_valid imps ->
   List.Forall (idx_in_range tys) (imported_func_idxs imps) ->
@@ -224,14 +211,6 @@ Proof.
   intros A B f l1 l2. induction l1 as [|x l1 IH]; [reflexivity|].
   cbn [List.app seq.pmap ssrfun.oapp]. destruct (f x); cbn [List.app];
     rewrite IH; reflexivity.
-Qed.
-
-Lemma import_externs_cons : forall tys im imps,
-  import_externs tys (im :: imps)
-    = import_externs tys [im] ++ import_externs tys imps.
-Proof.
-  intros tys im imps. unfold import_externs. cbn [List.flat_map].
-  rewrite app_nil_r. reflexivity.
 Qed.
 
 Lemma ext_t_funcs_app : forall a b,
@@ -768,6 +747,18 @@ Proof.
   cbn [List.map]. apply eqb_refl_true.
 Qed.
 
+(* ================================================================== *)
+(** ** [module_exports_typer]                                          *)
+(* ================================================================== *)
+
+(** And [export_externs] of the export list. An export names an index space
+    entry, so unlike an import it carries no type of its own and every arm is a
+    lookup; [export_desc_ok] is what makes all four of them succeed.
+
+    Naming both lists rather than producing witnesses is what lets
+    [validate_module_typed] say the import and export types WasmCert's type
+    system assigns are the ones [module::import_types] and
+    [module::export_types] return. *)
 Lemma module_exports_typer_ok : forall env c exps,
   tc_funcs c = List.map translate_functype
                  (vec_list env.(env_Env_func_types)) ->
@@ -777,34 +768,34 @@ Lemma module_exports_typer_ok : forall env c exps,
   tc_globals c = List.map translate_globaltype
                    (vec_list env.(env_Env_global_types)) ->
   List.Forall (export_desc_ok env) exps ->
-  exists expts,
-    module_exports_typer c (List.map translate_export exps) = Some expts.
+  module_exports_typer c (List.map translate_export exps)
+    = Some (export_externs env exps).
 Proof.
   intros env c exps Hf Ht Hm Hg. unfold module_exports_typer.
   rewrite <- those_those0.
-  induction exps as [|e exps IH]; intros Hall; [exists []; reflexivity|].
+  induction exps as [|e exps IH]; intros Hall; [reflexivity|].
   inversion Hall as [|h t He Hes]; subst.
   cbn [List.map seq.map those0].
   unfold translate_export at 1. cbn [modexp_desc].
   unfold export_desc_ok in He. unfold translate_exportdesc.
-  destruct (IH Hes) as [expts Hrest]. rewrite Hrest.
+  rewrite (IH Hes). cbn [export_externs List.flat_map].
   destruct e.(env_Export_desc) as [x|x|x|x]; cbn [module_export_typer].
   - destruct (nth_error_of_lt _ (vec_list env.(env_Env_func_types)) x He)
       as [v Hnth].
     rewrite Hf. rewrite (lookup_N_map _ _ translate_functype _ _ _ Hnth).
-    cbn [option_map]. eexists. reflexivity.
+    rewrite Hnth. reflexivity.
   - destruct (nth_error_of_lt _ (vec_list env.(env_Env_table_types)) x He)
       as [v Hnth].
     rewrite Ht. rewrite (lookup_N_map _ _ translate_tabletype _ _ _ Hnth).
-    cbn [option_map]. eexists. reflexivity.
+    rewrite Hnth. reflexivity.
   - destruct (nth_error_of_lt _ (vec_list env.(env_Env_mem_types)) x He)
       as [v Hnth].
     rewrite Hm. rewrite (lookup_N_map _ _ translate_memtype _ _ _ Hnth).
-    cbn [option_map]. eexists. reflexivity.
+    rewrite Hnth. reflexivity.
   - destruct (nth_error_of_lt _ (vec_list env.(env_Env_global_types)) x He)
       as [v Hnth].
     rewrite Hg. rewrite (lookup_N_map _ _ translate_globaltype _ _ _ Hnth).
-    cbn [option_map]. eexists. reflexivity.
+    rewrite Hnth. reflexivity.
 Qed.
 
 (* ================================================================== *)
@@ -893,10 +884,11 @@ Theorem module_of_type_checker : forall env fs tabs mems ds codes,
     codes ->
   funcs_of (List.map translate_idx (vec_list env.(env_Env_func_type_indices)))
     codes fs ->
-  exists impts expts,
-    module_type_checker
-      (module_of env fs tabs mems (List.map translate_data ds))
-      = Some (impts, expts).
+  module_type_checker
+    (module_of env fs tabs mems (List.map translate_data ds))
+    = Some (import_externs (vec_list env.(env_Env_types))
+                           (vec_list env.(env_Env_imports)),
+            export_externs env (vec_list env.(env_Env_exports))).
 Proof.
   intros env fs tabs mems ds codes Hlim Htab Hmem Hfsp Hgsp Hnig Hels Hstart
          Hdist Hdesc Hdata Hglob Hcodes Hfuncs.
@@ -961,19 +953,80 @@ Proof.
              Hgsp Hnig).
     apply Hels. exact Hin. }
   rewrite Hel. cbn [andb].
-  destruct (module_exports_typer_ok env c (vec_list env.(env_Env_exports))
-              eq_refl eq_refl eq_refl eq_refl Hdesc) as [expts Hexp].
-  rewrite Hexp.
-  eexists. eexists. reflexivity.
+  rewrite (module_exports_typer_ok env c (vec_list env.(env_Env_exports))
+             eq_refl eq_refl eq_refl eq_refl Hdesc).
+  reflexivity.
 Qed.
 
 (* ================================================================== *)
 (** ** An accepted module is well typed                                *)
 (* ================================================================== *)
 
+(** The checker's verdict on the module an accepting run decoded, with both
+    extern-type lists named.
+
+    The module is existential -- validation is a single streaming pass that does
+    not retain function bodies, so the module the bytes decode to is not a
+    function of what the run returns. Its imports and exports are retained,
+    though, and that is what the rest of the conclusion is about: the two
+    [mod_imports]/[mod_exports] equations say the module WasmCert reads declares
+    exactly what the run recorded, in order and with the names, and the pair the
+    checker returns is [import_externs] and [export_externs] of the environment
+    in the returned [ValidatedModule] rather than a witness.
+
+    [validate_module_typed] below turns the checker's verdict into
+    [module_typing]. [Module_Wasm10.validate_module_typechecked] uses the
+    equation itself, to identify the two lists a caller supplied with the ones
+    the run reports. *)
+Theorem validate_module_checked : forall data vm,
+  module_validate_module data = Ok (Core_result_Result_Ok vm) ->
+  let env := vm.(module_ValidatedModule_env) in
+  exists m imps exps,
+    repr_module (byte_list data) m
+    /\ module_import_types env = Ok (Core_result_Result_Ok imps)
+    /\ module_export_types env = Ok (Core_result_Result_Ok exps)
+    /\ mod_imports m
+         = List.map translate_import (vec_list env.(env_Env_imports))
+    /\ mod_exports m
+         = List.map translate_export (vec_list env.(env_Env_exports))
+    /\ module_type_checker m
+         = Some (translate_externtypes imps, translate_externtypes exps).
+Proof.
+  intros data vm H.
+  destruct (validate_module_parts _ _ H)
+    as [env [cp [tp [tl [fs [tabs [mems Hrest]]]]]]].
+  destruct Hrest as [Hvm Hrest].
+  destruct Hrest as [Henv Hrest]. destruct Hrest as [_ Hrest].
+  destruct Hrest as [_ Hrest]. destruct Hrest as [Htab Hrest].
+  destruct Hrest as [Hmem Hrest]. destruct Hrest as [Hfsp Hrest].
+  destruct Hrest as [Hgsp Hrest]. destruct Hrest as [Hnig Hrest].
+  destruct Hrest as [Hels Hrest]. destruct Hrest as [Hstart Hrest].
+  destruct Hrest as [Hdist Hrest]. destruct Hrest as [Hdesc Hrest].
+  destruct Hrest as [Hdata Hrest]. destruct Hrest as [Hglob Hrest].
+  destruct Hrest as [[codes [Hcodes Hfuncs]] Hm].
+  pose proof (module_of_type_checker env fs tabs mems
+                (vec_list tl.(module_Tail_data)) codes
+                (decode_env_limits_valid _ _ _ Henv)
+                Htab Hmem Hfsp Hgsp Hnig Hels Hstart Hdist Hdesc Hdata Hglob
+                Hcodes Hfuncs) as Hchk.
+  (* the two accessors succeed, and return the two lists the checker built *)
+  destruct Hfsp as [_ Hfall].
+  apply List.Forall_app in Hfall. destruct Hfall as [Hfimp _].
+  destruct (import_types_externs env Hfimp) as [imps [Himps Hiv]].
+  destruct (export_types_externs env Hdesc) as [exps [Hexps Hev]].
+  subst vm. cbn [module_ValidatedModule_env]. cbv zeta.
+  exists (module_of env fs tabs mems
+            (List.map translate_data (vec_list tl.(module_Tail_data)))).
+  exists imps. exists exps.
+  split; [exact Hm|]. split; [exact Himps|]. split; [exact Hexps|].
+  split; [reflexivity|]. split; [reflexivity|].
+  rewrite Hiv. rewrite Hev. exact Hchk.
+Qed.
+
 (** The second half of module soundness, and the end of the chain: an
     accepting run of [validate_module] means the input is a Wasm 1.0 module
-    binary *and* WebAssembly's type system accepts the module it decodes to.
+    binary *and* WebAssembly's type system accepts the module it decodes to,
+    with the import and export types it assigns being the ones the run reports.
 
     [module_type_checker_sound] is host-parameterised, so the statement is too;
     nothing in it depends on the host. *)
@@ -983,31 +1036,25 @@ Context `{ho: host}.
 
 Theorem validate_module_typed : forall data vm,
   module_validate_module data = Ok (Core_result_Result_Ok vm) ->
-  exists m t_imps t_exps,
+  let env := vm.(module_ValidatedModule_env) in
+  exists m imps exps,
     repr_module (byte_list data) m
-    /\ module_typing m t_imps t_exps.
+    /\ module_import_types env = Ok (Core_result_Result_Ok imps)
+    /\ module_export_types env = Ok (Core_result_Result_Ok exps)
+    /\ mod_imports m
+         = List.map translate_import (vec_list env.(env_Env_imports))
+    /\ mod_exports m
+         = List.map translate_export (vec_list env.(env_Env_exports))
+    /\ module_typing m (translate_externtypes imps)
+                       (translate_externtypes exps).
 Proof.
-  intros data vm H.
-  destruct (validate_module_parts _ _ H)
-    as [env [cp [tp [tl [fs [tabs [mems Hrest]]]]]]].
-  destruct Hrest as [Henv Hrest]. destruct Hrest as [_ Hrest].
-  destruct Hrest as [_ Hrest]. destruct Hrest as [Htab Hrest].
-  destruct Hrest as [Hmem Hrest]. destruct Hrest as [Hfsp Hrest].
-  destruct Hrest as [Hgsp Hrest]. destruct Hrest as [Hnig Hrest].
-  destruct Hrest as [Hels Hrest]. destruct Hrest as [Hstart Hrest].
-  destruct Hrest as [Hdist Hrest]. destruct Hrest as [Hdesc Hrest].
-  destruct Hrest as [Hdata Hrest]. destruct Hrest as [Hglob Hrest].
-  destruct Hrest as [[codes [Hcodes Hfuncs]] Hm].
-  destruct (module_of_type_checker env fs tabs mems
-              (vec_list tl.(module_Tail_data)) codes
-              (decode_env_limits_valid _ _ _ Henv)
-              Htab Hmem Hfsp Hgsp Hnig Hels Hstart Hdist Hdesc Hdata Hglob
-              Hcodes Hfuncs)
-    as [impts [expts Hchk]].
-  exists (module_of env fs tabs mems
-            (List.map translate_data (vec_list tl.(module_Tail_data)))).
-  exists impts. exists expts.
-  split; [exact Hm | apply module_type_checker_sound; exact Hchk].
+  intros data vm H env.
+  destruct (validate_module_checked _ _ H)
+    as [m [imps [exps [Hm [Himps [Hexps [Himp [Hexp Hchk]]]]]]]].
+  exists m. exists imps. exists exps.
+  split; [exact Hm|]. split; [exact Himps|]. split; [exact Hexps|].
+  split; [exact Himp|]. split; [exact Hexp|].
+  apply module_type_checker_sound. exact Hchk.
 Qed.
 
 End Typed.

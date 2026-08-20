@@ -406,7 +406,7 @@ Definition opiter_op_i32_const : u8 := 65%u8.
 Definition opiter_op_global_get : u8 := 35%u8.
 
 (** [veriwasm::module::const_global]:
-    Source: 'src/module.rs', lines 376:0-389:1 *)
+    Source: 'src/module.rs', lines 452:0-465:1 *)
 Definition module_const_global
   (env : env_Env_t) (idx : u32) :
   result (core_result_Result_t types_GlobalType_t error_Error_t)
@@ -435,7 +435,7 @@ Definition module_const_global
 Definition opiter_op_end : u8 := 11%u8.
 
 (** [veriwasm::module::read_expr_end]:
-    Source: 'src/module.rs', lines 366:0-372:1 *)
+    Source: 'src/module.rs', lines 442:0-448:1 *)
 Definition module_read_expr_end
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t usize error_Error_t)
@@ -456,7 +456,7 @@ Definition module_read_expr_end
 .
 
 (** [veriwasm::module::expect_const_type]:
-    Source: 'src/module.rs', lines 359:0-364:1 *)
+    Source: 'src/module.rs', lines 435:0-440:1 *)
 Definition module_expect_const_type
   (actual : types_ValueType_t) (expected : types_ValueType_t) :
   result (core_result_Result_t unit error_Error_t)
@@ -468,7 +468,7 @@ Definition module_expect_const_type
 .
 
 (** [veriwasm::module::decode_const_expr]:
-    Source: 'src/module.rs', lines 393:0-432:1 *)
+    Source: 'src/module.rs', lines 469:0-508:1 *)
 Definition module_decode_const_expr
   (data : slice u8) (pos : usize) (env : env_Env_t)
   (expected : types_ValueType_t) :
@@ -692,7 +692,7 @@ Definition module_decode_const_expr
 .
 
 (** [veriwasm::module::have_bytes]:
-    Source: 'src/module.rs', lines 101:0-106:1 *)
+    Source: 'src/module.rs', lines 177:0-182:1 *)
 Definition module_have_bytes
   (data : slice u8) (pos : usize) (n : usize) :
   result (core_result_Result_t unit error_Error_t)
@@ -705,7 +705,7 @@ Definition module_have_bytes
 .
 
 (** [veriwasm::module::copy_bytes]: loop 0:
-    Source: 'src/module.rs', lines 90:4-96:5 *)
+    Source: 'src/module.rs', lines 166:4-172:5 *)
 Definition module_copy_bytes_loop
   (data : slice u8) (to : usize) (out : alloc_vec_Vec u8) (i : usize) :
   result (alloc_vec_Vec u8)
@@ -723,14 +723,14 @@ Definition module_copy_bytes_loop
 .
 
 (** [veriwasm::module::copy_bytes]:
-    Source: 'src/module.rs', lines 87:0-97:1 *)
+    Source: 'src/module.rs', lines 163:0-173:1 *)
 Definition module_copy_bytes
   (data : slice u8) (from : usize) (to : usize) : result (alloc_vec_Vec u8) :=
   module_copy_bytes_loop data to (alloc_vec_Vec_new u8) from
 .
 
 (** [veriwasm::module::decode_data_segment]:
-    Source: 'src/module.rs', lines 958:0-976:1 *)
+    Source: 'src/module.rs', lines 1034:0-1052:1 *)
 Definition module_decode_data_segment
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result (core_result_Result_t (module_Data_t * usize) error_Error_t)
@@ -797,7 +797,7 @@ Definition module_decode_data_segment
 .
 
 (** [veriwasm::module::decode_data_section]: loop 0:
-    Source: 'src/module.rs', lines 983:4-991:5 *)
+    Source: 'src/module.rs', lines 1059:4-1067:5 *)
 Definition module_decode_data_section_loop
   (data : slice u8) (env : env_Env_t) (count : u32)
   (out : alloc_vec_Vec module_Data_t) (q : usize) (i : u32) :
@@ -830,7 +830,7 @@ Definition module_decode_data_section_loop
 .
 
 (** [veriwasm::module::decode_data_section]:
-    Source: 'src/module.rs', lines 978:0-992:1 *)
+    Source: 'src/module.rs', lines 1054:0-1068:1 *)
 Definition module_decode_data_section
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result (core_result_Result_t ((alloc_vec_Vec module_Data_t) * usize)
@@ -852,7 +852,7 @@ Definition module_decode_data_section
 .
 
 (** [veriwasm::module::utf8_cont]:
-    Source: 'src/module.rs', lines 263:0-272:1 *)
+    Source: 'src/module.rs', lines 339:0-348:1 *)
 Definition module_utf8_cont
   (bytes : slice u8) (i : usize) (lo : u8) (hi : u8) :
   result (core_result_Result_t unit error_Error_t)
@@ -871,7 +871,7 @@ Definition module_utf8_cont
 .
 
 (** [veriwasm::module::utf8_sequence_len]:
-    Source: 'src/module.rs', lines 279:0-322:1 *)
+    Source: 'src/module.rs', lines 355:0-398:1 *)
 Definition module_utf8_sequence_len
   (bytes : slice u8) (i : usize) :
   result (core_result_Result_t usize error_Error_t)
@@ -1781,7 +1781,7 @@ Definition module_utf8_sequence_len
 .
 
 (** [veriwasm::module::validate_utf8]: loop 0:
-    Source: 'src/module.rs', lines 326:4-332:5 *)
+    Source: 'src/module.rs', lines 402:4-408:5 *)
 Definition module_validate_utf8_loop
   (bytes : slice u8) (i : usize) :
   result (core_result_Result_t unit error_Error_t)
@@ -1809,14 +1809,14 @@ Definition module_validate_utf8_loop
 .
 
 (** [veriwasm::module::validate_utf8]:
-    Source: 'src/module.rs', lines 324:0-333:1 *)
+    Source: 'src/module.rs', lines 400:0-409:1 *)
 Definition module_validate_utf8
   (bytes : slice u8) : result (core_result_Result_t unit error_Error_t) :=
   module_validate_utf8_loop bytes 0%usize
 .
 
 (** [veriwasm::module::decode_name]:
-    Source: 'src/module.rs', lines 336:0-343:1 *)
+    Source: 'src/module.rs', lines 412:0-419:1 *)
 Definition module_decode_name
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t ((alloc_vec_Vec u8) * usize) error_Error_t)
@@ -1861,7 +1861,7 @@ Definition module_decode_name
 .
 
 (** [veriwasm::module::decode_custom_section]:
-    Source: 'src/module.rs', lines 349:0-355:1 *)
+    Source: 'src/module.rs', lines 425:0-431:1 *)
 Definition module_decode_custom_section
   (data : slice u8) (pos : usize) (end1 : usize) :
   result (core_result_Result_t unit error_Error_t)
@@ -1882,7 +1882,7 @@ Definition module_decode_custom_section
 .
 
 (** [veriwasm::module::read_section_header]:
-    Source: 'src/module.rs', lines 131:0-137:1 *)
+    Source: 'src/module.rs', lines 207:0-213:1 *)
 Definition module_read_section_header
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (u8 * usize * usize) error_Error_t)
@@ -1923,7 +1923,7 @@ Definition module_read_section_header
 .
 
 (** [veriwasm::module::decode_tail]: loop 0:
-    Source: 'src/module.rs', lines 1000:4-1019:5 *)
+    Source: 'src/module.rs', lines 1076:4-1095:5 *)
 Definition module_decode_tail_loop
   (data : slice u8) (env : env_Env_t) (segments : alloc_vec_Vec module_Data_t)
   (q : usize) (seen_data : bool) :
@@ -1999,7 +1999,7 @@ Definition module_decode_tail_loop
 .
 
 (** [veriwasm::module::decode_tail]:
-    Source: 'src/module.rs', lines 996:0-1020:1 *)
+    Source: 'src/module.rs', lines 1072:0-1096:1 *)
 Definition module_decode_tail
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result (core_result_Result_t module_Tail_t error_Error_t)
@@ -2008,7 +2008,7 @@ Definition module_decode_tail
 .
 
 (** [veriwasm::module::no_code_section]:
-    Source: 'src/module.rs', lines 949:0-954:1 *)
+    Source: 'src/module.rs', lines 1025:0-1030:1 *)
 Definition module_no_code_section
   (env : env_Env_t) (pos : usize) :
   result (core_result_Result_t usize error_Error_t)
@@ -7082,7 +7082,7 @@ Definition opiter_validate_body
 .
 
 (** [veriwasm::module::copy_value_types]: loop 0:
-    Source: 'src/module.rs', lines 439:4-445:5 *)
+    Source: 'src/module.rs', lines 515:4-521:5 *)
 Definition module_copy_value_types_loop
   (src : slice types_ValueType_t) (out : alloc_vec_Vec types_ValueType_t)
   (i : usize) :
@@ -7102,7 +7102,7 @@ Definition module_copy_value_types_loop
 .
 
 (** [veriwasm::module::copy_value_types]:
-    Source: 'src/module.rs', lines 436:0-446:1 *)
+    Source: 'src/module.rs', lines 512:0-522:1 *)
 Definition module_copy_value_types
   (src : slice types_ValueType_t) : result (alloc_vec_Vec types_ValueType_t) :=
   module_copy_value_types_loop src (alloc_vec_Vec_new types_ValueType_t)
@@ -7110,7 +7110,7 @@ Definition module_copy_value_types
 .
 
 (** [veriwasm::module::build_func_locals]: loop 0:
-    Source: 'src/module.rs', lines 862:4-868:5 *)
+    Source: 'src/module.rs', lines 938:4-944:5 *)
 Definition module_build_func_locals_loop
   (declared : slice types_ValueType_t)
   (locals : alloc_vec_Vec types_ValueType_t) (i : usize) :
@@ -7130,7 +7130,7 @@ Definition module_build_func_locals_loop
 .
 
 (** [veriwasm::module::build_func_locals]:
-    Source: 'src/module.rs', lines 859:0-869:1 *)
+    Source: 'src/module.rs', lines 935:0-945:1 *)
 Definition module_build_func_locals
   (params : slice types_ValueType_t) (declared : slice types_ValueType_t) :
   result (alloc_vec_Vec types_ValueType_t)
@@ -7140,7 +7140,7 @@ Definition module_build_func_locals
 .
 
 (** [veriwasm::module::push_locals]: loop 0:
-    Source: 'src/module.rs', lines 827:4-833:5 *)
+    Source: 'src/module.rs', lines 903:4-909:5 *)
 Definition module_push_locals_loop
   (out : alloc_vec_Vec types_ValueType_t) (count : u32)
   (vt : types_ValueType_t) (i : u32) :
@@ -7158,7 +7158,7 @@ Definition module_push_locals_loop
 .
 
 (** [veriwasm::module::push_locals]:
-    Source: 'src/module.rs', lines 825:0-834:1 *)
+    Source: 'src/module.rs', lines 901:0-910:1 *)
 Definition module_push_locals
   (out : alloc_vec_Vec types_ValueType_t) (count : u32)
   (vt : types_ValueType_t) :
@@ -7168,7 +7168,7 @@ Definition module_push_locals
 .
 
 (** [veriwasm::module::decode_value_type]:
-    Source: 'src/module.rs', lines 141:0-156:1 *)
+    Source: 'src/module.rs', lines 217:0-232:1 *)
 Definition module_decode_value_type
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (types_ValueType_t * usize) error_Error_t)
@@ -7199,7 +7199,7 @@ Definition module_decode_value_type
 .
 
 (** [veriwasm::module::decode_locals]: loop 0:
-    Source: 'src/module.rs', lines 842:4-856:5 *)
+    Source: 'src/module.rs', lines 918:4-932:5 *)
 Definition module_decode_locals_loop
   (data : slice u8) (groups : u32) (out : alloc_vec_Vec types_ValueType_t)
   (q : usize) (i : u32) :
@@ -7253,7 +7253,7 @@ Definition module_decode_locals_loop
 .
 
 (** [veriwasm::module::decode_locals]:
-    Source: 'src/module.rs', lines 837:0-857:1 *)
+    Source: 'src/module.rs', lines 913:0-933:1 *)
 Definition module_decode_locals
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t ((alloc_vec_Vec types_ValueType_t) * usize)
@@ -7275,7 +7275,7 @@ Definition module_decode_locals
 .
 
 (** [veriwasm::module::validate_code_entry]:
-    Source: 'src/module.rs', lines 877:0-912:1 *)
+    Source: 'src/module.rs', lines 953:0-988:1 *)
 Definition module_validate_code_entry
   (data : slice u8) (pos : usize) (env : env_Env_t) (index : usize) :
   result (core_result_Result_t usize error_Error_t)
@@ -7355,7 +7355,7 @@ Definition module_validate_code_entry
 .
 
 (** [veriwasm::module::validate_code_entries]: loop 0:
-    Source: 'src/module.rs', lines 917:4-923:5 *)
+    Source: 'src/module.rs', lines 993:4-999:5 *)
 Definition module_validate_code_entries_loop
   (data : slice u8) (env : env_Env_t) (q : usize) (i : usize) :
   result (core_result_Result_t usize error_Error_t)
@@ -7383,7 +7383,7 @@ Definition module_validate_code_entries_loop
 .
 
 (** [veriwasm::module::validate_code_entries]:
-    Source: 'src/module.rs', lines 914:0-924:1 *)
+    Source: 'src/module.rs', lines 990:0-1000:1 *)
 Definition module_validate_code_entries
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result (core_result_Result_t usize error_Error_t)
@@ -7392,7 +7392,7 @@ Definition module_validate_code_entries
 .
 
 (** [veriwasm::module::validate_code]:
-    Source: 'src/module.rs', lines 930:0-947:1 *)
+    Source: 'src/module.rs', lines 1006:0-1023:1 *)
 Definition module_validate_code
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result (core_result_Result_t usize error_Error_t)
@@ -7446,7 +7446,7 @@ Definition module_validate_code
 .
 
 (** [veriwasm::module::decode_func_indices]: loop 0:
-    Source: 'src/module.rs', lines 721:4-732:5 *)
+    Source: 'src/module.rs', lines 797:4-808:5 *)
 Definition module_decode_func_indices_loop
   (data : slice u8) (env : env_Env_t) (count : u32) (out : alloc_vec_Vec u32)
   (q : usize) (i : u32) :
@@ -7483,7 +7483,7 @@ Definition module_decode_func_indices_loop
 .
 
 (** [veriwasm::module::decode_func_indices]:
-    Source: 'src/module.rs', lines 716:0-733:1 *)
+    Source: 'src/module.rs', lines 792:0-809:1 *)
 Definition module_decode_func_indices
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result (core_result_Result_t ((alloc_vec_Vec u32) * usize) error_Error_t)
@@ -7504,7 +7504,7 @@ Definition module_decode_func_indices
 .
 
 (** [veriwasm::module::decode_element_section]: loop 0:
-    Source: 'src/module.rs', lines 739:4-756:5 *)
+    Source: 'src/module.rs', lines 815:4-832:5 *)
 Definition module_decode_element_section_loop
   (data : slice u8) (env : env_Env_t) (count : u32) (q : usize) (i : u32) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -7591,7 +7591,7 @@ Definition module_decode_element_section_loop
 .
 
 (** [veriwasm::module::decode_element_section]:
-    Source: 'src/module.rs', lines 735:0-757:1 *)
+    Source: 'src/module.rs', lines 811:0-833:1 *)
 Definition module_decode_element_section
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -7612,7 +7612,7 @@ Definition module_decode_element_section
 .
 
 (** [veriwasm::module::decode_start_section]:
-    Source: 'src/module.rs', lines 703:0-714:1 *)
+    Source: 'src/module.rs', lines 779:0-790:1 *)
 Definition module_decode_start_section
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -7668,7 +7668,7 @@ Definition module_decode_start_section
 .
 
 (** [veriwasm::module::export_desc]:
-    Source: 'src/module.rs', lines 652:0-679:1 *)
+    Source: 'src/module.rs', lines 728:0-755:1 *)
 Definition module_export_desc
   (env : env_Env_t) (kind : u8) (idx : u32) :
   result (core_result_Result_t env_ExportDesc_t error_Error_t)
@@ -7705,7 +7705,7 @@ Definition module_export_desc
 .
 
 (** [veriwasm::module::names_equal]: loop 0:
-    Source: 'src/module.rs', lines 626:4-634:5 *)
+    Source: 'src/module.rs', lines 702:4-710:5 *)
 Definition module_names_equal_loop
   (a : slice u8) (b : slice u8) (i : usize) : result bool :=
   loop
@@ -7723,7 +7723,7 @@ Definition module_names_equal_loop
 .
 
 (** [veriwasm::module::names_equal]:
-    Source: 'src/module.rs', lines 621:0-635:1 *)
+    Source: 'src/module.rs', lines 697:0-711:1 *)
 Definition module_names_equal (a : slice u8) (b : slice u8) : result bool :=
   let i := slice_len a in
   let i1 := slice_len b in
@@ -7731,7 +7731,7 @@ Definition module_names_equal (a : slice u8) (b : slice u8) : result bool :=
 .
 
 (** [veriwasm::module::export_name_taken]: loop 0:
-    Source: 'src/module.rs', lines 641:4-649:5 *)
+    Source: 'src/module.rs', lines 717:4-725:5 *)
 Definition module_export_name_taken_loop
   (env : env_Env_t) (name : slice u8) (i : usize) : result bool :=
   loop
@@ -7752,14 +7752,14 @@ Definition module_export_name_taken_loop
 .
 
 (** [veriwasm::module::export_name_taken]:
-    Source: 'src/module.rs', lines 639:0-650:1 *)
+    Source: 'src/module.rs', lines 715:0-726:1 *)
 Definition module_export_name_taken
   (env : env_Env_t) (name : slice u8) : result bool :=
   module_export_name_taken_loop env name 0%usize
 .
 
 (** [veriwasm::module::decode_export_section]: loop 0:
-    Source: 'src/module.rs', lines 685:4-699:5 *)
+    Source: 'src/module.rs', lines 761:4-775:5 *)
 Definition module_decode_export_section_loop
   (data : slice u8) (env : env_Env_t) (count : u32) (q : usize) (i : u32) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -7854,7 +7854,7 @@ Definition module_decode_export_section_loop
 .
 
 (** [veriwasm::module::decode_export_section]:
-    Source: 'src/module.rs', lines 681:0-700:1 *)
+    Source: 'src/module.rs', lines 757:0-776:1 *)
 Definition module_decode_export_section
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -7875,7 +7875,7 @@ Definition module_decode_export_section
 .
 
 (** [veriwasm::module::decode_global_type]:
-    Source: 'src/module.rs', lines 236:0-258:1 *)
+    Source: 'src/module.rs', lines 312:0-334:1 *)
 Definition module_decode_global_type
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (types_GlobalType_t * usize) error_Error_t)
@@ -7921,7 +7921,7 @@ Definition module_decode_global_type
 .
 
 (** [veriwasm::module::decode_global_section]: loop 0:
-    Source: 'src/module.rs', lines 608:4-618:5 *)
+    Source: 'src/module.rs', lines 684:4-694:5 *)
 Definition module_decode_global_section_loop
   (data : slice u8) (env : env_Env_t) (count : u32) (q : usize) (i : u32) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -7986,7 +7986,7 @@ Definition module_decode_global_section_loop
 .
 
 (** [veriwasm::module::decode_global_section]:
-    Source: 'src/module.rs', lines 604:0-619:1 *)
+    Source: 'src/module.rs', lines 680:0-695:1 *)
 Definition module_decode_global_section
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -8007,7 +8007,7 @@ Definition module_decode_global_section
 .
 
 (** [veriwasm::module::decode_limits]:
-    Source: 'src/module.rs', lines 191:0-209:1 *)
+    Source: 'src/module.rs', lines 267:0-285:1 *)
 Definition module_decode_limits
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (limits_Limits_t * usize) error_Error_t)
@@ -8073,7 +8073,7 @@ Definition module_decode_limits
 .
 
 (** [veriwasm::module::decode_mem_type]:
-    Source: 'src/module.rs', lines 229:0-233:1 *)
+    Source: 'src/module.rs', lines 305:0-309:1 *)
 Definition module_decode_mem_type
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (types_MemType_t * usize) error_Error_t)
@@ -8103,7 +8103,7 @@ Definition module_decode_mem_type
 .
 
 (** [veriwasm::module::decode_memory_section]: loop 0:
-    Source: 'src/module.rs', lines 590:4-601:5 *)
+    Source: 'src/module.rs', lines 666:4-677:5 *)
 Definition module_decode_memory_section_loop
   (data : slice u8) (env : env_Env_t) (count : u32) (q : usize) (i : u32) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -8171,7 +8171,7 @@ Definition module_decode_memory_section_loop
 .
 
 (** [veriwasm::module::decode_memory_section]:
-    Source: 'src/module.rs', lines 586:0-602:1 *)
+    Source: 'src/module.rs', lines 662:0-678:1 *)
 Definition module_decode_memory_section
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -8192,7 +8192,7 @@ Definition module_decode_memory_section
 .
 
 (** [veriwasm::module::decode_table_type]:
-    Source: 'src/module.rs', lines 212:0-226:1 *)
+    Source: 'src/module.rs', lines 288:0-302:1 *)
 Definition module_decode_table_type
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (types_TableType_t * usize) error_Error_t)
@@ -8242,7 +8242,7 @@ Definition module_decode_table_type
 .
 
 (** [veriwasm::module::decode_table_section]: loop 0:
-    Source: 'src/module.rs', lines 572:4-583:5 *)
+    Source: 'src/module.rs', lines 648:4-659:5 *)
 Definition module_decode_table_section_loop
   (data : slice u8) (env : env_Env_t) (count : u32) (q : usize) (i : u32) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -8310,7 +8310,7 @@ Definition module_decode_table_section_loop
 .
 
 (** [veriwasm::module::decode_table_section]:
-    Source: 'src/module.rs', lines 568:0-584:1 *)
+    Source: 'src/module.rs', lines 644:0-660:1 *)
 Definition module_decode_table_section
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -8331,7 +8331,7 @@ Definition module_decode_table_section
 .
 
 (** [veriwasm::module::copy_func_type]:
-    Source: 'src/module.rs', lines 448:0-453:1 *)
+    Source: 'src/module.rs', lines 524:0-529:1 *)
 Definition module_copy_func_type
   (ft : types_FuncType_t) : result types_FuncType_t :=
   let s := alloc_vec_Vec_deref ft.(types_FuncType_params) in
@@ -8342,7 +8342,7 @@ Definition module_copy_func_type
 .
 
 (** [veriwasm::module::lookup_type]:
-    Source: 'src/module.rs', lines 456:0-462:1 *)
+    Source: 'src/module.rs', lines 532:0-538:1 *)
 Definition module_lookup_type
   (env : env_Env_t) (idx : u32) :
   result (core_result_Result_t types_FuncType_t error_Error_t)
@@ -8360,7 +8360,7 @@ Definition module_lookup_type
 .
 
 (** [veriwasm::module::decode_function_section]: loop 0:
-    Source: 'src/module.rs', lines 555:4-565:5 *)
+    Source: 'src/module.rs', lines 631:4-641:5 *)
 Definition module_decode_function_section_loop
   (data : slice u8) (env : env_Env_t) (count : u32) (q : usize) (i : u32) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -8420,7 +8420,7 @@ Definition module_decode_function_section_loop
 .
 
 (** [veriwasm::module::decode_function_section]:
-    Source: 'src/module.rs', lines 551:0-566:1 *)
+    Source: 'src/module.rs', lines 627:0-642:1 *)
 Definition module_decode_function_section
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -8441,7 +8441,7 @@ Definition module_decode_function_section
 .
 
 (** [veriwasm::module::decode_import]:
-    Source: 'src/module.rs', lines 482:0-536:1 *)
+    Source: 'src/module.rs', lines 558:0-612:1 *)
 Definition module_decode_import
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -8716,7 +8716,7 @@ Definition module_decode_import
 .
 
 (** [veriwasm::module::decode_import_section]: loop 0:
-    Source: 'src/module.rs', lines 542:4-548:5 *)
+    Source: 'src/module.rs', lines 618:4-624:5 *)
 Definition module_decode_import_section_loop
   (data : slice u8) (env : env_Env_t) (count : u32) (q : usize) (i : u32) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -8744,7 +8744,7 @@ Definition module_decode_import_section_loop
 .
 
 (** [veriwasm::module::decode_import_section]:
-    Source: 'src/module.rs', lines 538:0-549:1 *)
+    Source: 'src/module.rs', lines 614:0-625:1 *)
 Definition module_decode_import_section
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -8765,7 +8765,7 @@ Definition module_decode_import_section
 .
 
 (** [veriwasm::module::decode_value_types]: loop 0:
-    Source: 'src/module.rs', lines 163:4-171:5 *)
+    Source: 'src/module.rs', lines 239:4-247:5 *)
 Definition module_decode_value_types_loop
   (data : slice u8) (count : u32) (out : alloc_vec_Vec types_ValueType_t)
   (q : usize) (i : u32) :
@@ -8799,7 +8799,7 @@ Definition module_decode_value_types_loop
 .
 
 (** [veriwasm::module::decode_value_types]:
-    Source: 'src/module.rs', lines 158:0-172:1 *)
+    Source: 'src/module.rs', lines 234:0-248:1 *)
 Definition module_decode_value_types
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t ((alloc_vec_Vec types_ValueType_t) * usize)
@@ -8821,7 +8821,7 @@ Definition module_decode_value_types
 .
 
 (** [veriwasm::module::decode_func_type]:
-    Source: 'src/module.rs', lines 177:0-188:1 *)
+    Source: 'src/module.rs', lines 253:0-264:1 *)
 Definition module_decode_func_type
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (types_FuncType_t * usize) error_Error_t)
@@ -8876,7 +8876,7 @@ Definition module_decode_func_type
 .
 
 (** [veriwasm::module::decode_type_section]: loop 0:
-    Source: 'src/module.rs', lines 470:4-478:5 *)
+    Source: 'src/module.rs', lines 546:4-554:5 *)
 Definition module_decode_type_section_loop
   (data : slice u8) (env : env_Env_t) (count : u32) (q : usize) (i : u32) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -8922,7 +8922,7 @@ Definition module_decode_type_section_loop
 .
 
 (** [veriwasm::module::decode_type_section]:
-    Source: 'src/module.rs', lines 466:0-479:1 *)
+    Source: 'src/module.rs', lines 542:0-555:1 *)
 Definition module_decode_type_section
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -8943,7 +8943,7 @@ Definition module_decode_type_section
 .
 
 (** [veriwasm::module::decode_env_section]:
-    Source: 'src/module.rs', lines 759:0-788:1 *)
+    Source: 'src/module.rs', lines 835:0-864:1 *)
 Definition module_decode_env_section
   (data : slice u8) (pos : usize) (id : u8) (env : env_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -8980,7 +8980,7 @@ Definition module_decode_env_section
 .
 
 (** [veriwasm::module::read_header]:
-    Source: 'src/module.rs', lines 111:0-127:1 *)
+    Source: 'src/module.rs', lines 187:0-203:1 *)
 Definition module_read_header
   (data : slice u8) : result (core_result_Result_t usize error_Error_t) :=
   r <- reader_read_byte data 0%usize;
@@ -9106,7 +9106,7 @@ Definition module_read_header
 .
 
 (** [veriwasm::module::decode_env]: loop 0:
-    Source: 'src/module.rs', lines 798:4-820:5 *)
+    Source: 'src/module.rs', lines 874:4-896:5 *)
 Definition module_decode_env_loop
   (data : slice u8) (env : env_Env_t) (q : usize) (last_id : u8) :
   result (core_result_Result_t (env_Env_t * usize) error_Error_t)
@@ -9179,7 +9179,7 @@ Definition module_decode_env_loop
 .
 
 (** [veriwasm::module::decode_env]:
-    Source: 'src/module.rs', lines 794:0-821:1 *)
+    Source: 'src/module.rs', lines 870:0-897:1 *)
 Definition module_decode_env
   (data : slice u8) :
   result (core_result_Result_t (env_Env_t * usize) error_Error_t)
@@ -9245,6 +9245,149 @@ Definition module_validate_module
         module_ValidatedModule_t (core_convert_From_Blanket error_Error_t)
         residual
     end)
+.
+
+(** [veriwasm::module::import_types]: loop 0:
+    Source: 'src/module.rs', lines 92:4-107:5 *)
+Definition module_import_types_loop
+  (env : env_Env_t) (out : alloc_vec_Vec types_ExternType_t) (i : usize) :
+  result (core_result_Result_t (alloc_vec_Vec types_ExternType_t)
+    error_Error_t)
+  :=
+  loop
+    (fun '((out1, i1) : ((alloc_vec_Vec types_ExternType_t) * usize)) =>
+      let i2 := alloc_vec_Vec_len env.(env_Env_imports) in
+      if i1 s>= i2
+      then Ok (Done (Core_result_Result_Ok out1))
+      else (
+        i3 <-
+          alloc_vec_Vec_index (core_slice_index_SliceIndexUsizeSliceInst
+            env_Import_t) env.(env_Env_imports) i1;
+        match i3.(env_Import_desc) with
+        | Env_ImportDesc_Func idx =>
+          r <- module_lookup_type env idx;
+          cf <-
+            core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+              r;
+          match cf with
+          | Core_ops_control_flow_ControlFlow_Continue val =>
+            out2 <- alloc_vec_Vec_push out1 (Types_ExternType_Func val);
+            i4 <- usize_add i1 1%usize;
+            Ok (Cont (out2, i4))
+          | Core_ops_control_flow_ControlFlow_Break residual =>
+            r1 <-
+              core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                (alloc_vec_Vec types_ExternType_t) (core_convert_From_Blanket
+                error_Error_t) residual;
+            Ok (Done r1)
+          end
+        | Env_ImportDesc_Table tt1 =>
+          out2 <- alloc_vec_Vec_push out1 (Types_ExternType_Table tt1);
+          i4 <- usize_add i1 1%usize;
+          Ok (Cont (out2, i4))
+        | Env_ImportDesc_Memory mt =>
+          out2 <- alloc_vec_Vec_push out1 (Types_ExternType_Memory mt);
+          i4 <- usize_add i1 1%usize;
+          Ok (Cont (out2, i4))
+        | Env_ImportDesc_Global gt =>
+          out2 <- alloc_vec_Vec_push out1 (Types_ExternType_Global gt);
+          i4 <- usize_add i1 1%usize;
+          Ok (Cont (out2, i4))
+        end))
+    (out, i)
+.
+
+(** [veriwasm::module::import_types]:
+    Source: 'src/module.rs', lines 89:0-108:1 *)
+Definition module_import_types
+  (env : env_Env_t) :
+  result (core_result_Result_t (alloc_vec_Vec types_ExternType_t)
+    error_Error_t)
+  :=
+  module_import_types_loop env (alloc_vec_Vec_new types_ExternType_t) 0%usize
+.
+
+(** [veriwasm::module::export_types]: loop 0:
+    Source: 'src/module.rs', lines 119:4-155:5 *)
+Definition module_export_types_loop
+  (env : env_Env_t) (out : alloc_vec_Vec types_ExternType_t) (i : usize) :
+  result (core_result_Result_t (alloc_vec_Vec types_ExternType_t)
+    error_Error_t)
+  :=
+  loop
+    (fun '((out1, i1) : ((alloc_vec_Vec types_ExternType_t) * usize)) =>
+      let i2 := alloc_vec_Vec_len env.(env_Env_exports) in
+      if i1 s>= i2
+      then Ok (Done (Core_result_Result_Ok out1))
+      else (
+        e <-
+          alloc_vec_Vec_index (core_slice_index_SliceIndexUsizeSliceInst
+            env_Export_t) env.(env_Env_exports) i1;
+        match e.(env_Export_desc) with
+        | Env_ExportDesc_Func idx =>
+          j <- scalar_cast U32 Usize idx;
+          let i3 := alloc_vec_Vec_len env.(env_Env_func_types) in
+          if j s>= i3
+          then Ok (Done (Core_result_Result_Err (Error_Error_UnknownFunc idx)))
+          else (
+            ft <-
+              alloc_vec_Vec_index (core_slice_index_SliceIndexUsizeSliceInst
+                types_FuncType_t) env.(env_Env_func_types) j;
+            ft1 <- module_copy_func_type ft;
+            out2 <- alloc_vec_Vec_push out1 (Types_ExternType_Func ft1);
+            i4 <- usize_add i1 1%usize;
+            Ok (Cont (out2, i4)))
+        | Env_ExportDesc_Table idx =>
+          j <- scalar_cast U32 Usize idx;
+          let i3 := alloc_vec_Vec_len env.(env_Env_table_types) in
+          if j s>= i3
+          then
+            Ok (Done (Core_result_Result_Err (Error_Error_UnknownTable idx)))
+          else (
+            tt1 <-
+              alloc_vec_Vec_index (core_slice_index_SliceIndexUsizeSliceInst
+                types_TableType_t) env.(env_Env_table_types) j;
+            out2 <- alloc_vec_Vec_push out1 (Types_ExternType_Table tt1);
+            i4 <- usize_add i1 1%usize;
+            Ok (Cont (out2, i4)))
+        | Env_ExportDesc_Memory idx =>
+          j <- scalar_cast U32 Usize idx;
+          let i3 := alloc_vec_Vec_len env.(env_Env_mem_types) in
+          if j s>= i3
+          then
+            Ok (Done (Core_result_Result_Err (Error_Error_UnknownMemory idx)))
+          else (
+            mt <-
+              alloc_vec_Vec_index (core_slice_index_SliceIndexUsizeSliceInst
+                types_MemType_t) env.(env_Env_mem_types) j;
+            out2 <- alloc_vec_Vec_push out1 (Types_ExternType_Memory mt);
+            i4 <- usize_add i1 1%usize;
+            Ok (Cont (out2, i4)))
+        | Env_ExportDesc_Global idx =>
+          j <- scalar_cast U32 Usize idx;
+          let i3 := alloc_vec_Vec_len env.(env_Env_global_types) in
+          if j s>= i3
+          then
+            Ok (Done (Core_result_Result_Err (Error_Error_UnknownGlobal idx)))
+          else (
+            gt <-
+              alloc_vec_Vec_index (core_slice_index_SliceIndexUsizeSliceInst
+                types_GlobalType_t) env.(env_Env_global_types) j;
+            out2 <- alloc_vec_Vec_push out1 (Types_ExternType_Global gt);
+            i4 <- usize_add i1 1%usize;
+            Ok (Cont (out2, i4)))
+        end))
+    (out, i)
+.
+
+(** [veriwasm::module::export_types]:
+    Source: 'src/module.rs', lines 116:0-156:1 *)
+Definition module_export_types
+  (env : env_Env_t) :
+  result (core_result_Result_t (alloc_vec_Vec types_ExternType_t)
+    error_Error_t)
+  :=
+  module_export_types_loop env (alloc_vec_Vec_new types_ExternType_t) 0%usize
 .
 
 (** Trait implementation: [veriwasm::opiter::{core::cmp::PartialEq<veriwasm::opiter::BlockType> for veriwasm::opiter::BlockType}]

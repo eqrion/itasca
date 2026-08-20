@@ -90,6 +90,16 @@ pub struct GlobalType {
     pub valtype: ValueType,
 }
 
+/// An external type (spec 3.2.7): what an import asks for, or what an export
+/// provides.
+#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
+pub enum ExternType {
+    Func(FuncType),
+    Table(TableType),
+    Memory(MemType),
+    Global(GlobalType),
+}
+
 /// A constant expression: a global's initialiser, or an element or data
 /// segment's offset.
 ///

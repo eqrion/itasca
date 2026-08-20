@@ -26,6 +26,7 @@ theories/OpIter_Readers.v
 theories/OpIter_Complete.v
 theories/Module_NoPanic.v
 theories/Module_Sound.v
+theories/Module_Externs.v
 theories/Wasm_Bridge.v
 theories/Module_Typing.v
 theories/Module_Complete.v

@@ -29,7 +29,7 @@ use crate::reader::{
     read_byte, read_f32_bits, read_f64_bits, read_s32_leb, read_s64_leb, read_u32_leb,
 };
 use crate::types::{
-    ConstExpr, ElemType, FuncType, GlobalType, MemType, Mut, TableType, ValueType,
+    ConstExpr, ElemType, ExternType, FuncType, GlobalType, MemType, Mut, TableType, ValueType,
 };
 
 type Result<T> = core::result::Result<T, Error>;
@@ -77,6 +77,82 @@ pub fn validate_module(data: &[u8]) -> Result<ValidatedModule> {
     let tail_pos = validate_code(data, code_pos, &env)?;
     let tail = decode_tail(data, tail_pos, &env)?;
     Ok(ValidatedModule { env, tail })
+}
+
+// --- The module's external types ---
+
+/// The type of every import the module declares (spec 3.2.7), in declaration
+/// order. This is the list an embedder matches the values it supplies against.
+///
+/// `Err` cannot happen for an `Env` that came out of `validate_module`: every
+/// import's type index was resolved as the import section was decoded.
+pub fn import_types(env: &Env) -> Result<Vec<ExternType>> {
+    let mut out: Vec<ExternType> = Vec::new();
+    let mut i: usize = 0;
+    loop {
+        if i >= env.imports.len() {
+            return Ok(out);
+        }
+        let desc = env.imports[i].desc;
+        match desc {
+            ImportDesc::Func(idx) => {
+                let ft = lookup_type(env, idx)?;
+                out.push(ExternType::Func(ft));
+            }
+            ImportDesc::Table(tt) => out.push(ExternType::Table(tt)),
+            ImportDesc::Memory(mt) => out.push(ExternType::Memory(mt)),
+            ImportDesc::Global(gt) => out.push(ExternType::Global(gt)),
+        }
+        i += 1;
+    }
+}
+
+/// The type of every export the module declares (spec 3.2.7), in declaration
+/// order. An export names an index space entry, so the type comes from the
+/// index space rather than from the export itself.
+///
+/// `Err` cannot happen for an `Env` that came out of `validate_module`:
+/// `export_desc` range-checked every index as the export section was decoded.
+pub fn export_types(env: &Env) -> Result<Vec<ExternType>> {
+    let mut out: Vec<ExternType> = Vec::new();
+    let mut i: usize = 0;
+    loop {
+        if i >= env.exports.len() {
+            return Ok(out);
+        }
+        let desc = env.exports[i].desc;
+        match desc {
+            ExportDesc::Func(idx) => {
+                let j = idx as usize;
+                if j >= env.func_types.len() {
+                    return Err(Error::UnknownFunc(idx));
+                }
+                out.push(ExternType::Func(copy_func_type(&env.func_types[j])));
+            }
+            ExportDesc::Table(idx) => {
+                let j = idx as usize;
+                if j >= env.table_types.len() {
+                    return Err(Error::UnknownTable(idx));
+                }
+                out.push(ExternType::Table(env.table_types[j]));
+            }
+            ExportDesc::Memory(idx) => {
+                let j = idx as usize;
+                if j >= env.mem_types.len() {
+                    return Err(Error::UnknownMemory(idx));
+                }
+                out.push(ExternType::Memory(env.mem_types[j]));
+            }
+            ExportDesc::Global(idx) => {
+                let j = idx as usize;
+                if j >= env.global_types.len() {
+                    return Err(Error::UnknownGlobal(idx));
+                }
+                out.push(ExternType::Global(env.global_types[j]));
+            }
+        }
+        i += 1;
+    }
 }
 
 // --- Cursor helpers ---

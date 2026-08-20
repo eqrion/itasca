@@ -24,9 +24,9 @@ Five results about `validate_module`, which takes a whole `.wasm` file:
 |---|---|
 | `validate_module_no_panic` | It never crashes (outside of OOMs) and never hangs, on any input at all. |
 | `validate_module_repr` | **If it accepts, the input really is a WebAssembly 1.0 module binary.** Every section is where the format says, framed the way the format says, and the whole file decodes to a module. |
-| `validate_module_typed` | **No false accepts.** If it accepts, the input is a module binary *and* WebAssembly's type system accepts the module it decodes to. |
+| `validate_module_typed` | **No false accepts.** If it accepts, the input is a module binary *and* WebAssembly's type system accepts the module it decodes to, with the import and export types it assigns being the ones the validator reports (below). |
 | `validate_module_complete` | **No false rejects.** If the input is a module binary and the module it decodes to satisfies WebAssembly 1.0's rules, it accepts. Same qualifier as for bodies: the fixed size caps are real, and the theorem is about files under them. |
-| `validate_module_typechecked` | The same with WebAssembly's own rules in place of ours: **if the input is a module binary and WasmCert's module type checker accepts the module it decodes to, this validator accepts the input** -- provided the module respects three restrictions Wasm 2.0 lifted (below). |
+| `validate_module_typechecked` | The same with WebAssembly's own rules in place of ours: **if the input is a module binary and WasmCert's module type checker accepts the module it decodes to, this validator accepts the input**, and reports the same two extern-type lists the checker produced -- provided the module respects three restrictions Wasm 2.0 lifted (below). |
 
 The three restrictions it still asks for are the places WebAssembly 1.0 is
 narrower than the 2.0 type system WasmCert formalises: a function type may

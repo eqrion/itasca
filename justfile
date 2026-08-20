@@ -153,6 +153,9 @@ trust:
         OpIter_Complete:validate_body_complete \
         Module_NoPanic:validate_module_no_panic \
         Module_Sound:validate_module_repr \
+        Module_Externs:import_types_externs \
+        Module_Externs:export_types_externs \
+        Module_Typing:validate_module_checked \
         Module_Typing:validate_module_typed \
         Module_Complete:decode_bytevec_complete \
         Module_Complete:decode_func_type_complete \

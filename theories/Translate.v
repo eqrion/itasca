@@ -83,6 +83,19 @@ Definition translate_globaltype (g : types_GlobalType_t) : global_type :=
   {| tg_mut := translate_mut g.(types_GlobalType_mutability);
      tg_t := translate_vt_v g.(types_GlobalType_valtype) |}.
 
+(** The four index spaces an import can ask for and an export can name, which
+    is what [module::import_types] and [module::export_types] report. *)
+Definition translate_externtype (t : types_ExternType_t) : extern_type :=
+  match t with
+  | Types_ExternType_Func ft => ET_func (translate_functype ft)
+  | Types_ExternType_Table t => ET_table (translate_tabletype t)
+  | Types_ExternType_Memory mt => ET_mem (translate_memtype mt)
+  | Types_ExternType_Global gt => ET_global (translate_globaltype gt)
+  end.
+
+Definition translate_externtypes (v : alloc_vec_Vec types_ExternType_t)
+  : list extern_type := List.map translate_externtype (vec_list v).
+
 (** WasmCert's [name] is a list of Coq's [Byte.byte], and a data segment's
     contents a list of CompCert's, so a byte the decoder copied out crosses
     into WasmCert two different ways. Both are total on the values a [u8] can

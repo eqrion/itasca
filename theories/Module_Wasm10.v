@@ -1077,15 +1077,39 @@ Qed.
     the same reason [validate_body_complete] is stated against
     [b_e_type_checker_aux]: WasmCert proves the checker sound, not complete, so
     the checker is the stronger of the two premises and the one a caller can
-    actually decide. *)
+    actually decide.
+
+    The two extern-type lists the caller supplied are the ones the accepting run
+    reports, which is the completeness-side half of the relationship
+    [Module_Typing.validate_module_typed] states. What identifies them is
+    [Spec_Module.repr_module_det]: the bytes decode to one module only, so the
+    module the run decoded is the caller's [m] and the checker's verdict on it
+    is the caller's pair. *)
 Theorem validate_module_typechecked : forall data m t_imps t_exps,
   dlen data <= module_bytes ->
   repr_module_fit (byte_list data) m ->
   module_type_checker m = Some (t_imps, t_exps) ->
   module_1_0 m ->
-  exists vm, module_validate_module data = Ok (Core_result_Result_Ok vm).
+  exists vm imps exps,
+    module_validate_module data = Ok (Core_result_Result_Ok vm)
+    /\ module_import_types vm.(module_ValidatedModule_env)
+         = Ok (Core_result_Result_Ok imps)
+    /\ module_export_types vm.(module_ValidatedModule_env)
+         = Ok (Core_result_Result_Ok exps)
+    /\ translate_externtypes imps = t_imps
+    /\ translate_externtypes exps = t_exps.
 Proof.
   intros data m t_imps t_exps Hmod Hrepr Hchk H10.
-  exact (validate_module_complete data m Hmod Hrepr
-           (module_wasm10_of_checker _ _ _ _ Hrepr Hchk H10)).
+  destruct (validate_module_complete data m Hmod Hrepr
+              (module_wasm10_of_checker _ _ _ _ Hrepr Hchk H10)) as [vm Hvm].
+  destruct (validate_module_checked _ _ Hvm)
+    as [m' [imps [exps [Hm' [Himps [Hexps [_ [_ Hchk']]]]]]]].
+  assert (Hsame : m' = m)
+    by (apply (repr_module_det (byte_list data) m' m Hm');
+        exact (repr_module_fit_module _ _ Hrepr)).
+  subst m'.
+  rewrite Hchk in Hchk'. injection Hchk' as Hi He.
+  exists vm. exists imps. exists exps.
+  split; [exact Hvm|]. split; [exact Himps|]. split; [exact Hexps|].
+  split; [symmetry; exact Hi | symmetry; exact He].
 Qed.

@@ -63,7 +63,7 @@ Arguments Core_result_Result_Ok { _ } { _ }.
 Arguments Core_result_Result_Err { _ } { _ }.
 
 (** [veriwasm::types::ConstExpr]
-    Source: 'src/types.rs', lines 100:0-110:1 *)
+    Source: 'src/types.rs', lines 110:0-120:1 *)
 Inductive types_ConstExpr_t :=
 | Types_ConstExpr_I32 : i32 -> types_ConstExpr_t
 | Types_ConstExpr_I64 : i64 -> types_ConstExpr_t
@@ -354,6 +354,15 @@ mkopiter_Context_t {
   opiter_Context_locals : alloc_vec_Vec types_ValueType_t;
   opiter_Context_results : alloc_vec_Vec types_ValueType_t;
 }
+.
+
+(** [veriwasm::types::ExternType]
+    Source: 'src/types.rs', lines 96:0-101:1 *)
+Inductive types_ExternType_t :=
+| Types_ExternType_Func : types_FuncType_t -> types_ExternType_t
+| Types_ExternType_Table : types_TableType_t -> types_ExternType_t
+| Types_ExternType_Memory : types_MemType_t -> types_ExternType_t
+| Types_ExternType_Global : types_GlobalType_t -> types_ExternType_t
 .
 
 End Veriwasm_Types.
