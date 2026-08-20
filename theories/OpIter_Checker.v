@@ -24,7 +24,6 @@ Local Open Scope Primitives_scope.
 Require Import Veriwasm.Aeneas_Specs.
 Require Import Veriwasm.Translate.
 Require Import Veriwasm.OpIter_State.
-Require Import Veriwasm.OpIter_Protocol.
 Require Import Veriwasm.OpIter_Sim.
 
 From Wasm Require Import datatypes type_checker operations typing.

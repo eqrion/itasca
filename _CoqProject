@@ -13,9 +13,9 @@ theories/Translate.v
 theories/Spec_Binary.v
 theories/Spec_Expr.v
 theories/Spec_Module.v
+theories/OpIter_Visit.v
 theories/OpIter_State.v
 theories/OpIter_Decode.v
-theories/OpIter_Protocol.v
 theories/OpIter_Sim.v
 theories/OpIter_Expr.v
 theories/OpIter_Table.v
@@ -24,6 +24,7 @@ theories/OpIter_Validate.v
 theories/OpIter_Checker.v
 theories/OpIter_Readers.v
 theories/OpIter_Complete.v
+theories/OpIter_Driven.v
 theories/Module_NoPanic.v
 theories/Module_Sound.v
 theories/Module_Externs.v
@@ -31,3 +32,4 @@ theories/Wasm_Bridge.v
 theories/Module_Typing.v
 theories/Module_Complete.v
 theories/Module_Wasm10.v
+theories/Module_Driven.v

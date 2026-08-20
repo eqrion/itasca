@@ -20,7 +20,7 @@ Definition core_convert_From_Blanket (T : Type) : core_convert_From T T := {|
 |}.
 
 (** [veriwasm::env::{veriwasm::env::Env}::new]:
-    Source: 'src/env.rs', lines 112:4-128:5 *)
+    Source: 'src/env.rs', lines 125:4-141:5 *)
 Definition env_Env_new : result env_Env_t :=
   Ok
     {|
@@ -41,14 +41,14 @@ Definition env_Env_new : result env_Env_t :=
 .
 
 (** [veriwasm::error::{core::convert::From<veriwasm::error::OpError> for veriwasm::error::Error}::from]:
-    Source: 'src/error.rs', lines 93:4-95:5 *)
+    Source: 'src/error.rs', lines 113:4-115:5 *)
 Definition error_Error_Insts_CoreConvertFromOpError_from
   (e : error_OpError_t) : result error_Error_t :=
   Ok (Error_Error_Read e)
 .
 
 (** Trait implementation: [veriwasm::error::{core::convert::From<veriwasm::error::OpError> for veriwasm::error::Error}]
-    Source: 'src/error.rs', lines 92:0-96:1 *)
+    Source: 'src/error.rs', lines 112:0-116:1 *)
 Definition error_Error_Insts_CoreConvertFromOpError : core_convert_From
   error_Error_t error_OpError_t := {|
   from_ := error_Error_Insts_CoreConvertFromOpError_from;
@@ -82,12 +82,25 @@ Definition limits_max_function_bytes : usize := 7654321%usize.
     Source: 'src/limits.rs', lines 43:0-43:50 *)
 Definition limits_max_module_bytes : usize := 1073741824%usize.
 
+(** [veriwasm::limits::MAX_LEB_BYTES]
+    Source: 'src/limits.rs', lines 48:0-48:35 *)
+Definition limits_max_leb_bytes : usize := 5%usize.
+
+(** [veriwasm::limits::MAX_CODE_HEADER_BYTES]
+    Source: 'src/limits.rs', lines 53:0-53:63 *)
+Definition limits_max_code_header_bytes_body : result usize :=
+  i <- usize_mul 2%usize limits_max_leb_bytes; usize_add 1%usize i
+.
+Definition limits_max_code_header_bytes : usize :=
+  limits_max_code_header_bytes_body%global
+.
+
 (** [veriwasm::limits::MAX_LOCALS]
-    Source: 'src/limits.rs', lines 48:0-48:37 *)
+    Source: 'src/limits.rs', lines 58:0-58:37 *)
 Definition limits_max_locals : usize := 50000%usize.
 
 (** [veriwasm::limits::validate_limits]:
-    Source: 'src/limits.rs', lines 60:0-73:1 *)
+    Source: 'src/limits.rs', lines 70:0-83:1 *)
 Definition limits_validate_limits
   (limits : limits_Limits_t) (range : u32) :
   result (core_result_Result_t unit error_Error_t)
@@ -108,52 +121,61 @@ Definition limits_validate_limits
 .
 
 (** [veriwasm::module::SECTION_CUSTOM]
-    Source: 'src/module.rs', lines 37:0-37:29 *)
+    Source: 'src/module.rs', lines 39:0-39:29 *)
 Definition module_section_custom : u8 := 0%u8.
 
 (** [veriwasm::module::SECTION_TYPE]
-    Source: 'src/module.rs', lines 38:0-38:27 *)
+    Source: 'src/module.rs', lines 40:0-40:27 *)
 Definition module_section_type : u8 := 1%u8.
 
 (** [veriwasm::module::SECTION_IMPORT]
-    Source: 'src/module.rs', lines 39:0-39:29 *)
+    Source: 'src/module.rs', lines 41:0-41:29 *)
 Definition module_section_import : u8 := 2%u8.
 
 (** [veriwasm::module::SECTION_FUNCTION]
-    Source: 'src/module.rs', lines 40:0-40:31 *)
+    Source: 'src/module.rs', lines 42:0-42:31 *)
 Definition module_section_function : u8 := 3%u8.
 
 (** [veriwasm::module::SECTION_TABLE]
-    Source: 'src/module.rs', lines 41:0-41:28 *)
+    Source: 'src/module.rs', lines 43:0-43:28 *)
 Definition module_section_table : u8 := 4%u8.
 
 (** [veriwasm::module::SECTION_MEMORY]
-    Source: 'src/module.rs', lines 42:0-42:29 *)
+    Source: 'src/module.rs', lines 44:0-44:29 *)
 Definition module_section_memory : u8 := 5%u8.
 
 (** [veriwasm::module::SECTION_GLOBAL]
-    Source: 'src/module.rs', lines 43:0-43:29 *)
+    Source: 'src/module.rs', lines 45:0-45:29 *)
 Definition module_section_global : u8 := 6%u8.
 
 (** [veriwasm::module::SECTION_EXPORT]
-    Source: 'src/module.rs', lines 44:0-44:29 *)
+    Source: 'src/module.rs', lines 46:0-46:29 *)
 Definition module_section_export : u8 := 7%u8.
 
 (** [veriwasm::module::SECTION_START]
-    Source: 'src/module.rs', lines 45:0-45:28 *)
+    Source: 'src/module.rs', lines 47:0-47:28 *)
 Definition module_section_start : u8 := 8%u8.
 
 (** [veriwasm::module::SECTION_ELEMENT]
-    Source: 'src/module.rs', lines 46:0-46:30 *)
+    Source: 'src/module.rs', lines 48:0-48:30 *)
 Definition module_section_element : u8 := 9%u8.
 
 (** [veriwasm::module::SECTION_CODE]
-    Source: 'src/module.rs', lines 47:0-47:28 *)
+    Source: 'src/module.rs', lines 49:0-49:28 *)
 Definition module_section_code : u8 := 10%u8.
 
 (** [veriwasm::module::SECTION_DATA]
-    Source: 'src/module.rs', lines 48:0-48:28 *)
+    Source: 'src/module.rs', lines 50:0-50:28 *)
 Definition module_section_data : u8 := 11%u8.
+
+(** [veriwasm::module::ModuleVisitor::on_custom_section]:
+    Source: 'src/module.rs', lines 1408:4-1410:5 *)
+Definition module_ModuleVisitor_on_custom_section_default
+  {Self : Type} (self : Self) (_section : types_CustomSection_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
 
 (** [veriwasm::reader::read_u32_leb]: loop 0:
     Source: 'src/reader.rs', lines 36:4-55:5 *)
@@ -386,27 +408,27 @@ Definition reader_read_byte
 .
 
 (** [veriwasm::opiter::OP_F64_CONST]
-    Source: 'src/opiter.rs', lines 171:0-171:34 *)
+    Source: 'src/opiter.rs', lines 190:0-190:34 *)
 Definition opiter_op_f64_const : u8 := 68%u8.
 
 (** [veriwasm::opiter::OP_F32_CONST]
-    Source: 'src/opiter.rs', lines 170:0-170:34 *)
+    Source: 'src/opiter.rs', lines 189:0-189:34 *)
 Definition opiter_op_f32_const : u8 := 67%u8.
 
 (** [veriwasm::opiter::OP_I64_CONST]
-    Source: 'src/opiter.rs', lines 169:0-169:34 *)
+    Source: 'src/opiter.rs', lines 188:0-188:34 *)
 Definition opiter_op_i64_const : u8 := 66%u8.
 
 (** [veriwasm::opiter::OP_I32_CONST]
-    Source: 'src/opiter.rs', lines 168:0-168:34 *)
+    Source: 'src/opiter.rs', lines 187:0-187:34 *)
 Definition opiter_op_i32_const : u8 := 65%u8.
 
 (** [veriwasm::opiter::OP_GLOBAL_GET]
-    Source: 'src/opiter.rs', lines 137:0-137:35 *)
+    Source: 'src/opiter.rs', lines 156:0-156:35 *)
 Definition opiter_op_global_get : u8 := 35%u8.
 
 (** [veriwasm::module::const_global]:
-    Source: 'src/module.rs', lines 452:0-465:1 *)
+    Source: 'src/module.rs', lines 507:0-520:1 *)
 Definition module_const_global
   (env : env_Env_t) (idx : u32) :
   result (core_result_Result_t types_GlobalType_t error_Error_t)
@@ -431,11 +453,11 @@ Definition module_const_global
 .
 
 (** [veriwasm::opiter::OP_END]
-    Source: 'src/opiter.rs', lines 124:0-124:28 *)
+    Source: 'src/opiter.rs', lines 143:0-143:28 *)
 Definition opiter_op_end : u8 := 11%u8.
 
 (** [veriwasm::module::read_expr_end]:
-    Source: 'src/module.rs', lines 442:0-448:1 *)
+    Source: 'src/module.rs', lines 497:0-503:1 *)
 Definition module_read_expr_end
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t usize error_Error_t)
@@ -456,7 +478,7 @@ Definition module_read_expr_end
 .
 
 (** [veriwasm::module::expect_const_type]:
-    Source: 'src/module.rs', lines 435:0-440:1 *)
+    Source: 'src/module.rs', lines 490:0-495:1 *)
 Definition module_expect_const_type
   (actual : types_ValueType_t) (expected : types_ValueType_t) :
   result (core_result_Result_t unit error_Error_t)
@@ -468,7 +490,7 @@ Definition module_expect_const_type
 .
 
 (** [veriwasm::module::decode_const_expr]:
-    Source: 'src/module.rs', lines 469:0-508:1 *)
+    Source: 'src/module.rs', lines 524:0-563:1 *)
 Definition module_decode_const_expr
   (data : slice u8) (pos : usize) (env : env_Env_t)
   (expected : types_ValueType_t) :
@@ -692,7 +714,7 @@ Definition module_decode_const_expr
 .
 
 (** [veriwasm::module::have_bytes]:
-    Source: 'src/module.rs', lines 177:0-182:1 *)
+    Source: 'src/module.rs', lines 224:0-229:1 *)
 Definition module_have_bytes
   (data : slice u8) (pos : usize) (n : usize) :
   result (core_result_Result_t unit error_Error_t)
@@ -705,7 +727,7 @@ Definition module_have_bytes
 .
 
 (** [veriwasm::module::copy_bytes]: loop 0:
-    Source: 'src/module.rs', lines 166:4-172:5 *)
+    Source: 'src/module.rs', lines 213:4-219:5 *)
 Definition module_copy_bytes_loop
   (data : slice u8) (to : usize) (out : alloc_vec_Vec u8) (i : usize) :
   result (alloc_vec_Vec u8)
@@ -723,14 +745,14 @@ Definition module_copy_bytes_loop
 .
 
 (** [veriwasm::module::copy_bytes]:
-    Source: 'src/module.rs', lines 163:0-173:1 *)
+    Source: 'src/module.rs', lines 210:0-220:1 *)
 Definition module_copy_bytes
   (data : slice u8) (from : usize) (to : usize) : result (alloc_vec_Vec u8) :=
   module_copy_bytes_loop data to (alloc_vec_Vec_new u8) from
 .
 
 (** [veriwasm::module::decode_data_segment]:
-    Source: 'src/module.rs', lines 1034:0-1052:1 *)
+    Source: 'src/module.rs', lines 1259:0-1277:1 *)
 Definition module_decode_data_segment
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result (core_result_Result_t (module_Data_t * usize) error_Error_t)
@@ -797,7 +819,7 @@ Definition module_decode_data_segment
 .
 
 (** [veriwasm::module::decode_data_section]: loop 0:
-    Source: 'src/module.rs', lines 1059:4-1067:5 *)
+    Source: 'src/module.rs', lines 1284:4-1292:5 *)
 Definition module_decode_data_section_loop
   (data : slice u8) (env : env_Env_t) (count : u32)
   (out : alloc_vec_Vec module_Data_t) (q : usize) (i : u32) :
@@ -830,7 +852,7 @@ Definition module_decode_data_section_loop
 .
 
 (** [veriwasm::module::decode_data_section]:
-    Source: 'src/module.rs', lines 1054:0-1068:1 *)
+    Source: 'src/module.rs', lines 1279:0-1293:1 *)
 Definition module_decode_data_section
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result (core_result_Result_t ((alloc_vec_Vec module_Data_t) * usize)
@@ -852,7 +874,7 @@ Definition module_decode_data_section
 .
 
 (** [veriwasm::module::utf8_cont]:
-    Source: 'src/module.rs', lines 339:0-348:1 *)
+    Source: 'src/module.rs', lines 386:0-395:1 *)
 Definition module_utf8_cont
   (bytes : slice u8) (i : usize) (lo : u8) (hi : u8) :
   result (core_result_Result_t unit error_Error_t)
@@ -871,7 +893,7 @@ Definition module_utf8_cont
 .
 
 (** [veriwasm::module::utf8_sequence_len]:
-    Source: 'src/module.rs', lines 355:0-398:1 *)
+    Source: 'src/module.rs', lines 402:0-445:1 *)
 Definition module_utf8_sequence_len
   (bytes : slice u8) (i : usize) :
   result (core_result_Result_t usize error_Error_t)
@@ -1781,7 +1803,7 @@ Definition module_utf8_sequence_len
 .
 
 (** [veriwasm::module::validate_utf8]: loop 0:
-    Source: 'src/module.rs', lines 402:4-408:5 *)
+    Source: 'src/module.rs', lines 449:4-455:5 *)
 Definition module_validate_utf8_loop
   (bytes : slice u8) (i : usize) :
   result (core_result_Result_t unit error_Error_t)
@@ -1809,14 +1831,14 @@ Definition module_validate_utf8_loop
 .
 
 (** [veriwasm::module::validate_utf8]:
-    Source: 'src/module.rs', lines 400:0-409:1 *)
+    Source: 'src/module.rs', lines 447:0-456:1 *)
 Definition module_validate_utf8
   (bytes : slice u8) : result (core_result_Result_t unit error_Error_t) :=
   module_validate_utf8_loop bytes 0%usize
 .
 
 (** [veriwasm::module::decode_name]:
-    Source: 'src/module.rs', lines 412:0-419:1 *)
+    Source: 'src/module.rs', lines 459:0-466:1 *)
 Definition module_decode_name
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t ((alloc_vec_Vec u8) * usize) error_Error_t)
@@ -1861,28 +1883,35 @@ Definition module_decode_name
 .
 
 (** [veriwasm::module::decode_custom_section]:
-    Source: 'src/module.rs', lines 425:0-431:1 *)
+    Source: 'src/module.rs', lines 476:0-486:1 *)
 Definition module_decode_custom_section
   (data : slice u8) (pos : usize) (end1 : usize) :
-  result (core_result_Result_t unit error_Error_t)
+  result (core_result_Result_t types_CustomSection_t error_Error_t)
   :=
   r <- module_decode_name data pos;
   cf <-
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
   match cf with
   | Core_ops_control_flow_ControlFlow_Continue val =>
-    let (_, p) := val in
+    let (name, p) := val in
     if p s> end1
     then Ok (Core_result_Result_Err Error_Error_SectionSizeMismatch)
-    else Ok (Core_result_Result_Ok tt)
+    else
+      let i := alloc_vec_Vec_len name in
+      Ok (Core_result_Result_Ok
+        {|
+          types_CustomSection_name_len := i;
+          types_CustomSection_payload_start := p;
+          types_CustomSection_payload_end := end1
+        |})
   | Core_ops_control_flow_ControlFlow_Break residual =>
     core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-      unit (core_convert_From_Blanket error_Error_t) residual
+      types_CustomSection_t (core_convert_From_Blanket error_Error_t) residual
   end
 .
 
 (** [veriwasm::module::read_section_header]:
-    Source: 'src/module.rs', lines 207:0-213:1 *)
+    Source: 'src/module.rs', lines 254:0-260:1 *)
 Definition module_read_section_header
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (u8 * usize * usize) error_Error_t)
@@ -1922,20 +1951,22 @@ Definition module_read_section_header
   end
 .
 
-(** [veriwasm::module::decode_tail]: loop 0:
-    Source: 'src/module.rs', lines 1076:4-1095:5 *)
-Definition module_decode_tail_loop
-  (data : slice u8) (env : env_Env_t) (segments : alloc_vec_Vec module_Data_t)
+(** [veriwasm::module::decode_tail_with]: loop 0:
+    Source: 'src/module.rs', lines 1323:4-1346:5 *)
+Definition module_decode_tail_with_loop
+  {V : Type} (moduleVisitorInst : module_ModuleVisitor_t V) (data : slice u8)
+  (env : env_Env_t) (v : V) (segments : alloc_vec_Vec module_Data_t)
   (q : usize) (seen_data : bool) :
-  result (core_result_Result_t module_Tail_t error_Error_t)
+  result ((core_result_Result_t module_Tail_t error_Error_t) * V)
   :=
   loop
-    (fun '((segments1, q1, seen_data1) : ((alloc_vec_Vec module_Data_t) * usize
-      * bool)) =>
+    (fun '((v1, segments1, q1, seen_data1) : (V * (alloc_vec_Vec module_Data_t)
+      * usize * bool)) =>
       let i := slice_len data in
       if q1 s>= i
       then
-        Ok (Done (Core_result_Result_Ok {| module_Tail_data := segments1 |}))
+        Ok (Done (Core_result_Result_Ok {| module_Tail_data := segments1 |},
+          v1))
       else (
         r <- module_read_section_header data q1;
         cf <-
@@ -1951,24 +1982,34 @@ Definition module_decode_tail_loop
               core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
                 r1;
             match cf1 with
-            | Core_ops_control_flow_ControlFlow_Continue _ =>
-              Ok (Cont (segments1, end1, seen_data1))
+            | Core_ops_control_flow_ControlFlow_Continue val1 =>
+              p <-
+                moduleVisitorInst.(module_ModuleVisitor_t_on_custom_section) v1
+                  val1;
+              let (r2, v2) := p in
+              match r2 with
+              | Core_result_Result_Ok _ =>
+                Ok (Cont (v2, segments1, end1, seen_data1))
+              | Core_result_Result_Err e =>
+                Ok (Done (Core_result_Result_Err (Error_Error_Visitor e), v2))
+              end
             | Core_ops_control_flow_ControlFlow_Break residual =>
               r2 <-
                 core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                   module_Tail_t (core_convert_From_Blanket error_Error_t)
                   residual;
-              Ok (Done r2)
+              Ok (Done (r2, v1))
             end)
           else
             if id s<> module_section_data
             then
-              Ok (Done (Core_result_Result_Err Error_Error_SectionOutOfOrder))
+              Ok (Done (Core_result_Result_Err Error_Error_SectionOutOfOrder,
+                v1))
             else
               if seen_data1
               then
-                Ok (Done (Core_result_Result_Err
-                  Error_Error_SectionOutOfOrder))
+                Ok (Done (Core_result_Result_Err Error_Error_SectionOutOfOrder,
+                  v1))
               else (
                 r1 <- module_decode_data_section data start env;
                 cf1 <-
@@ -1980,352 +2021,5138 @@ Definition module_decode_tail_loop
                   if p s<> end1
                   then
                     Ok (Done (Core_result_Result_Err
-                      Error_Error_SectionSizeMismatch))
-                  else Ok (Cont (decoded, end1, true))
+                      Error_Error_SectionSizeMismatch, v1))
+                  else Ok (Cont (v1, decoded, end1, true))
                 | Core_ops_control_flow_ControlFlow_Break residual =>
                   r2 <-
                     core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                       module_Tail_t (core_convert_From_Blanket error_Error_t)
                       residual;
-                  Ok (Done r2)
+                  Ok (Done (r2, v1))
                 end)
         | Core_ops_control_flow_ControlFlow_Break residual =>
           r1 <-
             core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
               module_Tail_t (core_convert_From_Blanket error_Error_t) residual;
-          Ok (Done r1)
+          Ok (Done (r1, v1))
         end))
-    (segments, q, seen_data)
+    (v, segments, q, seen_data)
 .
 
-(** [veriwasm::module::decode_tail]:
-    Source: 'src/module.rs', lines 1072:0-1096:1 *)
-Definition module_decode_tail
-  (data : slice u8) (pos : usize) (env : env_Env_t) :
-  result (core_result_Result_t module_Tail_t error_Error_t)
+(** [veriwasm::module::decode_tail_with]:
+    Source: 'src/module.rs', lines 1314:0-1347:1 *)
+Definition module_decode_tail_with
+  {V : Type} (moduleVisitorInst : module_ModuleVisitor_t V) (data : slice u8)
+  (pos : usize) (env : env_Env_t) (v : V) :
+  result ((core_result_Result_t module_Tail_t error_Error_t) * V)
   :=
-  module_decode_tail_loop data env (alloc_vec_Vec_new module_Data_t) pos false
+  module_decode_tail_with_loop moduleVisitorInst data env v (alloc_vec_Vec_new
+    module_Data_t) pos false
+.
+
+(** [veriwasm::module::CodeVisitor::on_need_bytes]:
+    Source: 'src/module.rs', lines 1462:4-1464:5 *)
+Definition module_CodeVisitor_on_need_bytes_default
+  {Self : Type} (self : Self) (_end : usize) :
+  result ((core_result_Result_t unit error_Error_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
 .
 
 (** [veriwasm::module::no_code_section]:
-    Source: 'src/module.rs', lines 1025:0-1030:1 *)
+    Source: 'src/module.rs', lines 1203:0-1208:1 *)
 Definition module_no_code_section
-  (env : env_Env_t) (pos : usize) :
-  result (core_result_Result_t usize error_Error_t)
+  (env : env_Env_t) :
+  result (core_result_Result_t (option module_CodeSection_t) error_Error_t)
   :=
   b <-
     alloc_vec_Vec_is_empty alloc_alloc_Global env.(env_Env_func_type_indices);
   if b
-  then Ok (Core_result_Result_Ok pos)
-  else Ok (Core_result_Result_Err Error_Error_FuncCodeMismatch)
+  then Ok (Core_result_Result_Ok None)
+  else Ok (Core_result_Result_Err Error_Error_MissingCodeSection)
 .
 
+(** [veriwasm::module::code_section]:
+    Source: 'src/module.rs', lines 1182:0-1199:1 *)
+Definition module_code_section
+  (data : slice u8) (pos : usize) (env : env_Env_t) :
+  result (core_result_Result_t (option module_CodeSection_t) error_Error_t)
+  :=
+  let i := slice_len data in
+  if pos s>= i
+  then module_no_code_section env
+  else (
+    r <- module_read_section_header data pos;
+    cf <-
+      core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
+    match cf with
+    | Core_ops_control_flow_ControlFlow_Continue val =>
+      let '(id, start, end1) := val in
+      if id s<> module_section_code
+      then module_no_code_section env
+      else (
+        r1 <- reader_read_u32_leb data start;
+        cf1 <-
+          core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+            r1;
+        match cf1 with
+        | Core_ops_control_flow_ControlFlow_Continue val1 =>
+          let (count, p) := val1 in
+          i1 <- scalar_cast U32 Usize count;
+          let i2 := alloc_vec_Vec_len env.(env_Env_func_type_indices) in
+          if i1 s<> i2
+          then Ok (Core_result_Result_Err Error_Error_FuncCodeMismatch)
+          else
+            Ok (Core_result_Result_Ok (Some
+              {|
+                module_CodeSection_count := count;
+                module_CodeSection_entries := p;
+                module_CodeSection_end := end1
+              |}))
+        | Core_ops_control_flow_ControlFlow_Break residual =>
+          core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+            (option module_CodeSection_t)
+            error_Error_Insts_CoreConvertFromOpError residual
+        end)
+    | Core_ops_control_flow_ControlFlow_Break residual =>
+      core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+        (option module_CodeSection_t) (core_convert_From_Blanket error_Error_t)
+        residual
+    end)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_reinterpret_i64]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_reinterpret_i64
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_reinterpret_i32]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_reinterpret_i32
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_reinterpret_f64]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_reinterpret_f64
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_reinterpret_f32]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_reinterpret_f32
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_promote_f32]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_promote_f32
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_convert_i64_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_convert_i64_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_convert_i64_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_convert_i64_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_convert_i32_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_convert_i32_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_convert_i32_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_convert_i32_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_demote_f64]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_demote_f64
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_convert_i64_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_convert_i64_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_convert_i64_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_convert_i64_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_convert_i32_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_convert_i32_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_convert_i32_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_convert_i32_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_trunc_f64_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_trunc_f64_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_trunc_f64_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_trunc_f64_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_trunc_f32_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_trunc_f32_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_trunc_f32_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_trunc_f32_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_extend_i32_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_extend_i32_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_extend_i32_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_extend_i32_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_trunc_f64_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_trunc_f64_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_trunc_f64_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_trunc_f64_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_trunc_f32_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_trunc_f32_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_trunc_f32_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_trunc_f32_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_wrap_i64]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_wrap_i64
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_sqrt]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_sqrt
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_nearest]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_nearest
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_trunc]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_trunc
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_floor]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_floor
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_ceil]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_ceil
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_neg]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_neg
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_abs]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_abs
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_sqrt]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_sqrt
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_nearest]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_nearest
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_trunc]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_trunc
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_floor]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_floor
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_ceil]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_ceil
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_neg]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_neg
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_abs]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_abs
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_popcnt]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_popcnt
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_ctz]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_ctz
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_clz]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_clz
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_add]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_add
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_popcnt]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_popcnt
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_ctz]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_ctz
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_clz]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_clz
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_copysign]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_copysign
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_max]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_max
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_min]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_min
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_div]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_div
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_mul]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_mul
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_sub]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_sub
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_add]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_add
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_copysign]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_copysign
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_max]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_max
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_min]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_min
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_div]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_div
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_mul]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_mul
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_sub]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_sub
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_add]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_add
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_rotr]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_rotr
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_rotl]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_rotl
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_shr_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_shr_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_shr_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_shr_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_shl]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_shl
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_xor]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_xor
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_or]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_or
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_and]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_and
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_rem_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_rem_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_rem_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_rem_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_div_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_div_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_div_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_div_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_mul]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_mul
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_sub]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_sub
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_add]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_add
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_rotr]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_rotr
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_rotl]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_rotl
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_shr_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_shr_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_shr_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_shr_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_shl]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_shl
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_xor]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_xor
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_or]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_or
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_and]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_and
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_rem_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_rem_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_rem_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_rem_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_div_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_div_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_div_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_div_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_mul]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_mul
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_sub]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_sub
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_ge]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_ge
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_le]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_le
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_gt]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_gt
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_lt]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_lt
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_ne]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_ne
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_eq]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_eq
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_ge]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_ge
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_le]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_le
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_gt]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_gt
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_lt]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_lt
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_ne]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_ne
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_eq]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_eq
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_ge_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_ge_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_ge_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_ge_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_le_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_le_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_le_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_le_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_gt_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_gt_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_gt_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_gt_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_lt_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_lt_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_lt_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_lt_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_ne]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_ne
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_eq]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_eq
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_eqz]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_eqz
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_ge_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_ge_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_ge_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_ge_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_le_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_le_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_le_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_le_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_gt_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_gt_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_gt_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_gt_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_lt_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_lt_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_lt_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_lt_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_ne]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_ne
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_eq]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_eq
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_eqz]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_eqz
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_store32]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_store32
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_store16]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_store16
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_store8]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_store8
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_store16]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_store16
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_store8]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_store8
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_store]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_store
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_store]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_store
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_store]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_store
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_store]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_store
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_load32_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_load32_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_load32_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_load32_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_load16_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_load16_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_load16_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_load16_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_load8_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_load8_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_load8_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_load8_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_load16_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_load16_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_load16_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_load16_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_load8_u]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_load8_u
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_load8_s]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_load8_s
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_load]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_load
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_load]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_load
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_load]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_load
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_load]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_load
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f64_const]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_const
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) (_bits : u64) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_f32_const]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_const
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) (_bits : u32) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i64_const]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_const
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) (_v : i64) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_i32_const]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_const
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) (_v : i32) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_memory_grow]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_memory_grow
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_memory_size]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_memory_size
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_global_set]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_global_set
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) (_idx : u32) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_global_get]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_global_get
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) (_idx : u32) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_local_tee]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_local_tee
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) (_idx : u32) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_local_set]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_local_set
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) (_idx : u32) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_local_get]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_local_get
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) (_idx : u32) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_select]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_select
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_ty : opiter_StackType_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_drop]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_drop
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_ty : opiter_StackType_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_call_indirect]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_call_indirect
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) (_type_idx : u32) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_call]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_call
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) (_idx : u32) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_return]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_return
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_br_table]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_br_table
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) (_default : u32)
+  (_common : opiter_BlockType_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_br_table_label]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_br_table_label
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) (_depth : u32) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_br_if]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_br_if
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) (_depth : u32)
+  (_bt : opiter_BlockType_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_br]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_br
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) (_depth : u32)
+  (_bt : opiter_BlockType_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_end]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_end
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_kind : opiter_LabelKind_t) (_bt : opiter_BlockType_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_else]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_else
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_bt : opiter_BlockType_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_if]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_if
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_bt : opiter_BlockType_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_loop]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_loop
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_bt : opiter_BlockType_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_block]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_block
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t)
+  (_bt : opiter_BlockType_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_nop]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_nop
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_unreachable]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_unreachable
+  (self : visit_NopVisitor_t) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}::on_function_start]:
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_function_start
+  (self : visit_NopVisitor_t) (_ctx : opiter_Context_t) (_type_idx : u32)
+  (_body_begin : usize) (_body_end : usize) :
+  result ((core_result_Result_t unit error_VisitError_t) * visit_NopVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** Trait implementation: [veriwasm::visit::{veriwasm::visit::OpVisitor for veriwasm::visit::NopVisitor}]
+    Source: 'src/visit.rs', lines 415:0-415:32 *)
+Definition visit_NopVisitor_Insts_VeriwasmVisitOpVisitor : visit_OpVisitor_t
+  visit_NopVisitor_t := {|
+  visit_OpVisitor_t_on_function_start :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_function_start;
+  visit_OpVisitor_t_on_unreachable :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_unreachable;
+  visit_OpVisitor_t_on_nop :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_nop;
+  visit_OpVisitor_t_on_block :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_block;
+  visit_OpVisitor_t_on_loop :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_loop;
+  visit_OpVisitor_t_on_if :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_if;
+  visit_OpVisitor_t_on_else :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_else;
+  visit_OpVisitor_t_on_end :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_end;
+  visit_OpVisitor_t_on_br :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_br;
+  visit_OpVisitor_t_on_br_if :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_br_if;
+  visit_OpVisitor_t_on_br_table_label :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_br_table_label;
+  visit_OpVisitor_t_on_br_table :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_br_table;
+  visit_OpVisitor_t_on_return :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_return;
+  visit_OpVisitor_t_on_call :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_call;
+  visit_OpVisitor_t_on_call_indirect :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_call_indirect;
+  visit_OpVisitor_t_on_drop :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_drop;
+  visit_OpVisitor_t_on_select :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_select;
+  visit_OpVisitor_t_on_local_get :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_local_get;
+  visit_OpVisitor_t_on_local_set :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_local_set;
+  visit_OpVisitor_t_on_local_tee :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_local_tee;
+  visit_OpVisitor_t_on_global_get :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_global_get;
+  visit_OpVisitor_t_on_global_set :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_global_set;
+  visit_OpVisitor_t_on_memory_size :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_memory_size;
+  visit_OpVisitor_t_on_memory_grow :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_memory_grow;
+  visit_OpVisitor_t_on_i32_const :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_const;
+  visit_OpVisitor_t_on_i64_const :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_const;
+  visit_OpVisitor_t_on_f32_const :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_const;
+  visit_OpVisitor_t_on_f64_const :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_const;
+  visit_OpVisitor_t_on_i32_load :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_load;
+  visit_OpVisitor_t_on_i64_load :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_load;
+  visit_OpVisitor_t_on_f32_load :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_load;
+  visit_OpVisitor_t_on_f64_load :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_load;
+  visit_OpVisitor_t_on_i32_load8_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_load8_s;
+  visit_OpVisitor_t_on_i32_load8_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_load8_u;
+  visit_OpVisitor_t_on_i32_load16_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_load16_s;
+  visit_OpVisitor_t_on_i32_load16_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_load16_u;
+  visit_OpVisitor_t_on_i64_load8_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_load8_s;
+  visit_OpVisitor_t_on_i64_load8_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_load8_u;
+  visit_OpVisitor_t_on_i64_load16_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_load16_s;
+  visit_OpVisitor_t_on_i64_load16_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_load16_u;
+  visit_OpVisitor_t_on_i64_load32_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_load32_s;
+  visit_OpVisitor_t_on_i64_load32_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_load32_u;
+  visit_OpVisitor_t_on_i32_store :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_store;
+  visit_OpVisitor_t_on_i64_store :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_store;
+  visit_OpVisitor_t_on_f32_store :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_store;
+  visit_OpVisitor_t_on_f64_store :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_store;
+  visit_OpVisitor_t_on_i32_store8 :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_store8;
+  visit_OpVisitor_t_on_i32_store16 :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_store16;
+  visit_OpVisitor_t_on_i64_store8 :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_store8;
+  visit_OpVisitor_t_on_i64_store16 :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_store16;
+  visit_OpVisitor_t_on_i64_store32 :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_store32;
+  visit_OpVisitor_t_on_i32_eqz :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_eqz;
+  visit_OpVisitor_t_on_i32_eq :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_eq;
+  visit_OpVisitor_t_on_i32_ne :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_ne;
+  visit_OpVisitor_t_on_i32_lt_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_lt_s;
+  visit_OpVisitor_t_on_i32_lt_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_lt_u;
+  visit_OpVisitor_t_on_i32_gt_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_gt_s;
+  visit_OpVisitor_t_on_i32_gt_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_gt_u;
+  visit_OpVisitor_t_on_i32_le_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_le_s;
+  visit_OpVisitor_t_on_i32_le_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_le_u;
+  visit_OpVisitor_t_on_i32_ge_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_ge_s;
+  visit_OpVisitor_t_on_i32_ge_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_ge_u;
+  visit_OpVisitor_t_on_i64_eqz :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_eqz;
+  visit_OpVisitor_t_on_i64_eq :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_eq;
+  visit_OpVisitor_t_on_i64_ne :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_ne;
+  visit_OpVisitor_t_on_i64_lt_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_lt_s;
+  visit_OpVisitor_t_on_i64_lt_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_lt_u;
+  visit_OpVisitor_t_on_i64_gt_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_gt_s;
+  visit_OpVisitor_t_on_i64_gt_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_gt_u;
+  visit_OpVisitor_t_on_i64_le_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_le_s;
+  visit_OpVisitor_t_on_i64_le_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_le_u;
+  visit_OpVisitor_t_on_i64_ge_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_ge_s;
+  visit_OpVisitor_t_on_i64_ge_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_ge_u;
+  visit_OpVisitor_t_on_f32_eq :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_eq;
+  visit_OpVisitor_t_on_f32_ne :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_ne;
+  visit_OpVisitor_t_on_f32_lt :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_lt;
+  visit_OpVisitor_t_on_f32_gt :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_gt;
+  visit_OpVisitor_t_on_f32_le :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_le;
+  visit_OpVisitor_t_on_f32_ge :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_ge;
+  visit_OpVisitor_t_on_f64_eq :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_eq;
+  visit_OpVisitor_t_on_f64_ne :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_ne;
+  visit_OpVisitor_t_on_f64_lt :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_lt;
+  visit_OpVisitor_t_on_f64_gt :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_gt;
+  visit_OpVisitor_t_on_f64_le :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_le;
+  visit_OpVisitor_t_on_f64_ge :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_ge;
+  visit_OpVisitor_t_on_i32_sub :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_sub;
+  visit_OpVisitor_t_on_i32_mul :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_mul;
+  visit_OpVisitor_t_on_i32_div_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_div_s;
+  visit_OpVisitor_t_on_i32_div_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_div_u;
+  visit_OpVisitor_t_on_i32_rem_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_rem_s;
+  visit_OpVisitor_t_on_i32_rem_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_rem_u;
+  visit_OpVisitor_t_on_i32_and :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_and;
+  visit_OpVisitor_t_on_i32_or :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_or;
+  visit_OpVisitor_t_on_i32_xor :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_xor;
+  visit_OpVisitor_t_on_i32_shl :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_shl;
+  visit_OpVisitor_t_on_i32_shr_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_shr_s;
+  visit_OpVisitor_t_on_i32_shr_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_shr_u;
+  visit_OpVisitor_t_on_i32_rotl :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_rotl;
+  visit_OpVisitor_t_on_i32_rotr :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_rotr;
+  visit_OpVisitor_t_on_i64_add :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_add;
+  visit_OpVisitor_t_on_i64_sub :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_sub;
+  visit_OpVisitor_t_on_i64_mul :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_mul;
+  visit_OpVisitor_t_on_i64_div_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_div_s;
+  visit_OpVisitor_t_on_i64_div_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_div_u;
+  visit_OpVisitor_t_on_i64_rem_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_rem_s;
+  visit_OpVisitor_t_on_i64_rem_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_rem_u;
+  visit_OpVisitor_t_on_i64_and :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_and;
+  visit_OpVisitor_t_on_i64_or :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_or;
+  visit_OpVisitor_t_on_i64_xor :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_xor;
+  visit_OpVisitor_t_on_i64_shl :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_shl;
+  visit_OpVisitor_t_on_i64_shr_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_shr_s;
+  visit_OpVisitor_t_on_i64_shr_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_shr_u;
+  visit_OpVisitor_t_on_i64_rotl :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_rotl;
+  visit_OpVisitor_t_on_i64_rotr :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_rotr;
+  visit_OpVisitor_t_on_f32_add :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_add;
+  visit_OpVisitor_t_on_f32_sub :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_sub;
+  visit_OpVisitor_t_on_f32_mul :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_mul;
+  visit_OpVisitor_t_on_f32_div :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_div;
+  visit_OpVisitor_t_on_f32_min :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_min;
+  visit_OpVisitor_t_on_f32_max :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_max;
+  visit_OpVisitor_t_on_f32_copysign :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_copysign;
+  visit_OpVisitor_t_on_f64_add :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_add;
+  visit_OpVisitor_t_on_f64_sub :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_sub;
+  visit_OpVisitor_t_on_f64_mul :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_mul;
+  visit_OpVisitor_t_on_f64_div :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_div;
+  visit_OpVisitor_t_on_f64_min :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_min;
+  visit_OpVisitor_t_on_f64_max :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_max;
+  visit_OpVisitor_t_on_f64_copysign :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_copysign;
+  visit_OpVisitor_t_on_i32_clz :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_clz;
+  visit_OpVisitor_t_on_i32_ctz :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_ctz;
+  visit_OpVisitor_t_on_i32_popcnt :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_popcnt;
+  visit_OpVisitor_t_on_i32_add :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_add;
+  visit_OpVisitor_t_on_i64_clz :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_clz;
+  visit_OpVisitor_t_on_i64_ctz :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_ctz;
+  visit_OpVisitor_t_on_i64_popcnt :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_popcnt;
+  visit_OpVisitor_t_on_f32_abs :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_abs;
+  visit_OpVisitor_t_on_f32_neg :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_neg;
+  visit_OpVisitor_t_on_f32_ceil :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_ceil;
+  visit_OpVisitor_t_on_f32_floor :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_floor;
+  visit_OpVisitor_t_on_f32_trunc :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_trunc;
+  visit_OpVisitor_t_on_f32_nearest :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_nearest;
+  visit_OpVisitor_t_on_f32_sqrt :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_sqrt;
+  visit_OpVisitor_t_on_f64_abs :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_abs;
+  visit_OpVisitor_t_on_f64_neg :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_neg;
+  visit_OpVisitor_t_on_f64_ceil :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_ceil;
+  visit_OpVisitor_t_on_f64_floor :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_floor;
+  visit_OpVisitor_t_on_f64_trunc :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_trunc;
+  visit_OpVisitor_t_on_f64_nearest :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_nearest;
+  visit_OpVisitor_t_on_f64_sqrt :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_sqrt;
+  visit_OpVisitor_t_on_i32_wrap_i64 :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_wrap_i64;
+  visit_OpVisitor_t_on_i32_trunc_f32_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_trunc_f32_s;
+  visit_OpVisitor_t_on_i32_trunc_f32_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_trunc_f32_u;
+  visit_OpVisitor_t_on_i32_trunc_f64_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_trunc_f64_s;
+  visit_OpVisitor_t_on_i32_trunc_f64_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_trunc_f64_u;
+  visit_OpVisitor_t_on_i64_extend_i32_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_extend_i32_s;
+  visit_OpVisitor_t_on_i64_extend_i32_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_extend_i32_u;
+  visit_OpVisitor_t_on_i64_trunc_f32_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_trunc_f32_s;
+  visit_OpVisitor_t_on_i64_trunc_f32_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_trunc_f32_u;
+  visit_OpVisitor_t_on_i64_trunc_f64_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_trunc_f64_s;
+  visit_OpVisitor_t_on_i64_trunc_f64_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_trunc_f64_u;
+  visit_OpVisitor_t_on_f32_convert_i32_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_convert_i32_s;
+  visit_OpVisitor_t_on_f32_convert_i32_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_convert_i32_u;
+  visit_OpVisitor_t_on_f32_convert_i64_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_convert_i64_s;
+  visit_OpVisitor_t_on_f32_convert_i64_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_convert_i64_u;
+  visit_OpVisitor_t_on_f32_demote_f64 :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_demote_f64;
+  visit_OpVisitor_t_on_f64_convert_i32_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_convert_i32_s;
+  visit_OpVisitor_t_on_f64_convert_i32_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_convert_i32_u;
+  visit_OpVisitor_t_on_f64_convert_i64_s :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_convert_i64_s;
+  visit_OpVisitor_t_on_f64_convert_i64_u :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_convert_i64_u;
+  visit_OpVisitor_t_on_f64_promote_f32 :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_promote_f32;
+  visit_OpVisitor_t_on_i32_reinterpret_f32 :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i32_reinterpret_f32;
+  visit_OpVisitor_t_on_i64_reinterpret_f64 :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_i64_reinterpret_f64;
+  visit_OpVisitor_t_on_f32_reinterpret_i32 :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f32_reinterpret_i32;
+  visit_OpVisitor_t_on_f64_reinterpret_i64 :=
+    visit_NopVisitor_Insts_VeriwasmVisitOpVisitor_on_f64_reinterpret_i64;
+|}.
+
+(** [veriwasm::visit::OpVisitor::on_function_start]:
+    Source: 'src/visit.rs', lines 248:4-256:5 *)
+Definition visit_OpVisitor_on_function_start_default
+  {Self : Type} (self : Self) (_ctx : opiter_Context_t) (_type_idx : u32)
+  (_body_begin : usize) (_body_end : usize) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_const]:
+    Source: 'src/visit.rs', lines 398:4-400:5 *)
+Definition visit_OpVisitor_on_f64_const_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) (_bits : u64) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_const]:
+    Source: 'src/visit.rs', lines 394:4-396:5 *)
+Definition visit_OpVisitor_on_f32_const_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) (_bits : u32) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_const]:
+    Source: 'src/visit.rs', lines 388:4-390:5 *)
+Definition visit_OpVisitor_on_i64_const_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) (_v : i64) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_const]:
+    Source: 'src/visit.rs', lines 384:4-386:5 *)
+Definition visit_OpVisitor_on_i32_const_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) (_v : i32) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_global_set]:
+    Source: 'src/visit.rs', lines 368:4-370:5 *)
+Definition visit_OpVisitor_on_global_set_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) (_idx : u32) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_global_get]:
+    Source: 'src/visit.rs', lines 364:4-366:5 *)
+Definition visit_OpVisitor_on_global_get_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) (_idx : u32) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_local_tee]:
+    Source: 'src/visit.rs', lines 360:4-362:5 *)
+Definition visit_OpVisitor_on_local_tee_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) (_idx : u32) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_local_set]:
+    Source: 'src/visit.rs', lines 356:4-358:5 *)
+Definition visit_OpVisitor_on_local_set_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) (_idx : u32) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_local_get]:
+    Source: 'src/visit.rs', lines 352:4-354:5 *)
+Definition visit_OpVisitor_on_local_get_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) (_idx : u32) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_select]:
+    Source: 'src/visit.rs', lines 346:4-348:5 *)
+Definition visit_OpVisitor_on_select_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_ty : opiter_StackType_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_drop]:
+    Source: 'src/visit.rs', lines 340:4-342:5 *)
+Definition visit_OpVisitor_on_drop_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_ty : opiter_StackType_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_call_indirect]:
+    Source: 'src/visit.rs', lines 333:4-335:5 *)
+Definition visit_OpVisitor_on_call_indirect_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) (_type_idx : u32) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_call]:
+    Source: 'src/visit.rs', lines 329:4-331:5 *)
+Definition visit_OpVisitor_on_call_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) (_idx : u32) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_return]:
+    Source: 'src/visit.rs', lines 325:4-327:5 *)
+Definition visit_OpVisitor_on_return_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_br_table]:
+    Source: 'src/visit.rs', lines 316:4-323:5 *)
+Definition visit_OpVisitor_on_br_table_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) (_default : u32)
+  (_common : opiter_BlockType_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_br_if]:
+    Source: 'src/visit.rs', lines 302:4-304:5 *)
+Definition visit_OpVisitor_on_br_if_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) (_depth : u32)
+  (_bt : opiter_BlockType_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_br]:
+    Source: 'src/visit.rs', lines 298:4-300:5 *)
+Definition visit_OpVisitor_on_br_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) (_depth : u32)
+  (_bt : opiter_BlockType_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_end]:
+    Source: 'src/visit.rs', lines 288:4-295:5 *)
+Definition visit_OpVisitor_on_end_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_kind : opiter_LabelKind_t) (_bt : opiter_BlockType_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_else]:
+    Source: 'src/visit.rs', lines 281:4-283:5 *)
+Definition visit_OpVisitor_on_else_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_bt : opiter_BlockType_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_if]:
+    Source: 'src/visit.rs', lines 276:4-278:5 *)
+Definition visit_OpVisitor_on_if_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_bt : opiter_BlockType_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_loop]:
+    Source: 'src/visit.rs', lines 272:4-274:5 *)
+Definition visit_OpVisitor_on_loop_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_bt : opiter_BlockType_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_block]:
+    Source: 'src/visit.rs', lines 268:4-270:5 *)
+Definition visit_OpVisitor_on_block_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_bt : opiter_BlockType_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_nop]:
+    Source: 'src/visit.rs', lines 264:4-266:5 *)
+Definition visit_OpVisitor_on_nop_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_unreachable]:
+    Source: 'src/visit.rs', lines 260:4-262:5 *)
+Definition visit_OpVisitor_on_unreachable_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_store32]:
+    Source: 'src/visit.rs', lines 206:10-208:9 *)
+Definition visit_OpVisitor_on_i64_store32_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_store16]:
+    Source: 'src/visit.rs', lines 206:10-208:9 *)
+Definition visit_OpVisitor_on_i64_store16_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_store8]:
+    Source: 'src/visit.rs', lines 206:10-208:9 *)
+Definition visit_OpVisitor_on_i64_store8_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_store16]:
+    Source: 'src/visit.rs', lines 206:10-208:9 *)
+Definition visit_OpVisitor_on_i32_store16_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_store8]:
+    Source: 'src/visit.rs', lines 206:10-208:9 *)
+Definition visit_OpVisitor_on_i32_store8_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_store]:
+    Source: 'src/visit.rs', lines 206:10-208:9 *)
+Definition visit_OpVisitor_on_f64_store_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_store]:
+    Source: 'src/visit.rs', lines 206:10-208:9 *)
+Definition visit_OpVisitor_on_f32_store_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_store]:
+    Source: 'src/visit.rs', lines 206:10-208:9 *)
+Definition visit_OpVisitor_on_i64_store_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_store]:
+    Source: 'src/visit.rs', lines 206:10-208:9 *)
+Definition visit_OpVisitor_on_i32_store_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_load32_u]:
+    Source: 'src/visit.rs', lines 206:10-208:9 *)
+Definition visit_OpVisitor_on_i64_load32_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_load32_s]:
+    Source: 'src/visit.rs', lines 206:10-208:9 *)
+Definition visit_OpVisitor_on_i64_load32_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_load16_u]:
+    Source: 'src/visit.rs', lines 206:10-208:9 *)
+Definition visit_OpVisitor_on_i64_load16_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_load16_s]:
+    Source: 'src/visit.rs', lines 206:10-208:9 *)
+Definition visit_OpVisitor_on_i64_load16_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_load8_u]:
+    Source: 'src/visit.rs', lines 206:10-208:9 *)
+Definition visit_OpVisitor_on_i64_load8_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_load8_s]:
+    Source: 'src/visit.rs', lines 206:10-208:9 *)
+Definition visit_OpVisitor_on_i64_load8_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_load16_u]:
+    Source: 'src/visit.rs', lines 206:10-208:9 *)
+Definition visit_OpVisitor_on_i32_load16_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_load16_s]:
+    Source: 'src/visit.rs', lines 206:10-208:9 *)
+Definition visit_OpVisitor_on_i32_load16_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_load8_u]:
+    Source: 'src/visit.rs', lines 206:10-208:9 *)
+Definition visit_OpVisitor_on_i32_load8_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_load8_s]:
+    Source: 'src/visit.rs', lines 206:10-208:9 *)
+Definition visit_OpVisitor_on_i32_load8_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_load]:
+    Source: 'src/visit.rs', lines 206:10-208:9 *)
+Definition visit_OpVisitor_on_f64_load_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_load]:
+    Source: 'src/visit.rs', lines 206:10-208:9 *)
+Definition visit_OpVisitor_on_f32_load_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_load]:
+    Source: 'src/visit.rs', lines 206:10-208:9 *)
+Definition visit_OpVisitor_on_i64_load_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_load]:
+    Source: 'src/visit.rs', lines 206:10-208:9 *)
+Definition visit_OpVisitor_on_i32_load_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t)
+  (_memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::opiter::OP_I64_STORE32]
+    Source: 'src/opiter.rs', lines 182:0-182:36 *)
+Definition opiter_op_i64_store32 : u8 := 62%u8.
+
+(** [veriwasm::opiter::OP_I64_STORE16]
+    Source: 'src/opiter.rs', lines 181:0-181:36 *)
+Definition opiter_op_i64_store16 : u8 := 61%u8.
+
+(** [veriwasm::opiter::OP_I64_STORE8]
+    Source: 'src/opiter.rs', lines 180:0-180:35 *)
+Definition opiter_op_i64_store8 : u8 := 60%u8.
+
+(** [veriwasm::opiter::OP_I32_STORE16]
+    Source: 'src/opiter.rs', lines 179:0-179:36 *)
+Definition opiter_op_i32_store16 : u8 := 59%u8.
+
+(** [veriwasm::opiter::OP_I32_STORE8]
+    Source: 'src/opiter.rs', lines 178:0-178:35 *)
+Definition opiter_op_i32_store8 : u8 := 58%u8.
+
+(** [veriwasm::opiter::OP_F64_STORE]
+    Source: 'src/opiter.rs', lines 177:0-177:34 *)
+Definition opiter_op_f64_store : u8 := 57%u8.
+
+(** [veriwasm::opiter::OP_F32_STORE]
+    Source: 'src/opiter.rs', lines 176:0-176:34 *)
+Definition opiter_op_f32_store : u8 := 56%u8.
+
+(** [veriwasm::opiter::OP_I64_STORE]
+    Source: 'src/opiter.rs', lines 175:0-175:34 *)
+Definition opiter_op_i64_store : u8 := 55%u8.
+
+(** [veriwasm::opiter::OP_I32_STORE]
+    Source: 'src/opiter.rs', lines 174:0-174:34 *)
+Definition opiter_op_i32_store : u8 := 54%u8.
+
+(** [veriwasm::opiter::OP_I64_LOAD32_U]
+    Source: 'src/opiter.rs', lines 172:0-172:37 *)
+Definition opiter_op_i64_load32_u : u8 := 53%u8.
+
+(** [veriwasm::opiter::OP_I64_LOAD32_S]
+    Source: 'src/opiter.rs', lines 171:0-171:37 *)
+Definition opiter_op_i64_load32_s : u8 := 52%u8.
+
+(** [veriwasm::opiter::OP_I64_LOAD16_U]
+    Source: 'src/opiter.rs', lines 170:0-170:37 *)
+Definition opiter_op_i64_load16_u : u8 := 51%u8.
+
+(** [veriwasm::opiter::OP_I64_LOAD16_S]
+    Source: 'src/opiter.rs', lines 169:0-169:37 *)
+Definition opiter_op_i64_load16_s : u8 := 50%u8.
+
+(** [veriwasm::opiter::OP_I64_LOAD8_U]
+    Source: 'src/opiter.rs', lines 168:0-168:36 *)
+Definition opiter_op_i64_load8_u : u8 := 49%u8.
+
+(** [veriwasm::opiter::OP_I64_LOAD8_S]
+    Source: 'src/opiter.rs', lines 167:0-167:36 *)
+Definition opiter_op_i64_load8_s : u8 := 48%u8.
+
+(** [veriwasm::opiter::OP_I32_LOAD16_U]
+    Source: 'src/opiter.rs', lines 166:0-166:37 *)
+Definition opiter_op_i32_load16_u : u8 := 47%u8.
+
+(** [veriwasm::opiter::OP_I32_LOAD16_S]
+    Source: 'src/opiter.rs', lines 165:0-165:37 *)
+Definition opiter_op_i32_load16_s : u8 := 46%u8.
+
+(** [veriwasm::opiter::OP_I32_LOAD8_U]
+    Source: 'src/opiter.rs', lines 164:0-164:36 *)
+Definition opiter_op_i32_load8_u : u8 := 45%u8.
+
+(** [veriwasm::opiter::OP_I32_LOAD8_S]
+    Source: 'src/opiter.rs', lines 163:0-163:36 *)
+Definition opiter_op_i32_load8_s : u8 := 44%u8.
+
+(** [veriwasm::opiter::OP_F64_LOAD]
+    Source: 'src/opiter.rs', lines 162:0-162:33 *)
+Definition opiter_op_f64_load : u8 := 43%u8.
+
+(** [veriwasm::opiter::OP_F32_LOAD]
+    Source: 'src/opiter.rs', lines 161:0-161:33 *)
+Definition opiter_op_f32_load : u8 := 42%u8.
+
+(** [veriwasm::opiter::OP_I64_LOAD]
+    Source: 'src/opiter.rs', lines 160:0-160:33 *)
+Definition opiter_op_i64_load : u8 := 41%u8.
+
+(** [veriwasm::opiter::OP_I32_LOAD]
+    Source: 'src/opiter.rs', lines 159:0-159:33 *)
+Definition opiter_op_i32_load : u8 := 40%u8.
+
+(** [veriwasm::visit::visit_memory]:
+    Source: 'src/visit.rs', lines 439:8-449:9 *)
+Definition visit_visit_memory
+  {V : Type} (opVisitorInst : visit_OpVisitor_t V) (v : V)
+  (st : opiter_OpIterState_t) (opcode : u8) (memarg : opiter_MemArg_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * V)
+  :=
+  if opcode s= opiter_op_i32_load
+  then opVisitorInst.(visit_OpVisitor_t_on_i32_load) v st memarg
+  else
+    if opcode s= opiter_op_i64_load
+    then opVisitorInst.(visit_OpVisitor_t_on_i64_load) v st memarg
+    else
+      if opcode s= opiter_op_f32_load
+      then opVisitorInst.(visit_OpVisitor_t_on_f32_load) v st memarg
+      else
+        if opcode s= opiter_op_f64_load
+        then opVisitorInst.(visit_OpVisitor_t_on_f64_load) v st memarg
+        else
+          if opcode s= opiter_op_i32_load8_s
+          then opVisitorInst.(visit_OpVisitor_t_on_i32_load8_s) v st memarg
+          else
+            if opcode s= opiter_op_i32_load8_u
+            then opVisitorInst.(visit_OpVisitor_t_on_i32_load8_u) v st memarg
+            else
+              if opcode s= opiter_op_i32_load16_s
+              then
+                opVisitorInst.(visit_OpVisitor_t_on_i32_load16_s) v st memarg
+              else
+                if opcode s= opiter_op_i32_load16_u
+                then
+                  opVisitorInst.(visit_OpVisitor_t_on_i32_load16_u) v st memarg
+                else
+                  if opcode s= opiter_op_i64_load8_s
+                  then
+                    opVisitorInst.(visit_OpVisitor_t_on_i64_load8_s) v st
+                      memarg
+                  else
+                    if opcode s= opiter_op_i64_load8_u
+                    then
+                      opVisitorInst.(visit_OpVisitor_t_on_i64_load8_u) v st
+                        memarg
+                    else
+                      if opcode s= opiter_op_i64_load16_s
+                      then
+                        opVisitorInst.(visit_OpVisitor_t_on_i64_load16_s) v st
+                          memarg
+                      else
+                        if opcode s= opiter_op_i64_load16_u
+                        then
+                          opVisitorInst.(visit_OpVisitor_t_on_i64_load16_u) v
+                            st memarg
+                        else
+                          if opcode s= opiter_op_i64_load32_s
+                          then
+                            opVisitorInst.(visit_OpVisitor_t_on_i64_load32_s) v
+                              st memarg
+                          else
+                            if opcode s= opiter_op_i64_load32_u
+                            then
+                              opVisitorInst.(visit_OpVisitor_t_on_i64_load32_u)
+                                v st memarg
+                            else
+                              if opcode s= opiter_op_i32_store
+                              then
+                                opVisitorInst.(visit_OpVisitor_t_on_i32_store)
+                                  v st memarg
+                              else
+                                if opcode s= opiter_op_i64_store
+                                then
+                                  opVisitorInst.(visit_OpVisitor_t_on_i64_store)
+                                    v st memarg
+                                else
+                                  if opcode s= opiter_op_f32_store
+                                  then
+                                    opVisitorInst.(visit_OpVisitor_t_on_f32_store)
+                                      v st memarg
+                                  else
+                                    if opcode s= opiter_op_f64_store
+                                    then
+                                      opVisitorInst.(visit_OpVisitor_t_on_f64_store)
+                                        v st memarg
+                                    else
+                                      if opcode s= opiter_op_i32_store8
+                                      then
+                                        opVisitorInst.(visit_OpVisitor_t_on_i32_store8)
+                                          v st memarg
+                                      else
+                                        if opcode s= opiter_op_i32_store16
+                                        then
+                                          opVisitorInst.(visit_OpVisitor_t_on_i32_store16)
+                                            v st memarg
+                                        else
+                                          if opcode s= opiter_op_i64_store8
+                                          then
+                                            opVisitorInst.(visit_OpVisitor_t_on_i64_store8)
+                                              v st memarg
+                                          else
+                                            if opcode s= opiter_op_i64_store16
+                                            then
+                                              opVisitorInst.(visit_OpVisitor_t_on_i64_store16)
+                                                v st memarg
+                                            else
+                                              if opcode s=
+                                                opiter_op_i64_store32
+                                              then
+                                                opVisitorInst.(visit_OpVisitor_t_on_i64_store32)
+                                                  v st memarg
+                                              else
+                                                Ok (Core_result_Result_Ok tt,
+                                                  v)
+.
+
+(** [veriwasm::visit::OpVisitor::on_memory_grow]:
+    Source: 'src/visit.rs', lines 378:4-380:5 *)
+Definition visit_OpVisitor_on_memory_grow_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_memory_size]:
+    Source: 'src/visit.rs', lines 374:4-376:5 *)
+Definition visit_OpVisitor_on_memory_size_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_reinterpret_i64]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f64_reinterpret_i64_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_reinterpret_i32]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f32_reinterpret_i32_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_reinterpret_f64]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_reinterpret_f64_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_reinterpret_f32]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_reinterpret_f32_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_promote_f32]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f64_promote_f32_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_convert_i64_u]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f64_convert_i64_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_convert_i64_s]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f64_convert_i64_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_convert_i32_u]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f64_convert_i32_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_convert_i32_s]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f64_convert_i32_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_demote_f64]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f32_demote_f64_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_convert_i64_u]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f32_convert_i64_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_convert_i64_s]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f32_convert_i64_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_convert_i32_u]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f32_convert_i32_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_convert_i32_s]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f32_convert_i32_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_trunc_f64_u]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_trunc_f64_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_trunc_f64_s]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_trunc_f64_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_trunc_f32_u]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_trunc_f32_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_trunc_f32_s]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_trunc_f32_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_extend_i32_u]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_extend_i32_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_extend_i32_s]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_extend_i32_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_trunc_f64_u]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_trunc_f64_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_trunc_f64_s]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_trunc_f64_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_trunc_f32_u]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_trunc_f32_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_trunc_f32_s]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_trunc_f32_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_wrap_i64]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_wrap_i64_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_sqrt]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f64_sqrt_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_nearest]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f64_nearest_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_trunc]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f64_trunc_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_floor]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f64_floor_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_ceil]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f64_ceil_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_neg]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f64_neg_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_abs]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f64_abs_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_sqrt]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f32_sqrt_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_nearest]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f32_nearest_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_trunc]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f32_trunc_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_floor]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f32_floor_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_ceil]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f32_ceil_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_neg]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f32_neg_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_abs]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f32_abs_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_popcnt]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_popcnt_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_ctz]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_ctz_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_clz]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_clz_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_add]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_add_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_popcnt]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_popcnt_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_ctz]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_ctz_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_clz]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_clz_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_copysign]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f64_copysign_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_max]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f64_max_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_min]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f64_min_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_div]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f64_div_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_mul]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f64_mul_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_sub]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f64_sub_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_add]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f64_add_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_copysign]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f32_copysign_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_max]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f32_max_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_min]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f32_min_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_div]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f32_div_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_mul]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f32_mul_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_sub]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f32_sub_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_add]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f32_add_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_rotr]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_rotr_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_rotl]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_rotl_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_shr_u]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_shr_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_shr_s]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_shr_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_shl]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_shl_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_xor]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_xor_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_or]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_or_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_and]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_and_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_rem_u]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_rem_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_rem_s]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_rem_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_div_u]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_div_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_div_s]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_div_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_mul]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_mul_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_sub]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_sub_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_add]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_add_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_rotr]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_rotr_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_rotl]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_rotl_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_shr_u]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_shr_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_shr_s]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_shr_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_shl]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_shl_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_xor]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_xor_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_or]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_or_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_and]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_and_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_rem_u]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_rem_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_rem_s]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_rem_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_div_u]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_div_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_div_s]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_div_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_mul]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_mul_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_sub]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_sub_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_ge]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f64_ge_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_le]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f64_le_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_gt]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f64_gt_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_lt]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f64_lt_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_ne]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f64_ne_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f64_eq]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f64_eq_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_ge]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f32_ge_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_le]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f32_le_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_gt]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f32_gt_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_lt]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f32_lt_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_ne]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f32_ne_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_f32_eq]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_f32_eq_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_ge_u]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_ge_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_ge_s]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_ge_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_le_u]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_le_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_le_s]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_le_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_gt_u]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_gt_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_gt_s]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_gt_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_lt_u]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_lt_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_lt_s]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_lt_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_ne]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_ne_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_eq]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_eq_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i64_eqz]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i64_eqz_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_ge_u]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_ge_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_ge_s]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_ge_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_le_u]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_le_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_le_s]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_le_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_gt_u]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_gt_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_gt_s]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_gt_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_lt_u]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_lt_u_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_lt_s]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_lt_s_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_ne]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_ne_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_eq]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_eq_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::visit::OpVisitor::on_i32_eqz]:
+    Source: 'src/visit.rs', lines 198:10-200:9 *)
+Definition visit_OpVisitor_on_i32_eqz_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** [veriwasm::opiter::OP_F64_REINTERPRET_I64]
+    Source: 'src/opiter.rs', lines 326:0-326:44 *)
+Definition opiter_op_f64_reinterpret_i64 : u8 := 191%u8.
+
+(** [veriwasm::opiter::OP_F32_REINTERPRET_I32]
+    Source: 'src/opiter.rs', lines 325:0-325:44 *)
+Definition opiter_op_f32_reinterpret_i32 : u8 := 190%u8.
+
+(** [veriwasm::opiter::OP_I64_REINTERPRET_F64]
+    Source: 'src/opiter.rs', lines 324:0-324:44 *)
+Definition opiter_op_i64_reinterpret_f64 : u8 := 189%u8.
+
+(** [veriwasm::opiter::OP_I32_REINTERPRET_F32]
+    Source: 'src/opiter.rs', lines 323:0-323:44 *)
+Definition opiter_op_i32_reinterpret_f32 : u8 := 188%u8.
+
+(** [veriwasm::opiter::OP_F64_PROMOTE_F32]
+    Source: 'src/opiter.rs', lines 322:0-322:40 *)
+Definition opiter_op_f64_promote_f32 : u8 := 187%u8.
+
+(** [veriwasm::opiter::OP_F64_CONVERT_I64_U]
+    Source: 'src/opiter.rs', lines 321:0-321:42 *)
+Definition opiter_op_f64_convert_i64_u : u8 := 186%u8.
+
+(** [veriwasm::opiter::OP_F64_CONVERT_I64_S]
+    Source: 'src/opiter.rs', lines 320:0-320:42 *)
+Definition opiter_op_f64_convert_i64_s : u8 := 185%u8.
+
+(** [veriwasm::opiter::OP_F64_CONVERT_I32_U]
+    Source: 'src/opiter.rs', lines 319:0-319:42 *)
+Definition opiter_op_f64_convert_i32_u : u8 := 184%u8.
+
+(** [veriwasm::opiter::OP_F64_CONVERT_I32_S]
+    Source: 'src/opiter.rs', lines 318:0-318:42 *)
+Definition opiter_op_f64_convert_i32_s : u8 := 183%u8.
+
+(** [veriwasm::opiter::OP_F32_DEMOTE_F64]
+    Source: 'src/opiter.rs', lines 317:0-317:39 *)
+Definition opiter_op_f32_demote_f64 : u8 := 182%u8.
+
+(** [veriwasm::opiter::OP_F32_CONVERT_I64_U]
+    Source: 'src/opiter.rs', lines 316:0-316:42 *)
+Definition opiter_op_f32_convert_i64_u : u8 := 181%u8.
+
+(** [veriwasm::opiter::OP_F32_CONVERT_I64_S]
+    Source: 'src/opiter.rs', lines 315:0-315:42 *)
+Definition opiter_op_f32_convert_i64_s : u8 := 180%u8.
+
+(** [veriwasm::opiter::OP_F32_CONVERT_I32_U]
+    Source: 'src/opiter.rs', lines 314:0-314:42 *)
+Definition opiter_op_f32_convert_i32_u : u8 := 179%u8.
+
+(** [veriwasm::opiter::OP_F32_CONVERT_I32_S]
+    Source: 'src/opiter.rs', lines 313:0-313:42 *)
+Definition opiter_op_f32_convert_i32_s : u8 := 178%u8.
+
+(** [veriwasm::opiter::OP_I64_TRUNC_F64_U]
+    Source: 'src/opiter.rs', lines 312:0-312:40 *)
+Definition opiter_op_i64_trunc_f64_u : u8 := 177%u8.
+
+(** [veriwasm::opiter::OP_I64_TRUNC_F64_S]
+    Source: 'src/opiter.rs', lines 311:0-311:40 *)
+Definition opiter_op_i64_trunc_f64_s : u8 := 176%u8.
+
+(** [veriwasm::opiter::OP_I64_TRUNC_F32_U]
+    Source: 'src/opiter.rs', lines 310:0-310:40 *)
+Definition opiter_op_i64_trunc_f32_u : u8 := 175%u8.
+
+(** [veriwasm::opiter::OP_I64_TRUNC_F32_S]
+    Source: 'src/opiter.rs', lines 309:0-309:40 *)
+Definition opiter_op_i64_trunc_f32_s : u8 := 174%u8.
+
+(** [veriwasm::opiter::OP_I64_EXTEND_I32_U]
+    Source: 'src/opiter.rs', lines 308:0-308:41 *)
+Definition opiter_op_i64_extend_i32_u : u8 := 173%u8.
+
+(** [veriwasm::opiter::OP_I64_EXTEND_I32_S]
+    Source: 'src/opiter.rs', lines 307:0-307:41 *)
+Definition opiter_op_i64_extend_i32_s : u8 := 172%u8.
+
+(** [veriwasm::opiter::OP_I32_TRUNC_F64_U]
+    Source: 'src/opiter.rs', lines 306:0-306:40 *)
+Definition opiter_op_i32_trunc_f64_u : u8 := 171%u8.
+
+(** [veriwasm::opiter::OP_I32_TRUNC_F64_S]
+    Source: 'src/opiter.rs', lines 305:0-305:40 *)
+Definition opiter_op_i32_trunc_f64_s : u8 := 170%u8.
+
+(** [veriwasm::opiter::OP_I32_TRUNC_F32_U]
+    Source: 'src/opiter.rs', lines 304:0-304:40 *)
+Definition opiter_op_i32_trunc_f32_u : u8 := 169%u8.
+
+(** [veriwasm::opiter::OP_I32_TRUNC_F32_S]
+    Source: 'src/opiter.rs', lines 303:0-303:40 *)
+Definition opiter_op_i32_trunc_f32_s : u8 := 168%u8.
+
+(** [veriwasm::opiter::OP_I32_WRAP_I64]
+    Source: 'src/opiter.rs', lines 302:0-302:37 *)
+Definition opiter_op_i32_wrap_i64 : u8 := 167%u8.
+
+(** [veriwasm::opiter::OP_F64_SQRT]
+    Source: 'src/opiter.rs', lines 300:0-300:33 *)
+Definition opiter_op_f64_sqrt : u8 := 159%u8.
+
+(** [veriwasm::opiter::OP_F64_NEAREST]
+    Source: 'src/opiter.rs', lines 299:0-299:36 *)
+Definition opiter_op_f64_nearest : u8 := 158%u8.
+
+(** [veriwasm::opiter::OP_F64_TRUNC]
+    Source: 'src/opiter.rs', lines 298:0-298:34 *)
+Definition opiter_op_f64_trunc : u8 := 157%u8.
+
+(** [veriwasm::opiter::OP_F64_FLOOR]
+    Source: 'src/opiter.rs', lines 297:0-297:34 *)
+Definition opiter_op_f64_floor : u8 := 156%u8.
+
+(** [veriwasm::opiter::OP_F64_CEIL]
+    Source: 'src/opiter.rs', lines 296:0-296:33 *)
+Definition opiter_op_f64_ceil : u8 := 155%u8.
+
+(** [veriwasm::opiter::OP_F64_NEG]
+    Source: 'src/opiter.rs', lines 295:0-295:32 *)
+Definition opiter_op_f64_neg : u8 := 154%u8.
+
+(** [veriwasm::opiter::OP_F64_ABS]
+    Source: 'src/opiter.rs', lines 294:0-294:32 *)
+Definition opiter_op_f64_abs : u8 := 153%u8.
+
+(** [veriwasm::opiter::OP_F32_SQRT]
+    Source: 'src/opiter.rs', lines 292:0-292:33 *)
+Definition opiter_op_f32_sqrt : u8 := 145%u8.
+
+(** [veriwasm::opiter::OP_F32_NEAREST]
+    Source: 'src/opiter.rs', lines 291:0-291:36 *)
+Definition opiter_op_f32_nearest : u8 := 144%u8.
+
+(** [veriwasm::opiter::OP_F32_TRUNC]
+    Source: 'src/opiter.rs', lines 290:0-290:34 *)
+Definition opiter_op_f32_trunc : u8 := 143%u8.
+
+(** [veriwasm::opiter::OP_F32_FLOOR]
+    Source: 'src/opiter.rs', lines 289:0-289:34 *)
+Definition opiter_op_f32_floor : u8 := 142%u8.
+
+(** [veriwasm::opiter::OP_F32_CEIL]
+    Source: 'src/opiter.rs', lines 288:0-288:33 *)
+Definition opiter_op_f32_ceil : u8 := 141%u8.
+
+(** [veriwasm::opiter::OP_F32_NEG]
+    Source: 'src/opiter.rs', lines 287:0-287:32 *)
+Definition opiter_op_f32_neg : u8 := 140%u8.
+
+(** [veriwasm::opiter::OP_F32_ABS]
+    Source: 'src/opiter.rs', lines 286:0-286:32 *)
+Definition opiter_op_f32_abs : u8 := 139%u8.
+
+(** [veriwasm::opiter::OP_I64_POPCNT]
+    Source: 'src/opiter.rs', lines 284:0-284:35 *)
+Definition opiter_op_i64_popcnt : u8 := 123%u8.
+
+(** [veriwasm::opiter::OP_I64_CTZ]
+    Source: 'src/opiter.rs', lines 283:0-283:32 *)
+Definition opiter_op_i64_ctz : u8 := 122%u8.
+
+(** [veriwasm::opiter::OP_I64_CLZ]
+    Source: 'src/opiter.rs', lines 282:0-282:32 *)
+Definition opiter_op_i64_clz : u8 := 121%u8.
+
 (** [veriwasm::opiter::OP_I32_ADD]
-    Source: 'src/opiter.rs', lines 261:0-261:32 *)
+    Source: 'src/opiter.rs', lines 280:0-280:32 *)
 Definition opiter_op_i32_add : u8 := 106%u8.
 
+(** [veriwasm::opiter::OP_I32_POPCNT]
+    Source: 'src/opiter.rs', lines 279:0-279:35 *)
+Definition opiter_op_i32_popcnt : u8 := 105%u8.
+
+(** [veriwasm::opiter::OP_I32_CTZ]
+    Source: 'src/opiter.rs', lines 278:0-278:32 *)
+Definition opiter_op_i32_ctz : u8 := 104%u8.
+
+(** [veriwasm::opiter::OP_I32_CLZ]
+    Source: 'src/opiter.rs', lines 277:0-277:32 *)
+Definition opiter_op_i32_clz : u8 := 103%u8.
+
 (** [veriwasm::opiter::OP_F64_COPYSIGN]
-    Source: 'src/opiter.rs', lines 256:0-256:37 *)
+    Source: 'src/opiter.rs', lines 275:0-275:37 *)
 Definition opiter_op_f64_copysign : u8 := 166%u8.
 
 (** [veriwasm::opiter::OP_F64_MAX]
-    Source: 'src/opiter.rs', lines 255:0-255:32 *)
+    Source: 'src/opiter.rs', lines 274:0-274:32 *)
 Definition opiter_op_f64_max : u8 := 165%u8.
 
 (** [veriwasm::opiter::OP_F64_MIN]
-    Source: 'src/opiter.rs', lines 254:0-254:32 *)
+    Source: 'src/opiter.rs', lines 273:0-273:32 *)
 Definition opiter_op_f64_min : u8 := 164%u8.
 
 (** [veriwasm::opiter::OP_F64_DIV]
-    Source: 'src/opiter.rs', lines 253:0-253:32 *)
+    Source: 'src/opiter.rs', lines 272:0-272:32 *)
 Definition opiter_op_f64_div : u8 := 163%u8.
 
 (** [veriwasm::opiter::OP_F64_MUL]
-    Source: 'src/opiter.rs', lines 252:0-252:32 *)
+    Source: 'src/opiter.rs', lines 271:0-271:32 *)
 Definition opiter_op_f64_mul : u8 := 162%u8.
 
 (** [veriwasm::opiter::OP_F64_SUB]
-    Source: 'src/opiter.rs', lines 251:0-251:32 *)
+    Source: 'src/opiter.rs', lines 270:0-270:32 *)
 Definition opiter_op_f64_sub : u8 := 161%u8.
 
 (** [veriwasm::opiter::OP_F64_ADD]
-    Source: 'src/opiter.rs', lines 250:0-250:32 *)
+    Source: 'src/opiter.rs', lines 269:0-269:32 *)
 Definition opiter_op_f64_add : u8 := 160%u8.
 
 (** [veriwasm::opiter::OP_F32_COPYSIGN]
-    Source: 'src/opiter.rs', lines 248:0-248:37 *)
+    Source: 'src/opiter.rs', lines 267:0-267:37 *)
 Definition opiter_op_f32_copysign : u8 := 152%u8.
 
 (** [veriwasm::opiter::OP_F32_MAX]
-    Source: 'src/opiter.rs', lines 247:0-247:32 *)
+    Source: 'src/opiter.rs', lines 266:0-266:32 *)
 Definition opiter_op_f32_max : u8 := 151%u8.
 
 (** [veriwasm::opiter::OP_F32_MIN]
-    Source: 'src/opiter.rs', lines 246:0-246:32 *)
+    Source: 'src/opiter.rs', lines 265:0-265:32 *)
 Definition opiter_op_f32_min : u8 := 150%u8.
 
 (** [veriwasm::opiter::OP_F32_DIV]
-    Source: 'src/opiter.rs', lines 245:0-245:32 *)
+    Source: 'src/opiter.rs', lines 264:0-264:32 *)
 Definition opiter_op_f32_div : u8 := 149%u8.
 
 (** [veriwasm::opiter::OP_F32_MUL]
-    Source: 'src/opiter.rs', lines 244:0-244:32 *)
+    Source: 'src/opiter.rs', lines 263:0-263:32 *)
 Definition opiter_op_f32_mul : u8 := 148%u8.
 
 (** [veriwasm::opiter::OP_F32_SUB]
-    Source: 'src/opiter.rs', lines 243:0-243:32 *)
+    Source: 'src/opiter.rs', lines 262:0-262:32 *)
 Definition opiter_op_f32_sub : u8 := 147%u8.
 
 (** [veriwasm::opiter::OP_F32_ADD]
-    Source: 'src/opiter.rs', lines 242:0-242:32 *)
+    Source: 'src/opiter.rs', lines 261:0-261:32 *)
 Definition opiter_op_f32_add : u8 := 146%u8.
 
 (** [veriwasm::opiter::OP_I64_ROTR]
-    Source: 'src/opiter.rs', lines 240:0-240:33 *)
+    Source: 'src/opiter.rs', lines 259:0-259:33 *)
 Definition opiter_op_i64_rotr : u8 := 138%u8.
 
 (** [veriwasm::opiter::OP_I64_ROTL]
-    Source: 'src/opiter.rs', lines 239:0-239:33 *)
+    Source: 'src/opiter.rs', lines 258:0-258:33 *)
 Definition opiter_op_i64_rotl : u8 := 137%u8.
 
 (** [veriwasm::opiter::OP_I64_SHR_U]
-    Source: 'src/opiter.rs', lines 238:0-238:34 *)
+    Source: 'src/opiter.rs', lines 257:0-257:34 *)
 Definition opiter_op_i64_shr_u : u8 := 136%u8.
 
 (** [veriwasm::opiter::OP_I64_SHR_S]
-    Source: 'src/opiter.rs', lines 237:0-237:34 *)
+    Source: 'src/opiter.rs', lines 256:0-256:34 *)
 Definition opiter_op_i64_shr_s : u8 := 135%u8.
 
 (** [veriwasm::opiter::OP_I64_SHL]
-    Source: 'src/opiter.rs', lines 236:0-236:32 *)
+    Source: 'src/opiter.rs', lines 255:0-255:32 *)
 Definition opiter_op_i64_shl : u8 := 134%u8.
 
 (** [veriwasm::opiter::OP_I64_XOR]
-    Source: 'src/opiter.rs', lines 235:0-235:32 *)
+    Source: 'src/opiter.rs', lines 254:0-254:32 *)
 Definition opiter_op_i64_xor : u8 := 133%u8.
 
 (** [veriwasm::opiter::OP_I64_OR]
-    Source: 'src/opiter.rs', lines 234:0-234:31 *)
+    Source: 'src/opiter.rs', lines 253:0-253:31 *)
 Definition opiter_op_i64_or : u8 := 132%u8.
 
 (** [veriwasm::opiter::OP_I64_AND]
-    Source: 'src/opiter.rs', lines 233:0-233:32 *)
+    Source: 'src/opiter.rs', lines 252:0-252:32 *)
 Definition opiter_op_i64_and : u8 := 131%u8.
 
 (** [veriwasm::opiter::OP_I64_REM_U]
-    Source: 'src/opiter.rs', lines 232:0-232:34 *)
+    Source: 'src/opiter.rs', lines 251:0-251:34 *)
 Definition opiter_op_i64_rem_u : u8 := 130%u8.
 
 (** [veriwasm::opiter::OP_I64_REM_S]
-    Source: 'src/opiter.rs', lines 231:0-231:34 *)
+    Source: 'src/opiter.rs', lines 250:0-250:34 *)
 Definition opiter_op_i64_rem_s : u8 := 129%u8.
 
 (** [veriwasm::opiter::OP_I64_DIV_U]
-    Source: 'src/opiter.rs', lines 230:0-230:34 *)
+    Source: 'src/opiter.rs', lines 249:0-249:34 *)
 Definition opiter_op_i64_div_u : u8 := 128%u8.
 
 (** [veriwasm::opiter::OP_I64_DIV_S]
-    Source: 'src/opiter.rs', lines 229:0-229:34 *)
+    Source: 'src/opiter.rs', lines 248:0-248:34 *)
 Definition opiter_op_i64_div_s : u8 := 127%u8.
 
 (** [veriwasm::opiter::OP_I64_MUL]
-    Source: 'src/opiter.rs', lines 228:0-228:32 *)
+    Source: 'src/opiter.rs', lines 247:0-247:32 *)
 Definition opiter_op_i64_mul : u8 := 126%u8.
 
 (** [veriwasm::opiter::OP_I64_SUB]
-    Source: 'src/opiter.rs', lines 227:0-227:32 *)
+    Source: 'src/opiter.rs', lines 246:0-246:32 *)
 Definition opiter_op_i64_sub : u8 := 125%u8.
 
 (** [veriwasm::opiter::OP_I64_ADD]
-    Source: 'src/opiter.rs', lines 226:0-226:32 *)
+    Source: 'src/opiter.rs', lines 245:0-245:32 *)
 Definition opiter_op_i64_add : u8 := 124%u8.
 
 (** [veriwasm::opiter::OP_I32_ROTR]
-    Source: 'src/opiter.rs', lines 224:0-224:33 *)
+    Source: 'src/opiter.rs', lines 243:0-243:33 *)
 Definition opiter_op_i32_rotr : u8 := 120%u8.
 
 (** [veriwasm::opiter::OP_I32_ROTL]
-    Source: 'src/opiter.rs', lines 223:0-223:33 *)
+    Source: 'src/opiter.rs', lines 242:0-242:33 *)
 Definition opiter_op_i32_rotl : u8 := 119%u8.
 
 (** [veriwasm::opiter::OP_I32_SHR_U]
-    Source: 'src/opiter.rs', lines 222:0-222:34 *)
+    Source: 'src/opiter.rs', lines 241:0-241:34 *)
 Definition opiter_op_i32_shr_u : u8 := 118%u8.
 
 (** [veriwasm::opiter::OP_I32_SHR_S]
-    Source: 'src/opiter.rs', lines 221:0-221:34 *)
+    Source: 'src/opiter.rs', lines 240:0-240:34 *)
 Definition opiter_op_i32_shr_s : u8 := 117%u8.
 
 (** [veriwasm::opiter::OP_I32_SHL]
-    Source: 'src/opiter.rs', lines 220:0-220:32 *)
+    Source: 'src/opiter.rs', lines 239:0-239:32 *)
 Definition opiter_op_i32_shl : u8 := 116%u8.
 
 (** [veriwasm::opiter::OP_I32_XOR]
-    Source: 'src/opiter.rs', lines 219:0-219:32 *)
+    Source: 'src/opiter.rs', lines 238:0-238:32 *)
 Definition opiter_op_i32_xor : u8 := 115%u8.
 
 (** [veriwasm::opiter::OP_I32_OR]
-    Source: 'src/opiter.rs', lines 218:0-218:31 *)
+    Source: 'src/opiter.rs', lines 237:0-237:31 *)
 Definition opiter_op_i32_or : u8 := 114%u8.
 
 (** [veriwasm::opiter::OP_I32_AND]
-    Source: 'src/opiter.rs', lines 217:0-217:32 *)
+    Source: 'src/opiter.rs', lines 236:0-236:32 *)
 Definition opiter_op_i32_and : u8 := 113%u8.
 
 (** [veriwasm::opiter::OP_I32_REM_U]
-    Source: 'src/opiter.rs', lines 216:0-216:34 *)
+    Source: 'src/opiter.rs', lines 235:0-235:34 *)
 Definition opiter_op_i32_rem_u : u8 := 112%u8.
 
 (** [veriwasm::opiter::OP_I32_REM_S]
-    Source: 'src/opiter.rs', lines 215:0-215:34 *)
+    Source: 'src/opiter.rs', lines 234:0-234:34 *)
 Definition opiter_op_i32_rem_s : u8 := 111%u8.
 
 (** [veriwasm::opiter::OP_I32_DIV_U]
-    Source: 'src/opiter.rs', lines 214:0-214:34 *)
+    Source: 'src/opiter.rs', lines 233:0-233:34 *)
 Definition opiter_op_i32_div_u : u8 := 110%u8.
 
 (** [veriwasm::opiter::OP_I32_DIV_S]
-    Source: 'src/opiter.rs', lines 213:0-213:34 *)
+    Source: 'src/opiter.rs', lines 232:0-232:34 *)
 Definition opiter_op_i32_div_s : u8 := 109%u8.
 
 (** [veriwasm::opiter::OP_I32_MUL]
-    Source: 'src/opiter.rs', lines 212:0-212:32 *)
+    Source: 'src/opiter.rs', lines 231:0-231:32 *)
 Definition opiter_op_i32_mul : u8 := 108%u8.
 
 (** [veriwasm::opiter::OP_I32_SUB]
-    Source: 'src/opiter.rs', lines 211:0-211:32 *)
+    Source: 'src/opiter.rs', lines 230:0-230:32 *)
 Definition opiter_op_i32_sub : u8 := 107%u8.
 
 (** [veriwasm::opiter::OP_F64_GE]
-    Source: 'src/opiter.rs', lines 209:0-209:31 *)
+    Source: 'src/opiter.rs', lines 228:0-228:31 *)
 Definition opiter_op_f64_ge : u8 := 102%u8.
 
 (** [veriwasm::opiter::OP_F64_LE]
-    Source: 'src/opiter.rs', lines 208:0-208:31 *)
+    Source: 'src/opiter.rs', lines 227:0-227:31 *)
 Definition opiter_op_f64_le : u8 := 101%u8.
 
 (** [veriwasm::opiter::OP_F64_GT]
-    Source: 'src/opiter.rs', lines 207:0-207:31 *)
+    Source: 'src/opiter.rs', lines 226:0-226:31 *)
 Definition opiter_op_f64_gt : u8 := 100%u8.
 
 (** [veriwasm::opiter::OP_F64_LT]
-    Source: 'src/opiter.rs', lines 206:0-206:31 *)
+    Source: 'src/opiter.rs', lines 225:0-225:31 *)
 Definition opiter_op_f64_lt : u8 := 99%u8.
 
 (** [veriwasm::opiter::OP_F64_NE]
-    Source: 'src/opiter.rs', lines 205:0-205:31 *)
+    Source: 'src/opiter.rs', lines 224:0-224:31 *)
 Definition opiter_op_f64_ne : u8 := 98%u8.
 
 (** [veriwasm::opiter::OP_F64_EQ]
-    Source: 'src/opiter.rs', lines 204:0-204:31 *)
+    Source: 'src/opiter.rs', lines 223:0-223:31 *)
 Definition opiter_op_f64_eq : u8 := 97%u8.
 
 (** [veriwasm::opiter::OP_F32_GE]
-    Source: 'src/opiter.rs', lines 202:0-202:31 *)
+    Source: 'src/opiter.rs', lines 221:0-221:31 *)
 Definition opiter_op_f32_ge : u8 := 96%u8.
 
 (** [veriwasm::opiter::OP_F32_LE]
-    Source: 'src/opiter.rs', lines 201:0-201:31 *)
+    Source: 'src/opiter.rs', lines 220:0-220:31 *)
 Definition opiter_op_f32_le : u8 := 95%u8.
 
 (** [veriwasm::opiter::OP_F32_GT]
-    Source: 'src/opiter.rs', lines 200:0-200:31 *)
+    Source: 'src/opiter.rs', lines 219:0-219:31 *)
 Definition opiter_op_f32_gt : u8 := 94%u8.
 
 (** [veriwasm::opiter::OP_F32_LT]
-    Source: 'src/opiter.rs', lines 199:0-199:31 *)
+    Source: 'src/opiter.rs', lines 218:0-218:31 *)
 Definition opiter_op_f32_lt : u8 := 93%u8.
 
 (** [veriwasm::opiter::OP_F32_NE]
-    Source: 'src/opiter.rs', lines 198:0-198:31 *)
+    Source: 'src/opiter.rs', lines 217:0-217:31 *)
 Definition opiter_op_f32_ne : u8 := 92%u8.
 
 (** [veriwasm::opiter::OP_F32_EQ]
-    Source: 'src/opiter.rs', lines 197:0-197:31 *)
+    Source: 'src/opiter.rs', lines 216:0-216:31 *)
 Definition opiter_op_f32_eq : u8 := 91%u8.
 
 (** [veriwasm::opiter::OP_I64_GE_U]
-    Source: 'src/opiter.rs', lines 195:0-195:33 *)
+    Source: 'src/opiter.rs', lines 214:0-214:33 *)
 Definition opiter_op_i64_ge_u : u8 := 90%u8.
 
 (** [veriwasm::opiter::OP_I64_GE_S]
-    Source: 'src/opiter.rs', lines 194:0-194:33 *)
+    Source: 'src/opiter.rs', lines 213:0-213:33 *)
 Definition opiter_op_i64_ge_s : u8 := 89%u8.
 
 (** [veriwasm::opiter::OP_I64_LE_U]
-    Source: 'src/opiter.rs', lines 193:0-193:33 *)
+    Source: 'src/opiter.rs', lines 212:0-212:33 *)
 Definition opiter_op_i64_le_u : u8 := 88%u8.
 
 (** [veriwasm::opiter::OP_I64_LE_S]
-    Source: 'src/opiter.rs', lines 192:0-192:33 *)
+    Source: 'src/opiter.rs', lines 211:0-211:33 *)
 Definition opiter_op_i64_le_s : u8 := 87%u8.
 
 (** [veriwasm::opiter::OP_I64_GT_U]
-    Source: 'src/opiter.rs', lines 191:0-191:33 *)
+    Source: 'src/opiter.rs', lines 210:0-210:33 *)
 Definition opiter_op_i64_gt_u : u8 := 86%u8.
 
 (** [veriwasm::opiter::OP_I64_GT_S]
-    Source: 'src/opiter.rs', lines 190:0-190:33 *)
+    Source: 'src/opiter.rs', lines 209:0-209:33 *)
 Definition opiter_op_i64_gt_s : u8 := 85%u8.
 
 (** [veriwasm::opiter::OP_I64_LT_U]
-    Source: 'src/opiter.rs', lines 189:0-189:33 *)
+    Source: 'src/opiter.rs', lines 208:0-208:33 *)
 Definition opiter_op_i64_lt_u : u8 := 84%u8.
 
 (** [veriwasm::opiter::OP_I64_LT_S]
-    Source: 'src/opiter.rs', lines 188:0-188:33 *)
+    Source: 'src/opiter.rs', lines 207:0-207:33 *)
 Definition opiter_op_i64_lt_s : u8 := 83%u8.
 
 (** [veriwasm::opiter::OP_I64_NE]
-    Source: 'src/opiter.rs', lines 187:0-187:31 *)
+    Source: 'src/opiter.rs', lines 206:0-206:31 *)
 Definition opiter_op_i64_ne : u8 := 82%u8.
 
 (** [veriwasm::opiter::OP_I64_EQ]
-    Source: 'src/opiter.rs', lines 186:0-186:31 *)
+    Source: 'src/opiter.rs', lines 205:0-205:31 *)
 Definition opiter_op_i64_eq : u8 := 81%u8.
 
+(** [veriwasm::opiter::OP_I64_EQZ]
+    Source: 'src/opiter.rs', lines 204:0-204:32 *)
+Definition opiter_op_i64_eqz : u8 := 80%u8.
+
 (** [veriwasm::opiter::OP_I32_GE_U]
-    Source: 'src/opiter.rs', lines 183:0-183:33 *)
+    Source: 'src/opiter.rs', lines 202:0-202:33 *)
 Definition opiter_op_i32_ge_u : u8 := 79%u8.
 
 (** [veriwasm::opiter::OP_I32_GE_S]
-    Source: 'src/opiter.rs', lines 182:0-182:33 *)
+    Source: 'src/opiter.rs', lines 201:0-201:33 *)
 Definition opiter_op_i32_ge_s : u8 := 78%u8.
 
 (** [veriwasm::opiter::OP_I32_LE_U]
-    Source: 'src/opiter.rs', lines 181:0-181:33 *)
+    Source: 'src/opiter.rs', lines 200:0-200:33 *)
 Definition opiter_op_i32_le_u : u8 := 77%u8.
 
 (** [veriwasm::opiter::OP_I32_LE_S]
-    Source: 'src/opiter.rs', lines 180:0-180:33 *)
+    Source: 'src/opiter.rs', lines 199:0-199:33 *)
 Definition opiter_op_i32_le_s : u8 := 76%u8.
 
 (** [veriwasm::opiter::OP_I32_GT_U]
-    Source: 'src/opiter.rs', lines 179:0-179:33 *)
+    Source: 'src/opiter.rs', lines 198:0-198:33 *)
 Definition opiter_op_i32_gt_u : u8 := 75%u8.
 
 (** [veriwasm::opiter::OP_I32_GT_S]
-    Source: 'src/opiter.rs', lines 178:0-178:33 *)
+    Source: 'src/opiter.rs', lines 197:0-197:33 *)
 Definition opiter_op_i32_gt_s : u8 := 74%u8.
 
 (** [veriwasm::opiter::OP_I32_LT_U]
-    Source: 'src/opiter.rs', lines 177:0-177:33 *)
+    Source: 'src/opiter.rs', lines 196:0-196:33 *)
 Definition opiter_op_i32_lt_u : u8 := 73%u8.
 
 (** [veriwasm::opiter::OP_I32_LT_S]
-    Source: 'src/opiter.rs', lines 176:0-176:33 *)
+    Source: 'src/opiter.rs', lines 195:0-195:33 *)
 Definition opiter_op_i32_lt_s : u8 := 72%u8.
 
 (** [veriwasm::opiter::OP_I32_NE]
-    Source: 'src/opiter.rs', lines 175:0-175:31 *)
+    Source: 'src/opiter.rs', lines 194:0-194:31 *)
 Definition opiter_op_i32_ne : u8 := 71%u8.
 
 (** [veriwasm::opiter::OP_I32_EQ]
-    Source: 'src/opiter.rs', lines 174:0-174:31 *)
+    Source: 'src/opiter.rs', lines 193:0-193:31 *)
 Definition opiter_op_i32_eq : u8 := 70%u8.
 
+(** [veriwasm::opiter::OP_I32_EQZ]
+    Source: 'src/opiter.rs', lines 192:0-192:32 *)
+Definition opiter_op_i32_eqz : u8 := 69%u8.
+
+(** [veriwasm::visit::visit_numeric]:
+    Source: 'src/visit.rs', lines 423:8-432:9 *)
+Definition visit_visit_numeric
+  {V : Type} (opVisitorInst : visit_OpVisitor_t V) (v : V)
+  (st : opiter_OpIterState_t) (opcode : u8) :
+  result ((core_result_Result_t unit error_VisitError_t) * V)
+  :=
+  if opcode s= opiter_op_i32_eqz
+  then opVisitorInst.(visit_OpVisitor_t_on_i32_eqz) v st
+  else
+    if opcode s= opiter_op_i32_eq
+    then opVisitorInst.(visit_OpVisitor_t_on_i32_eq) v st
+    else
+      if opcode s= opiter_op_i32_ne
+      then opVisitorInst.(visit_OpVisitor_t_on_i32_ne) v st
+      else
+        if opcode s= opiter_op_i32_lt_s
+        then opVisitorInst.(visit_OpVisitor_t_on_i32_lt_s) v st
+        else
+          if opcode s= opiter_op_i32_lt_u
+          then opVisitorInst.(visit_OpVisitor_t_on_i32_lt_u) v st
+          else
+            if opcode s= opiter_op_i32_gt_s
+            then opVisitorInst.(visit_OpVisitor_t_on_i32_gt_s) v st
+            else
+              if opcode s= opiter_op_i32_gt_u
+              then opVisitorInst.(visit_OpVisitor_t_on_i32_gt_u) v st
+              else
+                if opcode s= opiter_op_i32_le_s
+                then opVisitorInst.(visit_OpVisitor_t_on_i32_le_s) v st
+                else
+                  if opcode s= opiter_op_i32_le_u
+                  then opVisitorInst.(visit_OpVisitor_t_on_i32_le_u) v st
+                  else
+                    if opcode s= opiter_op_i32_ge_s
+                    then opVisitorInst.(visit_OpVisitor_t_on_i32_ge_s) v st
+                    else
+                      if opcode s= opiter_op_i32_ge_u
+                      then opVisitorInst.(visit_OpVisitor_t_on_i32_ge_u) v st
+                      else
+                        if opcode s= opiter_op_i64_eqz
+                        then opVisitorInst.(visit_OpVisitor_t_on_i64_eqz) v st
+                        else
+                          if opcode s= opiter_op_i64_eq
+                          then opVisitorInst.(visit_OpVisitor_t_on_i64_eq) v st
+                          else
+                            if opcode s= opiter_op_i64_ne
+                            then
+                              opVisitorInst.(visit_OpVisitor_t_on_i64_ne) v st
+                            else
+                              if opcode s= opiter_op_i64_lt_s
+                              then
+                                opVisitorInst.(visit_OpVisitor_t_on_i64_lt_s) v
+                                  st
+                              else
+                                if opcode s= opiter_op_i64_lt_u
+                                then
+                                  opVisitorInst.(visit_OpVisitor_t_on_i64_lt_u)
+                                    v st
+                                else
+                                  if opcode s= opiter_op_i64_gt_s
+                                  then
+                                    opVisitorInst.(visit_OpVisitor_t_on_i64_gt_s)
+                                      v st
+                                  else
+                                    if opcode s= opiter_op_i64_gt_u
+                                    then
+                                      opVisitorInst.(visit_OpVisitor_t_on_i64_gt_u)
+                                        v st
+                                    else
+                                      if opcode s= opiter_op_i64_le_s
+                                      then
+                                        opVisitorInst.(visit_OpVisitor_t_on_i64_le_s)
+                                          v st
+                                      else
+                                        if opcode s= opiter_op_i64_le_u
+                                        then
+                                          opVisitorInst.(visit_OpVisitor_t_on_i64_le_u)
+                                            v st
+                                        else
+                                          if opcode s= opiter_op_i64_ge_s
+                                          then
+                                            opVisitorInst.(visit_OpVisitor_t_on_i64_ge_s)
+                                              v st
+                                          else
+                                            if opcode s= opiter_op_i64_ge_u
+                                            then
+                                              opVisitorInst.(visit_OpVisitor_t_on_i64_ge_u)
+                                                v st
+                                            else
+                                              if opcode s= opiter_op_f32_eq
+                                              then
+                                                opVisitorInst.(visit_OpVisitor_t_on_f32_eq)
+                                                  v st
+                                              else
+                                                if opcode s= opiter_op_f32_ne
+                                                then
+                                                  opVisitorInst.(visit_OpVisitor_t_on_f32_ne)
+                                                    v st
+                                                else
+                                                  if opcode s= opiter_op_f32_lt
+                                                  then
+                                                    opVisitorInst.(visit_OpVisitor_t_on_f32_lt)
+                                                      v st
+                                                  else
+                                                    if opcode s=
+                                                      opiter_op_f32_gt
+                                                    then
+                                                      opVisitorInst.(visit_OpVisitor_t_on_f32_gt)
+                                                        v st
+                                                    else
+                                                      if opcode s=
+                                                        opiter_op_f32_le
+                                                      then
+                                                        opVisitorInst.(visit_OpVisitor_t_on_f32_le)
+                                                          v st
+                                                      else
+                                                        if opcode s=
+                                                          opiter_op_f32_ge
+                                                        then
+                                                          opVisitorInst.(visit_OpVisitor_t_on_f32_ge)
+                                                            v st
+                                                        else
+                                                          if opcode s=
+                                                            opiter_op_f64_eq
+                                                          then
+                                                            opVisitorInst.(visit_OpVisitor_t_on_f64_eq)
+                                                              v st
+                                                          else
+                                                            if opcode s=
+                                                              opiter_op_f64_ne
+                                                            then
+                                                              opVisitorInst.(visit_OpVisitor_t_on_f64_ne)
+                                                                v st
+                                                            else
+                                                              if opcode s=
+                                                                opiter_op_f64_lt
+                                                              then
+                                                                opVisitorInst.(visit_OpVisitor_t_on_f64_lt)
+                                                                  v st
+                                                              else
+                                                                if opcode s=
+                                                                  opiter_op_f64_gt
+                                                                then
+                                                                  opVisitorInst.(visit_OpVisitor_t_on_f64_gt)
+                                                                    v st
+                                                                else
+                                                                  if opcode s=
+                                                                    opiter_op_f64_le
+                                                                  then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f64_le)
+                                                                    v st
+                                                                  else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f64_ge
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f64_ge)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i32_sub
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i32_sub)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i32_mul
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i32_mul)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i32_div_s
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i32_div_s)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i32_div_u
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i32_div_u)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i32_rem_s
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i32_rem_s)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i32_rem_u
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i32_rem_u)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i32_and
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i32_and)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i32_or
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i32_or)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i32_xor
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i32_xor)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i32_shl
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i32_shl)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i32_shr_s
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i32_shr_s)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i32_shr_u
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i32_shr_u)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i32_rotl
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i32_rotl)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i32_rotr
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i32_rotr)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i64_add
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i64_add)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i64_sub
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i64_sub)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i64_mul
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i64_mul)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i64_div_s
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i64_div_s)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i64_div_u
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i64_div_u)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i64_rem_s
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i64_rem_s)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i64_rem_u
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i64_rem_u)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i64_and
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i64_and)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i64_or
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i64_or)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i64_xor
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i64_xor)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i64_shl
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i64_shl)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i64_shr_s
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i64_shr_s)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i64_shr_u
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i64_shr_u)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i64_rotl
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i64_rotl)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i64_rotr
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i64_rotr)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f32_add
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f32_add)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f32_sub
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f32_sub)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f32_mul
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f32_mul)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f32_div
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f32_div)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f32_min
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f32_min)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f32_max
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f32_max)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f32_copysign
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f32_copysign)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f64_add
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f64_add)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f64_sub
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f64_sub)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f64_mul
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f64_mul)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f64_div
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f64_div)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f64_min
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f64_min)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f64_max
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f64_max)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f64_copysign
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f64_copysign)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i32_clz
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i32_clz)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i32_ctz
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i32_ctz)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i32_popcnt
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i32_popcnt)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i32_add
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i32_add)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i64_clz
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i64_clz)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i64_ctz
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i64_ctz)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i64_popcnt
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i64_popcnt)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f32_abs
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f32_abs)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f32_neg
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f32_neg)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f32_ceil
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f32_ceil)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f32_floor
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f32_floor)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f32_trunc
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f32_trunc)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f32_nearest
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f32_nearest)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f32_sqrt
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f32_sqrt)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f64_abs
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f64_abs)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f64_neg
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f64_neg)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f64_ceil
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f64_ceil)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f64_floor
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f64_floor)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f64_trunc
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f64_trunc)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f64_nearest
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f64_nearest)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f64_sqrt
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f64_sqrt)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i32_wrap_i64
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i32_wrap_i64)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i32_trunc_f32_s
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i32_trunc_f32_s)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i32_trunc_f32_u
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i32_trunc_f32_u)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i32_trunc_f64_s
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i32_trunc_f64_s)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i32_trunc_f64_u
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i32_trunc_f64_u)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i64_extend_i32_s
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i64_extend_i32_s)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i64_extend_i32_u
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i64_extend_i32_u)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i64_trunc_f32_s
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i64_trunc_f32_s)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i64_trunc_f32_u
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i64_trunc_f32_u)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i64_trunc_f64_s
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i64_trunc_f64_s)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i64_trunc_f64_u
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i64_trunc_f64_u)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f32_convert_i32_s
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f32_convert_i32_s)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f32_convert_i32_u
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f32_convert_i32_u)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f32_convert_i64_s
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f32_convert_i64_s)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f32_convert_i64_u
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f32_convert_i64_u)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f32_demote_f64
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f32_demote_f64)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f64_convert_i32_s
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f64_convert_i32_s)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f64_convert_i32_u
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f64_convert_i32_u)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f64_convert_i64_s
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f64_convert_i64_s)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f64_convert_i64_u
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f64_convert_i64_u)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f64_promote_f32
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f64_promote_f32)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i32_reinterpret_f32
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i32_reinterpret_f32)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_i64_reinterpret_f64
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_i64_reinterpret_f64)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f32_reinterpret_i32
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f32_reinterpret_i32)
+                                                                    v st
+                                                                    else
+                                                                    if opcode
+                                                                    s=
+                                                                    opiter_op_f64_reinterpret_i64
+                                                                    then
+                                                                    opVisitorInst.(visit_OpVisitor_t_on_f64_reinterpret_i64)
+                                                                    v st
+                                                                    else
+                                                                    Ok
+                                                                    (Core_result_Result_Ok
+                                                                    tt, v)
+.
+
 (** [veriwasm::opiter::binary_types]:
-    Source: 'src/opiter.rs', lines 1203:0-1302:1 *)
+    Source: 'src/opiter.rs', lines 1151:0-1250:1 *)
 Definition opiter_binary_types
   (opcode : u8) : result (option (types_ValueType_t * types_ValueType_t)) :=
   if opcode s= opiter_op_i32_eq
@@ -2836,196 +7663,8 @@ Definition opiter_binary_types
                                                                     Ok None
 .
 
-(** [veriwasm::opiter::OP_F64_REINTERPRET_I64]
-    Source: 'src/opiter.rs', lines 307:0-307:44 *)
-Definition opiter_op_f64_reinterpret_i64 : u8 := 191%u8.
-
-(** [veriwasm::opiter::OP_F32_REINTERPRET_I32]
-    Source: 'src/opiter.rs', lines 306:0-306:44 *)
-Definition opiter_op_f32_reinterpret_i32 : u8 := 190%u8.
-
-(** [veriwasm::opiter::OP_I64_REINTERPRET_F64]
-    Source: 'src/opiter.rs', lines 305:0-305:44 *)
-Definition opiter_op_i64_reinterpret_f64 : u8 := 189%u8.
-
-(** [veriwasm::opiter::OP_I32_REINTERPRET_F32]
-    Source: 'src/opiter.rs', lines 304:0-304:44 *)
-Definition opiter_op_i32_reinterpret_f32 : u8 := 188%u8.
-
-(** [veriwasm::opiter::OP_F64_PROMOTE_F32]
-    Source: 'src/opiter.rs', lines 303:0-303:40 *)
-Definition opiter_op_f64_promote_f32 : u8 := 187%u8.
-
-(** [veriwasm::opiter::OP_F64_CONVERT_I64_U]
-    Source: 'src/opiter.rs', lines 302:0-302:42 *)
-Definition opiter_op_f64_convert_i64_u : u8 := 186%u8.
-
-(** [veriwasm::opiter::OP_F64_CONVERT_I64_S]
-    Source: 'src/opiter.rs', lines 301:0-301:42 *)
-Definition opiter_op_f64_convert_i64_s : u8 := 185%u8.
-
-(** [veriwasm::opiter::OP_F64_CONVERT_I32_U]
-    Source: 'src/opiter.rs', lines 300:0-300:42 *)
-Definition opiter_op_f64_convert_i32_u : u8 := 184%u8.
-
-(** [veriwasm::opiter::OP_F64_CONVERT_I32_S]
-    Source: 'src/opiter.rs', lines 299:0-299:42 *)
-Definition opiter_op_f64_convert_i32_s : u8 := 183%u8.
-
-(** [veriwasm::opiter::OP_F32_DEMOTE_F64]
-    Source: 'src/opiter.rs', lines 298:0-298:39 *)
-Definition opiter_op_f32_demote_f64 : u8 := 182%u8.
-
-(** [veriwasm::opiter::OP_F32_CONVERT_I64_U]
-    Source: 'src/opiter.rs', lines 297:0-297:42 *)
-Definition opiter_op_f32_convert_i64_u : u8 := 181%u8.
-
-(** [veriwasm::opiter::OP_F32_CONVERT_I64_S]
-    Source: 'src/opiter.rs', lines 296:0-296:42 *)
-Definition opiter_op_f32_convert_i64_s : u8 := 180%u8.
-
-(** [veriwasm::opiter::OP_F32_CONVERT_I32_U]
-    Source: 'src/opiter.rs', lines 295:0-295:42 *)
-Definition opiter_op_f32_convert_i32_u : u8 := 179%u8.
-
-(** [veriwasm::opiter::OP_F32_CONVERT_I32_S]
-    Source: 'src/opiter.rs', lines 294:0-294:42 *)
-Definition opiter_op_f32_convert_i32_s : u8 := 178%u8.
-
-(** [veriwasm::opiter::OP_I64_TRUNC_F64_U]
-    Source: 'src/opiter.rs', lines 293:0-293:40 *)
-Definition opiter_op_i64_trunc_f64_u : u8 := 177%u8.
-
-(** [veriwasm::opiter::OP_I64_TRUNC_F64_S]
-    Source: 'src/opiter.rs', lines 292:0-292:40 *)
-Definition opiter_op_i64_trunc_f64_s : u8 := 176%u8.
-
-(** [veriwasm::opiter::OP_I64_TRUNC_F32_U]
-    Source: 'src/opiter.rs', lines 291:0-291:40 *)
-Definition opiter_op_i64_trunc_f32_u : u8 := 175%u8.
-
-(** [veriwasm::opiter::OP_I64_TRUNC_F32_S]
-    Source: 'src/opiter.rs', lines 290:0-290:40 *)
-Definition opiter_op_i64_trunc_f32_s : u8 := 174%u8.
-
-(** [veriwasm::opiter::OP_I64_EXTEND_I32_U]
-    Source: 'src/opiter.rs', lines 289:0-289:41 *)
-Definition opiter_op_i64_extend_i32_u : u8 := 173%u8.
-
-(** [veriwasm::opiter::OP_I64_EXTEND_I32_S]
-    Source: 'src/opiter.rs', lines 288:0-288:41 *)
-Definition opiter_op_i64_extend_i32_s : u8 := 172%u8.
-
-(** [veriwasm::opiter::OP_I32_TRUNC_F64_U]
-    Source: 'src/opiter.rs', lines 287:0-287:40 *)
-Definition opiter_op_i32_trunc_f64_u : u8 := 171%u8.
-
-(** [veriwasm::opiter::OP_I32_TRUNC_F64_S]
-    Source: 'src/opiter.rs', lines 286:0-286:40 *)
-Definition opiter_op_i32_trunc_f64_s : u8 := 170%u8.
-
-(** [veriwasm::opiter::OP_I32_TRUNC_F32_U]
-    Source: 'src/opiter.rs', lines 285:0-285:40 *)
-Definition opiter_op_i32_trunc_f32_u : u8 := 169%u8.
-
-(** [veriwasm::opiter::OP_I32_TRUNC_F32_S]
-    Source: 'src/opiter.rs', lines 284:0-284:40 *)
-Definition opiter_op_i32_trunc_f32_s : u8 := 168%u8.
-
-(** [veriwasm::opiter::OP_I32_WRAP_I64]
-    Source: 'src/opiter.rs', lines 283:0-283:37 *)
-Definition opiter_op_i32_wrap_i64 : u8 := 167%u8.
-
-(** [veriwasm::opiter::OP_F64_SQRT]
-    Source: 'src/opiter.rs', lines 281:0-281:33 *)
-Definition opiter_op_f64_sqrt : u8 := 159%u8.
-
-(** [veriwasm::opiter::OP_F64_NEAREST]
-    Source: 'src/opiter.rs', lines 280:0-280:36 *)
-Definition opiter_op_f64_nearest : u8 := 158%u8.
-
-(** [veriwasm::opiter::OP_F64_TRUNC]
-    Source: 'src/opiter.rs', lines 279:0-279:34 *)
-Definition opiter_op_f64_trunc : u8 := 157%u8.
-
-(** [veriwasm::opiter::OP_F64_FLOOR]
-    Source: 'src/opiter.rs', lines 278:0-278:34 *)
-Definition opiter_op_f64_floor : u8 := 156%u8.
-
-(** [veriwasm::opiter::OP_F64_CEIL]
-    Source: 'src/opiter.rs', lines 277:0-277:33 *)
-Definition opiter_op_f64_ceil : u8 := 155%u8.
-
-(** [veriwasm::opiter::OP_F64_NEG]
-    Source: 'src/opiter.rs', lines 276:0-276:32 *)
-Definition opiter_op_f64_neg : u8 := 154%u8.
-
-(** [veriwasm::opiter::OP_F64_ABS]
-    Source: 'src/opiter.rs', lines 275:0-275:32 *)
-Definition opiter_op_f64_abs : u8 := 153%u8.
-
-(** [veriwasm::opiter::OP_F32_SQRT]
-    Source: 'src/opiter.rs', lines 273:0-273:33 *)
-Definition opiter_op_f32_sqrt : u8 := 145%u8.
-
-(** [veriwasm::opiter::OP_F32_NEAREST]
-    Source: 'src/opiter.rs', lines 272:0-272:36 *)
-Definition opiter_op_f32_nearest : u8 := 144%u8.
-
-(** [veriwasm::opiter::OP_F32_TRUNC]
-    Source: 'src/opiter.rs', lines 271:0-271:34 *)
-Definition opiter_op_f32_trunc : u8 := 143%u8.
-
-(** [veriwasm::opiter::OP_F32_FLOOR]
-    Source: 'src/opiter.rs', lines 270:0-270:34 *)
-Definition opiter_op_f32_floor : u8 := 142%u8.
-
-(** [veriwasm::opiter::OP_F32_CEIL]
-    Source: 'src/opiter.rs', lines 269:0-269:33 *)
-Definition opiter_op_f32_ceil : u8 := 141%u8.
-
-(** [veriwasm::opiter::OP_F32_NEG]
-    Source: 'src/opiter.rs', lines 268:0-268:32 *)
-Definition opiter_op_f32_neg : u8 := 140%u8.
-
-(** [veriwasm::opiter::OP_F32_ABS]
-    Source: 'src/opiter.rs', lines 267:0-267:32 *)
-Definition opiter_op_f32_abs : u8 := 139%u8.
-
-(** [veriwasm::opiter::OP_I64_POPCNT]
-    Source: 'src/opiter.rs', lines 265:0-265:35 *)
-Definition opiter_op_i64_popcnt : u8 := 123%u8.
-
-(** [veriwasm::opiter::OP_I64_CTZ]
-    Source: 'src/opiter.rs', lines 264:0-264:32 *)
-Definition opiter_op_i64_ctz : u8 := 122%u8.
-
-(** [veriwasm::opiter::OP_I64_CLZ]
-    Source: 'src/opiter.rs', lines 263:0-263:32 *)
-Definition opiter_op_i64_clz : u8 := 121%u8.
-
-(** [veriwasm::opiter::OP_I32_POPCNT]
-    Source: 'src/opiter.rs', lines 260:0-260:35 *)
-Definition opiter_op_i32_popcnt : u8 := 105%u8.
-
-(** [veriwasm::opiter::OP_I32_CTZ]
-    Source: 'src/opiter.rs', lines 259:0-259:32 *)
-Definition opiter_op_i32_ctz : u8 := 104%u8.
-
-(** [veriwasm::opiter::OP_I32_CLZ]
-    Source: 'src/opiter.rs', lines 258:0-258:32 *)
-Definition opiter_op_i32_clz : u8 := 103%u8.
-
-(** [veriwasm::opiter::OP_I64_EQZ]
-    Source: 'src/opiter.rs', lines 185:0-185:32 *)
-Definition opiter_op_i64_eqz : u8 := 80%u8.
-
-(** [veriwasm::opiter::OP_I32_EQZ]
-    Source: 'src/opiter.rs', lines 173:0-173:32 *)
-Definition opiter_op_i32_eqz : u8 := 69%u8.
-
 (** [veriwasm::opiter::convert_types]:
-    Source: 'src/opiter.rs', lines 1115:0-1195:1 *)
+    Source: 'src/opiter.rs', lines 1063:0-1143:1 *)
 Definition opiter_convert_types
   (opcode : u8) : result (option (types_ValueType_t * types_ValueType_t)) :=
   if opcode s= opiter_op_i32_eqz
@@ -3306,42 +7945,6 @@ Definition opiter_convert_types
                                                                     Ok None
 .
 
-(** [veriwasm::opiter::take_pending]:
-    Source: 'src/opiter.rs', lines 496:0-507:1 *)
-Definition opiter_take_pending
-  (st : opiter_OpIterState_t) (expected : u8) :
-  result ((core_result_Result_t unit error_OpError_t) * opiter_OpIterState_t)
-  :=
-  match st.(opiter_OpIterState_pending) with
-  | None =>
-    Ok (Core_result_Result_Err Error_OpError_ProtocolViolation,
-      {|
-        opiter_OpIterState_vals := st.(opiter_OpIterState_vals);
-        opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
-        opiter_OpIterState_pos := st.(opiter_OpIterState_pos);
-        opiter_OpIterState_pending := None
-      |})
-  | Some b =>
-    if b s<> expected
-    then
-      Ok (Core_result_Result_Err Error_OpError_ProtocolViolation,
-        {|
-          opiter_OpIterState_vals := st.(opiter_OpIterState_vals);
-          opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
-          opiter_OpIterState_pos := st.(opiter_OpIterState_pos);
-          opiter_OpIterState_pending := st.(opiter_OpIterState_pending)
-        |})
-    else
-      Ok (Core_result_Result_Ok tt,
-        {|
-          opiter_OpIterState_vals := st.(opiter_OpIterState_vals);
-          opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
-          opiter_OpIterState_pos := st.(opiter_OpIterState_pos);
-          opiter_OpIterState_pending := None
-        |})
-  end
-.
-
 (** [veriwasm::types::{core::cmp::PartialEq<veriwasm::types::ValueType> for veriwasm::types::ValueType}::eq]:
     Source: 'src/types.rs', lines 22:4-30:5 *)
 Definition types_ValueType_Insts_CoreCmpPartialEqValueType_eq
@@ -3379,7 +7982,7 @@ Definition types_ValueType_Insts_CoreCmpPartialEqValueType_eq
 .
 
 (** [veriwasm::opiter::cur_polymorphic]:
-    Source: 'src/opiter.rs', lines 339:0-345:1 *)
+    Source: 'src/opiter.rs', lines 358:0-364:1 *)
 Definition opiter_cur_polymorphic (st : opiter_OpIterState_t) : result bool :=
   let n := alloc_vec_Vec_len st.(opiter_OpIterState_ctrls) in
   if n s= 0%usize
@@ -3393,7 +7996,7 @@ Definition opiter_cur_polymorphic (st : opiter_OpIterState_t) : result bool :=
 .
 
 (** [veriwasm::opiter::cur_base]:
-    Source: 'src/opiter.rs', lines 331:0-337:1 *)
+    Source: 'src/opiter.rs', lines 350:0-356:1 *)
 Definition opiter_cur_base (st : opiter_OpIterState_t) : result usize :=
   let n := alloc_vec_Vec_len st.(opiter_OpIterState_ctrls) in
   if n s= 0%usize
@@ -3407,7 +8010,7 @@ Definition opiter_cur_base (st : opiter_OpIterState_t) : result usize :=
 .
 
 (** [veriwasm::opiter::pop_stack_type]:
-    Source: 'src/opiter.rs', lines 353:0-364:1 *)
+    Source: 'src/opiter.rs', lines 372:0-383:1 *)
 Definition opiter_pop_stack_type
   (st : opiter_OpIterState_t) :
   result ((core_result_Result_t opiter_StackType_t error_OpError_t) *
@@ -3430,22 +8033,20 @@ Definition opiter_pop_stack_type
         {|
           opiter_OpIterState_vals := v;
           opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
-          opiter_OpIterState_pos := st.(opiter_OpIterState_pos);
-          opiter_OpIterState_pending := st.(opiter_OpIterState_pending)
+          opiter_OpIterState_pos := st.(opiter_OpIterState_pos)
         |})
     | Some t =>
       Ok (Core_result_Result_Ok t,
         {|
           opiter_OpIterState_vals := v;
           opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
-          opiter_OpIterState_pos := st.(opiter_OpIterState_pos);
-          opiter_OpIterState_pending := st.(opiter_OpIterState_pending)
+          opiter_OpIterState_pos := st.(opiter_OpIterState_pos)
         |})
     end)
 .
 
 (** [veriwasm::opiter::pop_with_type]:
-    Source: 'src/opiter.rs', lines 368:0-380:1 *)
+    Source: 'src/opiter.rs', lines 387:0-399:1 *)
 Definition opiter_pop_with_type
   (st : opiter_OpIterState_t) (expected : types_ValueType_t) :
   result ((core_result_Result_t opiter_StackType_t error_OpError_t) *
@@ -3476,7 +8077,7 @@ Definition opiter_pop_with_type
 .
 
 (** [veriwasm::opiter::push_val]:
-    Source: 'src/opiter.rs', lines 347:0-349:1 *)
+    Source: 'src/opiter.rs', lines 366:0-368:1 *)
 Definition opiter_push_val
   (st : opiter_OpIterState_t) (t : opiter_StackType_t) :
   result opiter_OpIterState_t
@@ -3486,31 +8087,53 @@ Definition opiter_push_val
     {|
       opiter_OpIterState_vals := v;
       opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
-      opiter_OpIterState_pos := st.(opiter_OpIterState_pos);
-      opiter_OpIterState_pending := st.(opiter_OpIterState_pending)
+      opiter_OpIterState_pos := st.(opiter_OpIterState_pos)
     |}
 .
 
 (** [veriwasm::opiter::read_conversion]:
-    Source: 'src/opiter.rs', lines 576:0-586:1 *)
+    Source: 'src/opiter.rs', lines 560:0-564:1 *)
 Definition opiter_read_conversion
-  (st : opiter_OpIterState_t) (opcode : u8) (from : types_ValueType_t)
+  (st : opiter_OpIterState_t) (from : types_ValueType_t)
   (to : types_ValueType_t) :
   result ((core_result_Result_t unit error_OpError_t) * opiter_OpIterState_t)
   :=
-  p <- opiter_take_pending st opcode;
+  p <- opiter_pop_with_type st from;
   let (r, st1) := p in
   cf <-
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
   match cf with
   | Core_ops_control_flow_ControlFlow_Continue _ =>
-    p1 <- opiter_pop_with_type st1 from;
+    st2 <- opiter_push_val st1 (Opiter_StackType_Val to);
+    Ok (Core_result_Result_Ok tt, st2)
+  | Core_ops_control_flow_ControlFlow_Break residual =>
+    r1 <-
+      core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+        unit (core_convert_From_Blanket error_OpError_t) residual;
+    Ok (r1, st1)
+  end
+.
+
+(** [veriwasm::opiter::read_binary]:
+    Source: 'src/opiter.rs', lines 549:0-554:1 *)
+Definition opiter_read_binary
+  (st : opiter_OpIterState_t) (ty : types_ValueType_t)
+  (result1 : types_ValueType_t) :
+  result ((core_result_Result_t unit error_OpError_t) * opiter_OpIterState_t)
+  :=
+  p <- opiter_pop_with_type st ty;
+  let (r, st1) := p in
+  cf <-
+    core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
+  match cf with
+  | Core_ops_control_flow_ControlFlow_Continue _ =>
+    p1 <- opiter_pop_with_type st1 ty;
     let (r1, st2) := p1 in
     cf1 <-
       core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r1;
     match cf1 with
     | Core_ops_control_flow_ControlFlow_Continue _ =>
-      st3 <- opiter_push_val st2 (Opiter_StackType_Val to);
+      st3 <- opiter_push_val st2 (Opiter_StackType_Val result1);
       Ok (Core_result_Result_Ok tt, st3)
     | Core_ops_control_flow_ControlFlow_Break residual =>
       r2 <-
@@ -3526,75 +8149,99 @@ Definition opiter_read_conversion
   end
 .
 
-(** [veriwasm::opiter::read_binary]:
-    Source: 'src/opiter.rs', lines 559:0-570:1 *)
-Definition opiter_read_binary
-  (st : opiter_OpIterState_t) (opcode : u8) (ty : types_ValueType_t)
-  (result1 : types_ValueType_t) :
-  result ((core_result_Result_t unit error_OpError_t) * opiter_OpIterState_t)
+(** [veriwasm::opiter::visit]:
+    Source: 'src/opiter.rs', lines 81:0-86:1 *)
+Definition opiter_visit
+  (r : core_result_Result_t unit error_VisitError_t) :
+  result (core_result_Result_t unit error_OpError_t)
   :=
-  p <- opiter_take_pending st opcode;
-  let (r, st1) := p in
-  cf <-
-    core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
-  match cf with
-  | Core_ops_control_flow_ControlFlow_Continue _ =>
-    p1 <- opiter_pop_with_type st1 ty;
-    let (r1, st2) := p1 in
-    cf1 <-
-      core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r1;
-    match cf1 with
-    | Core_ops_control_flow_ControlFlow_Continue _ =>
-      p2 <- opiter_pop_with_type st2 ty;
-      let (r2, st3) := p2 in
-      cf2 <-
-        core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
-          r2;
-      match cf2 with
-      | Core_ops_control_flow_ControlFlow_Continue _ =>
-        st4 <- opiter_push_val st3 (Opiter_StackType_Val result1);
-        Ok (Core_result_Result_Ok tt, st4)
-      | Core_ops_control_flow_ControlFlow_Break residual =>
-        r3 <-
-          core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-            unit (core_convert_From_Blanket error_OpError_t) residual;
-        Ok (r3, st3)
-      end
-    | Core_ops_control_flow_ControlFlow_Break residual =>
-      r2 <-
-        core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-          unit (core_convert_From_Blanket error_OpError_t) residual;
-      Ok (r2, st2)
-    end
-  | Core_ops_control_flow_ControlFlow_Break residual =>
-    r1 <-
-      core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-        unit (core_convert_From_Blanket error_OpError_t) residual;
-    Ok (r1, st1)
+  match r with
+  | Core_result_Result_Ok _ => Ok (Core_result_Result_Ok tt)
+  | Core_result_Result_Err e =>
+    Ok (Core_result_Result_Err (Error_OpError_Visitor e))
   end
 .
 
 (** [veriwasm::opiter::step_numeric]:
-    Source: 'src/opiter.rs', lines 1505:0-1515:1 *)
+    Source: 'src/opiter.rs', lines 1527:0-1549:1 *)
 Definition opiter_step_numeric
-  (st : opiter_OpIterState_t) (opcode : u8) :
-  result ((core_result_Result_t unit error_OpError_t) * opiter_OpIterState_t)
+  {V : Type} (visitOpVisitorInst : visit_OpVisitor_t V)
+  (st : opiter_OpIterState_t) (opcode : u8) (v : V) :
+  result ((core_result_Result_t unit error_OpError_t) * opiter_OpIterState_t *
+    V)
   :=
   o <- opiter_convert_types opcode;
   match o with
   | None =>
     o1 <- opiter_binary_types opcode;
     match o1 with
-    | None => Ok (Core_result_Result_Err Error_OpError_UnrecognizedOpcode, st)
+    | None =>
+      Ok (Core_result_Result_Err Error_OpError_UnrecognizedOpcode, st, v)
     | Some p =>
-      let (ty, result1) := p in opiter_read_binary st opcode ty result1
+      let (ty, result1) := p in
+      p1 <- opiter_read_binary st ty result1;
+      let (r, st1) := p1 in
+      cf <-
+        core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+          r;
+      match cf with
+      | Core_ops_control_flow_ControlFlow_Continue _ =>
+        p2 <- visit_visit_numeric visitOpVisitorInst v st1 opcode;
+        let (r1, v1) := p2 in
+        r2 <- opiter_visit r1;
+        cf1 <-
+          core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+            r2;
+        match cf1 with
+        | Core_ops_control_flow_ControlFlow_Continue _ =>
+          Ok (Core_result_Result_Ok tt, st1, v1)
+        | Core_ops_control_flow_ControlFlow_Break residual =>
+          r3 <-
+            core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+              unit (core_convert_From_Blanket error_OpError_t) residual;
+          Ok (r3, st1, v1)
+        end
+      | Core_ops_control_flow_ControlFlow_Break residual =>
+        r1 <-
+          core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+            unit (core_convert_From_Blanket error_OpError_t) residual;
+        Ok (r1, st1, v)
+      end
     end
-  | Some p => let (from, to) := p in opiter_read_conversion st opcode from to
+  | Some p =>
+    let (from, to) := p in
+    p1 <- opiter_read_conversion st from to;
+    let (r, st1) := p1 in
+    cf <-
+      core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
+    match cf with
+    | Core_ops_control_flow_ControlFlow_Continue _ =>
+      p2 <- visit_visit_numeric visitOpVisitorInst v st1 opcode;
+      let (r1, v1) := p2 in
+      r2 <- opiter_visit r1;
+      cf1 <-
+        core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+          r2;
+      match cf1 with
+      | Core_ops_control_flow_ControlFlow_Continue _ =>
+        Ok (Core_result_Result_Ok tt, st1, v1)
+      | Core_ops_control_flow_ControlFlow_Break residual =>
+        r3 <-
+          core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+            unit (core_convert_From_Blanket error_OpError_t) residual;
+        Ok (r3, st1, v1)
+      end
+    | Core_ops_control_flow_ControlFlow_Break residual =>
+      r1 <-
+        core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+          unit (core_convert_From_Blanket error_OpError_t) residual;
+      Ok (r1, st1, v)
+    end
   end
 .
 
 (** [veriwasm::opiter::require_memory]:
-    Source: 'src/opiter.rs', lines 1083:0-1088:1 *)
+    Source: 'src/opiter.rs', lines 1031:0-1036:1 *)
 Definition opiter_require_memory
   (env : env_Env_t) : result (core_result_Result_t unit error_OpError_t) :=
   b <- alloc_vec_Vec_is_empty alloc_alloc_Global env.(env_Env_mem_types);
@@ -3604,7 +8251,7 @@ Definition opiter_require_memory
 .
 
 (** [veriwasm::opiter::check_memory_and_alignment]:
-    Source: 'src/opiter.rs', lines 1091:0-1097:1 *)
+    Source: 'src/opiter.rs', lines 1039:0-1045:1 *)
 Definition opiter_check_memory_and_alignment
   (env : env_Env_t) (memarg : opiter_MemArg_t) (natural_align : u32) :
   result (core_result_Result_t unit error_OpError_t)
@@ -3624,7 +8271,7 @@ Definition opiter_check_memory_and_alignment
 .
 
 (** [veriwasm::opiter::read_memarg]:
-    Source: 'src/opiter.rs', lines 1074:0-1079:1 *)
+    Source: 'src/opiter.rs', lines 1022:0-1027:1 *)
 Definition opiter_read_memarg
   (st : opiter_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t opiter_MemArg_t error_OpError_t) *
@@ -3647,8 +8294,7 @@ Definition opiter_read_memarg
         {|
           opiter_OpIterState_vals := st.(opiter_OpIterState_vals);
           opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
-          opiter_OpIterState_pos := p2;
-          opiter_OpIterState_pending := st.(opiter_OpIterState_pending)
+          opiter_OpIterState_pos := p2
         |})
     | Core_ops_control_flow_ControlFlow_Break residual =>
       r2 <-
@@ -3665,102 +8311,26 @@ Definition opiter_read_memarg
 .
 
 (** [veriwasm::opiter::read_store]:
-    Source: 'src/opiter.rs', lines 1058:0-1072:1 *)
+    Source: 'src/opiter.rs', lines 1008:0-1020:1 *)
 Definition opiter_read_store
-  (st : opiter_OpIterState_t) (data : slice u8) (env : env_Env_t) (opcode : u8)
+  (st : opiter_OpIterState_t) (data : slice u8) (env : env_Env_t)
   (ty : types_ValueType_t) (natural_align : u32) :
   result ((core_result_Result_t opiter_MemArg_t error_OpError_t) *
     opiter_OpIterState_t)
   :=
-  p <- opiter_take_pending st opcode;
+  p <- opiter_read_memarg st data;
   let (r, st1) := p in
   cf <-
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
   match cf with
-  | Core_ops_control_flow_ControlFlow_Continue _ =>
-    p1 <- opiter_read_memarg st1 data;
-    let (r1, st2) := p1 in
+  | Core_ops_control_flow_ControlFlow_Continue val =>
+    r1 <- opiter_check_memory_and_alignment env val natural_align;
     cf1 <-
       core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r1;
     match cf1 with
-    | Core_ops_control_flow_ControlFlow_Continue val =>
-      r2 <- opiter_check_memory_and_alignment env val natural_align;
-      cf2 <-
-        core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
-          r2;
-      match cf2 with
-      | Core_ops_control_flow_ControlFlow_Continue _ =>
-        p2 <- opiter_pop_with_type st2 ty;
-        let (r3, st3) := p2 in
-        cf3 <-
-          core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
-            r3;
-        match cf3 with
-        | Core_ops_control_flow_ControlFlow_Continue _ =>
-          p3 <- opiter_pop_with_type st3 Types_ValueType_I32;
-          let (r4, st4) := p3 in
-          cf4 <-
-            core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
-              r4;
-          match cf4 with
-          | Core_ops_control_flow_ControlFlow_Continue _ =>
-            Ok (Core_result_Result_Ok val, st4)
-          | Core_ops_control_flow_ControlFlow_Break residual =>
-            r5 <-
-              core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-                opiter_MemArg_t (core_convert_From_Blanket error_OpError_t)
-                residual;
-            Ok (r5, st4)
-          end
-        | Core_ops_control_flow_ControlFlow_Break residual =>
-          r4 <-
-            core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-              opiter_MemArg_t (core_convert_From_Blanket error_OpError_t)
-              residual;
-          Ok (r4, st3)
-        end
-      | Core_ops_control_flow_ControlFlow_Break residual =>
-        r3 <-
-          core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-            opiter_MemArg_t (core_convert_From_Blanket error_OpError_t)
-            residual;
-        Ok (r3, st2)
-      end
-    | Core_ops_control_flow_ControlFlow_Break residual =>
-      r2 <-
-        core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-          opiter_MemArg_t (core_convert_From_Blanket error_OpError_t) residual;
-      Ok (r2, st2)
-    end
-  | Core_ops_control_flow_ControlFlow_Break residual =>
-    r1 <-
-      core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-        opiter_MemArg_t (core_convert_From_Blanket error_OpError_t) residual;
-    Ok (r1, st1)
-  end
-.
-
-(** [veriwasm::opiter::read_load]:
-    Source: 'src/opiter.rs', lines 1041:0-1055:1 *)
-Definition opiter_read_load
-  (st : opiter_OpIterState_t) (data : slice u8) (env : env_Env_t) (opcode : u8)
-  (ty : types_ValueType_t) (natural_align : u32) :
-  result ((core_result_Result_t opiter_MemArg_t error_OpError_t) *
-    opiter_OpIterState_t)
-  :=
-  p <- opiter_take_pending st opcode;
-  let (r, st1) := p in
-  cf <-
-    core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
-  match cf with
-  | Core_ops_control_flow_ControlFlow_Continue _ =>
-    p1 <- opiter_read_memarg st1 data;
-    let (r1, st2) := p1 in
-    cf1 <-
-      core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r1;
-    match cf1 with
-    | Core_ops_control_flow_ControlFlow_Continue val =>
-      r2 <- opiter_check_memory_and_alignment env val natural_align;
+    | Core_ops_control_flow_ControlFlow_Continue _ =>
+      p1 <- opiter_pop_with_type st1 ty;
+      let (r2, st2) := p1 in
       cf2 <-
         core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
           r2;
@@ -3773,8 +8343,7 @@ Definition opiter_read_load
             r3;
         match cf3 with
         | Core_ops_control_flow_ControlFlow_Continue _ =>
-          st4 <- opiter_push_val st3 (Opiter_StackType_Val ty);
-          Ok (Core_result_Result_Ok val, st4)
+          Ok (Core_result_Result_Ok val, st3)
         | Core_ops_control_flow_ControlFlow_Break residual =>
           r4 <-
             core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
@@ -3793,7 +8362,56 @@ Definition opiter_read_load
       r2 <-
         core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
           opiter_MemArg_t (core_convert_From_Blanket error_OpError_t) residual;
-      Ok (r2, st2)
+      Ok (r2, st1)
+    end
+  | Core_ops_control_flow_ControlFlow_Break residual =>
+    r1 <-
+      core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+        opiter_MemArg_t (core_convert_From_Blanket error_OpError_t) residual;
+    Ok (r1, st1)
+  end
+.
+
+(** [veriwasm::opiter::read_load]:
+    Source: 'src/opiter.rs', lines 993:0-1005:1 *)
+Definition opiter_read_load
+  (st : opiter_OpIterState_t) (data : slice u8) (env : env_Env_t)
+  (ty : types_ValueType_t) (natural_align : u32) :
+  result ((core_result_Result_t opiter_MemArg_t error_OpError_t) *
+    opiter_OpIterState_t)
+  :=
+  p <- opiter_read_memarg st data;
+  let (r, st1) := p in
+  cf <-
+    core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
+  match cf with
+  | Core_ops_control_flow_ControlFlow_Continue val =>
+    r1 <- opiter_check_memory_and_alignment env val natural_align;
+    cf1 <-
+      core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r1;
+    match cf1 with
+    | Core_ops_control_flow_ControlFlow_Continue _ =>
+      p1 <- opiter_pop_with_type st1 Types_ValueType_I32;
+      let (r2, st2) := p1 in
+      cf2 <-
+        core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+          r2;
+      match cf2 with
+      | Core_ops_control_flow_ControlFlow_Continue _ =>
+        st3 <- opiter_push_val st2 (Opiter_StackType_Val ty);
+        Ok (Core_result_Result_Ok val, st3)
+      | Core_ops_control_flow_ControlFlow_Break residual =>
+        r3 <-
+          core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+            opiter_MemArg_t (core_convert_From_Blanket error_OpError_t)
+            residual;
+        Ok (r3, st2)
+      end
+    | Core_ops_control_flow_ControlFlow_Break residual =>
+      r2 <-
+        core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+          opiter_MemArg_t (core_convert_From_Blanket error_OpError_t) residual;
+      Ok (r2, st1)
     end
   | Core_ops_control_flow_ControlFlow_Break residual =>
     r1 <-
@@ -3804,7 +8422,7 @@ Definition opiter_read_load
 .
 
 (** [veriwasm::opiter::read_reserved_zero]:
-    Source: 'src/opiter.rs', lines 728:0-735:1 *)
+    Source: 'src/opiter.rs', lines 692:0-699:1 *)
 Definition opiter_read_reserved_zero
   (st : opiter_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t unit error_OpError_t) * opiter_OpIterState_t)
@@ -3822,8 +8440,7 @@ Definition opiter_read_reserved_zero
         {|
           opiter_OpIterState_vals := st.(opiter_OpIterState_vals);
           opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
-          opiter_OpIterState_pos := p;
-          opiter_OpIterState_pending := st.(opiter_OpIterState_pending)
+          opiter_OpIterState_pos := p
         |})
   | Core_ops_control_flow_ControlFlow_Break residual =>
     r1 <-
@@ -3833,93 +8450,25 @@ Definition opiter_read_reserved_zero
   end
 .
 
-(** [veriwasm::opiter::OP_MEMORY_GROW]
-    Source: 'src/opiter.rs', lines 166:0-166:36 *)
-Definition opiter_op_memory_grow : u8 := 64%u8.
-
 (** [veriwasm::opiter::read_memory_grow]:
-    Source: 'src/opiter.rs', lines 747:0-754:1 *)
+    Source: 'src/opiter.rs', lines 710:0-716:1 *)
 Definition opiter_read_memory_grow
   (st : opiter_OpIterState_t) (data : slice u8) (env : env_Env_t) :
   result ((core_result_Result_t unit error_OpError_t) * opiter_OpIterState_t)
   :=
-  p <- opiter_take_pending st opiter_op_memory_grow;
+  p <- opiter_read_reserved_zero st data;
   let (r, st1) := p in
   cf <-
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
   match cf with
   | Core_ops_control_flow_ControlFlow_Continue _ =>
-    p1 <- opiter_read_reserved_zero st1 data;
-    let (r1, st2) := p1 in
+    r1 <- opiter_require_memory env;
     cf1 <-
       core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r1;
     match cf1 with
     | Core_ops_control_flow_ControlFlow_Continue _ =>
-      r2 <- opiter_require_memory env;
-      cf2 <-
-        core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
-          r2;
-      match cf2 with
-      | Core_ops_control_flow_ControlFlow_Continue _ =>
-        p2 <- opiter_pop_with_type st2 Types_ValueType_I32;
-        let (r3, st3) := p2 in
-        cf3 <-
-          core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
-            r3;
-        match cf3 with
-        | Core_ops_control_flow_ControlFlow_Continue _ =>
-          st4 <-
-            opiter_push_val st3 (Opiter_StackType_Val Types_ValueType_I32);
-          Ok (Core_result_Result_Ok tt, st4)
-        | Core_ops_control_flow_ControlFlow_Break residual =>
-          r4 <-
-            core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-              unit (core_convert_From_Blanket error_OpError_t) residual;
-          Ok (r4, st3)
-        end
-      | Core_ops_control_flow_ControlFlow_Break residual =>
-        r3 <-
-          core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-            unit (core_convert_From_Blanket error_OpError_t) residual;
-        Ok (r3, st2)
-      end
-    | Core_ops_control_flow_ControlFlow_Break residual =>
-      r2 <-
-        core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-          unit (core_convert_From_Blanket error_OpError_t) residual;
-      Ok (r2, st2)
-    end
-  | Core_ops_control_flow_ControlFlow_Break residual =>
-    r1 <-
-      core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-        unit (core_convert_From_Blanket error_OpError_t) residual;
-    Ok (r1, st1)
-  end
-.
-
-(** [veriwasm::opiter::OP_MEMORY_SIZE]
-    Source: 'src/opiter.rs', lines 165:0-165:36 *)
-Definition opiter_op_memory_size : u8 := 63%u8.
-
-(** [veriwasm::opiter::read_memory_size]:
-    Source: 'src/opiter.rs', lines 738:0-744:1 *)
-Definition opiter_read_memory_size
-  (st : opiter_OpIterState_t) (data : slice u8) (env : env_Env_t) :
-  result ((core_result_Result_t unit error_OpError_t) * opiter_OpIterState_t)
-  :=
-  p <- opiter_take_pending st opiter_op_memory_size;
-  let (r, st1) := p in
-  cf <-
-    core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
-  match cf with
-  | Core_ops_control_flow_ControlFlow_Continue _ =>
-    p1 <- opiter_read_reserved_zero st1 data;
-    let (r1, st2) := p1 in
-    cf1 <-
-      core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r1;
-    match cf1 with
-    | Core_ops_control_flow_ControlFlow_Continue _ =>
-      r2 <- opiter_require_memory env;
+      p1 <- opiter_pop_with_type st1 Types_ValueType_I32;
+      let (r2, st2) := p1 in
       cf2 <-
         core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
           r2;
@@ -3937,7 +8486,7 @@ Definition opiter_read_memory_size
       r2 <-
         core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
           unit (core_convert_From_Blanket error_OpError_t) residual;
-      Ok (r2, st2)
+      Ok (r2, st1)
     end
   | Core_ops_control_flow_ControlFlow_Break residual =>
     r1 <-
@@ -3947,395 +8496,580 @@ Definition opiter_read_memory_size
   end
 .
 
-(** [veriwasm::opiter::OP_I64_STORE32]
-    Source: 'src/opiter.rs', lines 163:0-163:36 *)
-Definition opiter_op_i64_store32 : u8 := 62%u8.
+(** [veriwasm::opiter::read_memory_size]:
+    Source: 'src/opiter.rs', lines 702:0-707:1 *)
+Definition opiter_read_memory_size
+  (st : opiter_OpIterState_t) (data : slice u8) (env : env_Env_t) :
+  result ((core_result_Result_t unit error_OpError_t) * opiter_OpIterState_t)
+  :=
+  p <- opiter_read_reserved_zero st data;
+  let (r, st1) := p in
+  cf <-
+    core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
+  match cf with
+  | Core_ops_control_flow_ControlFlow_Continue _ =>
+    r1 <- opiter_require_memory env;
+    cf1 <-
+      core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r1;
+    match cf1 with
+    | Core_ops_control_flow_ControlFlow_Continue _ =>
+      st2 <- opiter_push_val st1 (Opiter_StackType_Val Types_ValueType_I32);
+      Ok (Core_result_Result_Ok tt, st2)
+    | Core_ops_control_flow_ControlFlow_Break residual =>
+      r2 <-
+        core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+          unit (core_convert_From_Blanket error_OpError_t) residual;
+      Ok (r2, st1)
+    end
+  | Core_ops_control_flow_ControlFlow_Break residual =>
+    r1 <-
+      core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+        unit (core_convert_From_Blanket error_OpError_t) residual;
+    Ok (r1, st1)
+  end
+.
 
-(** [veriwasm::opiter::OP_I64_STORE16]
-    Source: 'src/opiter.rs', lines 162:0-162:36 *)
-Definition opiter_op_i64_store16 : u8 := 61%u8.
+(** [veriwasm::opiter::OP_MEMORY_GROW]
+    Source: 'src/opiter.rs', lines 185:0-185:36 *)
+Definition opiter_op_memory_grow : u8 := 64%u8.
 
-(** [veriwasm::opiter::OP_I64_STORE8]
-    Source: 'src/opiter.rs', lines 161:0-161:35 *)
-Definition opiter_op_i64_store8 : u8 := 60%u8.
-
-(** [veriwasm::opiter::OP_I32_STORE16]
-    Source: 'src/opiter.rs', lines 160:0-160:36 *)
-Definition opiter_op_i32_store16 : u8 := 59%u8.
-
-(** [veriwasm::opiter::OP_I32_STORE8]
-    Source: 'src/opiter.rs', lines 159:0-159:35 *)
-Definition opiter_op_i32_store8 : u8 := 58%u8.
-
-(** [veriwasm::opiter::OP_F64_STORE]
-    Source: 'src/opiter.rs', lines 158:0-158:34 *)
-Definition opiter_op_f64_store : u8 := 57%u8.
-
-(** [veriwasm::opiter::OP_F32_STORE]
-    Source: 'src/opiter.rs', lines 157:0-157:34 *)
-Definition opiter_op_f32_store : u8 := 56%u8.
-
-(** [veriwasm::opiter::OP_I64_STORE]
-    Source: 'src/opiter.rs', lines 156:0-156:34 *)
-Definition opiter_op_i64_store : u8 := 55%u8.
-
-(** [veriwasm::opiter::OP_I32_STORE]
-    Source: 'src/opiter.rs', lines 155:0-155:34 *)
-Definition opiter_op_i32_store : u8 := 54%u8.
-
-(** [veriwasm::opiter::OP_I64_LOAD32_U]
-    Source: 'src/opiter.rs', lines 153:0-153:37 *)
-Definition opiter_op_i64_load32_u : u8 := 53%u8.
-
-(** [veriwasm::opiter::OP_I64_LOAD32_S]
-    Source: 'src/opiter.rs', lines 152:0-152:37 *)
-Definition opiter_op_i64_load32_s : u8 := 52%u8.
-
-(** [veriwasm::opiter::OP_I64_LOAD16_U]
-    Source: 'src/opiter.rs', lines 151:0-151:37 *)
-Definition opiter_op_i64_load16_u : u8 := 51%u8.
-
-(** [veriwasm::opiter::OP_I64_LOAD16_S]
-    Source: 'src/opiter.rs', lines 150:0-150:37 *)
-Definition opiter_op_i64_load16_s : u8 := 50%u8.
-
-(** [veriwasm::opiter::OP_I64_LOAD8_U]
-    Source: 'src/opiter.rs', lines 149:0-149:36 *)
-Definition opiter_op_i64_load8_u : u8 := 49%u8.
-
-(** [veriwasm::opiter::OP_I64_LOAD8_S]
-    Source: 'src/opiter.rs', lines 148:0-148:36 *)
-Definition opiter_op_i64_load8_s : u8 := 48%u8.
-
-(** [veriwasm::opiter::OP_I32_LOAD16_U]
-    Source: 'src/opiter.rs', lines 147:0-147:37 *)
-Definition opiter_op_i32_load16_u : u8 := 47%u8.
-
-(** [veriwasm::opiter::OP_I32_LOAD16_S]
-    Source: 'src/opiter.rs', lines 146:0-146:37 *)
-Definition opiter_op_i32_load16_s : u8 := 46%u8.
-
-(** [veriwasm::opiter::OP_I32_LOAD8_U]
-    Source: 'src/opiter.rs', lines 145:0-145:36 *)
-Definition opiter_op_i32_load8_u : u8 := 45%u8.
-
-(** [veriwasm::opiter::OP_I32_LOAD8_S]
-    Source: 'src/opiter.rs', lines 144:0-144:36 *)
-Definition opiter_op_i32_load8_s : u8 := 44%u8.
-
-(** [veriwasm::opiter::OP_F64_LOAD]
-    Source: 'src/opiter.rs', lines 143:0-143:33 *)
-Definition opiter_op_f64_load : u8 := 43%u8.
-
-(** [veriwasm::opiter::OP_F32_LOAD]
-    Source: 'src/opiter.rs', lines 142:0-142:33 *)
-Definition opiter_op_f32_load : u8 := 42%u8.
-
-(** [veriwasm::opiter::OP_I64_LOAD]
-    Source: 'src/opiter.rs', lines 141:0-141:33 *)
-Definition opiter_op_i64_load : u8 := 41%u8.
-
-(** [veriwasm::opiter::OP_I32_LOAD]
-    Source: 'src/opiter.rs', lines 140:0-140:33 *)
-Definition opiter_op_i32_load : u8 := 40%u8.
+(** [veriwasm::opiter::OP_MEMORY_SIZE]
+    Source: 'src/opiter.rs', lines 184:0-184:36 *)
+Definition opiter_op_memory_size : u8 := 63%u8.
 
 (** [veriwasm::opiter::step_memory]:
-    Source: 'src/opiter.rs', lines 1413:0-1501:1 *)
+    Source: 'src/opiter.rs', lines 1389:0-1522:1 *)
 Definition opiter_step_memory
+  {V : Type} (visitOpVisitorInst : visit_OpVisitor_t V)
   (st : opiter_OpIterState_t) (data : slice u8) (env : env_Env_t) (opcode : u8)
-  :
-  result ((core_result_Result_t unit error_OpError_t) * opiter_OpIterState_t)
+  (v : V) :
+  result ((core_result_Result_t unit error_OpError_t) * opiter_OpIterState_t *
+    V)
   :=
   if opcode s= opiter_op_i32_load
   then (
-    p <- opiter_read_load st data env opcode Types_ValueType_I32 2%u32;
+    p <- opiter_read_load st data env Types_ValueType_I32 2%u32;
     let (r, st1) := p in
     cf <-
       core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
     match cf with
-    | Core_ops_control_flow_ControlFlow_Continue _ =>
-      Ok (Core_result_Result_Ok tt, st1)
+    | Core_ops_control_flow_ControlFlow_Continue val =>
+      p1 <- visit_visit_memory visitOpVisitorInst v st1 opcode val;
+      let (r1, v1) := p1 in
+      r2 <- opiter_visit r1;
+      cf1 <-
+        core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+          r2;
+      match cf1 with
+      | Core_ops_control_flow_ControlFlow_Continue _ =>
+        Ok (Core_result_Result_Ok tt, st1, v1)
+      | Core_ops_control_flow_ControlFlow_Break residual =>
+        r3 <-
+          core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+            unit (core_convert_From_Blanket error_OpError_t) residual;
+        Ok (r3, st1, v1)
+      end
     | Core_ops_control_flow_ControlFlow_Break residual =>
       r1 <-
         core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
           unit (core_convert_From_Blanket error_OpError_t) residual;
-      Ok (r1, st1)
+      Ok (r1, st1, v)
     end)
   else
     if opcode s= opiter_op_i64_load
     then (
-      p <- opiter_read_load st data env opcode Types_ValueType_I64 3%u32;
+      p <- opiter_read_load st data env Types_ValueType_I64 3%u32;
       let (r, st1) := p in
       cf <-
         core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
           r;
       match cf with
-      | Core_ops_control_flow_ControlFlow_Continue _ =>
-        Ok (Core_result_Result_Ok tt, st1)
+      | Core_ops_control_flow_ControlFlow_Continue val =>
+        p1 <- visit_visit_memory visitOpVisitorInst v st1 opcode val;
+        let (r1, v1) := p1 in
+        r2 <- opiter_visit r1;
+        cf1 <-
+          core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+            r2;
+        match cf1 with
+        | Core_ops_control_flow_ControlFlow_Continue _ =>
+          Ok (Core_result_Result_Ok tt, st1, v1)
+        | Core_ops_control_flow_ControlFlow_Break residual =>
+          r3 <-
+            core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+              unit (core_convert_From_Blanket error_OpError_t) residual;
+          Ok (r3, st1, v1)
+        end
       | Core_ops_control_flow_ControlFlow_Break residual =>
         r1 <-
           core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
             unit (core_convert_From_Blanket error_OpError_t) residual;
-        Ok (r1, st1)
+        Ok (r1, st1, v)
       end)
     else
       if opcode s= opiter_op_f32_load
       then (
-        p <- opiter_read_load st data env opcode Types_ValueType_F32 2%u32;
+        p <- opiter_read_load st data env Types_ValueType_F32 2%u32;
         let (r, st1) := p in
         cf <-
           core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
             r;
         match cf with
-        | Core_ops_control_flow_ControlFlow_Continue _ =>
-          Ok (Core_result_Result_Ok tt, st1)
+        | Core_ops_control_flow_ControlFlow_Continue val =>
+          p1 <- visit_visit_memory visitOpVisitorInst v st1 opcode val;
+          let (r1, v1) := p1 in
+          r2 <- opiter_visit r1;
+          cf1 <-
+            core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+              r2;
+          match cf1 with
+          | Core_ops_control_flow_ControlFlow_Continue _ =>
+            Ok (Core_result_Result_Ok tt, st1, v1)
+          | Core_ops_control_flow_ControlFlow_Break residual =>
+            r3 <-
+              core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                unit (core_convert_From_Blanket error_OpError_t) residual;
+            Ok (r3, st1, v1)
+          end
         | Core_ops_control_flow_ControlFlow_Break residual =>
           r1 <-
             core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
               unit (core_convert_From_Blanket error_OpError_t) residual;
-          Ok (r1, st1)
+          Ok (r1, st1, v)
         end)
       else
         if opcode s= opiter_op_f64_load
         then (
-          p <- opiter_read_load st data env opcode Types_ValueType_F64 3%u32;
+          p <- opiter_read_load st data env Types_ValueType_F64 3%u32;
           let (r, st1) := p in
           cf <-
             core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
               r;
           match cf with
-          | Core_ops_control_flow_ControlFlow_Continue _ =>
-            Ok (Core_result_Result_Ok tt, st1)
+          | Core_ops_control_flow_ControlFlow_Continue val =>
+            p1 <- visit_visit_memory visitOpVisitorInst v st1 opcode val;
+            let (r1, v1) := p1 in
+            r2 <- opiter_visit r1;
+            cf1 <-
+              core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                r2;
+            match cf1 with
+            | Core_ops_control_flow_ControlFlow_Continue _ =>
+              Ok (Core_result_Result_Ok tt, st1, v1)
+            | Core_ops_control_flow_ControlFlow_Break residual =>
+              r3 <-
+                core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                  unit (core_convert_From_Blanket error_OpError_t) residual;
+              Ok (r3, st1, v1)
+            end
           | Core_ops_control_flow_ControlFlow_Break residual =>
             r1 <-
               core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                 unit (core_convert_From_Blanket error_OpError_t) residual;
-            Ok (r1, st1)
+            Ok (r1, st1, v)
           end)
         else
           if opcode s= opiter_op_i32_load8_s
           then (
-            p <- opiter_read_load st data env opcode Types_ValueType_I32 0%u32;
+            p <- opiter_read_load st data env Types_ValueType_I32 0%u32;
             let (r, st1) := p in
             cf <-
               core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
                 r;
             match cf with
-            | Core_ops_control_flow_ControlFlow_Continue _ =>
-              Ok (Core_result_Result_Ok tt, st1)
+            | Core_ops_control_flow_ControlFlow_Continue val =>
+              p1 <- visit_visit_memory visitOpVisitorInst v st1 opcode val;
+              let (r1, v1) := p1 in
+              r2 <- opiter_visit r1;
+              cf1 <-
+                core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                  r2;
+              match cf1 with
+              | Core_ops_control_flow_ControlFlow_Continue _ =>
+                Ok (Core_result_Result_Ok tt, st1, v1)
+              | Core_ops_control_flow_ControlFlow_Break residual =>
+                r3 <-
+                  core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                    unit (core_convert_From_Blanket error_OpError_t) residual;
+                Ok (r3, st1, v1)
+              end
             | Core_ops_control_flow_ControlFlow_Break residual =>
               r1 <-
                 core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                   unit (core_convert_From_Blanket error_OpError_t) residual;
-              Ok (r1, st1)
+              Ok (r1, st1, v)
             end)
           else
             if opcode s= opiter_op_i32_load8_u
             then (
-              p <-
-                opiter_read_load st data env opcode Types_ValueType_I32 0%u32;
+              p <- opiter_read_load st data env Types_ValueType_I32 0%u32;
               let (r, st1) := p in
               cf <-
                 core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
                   r;
               match cf with
-              | Core_ops_control_flow_ControlFlow_Continue _ =>
-                Ok (Core_result_Result_Ok tt, st1)
+              | Core_ops_control_flow_ControlFlow_Continue val =>
+                p1 <- visit_visit_memory visitOpVisitorInst v st1 opcode val;
+                let (r1, v1) := p1 in
+                r2 <- opiter_visit r1;
+                cf1 <-
+                  core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                    r2;
+                match cf1 with
+                | Core_ops_control_flow_ControlFlow_Continue _ =>
+                  Ok (Core_result_Result_Ok tt, st1, v1)
+                | Core_ops_control_flow_ControlFlow_Break residual =>
+                  r3 <-
+                    core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                      unit (core_convert_From_Blanket error_OpError_t)
+                      residual;
+                  Ok (r3, st1, v1)
+                end
               | Core_ops_control_flow_ControlFlow_Break residual =>
                 r1 <-
                   core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                     unit (core_convert_From_Blanket error_OpError_t) residual;
-                Ok (r1, st1)
+                Ok (r1, st1, v)
               end)
             else
               if opcode s= opiter_op_i32_load16_s
               then (
-                p <-
-                  opiter_read_load st data env opcode Types_ValueType_I32
-                    1%u32;
+                p <- opiter_read_load st data env Types_ValueType_I32 1%u32;
                 let (r, st1) := p in
                 cf <-
                   core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
                     r;
                 match cf with
-                | Core_ops_control_flow_ControlFlow_Continue _ =>
-                  Ok (Core_result_Result_Ok tt, st1)
+                | Core_ops_control_flow_ControlFlow_Continue val =>
+                  p1 <- visit_visit_memory visitOpVisitorInst v st1 opcode val;
+                  let (r1, v1) := p1 in
+                  r2 <- opiter_visit r1;
+                  cf1 <-
+                    core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                      r2;
+                  match cf1 with
+                  | Core_ops_control_flow_ControlFlow_Continue _ =>
+                    Ok (Core_result_Result_Ok tt, st1, v1)
+                  | Core_ops_control_flow_ControlFlow_Break residual =>
+                    r3 <-
+                      core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                        unit (core_convert_From_Blanket error_OpError_t)
+                        residual;
+                    Ok (r3, st1, v1)
+                  end
                 | Core_ops_control_flow_ControlFlow_Break residual =>
                   r1 <-
                     core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                       unit (core_convert_From_Blanket error_OpError_t)
                       residual;
-                  Ok (r1, st1)
+                  Ok (r1, st1, v)
                 end)
               else
                 if opcode s= opiter_op_i32_load16_u
                 then (
-                  p <-
-                    opiter_read_load st data env opcode Types_ValueType_I32
-                      1%u32;
+                  p <- opiter_read_load st data env Types_ValueType_I32 1%u32;
                   let (r, st1) := p in
                   cf <-
                     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
                       r;
                   match cf with
-                  | Core_ops_control_flow_ControlFlow_Continue _ =>
-                    Ok (Core_result_Result_Ok tt, st1)
+                  | Core_ops_control_flow_ControlFlow_Continue val =>
+                    p1 <-
+                      visit_visit_memory visitOpVisitorInst v st1 opcode val;
+                    let (r1, v1) := p1 in
+                    r2 <- opiter_visit r1;
+                    cf1 <-
+                      core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                        r2;
+                    match cf1 with
+                    | Core_ops_control_flow_ControlFlow_Continue _ =>
+                      Ok (Core_result_Result_Ok tt, st1, v1)
+                    | Core_ops_control_flow_ControlFlow_Break residual =>
+                      r3 <-
+                        core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                          unit (core_convert_From_Blanket error_OpError_t)
+                          residual;
+                      Ok (r3, st1, v1)
+                    end
                   | Core_ops_control_flow_ControlFlow_Break residual =>
                     r1 <-
                       core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                         unit (core_convert_From_Blanket error_OpError_t)
                         residual;
-                    Ok (r1, st1)
+                    Ok (r1, st1, v)
                   end)
                 else
                   if opcode s= opiter_op_i64_load8_s
                   then (
                     p <-
-                      opiter_read_load st data env opcode Types_ValueType_I64
-                        0%u32;
+                      opiter_read_load st data env Types_ValueType_I64 0%u32;
                     let (r, st1) := p in
                     cf <-
                       core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
                         r;
                     match cf with
-                    | Core_ops_control_flow_ControlFlow_Continue _ =>
-                      Ok (Core_result_Result_Ok tt, st1)
+                    | Core_ops_control_flow_ControlFlow_Continue val =>
+                      p1 <-
+                        visit_visit_memory visitOpVisitorInst v st1 opcode val;
+                      let (r1, v1) := p1 in
+                      r2 <- opiter_visit r1;
+                      cf1 <-
+                        core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                          r2;
+                      match cf1 with
+                      | Core_ops_control_flow_ControlFlow_Continue _ =>
+                        Ok (Core_result_Result_Ok tt, st1, v1)
+                      | Core_ops_control_flow_ControlFlow_Break residual =>
+                        r3 <-
+                          core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                            unit (core_convert_From_Blanket error_OpError_t)
+                            residual;
+                        Ok (r3, st1, v1)
+                      end
                     | Core_ops_control_flow_ControlFlow_Break residual =>
                       r1 <-
                         core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                           unit (core_convert_From_Blanket error_OpError_t)
                           residual;
-                      Ok (r1, st1)
+                      Ok (r1, st1, v)
                     end)
                   else
                     if opcode s= opiter_op_i64_load8_u
                     then (
                       p <-
-                        opiter_read_load st data env opcode Types_ValueType_I64
-                          0%u32;
+                        opiter_read_load st data env Types_ValueType_I64 0%u32;
                       let (r, st1) := p in
                       cf <-
                         core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
                           r;
                       match cf with
-                      | Core_ops_control_flow_ControlFlow_Continue _ =>
-                        Ok (Core_result_Result_Ok tt, st1)
+                      | Core_ops_control_flow_ControlFlow_Continue val =>
+                        p1 <-
+                          visit_visit_memory visitOpVisitorInst v st1 opcode
+                            val;
+                        let (r1, v1) := p1 in
+                        r2 <- opiter_visit r1;
+                        cf1 <-
+                          core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                            r2;
+                        match cf1 with
+                        | Core_ops_control_flow_ControlFlow_Continue _ =>
+                          Ok (Core_result_Result_Ok tt, st1, v1)
+                        | Core_ops_control_flow_ControlFlow_Break residual =>
+                          r3 <-
+                            core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                              unit (core_convert_From_Blanket error_OpError_t)
+                              residual;
+                          Ok (r3, st1, v1)
+                        end
                       | Core_ops_control_flow_ControlFlow_Break residual =>
                         r1 <-
                           core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                             unit (core_convert_From_Blanket error_OpError_t)
                             residual;
-                        Ok (r1, st1)
+                        Ok (r1, st1, v)
                       end)
                     else
                       if opcode s= opiter_op_i64_load16_s
                       then (
                         p <-
-                          opiter_read_load st data env opcode
-                            Types_ValueType_I64 1%u32;
+                          opiter_read_load st data env Types_ValueType_I64
+                            1%u32;
                         let (r, st1) := p in
                         cf <-
                           core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
                             r;
                         match cf with
-                        | Core_ops_control_flow_ControlFlow_Continue _ =>
-                          Ok (Core_result_Result_Ok tt, st1)
+                        | Core_ops_control_flow_ControlFlow_Continue val =>
+                          p1 <-
+                            visit_visit_memory visitOpVisitorInst v st1 opcode
+                              val;
+                          let (r1, v1) := p1 in
+                          r2 <- opiter_visit r1;
+                          cf1 <-
+                            core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                              r2;
+                          match cf1 with
+                          | Core_ops_control_flow_ControlFlow_Continue _ =>
+                            Ok (Core_result_Result_Ok tt, st1, v1)
+                          | Core_ops_control_flow_ControlFlow_Break residual =>
+                            r3 <-
+                              core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                unit (core_convert_From_Blanket
+                                error_OpError_t) residual;
+                            Ok (r3, st1, v1)
+                          end
                         | Core_ops_control_flow_ControlFlow_Break residual =>
                           r1 <-
                             core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                               unit (core_convert_From_Blanket error_OpError_t)
                               residual;
-                          Ok (r1, st1)
+                          Ok (r1, st1, v)
                         end)
                       else
                         if opcode s= opiter_op_i64_load16_u
                         then (
                           p <-
-                            opiter_read_load st data env opcode
-                              Types_ValueType_I64 1%u32;
+                            opiter_read_load st data env Types_ValueType_I64
+                              1%u32;
                           let (r, st1) := p in
                           cf <-
                             core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
                               r;
                           match cf with
-                          | Core_ops_control_flow_ControlFlow_Continue _ =>
-                            Ok (Core_result_Result_Ok tt, st1)
+                          | Core_ops_control_flow_ControlFlow_Continue val =>
+                            p1 <-
+                              visit_visit_memory visitOpVisitorInst v st1
+                                opcode val;
+                            let (r1, v1) := p1 in
+                            r2 <- opiter_visit r1;
+                            cf1 <-
+                              core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                                r2;
+                            match cf1 with
+                            | Core_ops_control_flow_ControlFlow_Continue _ =>
+                              Ok (Core_result_Result_Ok tt, st1, v1)
+                            | Core_ops_control_flow_ControlFlow_Break residual
+                              =>
+                              r3 <-
+                                core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                  unit (core_convert_From_Blanket
+                                  error_OpError_t) residual;
+                              Ok (r3, st1, v1)
+                            end
                           | Core_ops_control_flow_ControlFlow_Break residual =>
                             r1 <-
                               core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                                 unit (core_convert_From_Blanket
                                 error_OpError_t) residual;
-                            Ok (r1, st1)
+                            Ok (r1, st1, v)
                           end)
                         else
                           if opcode s= opiter_op_i64_load32_s
                           then (
                             p <-
-                              opiter_read_load st data env opcode
-                                Types_ValueType_I64 2%u32;
+                              opiter_read_load st data env Types_ValueType_I64
+                                2%u32;
                             let (r, st1) := p in
                             cf <-
                               core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
                                 r;
                             match cf with
-                            | Core_ops_control_flow_ControlFlow_Continue _ =>
-                              Ok (Core_result_Result_Ok tt, st1)
+                            | Core_ops_control_flow_ControlFlow_Continue val =>
+                              p1 <-
+                                visit_visit_memory visitOpVisitorInst v st1
+                                  opcode val;
+                              let (r1, v1) := p1 in
+                              r2 <- opiter_visit r1;
+                              cf1 <-
+                                core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                                  r2;
+                              match cf1 with
+                              | Core_ops_control_flow_ControlFlow_Continue _ =>
+                                Ok (Core_result_Result_Ok tt, st1, v1)
+                              | Core_ops_control_flow_ControlFlow_Break
+                                residual =>
+                                r3 <-
+                                  core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                    unit (core_convert_From_Blanket
+                                    error_OpError_t) residual;
+                                Ok (r3, st1, v1)
+                              end
                             | Core_ops_control_flow_ControlFlow_Break residual
                               =>
                               r1 <-
                                 core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                                   unit (core_convert_From_Blanket
                                   error_OpError_t) residual;
-                              Ok (r1, st1)
+                              Ok (r1, st1, v)
                             end)
                           else
                             if opcode s= opiter_op_i64_load32_u
                             then (
                               p <-
-                                opiter_read_load st data env opcode
+                                opiter_read_load st data env
                                   Types_ValueType_I64 2%u32;
                               let (r, st1) := p in
                               cf <-
                                 core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
                                   r;
                               match cf with
-                              | Core_ops_control_flow_ControlFlow_Continue _ =>
-                                Ok (Core_result_Result_Ok tt, st1)
+                              | Core_ops_control_flow_ControlFlow_Continue val
+                                =>
+                                p1 <-
+                                  visit_visit_memory visitOpVisitorInst v st1
+                                    opcode val;
+                                let (r1, v1) := p1 in
+                                r2 <- opiter_visit r1;
+                                cf1 <-
+                                  core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                                    r2;
+                                match cf1 with
+                                | Core_ops_control_flow_ControlFlow_Continue _
+                                  =>
+                                  Ok (Core_result_Result_Ok tt, st1, v1)
+                                | Core_ops_control_flow_ControlFlow_Break
+                                  residual =>
+                                  r3 <-
+                                    core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                      unit (core_convert_From_Blanket
+                                      error_OpError_t) residual;
+                                  Ok (r3, st1, v1)
+                                end
                               | Core_ops_control_flow_ControlFlow_Break
                                 residual =>
                                 r1 <-
                                   core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                                     unit (core_convert_From_Blanket
                                     error_OpError_t) residual;
-                                Ok (r1, st1)
+                                Ok (r1, st1, v)
                               end)
                             else
                               if opcode s= opiter_op_i32_store
                               then (
                                 p <-
-                                  opiter_read_store st data env opcode
+                                  opiter_read_store st data env
                                     Types_ValueType_I32 2%u32;
                                 let (r, st1) := p in
                                 cf <-
                                   core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
                                     r;
                                 match cf with
-                                | Core_ops_control_flow_ControlFlow_Continue _
-                                  =>
-                                  Ok (Core_result_Result_Ok tt, st1)
+                                | Core_ops_control_flow_ControlFlow_Continue
+                                  val =>
+                                  p1 <-
+                                    visit_visit_memory visitOpVisitorInst v st1
+                                      opcode val;
+                                  let (r1, v1) := p1 in
+                                  r2 <- opiter_visit r1;
+                                  cf1 <-
+                                    core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                                      r2;
+                                  match cf1 with
+                                  | Core_ops_control_flow_ControlFlow_Continue
+                                    _ =>
+                                    Ok (Core_result_Result_Ok tt, st1, v1)
+                                  | Core_ops_control_flow_ControlFlow_Break
+                                    residual =>
+                                    r3 <-
+                                      core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                        unit (core_convert_From_Blanket
+                                        error_OpError_t) residual;
+                                    Ok (r3, st1, v1)
+                                  end
                                 | Core_ops_control_flow_ControlFlow_Break
                                   residual =>
                                   r1 <-
                                     core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                                       unit (core_convert_From_Blanket
                                       error_OpError_t) residual;
-                                  Ok (r1, st1)
+                                  Ok (r1, st1, v)
                                 end)
                               else
                                 if opcode s= opiter_op_i64_store
                                 then (
                                   p <-
-                                    opiter_read_store st data env opcode
+                                    opiter_read_store st data env
                                       Types_ValueType_I64 3%u32;
                                   let (r, st1) := p in
                                   cf <-
@@ -4343,21 +9077,41 @@ Definition opiter_step_memory
                                       r;
                                   match cf with
                                   | Core_ops_control_flow_ControlFlow_Continue
-                                    _ =>
-                                    Ok (Core_result_Result_Ok tt, st1)
+                                    val =>
+                                    p1 <-
+                                      visit_visit_memory visitOpVisitorInst v
+                                        st1 opcode val;
+                                    let (r1, v1) := p1 in
+                                    r2 <- opiter_visit r1;
+                                    cf1 <-
+                                      core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                                        r2;
+                                    match cf1 with
+                                    |
+                                      Core_ops_control_flow_ControlFlow_Continue
+                                      _ =>
+                                      Ok (Core_result_Result_Ok tt, st1, v1)
+                                    | Core_ops_control_flow_ControlFlow_Break
+                                      residual =>
+                                      r3 <-
+                                        core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                          unit (core_convert_From_Blanket
+                                          error_OpError_t) residual;
+                                      Ok (r3, st1, v1)
+                                    end
                                   | Core_ops_control_flow_ControlFlow_Break
                                     residual =>
                                     r1 <-
                                       core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                                         unit (core_convert_From_Blanket
                                         error_OpError_t) residual;
-                                    Ok (r1, st1)
+                                    Ok (r1, st1, v)
                                   end)
                                 else
                                   if opcode s= opiter_op_f32_store
                                   then (
                                     p <-
-                                      opiter_read_store st data env opcode
+                                      opiter_read_store st data env
                                         Types_ValueType_F32 2%u32;
                                     let (r, st1) := p in
                                     cf <-
@@ -4366,21 +9120,41 @@ Definition opiter_step_memory
                                     match cf with
                                     |
                                       Core_ops_control_flow_ControlFlow_Continue
-                                      _ =>
-                                      Ok (Core_result_Result_Ok tt, st1)
+                                      val =>
+                                      p1 <-
+                                        visit_visit_memory visitOpVisitorInst v
+                                          st1 opcode val;
+                                      let (r1, v1) := p1 in
+                                      r2 <- opiter_visit r1;
+                                      cf1 <-
+                                        core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                                          r2;
+                                      match cf1 with
+                                      |
+                                        Core_ops_control_flow_ControlFlow_Continue
+                                        _ =>
+                                        Ok (Core_result_Result_Ok tt, st1, v1)
+                                      | Core_ops_control_flow_ControlFlow_Break
+                                        residual =>
+                                        r3 <-
+                                          core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                            unit (core_convert_From_Blanket
+                                            error_OpError_t) residual;
+                                        Ok (r3, st1, v1)
+                                      end
                                     | Core_ops_control_flow_ControlFlow_Break
                                       residual =>
                                       r1 <-
                                         core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                                           unit (core_convert_From_Blanket
                                           error_OpError_t) residual;
-                                      Ok (r1, st1)
+                                      Ok (r1, st1, v)
                                     end)
                                   else
                                     if opcode s= opiter_op_f64_store
                                     then (
                                       p <-
-                                        opiter_read_store st data env opcode
+                                        opiter_read_store st data env
                                           Types_ValueType_F64 3%u32;
                                       let (r, st1) := p in
                                       cf <-
@@ -4389,21 +9163,43 @@ Definition opiter_step_memory
                                       match cf with
                                       |
                                         Core_ops_control_flow_ControlFlow_Continue
-                                        _ =>
-                                        Ok (Core_result_Result_Ok tt, st1)
+                                        val =>
+                                        p1 <-
+                                          visit_visit_memory visitOpVisitorInst
+                                            v st1 opcode val;
+                                        let (r1, v1) := p1 in
+                                        r2 <- opiter_visit r1;
+                                        cf1 <-
+                                          core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                                            r2;
+                                        match cf1 with
+                                        |
+                                          Core_ops_control_flow_ControlFlow_Continue
+                                          _ =>
+                                          Ok (Core_result_Result_Ok tt, st1,
+                                            v1)
+                                        |
+                                          Core_ops_control_flow_ControlFlow_Break
+                                          residual =>
+                                          r3 <-
+                                            core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                              unit (core_convert_From_Blanket
+                                              error_OpError_t) residual;
+                                          Ok (r3, st1, v1)
+                                        end
                                       | Core_ops_control_flow_ControlFlow_Break
                                         residual =>
                                         r1 <-
                                           core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                                             unit (core_convert_From_Blanket
                                             error_OpError_t) residual;
-                                        Ok (r1, st1)
+                                        Ok (r1, st1, v)
                                       end)
                                     else
                                       if opcode s= opiter_op_i32_store8
                                       then (
                                         p <-
-                                          opiter_read_store st data env opcode
+                                          opiter_read_store st data env
                                             Types_ValueType_I32 0%u32;
                                         let (r, st1) := p in
                                         cf <-
@@ -4412,8 +9208,31 @@ Definition opiter_step_memory
                                         match cf with
                                         |
                                           Core_ops_control_flow_ControlFlow_Continue
-                                          _ =>
-                                          Ok (Core_result_Result_Ok tt, st1)
+                                          val =>
+                                          p1 <-
+                                            visit_visit_memory
+                                              visitOpVisitorInst v st1 opcode
+                                              val;
+                                          let (r1, v1) := p1 in
+                                          r2 <- opiter_visit r1;
+                                          cf1 <-
+                                            core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                                              r2;
+                                          match cf1 with
+                                          |
+                                            Core_ops_control_flow_ControlFlow_Continue
+                                            _ =>
+                                            Ok (Core_result_Result_Ok tt, st1,
+                                              v1)
+                                          |
+                                            Core_ops_control_flow_ControlFlow_Break
+                                            residual =>
+                                            r3 <-
+                                              core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                                unit (core_convert_From_Blanket
+                                                error_OpError_t) residual;
+                                            Ok (r3, st1, v1)
+                                          end
                                         |
                                           Core_ops_control_flow_ControlFlow_Break
                                           residual =>
@@ -4421,14 +9240,14 @@ Definition opiter_step_memory
                                             core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                                               unit (core_convert_From_Blanket
                                               error_OpError_t) residual;
-                                          Ok (r1, st1)
+                                          Ok (r1, st1, v)
                                         end)
                                       else
                                         if opcode s= opiter_op_i32_store16
                                         then (
                                           p <-
                                             opiter_read_store st data env
-                                              opcode Types_ValueType_I32 1%u32;
+                                              Types_ValueType_I32 1%u32;
                                           let (r, st1) := p in
                                           cf <-
                                             core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
@@ -4436,8 +9255,32 @@ Definition opiter_step_memory
                                           match cf with
                                           |
                                             Core_ops_control_flow_ControlFlow_Continue
-                                            _ =>
-                                            Ok (Core_result_Result_Ok tt, st1)
+                                            val =>
+                                            p1 <-
+                                              visit_visit_memory
+                                                visitOpVisitorInst v st1 opcode
+                                                val;
+                                            let (r1, v1) := p1 in
+                                            r2 <- opiter_visit r1;
+                                            cf1 <-
+                                              core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                                                r2;
+                                            match cf1 with
+                                            |
+                                              Core_ops_control_flow_ControlFlow_Continue
+                                              _ =>
+                                              Ok (Core_result_Result_Ok tt,
+                                                st1, v1)
+                                            |
+                                              Core_ops_control_flow_ControlFlow_Break
+                                              residual =>
+                                              r3 <-
+                                                core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                                  unit
+                                                  (core_convert_From_Blanket
+                                                  error_OpError_t) residual;
+                                              Ok (r3, st1, v1)
+                                            end
                                           |
                                             Core_ops_control_flow_ControlFlow_Break
                                             residual =>
@@ -4445,15 +9288,14 @@ Definition opiter_step_memory
                                               core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                                                 unit (core_convert_From_Blanket
                                                 error_OpError_t) residual;
-                                            Ok (r1, st1)
+                                            Ok (r1, st1, v)
                                           end)
                                         else
                                           if opcode s= opiter_op_i64_store8
                                           then (
                                             p <-
                                               opiter_read_store st data env
-                                                opcode Types_ValueType_I64
-                                                0%u32;
+                                                Types_ValueType_I64 0%u32;
                                             let (r, st1) := p in
                                             cf <-
                                               core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
@@ -4461,9 +9303,32 @@ Definition opiter_step_memory
                                             match cf with
                                             |
                                               Core_ops_control_flow_ControlFlow_Continue
-                                              _ =>
-                                              Ok (Core_result_Result_Ok tt,
-                                                st1)
+                                              val =>
+                                              p1 <-
+                                                visit_visit_memory
+                                                  visitOpVisitorInst v st1
+                                                  opcode val;
+                                              let (r1, v1) := p1 in
+                                              r2 <- opiter_visit r1;
+                                              cf1 <-
+                                                core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                                                  r2;
+                                              match cf1 with
+                                              |
+                                                Core_ops_control_flow_ControlFlow_Continue
+                                                _ =>
+                                                Ok (Core_result_Result_Ok tt,
+                                                  st1, v1)
+                                              |
+                                                Core_ops_control_flow_ControlFlow_Break
+                                                residual =>
+                                                r3 <-
+                                                  core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                                    unit
+                                                    (core_convert_From_Blanket
+                                                    error_OpError_t) residual;
+                                                Ok (r3, st1, v1)
+                                              end
                                             |
                                               Core_ops_control_flow_ControlFlow_Break
                                               residual =>
@@ -4472,15 +9337,14 @@ Definition opiter_step_memory
                                                   unit
                                                   (core_convert_From_Blanket
                                                   error_OpError_t) residual;
-                                              Ok (r1, st1)
+                                              Ok (r1, st1, v)
                                             end)
                                           else
                                             if opcode s= opiter_op_i64_store16
                                             then (
                                               p <-
                                                 opiter_read_store st data env
-                                                  opcode Types_ValueType_I64
-                                                  1%u32;
+                                                  Types_ValueType_I64 1%u32;
                                               let (r, st1) := p in
                                               cf <-
                                                 core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
@@ -4488,9 +9352,33 @@ Definition opiter_step_memory
                                               match cf with
                                               |
                                                 Core_ops_control_flow_ControlFlow_Continue
-                                                _ =>
-                                                Ok (Core_result_Result_Ok tt,
-                                                  st1)
+                                                val =>
+                                                p1 <-
+                                                  visit_visit_memory
+                                                    visitOpVisitorInst v st1
+                                                    opcode val;
+                                                let (r1, v1) := p1 in
+                                                r2 <- opiter_visit r1;
+                                                cf1 <-
+                                                  core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                                                    r2;
+                                                match cf1 with
+                                                |
+                                                  Core_ops_control_flow_ControlFlow_Continue
+                                                  _ =>
+                                                  Ok (Core_result_Result_Ok tt,
+                                                    st1, v1)
+                                                |
+                                                  Core_ops_control_flow_ControlFlow_Break
+                                                  residual =>
+                                                  r3 <-
+                                                    core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                                      unit
+                                                      (core_convert_From_Blanket
+                                                      error_OpError_t)
+                                                      residual;
+                                                  Ok (r3, st1, v1)
+                                                end
                                               |
                                                 Core_ops_control_flow_ControlFlow_Break
                                                 residual =>
@@ -4499,7 +9387,7 @@ Definition opiter_step_memory
                                                     unit
                                                     (core_convert_From_Blanket
                                                     error_OpError_t) residual;
-                                                Ok (r1, st1)
+                                                Ok (r1, st1, v)
                                               end)
                                             else
                                               if opcode s=
@@ -4507,8 +9395,7 @@ Definition opiter_step_memory
                                               then (
                                                 p <-
                                                   opiter_read_store st data env
-                                                    opcode Types_ValueType_I64
-                                                    2%u32;
+                                                    Types_ValueType_I64 2%u32;
                                                 let (r, st1) := p in
                                                 cf <-
                                                   core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
@@ -4516,9 +9403,33 @@ Definition opiter_step_memory
                                                 match cf with
                                                 |
                                                   Core_ops_control_flow_ControlFlow_Continue
-                                                  _ =>
-                                                  Ok (Core_result_Result_Ok tt,
-                                                    st1)
+                                                  val =>
+                                                  p1 <-
+                                                    visit_visit_memory
+                                                      visitOpVisitorInst v st1
+                                                      opcode val;
+                                                  let (r1, v1) := p1 in
+                                                  r2 <- opiter_visit r1;
+                                                  cf1 <-
+                                                    core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                                                      r2;
+                                                  match cf1 with
+                                                  |
+                                                    Core_ops_control_flow_ControlFlow_Continue
+                                                    _ =>
+                                                    Ok (Core_result_Result_Ok
+                                                      tt, st1, v1)
+                                                  |
+                                                    Core_ops_control_flow_ControlFlow_Break
+                                                    residual =>
+                                                    r3 <-
+                                                      core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                                        unit
+                                                        (core_convert_From_Blanket
+                                                        error_OpError_t)
+                                                        residual;
+                                                    Ok (r3, st1, v1)
+                                                  end
                                                 |
                                                   Core_ops_control_flow_ControlFlow_Break
                                                   residual =>
@@ -4528,7 +9439,7 @@ Definition opiter_step_memory
                                                       (core_convert_From_Blanket
                                                       error_OpError_t)
                                                       residual;
-                                                  Ok (r1, st1)
+                                                  Ok (r1, st1, v)
                                                 end)
                                               else
                                                 if opcode s=
@@ -4545,8 +9456,31 @@ Definition opiter_step_memory
                                                   |
                                                     Core_ops_control_flow_ControlFlow_Continue
                                                     _ =>
-                                                    Ok (Core_result_Result_Ok
-                                                      tt, st1)
+                                                    p1 <-
+                                                      visitOpVisitorInst.(visit_OpVisitor_t_on_memory_size)
+                                                        v st1;
+                                                    let (r1, v1) := p1 in
+                                                    r2 <- opiter_visit r1;
+                                                    cf1 <-
+                                                      core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                                                        r2;
+                                                    match cf1 with
+                                                    |
+                                                      Core_ops_control_flow_ControlFlow_Continue
+                                                      _ =>
+                                                      Ok (Core_result_Result_Ok
+                                                        tt, st1, v1)
+                                                    |
+                                                      Core_ops_control_flow_ControlFlow_Break
+                                                      residual =>
+                                                      r3 <-
+                                                        core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                                          unit
+                                                          (core_convert_From_Blanket
+                                                          error_OpError_t)
+                                                          residual;
+                                                      Ok (r3, st1, v1)
+                                                    end
                                                   |
                                                     Core_ops_control_flow_ControlFlow_Break
                                                     residual =>
@@ -4556,7 +9490,7 @@ Definition opiter_step_memory
                                                         (core_convert_From_Blanket
                                                         error_OpError_t)
                                                         residual;
-                                                    Ok (r1, st1)
+                                                    Ok (r1, st1, v)
                                                   end)
                                                 else
                                                   if opcode s=
@@ -4573,8 +9507,32 @@ Definition opiter_step_memory
                                                     |
                                                       Core_ops_control_flow_ControlFlow_Continue
                                                       _ =>
-                                                      Ok (Core_result_Result_Ok
-                                                        tt, st1)
+                                                      p1 <-
+                                                        visitOpVisitorInst.(visit_OpVisitor_t_on_memory_grow)
+                                                          v st1;
+                                                      let (r1, v1) := p1 in
+                                                      r2 <- opiter_visit r1;
+                                                      cf1 <-
+                                                        core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                                                          r2;
+                                                      match cf1 with
+                                                      |
+                                                        Core_ops_control_flow_ControlFlow_Continue
+                                                        _ =>
+                                                        Ok
+                                                          (Core_result_Result_Ok
+                                                          tt, st1, v1)
+                                                      |
+                                                        Core_ops_control_flow_ControlFlow_Break
+                                                        residual =>
+                                                        r3 <-
+                                                          core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                                            unit
+                                                            (core_convert_From_Blanket
+                                                            error_OpError_t)
+                                                            residual;
+                                                        Ok (r3, st1, v1)
+                                                      end
                                                     |
                                                       Core_ops_control_flow_ControlFlow_Break
                                                       residual =>
@@ -4584,15 +9542,16 @@ Definition opiter_step_memory
                                                           (core_convert_From_Blanket
                                                           error_OpError_t)
                                                           residual;
-                                                      Ok (r1, st1)
+                                                      Ok (r1, st1, v)
                                                     end)
                                                   else
-                                                    opiter_step_numeric st
-                                                      opcode
+                                                    opiter_step_numeric
+                                                      visitOpVisitorInst st
+                                                      opcode v
 .
 
 (** [veriwasm::opiter::require_single_result]:
-    Source: 'src/opiter.rs', lines 985:0-990:1 *)
+    Source: 'src/opiter.rs', lines 937:0-942:1 *)
 Definition opiter_require_single_result
   (results : slice types_ValueType_t) :
   result (core_result_Result_t unit error_OpError_t)
@@ -4604,46 +9563,33 @@ Definition opiter_require_single_result
 .
 
 (** [veriwasm::opiter::take_index]:
-    Source: 'src/opiter.rs', lines 973:0-978:1 *)
+    Source: 'src/opiter.rs', lines 926:0-930:1 *)
 Definition opiter_take_index
-  (st : opiter_OpIterState_t) (data : slice u8) (opcode : u8) :
+  (st : opiter_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t u32 error_OpError_t) * opiter_OpIterState_t)
   :=
-  p <- opiter_take_pending st opcode;
-  let (r, st1) := p in
+  r <- reader_read_u32_leb data st.(opiter_OpIterState_pos);
   cf <-
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
   match cf with
-  | Core_ops_control_flow_ControlFlow_Continue _ =>
-    r1 <- reader_read_u32_leb data st1.(opiter_OpIterState_pos);
-    cf1 <-
-      core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r1;
-    match cf1 with
-    | Core_ops_control_flow_ControlFlow_Continue val =>
-      let (idx, p1) := val in
-      Ok (Core_result_Result_Ok idx,
-        {|
-          opiter_OpIterState_vals := st1.(opiter_OpIterState_vals);
-          opiter_OpIterState_ctrls := st1.(opiter_OpIterState_ctrls);
-          opiter_OpIterState_pos := p1;
-          opiter_OpIterState_pending := st1.(opiter_OpIterState_pending)
-        |})
-    | Core_ops_control_flow_ControlFlow_Break residual =>
-      r2 <-
-        core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-          u32 (core_convert_From_Blanket error_OpError_t) residual;
-      Ok (r2, st1)
-    end
+  | Core_ops_control_flow_ControlFlow_Continue val =>
+    let (idx, p) := val in
+    Ok (Core_result_Result_Ok idx,
+      {|
+        opiter_OpIterState_vals := st.(opiter_OpIterState_vals);
+        opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
+        opiter_OpIterState_pos := p
+      |})
   | Core_ops_control_flow_ControlFlow_Break residual =>
     r1 <-
       core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
         u32 (core_convert_From_Blanket error_OpError_t) residual;
-    Ok (r1, st1)
+    Ok (r1, st)
   end
 .
 
 (** [veriwasm::opiter::push_types]: loop 0:
-    Source: 'src/opiter.rs', lines 397:4-403:5 *)
+    Source: 'src/opiter.rs', lines 416:4-422:5 *)
 Definition opiter_push_types_loop
   (st : opiter_OpIterState_t) (types : slice types_ValueType_t) (i : usize) :
   result opiter_OpIterState_t
@@ -4662,7 +9608,7 @@ Definition opiter_push_types_loop
 .
 
 (** [veriwasm::opiter::push_types]:
-    Source: 'src/opiter.rs', lines 395:0-404:1 *)
+    Source: 'src/opiter.rs', lines 414:0-423:1 *)
 Definition opiter_push_types
   (st : opiter_OpIterState_t) (types : slice types_ValueType_t) :
   result opiter_OpIterState_t
@@ -4671,7 +9617,7 @@ Definition opiter_push_types
 .
 
 (** [veriwasm::opiter::pop_types]: loop 0:
-    Source: 'src/opiter.rs', lines 386:4-392:5 *)
+    Source: 'src/opiter.rs', lines 405:4-411:5 *)
 Definition opiter_pop_types_loop
   (st : opiter_OpIterState_t) (types : slice types_ValueType_t) (i : usize) :
   result ((core_result_Result_t unit error_OpError_t) * opiter_OpIterState_t)
@@ -4700,7 +9646,7 @@ Definition opiter_pop_types_loop
 .
 
 (** [veriwasm::opiter::pop_types]:
-    Source: 'src/opiter.rs', lines 384:0-393:1 *)
+    Source: 'src/opiter.rs', lines 403:0-412:1 *)
 Definition opiter_pop_types
   (st : opiter_OpIterState_t) (types : slice types_ValueType_t) :
   result ((core_result_Result_t unit error_OpError_t) * opiter_OpIterState_t)
@@ -4708,17 +9654,13 @@ Definition opiter_pop_types
   let i := slice_len types in opiter_pop_types_loop st types i
 .
 
-(** [veriwasm::opiter::OP_CALL_INDIRECT]
-    Source: 'src/opiter.rs', lines 130:0-130:38 *)
-Definition opiter_op_call_indirect : u8 := 17%u8.
-
 (** [veriwasm::opiter::read_call_indirect]:
-    Source: 'src/opiter.rs', lines 1018:0-1037:1 *)
+    Source: 'src/opiter.rs', lines 970:0-989:1 *)
 Definition opiter_read_call_indirect
   (st : opiter_OpIterState_t) (data : slice u8) (env : env_Env_t) :
   result ((core_result_Result_t u32 error_OpError_t) * opiter_OpIterState_t)
   :=
-  p <- opiter_take_index st data opiter_op_call_indirect;
+  p <- opiter_take_index st data;
   let (r, st1) := p in
   cf <-
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
@@ -4799,17 +9741,13 @@ Definition opiter_read_call_indirect
   end
 .
 
-(** [veriwasm::opiter::OP_CALL]
-    Source: 'src/opiter.rs', lines 129:0-129:29 *)
-Definition opiter_op_call : u8 := 16%u8.
-
 (** [veriwasm::opiter::read_call]:
-    Source: 'src/opiter.rs', lines 999:0-1009:1 *)
+    Source: 'src/opiter.rs', lines 951:0-961:1 *)
 Definition opiter_read_call
   (st : opiter_OpIterState_t) (data : slice u8) (env : env_Env_t) :
   result ((core_result_Result_t u32 error_OpError_t) * opiter_OpIterState_t)
   :=
-  p <- opiter_take_index st data opiter_op_call;
+  p <- opiter_take_index st data;
   let (r, st1) := p in
   cf <-
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
@@ -4861,6 +9799,15 @@ Definition opiter_read_call
   end
 .
 
+(** [veriwasm::visit::OpVisitor::on_br_table_label]:
+    Source: 'src/visit.rs', lines 310:4-312:5 *)
+Definition visit_OpVisitor_on_br_table_label_default
+  {Self : Type} (self : Self) (_st : opiter_OpIterState_t) (_depth : u32) :
+  result ((core_result_Result_t unit error_VisitError_t) * Self)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
 (** Trait implementation: [veriwasm::types::{core::cmp::PartialEq<veriwasm::types::ValueType> for veriwasm::types::ValueType}]
     Source: 'src/types.rs', lines 21:0-31:1 *)
 Definition types_ValueType_Insts_CoreCmpPartialEqValueType :
@@ -4872,7 +9819,7 @@ Definition types_ValueType_Insts_CoreCmpPartialEqValueType :
 |}.
 
 (** [veriwasm::opiter::{core::cmp::PartialEq<veriwasm::opiter::BlockType> for veriwasm::opiter::BlockType}::eq]:
-    Source: 'src/opiter.rs', lines 34:4-40:5 *)
+    Source: 'src/opiter.rs', lines 42:4-48:5 *)
 Definition opiter_BlockType_Insts_CoreCmpPartialEqBlockType_eq
   (self : opiter_BlockType_t) (other : opiter_BlockType_t) : result bool :=
   match self with
@@ -4891,7 +9838,7 @@ Definition opiter_BlockType_Insts_CoreCmpPartialEqBlockType_eq
 .
 
 (** [veriwasm::opiter::merge_target]:
-    Source: 'src/opiter.rs', lines 911:0-922:1 *)
+    Source: 'src/opiter.rs', lines 857:0-868:1 *)
 Definition opiter_merge_target
   (expect : option opiter_BlockType_t) (bt : opiter_BlockType_t) :
   result (core_result_Result_t opiter_BlockType_t error_OpError_t)
@@ -4907,7 +9854,7 @@ Definition opiter_merge_target
 .
 
 (** [veriwasm::opiter::read_label]:
-    Source: 'src/opiter.rs', lines 855:0-864:1 *)
+    Source: 'src/opiter.rs', lines 812:0-821:1 *)
 Definition opiter_read_label
   (st : opiter_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t (u32 * opiter_Ctrl_t) error_OpError_t) *
@@ -4927,8 +9874,7 @@ Definition opiter_read_label
         {|
           opiter_OpIterState_vals := st.(opiter_OpIterState_vals);
           opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
-          opiter_OpIterState_pos := p;
-          opiter_OpIterState_pending := st.(opiter_OpIterState_pending)
+          opiter_OpIterState_pos := p
         |})
     else (
       i <- usize_sub n 1%usize;
@@ -4940,8 +9886,7 @@ Definition opiter_read_label
         {|
           opiter_OpIterState_vals := st.(opiter_OpIterState_vals);
           opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
-          opiter_OpIterState_pos := p;
-          opiter_OpIterState_pending := st.(opiter_OpIterState_pending)
+          opiter_OpIterState_pos := p
         |}))
   | Core_ops_control_flow_ControlFlow_Break residual =>
     r1 <-
@@ -4953,7 +9898,7 @@ Definition opiter_read_label
 .
 
 (** [veriwasm::opiter::branch_target_bt]:
-    Source: 'src/opiter.rs', lines 425:0-430:1 *)
+    Source: 'src/opiter.rs', lines 444:0-449:1 *)
 Definition opiter_branch_target_bt
   (c : opiter_Ctrl_t) : result opiter_BlockType_t :=
   match c.(opiter_Ctrl_kind) with
@@ -4966,18 +9911,19 @@ Definition opiter_branch_target_bt
 .
 
 (** [veriwasm::opiter::read_table_labels]: loop 0:
-    Source: 'src/opiter.rs', lines 936:4-944:5 *)
+    Source: 'src/opiter.rs', lines 883:4-895:5 *)
 Definition opiter_read_table_labels_loop
-  (st : opiter_OpIterState_t) (data : slice u8) (count : u32)
+  {V : Type} (visitOpVisitorInst : visit_OpVisitor_t V)
+  (st : opiter_OpIterState_t) (data : slice u8) (count : u32) (v : V)
   (expect : option opiter_BlockType_t) (i : u32) :
   result ((core_result_Result_t (option opiter_BlockType_t) error_OpError_t) *
-    opiter_OpIterState_t)
+    opiter_OpIterState_t * V)
   :=
   loop
-    (fun '((st1, expect1, i1) : (opiter_OpIterState_t * (option
+    (fun '((st1, v1, expect1, i1) : (opiter_OpIterState_t * V * (option
       opiter_BlockType_t) * u32)) =>
       if i1 s= count
-      then Ok (Done (Core_result_Result_Ok expect1, st1))
+      then Ok (Done (Core_result_Result_Ok expect1, st1, v1))
       else (
         p <- opiter_read_label st1 data;
         let (r, st2) := p in
@@ -4986,48 +9932,66 @@ Definition opiter_read_table_labels_loop
             r;
         match cf with
         | Core_ops_control_flow_ControlFlow_Continue val =>
-          let (_, target) := val in
-          bt <- opiter_branch_target_bt target;
-          r1 <- opiter_merge_target expect1 bt;
+          let (depth, target) := val in
+          p1 <-
+            visitOpVisitorInst.(visit_OpVisitor_t_on_br_table_label) v1 st2
+              depth;
+          let (r1, v2) := p1 in
+          r2 <- opiter_visit r1;
           cf1 <-
             core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
-              r1;
+              r2;
           match cf1 with
-          | Core_ops_control_flow_ControlFlow_Continue val1 =>
-            i2 <- u32_add i1 1%u32; Ok (Cont (st2, Some val1, i2))
+          | Core_ops_control_flow_ControlFlow_Continue _ =>
+            bt <- opiter_branch_target_bt target;
+            r3 <- opiter_merge_target expect1 bt;
+            cf2 <-
+              core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                r3;
+            match cf2 with
+            | Core_ops_control_flow_ControlFlow_Continue val1 =>
+              i2 <- u32_add i1 1%u32; Ok (Cont (st2, v2, Some val1, i2))
+            | Core_ops_control_flow_ControlFlow_Break residual =>
+              r4 <-
+                core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                  (option opiter_BlockType_t) (core_convert_From_Blanket
+                  error_OpError_t) residual;
+              Ok (Done (r4, st2, v2))
+            end
           | Core_ops_control_flow_ControlFlow_Break residual =>
-            r2 <-
+            r3 <-
               core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                 (option opiter_BlockType_t) (core_convert_From_Blanket
                 error_OpError_t) residual;
-            Ok (Done (r2, st2))
+            Ok (Done (r3, st2, v2))
           end
         | Core_ops_control_flow_ControlFlow_Break residual =>
           r1 <-
             core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
               (option opiter_BlockType_t) (core_convert_From_Blanket
               error_OpError_t) residual;
-          Ok (Done (r1, st2))
+          Ok (Done (r1, st2, v1))
         end))
-    (st, expect, i)
+    (st, v, expect, i)
 .
 
 (** [veriwasm::opiter::read_table_labels]:
-    Source: 'src/opiter.rs', lines 929:0-945:1 *)
+    Source: 'src/opiter.rs', lines 875:0-896:1 *)
 Definition opiter_read_table_labels
-  (st : opiter_OpIterState_t) (data : slice u8) (count : u32) :
+  {V : Type} (visitOpVisitorInst : visit_OpVisitor_t V)
+  (st : opiter_OpIterState_t) (data : slice u8) (count : u32) (v : V) :
   result ((core_result_Result_t (option opiter_BlockType_t) error_OpError_t) *
-    opiter_OpIterState_t)
+    opiter_OpIterState_t * V)
   :=
-  opiter_read_table_labels_loop st data count None 0%u32
+  opiter_read_table_labels_loop visitOpVisitorInst st data count v None 0%u32
 .
 
 (** [veriwasm::opiter::mark_unreachable]: loop 0:
-    Source: 'src/opiter.rs', lines 449:4-454:5 *)
+    Source: 'src/opiter.rs', lines 468:4-473:5 *)
 Definition opiter_mark_unreachable_loop
   (st : opiter_OpIterState_t) (base : usize) :
   result ((alloc_vec_Vec opiter_StackType_t) * (alloc_vec_Vec opiter_Ctrl_t) *
-    usize * (option u8))
+    usize)
   :=
   loop
     (fun (st1 : opiter_OpIterState_t) =>
@@ -5035,8 +9999,7 @@ Definition opiter_mark_unreachable_loop
       if i s<= base
       then
         Ok (Done (st1.(opiter_OpIterState_vals),
-          st1.(opiter_OpIterState_ctrls), st1.(opiter_OpIterState_pos),
-          st1.(opiter_OpIterState_pending)))
+          st1.(opiter_OpIterState_ctrls), st1.(opiter_OpIterState_pos)))
       else (
         p <-
           alloc_vec_Vec_pop alloc_alloc_Global st1.(opiter_OpIterState_vals);
@@ -5045,19 +10008,18 @@ Definition opiter_mark_unreachable_loop
           {|
             opiter_OpIterState_vals := v;
             opiter_OpIterState_ctrls := st1.(opiter_OpIterState_ctrls);
-            opiter_OpIterState_pos := st1.(opiter_OpIterState_pos);
-            opiter_OpIterState_pending := st1.(opiter_OpIterState_pending)
+            opiter_OpIterState_pos := st1.(opiter_OpIterState_pos)
           |})))
     st
 .
 
 (** [veriwasm::opiter::mark_unreachable]:
-    Source: 'src/opiter.rs', lines 447:0-460:1 *)
+    Source: 'src/opiter.rs', lines 466:0-479:1 *)
 Definition opiter_mark_unreachable
   (st : opiter_OpIterState_t) : result opiter_OpIterState_t :=
   base <- opiter_cur_base st;
   t <- opiter_mark_unreachable_loop st base;
-  let '(v, v1, i, o) := t in
+  let '(v, v1, i) := t in
   let n := alloc_vec_Vec_len v1 in
   if n s= 0%usize
   then
@@ -5065,8 +10027,7 @@ Definition opiter_mark_unreachable
       {|
         opiter_OpIterState_vals := v;
         opiter_OpIterState_ctrls := v1;
-        opiter_OpIterState_pos := i;
-        opiter_OpIterState_pending := o
+        opiter_OpIterState_pos := i
       |}
   else (
     i1 <- usize_sub n 1%usize;
@@ -5087,13 +10048,12 @@ Definition opiter_mark_unreachable
       {|
         opiter_OpIterState_vals := v;
         opiter_OpIterState_ctrls := v2;
-        opiter_OpIterState_pos := i;
-        opiter_OpIterState_pending := o
+        opiter_OpIterState_pos := i
       |})
 .
 
 (** [veriwasm::opiter::block_results]:
-    Source: 'src/opiter.rs', lines 407:0-416:1 *)
+    Source: 'src/opiter.rs', lines 426:0-435:1 *)
 Definition opiter_block_results
   (bt : opiter_BlockType_t) : result (alloc_vec_Vec types_ValueType_t) :=
   match bt with
@@ -5103,168 +10063,124 @@ Definition opiter_block_results
   end
 .
 
-(** [veriwasm::opiter::OP_BR_TABLE]
-    Source: 'src/opiter.rs', lines 127:0-127:33 *)
-Definition opiter_op_br_table : u8 := 14%u8.
-
 (** [veriwasm::opiter::read_br_table]:
-    Source: 'src/opiter.rs', lines 955:0-967:1 *)
+    Source: 'src/opiter.rs', lines 906:0-921:1 *)
 Definition opiter_read_br_table
-  (st : opiter_OpIterState_t) (data : slice u8) :
-  result ((core_result_Result_t opiter_BlockType_t error_OpError_t) *
-    opiter_OpIterState_t)
+  {V : Type} (visitOpVisitorInst : visit_OpVisitor_t V)
+  (st : opiter_OpIterState_t) (data : slice u8) (v : V) :
+  result ((core_result_Result_t (u32 * opiter_BlockType_t) error_OpError_t) *
+    opiter_OpIterState_t * V)
   :=
-  p <- opiter_take_pending st opiter_op_br_table;
-  let (r, st1) := p in
+  r <- reader_read_u32_leb data st.(opiter_OpIterState_pos);
   cf <-
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
   match cf with
-  | Core_ops_control_flow_ControlFlow_Continue _ =>
-    r1 <- reader_read_u32_leb data st1.(opiter_OpIterState_pos);
+  | Core_ops_control_flow_ControlFlow_Continue val =>
+    let (count, p) := val in
+    t <-
+      opiter_read_table_labels visitOpVisitorInst
+        {|
+          opiter_OpIterState_vals := st.(opiter_OpIterState_vals);
+          opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
+          opiter_OpIterState_pos := p
+        |} data count v;
+    let '(r1, st1, v1) := t in
     cf1 <-
       core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r1;
     match cf1 with
-    | Core_ops_control_flow_ControlFlow_Continue val =>
-      let (count, p1) := val in
-      p2 <-
-        opiter_read_table_labels
-          {|
-            opiter_OpIterState_vals := st1.(opiter_OpIterState_vals);
-            opiter_OpIterState_ctrls := st1.(opiter_OpIterState_ctrls);
-            opiter_OpIterState_pos := p1;
-            opiter_OpIterState_pending := st1.(opiter_OpIterState_pending)
-          |} data count;
-      let (r2, st2) := p2 in
+    | Core_ops_control_flow_ControlFlow_Continue val1 =>
+      p1 <- opiter_read_label st1 data;
+      let (r2, st2) := p1 in
       cf2 <-
         core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
           r2;
       match cf2 with
-      | Core_ops_control_flow_ControlFlow_Continue val1 =>
-        p3 <- opiter_read_label st2 data;
-        let (r3, st3) := p3 in
+      | Core_ops_control_flow_ControlFlow_Continue val2 =>
+        let (default, target) := val2 in
+        bt <- opiter_branch_target_bt target;
+        r3 <- opiter_merge_target val1 bt;
         cf3 <-
           core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
             r3;
         match cf3 with
-        | Core_ops_control_flow_ControlFlow_Continue val2 =>
-          let (_, target) := val2 in
-          bt <- opiter_branch_target_bt target;
-          r4 <- opiter_merge_target val1 bt;
+        | Core_ops_control_flow_ControlFlow_Continue val3 =>
+          p2 <- opiter_pop_with_type st2 Types_ValueType_I32;
+          let (r4, st3) := p2 in
           cf4 <-
             core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
               r4;
           match cf4 with
-          | Core_ops_control_flow_ControlFlow_Continue val3 =>
-            p4 <- opiter_pop_with_type st3 Types_ValueType_I32;
-            let (r5, st4) := p4 in
+          | Core_ops_control_flow_ControlFlow_Continue _ =>
+            types <- opiter_block_results val3;
+            let s := alloc_vec_Vec_deref types in
+            p3 <- opiter_pop_types st3 s;
+            let (r5, st4) := p3 in
             cf5 <-
               core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
                 r5;
             match cf5 with
             | Core_ops_control_flow_ControlFlow_Continue _ =>
-              types <- opiter_block_results val3;
-              let s := alloc_vec_Vec_deref types in
-              p5 <- opiter_pop_types st4 s;
-              let (r6, st5) := p5 in
-              cf6 <-
-                core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
-                  r6;
-              match cf6 with
-              | Core_ops_control_flow_ControlFlow_Continue _ =>
-                st6 <- opiter_mark_unreachable st5;
-                Ok (Core_result_Result_Ok val3, st6)
-              | Core_ops_control_flow_ControlFlow_Break residual =>
-                r7 <-
-                  core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-                    opiter_BlockType_t (core_convert_From_Blanket
-                    error_OpError_t) residual;
-                Ok (r7, st5)
-              end
+              st5 <- opiter_mark_unreachable st4;
+              Ok (Core_result_Result_Ok (default, val3), st5, v1)
             | Core_ops_control_flow_ControlFlow_Break residual =>
               r6 <-
                 core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-                  opiter_BlockType_t (core_convert_From_Blanket
+                  (u32 * opiter_BlockType_t) (core_convert_From_Blanket
                   error_OpError_t) residual;
-              Ok (r6, st4)
+              Ok (r6, st4, v1)
             end
           | Core_ops_control_flow_ControlFlow_Break residual =>
             r5 <-
               core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-                opiter_BlockType_t (core_convert_From_Blanket error_OpError_t)
-                residual;
-            Ok (r5, st3)
+                (u32 * opiter_BlockType_t) (core_convert_From_Blanket
+                error_OpError_t) residual;
+            Ok (r5, st3, v1)
           end
         | Core_ops_control_flow_ControlFlow_Break residual =>
           r4 <-
             core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-              opiter_BlockType_t (core_convert_From_Blanket error_OpError_t)
-              residual;
-          Ok (r4, st3)
+              (u32 * opiter_BlockType_t) (core_convert_From_Blanket
+              error_OpError_t) residual;
+          Ok (r4, st2, v1)
         end
       | Core_ops_control_flow_ControlFlow_Break residual =>
         r3 <-
           core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-            opiter_BlockType_t (core_convert_From_Blanket error_OpError_t)
-            residual;
-        Ok (r3, st2)
+            (u32 * opiter_BlockType_t) (core_convert_From_Blanket
+            error_OpError_t) residual;
+        Ok (r3, st2, v1)
       end
     | Core_ops_control_flow_ControlFlow_Break residual =>
       r2 <-
         core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-          opiter_BlockType_t (core_convert_From_Blanket error_OpError_t)
-          residual;
-      Ok (r2, st1)
+          (u32 * opiter_BlockType_t) (core_convert_From_Blanket
+          error_OpError_t) residual;
+      Ok (r2, st1, v1)
     end
   | Core_ops_control_flow_ControlFlow_Break residual =>
     r1 <-
       core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-        opiter_BlockType_t (core_convert_From_Blanket error_OpError_t)
+        (u32 * opiter_BlockType_t) (core_convert_From_Blanket error_OpError_t)
         residual;
-    Ok (r1, st1)
-  end
-.
-
-(** [veriwasm::opiter::take_branch_target]:
-    Source: 'src/opiter.rs', lines 867:0-874:1 *)
-Definition opiter_take_branch_target
-  (st : opiter_OpIterState_t) (data : slice u8) (opcode : u8) :
-  result ((core_result_Result_t (u32 * opiter_Ctrl_t) error_OpError_t) *
-    opiter_OpIterState_t)
-  :=
-  p <- opiter_take_pending st opcode;
-  let (r, st1) := p in
-  cf <-
-    core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
-  match cf with
-  | Core_ops_control_flow_ControlFlow_Continue _ => opiter_read_label st1 data
-  | Core_ops_control_flow_ControlFlow_Break residual =>
-    r1 <-
-      core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-        (u32 * opiter_Ctrl_t) (core_convert_From_Blanket error_OpError_t)
-        residual;
-    Ok (r1, st1)
+    Ok (r1, st, v)
   end
 .
 
 (** [veriwasm::opiter::branch_target_types]:
-    Source: 'src/opiter.rs', lines 432:0-434:1 *)
+    Source: 'src/opiter.rs', lines 451:0-453:1 *)
 Definition opiter_branch_target_types
   (c : opiter_Ctrl_t) : result (alloc_vec_Vec types_ValueType_t) :=
   bt <- opiter_branch_target_bt c; opiter_block_results bt
 .
 
-(** [veriwasm::opiter::OP_BR_IF]
-    Source: 'src/opiter.rs', lines 126:0-126:30 *)
-Definition opiter_op_br_if : u8 := 13%u8.
-
 (** [veriwasm::opiter::read_br_if]:
-    Source: 'src/opiter.rs', lines 899:0-906:1 *)
+    Source: 'src/opiter.rs', lines 845:0-852:1 *)
 Definition opiter_read_br_if
   (st : opiter_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t (u32 * opiter_BlockType_t) error_OpError_t) *
     opiter_OpIterState_t)
   :=
-  p <- opiter_take_branch_target st data opiter_op_br_if;
+  p <- opiter_read_label st data;
   let (r, st1) := p in
   cf <-
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
@@ -5313,36 +10229,20 @@ Definition opiter_read_br_if
   end
 .
 
-(** [veriwasm::opiter::OP_RETURN]
-    Source: 'src/opiter.rs', lines 128:0-128:31 *)
-Definition opiter_op_return : u8 := 15%u8.
-
 (** [veriwasm::opiter::read_return]:
-    Source: 'src/opiter.rs', lines 889:0-894:1 *)
+    Source: 'src/opiter.rs', lines 836:0-840:1 *)
 Definition opiter_read_return
   (st : opiter_OpIterState_t) (ctx : opiter_Context_t) :
   result ((core_result_Result_t unit error_OpError_t) * opiter_OpIterState_t)
   :=
-  p <- opiter_take_pending st opiter_op_return;
+  let s := alloc_vec_Vec_deref ctx.(opiter_Context_results) in
+  p <- opiter_pop_types st s;
   let (r, st1) := p in
   cf <-
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
   match cf with
   | Core_ops_control_flow_ControlFlow_Continue _ =>
-    let s := alloc_vec_Vec_deref ctx.(opiter_Context_results) in
-    p1 <- opiter_pop_types st1 s;
-    let (r1, st2) := p1 in
-    cf1 <-
-      core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r1;
-    match cf1 with
-    | Core_ops_control_flow_ControlFlow_Continue _ =>
-      st3 <- opiter_mark_unreachable st2; Ok (Core_result_Result_Ok tt, st3)
-    | Core_ops_control_flow_ControlFlow_Break residual =>
-      r2 <-
-        core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-          unit (core_convert_From_Blanket error_OpError_t) residual;
-      Ok (r2, st2)
-    end
+    st2 <- opiter_mark_unreachable st1; Ok (Core_result_Result_Ok tt, st2)
   | Core_ops_control_flow_ControlFlow_Break residual =>
     r1 <-
       core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
@@ -5351,18 +10251,14 @@ Definition opiter_read_return
   end
 .
 
-(** [veriwasm::opiter::OP_BR]
-    Source: 'src/opiter.rs', lines 125:0-125:27 *)
-Definition opiter_op_br : u8 := 12%u8.
-
 (** [veriwasm::opiter::read_br]:
-    Source: 'src/opiter.rs', lines 878:0-884:1 *)
+    Source: 'src/opiter.rs', lines 825:0-831:1 *)
 Definition opiter_read_br
   (st : opiter_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t (u32 * opiter_BlockType_t) error_OpError_t) *
     opiter_OpIterState_t)
   :=
-  p <- opiter_take_branch_target st data opiter_op_br;
+  p <- opiter_read_label st data;
   let (r, st1) := p in
   cf <-
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
@@ -5396,7 +10292,7 @@ Definition opiter_read_br
 .
 
 (** [veriwasm::opiter::is_then]:
-    Source: 'src/opiter.rs', lines 777:0-785:1 *)
+    Source: 'src/opiter.rs', lines 737:0-745:1 *)
 Definition opiter_is_then (kind : opiter_LabelKind_t) : result bool :=
   match kind with
   | Opiter_LabelKind_Body => Ok false
@@ -5408,211 +10304,175 @@ Definition opiter_is_then (kind : opiter_LabelKind_t) : result bool :=
 .
 
 (** [veriwasm::opiter::read_end]:
-    Source: 'src/opiter.rs', lines 829:0-847:1 *)
+    Source: 'src/opiter.rs', lines 787:0-804:1 *)
 Definition opiter_read_end
   (st : opiter_OpIterState_t) :
   result ((core_result_Result_t (opiter_LabelKind_t * opiter_BlockType_t)
     error_OpError_t) * opiter_OpIterState_t)
   :=
-  p <- opiter_take_pending st opiter_op_end;
-  let (r, st1) := p in
-  cf <-
-    core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
-  match cf with
-  | Core_ops_control_flow_ControlFlow_Continue _ =>
-    let n := alloc_vec_Vec_len st1.(opiter_OpIterState_ctrls) in
-    if n s= 0%usize
-    then Ok (Core_result_Result_Err Error_OpError_StackMismatch, st1)
-    else (
-      i <- usize_sub n 1%usize;
-      frame <-
-        alloc_vec_Vec_index (core_slice_index_SliceIndexUsizeSliceInst
-          opiter_Ctrl_t) st1.(opiter_OpIterState_ctrls) i;
-      results <- opiter_block_results frame.(opiter_Ctrl_block_type);
-      b <- opiter_is_then frame.(opiter_Ctrl_kind);
-      if b
+  let n := alloc_vec_Vec_len st.(opiter_OpIterState_ctrls) in
+  if n s= 0%usize
+  then Ok (Core_result_Result_Err Error_OpError_StackMismatch, st)
+  else (
+    i <- usize_sub n 1%usize;
+    frame <-
+      alloc_vec_Vec_index (core_slice_index_SliceIndexUsizeSliceInst
+        opiter_Ctrl_t) st.(opiter_OpIterState_ctrls) i;
+    results <- opiter_block_results frame.(opiter_Ctrl_block_type);
+    b <- opiter_is_then frame.(opiter_Ctrl_kind);
+    if b
+    then (
+      b1 <- alloc_vec_Vec_is_empty alloc_alloc_Global results;
+      if b1
       then (
-        b1 <- alloc_vec_Vec_is_empty alloc_alloc_Global results;
-        if b1
-        then (
-          let s := alloc_vec_Vec_deref results in
-          p1 <- opiter_pop_types st1 s;
-          let (r1, st2) := p1 in
-          cf1 <-
-            core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
-              r1;
-          match cf1 with
-          | Core_ops_control_flow_ControlFlow_Continue _ =>
-            let i1 := alloc_vec_Vec_len st2.(opiter_OpIterState_vals) in
-            if i1 s<> frame.(opiter_Ctrl_value_stack_base)
-            then Ok (Core_result_Result_Err Error_OpError_StackMismatch, st2)
-            else (
-              p2 <-
-                alloc_vec_Vec_pop alloc_alloc_Global
-                  st2.(opiter_OpIterState_ctrls);
-              let (_, v) := p2 in
-              let s1 := alloc_vec_Vec_deref results in
-              st3 <-
-                opiter_push_types
-                  {|
-                    opiter_OpIterState_vals := st2.(opiter_OpIterState_vals);
-                    opiter_OpIterState_ctrls := v;
-                    opiter_OpIterState_pos := st2.(opiter_OpIterState_pos);
-                    opiter_OpIterState_pending :=
-                      st2.(opiter_OpIterState_pending)
-                  |} s1;
-              Ok (Core_result_Result_Ok (frame.(opiter_Ctrl_kind),
-                frame.(opiter_Ctrl_block_type)), st3))
-          | Core_ops_control_flow_ControlFlow_Break residual =>
-            r2 <-
-              core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-                (opiter_LabelKind_t * opiter_BlockType_t)
-                (core_convert_From_Blanket error_OpError_t) residual;
-            Ok (r2, st2)
-          end)
-        else Ok (Core_result_Result_Err Error_OpError_StackMismatch, st1))
-      else (
         let s := alloc_vec_Vec_deref results in
-        p1 <- opiter_pop_types st1 s;
-        let (r1, st2) := p1 in
-        cf1 <-
+        p <- opiter_pop_types st s;
+        let (r, st1) := p in
+        cf <-
           core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
-            r1;
-        match cf1 with
+            r;
+        match cf with
         | Core_ops_control_flow_ControlFlow_Continue _ =>
-          let i1 := alloc_vec_Vec_len st2.(opiter_OpIterState_vals) in
+          let i1 := alloc_vec_Vec_len st1.(opiter_OpIterState_vals) in
           if i1 s<> frame.(opiter_Ctrl_value_stack_base)
-          then Ok (Core_result_Result_Err Error_OpError_StackMismatch, st2)
+          then Ok (Core_result_Result_Err Error_OpError_StackMismatch, st1)
           else (
-            p2 <-
+            p1 <-
               alloc_vec_Vec_pop alloc_alloc_Global
-                st2.(opiter_OpIterState_ctrls);
-            let (_, v) := p2 in
+                st1.(opiter_OpIterState_ctrls);
+            let (_, v) := p1 in
             let s1 := alloc_vec_Vec_deref results in
-            st3 <-
+            st2 <-
               opiter_push_types
                 {|
-                  opiter_OpIterState_vals := st2.(opiter_OpIterState_vals);
+                  opiter_OpIterState_vals := st1.(opiter_OpIterState_vals);
                   opiter_OpIterState_ctrls := v;
-                  opiter_OpIterState_pos := st2.(opiter_OpIterState_pos);
-                  opiter_OpIterState_pending :=
-                    st2.(opiter_OpIterState_pending)
+                  opiter_OpIterState_pos := st1.(opiter_OpIterState_pos)
                 |} s1;
             Ok (Core_result_Result_Ok (frame.(opiter_Ctrl_kind),
-              frame.(opiter_Ctrl_block_type)), st3))
+              frame.(opiter_Ctrl_block_type)), st2))
         | Core_ops_control_flow_ControlFlow_Break residual =>
-          r2 <-
+          r1 <-
             core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
               (opiter_LabelKind_t * opiter_BlockType_t)
               (core_convert_From_Blanket error_OpError_t) residual;
-          Ok (r2, st2)
-        end))
-  | Core_ops_control_flow_ControlFlow_Break residual =>
-    r1 <-
-      core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-        (opiter_LabelKind_t * opiter_BlockType_t) (core_convert_From_Blanket
-        error_OpError_t) residual;
-    Ok (r1, st1)
-  end
+          Ok (r1, st1)
+        end)
+      else Ok (Core_result_Result_Err Error_OpError_StackMismatch, st))
+    else (
+      let s := alloc_vec_Vec_deref results in
+      p <- opiter_pop_types st s;
+      let (r, st1) := p in
+      cf <-
+        core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+          r;
+      match cf with
+      | Core_ops_control_flow_ControlFlow_Continue _ =>
+        let i1 := alloc_vec_Vec_len st1.(opiter_OpIterState_vals) in
+        if i1 s<> frame.(opiter_Ctrl_value_stack_base)
+        then Ok (Core_result_Result_Err Error_OpError_StackMismatch, st1)
+        else (
+          p1 <-
+            alloc_vec_Vec_pop alloc_alloc_Global
+              st1.(opiter_OpIterState_ctrls);
+          let (_, v) := p1 in
+          let s1 := alloc_vec_Vec_deref results in
+          st2 <-
+            opiter_push_types
+              {|
+                opiter_OpIterState_vals := st1.(opiter_OpIterState_vals);
+                opiter_OpIterState_ctrls := v;
+                opiter_OpIterState_pos := st1.(opiter_OpIterState_pos)
+              |} s1;
+          Ok (Core_result_Result_Ok (frame.(opiter_Ctrl_kind),
+            frame.(opiter_Ctrl_block_type)), st2))
+      | Core_ops_control_flow_ControlFlow_Break residual =>
+        r1 <-
+          core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+            (opiter_LabelKind_t * opiter_BlockType_t)
+            (core_convert_From_Blanket error_OpError_t) residual;
+        Ok (r1, st1)
+      end))
 .
 
-(** [veriwasm::opiter::OP_ELSE]
-    Source: 'src/opiter.rs', lines 123:0-123:29 *)
-Definition opiter_op_else : u8 := 5%u8.
-
 (** [veriwasm::opiter::read_else]:
-    Source: 'src/opiter.rs', lines 802:0-820:1 *)
+    Source: 'src/opiter.rs', lines 761:0-778:1 *)
 Definition opiter_read_else
   (st : opiter_OpIterState_t) :
   result ((core_result_Result_t opiter_BlockType_t error_OpError_t) *
     opiter_OpIterState_t)
   :=
-  p <- opiter_take_pending st opiter_op_else;
-  let (r, st1) := p in
-  cf <-
-    core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
-  match cf with
-  | Core_ops_control_flow_ControlFlow_Continue _ =>
-    let n := alloc_vec_Vec_len st1.(opiter_OpIterState_ctrls) in
-    if n s= 0%usize
-    then Ok (Core_result_Result_Err Error_OpError_StackMismatch, st1)
-    else (
-      i <- usize_sub n 1%usize;
-      frame <-
-        alloc_vec_Vec_index (core_slice_index_SliceIndexUsizeSliceInst
-          opiter_Ctrl_t) st1.(opiter_OpIterState_ctrls) i;
-      b <- opiter_is_then frame.(opiter_Ctrl_kind);
-      if b
-      then (
-        results <- opiter_block_results frame.(opiter_Ctrl_block_type);
-        let s := alloc_vec_Vec_deref results in
-        p1 <- opiter_pop_types st1 s;
-        let (r1, st2) := p1 in
-        cf1 <-
-          core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
-            r1;
-        match cf1 with
-        | Core_ops_control_flow_ControlFlow_Continue _ =>
-          let i1 := alloc_vec_Vec_len st2.(opiter_OpIterState_vals) in
-          if i1 s<> frame.(opiter_Ctrl_value_stack_base)
-          then Ok (Core_result_Result_Err Error_OpError_StackMismatch, st2)
-          else (
-            p2 <-
-              alloc_vec_Vec_index_mut
-                (core_slice_index_SliceIndexUsizeSliceInst opiter_Ctrl_t)
-                st2.(opiter_OpIterState_ctrls) i;
-            let (c, index_mut_back) := p2 in
-            let v :=
-              index_mut_back
-                {|
-                  opiter_Ctrl_kind := Opiter_LabelKind_Else;
-                  opiter_Ctrl_block_type := c.(opiter_Ctrl_block_type);
-                  opiter_Ctrl_value_stack_base :=
-                    c.(opiter_Ctrl_value_stack_base);
-                  opiter_Ctrl_polymorphic_base :=
-                    c.(opiter_Ctrl_polymorphic_base)
-                |}
-            in
-            p3 <-
-              alloc_vec_Vec_index_mut
-                (core_slice_index_SliceIndexUsizeSliceInst opiter_Ctrl_t) v i;
-            let (c1, index_mut_back1) := p3 in
-            let v1 :=
-              index_mut_back1
-                {|
-                  opiter_Ctrl_kind := c1.(opiter_Ctrl_kind);
-                  opiter_Ctrl_block_type := c1.(opiter_Ctrl_block_type);
-                  opiter_Ctrl_value_stack_base :=
-                    c1.(opiter_Ctrl_value_stack_base);
-                  opiter_Ctrl_polymorphic_base := false
-                |}
-            in
-            Ok (Core_result_Result_Ok frame.(opiter_Ctrl_block_type),
+  let n := alloc_vec_Vec_len st.(opiter_OpIterState_ctrls) in
+  if n s= 0%usize
+  then Ok (Core_result_Result_Err Error_OpError_StackMismatch, st)
+  else (
+    i <- usize_sub n 1%usize;
+    frame <-
+      alloc_vec_Vec_index (core_slice_index_SliceIndexUsizeSliceInst
+        opiter_Ctrl_t) st.(opiter_OpIterState_ctrls) i;
+    b <- opiter_is_then frame.(opiter_Ctrl_kind);
+    if b
+    then (
+      results <- opiter_block_results frame.(opiter_Ctrl_block_type);
+      let s := alloc_vec_Vec_deref results in
+      p <- opiter_pop_types st s;
+      let (r, st1) := p in
+      cf <-
+        core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+          r;
+      match cf with
+      | Core_ops_control_flow_ControlFlow_Continue _ =>
+        let i1 := alloc_vec_Vec_len st1.(opiter_OpIterState_vals) in
+        if i1 s<> frame.(opiter_Ctrl_value_stack_base)
+        then Ok (Core_result_Result_Err Error_OpError_StackMismatch, st1)
+        else (
+          p1 <-
+            alloc_vec_Vec_index_mut (core_slice_index_SliceIndexUsizeSliceInst
+              opiter_Ctrl_t) st1.(opiter_OpIterState_ctrls) i;
+          let (c, index_mut_back) := p1 in
+          let v :=
+            index_mut_back
               {|
-                opiter_OpIterState_vals := st2.(opiter_OpIterState_vals);
-                opiter_OpIterState_ctrls := v1;
-                opiter_OpIterState_pos := st2.(opiter_OpIterState_pos);
-                opiter_OpIterState_pending := st2.(opiter_OpIterState_pending)
-              |}))
-        | Core_ops_control_flow_ControlFlow_Break residual =>
-          r2 <-
-            core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-              opiter_BlockType_t (core_convert_From_Blanket error_OpError_t)
-              residual;
-          Ok (r2, st2)
-        end)
-      else Ok (Core_result_Result_Err Error_OpError_StackMismatch, st1))
-  | Core_ops_control_flow_ControlFlow_Break residual =>
-    r1 <-
-      core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-        opiter_BlockType_t (core_convert_From_Blanket error_OpError_t)
-        residual;
-    Ok (r1, st1)
-  end
+                opiter_Ctrl_kind := Opiter_LabelKind_Else;
+                opiter_Ctrl_block_type := c.(opiter_Ctrl_block_type);
+                opiter_Ctrl_value_stack_base :=
+                  c.(opiter_Ctrl_value_stack_base);
+                opiter_Ctrl_polymorphic_base :=
+                  c.(opiter_Ctrl_polymorphic_base)
+              |}
+          in
+          p2 <-
+            alloc_vec_Vec_index_mut (core_slice_index_SliceIndexUsizeSliceInst
+              opiter_Ctrl_t) v i;
+          let (c1, index_mut_back1) := p2 in
+          let v1 :=
+            index_mut_back1
+              {|
+                opiter_Ctrl_kind := c1.(opiter_Ctrl_kind);
+                opiter_Ctrl_block_type := c1.(opiter_Ctrl_block_type);
+                opiter_Ctrl_value_stack_base :=
+                  c1.(opiter_Ctrl_value_stack_base);
+                opiter_Ctrl_polymorphic_base := false
+              |}
+          in
+          Ok (Core_result_Result_Ok frame.(opiter_Ctrl_block_type),
+            {|
+              opiter_OpIterState_vals := st1.(opiter_OpIterState_vals);
+              opiter_OpIterState_ctrls := v1;
+              opiter_OpIterState_pos := st1.(opiter_OpIterState_pos)
+            |}))
+      | Core_ops_control_flow_ControlFlow_Break residual =>
+        r1 <-
+          core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+            opiter_BlockType_t (core_convert_From_Blanket error_OpError_t)
+            residual;
+        Ok (r1, st1)
+      end)
+    else Ok (Core_result_Result_Err Error_OpError_StackMismatch, st))
 .
 
 (** [veriwasm::opiter::push_ctrl]:
-    Source: 'src/opiter.rs', lines 436:0-444:1 *)
+    Source: 'src/opiter.rs', lines 455:0-463:1 *)
 Definition opiter_push_ctrl
   (st : opiter_OpIterState_t) (kind : opiter_LabelKind_t)
   (bt : opiter_BlockType_t) :
@@ -5631,13 +10491,12 @@ Definition opiter_push_ctrl
     {|
       opiter_OpIterState_vals := st.(opiter_OpIterState_vals);
       opiter_OpIterState_ctrls := v;
-      opiter_OpIterState_pos := st.(opiter_OpIterState_pos);
-      opiter_OpIterState_pending := st.(opiter_OpIterState_pending)
+      opiter_OpIterState_pos := st.(opiter_OpIterState_pos)
     |}
 .
 
 (** [veriwasm::opiter::read_block_type]:
-    Source: 'src/opiter.rs', lines 309:0-327:1 *)
+    Source: 'src/opiter.rs', lines 328:0-346:1 *)
 Definition opiter_read_block_type
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (opiter_BlockType_t * usize) error_OpError_t)
@@ -5678,52 +10537,33 @@ Definition opiter_read_block_type
   end
 .
 
-(** [veriwasm::opiter::OP_IF]
-    Source: 'src/opiter.rs', lines 122:0-122:27 *)
-Definition opiter_op_if : u8 := 4%u8.
-
 (** [veriwasm::opiter::read_if]:
-    Source: 'src/opiter.rs', lines 789:0-796:1 *)
+    Source: 'src/opiter.rs', lines 749:0-755:1 *)
 Definition opiter_read_if
   (st : opiter_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t opiter_BlockType_t error_OpError_t) *
     opiter_OpIterState_t)
   :=
-  p <- opiter_take_pending st opiter_op_if;
-  let (r, st1) := p in
+  r <- opiter_read_block_type data st.(opiter_OpIterState_pos);
   cf <-
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
   match cf with
-  | Core_ops_control_flow_ControlFlow_Continue _ =>
-    r1 <- opiter_read_block_type data st1.(opiter_OpIterState_pos);
+  | Core_ops_control_flow_ControlFlow_Continue val =>
+    let (bt, p) := val in
+    p1 <-
+      opiter_pop_with_type
+        {|
+          opiter_OpIterState_vals := st.(opiter_OpIterState_vals);
+          opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
+          opiter_OpIterState_pos := p
+        |} Types_ValueType_I32;
+    let (r1, st1) := p1 in
     cf1 <-
       core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r1;
     match cf1 with
-    | Core_ops_control_flow_ControlFlow_Continue val =>
-      let (bt, p1) := val in
-      p2 <-
-        opiter_pop_with_type
-          {|
-            opiter_OpIterState_vals := st1.(opiter_OpIterState_vals);
-            opiter_OpIterState_ctrls := st1.(opiter_OpIterState_ctrls);
-            opiter_OpIterState_pos := p1;
-            opiter_OpIterState_pending := st1.(opiter_OpIterState_pending)
-          |} Types_ValueType_I32;
-      let (r2, st2) := p2 in
-      cf2 <-
-        core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
-          r2;
-      match cf2 with
-      | Core_ops_control_flow_ControlFlow_Continue _ =>
-        st3 <- opiter_push_ctrl st2 Opiter_LabelKind_Then bt;
-        Ok (Core_result_Result_Ok bt, st3)
-      | Core_ops_control_flow_ControlFlow_Break residual =>
-        r3 <-
-          core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-            opiter_BlockType_t (core_convert_From_Blanket error_OpError_t)
-            residual;
-        Ok (r3, st2)
-      end
+    | Core_ops_control_flow_ControlFlow_Continue _ =>
+      st2 <- opiter_push_ctrl st1 Opiter_LabelKind_Then bt;
+      Ok (Core_result_Result_Ok bt, st2)
     | Core_ops_control_flow_ControlFlow_Break residual =>
       r2 <-
         core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
@@ -5736,108 +10576,72 @@ Definition opiter_read_if
       core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
         opiter_BlockType_t (core_convert_From_Blanket error_OpError_t)
         residual;
-    Ok (r1, st1)
+    Ok (r1, st)
   end
 .
 
-(** [veriwasm::opiter::OP_LOOP]
-    Source: 'src/opiter.rs', lines 121:0-121:29 *)
-Definition opiter_op_loop : u8 := 3%u8.
-
 (** [veriwasm::opiter::read_loop]:
-    Source: 'src/opiter.rs', lines 764:0-770:1 *)
+    Source: 'src/opiter.rs', lines 725:0-730:1 *)
 Definition opiter_read_loop
   (st : opiter_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t opiter_BlockType_t error_OpError_t) *
     opiter_OpIterState_t)
   :=
-  p <- opiter_take_pending st opiter_op_loop;
-  let (r, st1) := p in
+  r <- opiter_read_block_type data st.(opiter_OpIterState_pos);
   cf <-
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
   match cf with
-  | Core_ops_control_flow_ControlFlow_Continue _ =>
-    r1 <- opiter_read_block_type data st1.(opiter_OpIterState_pos);
-    cf1 <-
-      core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r1;
-    match cf1 with
-    | Core_ops_control_flow_ControlFlow_Continue val =>
-      let (bt, p1) := val in
-      st2 <-
-        opiter_push_ctrl
-          {|
-            opiter_OpIterState_vals := st1.(opiter_OpIterState_vals);
-            opiter_OpIterState_ctrls := st1.(opiter_OpIterState_ctrls);
-            opiter_OpIterState_pos := p1;
-            opiter_OpIterState_pending := st1.(opiter_OpIterState_pending)
-          |} Opiter_LabelKind_Loop bt;
-      Ok (Core_result_Result_Ok bt, st2)
-    | Core_ops_control_flow_ControlFlow_Break residual =>
-      r2 <-
-        core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-          opiter_BlockType_t (core_convert_From_Blanket error_OpError_t)
-          residual;
-      Ok (r2, st1)
-    end
+  | Core_ops_control_flow_ControlFlow_Continue val =>
+    let (bt, p) := val in
+    st1 <-
+      opiter_push_ctrl
+        {|
+          opiter_OpIterState_vals := st.(opiter_OpIterState_vals);
+          opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
+          opiter_OpIterState_pos := p
+        |} Opiter_LabelKind_Loop bt;
+    Ok (Core_result_Result_Ok bt, st1)
   | Core_ops_control_flow_ControlFlow_Break residual =>
     r1 <-
       core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
         opiter_BlockType_t (core_convert_From_Blanket error_OpError_t)
         residual;
-    Ok (r1, st1)
+    Ok (r1, st)
   end
 .
 
-(** [veriwasm::opiter::OP_BLOCK]
-    Source: 'src/opiter.rs', lines 120:0-120:30 *)
-Definition opiter_op_block : u8 := 2%u8.
-
 (** [veriwasm::opiter::read_block]:
-    Source: 'src/opiter.rs', lines 756:0-762:1 *)
+    Source: 'src/opiter.rs', lines 718:0-723:1 *)
 Definition opiter_read_block
   (st : opiter_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t opiter_BlockType_t error_OpError_t) *
     opiter_OpIterState_t)
   :=
-  p <- opiter_take_pending st opiter_op_block;
-  let (r, st1) := p in
+  r <- opiter_read_block_type data st.(opiter_OpIterState_pos);
   cf <-
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
   match cf with
-  | Core_ops_control_flow_ControlFlow_Continue _ =>
-    r1 <- opiter_read_block_type data st1.(opiter_OpIterState_pos);
-    cf1 <-
-      core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r1;
-    match cf1 with
-    | Core_ops_control_flow_ControlFlow_Continue val =>
-      let (bt, p1) := val in
-      st2 <-
-        opiter_push_ctrl
-          {|
-            opiter_OpIterState_vals := st1.(opiter_OpIterState_vals);
-            opiter_OpIterState_ctrls := st1.(opiter_OpIterState_ctrls);
-            opiter_OpIterState_pos := p1;
-            opiter_OpIterState_pending := st1.(opiter_OpIterState_pending)
-          |} Opiter_LabelKind_Block bt;
-      Ok (Core_result_Result_Ok bt, st2)
-    | Core_ops_control_flow_ControlFlow_Break residual =>
-      r2 <-
-        core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-          opiter_BlockType_t (core_convert_From_Blanket error_OpError_t)
-          residual;
-      Ok (r2, st1)
-    end
+  | Core_ops_control_flow_ControlFlow_Continue val =>
+    let (bt, p) := val in
+    st1 <-
+      opiter_push_ctrl
+        {|
+          opiter_OpIterState_vals := st.(opiter_OpIterState_vals);
+          opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
+          opiter_OpIterState_pos := p
+        |} Opiter_LabelKind_Block bt;
+    Ok (Core_result_Result_Ok bt, st1)
   | Core_ops_control_flow_ControlFlow_Break residual =>
     r1 <-
       core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
         opiter_BlockType_t (core_convert_From_Blanket error_OpError_t)
         residual;
-    Ok (r1, st1)
+    Ok (r1, st)
   end
 .
 
 (** [veriwasm::opiter::global_type]:
-    Source: 'src/opiter.rs', lines 680:0-686:1 *)
+    Source: 'src/opiter.rs', lines 650:0-656:1 *)
 Definition opiter_global_type
   (env : env_Env_t) (idx : u32) :
   result (core_result_Result_t types_GlobalType_t error_OpError_t)
@@ -5854,78 +10658,57 @@ Definition opiter_global_type
 .
 
 (** [veriwasm::opiter::take_global]:
-    Source: 'src/opiter.rs', lines 691:0-702:1 *)
+    Source: 'src/opiter.rs', lines 661:0-666:1 *)
 Definition opiter_take_global
-  (st : opiter_OpIterState_t) (data : slice u8) (env : env_Env_t) (opcode : u8)
-  :
+  (st : opiter_OpIterState_t) (data : slice u8) (env : env_Env_t) :
   result ((core_result_Result_t (u32 * types_GlobalType_t) error_OpError_t) *
     opiter_OpIterState_t)
   :=
-  p <- opiter_take_pending st opcode;
-  let (r, st1) := p in
+  r <- reader_read_u32_leb data st.(opiter_OpIterState_pos);
   cf <-
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
   match cf with
-  | Core_ops_control_flow_ControlFlow_Continue _ =>
-    r1 <- reader_read_u32_leb data st1.(opiter_OpIterState_pos);
+  | Core_ops_control_flow_ControlFlow_Continue val =>
+    let (idx, p) := val in
+    r1 <- opiter_global_type env idx;
     cf1 <-
       core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r1;
     match cf1 with
-    | Core_ops_control_flow_ControlFlow_Continue val =>
-      let (idx, p1) := val in
-      r2 <- opiter_global_type env idx;
-      cf2 <-
-        core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
-          r2;
-      match cf2 with
-      | Core_ops_control_flow_ControlFlow_Continue val1 =>
-        Ok (Core_result_Result_Ok (idx, val1),
-          {|
-            opiter_OpIterState_vals := st1.(opiter_OpIterState_vals);
-            opiter_OpIterState_ctrls := st1.(opiter_OpIterState_ctrls);
-            opiter_OpIterState_pos := p1;
-            opiter_OpIterState_pending := st1.(opiter_OpIterState_pending)
-          |})
-      | Core_ops_control_flow_ControlFlow_Break residual =>
-        r3 <-
-          core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-            (u32 * types_GlobalType_t) (core_convert_From_Blanket
-            error_OpError_t) residual;
-        Ok (r3,
-          {|
-            opiter_OpIterState_vals := st1.(opiter_OpIterState_vals);
-            opiter_OpIterState_ctrls := st1.(opiter_OpIterState_ctrls);
-            opiter_OpIterState_pos := p1;
-            opiter_OpIterState_pending := st1.(opiter_OpIterState_pending)
-          |})
-      end
+    | Core_ops_control_flow_ControlFlow_Continue val1 =>
+      Ok (Core_result_Result_Ok (idx, val1),
+        {|
+          opiter_OpIterState_vals := st.(opiter_OpIterState_vals);
+          opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
+          opiter_OpIterState_pos := p
+        |})
     | Core_ops_control_flow_ControlFlow_Break residual =>
       r2 <-
         core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
           (u32 * types_GlobalType_t) (core_convert_From_Blanket
           error_OpError_t) residual;
-      Ok (r2, st1)
+      Ok (r2,
+        {|
+          opiter_OpIterState_vals := st.(opiter_OpIterState_vals);
+          opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
+          opiter_OpIterState_pos := p
+        |})
     end
   | Core_ops_control_flow_ControlFlow_Break residual =>
     r1 <-
       core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
         (u32 * types_GlobalType_t) (core_convert_From_Blanket error_OpError_t)
         residual;
-    Ok (r1, st1)
+    Ok (r1, st)
   end
 .
 
-(** [veriwasm::opiter::OP_GLOBAL_SET]
-    Source: 'src/opiter.rs', lines 138:0-138:35 *)
-Definition opiter_op_global_set : u8 := 36%u8.
-
 (** [veriwasm::opiter::read_global_set]:
-    Source: 'src/opiter.rs', lines 714:0-722:1 *)
+    Source: 'src/opiter.rs', lines 678:0-686:1 *)
 Definition opiter_read_global_set
   (st : opiter_OpIterState_t) (data : slice u8) (env : env_Env_t) :
   result ((core_result_Result_t u32 error_OpError_t) * opiter_OpIterState_t)
   :=
-  p <- opiter_take_global st data env opiter_op_global_set;
+  p <- opiter_take_global st data env;
   let (r, st1) := p in
   cf <-
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
@@ -5960,12 +10743,12 @@ Definition opiter_read_global_set
 .
 
 (** [veriwasm::opiter::read_global_get]:
-    Source: 'src/opiter.rs', lines 705:0-709:1 *)
+    Source: 'src/opiter.rs', lines 669:0-673:1 *)
 Definition opiter_read_global_get
   (st : opiter_OpIterState_t) (data : slice u8) (env : env_Env_t) :
   result ((core_result_Result_t u32 error_OpError_t) * opiter_OpIterState_t)
   :=
-  p <- opiter_take_global st data env opiter_op_global_get;
+  p <- opiter_take_global st data env;
   let (r, st1) := p in
   cf <-
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
@@ -5984,7 +10767,7 @@ Definition opiter_read_global_get
 .
 
 (** [veriwasm::opiter::local_type]:
-    Source: 'src/opiter.rs', lines 633:0-639:1 *)
+    Source: 'src/opiter.rs', lines 609:0-615:1 *)
 Definition opiter_local_type
   (ctx : opiter_Context_t) (idx : u32) :
   result (core_result_Result_t types_ValueType_t error_OpError_t)
@@ -6001,78 +10784,57 @@ Definition opiter_local_type
 .
 
 (** [veriwasm::opiter::take_local]:
-    Source: 'src/opiter.rs', lines 644:0-655:1 *)
+    Source: 'src/opiter.rs', lines 620:0-625:1 *)
 Definition opiter_take_local
-  (st : opiter_OpIterState_t) (data : slice u8) (ctx : opiter_Context_t)
-  (opcode : u8) :
+  (st : opiter_OpIterState_t) (data : slice u8) (ctx : opiter_Context_t) :
   result ((core_result_Result_t (u32 * types_ValueType_t) error_OpError_t) *
     opiter_OpIterState_t)
   :=
-  p <- opiter_take_pending st opcode;
-  let (r, st1) := p in
+  r <- reader_read_u32_leb data st.(opiter_OpIterState_pos);
   cf <-
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
   match cf with
-  | Core_ops_control_flow_ControlFlow_Continue _ =>
-    r1 <- reader_read_u32_leb data st1.(opiter_OpIterState_pos);
+  | Core_ops_control_flow_ControlFlow_Continue val =>
+    let (idx, p) := val in
+    r1 <- opiter_local_type ctx idx;
     cf1 <-
       core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r1;
     match cf1 with
-    | Core_ops_control_flow_ControlFlow_Continue val =>
-      let (idx, p1) := val in
-      r2 <- opiter_local_type ctx idx;
-      cf2 <-
-        core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
-          r2;
-      match cf2 with
-      | Core_ops_control_flow_ControlFlow_Continue val1 =>
-        Ok (Core_result_Result_Ok (idx, val1),
-          {|
-            opiter_OpIterState_vals := st1.(opiter_OpIterState_vals);
-            opiter_OpIterState_ctrls := st1.(opiter_OpIterState_ctrls);
-            opiter_OpIterState_pos := p1;
-            opiter_OpIterState_pending := st1.(opiter_OpIterState_pending)
-          |})
-      | Core_ops_control_flow_ControlFlow_Break residual =>
-        r3 <-
-          core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-            (u32 * types_ValueType_t) (core_convert_From_Blanket
-            error_OpError_t) residual;
-        Ok (r3,
-          {|
-            opiter_OpIterState_vals := st1.(opiter_OpIterState_vals);
-            opiter_OpIterState_ctrls := st1.(opiter_OpIterState_ctrls);
-            opiter_OpIterState_pos := p1;
-            opiter_OpIterState_pending := st1.(opiter_OpIterState_pending)
-          |})
-      end
+    | Core_ops_control_flow_ControlFlow_Continue val1 =>
+      Ok (Core_result_Result_Ok (idx, val1),
+        {|
+          opiter_OpIterState_vals := st.(opiter_OpIterState_vals);
+          opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
+          opiter_OpIterState_pos := p
+        |})
     | Core_ops_control_flow_ControlFlow_Break residual =>
       r2 <-
         core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
           (u32 * types_ValueType_t) (core_convert_From_Blanket error_OpError_t)
           residual;
-      Ok (r2, st1)
+      Ok (r2,
+        {|
+          opiter_OpIterState_vals := st.(opiter_OpIterState_vals);
+          opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
+          opiter_OpIterState_pos := p
+        |})
     end
   | Core_ops_control_flow_ControlFlow_Break residual =>
     r1 <-
       core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
         (u32 * types_ValueType_t) (core_convert_From_Blanket error_OpError_t)
         residual;
-    Ok (r1, st1)
+    Ok (r1, st)
   end
 .
 
-(** [veriwasm::opiter::OP_LOCAL_TEE]
-    Source: 'src/opiter.rs', lines 136:0-136:34 *)
-Definition opiter_op_local_tee : u8 := 34%u8.
-
 (** [veriwasm::opiter::read_local_tee]:
-    Source: 'src/opiter.rs', lines 672:0-677:1 *)
+    Source: 'src/opiter.rs', lines 642:0-647:1 *)
 Definition opiter_read_local_tee
   (st : opiter_OpIterState_t) (data : slice u8) (ctx : opiter_Context_t) :
   result ((core_result_Result_t u32 error_OpError_t) * opiter_OpIterState_t)
   :=
-  p <- opiter_take_local st data ctx opiter_op_local_tee;
+  p <- opiter_take_local st data ctx;
   let (r, st1) := p in
   cf <-
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
@@ -6101,17 +10863,13 @@ Definition opiter_read_local_tee
   end
 .
 
-(** [veriwasm::opiter::OP_LOCAL_SET]
-    Source: 'src/opiter.rs', lines 135:0-135:34 *)
-Definition opiter_op_local_set : u8 := 33%u8.
-
 (** [veriwasm::opiter::read_local_set]:
-    Source: 'src/opiter.rs', lines 665:0-669:1 *)
+    Source: 'src/opiter.rs', lines 635:0-639:1 *)
 Definition opiter_read_local_set
   (st : opiter_OpIterState_t) (data : slice u8) (ctx : opiter_Context_t) :
   result ((core_result_Result_t u32 error_OpError_t) * opiter_OpIterState_t)
   :=
-  p <- opiter_take_local st data ctx opiter_op_local_set;
+  p <- opiter_take_local st data ctx;
   let (r, st1) := p in
   cf <-
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
@@ -6139,17 +10897,13 @@ Definition opiter_read_local_set
   end
 .
 
-(** [veriwasm::opiter::OP_LOCAL_GET]
-    Source: 'src/opiter.rs', lines 134:0-134:34 *)
-Definition opiter_op_local_get : u8 := 32%u8.
-
 (** [veriwasm::opiter::read_local_get]:
-    Source: 'src/opiter.rs', lines 658:0-662:1 *)
+    Source: 'src/opiter.rs', lines 628:0-632:1 *)
 Definition opiter_read_local_get
   (st : opiter_OpIterState_t) (data : slice u8) (ctx : opiter_Context_t) :
   result ((core_result_Result_t u32 error_OpError_t) * opiter_OpIterState_t)
   :=
-  p <- opiter_take_local st data ctx opiter_op_local_get;
+  p <- opiter_take_local st data ctx;
   let (r, st1) := p in
   cf <-
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
@@ -6167,7 +10921,7 @@ Definition opiter_read_local_get
 .
 
 (** [veriwasm::opiter::join_stack_type]:
-    Source: 'src/opiter.rs', lines 596:0-610:1 *)
+    Source: 'src/opiter.rs', lines 573:0-587:1 *)
 Definition opiter_join_stack_type
   (a : opiter_StackType_t) (b : opiter_StackType_t) :
   result (core_result_Result_t opiter_StackType_t error_OpError_t)
@@ -6186,64 +10940,45 @@ Definition opiter_join_stack_type
   end
 .
 
-(** [veriwasm::opiter::OP_SELECT]
-    Source: 'src/opiter.rs', lines 132:0-132:31 *)
-Definition opiter_op_select : u8 := 27%u8.
-
 (** [veriwasm::opiter::read_select]:
-    Source: 'src/opiter.rs', lines 620:0-630:1 *)
+    Source: 'src/opiter.rs', lines 597:0-606:1 *)
 Definition opiter_read_select
   (st : opiter_OpIterState_t) :
   result ((core_result_Result_t opiter_StackType_t error_OpError_t) *
     opiter_OpIterState_t)
   :=
-  p <- opiter_take_pending st opiter_op_select;
+  p <- opiter_pop_with_type st Types_ValueType_I32;
   let (r, st1) := p in
   cf <-
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
   match cf with
   | Core_ops_control_flow_ControlFlow_Continue _ =>
-    p1 <- opiter_pop_with_type st1 Types_ValueType_I32;
+    p1 <- opiter_pop_stack_type st1;
     let (r1, st2) := p1 in
     cf1 <-
       core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r1;
     match cf1 with
-    | Core_ops_control_flow_ControlFlow_Continue _ =>
+    | Core_ops_control_flow_ControlFlow_Continue val =>
       p2 <- opiter_pop_stack_type st2;
       let (r2, st3) := p2 in
       cf2 <-
         core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
           r2;
       match cf2 with
-      | Core_ops_control_flow_ControlFlow_Continue val =>
-        p3 <- opiter_pop_stack_type st3;
-        let (r3, st4) := p3 in
+      | Core_ops_control_flow_ControlFlow_Continue val1 =>
+        r3 <- opiter_join_stack_type val val1;
         cf3 <-
           core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
             r3;
         match cf3 with
-        | Core_ops_control_flow_ControlFlow_Continue val1 =>
-          r4 <- opiter_join_stack_type val val1;
-          cf4 <-
-            core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
-              r4;
-          match cf4 with
-          | Core_ops_control_flow_ControlFlow_Continue val2 =>
-            st5 <- opiter_push_val st4 val2;
-            Ok (Core_result_Result_Ok val2, st5)
-          | Core_ops_control_flow_ControlFlow_Break residual =>
-            r5 <-
-              core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-                opiter_StackType_t (core_convert_From_Blanket error_OpError_t)
-                residual;
-            Ok (r5, st4)
-          end
+        | Core_ops_control_flow_ControlFlow_Continue val2 =>
+          st4 <- opiter_push_val st3 val2; Ok (Core_result_Result_Ok val2, st4)
         | Core_ops_control_flow_ControlFlow_Break residual =>
           r4 <-
             core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
               opiter_StackType_t (core_convert_From_Blanket error_OpError_t)
               residual;
-          Ok (r4, st4)
+          Ok (r4, st3)
         end
       | Core_ops_control_flow_ControlFlow_Break residual =>
         r3 <-
@@ -6268,246 +11003,265 @@ Definition opiter_read_select
   end
 .
 
-(** [veriwasm::opiter::OP_DROP]
-    Source: 'src/opiter.rs', lines 131:0-131:29 *)
-Definition opiter_op_drop : u8 := 26%u8.
-
 (** [veriwasm::opiter::read_drop]:
-    Source: 'src/opiter.rs', lines 588:0-591:1 *)
+    Source: 'src/opiter.rs', lines 566:0-568:1 *)
 Definition opiter_read_drop
   (st : opiter_OpIterState_t) :
   result ((core_result_Result_t opiter_StackType_t error_OpError_t) *
     opiter_OpIterState_t)
   :=
-  p <- opiter_take_pending st opiter_op_drop;
-  let (r, st1) := p in
-  cf <-
-    core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
-  match cf with
-  | Core_ops_control_flow_ControlFlow_Continue _ => opiter_pop_stack_type st1
-  | Core_ops_control_flow_ControlFlow_Break residual =>
-    r1 <-
-      core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-        opiter_StackType_t (core_convert_From_Blanket error_OpError_t)
-        residual;
-    Ok (r1, st1)
-  end
+  opiter_pop_stack_type st
 .
 
 (** [veriwasm::opiter::read_f64_const]:
-    Source: 'src/opiter.rs', lines 547:0-553:1 *)
+    Source: 'src/opiter.rs', lines 538:0-543:1 *)
 Definition opiter_read_f64_const
   (st : opiter_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t u64 error_OpError_t) * opiter_OpIterState_t)
   :=
-  p <- opiter_take_pending st opiter_op_f64_const;
-  let (r, st1) := p in
+  r <- reader_read_f64_bits data st.(opiter_OpIterState_pos);
   cf <-
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
   match cf with
-  | Core_ops_control_flow_ControlFlow_Continue _ =>
-    r1 <- reader_read_f64_bits data st1.(opiter_OpIterState_pos);
-    cf1 <-
-      core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r1;
-    match cf1 with
-    | Core_ops_control_flow_ControlFlow_Continue val =>
-      let (v, p1) := val in
-      st2 <-
-        opiter_push_val
-          {|
-            opiter_OpIterState_vals := st1.(opiter_OpIterState_vals);
-            opiter_OpIterState_ctrls := st1.(opiter_OpIterState_ctrls);
-            opiter_OpIterState_pos := p1;
-            opiter_OpIterState_pending := st1.(opiter_OpIterState_pending)
-          |} (Opiter_StackType_Val Types_ValueType_F64);
-      Ok (Core_result_Result_Ok v, st2)
-    | Core_ops_control_flow_ControlFlow_Break residual =>
-      r2 <-
-        core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-          u64 (core_convert_From_Blanket error_OpError_t) residual;
-      Ok (r2, st1)
-    end
+  | Core_ops_control_flow_ControlFlow_Continue val =>
+    let (v, p) := val in
+    st1 <-
+      opiter_push_val
+        {|
+          opiter_OpIterState_vals := st.(opiter_OpIterState_vals);
+          opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
+          opiter_OpIterState_pos := p
+        |} (Opiter_StackType_Val Types_ValueType_F64);
+    Ok (Core_result_Result_Ok v, st1)
   | Core_ops_control_flow_ControlFlow_Break residual =>
     r1 <-
       core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
         u64 (core_convert_From_Blanket error_OpError_t) residual;
-    Ok (r1, st1)
+    Ok (r1, st)
   end
 .
 
 (** [veriwasm::opiter::read_f32_const]:
-    Source: 'src/opiter.rs', lines 538:0-544:1 *)
+    Source: 'src/opiter.rs', lines 530:0-535:1 *)
 Definition opiter_read_f32_const
   (st : opiter_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t u32 error_OpError_t) * opiter_OpIterState_t)
   :=
-  p <- opiter_take_pending st opiter_op_f32_const;
-  let (r, st1) := p in
+  r <- reader_read_f32_bits data st.(opiter_OpIterState_pos);
   cf <-
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
   match cf with
-  | Core_ops_control_flow_ControlFlow_Continue _ =>
-    r1 <- reader_read_f32_bits data st1.(opiter_OpIterState_pos);
-    cf1 <-
-      core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r1;
-    match cf1 with
-    | Core_ops_control_flow_ControlFlow_Continue val =>
-      let (v, p1) := val in
-      st2 <-
-        opiter_push_val
-          {|
-            opiter_OpIterState_vals := st1.(opiter_OpIterState_vals);
-            opiter_OpIterState_ctrls := st1.(opiter_OpIterState_ctrls);
-            opiter_OpIterState_pos := p1;
-            opiter_OpIterState_pending := st1.(opiter_OpIterState_pending)
-          |} (Opiter_StackType_Val Types_ValueType_F32);
-      Ok (Core_result_Result_Ok v, st2)
-    | Core_ops_control_flow_ControlFlow_Break residual =>
-      r2 <-
-        core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-          u32 (core_convert_From_Blanket error_OpError_t) residual;
-      Ok (r2, st1)
-    end
+  | Core_ops_control_flow_ControlFlow_Continue val =>
+    let (v, p) := val in
+    st1 <-
+      opiter_push_val
+        {|
+          opiter_OpIterState_vals := st.(opiter_OpIterState_vals);
+          opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
+          opiter_OpIterState_pos := p
+        |} (Opiter_StackType_Val Types_ValueType_F32);
+    Ok (Core_result_Result_Ok v, st1)
   | Core_ops_control_flow_ControlFlow_Break residual =>
     r1 <-
       core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
         u32 (core_convert_From_Blanket error_OpError_t) residual;
-    Ok (r1, st1)
+    Ok (r1, st)
   end
 .
 
 (** [veriwasm::opiter::read_i64_const]:
-    Source: 'src/opiter.rs', lines 529:0-535:1 *)
+    Source: 'src/opiter.rs', lines 522:0-527:1 *)
 Definition opiter_read_i64_const
   (st : opiter_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t i64 error_OpError_t) * opiter_OpIterState_t)
   :=
-  p <- opiter_take_pending st opiter_op_i64_const;
-  let (r, st1) := p in
+  r <- reader_read_s64_leb data st.(opiter_OpIterState_pos);
   cf <-
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
   match cf with
-  | Core_ops_control_flow_ControlFlow_Continue _ =>
-    r1 <- reader_read_s64_leb data st1.(opiter_OpIterState_pos);
-    cf1 <-
-      core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r1;
-    match cf1 with
-    | Core_ops_control_flow_ControlFlow_Continue val =>
-      let (v, p1) := val in
-      st2 <-
-        opiter_push_val
-          {|
-            opiter_OpIterState_vals := st1.(opiter_OpIterState_vals);
-            opiter_OpIterState_ctrls := st1.(opiter_OpIterState_ctrls);
-            opiter_OpIterState_pos := p1;
-            opiter_OpIterState_pending := st1.(opiter_OpIterState_pending)
-          |} (Opiter_StackType_Val Types_ValueType_I64);
-      Ok (Core_result_Result_Ok v, st2)
-    | Core_ops_control_flow_ControlFlow_Break residual =>
-      r2 <-
-        core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-          i64 (core_convert_From_Blanket error_OpError_t) residual;
-      Ok (r2, st1)
-    end
+  | Core_ops_control_flow_ControlFlow_Continue val =>
+    let (v, p) := val in
+    st1 <-
+      opiter_push_val
+        {|
+          opiter_OpIterState_vals := st.(opiter_OpIterState_vals);
+          opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
+          opiter_OpIterState_pos := p
+        |} (Opiter_StackType_Val Types_ValueType_I64);
+    Ok (Core_result_Result_Ok v, st1)
   | Core_ops_control_flow_ControlFlow_Break residual =>
     r1 <-
       core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
         i64 (core_convert_From_Blanket error_OpError_t) residual;
-    Ok (r1, st1)
+    Ok (r1, st)
   end
 .
 
 (** [veriwasm::opiter::read_i32_const]:
-    Source: 'src/opiter.rs', lines 521:0-527:1 *)
+    Source: 'src/opiter.rs', lines 515:0-520:1 *)
 Definition opiter_read_i32_const
   (st : opiter_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t i32 error_OpError_t) * opiter_OpIterState_t)
   :=
-  p <- opiter_take_pending st opiter_op_i32_const;
-  let (r, st1) := p in
+  r <- reader_read_s32_leb data st.(opiter_OpIterState_pos);
   cf <-
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
   match cf with
-  | Core_ops_control_flow_ControlFlow_Continue _ =>
-    r1 <- reader_read_s32_leb data st1.(opiter_OpIterState_pos);
-    cf1 <-
-      core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r1;
-    match cf1 with
-    | Core_ops_control_flow_ControlFlow_Continue val =>
-      let (v, p1) := val in
-      st2 <-
-        opiter_push_val
-          {|
-            opiter_OpIterState_vals := st1.(opiter_OpIterState_vals);
-            opiter_OpIterState_ctrls := st1.(opiter_OpIterState_ctrls);
-            opiter_OpIterState_pos := p1;
-            opiter_OpIterState_pending := st1.(opiter_OpIterState_pending)
-          |} (Opiter_StackType_Val Types_ValueType_I32);
-      Ok (Core_result_Result_Ok v, st2)
-    | Core_ops_control_flow_ControlFlow_Break residual =>
-      r2 <-
-        core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-          i32 (core_convert_From_Blanket error_OpError_t) residual;
-      Ok (r2, st1)
-    end
+  | Core_ops_control_flow_ControlFlow_Continue val =>
+    let (v, p) := val in
+    st1 <-
+      opiter_push_val
+        {|
+          opiter_OpIterState_vals := st.(opiter_OpIterState_vals);
+          opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
+          opiter_OpIterState_pos := p
+        |} (Opiter_StackType_Val Types_ValueType_I32);
+    Ok (Core_result_Result_Ok v, st1)
   | Core_ops_control_flow_ControlFlow_Break residual =>
     r1 <-
       core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
         i32 (core_convert_From_Blanket error_OpError_t) residual;
-    Ok (r1, st1)
+    Ok (r1, st)
   end
 .
 
-(** [veriwasm::opiter::OP_UNREACHABLE]
-    Source: 'src/opiter.rs', lines 118:0-118:36 *)
-Definition opiter_op_unreachable : u8 := 0%u8.
-
 (** [veriwasm::opiter::read_unreachable]:
-    Source: 'src/opiter.rs', lines 515:0-519:1 *)
+    Source: 'src/opiter.rs', lines 510:0-513:1 *)
 Definition opiter_read_unreachable
   (st : opiter_OpIterState_t) :
   result ((core_result_Result_t unit error_OpError_t) * opiter_OpIterState_t)
   :=
-  p <- opiter_take_pending st opiter_op_unreachable;
-  let (r, st1) := p in
-  cf <-
-    core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
-  match cf with
-  | Core_ops_control_flow_ControlFlow_Continue _ =>
-    st2 <- opiter_mark_unreachable st1; Ok (Core_result_Result_Ok tt, st2)
-  | Core_ops_control_flow_ControlFlow_Break residual =>
-    r1 <-
-      core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-        unit (core_convert_From_Blanket error_OpError_t) residual;
-    Ok (r1, st1)
-  end
+  st1 <- opiter_mark_unreachable st; Ok (Core_result_Result_Ok tt, st1)
 .
+
+(** [veriwasm::opiter::OP_GLOBAL_SET]
+    Source: 'src/opiter.rs', lines 157:0-157:35 *)
+Definition opiter_op_global_set : u8 := 36%u8.
+
+(** [veriwasm::opiter::OP_LOCAL_TEE]
+    Source: 'src/opiter.rs', lines 155:0-155:34 *)
+Definition opiter_op_local_tee : u8 := 34%u8.
+
+(** [veriwasm::opiter::OP_LOCAL_SET]
+    Source: 'src/opiter.rs', lines 154:0-154:34 *)
+Definition opiter_op_local_set : u8 := 33%u8.
+
+(** [veriwasm::opiter::OP_LOCAL_GET]
+    Source: 'src/opiter.rs', lines 153:0-153:34 *)
+Definition opiter_op_local_get : u8 := 32%u8.
+
+(** [veriwasm::opiter::OP_SELECT]
+    Source: 'src/opiter.rs', lines 151:0-151:31 *)
+Definition opiter_op_select : u8 := 27%u8.
+
+(** [veriwasm::opiter::OP_DROP]
+    Source: 'src/opiter.rs', lines 150:0-150:29 *)
+Definition opiter_op_drop : u8 := 26%u8.
+
+(** [veriwasm::opiter::OP_CALL_INDIRECT]
+    Source: 'src/opiter.rs', lines 149:0-149:38 *)
+Definition opiter_op_call_indirect : u8 := 17%u8.
+
+(** [veriwasm::opiter::OP_CALL]
+    Source: 'src/opiter.rs', lines 148:0-148:29 *)
+Definition opiter_op_call : u8 := 16%u8.
+
+(** [veriwasm::opiter::OP_RETURN]
+    Source: 'src/opiter.rs', lines 147:0-147:31 *)
+Definition opiter_op_return : u8 := 15%u8.
+
+(** [veriwasm::opiter::OP_BR_TABLE]
+    Source: 'src/opiter.rs', lines 146:0-146:33 *)
+Definition opiter_op_br_table : u8 := 14%u8.
+
+(** [veriwasm::opiter::OP_BR_IF]
+    Source: 'src/opiter.rs', lines 145:0-145:30 *)
+Definition opiter_op_br_if : u8 := 13%u8.
+
+(** [veriwasm::opiter::OP_BR]
+    Source: 'src/opiter.rs', lines 144:0-144:27 *)
+Definition opiter_op_br : u8 := 12%u8.
+
+(** [veriwasm::opiter::OP_ELSE]
+    Source: 'src/opiter.rs', lines 142:0-142:29 *)
+Definition opiter_op_else : u8 := 5%u8.
+
+(** [veriwasm::opiter::OP_IF]
+    Source: 'src/opiter.rs', lines 141:0-141:27 *)
+Definition opiter_op_if : u8 := 4%u8.
+
+(** [veriwasm::opiter::OP_LOOP]
+    Source: 'src/opiter.rs', lines 140:0-140:29 *)
+Definition opiter_op_loop : u8 := 3%u8.
+
+(** [veriwasm::opiter::OP_BLOCK]
+    Source: 'src/opiter.rs', lines 139:0-139:30 *)
+Definition opiter_op_block : u8 := 2%u8.
 
 (** [veriwasm::opiter::OP_NOP]
-    Source: 'src/opiter.rs', lines 119:0-119:28 *)
+    Source: 'src/opiter.rs', lines 138:0-138:28 *)
 Definition opiter_op_nop : u8 := 1%u8.
 
-(** [veriwasm::opiter::read_nop]:
-    Source: 'src/opiter.rs', lines 511:0-513:1 *)
-Definition opiter_read_nop
-  (st : opiter_OpIterState_t) :
-  result ((core_result_Result_t unit error_OpError_t) * opiter_OpIterState_t)
-  :=
-  opiter_take_pending st opiter_op_nop
-.
+(** [veriwasm::opiter::OP_UNREACHABLE]
+    Source: 'src/opiter.rs', lines 137:0-137:36 *)
+Definition opiter_op_unreachable : u8 := 0%u8.
 
 (** [veriwasm::opiter::step]:
-    Source: 'src/opiter.rs', lines 1309:0-1411:1 *)
+    Source: 'src/opiter.rs', lines 1259:0-1387:1 *)
 Definition opiter_step
+  {V : Type} (visitOpVisitorInst : visit_OpVisitor_t V)
   (st : opiter_OpIterState_t) (data : slice u8) (env : env_Env_t)
-  (ctx : opiter_Context_t) (opcode : u8) :
-  result ((core_result_Result_t unit error_OpError_t) * opiter_OpIterState_t)
+  (ctx : opiter_Context_t) (opcode : u8) (v : V) :
+  result ((core_result_Result_t unit error_OpError_t) * opiter_OpIterState_t *
+    V)
   :=
   if opcode s= opiter_op_nop
-  then opiter_read_nop st
+  then (
+    p <- visitOpVisitorInst.(visit_OpVisitor_t_on_nop) v st;
+    let (r, v1) := p in
+    r1 <- opiter_visit r;
+    cf <-
+      core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r1;
+    match cf with
+    | Core_ops_control_flow_ControlFlow_Continue _ =>
+      Ok (Core_result_Result_Ok tt, st, v1)
+    | Core_ops_control_flow_ControlFlow_Break residual =>
+      r2 <-
+        core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+          unit (core_convert_From_Blanket error_OpError_t) residual;
+      Ok (r2, st, v1)
+    end)
   else
     if opcode s= opiter_op_unreachable
-    then opiter_read_unreachable st
+    then (
+      p <- opiter_read_unreachable st;
+      let (r, st1) := p in
+      cf <-
+        core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+          r;
+      match cf with
+      | Core_ops_control_flow_ControlFlow_Continue _ =>
+        p1 <- visitOpVisitorInst.(visit_OpVisitor_t_on_unreachable) v st1;
+        let (r1, v1) := p1 in
+        r2 <- opiter_visit r1;
+        cf1 <-
+          core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+            r2;
+        match cf1 with
+        | Core_ops_control_flow_ControlFlow_Continue _ =>
+          Ok (Core_result_Result_Ok tt, st1, v1)
+        | Core_ops_control_flow_ControlFlow_Break residual =>
+          r3 <-
+            core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+              unit (core_convert_From_Blanket error_OpError_t) residual;
+          Ok (r3, st1, v1)
+        end
+      | Core_ops_control_flow_ControlFlow_Break residual =>
+        r1 <-
+          core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+            unit (core_convert_From_Blanket error_OpError_t) residual;
+        Ok (r1, st1, v)
+      end)
     else
       if opcode s= opiter_op_i32_const
       then (
@@ -6517,13 +11271,27 @@ Definition opiter_step
           core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
             r;
         match cf with
-        | Core_ops_control_flow_ControlFlow_Continue _ =>
-          Ok (Core_result_Result_Ok tt, st1)
+        | Core_ops_control_flow_ControlFlow_Continue val =>
+          p1 <- visitOpVisitorInst.(visit_OpVisitor_t_on_i32_const) v st1 val;
+          let (r1, v1) := p1 in
+          r2 <- opiter_visit r1;
+          cf1 <-
+            core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+              r2;
+          match cf1 with
+          | Core_ops_control_flow_ControlFlow_Continue _ =>
+            Ok (Core_result_Result_Ok tt, st1, v1)
+          | Core_ops_control_flow_ControlFlow_Break residual =>
+            r3 <-
+              core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                unit (core_convert_From_Blanket error_OpError_t) residual;
+            Ok (r3, st1, v1)
+          end
         | Core_ops_control_flow_ControlFlow_Break residual =>
           r1 <-
             core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
               unit (core_convert_From_Blanket error_OpError_t) residual;
-          Ok (r1, st1)
+          Ok (r1, st1, v)
         end)
       else
         if opcode s= opiter_op_i64_const
@@ -6534,13 +11302,28 @@ Definition opiter_step
             core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
               r;
           match cf with
-          | Core_ops_control_flow_ControlFlow_Continue _ =>
-            Ok (Core_result_Result_Ok tt, st1)
+          | Core_ops_control_flow_ControlFlow_Continue val =>
+            p1 <-
+              visitOpVisitorInst.(visit_OpVisitor_t_on_i64_const) v st1 val;
+            let (r1, v1) := p1 in
+            r2 <- opiter_visit r1;
+            cf1 <-
+              core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                r2;
+            match cf1 with
+            | Core_ops_control_flow_ControlFlow_Continue _ =>
+              Ok (Core_result_Result_Ok tt, st1, v1)
+            | Core_ops_control_flow_ControlFlow_Break residual =>
+              r3 <-
+                core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                  unit (core_convert_From_Blanket error_OpError_t) residual;
+              Ok (r3, st1, v1)
+            end
           | Core_ops_control_flow_ControlFlow_Break residual =>
             r1 <-
               core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                 unit (core_convert_From_Blanket error_OpError_t) residual;
-            Ok (r1, st1)
+            Ok (r1, st1, v)
           end)
         else
           if opcode s= opiter_op_f32_const
@@ -6551,13 +11334,28 @@ Definition opiter_step
               core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
                 r;
             match cf with
-            | Core_ops_control_flow_ControlFlow_Continue _ =>
-              Ok (Core_result_Result_Ok tt, st1)
+            | Core_ops_control_flow_ControlFlow_Continue val =>
+              p1 <-
+                visitOpVisitorInst.(visit_OpVisitor_t_on_f32_const) v st1 val;
+              let (r1, v1) := p1 in
+              r2 <- opiter_visit r1;
+              cf1 <-
+                core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                  r2;
+              match cf1 with
+              | Core_ops_control_flow_ControlFlow_Continue _ =>
+                Ok (Core_result_Result_Ok tt, st1, v1)
+              | Core_ops_control_flow_ControlFlow_Break residual =>
+                r3 <-
+                  core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                    unit (core_convert_From_Blanket error_OpError_t) residual;
+                Ok (r3, st1, v1)
+              end
             | Core_ops_control_flow_ControlFlow_Break residual =>
               r1 <-
                 core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                   unit (core_convert_From_Blanket error_OpError_t) residual;
-              Ok (r1, st1)
+              Ok (r1, st1, v)
             end)
           else
             if opcode s= opiter_op_f64_const
@@ -6568,13 +11366,30 @@ Definition opiter_step
                 core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
                   r;
               match cf with
-              | Core_ops_control_flow_ControlFlow_Continue _ =>
-                Ok (Core_result_Result_Ok tt, st1)
+              | Core_ops_control_flow_ControlFlow_Continue val =>
+                p1 <-
+                  visitOpVisitorInst.(visit_OpVisitor_t_on_f64_const) v st1
+                    val;
+                let (r1, v1) := p1 in
+                r2 <- opiter_visit r1;
+                cf1 <-
+                  core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                    r2;
+                match cf1 with
+                | Core_ops_control_flow_ControlFlow_Continue _ =>
+                  Ok (Core_result_Result_Ok tt, st1, v1)
+                | Core_ops_control_flow_ControlFlow_Break residual =>
+                  r3 <-
+                    core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                      unit (core_convert_From_Blanket error_OpError_t)
+                      residual;
+                  Ok (r3, st1, v1)
+                end
               | Core_ops_control_flow_ControlFlow_Break residual =>
                 r1 <-
                   core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                     unit (core_convert_From_Blanket error_OpError_t) residual;
-                Ok (r1, st1)
+                Ok (r1, st1, v)
               end)
             else
               if opcode s= opiter_op_drop
@@ -6585,14 +11400,30 @@ Definition opiter_step
                   core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
                     r;
                 match cf with
-                | Core_ops_control_flow_ControlFlow_Continue _ =>
-                  Ok (Core_result_Result_Ok tt, st1)
+                | Core_ops_control_flow_ControlFlow_Continue val =>
+                  p1 <-
+                    visitOpVisitorInst.(visit_OpVisitor_t_on_drop) v st1 val;
+                  let (r1, v1) := p1 in
+                  r2 <- opiter_visit r1;
+                  cf1 <-
+                    core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                      r2;
+                  match cf1 with
+                  | Core_ops_control_flow_ControlFlow_Continue _ =>
+                    Ok (Core_result_Result_Ok tt, st1, v1)
+                  | Core_ops_control_flow_ControlFlow_Break residual =>
+                    r3 <-
+                      core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                        unit (core_convert_From_Blanket error_OpError_t)
+                        residual;
+                    Ok (r3, st1, v1)
+                  end
                 | Core_ops_control_flow_ControlFlow_Break residual =>
                   r1 <-
                     core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                       unit (core_convert_From_Blanket error_OpError_t)
                       residual;
-                  Ok (r1, st1)
+                  Ok (r1, st1, v)
                 end)
               else
                 if opcode s= opiter_op_select
@@ -6603,14 +11434,31 @@ Definition opiter_step
                     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
                       r;
                   match cf with
-                  | Core_ops_control_flow_ControlFlow_Continue _ =>
-                    Ok (Core_result_Result_Ok tt, st1)
+                  | Core_ops_control_flow_ControlFlow_Continue val =>
+                    p1 <-
+                      visitOpVisitorInst.(visit_OpVisitor_t_on_select) v st1
+                        val;
+                    let (r1, v1) := p1 in
+                    r2 <- opiter_visit r1;
+                    cf1 <-
+                      core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                        r2;
+                    match cf1 with
+                    | Core_ops_control_flow_ControlFlow_Continue _ =>
+                      Ok (Core_result_Result_Ok tt, st1, v1)
+                    | Core_ops_control_flow_ControlFlow_Break residual =>
+                      r3 <-
+                        core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                          unit (core_convert_From_Blanket error_OpError_t)
+                          residual;
+                      Ok (r3, st1, v1)
+                    end
                   | Core_ops_control_flow_ControlFlow_Break residual =>
                     r1 <-
                       core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                         unit (core_convert_From_Blanket error_OpError_t)
                         residual;
-                    Ok (r1, st1)
+                    Ok (r1, st1, v)
                   end)
                 else
                   if opcode s= opiter_op_block
@@ -6621,14 +11469,31 @@ Definition opiter_step
                       core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
                         r;
                     match cf with
-                    | Core_ops_control_flow_ControlFlow_Continue _ =>
-                      Ok (Core_result_Result_Ok tt, st1)
+                    | Core_ops_control_flow_ControlFlow_Continue val =>
+                      p1 <-
+                        visitOpVisitorInst.(visit_OpVisitor_t_on_block) v st1
+                          val;
+                      let (r1, v1) := p1 in
+                      r2 <- opiter_visit r1;
+                      cf1 <-
+                        core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                          r2;
+                      match cf1 with
+                      | Core_ops_control_flow_ControlFlow_Continue _ =>
+                        Ok (Core_result_Result_Ok tt, st1, v1)
+                      | Core_ops_control_flow_ControlFlow_Break residual =>
+                        r3 <-
+                          core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                            unit (core_convert_From_Blanket error_OpError_t)
+                            residual;
+                        Ok (r3, st1, v1)
+                      end
                     | Core_ops_control_flow_ControlFlow_Break residual =>
                       r1 <-
                         core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                           unit (core_convert_From_Blanket error_OpError_t)
                           residual;
-                      Ok (r1, st1)
+                      Ok (r1, st1, v)
                     end)
                   else
                     if opcode s= opiter_op_loop
@@ -6639,14 +11504,31 @@ Definition opiter_step
                         core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
                           r;
                       match cf with
-                      | Core_ops_control_flow_ControlFlow_Continue _ =>
-                        Ok (Core_result_Result_Ok tt, st1)
+                      | Core_ops_control_flow_ControlFlow_Continue val =>
+                        p1 <-
+                          visitOpVisitorInst.(visit_OpVisitor_t_on_loop) v st1
+                            val;
+                        let (r1, v1) := p1 in
+                        r2 <- opiter_visit r1;
+                        cf1 <-
+                          core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                            r2;
+                        match cf1 with
+                        | Core_ops_control_flow_ControlFlow_Continue _ =>
+                          Ok (Core_result_Result_Ok tt, st1, v1)
+                        | Core_ops_control_flow_ControlFlow_Break residual =>
+                          r3 <-
+                            core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                              unit (core_convert_From_Blanket error_OpError_t)
+                              residual;
+                          Ok (r3, st1, v1)
+                        end
                       | Core_ops_control_flow_ControlFlow_Break residual =>
                         r1 <-
                           core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                             unit (core_convert_From_Blanket error_OpError_t)
                             residual;
-                        Ok (r1, st1)
+                        Ok (r1, st1, v)
                       end)
                     else
                       if opcode s= opiter_op_if
@@ -6657,14 +11539,31 @@ Definition opiter_step
                           core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
                             r;
                         match cf with
-                        | Core_ops_control_flow_ControlFlow_Continue _ =>
-                          Ok (Core_result_Result_Ok tt, st1)
+                        | Core_ops_control_flow_ControlFlow_Continue val =>
+                          p1 <-
+                            visitOpVisitorInst.(visit_OpVisitor_t_on_if) v st1
+                              val;
+                          let (r1, v1) := p1 in
+                          r2 <- opiter_visit r1;
+                          cf1 <-
+                            core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                              r2;
+                          match cf1 with
+                          | Core_ops_control_flow_ControlFlow_Continue _ =>
+                            Ok (Core_result_Result_Ok tt, st1, v1)
+                          | Core_ops_control_flow_ControlFlow_Break residual =>
+                            r3 <-
+                              core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                unit (core_convert_From_Blanket
+                                error_OpError_t) residual;
+                            Ok (r3, st1, v1)
+                          end
                         | Core_ops_control_flow_ControlFlow_Break residual =>
                           r1 <-
                             core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                               unit (core_convert_From_Blanket error_OpError_t)
                               residual;
-                          Ok (r1, st1)
+                          Ok (r1, st1, v)
                         end)
                       else
                         if opcode s= opiter_op_else
@@ -6675,14 +11574,32 @@ Definition opiter_step
                             core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
                               r;
                           match cf with
-                          | Core_ops_control_flow_ControlFlow_Continue _ =>
-                            Ok (Core_result_Result_Ok tt, st1)
+                          | Core_ops_control_flow_ControlFlow_Continue val =>
+                            p1 <-
+                              visitOpVisitorInst.(visit_OpVisitor_t_on_else) v
+                                st1 val;
+                            let (r1, v1) := p1 in
+                            r2 <- opiter_visit r1;
+                            cf1 <-
+                              core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                                r2;
+                            match cf1 with
+                            | Core_ops_control_flow_ControlFlow_Continue _ =>
+                              Ok (Core_result_Result_Ok tt, st1, v1)
+                            | Core_ops_control_flow_ControlFlow_Break residual
+                              =>
+                              r3 <-
+                                core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                  unit (core_convert_From_Blanket
+                                  error_OpError_t) residual;
+                              Ok (r3, st1, v1)
+                            end
                           | Core_ops_control_flow_ControlFlow_Break residual =>
                             r1 <-
                               core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                                 unit (core_convert_From_Blanket
                                 error_OpError_t) residual;
-                            Ok (r1, st1)
+                            Ok (r1, st1, v)
                           end)
                         else
                           if opcode s= opiter_op_end
@@ -6693,15 +11610,34 @@ Definition opiter_step
                               core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
                                 r;
                             match cf with
-                            | Core_ops_control_flow_ControlFlow_Continue _ =>
-                              Ok (Core_result_Result_Ok tt, st1)
+                            | Core_ops_control_flow_ControlFlow_Continue val =>
+                              let (kind, bt) := val in
+                              p1 <-
+                                visitOpVisitorInst.(visit_OpVisitor_t_on_end) v
+                                  st1 kind bt;
+                              let (r1, v1) := p1 in
+                              r2 <- opiter_visit r1;
+                              cf1 <-
+                                core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                                  r2;
+                              match cf1 with
+                              | Core_ops_control_flow_ControlFlow_Continue _ =>
+                                Ok (Core_result_Result_Ok tt, st1, v1)
+                              | Core_ops_control_flow_ControlFlow_Break
+                                residual =>
+                                r3 <-
+                                  core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                    unit (core_convert_From_Blanket
+                                    error_OpError_t) residual;
+                                Ok (r3, st1, v1)
+                              end
                             | Core_ops_control_flow_ControlFlow_Break residual
                               =>
                               r1 <-
                                 core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                                   unit (core_convert_From_Blanket
                                   error_OpError_t) residual;
-                              Ok (r1, st1)
+                              Ok (r1, st1, v)
                             end)
                           else
                             if opcode s= opiter_op_br
@@ -6712,15 +11648,36 @@ Definition opiter_step
                                 core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
                                   r;
                               match cf with
-                              | Core_ops_control_flow_ControlFlow_Continue _ =>
-                                Ok (Core_result_Result_Ok tt, st1)
+                              | Core_ops_control_flow_ControlFlow_Continue val
+                                =>
+                                let (depth, bt) := val in
+                                p1 <-
+                                  visitOpVisitorInst.(visit_OpVisitor_t_on_br)
+                                    v st1 depth bt;
+                                let (r1, v1) := p1 in
+                                r2 <- opiter_visit r1;
+                                cf1 <-
+                                  core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                                    r2;
+                                match cf1 with
+                                | Core_ops_control_flow_ControlFlow_Continue _
+                                  =>
+                                  Ok (Core_result_Result_Ok tt, st1, v1)
+                                | Core_ops_control_flow_ControlFlow_Break
+                                  residual =>
+                                  r3 <-
+                                    core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                      unit (core_convert_From_Blanket
+                                      error_OpError_t) residual;
+                                  Ok (r3, st1, v1)
+                                end
                               | Core_ops_control_flow_ControlFlow_Break
                                 residual =>
                                 r1 <-
                                   core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                                     unit (core_convert_From_Blanket
                                     error_OpError_t) residual;
-                                Ok (r1, st1)
+                                Ok (r1, st1, v)
                               end)
                             else
                               if opcode s= opiter_op_br_if
@@ -6731,36 +11688,79 @@ Definition opiter_step
                                   core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
                                     r;
                                 match cf with
-                                | Core_ops_control_flow_ControlFlow_Continue _
-                                  =>
-                                  Ok (Core_result_Result_Ok tt, st1)
+                                | Core_ops_control_flow_ControlFlow_Continue
+                                  val =>
+                                  let (depth, bt) := val in
+                                  p1 <-
+                                    visitOpVisitorInst.(visit_OpVisitor_t_on_br_if)
+                                      v st1 depth bt;
+                                  let (r1, v1) := p1 in
+                                  r2 <- opiter_visit r1;
+                                  cf1 <-
+                                    core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                                      r2;
+                                  match cf1 with
+                                  | Core_ops_control_flow_ControlFlow_Continue
+                                    _ =>
+                                    Ok (Core_result_Result_Ok tt, st1, v1)
+                                  | Core_ops_control_flow_ControlFlow_Break
+                                    residual =>
+                                    r3 <-
+                                      core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                        unit (core_convert_From_Blanket
+                                        error_OpError_t) residual;
+                                    Ok (r3, st1, v1)
+                                  end
                                 | Core_ops_control_flow_ControlFlow_Break
                                   residual =>
                                   r1 <-
                                     core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                                       unit (core_convert_From_Blanket
                                       error_OpError_t) residual;
-                                  Ok (r1, st1)
+                                  Ok (r1, st1, v)
                                 end)
                               else
                                 if opcode s= opiter_op_br_table
                                 then (
-                                  p <- opiter_read_br_table st data;
-                                  let (r, st1) := p in
+                                  t <-
+                                    opiter_read_br_table visitOpVisitorInst st
+                                      data v;
+                                  let '(r, st1, v1) := t in
                                   cf <-
                                     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
                                       r;
                                   match cf with
                                   | Core_ops_control_flow_ControlFlow_Continue
-                                    _ =>
-                                    Ok (Core_result_Result_Ok tt, st1)
+                                    val =>
+                                    let (default, common) := val in
+                                    p <-
+                                      visitOpVisitorInst.(visit_OpVisitor_t_on_br_table)
+                                        v1 st1 default common;
+                                    let (r1, v2) := p in
+                                    r2 <- opiter_visit r1;
+                                    cf1 <-
+                                      core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                                        r2;
+                                    match cf1 with
+                                    |
+                                      Core_ops_control_flow_ControlFlow_Continue
+                                      _ =>
+                                      Ok (Core_result_Result_Ok tt, st1, v2)
+                                    | Core_ops_control_flow_ControlFlow_Break
+                                      residual =>
+                                      r3 <-
+                                        core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                          unit (core_convert_From_Blanket
+                                          error_OpError_t) residual;
+                                      Ok (r3, st1, v2)
+                                    end
                                   | Core_ops_control_flow_ControlFlow_Break
                                     residual =>
                                     r1 <-
                                       core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                                         unit (core_convert_From_Blanket
                                         error_OpError_t) residual;
-                                    Ok (r1, st1)
+                                    Ok (r1, st1, v1)
                                   end)
                                 else
                                   if opcode s= opiter_op_return
@@ -6774,14 +11774,34 @@ Definition opiter_step
                                     |
                                       Core_ops_control_flow_ControlFlow_Continue
                                       _ =>
-                                      Ok (Core_result_Result_Ok tt, st1)
+                                      p1 <-
+                                        visitOpVisitorInst.(visit_OpVisitor_t_on_return)
+                                          v st1;
+                                      let (r1, v1) := p1 in
+                                      r2 <- opiter_visit r1;
+                                      cf1 <-
+                                        core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                                          r2;
+                                      match cf1 with
+                                      |
+                                        Core_ops_control_flow_ControlFlow_Continue
+                                        _ =>
+                                        Ok (Core_result_Result_Ok tt, st1, v1)
+                                      | Core_ops_control_flow_ControlFlow_Break
+                                        residual =>
+                                        r3 <-
+                                          core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                            unit (core_convert_From_Blanket
+                                            error_OpError_t) residual;
+                                        Ok (r3, st1, v1)
+                                      end
                                     | Core_ops_control_flow_ControlFlow_Break
                                       residual =>
                                       r1 <-
                                         core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                                           unit (core_convert_From_Blanket
                                           error_OpError_t) residual;
-                                      Ok (r1, st1)
+                                      Ok (r1, st1, v)
                                     end)
                                   else
                                     if opcode s= opiter_op_call
@@ -6794,15 +11814,37 @@ Definition opiter_step
                                       match cf with
                                       |
                                         Core_ops_control_flow_ControlFlow_Continue
-                                        _ =>
-                                        Ok (Core_result_Result_Ok tt, st1)
+                                        val =>
+                                        p1 <-
+                                          visitOpVisitorInst.(visit_OpVisitor_t_on_call)
+                                            v st1 val;
+                                        let (r1, v1) := p1 in
+                                        r2 <- opiter_visit r1;
+                                        cf1 <-
+                                          core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                                            r2;
+                                        match cf1 with
+                                        |
+                                          Core_ops_control_flow_ControlFlow_Continue
+                                          _ =>
+                                          Ok (Core_result_Result_Ok tt, st1,
+                                            v1)
+                                        |
+                                          Core_ops_control_flow_ControlFlow_Break
+                                          residual =>
+                                          r3 <-
+                                            core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                              unit (core_convert_From_Blanket
+                                              error_OpError_t) residual;
+                                          Ok (r3, st1, v1)
+                                        end
                                       | Core_ops_control_flow_ControlFlow_Break
                                         residual =>
                                         r1 <-
                                           core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                                             unit (core_convert_From_Blanket
                                             error_OpError_t) residual;
-                                        Ok (r1, st1)
+                                        Ok (r1, st1, v)
                                       end)
                                     else
                                       if opcode s= opiter_op_call_indirect
@@ -6817,8 +11859,30 @@ Definition opiter_step
                                         match cf with
                                         |
                                           Core_ops_control_flow_ControlFlow_Continue
-                                          _ =>
-                                          Ok (Core_result_Result_Ok tt, st1)
+                                          val =>
+                                          p1 <-
+                                            visitOpVisitorInst.(visit_OpVisitor_t_on_call_indirect)
+                                              v st1 val;
+                                          let (r1, v1) := p1 in
+                                          r2 <- opiter_visit r1;
+                                          cf1 <-
+                                            core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                                              r2;
+                                          match cf1 with
+                                          |
+                                            Core_ops_control_flow_ControlFlow_Continue
+                                            _ =>
+                                            Ok (Core_result_Result_Ok tt, st1,
+                                              v1)
+                                          |
+                                            Core_ops_control_flow_ControlFlow_Break
+                                            residual =>
+                                            r3 <-
+                                              core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                                unit (core_convert_From_Blanket
+                                                error_OpError_t) residual;
+                                            Ok (r3, st1, v1)
+                                          end
                                         |
                                           Core_ops_control_flow_ControlFlow_Break
                                           residual =>
@@ -6826,7 +11890,7 @@ Definition opiter_step
                                             core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                                               unit (core_convert_From_Blanket
                                               error_OpError_t) residual;
-                                          Ok (r1, st1)
+                                          Ok (r1, st1, v)
                                         end)
                                       else
                                         if opcode s= opiter_op_local_get
@@ -6840,8 +11904,31 @@ Definition opiter_step
                                           match cf with
                                           |
                                             Core_ops_control_flow_ControlFlow_Continue
-                                            _ =>
-                                            Ok (Core_result_Result_Ok tt, st1)
+                                            val =>
+                                            p1 <-
+                                              visitOpVisitorInst.(visit_OpVisitor_t_on_local_get)
+                                                v st1 val;
+                                            let (r1, v1) := p1 in
+                                            r2 <- opiter_visit r1;
+                                            cf1 <-
+                                              core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                                                r2;
+                                            match cf1 with
+                                            |
+                                              Core_ops_control_flow_ControlFlow_Continue
+                                              _ =>
+                                              Ok (Core_result_Result_Ok tt,
+                                                st1, v1)
+                                            |
+                                              Core_ops_control_flow_ControlFlow_Break
+                                              residual =>
+                                              r3 <-
+                                                core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                                  unit
+                                                  (core_convert_From_Blanket
+                                                  error_OpError_t) residual;
+                                              Ok (r3, st1, v1)
+                                            end
                                           |
                                             Core_ops_control_flow_ControlFlow_Break
                                             residual =>
@@ -6849,7 +11936,7 @@ Definition opiter_step
                                               core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                                                 unit (core_convert_From_Blanket
                                                 error_OpError_t) residual;
-                                            Ok (r1, st1)
+                                            Ok (r1, st1, v)
                                           end)
                                         else
                                           if opcode s= opiter_op_local_set
@@ -6864,9 +11951,31 @@ Definition opiter_step
                                             match cf with
                                             |
                                               Core_ops_control_flow_ControlFlow_Continue
-                                              _ =>
-                                              Ok (Core_result_Result_Ok tt,
-                                                st1)
+                                              val =>
+                                              p1 <-
+                                                visitOpVisitorInst.(visit_OpVisitor_t_on_local_set)
+                                                  v st1 val;
+                                              let (r1, v1) := p1 in
+                                              r2 <- opiter_visit r1;
+                                              cf1 <-
+                                                core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                                                  r2;
+                                              match cf1 with
+                                              |
+                                                Core_ops_control_flow_ControlFlow_Continue
+                                                _ =>
+                                                Ok (Core_result_Result_Ok tt,
+                                                  st1, v1)
+                                              |
+                                                Core_ops_control_flow_ControlFlow_Break
+                                                residual =>
+                                                r3 <-
+                                                  core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                                    unit
+                                                    (core_convert_From_Blanket
+                                                    error_OpError_t) residual;
+                                                Ok (r3, st1, v1)
+                                              end
                                             |
                                               Core_ops_control_flow_ControlFlow_Break
                                               residual =>
@@ -6875,7 +11984,7 @@ Definition opiter_step
                                                   unit
                                                   (core_convert_From_Blanket
                                                   error_OpError_t) residual;
-                                              Ok (r1, st1)
+                                              Ok (r1, st1, v)
                                             end)
                                           else
                                             if opcode s= opiter_op_local_tee
@@ -6890,9 +11999,32 @@ Definition opiter_step
                                               match cf with
                                               |
                                                 Core_ops_control_flow_ControlFlow_Continue
-                                                _ =>
-                                                Ok (Core_result_Result_Ok tt,
-                                                  st1)
+                                                val =>
+                                                p1 <-
+                                                  visitOpVisitorInst.(visit_OpVisitor_t_on_local_tee)
+                                                    v st1 val;
+                                                let (r1, v1) := p1 in
+                                                r2 <- opiter_visit r1;
+                                                cf1 <-
+                                                  core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                                                    r2;
+                                                match cf1 with
+                                                |
+                                                  Core_ops_control_flow_ControlFlow_Continue
+                                                  _ =>
+                                                  Ok (Core_result_Result_Ok tt,
+                                                    st1, v1)
+                                                |
+                                                  Core_ops_control_flow_ControlFlow_Break
+                                                  residual =>
+                                                  r3 <-
+                                                    core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                                      unit
+                                                      (core_convert_From_Blanket
+                                                      error_OpError_t)
+                                                      residual;
+                                                  Ok (r3, st1, v1)
+                                                end
                                               |
                                                 Core_ops_control_flow_ControlFlow_Break
                                                 residual =>
@@ -6901,7 +12033,7 @@ Definition opiter_step
                                                     unit
                                                     (core_convert_From_Blanket
                                                     error_OpError_t) residual;
-                                                Ok (r1, st1)
+                                                Ok (r1, st1, v)
                                               end)
                                             else
                                               if opcode s= opiter_op_global_get
@@ -6916,9 +12048,32 @@ Definition opiter_step
                                                 match cf with
                                                 |
                                                   Core_ops_control_flow_ControlFlow_Continue
-                                                  _ =>
-                                                  Ok (Core_result_Result_Ok tt,
-                                                    st1)
+                                                  val =>
+                                                  p1 <-
+                                                    visitOpVisitorInst.(visit_OpVisitor_t_on_global_get)
+                                                      v st1 val;
+                                                  let (r1, v1) := p1 in
+                                                  r2 <- opiter_visit r1;
+                                                  cf1 <-
+                                                    core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                                                      r2;
+                                                  match cf1 with
+                                                  |
+                                                    Core_ops_control_flow_ControlFlow_Continue
+                                                    _ =>
+                                                    Ok (Core_result_Result_Ok
+                                                      tt, st1, v1)
+                                                  |
+                                                    Core_ops_control_flow_ControlFlow_Break
+                                                    residual =>
+                                                    r3 <-
+                                                      core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                                        unit
+                                                        (core_convert_From_Blanket
+                                                        error_OpError_t)
+                                                        residual;
+                                                    Ok (r3, st1, v1)
+                                                  end
                                                 |
                                                   Core_ops_control_flow_ControlFlow_Break
                                                   residual =>
@@ -6928,7 +12083,7 @@ Definition opiter_step
                                                       (core_convert_From_Blanket
                                                       error_OpError_t)
                                                       residual;
-                                                  Ok (r1, st1)
+                                                  Ok (r1, st1, v)
                                                 end)
                                               else
                                                 if opcode s=
@@ -6944,9 +12099,32 @@ Definition opiter_step
                                                   match cf with
                                                   |
                                                     Core_ops_control_flow_ControlFlow_Continue
-                                                    _ =>
-                                                    Ok (Core_result_Result_Ok
-                                                      tt, st1)
+                                                    val =>
+                                                    p1 <-
+                                                      visitOpVisitorInst.(visit_OpVisitor_t_on_global_set)
+                                                        v st1 val;
+                                                    let (r1, v1) := p1 in
+                                                    r2 <- opiter_visit r1;
+                                                    cf1 <-
+                                                      core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                                                        r2;
+                                                    match cf1 with
+                                                    |
+                                                      Core_ops_control_flow_ControlFlow_Continue
+                                                      _ =>
+                                                      Ok (Core_result_Result_Ok
+                                                        tt, st1, v1)
+                                                    |
+                                                      Core_ops_control_flow_ControlFlow_Break
+                                                      residual =>
+                                                      r3 <-
+                                                        core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                                                          unit
+                                                          (core_convert_From_Blanket
+                                                          error_OpError_t)
+                                                          residual;
+                                                      Ok (r3, st1, v1)
+                                                    end
                                                   |
                                                     Core_ops_control_flow_ControlFlow_Break
                                                     residual =>
@@ -6956,15 +12134,16 @@ Definition opiter_step
                                                         (core_convert_From_Blanket
                                                         error_OpError_t)
                                                         residual;
-                                                    Ok (r1, st1)
+                                                    Ok (r1, st1, v)
                                                   end)
                                                 else
-                                                  opiter_step_memory st data
-                                                    env opcode
+                                                  opiter_step_memory
+                                                    visitOpVisitorInst st data
+                                                    env opcode v
 .
 
 (** [veriwasm::opiter::read_op]:
-    Source: 'src/opiter.rs', lines 484:0-489:1 *)
+    Source: 'src/opiter.rs', lines 502:0-506:1 *)
 Definition opiter_read_op
   (st : opiter_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t u8 error_OpError_t) * opiter_OpIterState_t)
@@ -6979,8 +12158,7 @@ Definition opiter_read_op
       {|
         opiter_OpIterState_vals := st.(opiter_OpIterState_vals);
         opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
-        opiter_OpIterState_pos := p;
-        opiter_OpIterState_pending := (Some b)
+        opiter_OpIterState_pos := p
       |})
   | Core_ops_control_flow_ControlFlow_Break residual =>
     r1 <-
@@ -6991,14 +12169,14 @@ Definition opiter_read_op
 .
 
 (** [veriwasm::opiter::control_stack_empty]:
-    Source: 'src/opiter.rs', lines 479:0-481:1 *)
+    Source: 'src/opiter.rs', lines 497:0-499:1 *)
 Definition opiter_control_stack_empty
   (st : opiter_OpIterState_t) : result bool :=
   alloc_vec_Vec_is_empty alloc_alloc_Global st.(opiter_OpIterState_ctrls)
 .
 
 (** [veriwasm::opiter::start_function]:
-    Source: 'src/opiter.rs', lines 464:0-477:1 *)
+    Source: 'src/opiter.rs', lines 483:0-495:1 *)
 Definition opiter_start_function
   (results : slice types_ValueType_t) : result opiter_OpIterState_t :=
   let i := slice_len results in
@@ -7011,27 +12189,27 @@ Definition opiter_start_function
     {|
       opiter_OpIterState_vals := (alloc_vec_Vec_new opiter_StackType_t);
       opiter_OpIterState_ctrls := (alloc_vec_Vec_new opiter_Ctrl_t);
-      opiter_OpIterState_pos := 0%usize;
-      opiter_OpIterState_pending := None
+      opiter_OpIterState_pos := 0%usize
     |} Opiter_LabelKind_Body bt
 .
 
-(** [veriwasm::opiter::validate_body]: loop 0:
-    Source: 'src/opiter.rs', lines 1524:4-1534:5 *)
-Definition opiter_validate_body_loop
-  (data : slice u8) (env : env_Env_t) (v : alloc_vec_Vec types_ValueType_t)
-  (v1 : alloc_vec_Vec types_ValueType_t) (st : opiter_OpIterState_t) :
-  result (core_result_Result_t unit error_OpError_t)
+(** [veriwasm::opiter::validate_body_with]: loop 0:
+    Source: 'src/opiter.rs', lines 1589:4-1599:5 *)
+Definition opiter_validate_body_with_loop
+  {V : Type} (visitOpVisitorInst : visit_OpVisitor_t V) (data : slice u8)
+  (env : env_Env_t) (v : alloc_vec_Vec types_ValueType_t)
+  (v1 : alloc_vec_Vec types_ValueType_t) (v2 : V) (st : opiter_OpIterState_t) :
+  result ((core_result_Result_t unit error_OpError_t) * V)
   :=
   loop
-    (fun (st1 : opiter_OpIterState_t) =>
+    (fun '((v3, st1) : (V * opiter_OpIterState_t)) =>
       b <- opiter_control_stack_empty st1;
       if b
       then
         let i := slice_len data in
         if st1.(opiter_OpIterState_pos) s= i
-        then Ok (Done (Core_result_Result_Ok tt))
-        else Ok (Done (Core_result_Result_Err Error_OpError_TrailingBytes))
+        then Ok (Done (Core_result_Result_Ok tt, v3))
+        else Ok (Done (Core_result_Result_Err Error_OpError_TrailingBytes, v3))
       else (
         p <- opiter_read_op st1 data;
         let (r, st2) := p in
@@ -7040,49 +12218,50 @@ Definition opiter_validate_body_loop
             r;
         match cf with
         | Core_ops_control_flow_ControlFlow_Continue val =>
-          p1 <-
-            opiter_step st2 data env
+          t <-
+            opiter_step visitOpVisitorInst st2 data env
               {| opiter_Context_locals := v; opiter_Context_results := v1 |}
-              val;
-          let (r1, st3) := p1 in
+              val v3;
+          let '(r1, st3, v4) := t in
           cf1 <-
             core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
               r1;
           match cf1 with
-          | Core_ops_control_flow_ControlFlow_Continue _ => Ok (Cont st3)
+          | Core_ops_control_flow_ControlFlow_Continue _ => Ok (Cont (v4, st3))
           | Core_ops_control_flow_ControlFlow_Break residual =>
             r2 <-
               core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                 unit (core_convert_From_Blanket error_OpError_t) residual;
-            Ok (Done r2)
+            Ok (Done (r2, v4))
           end
         | Core_ops_control_flow_ControlFlow_Break residual =>
           r1 <-
             core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
               unit (core_convert_From_Blanket error_OpError_t) residual;
-          Ok (Done r1)
+          Ok (Done (r1, v3))
         end))
-    st
+    (v2, st)
 .
 
-(** [veriwasm::opiter::validate_body]:
-    Source: 'src/opiter.rs', lines 1519:0-1535:1 *)
-Definition opiter_validate_body
-  (data : slice u8) (env : env_Env_t) (ctx : opiter_Context_t) :
-  result (core_result_Result_t unit error_OpError_t)
+(** [veriwasm::opiter::validate_body_with]:
+    Source: 'src/opiter.rs', lines 1579:0-1600:1 *)
+Definition opiter_validate_body_with
+  {V : Type} (visitOpVisitorInst : visit_OpVisitor_t V) (data : slice u8)
+  (env : env_Env_t) (ctx : opiter_Context_t) (v : V) :
+  result ((core_result_Result_t unit error_OpError_t) * V)
   :=
   let i := slice_len data in
   if i s> limits_max_function_bytes
-  then Ok (Core_result_Result_Err Error_OpError_BodyTooLarge)
+  then Ok (Core_result_Result_Err Error_OpError_BodyTooLarge, v)
   else (
     let s := alloc_vec_Vec_deref ctx.(opiter_Context_results) in
     st <- opiter_start_function s;
-    opiter_validate_body_loop data env ctx.(opiter_Context_locals)
-      ctx.(opiter_Context_results) st)
+    opiter_validate_body_with_loop visitOpVisitorInst data env
+      ctx.(opiter_Context_locals) ctx.(opiter_Context_results) v st)
 .
 
 (** [veriwasm::module::copy_value_types]: loop 0:
-    Source: 'src/module.rs', lines 515:4-521:5 *)
+    Source: 'src/module.rs', lines 570:4-576:5 *)
 Definition module_copy_value_types_loop
   (src : slice types_ValueType_t) (out : alloc_vec_Vec types_ValueType_t)
   (i : usize) :
@@ -7102,7 +12281,7 @@ Definition module_copy_value_types_loop
 .
 
 (** [veriwasm::module::copy_value_types]:
-    Source: 'src/module.rs', lines 512:0-522:1 *)
+    Source: 'src/module.rs', lines 567:0-577:1 *)
 Definition module_copy_value_types
   (src : slice types_ValueType_t) : result (alloc_vec_Vec types_ValueType_t) :=
   module_copy_value_types_loop src (alloc_vec_Vec_new types_ValueType_t)
@@ -7110,7 +12289,7 @@ Definition module_copy_value_types
 .
 
 (** [veriwasm::module::build_func_locals]: loop 0:
-    Source: 'src/module.rs', lines 938:4-944:5 *)
+    Source: 'src/module.rs', lines 1019:4-1025:5 *)
 Definition module_build_func_locals_loop
   (declared : slice types_ValueType_t)
   (locals : alloc_vec_Vec types_ValueType_t) (i : usize) :
@@ -7130,7 +12309,7 @@ Definition module_build_func_locals_loop
 .
 
 (** [veriwasm::module::build_func_locals]:
-    Source: 'src/module.rs', lines 935:0-945:1 *)
+    Source: 'src/module.rs', lines 1016:0-1026:1 *)
 Definition module_build_func_locals
   (params : slice types_ValueType_t) (declared : slice types_ValueType_t) :
   result (alloc_vec_Vec types_ValueType_t)
@@ -7140,7 +12319,7 @@ Definition module_build_func_locals
 .
 
 (** [veriwasm::module::push_locals]: loop 0:
-    Source: 'src/module.rs', lines 903:4-909:5 *)
+    Source: 'src/module.rs', lines 984:4-990:5 *)
 Definition module_push_locals_loop
   (out : alloc_vec_Vec types_ValueType_t) (count : u32)
   (vt : types_ValueType_t) (i : u32) :
@@ -7158,7 +12337,7 @@ Definition module_push_locals_loop
 .
 
 (** [veriwasm::module::push_locals]:
-    Source: 'src/module.rs', lines 901:0-910:1 *)
+    Source: 'src/module.rs', lines 982:0-991:1 *)
 Definition module_push_locals
   (out : alloc_vec_Vec types_ValueType_t) (count : u32)
   (vt : types_ValueType_t) :
@@ -7168,7 +12347,7 @@ Definition module_push_locals
 .
 
 (** [veriwasm::module::decode_value_type]:
-    Source: 'src/module.rs', lines 217:0-232:1 *)
+    Source: 'src/module.rs', lines 264:0-279:1 *)
 Definition module_decode_value_type
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (types_ValueType_t * usize) error_Error_t)
@@ -7199,7 +12378,7 @@ Definition module_decode_value_type
 .
 
 (** [veriwasm::module::decode_locals]: loop 0:
-    Source: 'src/module.rs', lines 918:4-932:5 *)
+    Source: 'src/module.rs', lines 999:4-1013:5 *)
 Definition module_decode_locals_loop
   (data : slice u8) (groups : u32) (out : alloc_vec_Vec types_ValueType_t)
   (q : usize) (i : u32) :
@@ -7253,7 +12432,7 @@ Definition module_decode_locals_loop
 .
 
 (** [veriwasm::module::decode_locals]:
-    Source: 'src/module.rs', lines 913:0-933:1 *)
+    Source: 'src/module.rs', lines 994:0-1014:1 *)
 Definition module_decode_locals
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t ((alloc_vec_Vec types_ValueType_t) * usize)
@@ -7274,15 +12453,16 @@ Definition module_decode_locals
   end
 .
 
-(** [veriwasm::module::validate_code_entry]:
-    Source: 'src/module.rs', lines 953:0-988:1 *)
-Definition module_validate_code_entry
-  (data : slice u8) (pos : usize) (env : env_Env_t) (index : usize) :
-  result (core_result_Result_t usize error_Error_t)
+(** [veriwasm::module::validate_code_entry_with]:
+    Source: 'src/module.rs', lines 1062:0-1105:1 *)
+Definition module_validate_code_entry_with
+  {V : Type} (visitOpVisitorInst : visit_OpVisitor_t V) (data : slice u8)
+  (pos : usize) (env : env_Env_t) (index : usize) (v : V) :
+  result ((core_result_Result_t usize error_Error_t) * V)
   :=
   let i := alloc_vec_Vec_len env.(env_Env_func_type_indices) in
   if index s>= i
-  then Ok (Core_result_Result_Err Error_Error_FuncCodeMismatch)
+  then Ok (Core_result_Result_Err Error_Error_FuncCodeMismatch, v)
   else (
     r <- reader_read_u32_leb data pos;
     cf <-
@@ -7306,7 +12486,7 @@ Definition module_validate_code_entry
         | Core_ops_control_flow_ControlFlow_Continue val1 =>
           let (declared, p1) := val1 in
           if p1 s> end1
-          then Ok (Core_result_Result_Err Error_Error_SectionSizeMismatch)
+          then Ok (Core_result_Result_Err Error_Error_SectionSizeMismatch, v)
           else (
             type_idx <-
               alloc_vec_Vec_index (core_slice_index_SliceIndexUsizeSliceInst
@@ -7314,139 +12494,270 @@ Definition module_validate_code_entry
             t <- scalar_cast U32 Usize type_idx;
             let i1 := alloc_vec_Vec_len env.(env_Env_types) in
             if t s>= i1
-            then Ok (Core_result_Result_Err (Error_Error_UnknownType type_idx))
+            then
+              Ok (Core_result_Result_Err (Error_Error_UnknownType type_idx), v)
             else (
               ft <-
                 alloc_vec_Vec_index (core_slice_index_SliceIndexUsizeSliceInst
                   types_FuncType_t) env.(env_Env_types) t;
               let s := alloc_vec_Vec_deref ft.(types_FuncType_params) in
               let s1 := alloc_vec_Vec_deref declared in
-              v <- module_build_func_locals s s1;
+              v1 <- module_build_func_locals s s1;
               let s2 := alloc_vec_Vec_deref ft.(types_FuncType_results) in
-              v1 <- module_copy_value_types s2;
-              s3 <-
-                core_slice_index_Slice_index
-                  (core_slice_index_SliceIndexRangeUsizeSliceInst u8) data
-                  {|
-                    core_ops_range_Range_start := p1;
-                    core_ops_range_Range_end_ := end1
-                  |};
-              r3 <-
-                opiter_validate_body s3 env
-                  {| opiter_Context_locals := v; opiter_Context_results := v1
-                  |};
+              v2 <- module_copy_value_types s2;
+              p2 <-
+                visitOpVisitorInst.(visit_OpVisitor_t_on_function_start) v
+                  {| opiter_Context_locals := v1; opiter_Context_results := v2
+                  |} type_idx p1 end1;
+              let (r3, v3) := p2 in
               match r3 with
-              | Core_result_Result_Ok _ => Ok (Core_result_Result_Ok end1)
+              | Core_result_Result_Ok _ =>
+                s3 <-
+                  core_slice_index_Slice_index
+                    (core_slice_index_SliceIndexRangeUsizeSliceInst u8) data
+                    {|
+                      core_ops_range_Range_start := p1;
+                      core_ops_range_Range_end_ := end1
+                    |};
+                p3 <-
+                  opiter_validate_body_with visitOpVisitorInst s3 env
+                    {|
+                      opiter_Context_locals := v1; opiter_Context_results := v2
+                    |} v3;
+                let (r4, v4) := p3 in
+                match r4 with
+                | Core_result_Result_Ok _ =>
+                  Ok (Core_result_Result_Ok end1, v4)
+                | Core_result_Result_Err e =>
+                  Ok (Core_result_Result_Err (Error_Error_Body e), v4)
+                end
               | Core_result_Result_Err e =>
-                Ok (Core_result_Result_Err (Error_Error_Body e))
+                Ok (Core_result_Result_Err (Error_Error_Body
+                  (Error_OpError_Visitor e)), v3)
               end))
         | Core_ops_control_flow_ControlFlow_Break residual =>
-          core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-            usize (core_convert_From_Blanket error_Error_t) residual
+          r3 <-
+            core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+              usize (core_convert_From_Blanket error_Error_t) residual;
+          Ok (r3, v)
         end
       | Core_ops_control_flow_ControlFlow_Break residual =>
-        core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-          usize (core_convert_From_Blanket error_Error_t) residual
+        r2 <-
+          core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+            usize (core_convert_From_Blanket error_Error_t) residual;
+        Ok (r2, v)
       end
     | Core_ops_control_flow_ControlFlow_Break residual =>
-      core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-        usize error_Error_Insts_CoreConvertFromOpError residual
+      r1 <-
+        core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+          usize error_Error_Insts_CoreConvertFromOpError residual;
+      Ok (r1, v)
     end)
 .
 
-(** [veriwasm::module::validate_code_entries]: loop 0:
-    Source: 'src/module.rs', lines 993:4-999:5 *)
-Definition module_validate_code_entries_loop
-  (data : slice u8) (env : env_Env_t) (q : usize) (i : usize) :
+(** [veriwasm::module::validate_code_entry]:
+    Source: 'src/module.rs', lines 1111:0-1119:1 *)
+Definition module_validate_code_entry
+  (data : slice u8) (pos : usize) (env : env_Env_t) (index : usize) :
   result (core_result_Result_t usize error_Error_t)
   :=
+  p <-
+    module_validate_code_entry_with
+      visit_NopVisitor_Insts_VeriwasmVisitOpVisitor data pos env index tt;
+  let (r, _) := p in
+  Ok r
+.
+
+(** [veriwasm::module::CodeVisitor::on_code_entry]:
+    Source: 'src/module.rs', lines 1478:4-1489:5 *)
+Definition module_CodeVisitor_on_code_entry_default
+  {Self : Type} (self : Self) (data : slice u8) (env : env_Env_t)
+  (index : usize) (entry_pos : usize) (_contents_start : usize)
+  (_entry_end : usize) :
+  result ((core_result_Result_t unit error_Error_t) * Self)
+  :=
+  r <- module_validate_code_entry data entry_pos env index;
+  cf <-
+    core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
+  match cf with
+  | Core_ops_control_flow_ControlFlow_Continue _ =>
+    Ok (Core_result_Result_Ok tt, self)
+  | Core_ops_control_flow_ControlFlow_Break residual =>
+    r1 <-
+      core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+        unit (core_convert_From_Blanket error_Error_t) residual;
+    Ok (r1, self)
+  end
+.
+
+(** [veriwasm::module::code_entry_extent]:
+    Source: 'src/module.rs', lines 1359:0-1364:1 *)
+Definition module_code_entry_extent
+  (data : slice u8) (pos : usize) :
+  result (core_result_Result_t (usize * usize) error_Error_t)
+  :=
+  r <- reader_read_u32_leb data pos;
+  cf <-
+    core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
+  match cf with
+  | Core_ops_control_flow_ControlFlow_Continue val =>
+    let (size, p) := val in
+    n <- scalar_cast U32 Usize size;
+    r1 <- module_have_bytes data p n;
+    cf1 <-
+      core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r1;
+    match cf1 with
+    | Core_ops_control_flow_ControlFlow_Continue _ =>
+      i <- usize_add p n; Ok (Core_result_Result_Ok (p, i))
+    | Core_ops_control_flow_ControlFlow_Break residual =>
+      core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+        (usize * usize) (core_convert_From_Blanket error_Error_t) residual
+    end
+  | Core_ops_control_flow_ControlFlow_Break residual =>
+    core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+      (usize * usize) error_Error_Insts_CoreConvertFromOpError residual
+  end
+.
+
+(** [veriwasm::module::validate_code_entries_with]: loop 0:
+    Source: 'src/module.rs', lines 1132:4-1144:5 *)
+Definition module_validate_code_entries_with_loop
+  {V : Type} (codeVisitorInst : module_CodeVisitor_t V) (data : slice u8)
+  (env : env_Env_t) (v : V) (q : usize) (i : usize) :
+  result ((core_result_Result_t usize error_Error_t) * V)
+  :=
   loop
-    (fun '((q1, i1) : (usize * usize)) =>
+    (fun '((v1, q1, i1) : (V * usize * usize)) =>
       let i2 := alloc_vec_Vec_len env.(env_Env_func_type_indices) in
       if i1 s>= i2
-      then Ok (Done (Core_result_Result_Ok q1))
+      then Ok (Done (Core_result_Result_Ok q1, v1))
       else (
-        r <- module_validate_code_entry data q1 env i1;
+        i3 <- usize_add q1 limits_max_leb_bytes;
+        p <- codeVisitorInst.(module_CodeVisitor_t_on_need_bytes) v1 i3;
+        let (r, v2) := p in
         cf <-
           core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
             r;
         match cf with
-        | Core_ops_control_flow_ControlFlow_Continue val =>
-          i3 <- usize_add i1 1%usize; Ok (Cont (val, i3))
-        | Core_ops_control_flow_ControlFlow_Break residual =>
-          r1 <-
-            core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-              usize (core_convert_From_Blanket error_Error_t) residual;
-          Ok (Done r1)
-        end))
-    (q, i)
-.
-
-(** [veriwasm::module::validate_code_entries]:
-    Source: 'src/module.rs', lines 990:0-1000:1 *)
-Definition module_validate_code_entries
-  (data : slice u8) (pos : usize) (env : env_Env_t) :
-  result (core_result_Result_t usize error_Error_t)
-  :=
-  module_validate_code_entries_loop data env pos 0%usize
-.
-
-(** [veriwasm::module::validate_code]:
-    Source: 'src/module.rs', lines 1006:0-1023:1 *)
-Definition module_validate_code
-  (data : slice u8) (pos : usize) (env : env_Env_t) :
-  result (core_result_Result_t usize error_Error_t)
-  :=
-  let i := slice_len data in
-  if pos s>= i
-  then module_no_code_section env pos
-  else (
-    r <- module_read_section_header data pos;
-    cf <-
-      core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
-    match cf with
-    | Core_ops_control_flow_ControlFlow_Continue val =>
-      let '(id, start, end1) := val in
-      if id s<> module_section_code
-      then module_no_code_section env pos
-      else (
-        r1 <- reader_read_u32_leb data start;
-        cf1 <-
-          core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
-            r1;
-        match cf1 with
-        | Core_ops_control_flow_ControlFlow_Continue val1 =>
-          let (count, p) := val1 in
-          i1 <- scalar_cast U32 Usize count;
-          let i2 := alloc_vec_Vec_len env.(env_Env_func_type_indices) in
-          if i1 s<> i2
-          then Ok (Core_result_Result_Err Error_Error_FuncCodeMismatch)
-          else (
-            r2 <- module_validate_code_entries data p env;
+        | Core_ops_control_flow_ControlFlow_Continue _ =>
+          r1 <- module_code_entry_extent data q1;
+          cf1 <-
+            core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+              r1;
+          match cf1 with
+          | Core_ops_control_flow_ControlFlow_Continue val =>
+            let (contents, end1) := val in
+            p1 <- codeVisitorInst.(module_CodeVisitor_t_on_need_bytes) v2 end1;
+            let (r2, v3) := p1 in
             cf2 <-
               core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
                 r2;
             match cf2 with
-            | Core_ops_control_flow_ControlFlow_Continue val2 =>
-              if val2 s<> end1
-              then Ok (Core_result_Result_Err Error_Error_SectionSizeMismatch)
-              else Ok (Core_result_Result_Ok end1)
+            | Core_ops_control_flow_ControlFlow_Continue _ =>
+              p2 <-
+                codeVisitorInst.(module_CodeVisitor_t_on_code_entry) v3 data
+                  env i1 q1 contents end1;
+              let (r3, v4) := p2 in
+              cf3 <-
+                core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+                  r3;
+              match cf3 with
+              | Core_ops_control_flow_ControlFlow_Continue _ =>
+                i4 <- usize_add i1 1%usize; Ok (Cont (v4, end1, i4))
+              | Core_ops_control_flow_ControlFlow_Break residual =>
+                r4 <-
+                  core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                    usize (core_convert_From_Blanket error_Error_t) residual;
+                Ok (Done (r4, v4))
+              end
             | Core_ops_control_flow_ControlFlow_Break residual =>
+              r3 <-
+                core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                  usize (core_convert_From_Blanket error_Error_t) residual;
+              Ok (Done (r3, v3))
+            end
+          | Core_ops_control_flow_ControlFlow_Break residual =>
+            r2 <-
               core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-                usize (core_convert_From_Blanket error_Error_t) residual
-            end)
+                usize (core_convert_From_Blanket error_Error_t) residual;
+            Ok (Done (r2, v2))
+          end
         | Core_ops_control_flow_ControlFlow_Break residual =>
-          core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-            usize error_Error_Insts_CoreConvertFromOpError residual
-        end)
+          r1 <-
+            core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+              usize (core_convert_From_Blanket error_Error_t) residual;
+          Ok (Done (r1, v2))
+        end))
+    (v, q, i)
+.
+
+(** [veriwasm::module::validate_code_entries_with]:
+    Source: 'src/module.rs', lines 1124:0-1145:1 *)
+Definition module_validate_code_entries_with
+  {V : Type} (codeVisitorInst : module_CodeVisitor_t V) (data : slice u8)
+  (pos : usize) (env : env_Env_t) (v : V) :
+  result ((core_result_Result_t usize error_Error_t) * V)
+  :=
+  module_validate_code_entries_with_loop codeVisitorInst data env v pos 0%usize
+.
+
+(** [veriwasm::module::validate_code_with]:
+    Source: 'src/module.rs', lines 1227:0-1246:1 *)
+Definition module_validate_code_with
+  {V : Type} (codeVisitorInst : module_CodeVisitor_t V) (data : slice u8)
+  (pos : usize) (env : env_Env_t) (v : V) :
+  result ((core_result_Result_t usize error_Error_t) * V)
+  :=
+  i <- usize_add pos limits_max_code_header_bytes;
+  p <- codeVisitorInst.(module_CodeVisitor_t_on_need_bytes) v i;
+  let (r, v1) := p in
+  cf <-
+    core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
+  match cf with
+  | Core_ops_control_flow_ControlFlow_Continue _ =>
+    r1 <- module_code_section data pos env;
+    cf1 <-
+      core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r1;
+    match cf1 with
+    | Core_ops_control_flow_ControlFlow_Continue val =>
+      match val with
+      | None => Ok (Core_result_Result_Ok pos, v1)
+      | Some cs =>
+        p1 <-
+          module_validate_code_entries_with codeVisitorInst data
+            cs.(module_CodeSection_entries) env v1;
+        let (r2, v2) := p1 in
+        cf2 <-
+          core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+            r2;
+        match cf2 with
+        | Core_ops_control_flow_ControlFlow_Continue val1 =>
+          if val1 s<> cs.(module_CodeSection_end)
+          then Ok (Core_result_Result_Err Error_Error_SectionSizeMismatch, v2)
+          else Ok (Core_result_Result_Ok cs.(module_CodeSection_end), v2)
+        | Core_ops_control_flow_ControlFlow_Break residual =>
+          r3 <-
+            core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+              usize (core_convert_From_Blanket error_Error_t) residual;
+          Ok (r3, v2)
+        end
+      end
     | Core_ops_control_flow_ControlFlow_Break residual =>
+      r2 <-
+        core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+          usize (core_convert_From_Blanket error_Error_t) residual;
+      Ok (r2, v1)
+    end
+  | Core_ops_control_flow_ControlFlow_Break residual =>
+    r1 <-
       core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-        usize (core_convert_From_Blanket error_Error_t) residual
-    end)
+        usize (core_convert_From_Blanket error_Error_t) residual;
+    Ok (r1, v1)
+  end
 .
 
 (** [veriwasm::module::decode_func_indices]: loop 0:
-    Source: 'src/module.rs', lines 797:4-808:5 *)
+    Source: 'src/module.rs', lines 852:4-863:5 *)
 Definition module_decode_func_indices_loop
   (data : slice u8) (env : env_Env_t) (count : u32) (out : alloc_vec_Vec u32)
   (q : usize) (i : u32) :
@@ -7483,7 +12794,7 @@ Definition module_decode_func_indices_loop
 .
 
 (** [veriwasm::module::decode_func_indices]:
-    Source: 'src/module.rs', lines 792:0-809:1 *)
+    Source: 'src/module.rs', lines 847:0-864:1 *)
 Definition module_decode_func_indices
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result (core_result_Result_t ((alloc_vec_Vec u32) * usize) error_Error_t)
@@ -7504,7 +12815,7 @@ Definition module_decode_func_indices
 .
 
 (** [veriwasm::module::decode_element_section]: loop 0:
-    Source: 'src/module.rs', lines 815:4-832:5 *)
+    Source: 'src/module.rs', lines 870:4-887:5 *)
 Definition module_decode_element_section_loop
   (data : slice u8) (env : env_Env_t) (count : u32) (q : usize) (i : u32) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -7591,7 +12902,7 @@ Definition module_decode_element_section_loop
 .
 
 (** [veriwasm::module::decode_element_section]:
-    Source: 'src/module.rs', lines 811:0-833:1 *)
+    Source: 'src/module.rs', lines 866:0-888:1 *)
 Definition module_decode_element_section
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -7612,7 +12923,7 @@ Definition module_decode_element_section
 .
 
 (** [veriwasm::module::decode_start_section]:
-    Source: 'src/module.rs', lines 779:0-790:1 *)
+    Source: 'src/module.rs', lines 834:0-845:1 *)
 Definition module_decode_start_section
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -7668,7 +12979,7 @@ Definition module_decode_start_section
 .
 
 (** [veriwasm::module::export_desc]:
-    Source: 'src/module.rs', lines 728:0-755:1 *)
+    Source: 'src/module.rs', lines 783:0-810:1 *)
 Definition module_export_desc
   (env : env_Env_t) (kind : u8) (idx : u32) :
   result (core_result_Result_t env_ExportDesc_t error_Error_t)
@@ -7705,7 +13016,7 @@ Definition module_export_desc
 .
 
 (** [veriwasm::module::names_equal]: loop 0:
-    Source: 'src/module.rs', lines 702:4-710:5 *)
+    Source: 'src/module.rs', lines 757:4-765:5 *)
 Definition module_names_equal_loop
   (a : slice u8) (b : slice u8) (i : usize) : result bool :=
   loop
@@ -7723,7 +13034,7 @@ Definition module_names_equal_loop
 .
 
 (** [veriwasm::module::names_equal]:
-    Source: 'src/module.rs', lines 697:0-711:1 *)
+    Source: 'src/module.rs', lines 752:0-766:1 *)
 Definition module_names_equal (a : slice u8) (b : slice u8) : result bool :=
   let i := slice_len a in
   let i1 := slice_len b in
@@ -7731,7 +13042,7 @@ Definition module_names_equal (a : slice u8) (b : slice u8) : result bool :=
 .
 
 (** [veriwasm::module::export_name_taken]: loop 0:
-    Source: 'src/module.rs', lines 717:4-725:5 *)
+    Source: 'src/module.rs', lines 772:4-780:5 *)
 Definition module_export_name_taken_loop
   (env : env_Env_t) (name : slice u8) (i : usize) : result bool :=
   loop
@@ -7752,14 +13063,14 @@ Definition module_export_name_taken_loop
 .
 
 (** [veriwasm::module::export_name_taken]:
-    Source: 'src/module.rs', lines 715:0-726:1 *)
+    Source: 'src/module.rs', lines 770:0-781:1 *)
 Definition module_export_name_taken
   (env : env_Env_t) (name : slice u8) : result bool :=
   module_export_name_taken_loop env name 0%usize
 .
 
 (** [veriwasm::module::decode_export_section]: loop 0:
-    Source: 'src/module.rs', lines 761:4-775:5 *)
+    Source: 'src/module.rs', lines 816:4-830:5 *)
 Definition module_decode_export_section_loop
   (data : slice u8) (env : env_Env_t) (count : u32) (q : usize) (i : u32) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -7854,7 +13165,7 @@ Definition module_decode_export_section_loop
 .
 
 (** [veriwasm::module::decode_export_section]:
-    Source: 'src/module.rs', lines 757:0-776:1 *)
+    Source: 'src/module.rs', lines 812:0-831:1 *)
 Definition module_decode_export_section
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -7875,7 +13186,7 @@ Definition module_decode_export_section
 .
 
 (** [veriwasm::module::decode_global_type]:
-    Source: 'src/module.rs', lines 312:0-334:1 *)
+    Source: 'src/module.rs', lines 359:0-381:1 *)
 Definition module_decode_global_type
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (types_GlobalType_t * usize) error_Error_t)
@@ -7921,7 +13232,7 @@ Definition module_decode_global_type
 .
 
 (** [veriwasm::module::decode_global_section]: loop 0:
-    Source: 'src/module.rs', lines 684:4-694:5 *)
+    Source: 'src/module.rs', lines 739:4-749:5 *)
 Definition module_decode_global_section_loop
   (data : slice u8) (env : env_Env_t) (count : u32) (q : usize) (i : u32) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -7986,7 +13297,7 @@ Definition module_decode_global_section_loop
 .
 
 (** [veriwasm::module::decode_global_section]:
-    Source: 'src/module.rs', lines 680:0-695:1 *)
+    Source: 'src/module.rs', lines 735:0-750:1 *)
 Definition module_decode_global_section
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -8007,7 +13318,7 @@ Definition module_decode_global_section
 .
 
 (** [veriwasm::module::decode_limits]:
-    Source: 'src/module.rs', lines 267:0-285:1 *)
+    Source: 'src/module.rs', lines 314:0-332:1 *)
 Definition module_decode_limits
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (limits_Limits_t * usize) error_Error_t)
@@ -8073,7 +13384,7 @@ Definition module_decode_limits
 .
 
 (** [veriwasm::module::decode_mem_type]:
-    Source: 'src/module.rs', lines 305:0-309:1 *)
+    Source: 'src/module.rs', lines 352:0-356:1 *)
 Definition module_decode_mem_type
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (types_MemType_t * usize) error_Error_t)
@@ -8103,7 +13414,7 @@ Definition module_decode_mem_type
 .
 
 (** [veriwasm::module::decode_memory_section]: loop 0:
-    Source: 'src/module.rs', lines 666:4-677:5 *)
+    Source: 'src/module.rs', lines 721:4-732:5 *)
 Definition module_decode_memory_section_loop
   (data : slice u8) (env : env_Env_t) (count : u32) (q : usize) (i : u32) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -8171,7 +13482,7 @@ Definition module_decode_memory_section_loop
 .
 
 (** [veriwasm::module::decode_memory_section]:
-    Source: 'src/module.rs', lines 662:0-678:1 *)
+    Source: 'src/module.rs', lines 717:0-733:1 *)
 Definition module_decode_memory_section
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -8192,7 +13503,7 @@ Definition module_decode_memory_section
 .
 
 (** [veriwasm::module::decode_table_type]:
-    Source: 'src/module.rs', lines 288:0-302:1 *)
+    Source: 'src/module.rs', lines 335:0-349:1 *)
 Definition module_decode_table_type
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (types_TableType_t * usize) error_Error_t)
@@ -8242,7 +13553,7 @@ Definition module_decode_table_type
 .
 
 (** [veriwasm::module::decode_table_section]: loop 0:
-    Source: 'src/module.rs', lines 648:4-659:5 *)
+    Source: 'src/module.rs', lines 703:4-714:5 *)
 Definition module_decode_table_section_loop
   (data : slice u8) (env : env_Env_t) (count : u32) (q : usize) (i : u32) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -8310,7 +13621,7 @@ Definition module_decode_table_section_loop
 .
 
 (** [veriwasm::module::decode_table_section]:
-    Source: 'src/module.rs', lines 644:0-660:1 *)
+    Source: 'src/module.rs', lines 699:0-715:1 *)
 Definition module_decode_table_section
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -8331,7 +13642,7 @@ Definition module_decode_table_section
 .
 
 (** [veriwasm::module::copy_func_type]:
-    Source: 'src/module.rs', lines 524:0-529:1 *)
+    Source: 'src/module.rs', lines 579:0-584:1 *)
 Definition module_copy_func_type
   (ft : types_FuncType_t) : result types_FuncType_t :=
   let s := alloc_vec_Vec_deref ft.(types_FuncType_params) in
@@ -8342,7 +13653,7 @@ Definition module_copy_func_type
 .
 
 (** [veriwasm::module::lookup_type]:
-    Source: 'src/module.rs', lines 532:0-538:1 *)
+    Source: 'src/module.rs', lines 587:0-593:1 *)
 Definition module_lookup_type
   (env : env_Env_t) (idx : u32) :
   result (core_result_Result_t types_FuncType_t error_Error_t)
@@ -8360,7 +13671,7 @@ Definition module_lookup_type
 .
 
 (** [veriwasm::module::decode_function_section]: loop 0:
-    Source: 'src/module.rs', lines 631:4-641:5 *)
+    Source: 'src/module.rs', lines 686:4-696:5 *)
 Definition module_decode_function_section_loop
   (data : slice u8) (env : env_Env_t) (count : u32) (q : usize) (i : u32) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -8420,7 +13731,7 @@ Definition module_decode_function_section_loop
 .
 
 (** [veriwasm::module::decode_function_section]:
-    Source: 'src/module.rs', lines 627:0-642:1 *)
+    Source: 'src/module.rs', lines 682:0-697:1 *)
 Definition module_decode_function_section
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -8441,7 +13752,7 @@ Definition module_decode_function_section
 .
 
 (** [veriwasm::module::decode_import]:
-    Source: 'src/module.rs', lines 558:0-612:1 *)
+    Source: 'src/module.rs', lines 613:0-667:1 *)
 Definition module_decode_import
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -8716,7 +14027,7 @@ Definition module_decode_import
 .
 
 (** [veriwasm::module::decode_import_section]: loop 0:
-    Source: 'src/module.rs', lines 618:4-624:5 *)
+    Source: 'src/module.rs', lines 673:4-679:5 *)
 Definition module_decode_import_section_loop
   (data : slice u8) (env : env_Env_t) (count : u32) (q : usize) (i : u32) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -8744,7 +14055,7 @@ Definition module_decode_import_section_loop
 .
 
 (** [veriwasm::module::decode_import_section]:
-    Source: 'src/module.rs', lines 614:0-625:1 *)
+    Source: 'src/module.rs', lines 669:0-680:1 *)
 Definition module_decode_import_section
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -8765,7 +14076,7 @@ Definition module_decode_import_section
 .
 
 (** [veriwasm::module::decode_value_types]: loop 0:
-    Source: 'src/module.rs', lines 239:4-247:5 *)
+    Source: 'src/module.rs', lines 286:4-294:5 *)
 Definition module_decode_value_types_loop
   (data : slice u8) (count : u32) (out : alloc_vec_Vec types_ValueType_t)
   (q : usize) (i : u32) :
@@ -8799,7 +14110,7 @@ Definition module_decode_value_types_loop
 .
 
 (** [veriwasm::module::decode_value_types]:
-    Source: 'src/module.rs', lines 234:0-248:1 *)
+    Source: 'src/module.rs', lines 281:0-295:1 *)
 Definition module_decode_value_types
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t ((alloc_vec_Vec types_ValueType_t) * usize)
@@ -8821,7 +14132,7 @@ Definition module_decode_value_types
 .
 
 (** [veriwasm::module::decode_func_type]:
-    Source: 'src/module.rs', lines 253:0-264:1 *)
+    Source: 'src/module.rs', lines 300:0-311:1 *)
 Definition module_decode_func_type
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (types_FuncType_t * usize) error_Error_t)
@@ -8876,7 +14187,7 @@ Definition module_decode_func_type
 .
 
 (** [veriwasm::module::decode_type_section]: loop 0:
-    Source: 'src/module.rs', lines 546:4-554:5 *)
+    Source: 'src/module.rs', lines 601:4-609:5 *)
 Definition module_decode_type_section_loop
   (data : slice u8) (env : env_Env_t) (count : u32) (q : usize) (i : u32) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -8922,7 +14233,7 @@ Definition module_decode_type_section_loop
 .
 
 (** [veriwasm::module::decode_type_section]:
-    Source: 'src/module.rs', lines 542:0-555:1 *)
+    Source: 'src/module.rs', lines 597:0-610:1 *)
 Definition module_decode_type_section
   (data : slice u8) (pos : usize) (env : env_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -8943,7 +14254,7 @@ Definition module_decode_type_section
 .
 
 (** [veriwasm::module::decode_env_section]:
-    Source: 'src/module.rs', lines 835:0-864:1 *)
+    Source: 'src/module.rs', lines 890:0-919:1 *)
 Definition module_decode_env_section
   (data : slice u8) (pos : usize) (id : u8) (env : env_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * env_Env_t)
@@ -8980,7 +14291,7 @@ Definition module_decode_env_section
 .
 
 (** [veriwasm::module::read_header]:
-    Source: 'src/module.rs', lines 187:0-203:1 *)
+    Source: 'src/module.rs', lines 234:0-250:1 *)
 Definition module_read_header
   (data : slice u8) : result (core_result_Result_t usize error_Error_t) :=
   r <- reader_read_byte data 0%usize;
@@ -9105,17 +14416,18 @@ Definition module_read_header
   end
 .
 
-(** [veriwasm::module::decode_env]: loop 0:
-    Source: 'src/module.rs', lines 874:4-896:5 *)
-Definition module_decode_env_loop
-  (data : slice u8) (env : env_Env_t) (q : usize) (last_id : u8) :
-  result (core_result_Result_t (env_Env_t * usize) error_Error_t)
+(** [veriwasm::module::decode_env_with]: loop 0:
+    Source: 'src/module.rs', lines 951:4-977:5 *)
+Definition module_decode_env_with_loop
+  {V : Type} (moduleVisitorInst : module_ModuleVisitor_t V) (data : slice u8)
+  (v : V) (env : env_Env_t) (q : usize) (last_id : u8) :
+  result ((core_result_Result_t (env_Env_t * usize) error_Error_t) * V)
   :=
   loop
-    (fun '((env1, q1, last_id1) : (env_Env_t * usize * u8)) =>
+    (fun '((v1, env1, q1, last_id1) : (V * env_Env_t * usize * u8)) =>
       let i := slice_len data in
       if q1 s>= i
-      then Ok (Done (Core_result_Result_Ok (env1, q1)))
+      then Ok (Done (Core_result_Result_Ok (env1, q1), v1))
       else (
         r <- module_read_section_header data q1;
         cf <-
@@ -9131,23 +14443,31 @@ Definition module_decode_env_loop
               core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
                 r1;
             match cf1 with
-            | Core_ops_control_flow_ControlFlow_Continue _ =>
-              Ok (Cont (env1, end1, last_id1))
+            | Core_ops_control_flow_ControlFlow_Continue val1 =>
+              p <-
+                moduleVisitorInst.(module_ModuleVisitor_t_on_custom_section) v1
+                  val1;
+              let (r2, v2) := p in
+              match r2 with
+              | Core_result_Result_Ok _ => Ok (Cont (v2, env1, end1, last_id1))
+              | Core_result_Result_Err e =>
+                Ok (Done (Core_result_Result_Err (Error_Error_Visitor e), v2))
+              end
             | Core_ops_control_flow_ControlFlow_Break residual =>
               r2 <-
                 core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                   (env_Env_t * usize) (core_convert_From_Blanket error_Error_t)
                   residual;
-              Ok (Done r2)
+              Ok (Done (r2, v1))
             end)
           else
             if id s>= module_section_code
-            then Ok (Done (Core_result_Result_Ok (env1, q1)))
+            then Ok (Done (Core_result_Result_Ok (env1, q1), v1))
             else
               if id s<= last_id1
               then
-                Ok (Done (Core_result_Result_Err
-                  Error_Error_SectionOutOfOrder))
+                Ok (Done (Core_result_Result_Err Error_Error_SectionOutOfOrder,
+                  v1))
               else (
                 p <- module_decode_env_section data start id env1;
                 let (r1, env2) := p in
@@ -9159,30 +14479,31 @@ Definition module_decode_env_loop
                   if val1 s<> end1
                   then
                     Ok (Done (Core_result_Result_Err
-                      Error_Error_SectionSizeMismatch))
-                  else Ok (Cont (env2, end1, id))
+                      Error_Error_SectionSizeMismatch, v1))
+                  else Ok (Cont (v1, env2, end1, id))
                 | Core_ops_control_flow_ControlFlow_Break residual =>
                   r2 <-
                     core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                       (env_Env_t * usize) (core_convert_From_Blanket
                       error_Error_t) residual;
-                  Ok (Done r2)
+                  Ok (Done (r2, v1))
                 end)
         | Core_ops_control_flow_ControlFlow_Break residual =>
           r1 <-
             core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
               (env_Env_t * usize) (core_convert_From_Blanket error_Error_t)
               residual;
-          Ok (Done r1)
+          Ok (Done (r1, v1))
         end))
-    (env, q, last_id)
+    (v, env, q, last_id)
 .
 
-(** [veriwasm::module::decode_env]:
-    Source: 'src/module.rs', lines 870:0-897:1 *)
-Definition module_decode_env
-  (data : slice u8) :
-  result (core_result_Result_t (env_Env_t * usize) error_Error_t)
+(** [veriwasm::module::decode_env_with]:
+    Source: 'src/module.rs', lines 947:0-978:1 *)
+Definition module_decode_env_with
+  {V : Type} (moduleVisitorInst : module_ModuleVisitor_t V) (data : slice u8)
+  (v : V) :
+  result ((core_result_Result_t (env_Env_t * usize) error_Error_t) * V)
   :=
   env <- env_Env_new;
   r <- module_read_header data;
@@ -9190,15 +14511,182 @@ Definition module_decode_env
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
   match cf with
   | Core_ops_control_flow_ControlFlow_Continue val =>
-    module_decode_env_loop data env val 0%u8
+    module_decode_env_with_loop moduleVisitorInst data v env val 0%u8
   | Core_ops_control_flow_ControlFlow_Break residual =>
-    core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-      (env_Env_t * usize) (core_convert_From_Blanket error_Error_t) residual
+    r1 <-
+      core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+        (env_Env_t * usize) (core_convert_From_Blanket error_Error_t) residual;
+    Ok (r1, v)
   end
 .
 
+(** [veriwasm::module::validate_module_with]:
+    Source: 'src/module.rs', lines 94:0-105:1 *)
+Definition module_validate_module_with
+  {V : Type} (moduleVisitorInst : module_ModuleVisitor_t V) (codeVisitorInst :
+  module_CodeVisitor_t V) (data : slice u8) (v : V) :
+  result ((core_result_Result_t module_ValidatedModule_t error_Error_t) * V)
+  :=
+  let i := slice_len data in
+  if i s> limits_max_module_bytes
+  then Ok (Core_result_Result_Err Error_Error_ModuleTooLarge, v)
+  else (
+    p <- module_decode_env_with moduleVisitorInst data v;
+    let (r, v1) := p in
+    cf <-
+      core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
+    match cf with
+    | Core_ops_control_flow_ControlFlow_Continue val =>
+      let (env, code_pos) := val in
+      p1 <- module_validate_code_with codeVisitorInst data code_pos env v1;
+      let (r1, v2) := p1 in
+      cf1 <-
+        core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+          r1;
+      match cf1 with
+      | Core_ops_control_flow_ControlFlow_Continue val1 =>
+        p2 <- module_decode_tail_with moduleVisitorInst data val1 env v2;
+        let (r2, v3) := p2 in
+        cf2 <-
+          core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+            r2;
+        match cf2 with
+        | Core_ops_control_flow_ControlFlow_Continue val2 =>
+          Ok (Core_result_Result_Ok
+            {|
+              module_ValidatedModule_env := env;
+              module_ValidatedModule_tail := val2
+            |}, v3)
+        | Core_ops_control_flow_ControlFlow_Break residual =>
+          r3 <-
+            core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+              module_ValidatedModule_t (core_convert_From_Blanket
+              error_Error_t) residual;
+          Ok (r3, v3)
+        end
+      | Core_ops_control_flow_ControlFlow_Break residual =>
+        r2 <-
+          core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+            module_ValidatedModule_t (core_convert_From_Blanket error_Error_t)
+            residual;
+        Ok (r2, v2)
+      end
+    | Core_ops_control_flow_ControlFlow_Break residual =>
+      r1 <-
+        core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+          module_ValidatedModule_t (core_convert_From_Blanket error_Error_t)
+          residual;
+      Ok (r1, v1)
+    end)
+.
+
+(** [veriwasm::module::{veriwasm::module::ModuleVisitor for veriwasm::module::NopModuleVisitor}::on_custom_section]:
+    Source: 'src/module.rs', lines 1417:0-1417:42 *)
+Definition
+  module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor_on_custom_section
+  (self : module_NopModuleVisitor_t) (_section : types_CustomSection_t) :
+  result ((core_result_Result_t unit error_VisitError_t) *
+    module_NopModuleVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** Trait implementation: [veriwasm::module::{veriwasm::module::ModuleVisitor for veriwasm::module::NopModuleVisitor}]
+    Source: 'src/module.rs', lines 1417:0-1417:42 *)
+Definition module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor :
+  module_ModuleVisitor_t module_NopModuleVisitor_t := {|
+  module_ModuleVisitor_t_on_custom_section :=
+    module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor_on_custom_section;
+|}.
+
+(** [veriwasm::module::decode_tail]:
+    Source: 'src/module.rs', lines 1299:0-1302:1 *)
+Definition module_decode_tail
+  (data : slice u8) (pos : usize) (env : env_Env_t) :
+  result (core_result_Result_t module_Tail_t error_Error_t)
+  :=
+  p <-
+    module_decode_tail_with
+      module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor data pos env
+      tt;
+  let (r, _) := p in
+  Ok r
+.
+
+(** [veriwasm::module::{veriwasm::module::CodeVisitor for veriwasm::module::ValidatingCodeVisitor}::on_code_entry]:
+    Source: 'src/module.rs', lines 1498:0-1498:45 *)
+Definition
+  module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor_on_code_entry
+  (self : module_ValidatingCodeVisitor_t) (data : slice u8) (env : env_Env_t)
+  (index : usize) (entry_pos : usize) (_contents_start : usize)
+  (_entry_end : usize) :
+  result ((core_result_Result_t unit error_Error_t) *
+    module_ValidatingCodeVisitor_t)
+  :=
+  r <- module_validate_code_entry data entry_pos env index;
+  cf <-
+    core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
+  match cf with
+  | Core_ops_control_flow_ControlFlow_Continue _ =>
+    Ok (Core_result_Result_Ok tt, self)
+  | Core_ops_control_flow_ControlFlow_Break residual =>
+    r1 <-
+      core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+        unit (core_convert_From_Blanket error_Error_t) residual;
+    Ok (r1, self)
+  end
+.
+
+(** [veriwasm::module::{veriwasm::module::CodeVisitor for veriwasm::module::ValidatingCodeVisitor}::on_need_bytes]:
+    Source: 'src/module.rs', lines 1498:0-1498:45 *)
+Definition
+  module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor_on_need_bytes
+  (self : module_ValidatingCodeVisitor_t) (_end : usize) :
+  result ((core_result_Result_t unit error_Error_t) *
+    module_ValidatingCodeVisitor_t)
+  :=
+  Ok (Core_result_Result_Ok tt, self)
+.
+
+(** Trait implementation: [veriwasm::module::{veriwasm::module::CodeVisitor for veriwasm::module::ValidatingCodeVisitor}]
+    Source: 'src/module.rs', lines 1498:0-1498:45 *)
+Definition module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor :
+  module_CodeVisitor_t module_ValidatingCodeVisitor_t := {|
+  module_CodeVisitor_t_on_need_bytes :=
+    module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor_on_need_bytes;
+  module_CodeVisitor_t_on_code_entry :=
+    module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor_on_code_entry;
+|}.
+
+(** [veriwasm::module::validate_code]:
+    Source: 'src/module.rs', lines 1252:0-1255:1 *)
+Definition module_validate_code
+  (data : slice u8) (pos : usize) (env : env_Env_t) :
+  result (core_result_Result_t usize error_Error_t)
+  :=
+  p <-
+    module_validate_code_with
+      module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor data pos env
+      tt;
+  let (r, _) := p in
+  Ok r
+.
+
+(** [veriwasm::module::decode_env]:
+    Source: 'src/module.rs', lines 925:0-928:1 *)
+Definition module_decode_env
+  (data : slice u8) :
+  result (core_result_Result_t (env_Env_t * usize) error_Error_t)
+  :=
+  p <-
+    module_decode_env_with
+      module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor data tt;
+  let (r, _) := p in
+  Ok r
+.
+
 (** [veriwasm::module::validate_module]:
-    Source: 'src/module.rs', lines 72:0-80:1 *)
+    Source: 'src/module.rs', lines 114:0-122:1 *)
 Definition module_validate_module
   (data : slice u8) :
   result (core_result_Result_t module_ValidatedModule_t error_Error_t)
@@ -9248,7 +14736,7 @@ Definition module_validate_module
 .
 
 (** [veriwasm::module::import_types]: loop 0:
-    Source: 'src/module.rs', lines 92:4-107:5 *)
+    Source: 'src/module.rs', lines 138:4-153:5 *)
 Definition module_import_types_loop
   (env : env_Env_t) (out : alloc_vec_Vec types_ExternType_t) (i : usize) :
   result (core_result_Result_t (alloc_vec_Vec types_ExternType_t)
@@ -9298,7 +14786,7 @@ Definition module_import_types_loop
 .
 
 (** [veriwasm::module::import_types]:
-    Source: 'src/module.rs', lines 89:0-108:1 *)
+    Source: 'src/module.rs', lines 135:0-154:1 *)
 Definition module_import_types
   (env : env_Env_t) :
   result (core_result_Result_t (alloc_vec_Vec types_ExternType_t)
@@ -9308,7 +14796,7 @@ Definition module_import_types
 .
 
 (** [veriwasm::module::export_types]: loop 0:
-    Source: 'src/module.rs', lines 119:4-155:5 *)
+    Source: 'src/module.rs', lines 166:4-202:5 *)
 Definition module_export_types_loop
   (env : env_Env_t) (out : alloc_vec_Vec types_ExternType_t) (i : usize) :
   result (core_result_Result_t (alloc_vec_Vec types_ExternType_t)
@@ -9381,7 +14869,7 @@ Definition module_export_types_loop
 .
 
 (** [veriwasm::module::export_types]:
-    Source: 'src/module.rs', lines 116:0-156:1 *)
+    Source: 'src/module.rs', lines 163:0-203:1 *)
 Definition module_export_types
   (env : env_Env_t) :
   result (core_result_Result_t (alloc_vec_Vec types_ExternType_t)
@@ -9391,7 +14879,7 @@ Definition module_export_types
 .
 
 (** Trait implementation: [veriwasm::opiter::{core::cmp::PartialEq<veriwasm::opiter::BlockType> for veriwasm::opiter::BlockType}]
-    Source: 'src/opiter.rs', lines 33:0-41:1 *)
+    Source: 'src/opiter.rs', lines 41:0-49:1 *)
 Definition opiter_BlockType_Insts_CoreCmpPartialEqBlockType :
   core_cmp_PartialEq_t opiter_BlockType_t opiter_BlockType_t := {|
   core_cmp_PartialEq_t_eq :=
@@ -9401,12 +14889,25 @@ Definition opiter_BlockType_Insts_CoreCmpPartialEqBlockType :
 |}.
 
 (** Trait implementation: [veriwasm::opiter::{core::cmp::Eq for veriwasm::opiter::BlockType}]
-    Source: 'src/opiter.rs', lines 43:0-43:24 *)
+    Source: 'src/opiter.rs', lines 51:0-51:24 *)
 Definition opiter_BlockType_Insts_CoreCmpEq : core_cmp_Eq_t opiter_BlockType_t
   := {|
   core_cmp_Eq_tcore_cmp_Eq_t_PartialEqInst :=
     opiter_BlockType_Insts_CoreCmpPartialEqBlockType;
 |}.
+
+(** [veriwasm::opiter::validate_body]:
+    Source: 'src/opiter.rs', lines 1608:0-1611:1 *)
+Definition opiter_validate_body
+  (data : slice u8) (env : env_Env_t) (ctx : opiter_Context_t) :
+  result (core_result_Result_t unit error_OpError_t)
+  :=
+  p <-
+    opiter_validate_body_with visit_NopVisitor_Insts_VeriwasmVisitOpVisitor
+      data env ctx tt;
+  let (r, _) := p in
+  Ok r
+.
 
 (** Trait implementation: [veriwasm::types::{core::cmp::Eq for veriwasm::types::ValueType}]
     Source: 'src/types.rs', lines 33:0-33:24 *)

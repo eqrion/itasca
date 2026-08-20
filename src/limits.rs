@@ -42,6 +42,16 @@ pub const MAX_FUNCTION_BYTES: usize = 7_654_321;
 /// computes is below this, which rules out an overflowing cursor.
 pub const MAX_MODULE_BYTES: usize = 1_073_741_824;
 
+/// The most bytes an LEB128 `u32` can take, which is what `read_u32_leb` will
+/// read before it gives up. Not a cap the validator enforces: it is what a
+/// consumer needs in order to know how many bytes a framing read can want.
+pub const MAX_LEB_BYTES: usize = 5;
+
+/// The most bytes the code section's header can take: an id byte, the section
+/// size, and the entry count. What a streaming consumer has to have on hand
+/// before the walk can frame the section.
+pub const MAX_CODE_HEADER_BYTES: usize = 1 + 2 * MAX_LEB_BYTES;
+
 /// An implementation cap on the number of locals a function may declare. A
 /// local declaration is a count and a type, so without a cap two bytes of
 /// input could ask for four billion locals.
@@ -57,7 +67,7 @@ pub struct Limits {
 
 /// Spec 3.2.1: the minimum is within range, and so is the maximum if there is
 /// one, and the maximum is not below the minimum.
-pub fn validate_limits(limits: &Limits, range: u32) -> Result<(), Error> {
+pub(crate) fn validate_limits(limits: &Limits, range: u32) -> Result<(), Error> {
     if limits.min > range {
         return Err(Error::LimitsOutOfRange);
     }

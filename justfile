@@ -126,7 +126,6 @@ trust:
         OpIter_Decode:read_f64_bits_complete \
         OpIter_Decode:read_op_sound \
         OpIter_Decode:read_memarg_sound \
-        OpIter_Protocol:take_pending_ok \
         OpIter_State:push_types_pos \
         OpIter_Sim:ctx_at_label_lookup \
         OpIter_Sim:step_end_block \
@@ -142,17 +141,43 @@ trust:
         OpIter_Table:convert_types_spec \
         OpIter_Table:binary_types_spec \
         OpIter_Table:op_spec_handled \
+        OpIter_Table:visit_numeric_names_convert \
+        OpIter_Table:visit_numeric_names_binary \
+        OpIter_Table:visit_memory_names_load \
+        OpIter_Table:visit_memory_names_store \
+        OpIter_Visit:nop_hooks_total \
+        OpIter_Visit:nop_hooks_accept \
+        OpIter_Table:trace_records \
         OpIter_NoPanic:validate_body_no_panic \
+        OpIter_NoPanic:validate_body_with_no_panic \
         OpIter_Validate:step_op_step \
         OpIter_Validate:validate_body_sound \
         OpIter_Validate:validate_body_checker \
         OpIter_Validate:validate_body_typed \
+        OpIter_Validate:validate_body_with_typed \
+        OpIter_Validate:validate_body_with_trace \
+        OpIter_Validate:validate_body_trace \
         OpIter_Checker:pop_with_type_complete \
         OpIter_Readers:read_end_complete \
         OpIter_Complete:step_complete \
         OpIter_Complete:validate_body_complete \
+        OpIter_Complete:validate_body_with_complete \
+        OpIter_Driven:validate_body_with_transfer \
+        OpIter_Driven:validate_body_driven \
+        OpIter_Driven:validate_body_accepts \
         Module_NoPanic:validate_module_no_panic \
+        Module_NoPanic:decode_env_ok \
+        Module_NoPanic:decode_tail_ok \
         Module_Sound:validate_module_repr \
+        Module_Sound:validate_code_entry_with_sound \
+        Module_Sound:code_section_sound \
+        Module_Sound:code_entry_extent_frames \
+        Module_Sound:validate_code_driven \
+        Module_Sound:validate_module_driven \
+        Module_Sound:validate_code_with_sound \
+        Module_NoPanic:validate_code_with_ok \
+        Module_Complete:validate_code_with_complete \
+        Module_NoPanic:validate_code_entry_with_ok \
         Module_Externs:import_types_externs \
         Module_Externs:export_types_externs \
         Module_Typing:validate_module_checked \
@@ -181,12 +206,23 @@ trust:
         Module_Complete:decode_locals_complete \
         Module_Complete:validate_code_entry_complete \
         Module_Complete:validate_code_complete \
-        Module_Complete:decode_env_loop_complete \
+        Module_Complete:decode_env_with_loop_complete \
         Module_Complete:decode_env_complete \
+        Module_Complete:validate_code_entry_with_complete \
         Module_Complete:validate_module_complete \
         Module_Wasm10:const_exprs_one \
         Module_Wasm10:module_wasm10_of_checker \
-        Module_Wasm10:validate_module_typechecked
+        Module_Wasm10:validate_module_typechecked \
+        Module_Driven:validate_code_entry_driven \
+        Module_Driven:validate_code_entry_accepts \
+        Module_Driven:decode_env_with_accepts \
+        Module_Driven:decode_tail_with_accepts \
+        Module_Driven:validate_code_with_accepts \
+        Module_Driven:validate_module_of_parts \
+        Module_Driven:validate_module_with_accepts \
+        Module_Driven:validate_module_with_no_panic \
+        Module_Driven:validate_module_with_complete \
+        Module_Driven:validate_module_parts_typed
     do
         m="${pair%%:*}"; t="${pair##*:}"
         out=$(just assumptions "$m" "$t" 2>/dev/null)

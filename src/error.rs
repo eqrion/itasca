@@ -2,7 +2,7 @@
 //!
 //! Decoding and validation are one pass, so there is one `Error` covering
 //! both. `OpError` stays separate because `opiter` is a self-contained
-//! component: a consumer can drive `validate_body` on its own and get a
+//! component: a consumer can call `validate_body` on its own and get a
 //! rejection reason in its own vocabulary.
 
 #[cfg(not(charon))]
@@ -37,10 +37,19 @@ pub enum OpError {
     /// A byte the specification writes out as a literal zero was not zero.
     ReservedByteNotZero,
     InvalidAlignment,
-    /// A reader was called that does not match the opcode `read_op` returned.
-    ProtocolViolation,
     TrailingBytes,
     BodyTooLarge,
+    /// The consumer of `validate_body_with` declined the body. Not a validity
+    /// verdict: the bytes may well be a well-typed function, and this says only
+    /// that validation did not finish.
+    Visitor(VisitError),
+}
+
+/// Why a consumer declined a body it was handed.
+#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
+#[derive(Clone, Copy)]
+pub enum VisitError {
+    OutOfMemory,
 }
 
 /// Why a module was rejected.
@@ -64,6 +73,13 @@ pub enum Error {
     SectionSizeMismatch,
     /// The function and code sections declare different numbers of functions.
     FuncCodeMismatch,
+    /// The module declared functions and has no code section.
+    ///
+    /// Apart from `FuncCodeMismatch` because the two are not the same news to a
+    /// consumer reading a module as it arrives: a code section that has not
+    /// been reached yet may still turn up, where a code section that declares
+    /// the wrong number of entries will not become right.
+    MissingCodeSection,
     /// A name was not valid UTF-8 (spec 5.2.4).
     InvalidUtf8,
 
@@ -87,6 +103,10 @@ pub enum Error {
     ModuleTooLarge,
     /// A function body was rejected by `opiter::validate_body`.
     Body(OpError),
+    /// The consumer of a `_with` entry point declined what it was shown. Not a
+    /// validity verdict, the same way `OpError::Visitor` is not: the module may
+    /// well be valid, and this says only that decoding did not finish.
+    Visitor(VisitError),
 }
 
 impl From<OpError> for Error {
@@ -110,6 +130,9 @@ impl fmt::Display for Error {
             Error::FuncCodeMismatch => {
                 write!(f, "function and code sections have inconsistent lengths")
             }
+            Error::MissingCodeSection => {
+                write!(f, "the module declares functions and has no code section")
+            }
             Error::InvalidUtf8 => write!(f, "name is not valid UTF-8"),
             Error::UnknownType(i) => write!(f, "unknown type: {}", i),
             Error::UnknownFunc(i) => write!(f, "unknown function: {}", i),
@@ -129,6 +152,7 @@ impl fmt::Display for Error {
             Error::TooManyLocals => write!(f, "too many locals"),
             Error::ModuleTooLarge => write!(f, "module too large"),
             Error::Body(e) => write!(f, "invalid function body: {:?}", e),
+            Error::Visitor(e) => write!(f, "the consumer declined: {:?}", e),
         }
     }
 }

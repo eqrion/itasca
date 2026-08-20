@@ -26,7 +26,6 @@ Require Import Veriwasm.Translate.
    one place it is written down. *)
 Require Import Veriwasm.Spec_Binary.
 Require Import Veriwasm.OpIter_State.
-Require Import Veriwasm.OpIter_Protocol.
 
 From Wasm Require Import datatypes type_checker operations typing.
 From mathcomp Require Import ssreflect ssrbool eqtype seq.
@@ -329,8 +328,7 @@ Lemma Inv_start_push : forall C0 st bt,
   opiter_push_ctrl
     {| opiter_OpIterState_vals := alloc_vec_Vec_new opiter_StackType_t;
        opiter_OpIterState_ctrls := alloc_vec_Vec_new opiter_Ctrl_t;
-       opiter_OpIterState_pos := 0%usize;
-       opiter_OpIterState_pending := None |}
+       opiter_OpIterState_pos := 0%usize |}
     Opiter_LabelKind_Body bt = Ok st ->
   Inv C0 st [body_fview bt].
 Proof.
@@ -414,7 +412,7 @@ Proof.
 Qed.
 
 (** The invariant only mentions the two stacks, so any reader that leaves them
-    alone preserves it. That covers every reader's [take_pending] prologue. *)
+    alone preserves it. That covers every reader that only moves the cursor. *)
 Lemma Inv_fields : forall C0 st st' fs,
   vec_list st'.(opiter_OpIterState_vals)
     = vec_list st.(opiter_OpIterState_vals) ->
@@ -426,18 +424,6 @@ Proof.
   unfold Inv. rewrite Hv. rewrite Hc. repeat split; assumption.
 Qed.
 
-Lemma Inv_obs : forall C0 st st' fs,
-  obs st' = obs st -> Inv C0 st fs -> Inv C0 st' fs.
-Proof.
-  intros C0 st st' fs Hobs Hinv.
-  destruct (obs_fields st st' Hobs) as [Hv [Hc _]].
-  apply (Inv_fields C0 st st' fs); [rewrite Hv | rewrite Hc | exact Hinv];
-    reflexivity.
-Qed.
-
-(** Bases only look at the frames *before* each one, so replacing the innermost
-    frame's segment or ghost list cannot disturb them. Every non-control step
-    goes through this. *)
 Lemma bases_ok_from_last : forall n pre f g,
   (fv_ctrl g).(opiter_Ctrl_value_stack_base)
     = (fv_ctrl f).(opiter_Ctrl_value_stack_base) ->
@@ -470,26 +456,23 @@ Proof.
   - exact Hf.
 Qed.
 
-(** [nop]: the state is untouched and the innermost frame's ghost list grows by
-    [BI_nop], on which WasmCert's [check_single] is the identity. *)
-Theorem step_nop : forall C0 st fs pre f st',
+(** [nop]: the dispatch does nothing at all, so the state is the incoming one
+    and the innermost frame's ghost list grows by [BI_nop], on which WasmCert's
+    [check_single] is the identity. *)
+Theorem step_nop : forall C0 st fs pre f,
   Inv C0 st fs -> fs = pre ++ [f] ->
-  opiter_read_nop st = Ok (Core_result_Result_Ok tt, st') ->
-  Inv C0 st'
+  Inv C0 st
       (pre ++ [{| fv_ctrl := fv_ctrl f;
                   fv_seg := fv_seg f;
                   fv_done := fv_done f ++ [BI_nop];
                   fv_then := fv_then f |}]).
 Proof.
-  intros C0 st fs pre f st' Hinv Hfs H. subst fs.
-  unfold opiter_read_nop in H.
-  pose proof (take_pending_ok_inv st opiter_op_nop st' H) as Hobs.
-  destruct (obs_fields st st' Hobs) as [Hv [Hc _]].
-  apply (Inv_step_last C0 st st' pre f _ Hinv).
+  intros C0 st fs pre f Hinv Hfs. subst fs.
+  apply (Inv_step_last C0 st st pre f _ Hinv).
   - reflexivity.
-  - rewrite Hc. destruct Hinv as [H1 _]. rewrite H1.
+  - destruct Hinv as [H1 _]. rewrite H1.
     rewrite List.map_app. rewrite List.map_app. reflexivity.
-  - rewrite Hv. destruct Hinv as [_ [H2 _]]. rewrite H2.
+  - destruct Hinv as [_ [H2 _]]. rewrite H2.
     rewrite List.map_app. rewrite List.map_app. reflexivity.
   - apply frames_ok_append_nop. destruct Hinv as [_ [_ [_ H4]]]. exact H4.
 Qed.
@@ -550,31 +533,23 @@ Theorem step_i32_const : forall C0 st fs pre f data v st',
 Proof.
   intros C0 st fs pre f data v st' Hinv Hfs H. subst fs.
   unfold opiter_read_i32_const in H.
-  destruct (opiter_take_pending st opiter_op_i32_const) as [[r0 st1]|] eqn:Htp;
-    cbn [bind] in H; [|discriminate].
-  destruct r0 as [u|e].
-  2: { rewrite branch_err in H. cbn [bind] in H.
-       rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
-  destruct u. rewrite branch_ok in H. cbn [bind] in H.
-  pose proof (take_pending_ok_inv st opiter_op_i32_const st1 Htp) as Hobs.
-  destruct (obs_fields st st1 Hobs) as [Hv1 [Hc1 _]].
-  destruct (reader_read_s32_leb data st1.(opiter_OpIterState_pos))
+  destruct (reader_read_s32_leb data st.(opiter_OpIterState_pos))
     as [r1|] eqn:Hleb; cbn [bind] in H; [|discriminate].
   destruct r1 as [[v0 p1]|e1].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
   destruct (opiter_push_val _ (Opiter_StackType_Val Types_ValueType_I32))
-    as [st2|] eqn:Hpv; cbn [bind] in H; [|discriminate].
+    as [st1|] eqn:Hpv; cbn [bind] in H; [|discriminate].
   injection H as Hveq <-.
   (* the push appends to the operand array and leaves the control stack alone *)
   destruct (push_val_spec _ _ _ Hpv) as [Hpvals [Hpctrls _]].
   apply (Inv_step_last C0 st _ pre f _ Hinv).
   - reflexivity.
-  - rewrite Hpctrls. cbn [opiter_OpIterState_ctrls]. rewrite Hc1.
+  - rewrite Hpctrls. cbn [opiter_OpIterState_ctrls]. 
     destruct Hinv as [H1 _]. rewrite H1.
     rewrite List.map_app. rewrite List.map_app. reflexivity.
-  - rewrite Hpvals. cbn [opiter_OpIterState_vals]. rewrite Hv1.
+  - rewrite Hpvals. cbn [opiter_OpIterState_vals]. 
     destruct Hinv as [_ [H2 _]]. rewrite H2.
     rewrite List.map_app. rewrite List.map_app.
     rewrite List.concat_app. rewrite List.concat_app.
@@ -600,31 +575,23 @@ Theorem step_f32_const : forall C0 st fs pre f data v st',
 Proof.
   intros C0 st fs pre f data v st' Hinv Hfs H. subst fs.
   unfold opiter_read_f32_const in H.
-  destruct (opiter_take_pending st opiter_op_f32_const) as [[r0 st1]|] eqn:Htp;
-    cbn [bind] in H; [|discriminate].
-  destruct r0 as [u|e].
-  2: { rewrite branch_err in H. cbn [bind] in H.
-       rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
-  destruct u. rewrite branch_ok in H. cbn [bind] in H.
-  pose proof (take_pending_ok_inv st opiter_op_f32_const st1 Htp) as Hobs.
-  destruct (obs_fields st st1 Hobs) as [Hv1 [Hc1 _]].
-  destruct (reader_read_f32_bits data st1.(opiter_OpIterState_pos))
+  destruct (reader_read_f32_bits data st.(opiter_OpIterState_pos))
     as [r1|] eqn:Hleb; cbn [bind] in H; [|discriminate].
   destruct r1 as [[v0 p1]|e1].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
   destruct (opiter_push_val _ (Opiter_StackType_Val Types_ValueType_F32))
-    as [st2|] eqn:Hpv; cbn [bind] in H; [|discriminate].
+    as [st1|] eqn:Hpv; cbn [bind] in H; [|discriminate].
   injection H as Hveq <-.
   (* the push appends to the operand array and leaves the control stack alone *)
   destruct (push_val_spec _ _ _ Hpv) as [Hpvals [Hpctrls _]].
   apply (Inv_step_last C0 st _ pre f _ Hinv).
   - reflexivity.
-  - rewrite Hpctrls. cbn [opiter_OpIterState_ctrls]. rewrite Hc1.
+  - rewrite Hpctrls. cbn [opiter_OpIterState_ctrls]. 
     destruct Hinv as [H1 _]. rewrite H1.
     rewrite List.map_app. rewrite List.map_app. reflexivity.
-  - rewrite Hpvals. cbn [opiter_OpIterState_vals]. rewrite Hv1.
+  - rewrite Hpvals. cbn [opiter_OpIterState_vals]. 
     destruct Hinv as [_ [H2 _]]. rewrite H2.
     rewrite List.map_app. rewrite List.map_app.
     rewrite List.concat_app. rewrite List.concat_app.
@@ -650,31 +617,23 @@ Theorem step_f64_const : forall C0 st fs pre f data v st',
 Proof.
   intros C0 st fs pre f data v st' Hinv Hfs H. subst fs.
   unfold opiter_read_f64_const in H.
-  destruct (opiter_take_pending st opiter_op_f64_const) as [[r0 st1]|] eqn:Htp;
-    cbn [bind] in H; [|discriminate].
-  destruct r0 as [u|e].
-  2: { rewrite branch_err in H. cbn [bind] in H.
-       rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
-  destruct u. rewrite branch_ok in H. cbn [bind] in H.
-  pose proof (take_pending_ok_inv st opiter_op_f64_const st1 Htp) as Hobs.
-  destruct (obs_fields st st1 Hobs) as [Hv1 [Hc1 _]].
-  destruct (reader_read_f64_bits data st1.(opiter_OpIterState_pos))
+  destruct (reader_read_f64_bits data st.(opiter_OpIterState_pos))
     as [r1|] eqn:Hleb; cbn [bind] in H; [|discriminate].
   destruct r1 as [[v0 p1]|e1].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
   destruct (opiter_push_val _ (Opiter_StackType_Val Types_ValueType_F64))
-    as [st2|] eqn:Hpv; cbn [bind] in H; [|discriminate].
+    as [st1|] eqn:Hpv; cbn [bind] in H; [|discriminate].
   injection H as Hveq <-.
   (* the push appends to the operand array and leaves the control stack alone *)
   destruct (push_val_spec _ _ _ Hpv) as [Hpvals [Hpctrls _]].
   apply (Inv_step_last C0 st _ pre f _ Hinv).
   - reflexivity.
-  - rewrite Hpctrls. cbn [opiter_OpIterState_ctrls]. rewrite Hc1.
+  - rewrite Hpctrls. cbn [opiter_OpIterState_ctrls]. 
     destruct Hinv as [H1 _]. rewrite H1.
     rewrite List.map_app. rewrite List.map_app. reflexivity.
-  - rewrite Hpvals. cbn [opiter_OpIterState_vals]. rewrite Hv1.
+  - rewrite Hpvals. cbn [opiter_OpIterState_vals]. 
     destruct Hinv as [_ [H2 _]]. rewrite H2.
     rewrite List.map_app. rewrite List.map_app.
     rewrite List.concat_app. rewrite List.concat_app.
@@ -701,31 +660,23 @@ Theorem step_i64_const : forall C0 st fs pre f data v st',
 Proof.
   intros C0 st fs pre f data v st' Hinv Hfs H. subst fs.
   unfold opiter_read_i64_const in H.
-  destruct (opiter_take_pending st opiter_op_i64_const) as [[r0 st1]|] eqn:Htp;
-    cbn [bind] in H; [|discriminate].
-  destruct r0 as [u|e].
-  2: { rewrite branch_err in H. cbn [bind] in H.
-       rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
-  destruct u. rewrite branch_ok in H. cbn [bind] in H.
-  pose proof (take_pending_ok_inv st opiter_op_i64_const st1 Htp) as Hobs.
-  destruct (obs_fields st st1 Hobs) as [Hv1 [Hc1 _]].
-  destruct (reader_read_s64_leb data st1.(opiter_OpIterState_pos))
+  destruct (reader_read_s64_leb data st.(opiter_OpIterState_pos))
     as [r1|] eqn:Hleb; cbn [bind] in H; [|discriminate].
   destruct r1 as [[v0 p1]|e1].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
   destruct (opiter_push_val _ (Opiter_StackType_Val Types_ValueType_I64))
-    as [st2|] eqn:Hpv; cbn [bind] in H; [|discriminate].
+    as [st1|] eqn:Hpv; cbn [bind] in H; [|discriminate].
   injection H as Hveq <-.
   (* the push appends to the operand array and leaves the control stack alone *)
   destruct (push_val_spec _ _ _ Hpv) as [Hpvals [Hpctrls _]].
   apply (Inv_step_last C0 st _ pre f _ Hinv).
   - reflexivity.
-  - rewrite Hpctrls. cbn [opiter_OpIterState_ctrls]. rewrite Hc1.
+  - rewrite Hpctrls. cbn [opiter_OpIterState_ctrls]. 
     destruct Hinv as [H1 _]. rewrite H1.
     rewrite List.map_app. rewrite List.map_app. reflexivity.
-  - rewrite Hpvals. cbn [opiter_OpIterState_vals]. rewrite Hv1.
+  - rewrite Hpvals. cbn [opiter_OpIterState_vals]. 
     destruct Hinv as [_ [H2 _]]. rewrite H2.
     rewrite List.map_app. rewrite List.map_app.
     rewrite List.concat_app. rewrite List.concat_app.
@@ -803,22 +754,11 @@ Theorem step_drop : forall C0 st fs pre f t st',
 Proof.
   intros C0 st fs pre f t st' Hinv Hfs H. subst fs.
   unfold opiter_read_drop in H.
-  destruct (opiter_take_pending st opiter_op_drop) as [[r0 st1]|] eqn:Htp;
-    cbn [bind] in H; [|discriminate].
-  destruct r0 as [u|e].
-  2: { rewrite branch_err in H. cbn [bind] in H.
-       rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
-  destruct u. rewrite branch_ok in H. cbn [bind] in H.
-  pose proof (take_pending_ok_inv st opiter_op_drop st1 Htp) as Hobs.
-  destruct (obs_fields st st1 Hobs) as [Hv1 [Hc1 _]].
-  (* the invariant transports to st1, which the prologue left alone *)
-  assert (Hinv1 : Inv C0 st1 (pre ++ [f]))
-    by (apply (Inv_obs C0 st st1 _ Hobs Hinv)).
-  destruct (pop_stack_type_ok st1 t st' H) as [Hctrls [Hreal | Hbot]].
+  destruct (pop_stack_type_ok st t st' H) as [Hctrls [Hreal | Hbot]].
   - (* real pop *)
     destruct Hreal as [prev [Hvals [Hvals' Hne]]].
-    destruct (Inv_pop_from_last C0 st1 pre f Hinv1 Hne) as [seg' [t0 Hseg]].
-    destruct (Inv_split C0 st1 pre f Hinv1) as [Hbase [Hsplit Hunr]].
+    destruct (Inv_pop_from_last C0 st pre f Hinv Hne) as [seg' [t0 Hseg]].
+    destruct (Inv_split C0 st pre f Hinv) as [Hbase [Hsplit Hunr]].
     (* the popped element is the last of the innermost segment *)
     assert (Ht : t0 = t /\ prev = List.concat (List.map fv_seg pre) ++ seg').
     { (* ssreflect's rewrite does not take [<-], so re-associate forwards *)
@@ -830,34 +770,34 @@ Proof.
       split; [exact Ht0 | symmetry; exact Hp]. }
     destruct Ht as [Ht0 Hprev]. subst t0.
     exists seg'.
-    apply (Inv_step_last C0 st1 st' pre f _ Hinv1).
+    apply (Inv_step_last C0 st st' pre f _ Hinv).
     + reflexivity.
-    + rewrite Hctrls. destruct Hinv1 as [K1 _]. rewrite K1.
+    + rewrite Hctrls. destruct Hinv as [K1 _]. rewrite K1.
       rewrite List.map_app. rewrite List.map_app. reflexivity.
     + rewrite Hvals'. rewrite Hprev.
       rewrite List.map_app. rewrite List.concat_app.
       cbn [List.map List.concat fv_seg]. rewrite List.app_nil_r. reflexivity.
     + apply frames_ok_append;
-        [destruct Hinv1 as [_ [_ [_ K4]]]; exact K4|].
+        [destruct Hinv as [_ [_ [_ K4]]]; exact K4|].
       intros lbls. cbn [check_single]. unfold fv_ct.
       rewrite Hseg. rewrite translate_vals_snoc.
       unfold type_update_drop. cbn [CT_type CT_unr]. reflexivity.
   - (* exhausted unreachable frame *)
     destruct Hbot as [Htbot [Hvals' [Hunr Hlen]]].
-    destruct (Inv_split C0 st1 pre f Hinv1) as [Hbase [Hsplit Hunrf]].
+    destruct (Inv_split C0 st pre f Hinv) as [Hbase [Hsplit Hunrf]].
     assert (Hempty : fv_seg f = []).
     { rewrite Hbase in Hlen. rewrite Hsplit in Hlen.
       rewrite List.app_length in Hlen.
       destruct (fv_seg f); [reflexivity | cbn [List.length] in Hlen; lia]. }
     exists (fv_seg f).
-    apply (Inv_step_last C0 st1 st' pre f _ Hinv1).
+    apply (Inv_step_last C0 st st' pre f _ Hinv).
     + reflexivity.
-    + rewrite Hctrls. destruct Hinv1 as [K1 _]. rewrite K1.
+    + rewrite Hctrls. destruct Hinv as [K1 _]. rewrite K1.
       rewrite List.map_app. rewrite List.map_app. reflexivity.
-    + rewrite Hvals'. destruct Hinv1 as [_ [K2 _]]. rewrite K2.
+    + rewrite Hvals'. destruct Hinv as [_ [K2 _]]. rewrite K2.
       rewrite List.map_app. rewrite List.map_app. reflexivity.
     + apply frames_ok_append;
-        [destruct Hinv1 as [_ [_ [_ K4]]]; exact K4|].
+        [destruct Hinv as [_ [_ [_ K4]]]; exact K4|].
       intros lbls. cbn [check_single]. unfold fv_ct.
       rewrite Hempty. cbn [translate_vals List.map List.rev].
       unfold type_update_drop. cbn [CT_type CT_unr].
@@ -1126,57 +1066,48 @@ Proof.
   intros C0 st fs pre f t st' Hinv Hfs H. subst fs.
   unfold opiter_read_select in H.
   (* prologue *)
-  destruct (opiter_take_pending st opiter_op_select) as [[r0 st1]|] eqn:Htp;
-    cbn [bind] in H; [|discriminate].
-  destruct r0 as [u|e].
-  2: { rewrite branch_err in H. cbn [bind] in H.
-       rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
-  destruct u. rewrite branch_ok in H. cbn [bind] in H.
-  pose proof (take_pending_ok_inv st opiter_op_select st1 Htp) as Hobs.
-  assert (Hinv1 : Inv C0 st1 (pre ++ [f]))
-    by (apply (Inv_obs C0 st st1 _ Hobs Hinv)).
-  destruct (Inv_split C0 st1 pre f Hinv1) as [Hbase1 [Hsplit1 Hunr1]].
+  destruct (Inv_split C0 st pre f Hinv) as [Hbase1 [Hsplit1 Hunr1]].
   (* the condition *)
-  destruct (opiter_pop_with_type st1 Types_ValueType_I32) as [[r1 st2]|] eqn:Hq1;
+  destruct (opiter_pop_with_type st Types_ValueType_I32) as [[r1 st1]|] eqn:Hq1;
     cbn [bind] in H; [|discriminate].
   destruct r1 as [t1|e1].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (pop_with_type_ok st1 _ t1 st2 Hq1) as [Hraw1 Hty1].
-  destruct (pop_stack_type_sim st1 (List.concat (List.map fv_seg pre)) f
-              t1 st2 Hsplit1 Hbase1 Hunr1 Hraw1) as [seg1 [Hc2 [Hv2 D1]]].
+  destruct (pop_with_type_ok st _ t1 st1 Hq1) as [Hraw1 Hty1].
+  destruct (pop_stack_type_sim st (List.concat (List.map fv_seg pre)) f
+              t1 st1 Hsplit1 Hbase1 Hunr1 Hraw1) as [seg1 [Hc2 [Hv2 D1]]].
   pose proof (translate_st_sub t1 Types_ValueType_I32 Hty1) as Hsub1.
   cbn [translate_vt_v] in Hsub1.
   (* the second value *)
-  destruct (opiter_pop_stack_type st2) as [[r2 st3]|] eqn:Hq2;
+  destruct (opiter_pop_stack_type st1) as [[r2 st2]|] eqn:Hq2;
     cbn [bind] in H; [|discriminate].
   destruct r2 as [t2|e2].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (cur_views_ctrls st1 st2 Hc2) as [Hb2 Hu2].
-  destruct (pop_stack_type_sim st2 (List.concat (List.map fv_seg pre))
+  destruct (cur_views_ctrls st st1 Hc2) as [Hb2 Hu2].
+  destruct (pop_stack_type_sim st1 (List.concat (List.map fv_seg pre))
               {| fv_ctrl := fv_ctrl f; fv_seg := seg1; fv_done := fv_done f;
 fv_then := fv_then f |}
-              t2 st3) as [seg2 [Hc3 [Hv3 D2]]].
+              t2 st2) as [seg2 [Hc3 [Hv3 D2]]].
   { cbn [fv_seg]. exact Hv2. }
   { cbn [fv_ctrl]. rewrite Hb2. exact Hbase1. }
   { cbn [fv_ctrl]. rewrite Hu2. exact Hunr1. }
   { exact Hq2. }
   cbn [fv_seg fv_ctrl] in D2.
   (* the first value *)
-  destruct (opiter_pop_stack_type st3) as [[r3 st4]|] eqn:Hq3;
+  destruct (opiter_pop_stack_type st2) as [[r3 st3]|] eqn:Hq3;
     cbn [bind] in H; [|discriminate].
   destruct r3 as [t3|e3].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (cur_views_ctrls st2 st3 Hc3) as [Hb3 Hu3].
-  destruct (pop_stack_type_sim st3 (List.concat (List.map fv_seg pre))
+  destruct (cur_views_ctrls st1 st2 Hc3) as [Hb3 Hu3].
+  destruct (pop_stack_type_sim st2 (List.concat (List.map fv_seg pre))
               {| fv_ctrl := fv_ctrl f; fv_seg := seg2; fv_done := fv_done f;
 fv_then := fv_then f |}
-              t3 st4) as [seg3 [Hc4 [Hv4 D3]]].
+              t3 st3) as [seg3 [Hc4 [Hv4 D3]]].
   { cbn [fv_seg]. exact Hv3. }
   { cbn [fv_ctrl]. rewrite Hb3. rewrite Hb2. exact Hbase1. }
   { cbn [fv_ctrl]. rewrite Hu3. rewrite Hu2. exact Hunr1. }
@@ -1189,21 +1120,21 @@ fv_then := fv_then f |}
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (opiter_push_val st4 tj) as [st5|] eqn:Hpv; cbn [bind] in H;
+  destruct (opiter_push_val st3 tj) as [st4|] eqn:Hpv; cbn [bind] in H;
     [|discriminate].
   injection H as -> ->.
   destruct (push_val_spec _ _ _ Hpv) as [Hpvals [Hpctrls _]].
   exists (seg3 ++ [t]).
-  apply (Inv_step_last C0 st1 st' pre f _ Hinv1).
+  apply (Inv_step_last C0 st st' pre f _ Hinv).
   - reflexivity.
   - rewrite Hpctrls. rewrite Hc4. rewrite Hc3. rewrite Hc2.
-    destruct Hinv1 as [K1 _]. rewrite K1.
+    destruct Hinv as [K1 _]. rewrite K1.
     rewrite List.map_app. rewrite List.map_app. reflexivity.
   - rewrite Hpvals. rewrite Hv4.
     rewrite List.map_app. rewrite List.concat_app.
     cbn [List.map List.concat fv_seg]. rewrite List.app_nil_r.
     rewrite List.app_assoc. reflexivity.
-  - apply frames_ok_append; [destruct Hinv1 as [_ [_ [_ K4]]]; exact K4|].
+  - apply frames_ok_append; [destruct Hinv as [_ [_ [_ K4]]]; exact K4|].
     intros lbls. cbn [check_single]. unfold fv_ct.
     destruct D1 as [HA | [HA1 [HA2 [HA3 HA4]]]].
     + destruct D2 as [HB | [HB1 [HB2 [HB3 HB4]]]].
@@ -1280,10 +1211,10 @@ Proof. intros C0 be pops pushes H lbls ct. apply H. Qed.
     Covers every binary operator and every comparison: the operand and result
     types are parameters, and the instruction is whatever the opcode table says,
     constrained only by its [plain_effect]. *)
-Theorem step_binary : forall C0 st fs pre f opcode ty res be st',
+Theorem step_binary : forall C0 st fs pre f ty res be st',
   Inv C0 st fs -> fs = pre ++ [f] ->
   effect_in C0 be [translate_vt_v ty; translate_vt_v ty] [translate_vt_v res] ->
-  opiter_read_binary st opcode ty res = Ok (Core_result_Result_Ok tt, st') ->
+  opiter_read_binary st ty res = Ok (Core_result_Result_Ok tt, st') ->
   exists seg',
     Inv C0 st'
         (pre ++ [{| fv_ctrl := fv_ctrl f;
@@ -1291,42 +1222,32 @@ Theorem step_binary : forall C0 st fs pre f opcode ty res be st',
                     fv_done := fv_done f ++ [be];
                     fv_then := fv_then f |}]).
 Proof.
-  intros C0 st fs pre f opcode ty res be st' Hinv Hfs Heff H. subst fs.
+  intros C0 st fs pre f ty res be st' Hinv Hfs Heff H. subst fs.
   unfold opiter_read_binary in H.
   (* prologue *)
-  destruct (opiter_take_pending st opcode) as [[r0 st1]|] eqn:Htp;
-    cbn [bind] in H; [|discriminate].
-  destruct r0 as [u|e].
-  2: { rewrite branch_err in H. cbn [bind] in H.
-       rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
-  destruct u. rewrite branch_ok in H. cbn [bind] in H.
-  pose proof (take_pending_ok_inv st opcode st1 Htp) as Hobs.
-  destruct (obs_fields st st1 Hobs) as [Hv1 [Hc1 _]].
-  assert (Hinv1 : Inv C0 st1 (pre ++ [f]))
-    by (apply (Inv_obs C0 st st1 _ Hobs Hinv)).
-  destruct (Inv_split C0 st1 pre f Hinv1) as [Hbase1 [Hsplit1 Hunr1]].
+  destruct (Inv_split C0 st pre f Hinv) as [Hbase1 [Hsplit1 Hunr1]].
   (* first pop *)
-  destruct (opiter_pop_with_type st1 ty) as [[r1 st2]|] eqn:Hp1;
+  destruct (opiter_pop_with_type st ty) as [[r1 st1]|] eqn:Hp1;
     cbn [bind] in H; [|discriminate].
   destruct r1 as [t1|e1].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (pop_with_type_sim st1 (List.concat (List.map fv_seg pre)) f
-              ty t1 st2 Hsplit1 Hbase1 Hunr1 Hp1)
+  destruct (pop_with_type_sim st (List.concat (List.map fv_seg pre)) f
+              ty t1 st1 Hsplit1 Hbase1 Hunr1 Hp1)
     as [seg1 [Hc2 [Hv2 Hcon1]]].
   (* second pop, on the frame with the shortened segment *)
-  destruct (opiter_pop_with_type st2 ty) as [[r2 st3]|] eqn:Hp2;
+  destruct (opiter_pop_with_type st1 ty) as [[r2 st2]|] eqn:Hp2;
     cbn [bind] in H; [|discriminate].
   destruct r2 as [t2|e2].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (cur_views_ctrls st1 st2 Hc2) as [Hb2 Hu2].
-  destruct (pop_with_type_sim st2 (List.concat (List.map fv_seg pre))
+  destruct (cur_views_ctrls st st1 Hc2) as [Hb2 Hu2].
+  destruct (pop_with_type_sim st1 (List.concat (List.map fv_seg pre))
               {| fv_ctrl := fv_ctrl f; fv_seg := seg1; fv_done := fv_done f;
 fv_then := fv_then f |}
-              ty t2 st3)
+              ty t2 st2)
     as [seg2 [Hc3 [Hv3 Hcon2]]].
   { cbn [fv_seg]. exact Hv2. }
   { cbn [fv_ctrl]. rewrite Hb2. exact Hbase1. }
@@ -1334,22 +1255,22 @@ fv_then := fv_then f |}
   { exact Hp2. }
   cbn [fv_ct fv_seg fv_ctrl] in Hcon2.
   (* push *)
-  destruct (opiter_push_val st3 (Opiter_StackType_Val res))
-    as [st4|] eqn:Hpv; cbn [bind] in H; [|discriminate].
+  destruct (opiter_push_val st2 (Opiter_StackType_Val res))
+    as [st3|] eqn:Hpv; cbn [bind] in H; [|discriminate].
   (* the unit payload collapses, so injection yields one equation *)
   injection H as <-.
   destruct (push_val_spec _ _ _ Hpv) as [Hpvals [Hpctrls _]].
   exists (seg2 ++ [Opiter_StackType_Val res]).
-  apply (Inv_step_last C0 st1 st4 pre f _ Hinv1).
+  apply (Inv_step_last C0 st st3 pre f _ Hinv).
   - reflexivity.
   - rewrite Hpctrls. rewrite Hc3. rewrite Hc2.
-    destruct Hinv1 as [K1 _]. rewrite K1.
+    destruct Hinv as [K1 _]. rewrite K1.
     rewrite List.map_app. rewrite List.map_app. reflexivity.
   - rewrite Hpvals. rewrite Hv3.
     rewrite List.map_app. rewrite List.concat_app.
     cbn [List.map List.concat fv_seg]. rewrite List.app_nil_r.
     rewrite List.app_assoc. reflexivity.
-  - apply frames_ok_append; [destruct Hinv1 as [_ [_ [_ K4]]]; exact K4|].
+  - apply frames_ok_append; [destruct Hinv as [_ [_ [_ K4]]]; exact K4|].
     intros lbls. rewrite Heff.
     unfold type_update.
     rewrite (consume_cons_split (fv_ct f) (translate_vt_v ty)
@@ -1389,10 +1310,10 @@ Qed.
 (** [read_conversion]: pop one operand, push one result. The same proof as
     [step_binary] with one pop instead of two, and it covers the unary
     operators, [eqz] and every conversion. *)
-Theorem step_conversion : forall C0 st fs pre f opcode from to be st',
+Theorem step_conversion : forall C0 st fs pre f from to be st',
   Inv C0 st fs -> fs = pre ++ [f] ->
   effect_in C0 be [translate_vt_v from] [translate_vt_v to] ->
-  opiter_read_conversion st opcode from to
+  opiter_read_conversion st from to
     = Ok (Core_result_Result_Ok tt, st') ->
   exists seg',
     Inv C0 st'
@@ -1401,43 +1322,33 @@ Theorem step_conversion : forall C0 st fs pre f opcode from to be st',
                     fv_done := fv_done f ++ [be];
                     fv_then := fv_then f |}]).
 Proof.
-  intros C0 st fs pre f opcode from to be st' Hinv Hfs Heff H. subst fs.
+  intros C0 st fs pre f from to be st' Hinv Hfs Heff H. subst fs.
   unfold opiter_read_conversion in H.
-  destruct (opiter_take_pending st opcode) as [[r0 st1]|] eqn:Htp;
-    cbn [bind] in H; [|discriminate].
-  destruct r0 as [u|e].
-  2: { rewrite branch_err in H. cbn [bind] in H.
-       rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
-  destruct u. rewrite branch_ok in H. cbn [bind] in H.
-  pose proof (take_pending_ok_inv st opcode st1 Htp) as Hobs.
-  destruct (obs_fields st st1 Hobs) as [Hv1 [Hc1 _]].
-  assert (Hinv1 : Inv C0 st1 (pre ++ [f]))
-    by (apply (Inv_obs C0 st st1 _ Hobs Hinv)).
-  destruct (Inv_split C0 st1 pre f Hinv1) as [Hbase1 [Hsplit1 Hunr1]].
-  destruct (opiter_pop_with_type st1 from) as [[r1 st2]|] eqn:Hp1;
+  destruct (Inv_split C0 st pre f Hinv) as [Hbase1 [Hsplit1 Hunr1]].
+  destruct (opiter_pop_with_type st from) as [[r1 st1]|] eqn:Hp1;
     cbn [bind] in H; [|discriminate].
   destruct r1 as [t1|e1].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (pop_with_type_sim st1 (List.concat (List.map fv_seg pre)) f
-              from t1 st2 Hsplit1 Hbase1 Hunr1 Hp1)
+  destruct (pop_with_type_sim st (List.concat (List.map fv_seg pre)) f
+              from t1 st1 Hsplit1 Hbase1 Hunr1 Hp1)
     as [seg1 [Hc2 [Hv2 Hcon1]]].
-  destruct (opiter_push_val st2 (Opiter_StackType_Val to))
-    as [st3|] eqn:Hpv; cbn [bind] in H; [|discriminate].
+  destruct (opiter_push_val st1 (Opiter_StackType_Val to))
+    as [st2|] eqn:Hpv; cbn [bind] in H; [|discriminate].
   injection H as <-.
   destruct (push_val_spec _ _ _ Hpv) as [Hpvals [Hpctrls _]].
   exists (seg1 ++ [Opiter_StackType_Val to]).
-  apply (Inv_step_last C0 st1 st3 pre f _ Hinv1).
+  apply (Inv_step_last C0 st st2 pre f _ Hinv).
   - reflexivity.
   - rewrite Hpctrls. rewrite Hc2.
-    destruct Hinv1 as [K1 _]. rewrite K1.
+    destruct Hinv as [K1 _]. rewrite K1.
     rewrite List.map_app. rewrite List.map_app. reflexivity.
   - rewrite Hpvals. rewrite Hv2.
     rewrite List.map_app. rewrite List.concat_app.
     cbn [List.map List.concat fv_seg]. rewrite List.app_nil_r.
     rewrite List.app_assoc. reflexivity.
-  - apply frames_ok_append; [destruct Hinv1 as [_ [_ [_ K4]]]; exact K4|].
+  - apply frames_ok_append; [destruct Hinv as [_ [_ [_ K4]]]; exact K4|].
     intros lbls. rewrite Heff. unfold type_update. rewrite Hcon1.
     cbn [produce CT_type CT_unr]. rewrite translate_vals_snoc. reflexivity.
 Qed.
@@ -1525,37 +1436,28 @@ Theorem step_unreachable : forall C0 st fs pre f st',
 Proof.
   intros C0 st fs pre f st' Hinv Hfs H. subst fs.
   unfold opiter_read_unreachable in H.
-  destruct (opiter_take_pending st opiter_op_unreachable) as [[r0 st1]|] eqn:Htp;
-    cbn [bind] in H; [|discriminate].
-  destruct r0 as [u|e].
-  2: { rewrite branch_err in H. cbn [bind] in H.
-       rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
-  destruct u. rewrite branch_ok in H. cbn [bind] in H.
-  pose proof (take_pending_ok_inv st opiter_op_unreachable st1 Htp) as Hobs.
-  assert (Hinv1 : Inv C0 st1 (pre ++ [f]))
-    by (apply (Inv_obs C0 st st1 _ Hobs Hinv)).
-  destruct (Inv_split C0 st1 pre f Hinv1) as [Hbase1 [Hsplit1 Hunr1]].
-  assert (Hsnoc : vec_list st1.(opiter_OpIterState_ctrls)
+  destruct (Inv_split C0 st pre f Hinv) as [Hbase1 [Hsplit1 Hunr1]].
+  assert (Hsnoc : vec_list st.(opiter_OpIterState_ctrls)
                   = List.map fv_ctrl pre ++ [fv_ctrl f]).
-  { destruct Hinv1 as [K1 _]. rewrite K1. rewrite List.map_app. reflexivity. }
+  { destruct Hinv as [K1 _]. rewrite K1. rewrite List.map_app. reflexivity. }
   assert (Hle : (Z.to_nat (to_Z (fv_ctrl f).(opiter_Ctrl_value_stack_base))
-                   <= List.length (vec_list st1.(opiter_OpIterState_vals)))%nat).
+                   <= List.length (vec_list st.(opiter_OpIterState_vals)))%nat).
   { unfold cur_base_nat in Hbase1.
-    rewrite (cur_ctrl_snoc st1 (List.map fv_ctrl pre) (fv_ctrl f) Hsnoc)
+    rewrite (cur_ctrl_snoc st (List.map fv_ctrl pre) (fv_ctrl f) Hsnoc)
       in Hbase1.
     rewrite Hbase1. rewrite Hsplit1. rewrite List.app_length. lia. }
   (* the reader binds mark_unreachable's result before wrapping it *)
-  destruct (opiter_mark_unreachable st1) as [st2|] eqn:Hmu; cbn [bind] in H;
+  destruct (opiter_mark_unreachable st) as [st1|] eqn:Hmu; cbn [bind] in H;
     [|discriminate].
   injection H as <-.
-  destruct (mark_unreachable_spec st1 st2 (List.map fv_ctrl pre) (fv_ctrl f)
+  destruct (mark_unreachable_spec st st1 (List.map fv_ctrl pre) (fv_ctrl f)
               Hsnoc Hle Hmu) as [Hvals Hctrls].
-  apply (Inv_step_last C0 st1 st2 pre f _ Hinv1).
+  apply (Inv_step_last C0 st st1 pre f _ Hinv).
   - reflexivity.
   - rewrite Hctrls. rewrite List.map_app. reflexivity.
   - rewrite Hvals.
     unfold cur_base_nat in Hbase1.
-    rewrite (cur_ctrl_snoc st1 (List.map fv_ctrl pre) (fv_ctrl f) Hsnoc)
+    rewrite (cur_ctrl_snoc st (List.map fv_ctrl pre) (fv_ctrl f) Hsnoc)
       in Hbase1.
     rewrite Hbase1. rewrite Hsplit1. rewrite List.firstn_app.
     rewrite List.firstn_all.
@@ -1572,7 +1474,7 @@ Proof.
     + reflexivity.
     + reflexivity.
     + reflexivity.
-    + destruct Hinv1 as [_ [_ [_ K4]]]. exact K4.
+    + destruct Hinv as [_ [_ [_ K4]]]. exact K4.
     + intros lbls. cbn [check_single]. reflexivity.
 Qed.
 
@@ -1952,7 +1854,7 @@ Theorem step_local_get : forall C0 ctx st fs pre f data idx st',
 Proof.
   intros C0 ctx st fs pre f data idx st' Hinv Hfs Hag H. subst fs.
   unfold opiter_read_local_get in H.
-  destruct (opiter_take_local st data ctx opiter_op_local_get) as [[r0 st1]|]
+  destruct (opiter_take_local st data ctx) as [[r0 st1]|]
     eqn:Htl; cbn [bind] in H; [|discriminate].
   destruct r0 as [[idx0 t]|e].
   2: { rewrite branch_err in H. cbn [bind] in H.
@@ -1961,9 +1863,9 @@ Proof.
   destruct (opiter_push_val st1 (Opiter_StackType_Val t)) as [st2|] eqn:Hpv;
     cbn [bind] in H; [|discriminate].
   injection H as Hidx <-. rewrite -Hidx.
-  pose proof (take_local_type st data ctx _ idx0 t st1 Htl) as Hlt.
+  pose proof (take_local_type st data ctx idx0 t st1 Htl) as Hlt.
   pose proof (local_type_lookup ctx C0 idx0 t Hag Hlt) as Hlk.
-  destruct (take_local_fields st data ctx _ _ st1 Htl) as [Hv1 Hc1].
+  destruct (take_local_fields st data ctx _ st1 Htl) as [Hv1 Hc1].
   assert (Hinv1 : Inv C0 st1 (pre ++ [f]))
     by (apply (Inv_fields C0 st st1 _ Hv1 Hc1 Hinv)).
   destruct (push_val_spec _ _ _ Hpv) as [Hpvals [Hpctrls _]].
@@ -1999,7 +1901,7 @@ Theorem step_local_set : forall C0 ctx st fs pre f data idx st',
 Proof.
   intros C0 ctx st fs pre f data idx st' Hinv Hfs Hag H. subst fs.
   unfold opiter_read_local_set in H.
-  destruct (opiter_take_local st data ctx opiter_op_local_set) as [[r0 st1]|]
+  destruct (opiter_take_local st data ctx) as [[r0 st1]|]
     eqn:Htl; cbn [bind] in H; [|discriminate].
   destruct r0 as [[idx0 t]|e].
   2: { rewrite branch_err in H. cbn [bind] in H.
@@ -2011,9 +1913,9 @@ Proof.
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H. injection H as Hidx <-. rewrite -Hidx.
-  pose proof (take_local_type st data ctx _ idx0 t st1 Htl) as Hlt.
+  pose proof (take_local_type st data ctx idx0 t st1 Htl) as Hlt.
   pose proof (local_type_lookup ctx C0 idx0 t Hag Hlt) as Hlk.
-  destruct (take_local_fields st data ctx _ _ st1 Htl) as [Hv1 Hc1].
+  destruct (take_local_fields st data ctx _ st1 Htl) as [Hv1 Hc1].
   assert (Hinv1 : Inv C0 st1 (pre ++ [f]))
     by (apply (Inv_fields C0 st st1 _ Hv1 Hc1 Hinv)).
   destruct (Inv_split C0 st1 pre f Hinv1) as [Hbase1 [Hsplit1 Hunr1]].
@@ -2047,7 +1949,7 @@ Theorem step_local_tee : forall C0 ctx st fs pre f data idx st',
 Proof.
   intros C0 ctx st fs pre f data idx st' Hinv Hfs Hag H. subst fs.
   unfold opiter_read_local_tee in H.
-  destruct (opiter_take_local st data ctx opiter_op_local_tee) as [[r0 st1]|]
+  destruct (opiter_take_local st data ctx) as [[r0 st1]|]
     eqn:Htl; cbn [bind] in H; [|discriminate].
   destruct r0 as [[idx0 t]|e].
   2: { rewrite branch_err in H. cbn [bind] in H.
@@ -2062,9 +1964,9 @@ Proof.
   destruct (opiter_push_val st2 (Opiter_StackType_Val t)) as [st3|] eqn:Hpv;
     cbn [bind] in H; [|discriminate].
   injection H as Hidx <-. rewrite -Hidx.
-  pose proof (take_local_type st data ctx _ idx0 t st1 Htl) as Hlt.
+  pose proof (take_local_type st data ctx idx0 t st1 Htl) as Hlt.
   pose proof (local_type_lookup ctx C0 idx0 t Hag Hlt) as Hlk.
-  destruct (take_local_fields st data ctx _ _ st1 Htl) as [Hv1 Hc1].
+  destruct (take_local_fields st data ctx _ st1 Htl) as [Hv1 Hc1].
   assert (Hinv1 : Inv C0 st1 (pre ++ [f]))
     by (apply (Inv_fields C0 st st1 _ Hv1 Hc1 Hinv)).
   destruct (Inv_split C0 st1 pre f Hinv1) as [Hbase1 [Hsplit1 Hunr1]].
@@ -2121,7 +2023,7 @@ Theorem step_global_get : forall C0 module st fs pre f data idx st',
 Proof.
   intros C0 module st fs pre f data idx st' Hinv Hfs Hag H. subst fs.
   unfold opiter_read_global_get in H.
-  destruct (opiter_take_global st data module opiter_op_global_get) as [[r0 st1]|]
+  destruct (opiter_take_global st data module) as [[r0 st1]|]
     eqn:Htg; cbn [bind] in H; [|discriminate].
   destruct r0 as [[idx0 g]|e].
   2: { rewrite branch_err in H. cbn [bind] in H.
@@ -2131,9 +2033,9 @@ Proof.
               (Opiter_StackType_Val g.(types_GlobalType_valtype))) as [st2|]
     eqn:Hpv; cbn [bind] in H; [|discriminate].
   injection H as Hidx <-. rewrite -Hidx.
-  pose proof (take_global_type st data module _ idx0 g st1 Htg) as Hgt.
+  pose proof (take_global_type st data module idx0 g st1 Htg) as Hgt.
   pose proof (global_type_lookup module C0 idx0 g Hag Hgt) as Hlk.
-  destruct (take_global_fields st data module _ _ st1 Htg) as [Hv1 Hc1].
+  destruct (take_global_fields st data module _ st1 Htg) as [Hv1 Hc1].
   assert (Hinv1 : Inv C0 st1 (pre ++ [f]))
     by (apply (Inv_fields C0 st st1 _ Hv1 Hc1 Hinv)).
   destruct (push_val_spec _ _ _ Hpv) as [Hpvals [Hpctrls _]].
@@ -2171,7 +2073,7 @@ Theorem step_global_set : forall C0 module st fs pre f data idx st',
 Proof.
   intros C0 module st fs pre f data idx st' Hinv Hfs Hag H. subst fs.
   unfold opiter_read_global_set in H.
-  destruct (opiter_take_global st data module opiter_op_global_set) as [[r0 st1]|]
+  destruct (opiter_take_global st data module) as [[r0 st1]|]
     eqn:Htg; cbn [bind] in H; [|discriminate].
   destruct r0 as [[idx0 g]|e].
   2: { rewrite branch_err in H. cbn [bind] in H.
@@ -2184,9 +2086,9 @@ Proof.
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H. injection H as Hidx <-. rewrite -Hidx.
-  pose proof (take_global_type st data module _ idx0 g st1 Htg) as Hgt.
+  pose proof (take_global_type st data module idx0 g st1 Htg) as Hgt.
   pose proof (global_type_lookup module C0 idx0 g Hag Hgt) as Hlk.
-  destruct (take_global_fields st data module _ _ st1 Htg) as [Hv1 Hc1].
+  destruct (take_global_fields st data module _ st1 Htg) as [Hv1 Hc1].
   assert (Hinv1 : Inv C0 st1 (pre ++ [f]))
     by (apply (Inv_fields C0 st st1 _ Hv1 Hc1 Hinv)).
   destruct (Inv_split C0 st1 pre f Hinv1) as [Hbase1 [Hsplit1 Hunr1]].
@@ -2217,13 +2119,13 @@ Qed.
     site the natural alignment is a literal and the exponent ranges over at most
     four values, so it falls to computation. *)
 Theorem step_load :
-  forall C0 st fs pre f data module opcode ty natural nt tp_sx m st',
+  forall C0 st fs pre f data module ty natural nt tp_sx m st',
   Inv C0 st fs -> fs = pre ++ [f] ->
   mems_agree module C0 ->
   translate_vt_v ty = T_num nt ->
   (forall a, 0 <= a <= to_Z natural ->
      load_store_t_bounds (Z.to_N a) (option_projl tp_sx) nt = true) ->
-  opiter_read_load st data module opcode ty natural
+  opiter_read_load st data module ty natural
     = Ok (Core_result_Result_Ok m, st') ->
   exists seg',
     Inv C0 st'
@@ -2236,30 +2138,21 @@ Theorem step_load :
                             (Z.to_N (to_Z m.(opiter_MemArg_offset)))];
                             fv_then := fv_then f |}]).
 Proof.
-  intros C0 st fs pre f data module opcode ty natural nt tp_sx m st'
+  intros C0 st fs pre f data module ty natural nt tp_sx m st'
          Hinv Hfs Hmems Hty Hbounds H. subst fs.
   unfold opiter_read_load in H.
   (* prologue *)
-  destruct (opiter_take_pending st opcode) as [[r0 st1]|] eqn:Htp;
-    cbn [bind] in H; [|discriminate].
-  destruct r0 as [u|e].
-  2: { rewrite branch_err in H. cbn [bind] in H.
-       rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
-  destruct u. rewrite branch_ok in H. cbn [bind] in H.
-  pose proof (take_pending_ok_inv st opcode st1 Htp) as Hobs.
-  assert (Hinv1 : Inv C0 st1 (pre ++ [f]))
-    by (apply (Inv_obs C0 st st1 _ Hobs Hinv)).
   (* immediates: only the cursor moves *)
-  destruct (opiter_read_memarg st1 data) as [[r1 st2]|] eqn:Hma;
+  destruct (opiter_read_memarg st data) as [[r1 st1]|] eqn:Hma;
     cbn [bind] in H; [|discriminate].
   destruct r1 as [m0|e1].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (read_memarg_state st1 data m0 st2 Hma) as [Hmv Hmc].
-  assert (Hinv2 : Inv C0 st2 (pre ++ [f])).
-  { apply (Inv_fields C0 st1 st2 _); [rewrite Hmv | rewrite Hmc |];
-      try reflexivity. exact Hinv1. }
+  destruct (read_memarg_state st data m0 st1 Hma) as [Hmv Hmc].
+  assert (Hinv2 : Inv C0 st1 (pre ++ [f])).
+  { apply (Inv_fields C0 st st1 _); [rewrite Hmv | rewrite Hmc |];
+      try reflexivity. exact Hinv. }
   (* memory and alignment *)
   destruct (opiter_check_memory_and_alignment module m0 natural) as [r2|] eqn:Hck;
     cbn [bind] in H; [|discriminate].
@@ -2270,23 +2163,23 @@ Proof.
   destruct (check_memory_and_alignment_ok module C0 m0 natural Hmems Hck)
     as [[mem Hlookup] Halign].
   (* the address pop *)
-  destruct (Inv_split C0 st2 pre f Hinv2) as [Hbase2 [Hsplit2 Hunr2]].
-  destruct (opiter_pop_with_type st2 Types_ValueType_I32) as [[r3 st3]|] eqn:Hp;
+  destruct (Inv_split C0 st1 pre f Hinv2) as [Hbase2 [Hsplit2 Hunr2]].
+  destruct (opiter_pop_with_type st1 Types_ValueType_I32) as [[r3 st2]|] eqn:Hp;
     cbn [bind] in H; [|discriminate].
   destruct r3 as [t3|e3].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (pop_with_type_sim st2 (List.concat (List.map fv_seg pre)) f
-              Types_ValueType_I32 t3 st3 Hsplit2 Hbase2 Hunr2 Hp)
+  destruct (pop_with_type_sim st1 (List.concat (List.map fv_seg pre)) f
+              Types_ValueType_I32 t3 st2 Hsplit2 Hbase2 Hunr2 Hp)
     as [seg1 [Hc3 [Hv3 Hcon]]].
   (* the push *)
-  destruct (opiter_push_val st3 (Opiter_StackType_Val ty)) as [st4|] eqn:Hpv;
+  destruct (opiter_push_val st2 (Opiter_StackType_Val ty)) as [st3|] eqn:Hpv;
     cbn [bind] in H; [|discriminate].
   injection H as Hmeq <-.
   destruct (push_val_spec _ _ _ Hpv) as [Hpvals [Hpctrls _]].
   exists seg1.
-  apply (Inv_step_last C0 st2 st4 pre f _ Hinv2).
+  apply (Inv_step_last C0 st1 st3 pre f _ Hinv2).
   - reflexivity.
   - rewrite Hpctrls. rewrite Hc3. destruct Hinv2 as [K1 _]. rewrite K1.
     rewrite List.map_app. rewrite List.map_app. reflexivity.
@@ -2308,13 +2201,13 @@ Qed.
     [type_update ts [T_num nt; T_num T_i32] []] consumes in the same order, so
     the two [consume] steps line up directly. *)
 Theorem step_store :
-  forall C0 st fs pre f data module opcode ty natural nt tp m st',
+  forall C0 st fs pre f data module ty natural nt tp m st',
   Inv C0 st fs -> fs = pre ++ [f] ->
   mems_agree module C0 ->
   translate_vt_v ty = T_num nt ->
   (forall a, 0 <= a <= to_Z natural -> load_store_t_bounds (Z.to_N a) tp nt
                                        = true) ->
-  opiter_read_store st data module opcode ty natural
+  opiter_read_store st data module ty natural
     = Ok (Core_result_Result_Ok m, st') ->
   exists seg',
     Inv C0 st'
@@ -2327,28 +2220,19 @@ Theorem step_store :
                             (Z.to_N (to_Z m.(opiter_MemArg_offset)))];
                             fv_then := fv_then f |}]).
 Proof.
-  intros C0 st fs pre f data module opcode ty natural nt tp m st'
+  intros C0 st fs pre f data module ty natural nt tp m st'
          Hinv Hfs Hmems Hty Hbounds H. subst fs.
   unfold opiter_read_store in H.
-  destruct (opiter_take_pending st opcode) as [[r0 st1]|] eqn:Htp;
-    cbn [bind] in H; [|discriminate].
-  destruct r0 as [u|e].
-  2: { rewrite branch_err in H. cbn [bind] in H.
-       rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
-  destruct u. rewrite branch_ok in H. cbn [bind] in H.
-  pose proof (take_pending_ok_inv st opcode st1 Htp) as Hobs.
-  assert (Hinv1 : Inv C0 st1 (pre ++ [f]))
-    by (apply (Inv_obs C0 st st1 _ Hobs Hinv)).
-  destruct (opiter_read_memarg st1 data) as [[r1 st2]|] eqn:Hma;
+  destruct (opiter_read_memarg st data) as [[r1 st1]|] eqn:Hma;
     cbn [bind] in H; [|discriminate].
   destruct r1 as [m0|e1].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (read_memarg_state st1 data m0 st2 Hma) as [Hmv Hmc].
-  assert (Hinv2 : Inv C0 st2 (pre ++ [f])).
-  { apply (Inv_fields C0 st1 st2 _); [rewrite Hmv | rewrite Hmc |];
-      try reflexivity. exact Hinv1. }
+  destruct (read_memarg_state st data m0 st1 Hma) as [Hmv Hmc].
+  assert (Hinv2 : Inv C0 st1 (pre ++ [f])).
+  { apply (Inv_fields C0 st st1 _); [rewrite Hmv | rewrite Hmc |];
+      try reflexivity. exact Hinv. }
   destruct (opiter_check_memory_and_alignment module m0 natural) as [r2|] eqn:Hck;
     cbn [bind] in H; [|discriminate].
   destruct r2 as [u2|e2].
@@ -2357,29 +2241,29 @@ Proof.
   destruct u2. rewrite branch_ok in H. cbn [bind] in H.
   destruct (check_memory_and_alignment_ok module C0 m0 natural Hmems Hck)
     as [[mem Hlookup] Halign].
-  destruct (Inv_split C0 st2 pre f Hinv2) as [Hbase2 [Hsplit2 Hunr2]].
+  destruct (Inv_split C0 st1 pre f Hinv2) as [Hbase2 [Hsplit2 Hunr2]].
   (* first pop: the stored value *)
-  destruct (opiter_pop_with_type st2 ty) as [[r3 st3]|] eqn:Hp1;
+  destruct (opiter_pop_with_type st1 ty) as [[r3 st2]|] eqn:Hp1;
     cbn [bind] in H; [|discriminate].
   destruct r3 as [t3|e3].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (pop_with_type_sim st2 (List.concat (List.map fv_seg pre)) f
-              ty t3 st3 Hsplit2 Hbase2 Hunr2 Hp1)
+  destruct (pop_with_type_sim st1 (List.concat (List.map fv_seg pre)) f
+              ty t3 st2 Hsplit2 Hbase2 Hunr2 Hp1)
     as [seg1 [Hc3 [Hv3 Hcon1]]].
   (* second pop: the address *)
-  destruct (opiter_pop_with_type st3 Types_ValueType_I32) as [[r4 st4]|] eqn:Hp2;
+  destruct (opiter_pop_with_type st2 Types_ValueType_I32) as [[r4 st3]|] eqn:Hp2;
     cbn [bind] in H; [|discriminate].
   destruct r4 as [t4|e4].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (cur_views_ctrls st2 st3 Hc3) as [Hb3 Hu3].
-  destruct (pop_with_type_sim st3 (List.concat (List.map fv_seg pre))
+  destruct (cur_views_ctrls st1 st2 Hc3) as [Hb3 Hu3].
+  destruct (pop_with_type_sim st2 (List.concat (List.map fv_seg pre))
               {| fv_ctrl := fv_ctrl f; fv_seg := seg1; fv_done := fv_done f;
 fv_then := fv_then f |}
-              Types_ValueType_I32 t4 st4)
+              Types_ValueType_I32 t4 st3)
     as [seg2 [Hc4 [Hv4 Hcon2]]].
   { cbn [fv_seg]. exact Hv3. }
   { cbn [fv_ctrl]. rewrite Hb3. exact Hbase2. }
@@ -2388,7 +2272,7 @@ fv_then := fv_then f |}
   cbn [fv_ct fv_seg fv_ctrl] in Hcon2.
   injection H as Hmeq <-.
   exists seg2.
-  apply (Inv_step_last C0 st2 st4 pre f _ Hinv2).
+  apply (Inv_step_last C0 st1 st3 pre f _ Hinv2).
   - reflexivity.
   - rewrite Hc4. rewrite Hc3. destruct Hinv2 as [K1 _]. rewrite K1.
     rewrite List.map_app. rewrite List.map_app. reflexivity.
@@ -2611,33 +2495,24 @@ Theorem step_block : forall C0 st fs data bt st',
                    fv_then := [] |}]).
 Proof.
   intros C0 st fs data bt st' Hinv H. unfold opiter_read_block in H.
-  destruct (opiter_take_pending st opiter_op_block) as [[r0 st1]|] eqn:Htp;
-    cbn [bind] in H; [|discriminate].
-  destruct r0 as [u|e].
-  2: { rewrite branch_err in H. cbn [bind] in H.
-       rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
-  destruct u. rewrite branch_ok in H. cbn [bind] in H.
-  pose proof (take_pending_ok_inv st opiter_op_block st1 Htp) as Hobs.
-  assert (Hinv1 : Inv C0 st1 fs) by (apply (Inv_obs C0 st st1 _ Hobs Hinv)).
-  destruct (opiter_read_block_type data st1.(opiter_OpIterState_pos))
+  destruct (opiter_read_block_type data st.(opiter_OpIterState_pos))
     as [r1|] eqn:Hbt; cbn [bind] in H; [|discriminate].
   destruct r1 as [[bt0 p1]|e1].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
   (* the block type read moves only the cursor *)
-  destruct (opiter_push_ctrl _ Opiter_LabelKind_Block bt0) as [st2|] eqn:Hpc;
+  destruct (opiter_push_ctrl _ Opiter_LabelKind_Block bt0) as [st1|] eqn:Hpc;
     cbn [bind] in H; [|discriminate].
   injection H as Hbteq <-.
   eexists. rewrite <- Hbteq.
-  (* the intermediate state is st1 with the cursor advanced past the block type *)
+  (* the intermediate state is st with the cursor advanced past the block type *)
   apply (Inv_push_frame C0
-           {| opiter_OpIterState_vals := st1.(opiter_OpIterState_vals);
-              opiter_OpIterState_ctrls := st1.(opiter_OpIterState_ctrls);
-              opiter_OpIterState_pos := p1;
-              opiter_OpIterState_pending := st1.(opiter_OpIterState_pending) |}
-           st2 fs Opiter_LabelKind_Block bt0); [discriminate | discriminate | | exact Hpc].
-  apply (Inv_fields C0 st1 _ fs); [reflexivity | reflexivity | exact Hinv1].
+           {| opiter_OpIterState_vals := st.(opiter_OpIterState_vals);
+              opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
+              opiter_OpIterState_pos := p1 |}
+           st1 fs Opiter_LabelKind_Block bt0); [discriminate | discriminate | | exact Hpc].
+  apply (Inv_fields C0 st _ fs); [reflexivity | reflexivity | exact Hinv].
 Qed.
 
 (** Entering a loop. Identical apart from the kind, which is what makes the
@@ -2657,32 +2532,23 @@ Theorem step_loop : forall C0 st fs data bt st',
                    fv_then := [] |}]).
 Proof.
   intros C0 st fs data bt st' Hinv H. unfold opiter_read_loop in H.
-  destruct (opiter_take_pending st opiter_op_loop) as [[r0 st1]|] eqn:Htp;
-    cbn [bind] in H; [|discriminate].
-  destruct r0 as [u|e].
-  2: { rewrite branch_err in H. cbn [bind] in H.
-       rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
-  destruct u. rewrite branch_ok in H. cbn [bind] in H.
-  pose proof (take_pending_ok_inv st opiter_op_loop st1 Htp) as Hobs.
-  assert (Hinv1 : Inv C0 st1 fs) by (apply (Inv_obs C0 st st1 _ Hobs Hinv)).
-  destruct (opiter_read_block_type data st1.(opiter_OpIterState_pos))
+  destruct (opiter_read_block_type data st.(opiter_OpIterState_pos))
     as [r1|] eqn:Hbt; cbn [bind] in H; [|discriminate].
   destruct r1 as [[bt0 p1]|e1].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (opiter_push_ctrl _ Opiter_LabelKind_Loop bt0) as [st2|] eqn:Hpc;
+  destruct (opiter_push_ctrl _ Opiter_LabelKind_Loop bt0) as [st1|] eqn:Hpc;
     cbn [bind] in H; [|discriminate].
   injection H as Hbteq <-.
   eexists. rewrite <- Hbteq.
-  (* the intermediate state is st1 with the cursor advanced past the block type *)
+  (* the intermediate state is st with the cursor advanced past the block type *)
   apply (Inv_push_frame C0
-           {| opiter_OpIterState_vals := st1.(opiter_OpIterState_vals);
-              opiter_OpIterState_ctrls := st1.(opiter_OpIterState_ctrls);
-              opiter_OpIterState_pos := p1;
-              opiter_OpIterState_pending := st1.(opiter_OpIterState_pending) |}
-           st2 fs Opiter_LabelKind_Loop bt0); [discriminate | discriminate | | exact Hpc].
-  apply (Inv_fields C0 st1 _ fs); [reflexivity | reflexivity | exact Hinv1].
+           {| opiter_OpIterState_vals := st.(opiter_OpIterState_vals);
+              opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
+              opiter_OpIterState_pos := p1 |}
+           st1 fs Opiter_LabelKind_Loop bt0); [discriminate | discriminate | | exact Hpc].
+  apply (Inv_fields C0 st _ fs); [reflexivity | reflexivity | exact Hinv].
 Qed.
 
 (** Entering an [if]'s then-branch. Unlike [block]/[loop], [read_if] pops the
@@ -2708,56 +2574,45 @@ Theorem step_if : forall C0 st fs pre f data bt st',
 Proof.
   intros C0 st fs pre f data bt st' Hinv Hfs H. subst fs.
   unfold opiter_read_if in H.
-  destruct (opiter_take_pending st opiter_op_if) as [[r0 st1]|] eqn:Htp;
-    cbn [bind] in H; [|discriminate].
-  destruct r0 as [u|e].
-  2: { rewrite branch_err in H. cbn [bind] in H.
-       rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
-  destruct u. rewrite branch_ok in H. cbn [bind] in H.
-  pose proof (take_pending_ok_inv st opiter_op_if st1 Htp) as Hobs.
-  assert (Hinv1 : Inv C0 st1 (pre ++ [f]))
-    by (apply (Inv_obs C0 st st1 _ Hobs Hinv)).
-  destruct (opiter_read_block_type data st1.(opiter_OpIterState_pos))
+  destruct (opiter_read_block_type data st.(opiter_OpIterState_pos))
     as [r1|] eqn:Hbt; cbn [bind] in H; [|discriminate].
   destruct r1 as [[bt0 p1]|e1].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
-  assert (Hinv1' : Inv C0
-             {| opiter_OpIterState_vals := st1.(opiter_OpIterState_vals);
-                opiter_OpIterState_ctrls := st1.(opiter_OpIterState_ctrls);
-                opiter_OpIterState_pos := p1;
-                opiter_OpIterState_pending := st1.(opiter_OpIterState_pending) |}
+  assert (Hinv' : Inv C0
+             {| opiter_OpIterState_vals := st.(opiter_OpIterState_vals);
+                opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
+                opiter_OpIterState_pos := p1 |}
              (pre ++ [f])).
-  { apply (Inv_fields C0 st1 _ (pre ++ [f])); [reflexivity | reflexivity
-    | exact Hinv1]. }
+  { apply (Inv_fields C0 st _ (pre ++ [f])); [reflexivity | reflexivity
+    | exact Hinv]. }
   destruct (opiter_pop_with_type
-              {| opiter_OpIterState_vals := st1.(opiter_OpIterState_vals);
-                 opiter_OpIterState_ctrls := st1.(opiter_OpIterState_ctrls);
-                 opiter_OpIterState_pos := p1;
-                 opiter_OpIterState_pending := st1.(opiter_OpIterState_pending)
-              |} Types_ValueType_I32) as [[r2 st2]|] eqn:Hpw;
+              {| opiter_OpIterState_vals := st.(opiter_OpIterState_vals);
+                 opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
+                 opiter_OpIterState_pos := p1
+              |} Types_ValueType_I32) as [[r2 st1]|] eqn:Hpw;
     cbn [bind] in H; [|discriminate].
   destruct r2 as [t2|e2].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (opiter_push_ctrl st2 Opiter_LabelKind_Then bt0) as [st3|] eqn:Hpc;
+  destruct (opiter_push_ctrl st1 Opiter_LabelKind_Then bt0) as [st2|] eqn:Hpc;
     cbn [bind] in H; [|discriminate].
   injection H as Hbteq <-.
-  destruct (Inv_split C0 _ pre f Hinv1') as [Hbase1 [Hsplit1 Hunr1]].
+  destruct (Inv_split C0 _ pre f Hinv') as [Hbase1 [Hsplit1 Hunr1]].
   destruct (pop_with_type_sim _ (List.concat (List.map fv_seg pre)) f
-              Types_ValueType_I32 t2 st2 Hsplit1 Hbase1 Hunr1 Hpw)
+              Types_ValueType_I32 t2 st1 Hsplit1 Hbase1 Hunr1 Hpw)
     as [seg' [Hc2 [Hv2 Hcon]]].
-  exists seg', (alloc_vec_Vec_len st2.(opiter_OpIterState_vals)).
+  exists seg', (alloc_vec_Vec_len st1.(opiter_OpIterState_vals)).
   rewrite <- Hbteq.
-  destruct Hinv1' as [K1 [K2 [K3 K4]]].
+  destruct Hinv' as [K1 [K2 [K3 K4]]].
   unfold Inv. repeat split.
-  - destruct (push_ctrl_spec st2 Opiter_LabelKind_Then bt0 st3 Hpc) as [_ Hc3].
+  - destruct (push_ctrl_spec st1 Opiter_LabelKind_Then bt0 st2 Hpc) as [_ Hc3].
     rewrite Hc3. rewrite Hc2. rewrite K1.
     rewrite List.map_app. rewrite List.map_app. rewrite <- List.app_assoc.
     reflexivity.
-  - destruct (push_ctrl_spec st2 Opiter_LabelKind_Then bt0 st3 Hpc) as [Hv3 _].
+  - destruct (push_ctrl_spec st1 Opiter_LabelKind_Then bt0 st2 Hpc) as [Hv3 _].
     rewrite Hv3. rewrite Hv2.
     rewrite List.map_app. rewrite List.map_app.
     rewrite List.concat_app. rewrite List.concat_app.
@@ -2777,7 +2632,7 @@ Proof.
                                    opiter_Ctrl_block_type := bt0;
                                    opiter_Ctrl_value_stack_base :=
                                      alloc_vec_Vec_len
-                                       st2.(opiter_OpIterState_vals);
+                                       st1.(opiter_OpIterState_vals);
                                    opiter_Ctrl_polymorphic_base := false |};
                               fv_seg := []; fv_done := []; fv_then := [] |})
                      .(opiter_Ctrl_kind) = Opiter_LabelKind_Then)
@@ -2785,7 +2640,7 @@ Proof.
     apply (frames_ok_snoc_if C0 [] pre f seg' _ Hgk K4 Hcon).
     apply (frames_ok_fresh_obligation C0 _
              Opiter_LabelKind_Then bt0
-             (alloc_vec_Vec_len st2.(opiter_OpIterState_vals))).
+             (alloc_vec_Vec_len st1.(opiter_OpIterState_vals))).
 Qed.
 
 (* ================================================================== *)
@@ -3436,25 +3291,16 @@ Theorem step_switch_else : forall C0 st fs pre g st' bt,
 Proof.
   intros C0 st fs pre g st' bt Hinv Hfs Hkind H. subst fs.
   unfold opiter_read_else in H.
-  destruct (opiter_take_pending st opiter_op_else) as [[r0 st1]|] eqn:Htp;
-    cbn [bind] in H; [|discriminate].
-  destruct r0 as [u|e].
-  2: { rewrite branch_err in H. cbn [bind] in H.
-       rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
-  destruct u. rewrite branch_ok in H. cbn [bind] in H.
-  pose proof (take_pending_ok_inv st opiter_op_else st1 Htp) as Hobs.
-  assert (Hinv1 : Inv C0 st1 (pre ++ [g]))
-    by (apply (Inv_obs C0 st st1 _ Hobs Hinv)).
-  destruct (Inv_split C0 st1 pre g Hinv1) as [Hbase1 [Hsplit1 Hunr1]].
-  assert (Hsnoc : vec_list st1.(opiter_OpIterState_ctrls)
+  destruct (Inv_split C0 st pre g Hinv) as [Hbase1 [Hsplit1 Hunr1]].
+  assert (Hsnoc : vec_list st.(opiter_OpIterState_ctrls)
                   = List.map fv_ctrl pre ++ [fv_ctrl g]).
-  { destruct Hinv1 as [K1 _]. rewrite K1. rewrite List.map_app. reflexivity. }
-  destruct (alloc_vec_Vec_len st1.(opiter_OpIterState_ctrls) s= 0%usize) eqn:Hn;
+  { destruct Hinv as [K1 _]. rewrite K1. rewrite List.map_app. reflexivity. }
+  destruct (alloc_vec_Vec_len st.(opiter_OpIterState_ctrls) s= 0%usize) eqn:Hn;
     [discriminate|].
-  destruct (usize_sub (alloc_vec_Vec_len st1.(opiter_OpIterState_ctrls))
+  destruct (usize_sub (alloc_vec_Vec_len st.(opiter_OpIterState_ctrls))
               1%usize) as [i|] eqn:Hsub; cbn [bind] in H; [|discriminate].
   rewrite vec_index_spec in H.
-  rewrite (ctrls_last_index st1 (List.map fv_ctrl pre) (fv_ctrl g) i
+  rewrite (ctrls_last_index st (List.map fv_ctrl pre) (fv_ctrl g) i
              Hsnoc Hsub) in H.
   cbn [bind] in H.
   destruct (opiter_is_then (fv_ctrl g).(opiter_Ctrl_kind)) as [b|] eqn:Hit;
@@ -3464,26 +3310,26 @@ Proof.
     as [results|] eqn:Hbr; cbn [bind] in H; [|discriminate].
   pose proof (block_results_spec _ _ Hbr) as Hres.
   rewrite vec_deref_spec in H.
-  destruct (opiter_pop_types st1 results) as [[r1 st2]|] eqn:Hpt;
+  destruct (opiter_pop_types st results) as [[r1 st1]|] eqn:Hpt;
     cbn [bind] in H; [|discriminate].
   destruct r1 as [u1|e1].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   destruct u1. rewrite branch_ok in H. cbn [bind] in H.
-  destruct (pop_types_sim st1 (List.concat (List.map fv_seg pre)) g
-              results st2 Hsplit1 Hbase1 Hunr1 Hpt) as [seg' [Hc2 [Hv2 Hcon]]].
-  destruct (alloc_vec_Vec_len st2.(opiter_OpIterState_vals)
+  destruct (pop_types_sim st (List.concat (List.map fv_seg pre)) g
+              results st1 Hsplit1 Hbase1 Hunr1 Hpt) as [seg' [Hc2 [Hv2 Hcon]]].
+  destruct (alloc_vec_Vec_len st1.(opiter_OpIterState_vals)
             s<> (fv_ctrl g).(opiter_Ctrl_value_stack_base)) eqn:Hgb;
     [discriminate|].
   apply scalar_neqb_false in Hgb. rewrite vec_len_spec in Hgb.
   assert (Hgbase : Z.to_nat (to_Z (fv_ctrl g).(opiter_Ctrl_value_stack_base))
                    = List.length (List.concat (List.map fv_seg pre))).
   { unfold cur_base_nat in Hbase1.
-    rewrite (cur_ctrl_snoc st1 (List.map fv_ctrl pre) (fv_ctrl g)
+    rewrite (cur_ctrl_snoc st (List.map fv_ctrl pre) (fv_ctrl g)
                Hsnoc) in Hbase1.
     exact Hbase1. }
   assert (Hempty : seg' = []).
-  { assert (Hlen : List.length (vec_list st2.(opiter_OpIterState_vals))
+  { assert (Hlen : List.length (vec_list st1.(opiter_OpIterState_vals))
                    = (List.length (List.concat (List.map fv_seg pre))
                       + List.length seg')%nat).
     { rewrite Hv2. rewrite List.app_length. reflexivity. }
@@ -3492,17 +3338,17 @@ Proof.
     exfalso. cbn [List.length] in Hlen. lia. }
   subst seg'.
   assert (Hidxlen : Z.to_nat (to_Z i) = List.length (List.map fv_ctrl pre)).
-  { pose proof (ctrls_last_index_len st1 (List.map fv_ctrl pre) (fv_ctrl g)
+  { pose proof (ctrls_last_index_len st (List.map fv_ctrl pre) (fv_ctrl g)
                   i Hsnoc Hsub) as Hl.
     exact Hl. }
   assert (Hidxlen2 : (Z.to_nat (to_Z i)
-                     < List.length (vec_list st2.(opiter_OpIterState_ctrls)))%nat).
+                     < List.length (vec_list st1.(opiter_OpIterState_ctrls)))%nat).
   { rewrite Hc2. rewrite Hsnoc. rewrite List.app_length. cbn [List.length].
     rewrite Hidxlen. lia. }
-  destruct (vec_index_mut_ok st2.(opiter_OpIterState_ctrls) i Hidxlen2)
+  destruct (vec_index_mut_ok st1.(opiter_OpIterState_ctrls) i Hidxlen2)
     as [c [back Hidx2]].
   rewrite Hidx2 in H. cbn [bind] in H.
-  destruct (vec_index_mut_of_snoc st2.(opiter_OpIterState_ctrls)
+  destruct (vec_index_mut_of_snoc st1.(opiter_OpIterState_ctrls)
               (List.map fv_ctrl pre) (fv_ctrl g) i c back
               (ltac:(rewrite Hc2; exact Hsnoc)) Hidxlen Hidx2) as [Hceq Hback].
   subst c.
@@ -3531,7 +3377,7 @@ Proof.
               back1 (Hback mid) Hidxlen Hidx3) as [Hc1eq Hback1].
   subst c1.
   destruct (frames_ok_last_fold C0 [] pre g
-              (ltac:(destruct Hinv1 as [_ [_ [_ H4]]]; exact H4)))
+              (ltac:(destruct Hinv as [_ [_ [_ H4]]]; exact H4)))
     as [Hgfold Hgelse].
   assert (Hgc : frame_carry [g] = frame_carry [g']).
   { cbn [frame_carry]. rewrite Hkind. reflexivity. }
@@ -3543,10 +3389,10 @@ Proof.
     repeat rewrite List.app_nil_r. reflexivity.
   - apply (bases_ok_from_snoc 0 pre g').
     + apply (bases_ok_from_prefix 0 pre g).
-      destruct Hinv1 as [_ [_ [K3 _]]]. exact K3.
+      destruct Hinv as [_ [_ [K3 _]]]. exact K3.
     + cbn [fv_ctrl opiter_Ctrl_value_stack_base]. rewrite Hgbase. lia.
   - apply (frames_ok_replace_last C0 [] pre g g' Hgc
-             (ltac:(destruct Hinv1 as [_ [_ [_ H4]]]; exact H4))).
+             (ltac:(destruct Hinv as [_ [_ [_ H4]]]; exact H4))).
     + cbn [fv_ctrl fv_done fv_ct fv_seg]. reflexivity.
     + unfold else_obligation.
       cbn [fv_ctrl opiter_Ctrl_kind opiter_Ctrl_block_type fv_then].
@@ -3578,26 +3424,17 @@ Lemma end_state : forall C0 st fs pre' g r st',
 Proof.
   intros C0 st fs pre' g r st' Hinv Hfs H. subst fs.
   unfold opiter_read_end in H.
-  destruct (opiter_take_pending st opiter_op_end) as [[r0 st1]|] eqn:Htp;
-    cbn [bind] in H; [|discriminate].
-  destruct r0 as [u|e].
-  2: { rewrite branch_err in H. cbn [bind] in H.
-       rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
-  destruct u. rewrite branch_ok in H. cbn [bind] in H.
-  pose proof (take_pending_ok_inv st opiter_op_end st1 Htp) as Hobs.
-  assert (Hinv1 : Inv C0 st1 (pre' ++ [g]))
-    by (apply (Inv_obs C0 st st1 _ Hobs Hinv)).
-  destruct (Inv_split C0 st1 pre' g Hinv1) as [Hbase1 [Hsplit1 Hunr1]].
-  assert (Hsnoc : vec_list st1.(opiter_OpIterState_ctrls)
+  destruct (Inv_split C0 st pre' g Hinv) as [Hbase1 [Hsplit1 Hunr1]].
+  assert (Hsnoc : vec_list st.(opiter_OpIterState_ctrls)
                   = List.map fv_ctrl pre' ++ [fv_ctrl g]).
-  { destruct Hinv1 as [K1 _]. rewrite K1. rewrite List.map_app. reflexivity. }
+  { destruct Hinv as [K1 _]. rewrite K1. rewrite List.map_app. reflexivity. }
   (* the frame list is non-empty, so the [n = 0] branch cannot fire *)
-  destruct (alloc_vec_Vec_len st1.(opiter_OpIterState_ctrls) s= 0%usize) eqn:Hn;
+  destruct (alloc_vec_Vec_len st.(opiter_OpIterState_ctrls) s= 0%usize) eqn:Hn;
     [discriminate|].
-  destruct (usize_sub (alloc_vec_Vec_len st1.(opiter_OpIterState_ctrls))
+  destruct (usize_sub (alloc_vec_Vec_len st.(opiter_OpIterState_ctrls))
               1%usize) as [i|] eqn:Hsub; cbn [bind] in H; [|discriminate].
   rewrite vec_index_spec in H.
-  rewrite (ctrls_last_index st1 (List.map fv_ctrl pre') (fv_ctrl g) i
+  rewrite (ctrls_last_index st (List.map fv_ctrl pre') (fv_ctrl g) i
              Hsnoc Hsub) in H.
   cbn [bind] in H.
   destruct (opiter_block_results (fv_ctrl g).(opiter_Ctrl_block_type))
@@ -3610,26 +3447,26 @@ Proof.
       eqn:Hemp; cbn [bind] in H; [|discriminate].
     destruct b1; cbn [bind] in H; [|discriminate].
     rewrite vec_deref_spec in H.
-    destruct (opiter_pop_types st1 results) as [[r1 st2]|] eqn:Hpt;
+    destruct (opiter_pop_types st results) as [[r1 st1]|] eqn:Hpt;
       cbn [bind] in H; [|discriminate].
     destruct r1 as [u1|e1].
     2: { rewrite branch_err in H. cbn [bind] in H.
          rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
     destruct u1. rewrite branch_ok in H. cbn [bind] in H.
-    destruct (pop_types_sim st1 (List.concat (List.map fv_seg pre')) g
-                results st2 Hsplit1 Hbase1 Hunr1 Hpt) as [seg' [Hc2 [Hv2 Hcon]]].
-    destruct (alloc_vec_Vec_len st2.(opiter_OpIterState_vals)
+    destruct (pop_types_sim st (List.concat (List.map fv_seg pre')) g
+                results st1 Hsplit1 Hbase1 Hunr1 Hpt) as [seg' [Hc2 [Hv2 Hcon]]].
+    destruct (alloc_vec_Vec_len st1.(opiter_OpIterState_vals)
               s<> (fv_ctrl g).(opiter_Ctrl_value_stack_base)) eqn:Hg;
       [discriminate|].
     apply scalar_neqb_false in Hg. rewrite vec_len_spec in Hg.
     assert (Hgbase : Z.to_nat (to_Z (fv_ctrl g).(opiter_Ctrl_value_stack_base))
                      = List.length (List.concat (List.map fv_seg pre'))).
     { unfold cur_base_nat in Hbase1.
-      rewrite (cur_ctrl_snoc st1 (List.map fv_ctrl pre') (fv_ctrl g)
+      rewrite (cur_ctrl_snoc st (List.map fv_ctrl pre') (fv_ctrl g)
                  Hsnoc) in Hbase1.
       exact Hbase1. }
     assert (Hempty : seg' = []).
-    { assert (Hlen : List.length (vec_list st2.(opiter_OpIterState_vals))
+    { assert (Hlen : List.length (vec_list st1.(opiter_OpIterState_vals))
                      = (List.length (List.concat (List.map fv_seg pre'))
                         + List.length seg')%nat).
       { rewrite Hv2. rewrite List.app_length. reflexivity. }
@@ -3637,20 +3474,19 @@ Proof.
       destruct seg' as [|x xs]; [reflexivity|].
       exfalso. cbn [List.length] in Hlen. lia. }
     subst seg'.
-    destruct (alloc_vec_Vec_pop alloc_alloc_Global st2.(opiter_OpIterState_ctrls))
+    destruct (alloc_vec_Vec_pop alloc_alloc_Global st1.(opiter_OpIterState_ctrls))
       as [[o v]|] eqn:Hpop; cbn [bind] in H; [|discriminate].
-    destruct (vec_pop_of_snoc st2.(opiter_OpIterState_ctrls)
+    destruct (vec_pop_of_snoc st1.(opiter_OpIterState_ctrls)
                 (List.map fv_ctrl pre') (fv_ctrl g) o v
                 (ltac:(rewrite Hc2; exact Hsnoc)) Hpop) as [_ Hvctrls].
     destruct (opiter_push_types
-                {| opiter_OpIterState_vals := st2.(opiter_OpIterState_vals);
+                {| opiter_OpIterState_vals := st1.(opiter_OpIterState_vals);
                    opiter_OpIterState_ctrls := v;
-                   opiter_OpIterState_pos := st2.(opiter_OpIterState_pos);
-                   opiter_OpIterState_pending := st2.(opiter_OpIterState_pending)
-                |} results) as [st3|] eqn:Hpush; cbn [bind] in H; [|discriminate].
+                   opiter_OpIterState_pos := st1.(opiter_OpIterState_pos)
+                |} results) as [st2|] eqn:Hpush; cbn [bind] in H; [|discriminate].
     injection H as Hr <-.
     destruct (push_results_spec _ results
-                (fv_ctrl g).(opiter_Ctrl_block_type) st3 Hres Hpush)
+                (fv_ctrl g).(opiter_Ctrl_block_type) st2 Hres Hpush)
       as [Hpv Hpc].
     cbn [opiter_OpIterState_vals opiter_OpIterState_ctrls] in Hpv.
     cbn [opiter_OpIterState_vals opiter_OpIterState_ctrls] in Hpc.
@@ -3668,26 +3504,26 @@ Proof.
     + rewrite Hpc. exact Hvctrls.
     + rewrite Hpv. rewrite Hv2. rewrite List.app_nil_r. reflexivity.
   - rewrite vec_deref_spec in H.
-    destruct (opiter_pop_types st1 results) as [[r1 st2]|] eqn:Hpt;
+    destruct (opiter_pop_types st results) as [[r1 st1]|] eqn:Hpt;
       cbn [bind] in H; [|discriminate].
     destruct r1 as [u1|e1].
     2: { rewrite branch_err in H. cbn [bind] in H.
          rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
     destruct u1. rewrite branch_ok in H. cbn [bind] in H.
-    destruct (pop_types_sim st1 (List.concat (List.map fv_seg pre')) g
-                results st2 Hsplit1 Hbase1 Hunr1 Hpt) as [seg' [Hc2 [Hv2 Hcon]]].
-    destruct (alloc_vec_Vec_len st2.(opiter_OpIterState_vals)
+    destruct (pop_types_sim st (List.concat (List.map fv_seg pre')) g
+                results st1 Hsplit1 Hbase1 Hunr1 Hpt) as [seg' [Hc2 [Hv2 Hcon]]].
+    destruct (alloc_vec_Vec_len st1.(opiter_OpIterState_vals)
               s<> (fv_ctrl g).(opiter_Ctrl_value_stack_base)) eqn:Hg;
       [discriminate|].
     apply scalar_neqb_false in Hg. rewrite vec_len_spec in Hg.
     assert (Hgbase : Z.to_nat (to_Z (fv_ctrl g).(opiter_Ctrl_value_stack_base))
                      = List.length (List.concat (List.map fv_seg pre'))).
     { unfold cur_base_nat in Hbase1.
-      rewrite (cur_ctrl_snoc st1 (List.map fv_ctrl pre') (fv_ctrl g)
+      rewrite (cur_ctrl_snoc st (List.map fv_ctrl pre') (fv_ctrl g)
                  Hsnoc) in Hbase1.
       exact Hbase1. }
     assert (Hempty : seg' = []).
-    { assert (Hlen : List.length (vec_list st2.(opiter_OpIterState_vals))
+    { assert (Hlen : List.length (vec_list st1.(opiter_OpIterState_vals))
                      = (List.length (List.concat (List.map fv_seg pre'))
                         + List.length seg')%nat).
       { rewrite Hv2. rewrite List.app_length. reflexivity. }
@@ -3695,20 +3531,19 @@ Proof.
       destruct seg' as [|x xs]; [reflexivity|].
       exfalso. cbn [List.length] in Hlen. lia. }
     subst seg'.
-    destruct (alloc_vec_Vec_pop alloc_alloc_Global st2.(opiter_OpIterState_ctrls))
+    destruct (alloc_vec_Vec_pop alloc_alloc_Global st1.(opiter_OpIterState_ctrls))
       as [[o v]|] eqn:Hpop; cbn [bind] in H; [|discriminate].
-    destruct (vec_pop_of_snoc st2.(opiter_OpIterState_ctrls)
+    destruct (vec_pop_of_snoc st1.(opiter_OpIterState_ctrls)
                 (List.map fv_ctrl pre') (fv_ctrl g) o v
                 (ltac:(rewrite Hc2; exact Hsnoc)) Hpop) as [_ Hvctrls].
     destruct (opiter_push_types
-                {| opiter_OpIterState_vals := st2.(opiter_OpIterState_vals);
+                {| opiter_OpIterState_vals := st1.(opiter_OpIterState_vals);
                    opiter_OpIterState_ctrls := v;
-                   opiter_OpIterState_pos := st2.(opiter_OpIterState_pos);
-                   opiter_OpIterState_pending := st2.(opiter_OpIterState_pending)
-                |} results) as [st3|] eqn:Hpush; cbn [bind] in H; [|discriminate].
+                   opiter_OpIterState_pos := st1.(opiter_OpIterState_pos)
+                |} results) as [st2|] eqn:Hpush; cbn [bind] in H; [|discriminate].
     injection H as Hr <-.
     destruct (push_results_spec _ results
-                (fv_ctrl g).(opiter_Ctrl_block_type) st3 Hres Hpush)
+                (fv_ctrl g).(opiter_Ctrl_block_type) st2 Hres Hpush)
       as [Hpv Hpc].
     cbn [opiter_OpIterState_vals opiter_OpIterState_ctrls] in Hpv.
     cbn [opiter_OpIterState_vals opiter_OpIterState_ctrls] in Hpc.
@@ -4075,43 +3910,9 @@ Proof.
   apply (ctx_at_label_lookup C0 st (Z.to_nat (to_Z d0)) c Hlt Hnth).
 Qed.
 
-(** The same for the branch operators' prologue, which is the opcode and then a
-    label. [take_pending] leaves the control stack alone, so the label context
-    the lookup is stated against is unchanged. *)
-Lemma take_branch_target_at : forall C0 st fs data opcode depth target st',
-  Inv C0 st fs ->
-  opiter_take_branch_target st data opcode
-    = Ok (Core_result_Result_Ok (depth, target), st') ->
-  Inv C0 st' fs
-  /\ lookup_N (tc_labels (ctx_at C0 st)) (Z.to_N (to_Z depth))
-     = Some (ctrl_label target).
-Proof.
-  intros C0 st fs data opcode depth target st' Hinv H.
-  unfold opiter_take_branch_target in H.
-  destruct (opiter_take_pending st opcode) as [[r0 st1]|] eqn:Htp;
-    cbn [bind] in H; [|discriminate].
-  destruct (take_pending_stacks st opcode r0 st1 Htp) as [Hv1 Hc1].
-  destruct r0 as [u|e].
-  2: { rewrite branch_err in H. cbn [bind] in H.
-       rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
-  destruct u. rewrite branch_ok in H. cbn [bind] in H.
-  destruct (read_label_at C0 st1 fs data depth target st'
-              (Inv_fields C0 st st1 fs Hv1 Hc1 Hinv) H) as [Hi Hl].
-  split; [exact Hi|].
-  assert (Hctx : ctx_at C0 st = ctx_at C0 st1)
-    by (unfold ctx_at; rewrite Hc1; reflexivity).
-  rewrite Hctx. exact Hl.
-Qed.
-
-(** [br]: the target frame's types must be on the stack, and the rest of the
-    frame becomes unreachable. WasmCert's [type_update_top ts xx nil] consumes
-    [xx] and then yields [<<nil, true>>], which is exactly what
-    [mark_unreachable] does to the state: the segment is truncated to the frame's
-    base and the frame's polymorphic flag is set. [step_unreachable] already
-    established that half.
-
-    Which frame the depth names is [take_branch_target_at]'s business. Since [br]
-    inspects the labels, the [frames_ok] step has to be the [_at] variant. *)
+(** The same for the branch operators' prologue, which is one label. Reading it
+    leaves the control stack alone, so the label context the lookup is stated
+    against is unchanged. *)
 Theorem step_br : forall C0 st fs pre f data depth bt st',
   Inv C0 st fs -> fs = pre ++ [f] ->
   opiter_read_br st data = Ok (Core_result_Result_Ok (depth, bt), st') ->
@@ -4129,15 +3930,15 @@ Theorem step_br : forall C0 st fs pre f data depth bt st',
 Proof.
   intros C0 st fs pre f data depth bt st' Hinv Hfs H. subst fs.
   unfold opiter_read_br in H.
-  destruct (opiter_take_branch_target st data opiter_op_br) as [[r0 st1]|]
+  destruct (opiter_read_label st data) as [[r0 st1]|]
     eqn:Htb; cbn [bind] in H; [|discriminate].
   destruct r0 as [[d0 target]|e].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (take_branch_target_at C0 st (pre ++ [f]) data _ d0 target st1
+  destruct (read_label_at C0 st (pre ++ [f]) data d0 target st1
               Hinv Htb) as [Hinv1 Hlookup].
-  destruct (take_branch_target_fields st data _ _ st1 Htb) as [_ Hc1].
+  destruct (read_label_fields st data _ st1 Htb) as [_ Hc1].
   assert (Hsnoc : vec_list st1.(opiter_OpIterState_ctrls)
                   = List.map fv_ctrl pre ++ [fv_ctrl f]).
   { destruct Hinv1 as [K1 _]. rewrite K1. rewrite List.map_app. reflexivity. }
@@ -4223,15 +4024,15 @@ Theorem step_br_if : forall C0 st fs pre f data depth bt st',
 Proof.
   intros C0 st fs pre f data depth bt st' Hinv Hfs H. subst fs.
   unfold opiter_read_br_if in H.
-  destruct (opiter_take_branch_target st data opiter_op_br_if) as [[r0 st1]|]
+  destruct (opiter_read_label st data) as [[r0 st1]|]
     eqn:Htb; cbn [bind] in H; [|discriminate].
   destruct r0 as [[d0 target]|e].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (take_branch_target_at C0 st (pre ++ [f]) data _ d0 target st1
+  destruct (read_label_at C0 st (pre ++ [f]) data d0 target st1
               Hinv Htb) as [Hinv1 Hlookup].
-  destruct (take_branch_target_fields st data _ _ st1 Htb) as [_ Hc1].
+  destruct (read_label_fields st data _ st1 Htb) as [_ Hc1].
   destruct (opiter_branch_target_types target) as [types|] eqn:Hbtt;
     cbn [bind] in H; [|discriminate].
   pose proof (branch_target_types_spec target types Hbtt) as Htypes.
@@ -4401,10 +4202,12 @@ Proof.
   unfold ctrl_label, ctrl_target. rewrite Hbt. reflexivity.
 Qed.
 
-Theorem step_br_table : forall C0 st fs pre f data ls x common st',
+Theorem step_br_table : forall V (inst : visit_OpVisitor_t V) v v' dflt
+                               C0 st fs pre f data ls x common st',
   Inv C0 st fs -> fs = pre ++ [f] ->
   List.Forall (fun d => depth_target st d common) (ls ++ [x]) ->
-  opiter_read_br_table st data = Ok (Core_result_Result_Ok common, st') ->
+  opiter_read_br_table inst st data v
+    = Ok (Core_result_Result_Ok (dflt, common), st', v') ->
   Inv C0 st'
       (pre ++ [{| fv_ctrl :=
                     {| opiter_Ctrl_kind := (fv_ctrl f).(opiter_Ctrl_kind);
@@ -4419,42 +4222,33 @@ Theorem step_br_table : forall C0 st fs pre f data ls x common st',
                                              (Z.to_N x)];
                   fv_then := fv_then f |}]).
 Proof.
-  intros C0 st fs pre f data ls x common st' Hinv Hfs Hdt H. subst fs.
-  unfold opiter_read_br_table in H.
-  destruct (opiter_take_pending st opiter_op_br_table) as [[r0 st1]|] eqn:Htp;
-    cbn [bind] in H; [|discriminate].
-  destruct (take_pending_stacks st _ r0 st1 Htp) as [Hv1 Hc1].
-  destruct r0 as [u|e].
-  2: { rewrite branch_err in H. cbn [bind] in H.
-       rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
-  destruct u. rewrite branch_ok in H. cbn [bind] in H.
-  assert (Hinv1 : Inv C0 st1 (pre ++ [f]))
-    by (apply (Inv_fields C0 st st1 _ Hv1 Hc1 Hinv)).
-  destruct (reader_read_u32_leb data st1.(opiter_OpIterState_pos)) as [r1|]
+  intros V inst v v' dflt C0 st fs pre f data ls x common st' Hinv Hfs Hdt H.
+  subst fs. unfold opiter_read_br_table in H.
+  destruct (reader_read_u32_leb data st.(opiter_OpIterState_pos)) as [r1|]
     eqn:Hleb; cbn [bind] in H; [|discriminate].
   destruct r1 as [[count p1]|e1].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
   (* the count and the labels move only the cursor *)
-  destruct (opiter_read_table_labels
-              {| opiter_OpIterState_vals := st1.(opiter_OpIterState_vals);
-                 opiter_OpIterState_ctrls := st1.(opiter_OpIterState_ctrls);
-                 opiter_OpIterState_pos := p1;
-                 opiter_OpIterState_pending := st1.(opiter_OpIterState_pending)
-              |} data count) as [[r2 st2]|] eqn:Htl;
+  destruct (opiter_read_table_labels inst
+              {| opiter_OpIterState_vals := st.(opiter_OpIterState_vals);
+                 opiter_OpIterState_ctrls := st.(opiter_OpIterState_ctrls);
+                 opiter_OpIterState_pos := p1
+              |} data count v) as [[[r2 st1] v1]|] eqn:Htl;
     cbn [bind] in H; [|discriminate].
-  destruct (read_table_labels_fields _ data count r2 st2 Htl) as [Hv2 Hc2].
-  cbn [opiter_OpIterState_vals opiter_OpIterState_ctrls] in Hv2, Hc2.
+  destruct (read_table_labels_fields V inst v _ data count r2 st1 v1 Htl)
+    as [Hv1 Hc1].
+  cbn [opiter_OpIterState_vals opiter_OpIterState_ctrls] in Hv1, Hc1.
   destruct r2 as [expect|e2].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
-  assert (Hinv2 : Inv C0 st2 (pre ++ [f]))
-    by (apply (Inv_fields C0 st1 st2 _ Hv2 Hc2 Hinv1)).
-  destruct (opiter_read_label st2 data) as [[r3 st3]|] eqn:Hrl;
+  assert (Hinv2 : Inv C0 st1 (pre ++ [f]))
+    by (apply (Inv_fields C0 st st1 _ Hv1 Hc1 Hinv)).
+  destruct (opiter_read_label st1 data) as [[r3 st2]|] eqn:Hrl;
     cbn [bind] in H; [|discriminate].
-  destruct (read_label_fields st2 data r3 st3 Hrl) as [Hv3 Hc3].
+  destruct (read_label_fields st1 data r3 st2 Hrl) as [Hv2 Hc2].
   destruct r3 as [[d0 target]|e3].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
@@ -4466,62 +4260,62 @@ Proof.
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
-  assert (Hinv3 : Inv C0 st3 (pre ++ [f]))
-    by (apply (Inv_fields C0 st2 st3 _ Hv3 Hc3 Hinv2)).
-  destruct (Inv_split C0 st3 pre f Hinv3) as [Hbase3 [Hsplit3 Hunr3]].
+  assert (Hinv3 : Inv C0 st2 (pre ++ [f]))
+    by (apply (Inv_fields C0 st1 st2 _ Hv2 Hc2 Hinv2)).
+  destruct (Inv_split C0 st2 pre f Hinv3) as [Hbase3 [Hsplit3 Hunr3]].
   (* the condition *)
-  destruct (opiter_pop_with_type st3 Types_ValueType_I32) as [[r5 st4]|] eqn:Hp5;
+  destruct (opiter_pop_with_type st2 Types_ValueType_I32) as [[r5 st3]|] eqn:Hp5;
     cbn [bind] in H; [|discriminate].
   destruct r5 as [t5|e5].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (pop_with_type_sim st3 (List.concat (List.map fv_seg pre)) f
-              Types_ValueType_I32 t5 st4 Hsplit3 Hbase3 Hunr3 Hp5)
-    as [seg1 [Hc4 [Hv4 Hcon1]]].
-  destruct (cur_views_ctrls st3 st4 Hc4) as [Hb4 Hu4].
+  destruct (pop_with_type_sim st2 (List.concat (List.map fv_seg pre)) f
+              Types_ValueType_I32 t5 st3 Hsplit3 Hbase3 Hunr3 Hp5)
+    as [seg1 [Hc3 [Hv3 Hcon1]]].
+  destruct (cur_views_ctrls st2 st3 Hc3) as [Hb4 Hu4].
   (* the target's types *)
   destruct (opiter_block_results common0) as [types|] eqn:Hbr;
     cbn [bind] in H; [|discriminate].
   pose proof (block_results_spec _ types Hbr) as Htypes.
   rewrite vec_deref_spec in H.
-  destruct (opiter_pop_types st4 types) as [[r6 st5]|] eqn:Hpt;
+  destruct (opiter_pop_types st3 types) as [[r6 st4]|] eqn:Hpt;
     cbn [bind] in H; [|discriminate].
   destruct r6 as [u6|e6].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   destruct u6. rewrite branch_ok in H. cbn [bind] in H.
-  destruct (pop_types_sim st4 (List.concat (List.map fv_seg pre))
+  destruct (pop_types_sim st3 (List.concat (List.map fv_seg pre))
               {| fv_ctrl := fv_ctrl f; fv_seg := seg1; fv_done := fv_done f;
 fv_then := fv_then f |}
-              types st5)
-    as [seg2 [Hc5 [Hv5 Hcon2]]].
-  { cbn [fv_seg]. exact Hv4. }
+              types st4)
+    as [seg2 [Hc4 [Hv4 Hcon2]]].
+  { cbn [fv_seg]. exact Hv3. }
   { cbn [fv_ctrl]. rewrite Hb4. exact Hbase3. }
   { cbn [fv_ctrl]. rewrite Hu4. exact Hunr3. }
   { exact Hpt. }
   cbn [fv_ct fv_seg fv_ctrl] in Hcon2.
-  destruct (opiter_mark_unreachable st5) as [st6|] eqn:Hmu; cbn [bind] in H;
+  destruct (opiter_mark_unreachable st4) as [st5|] eqn:Hmu; cbn [bind] in H;
     [|discriminate].
-  injection H as Hcv <-. subst common0.
+  inversion H; subst.
   (* the frames, exactly as [br] leaves them *)
-  assert (Hsnoc : vec_list st3.(opiter_OpIterState_ctrls)
+  assert (Hsnoc : vec_list st2.(opiter_OpIterState_ctrls)
                   = List.map fv_ctrl pre ++ [fv_ctrl f])
     by (destruct Hinv3 as [K1 _]; rewrite K1; rewrite List.map_app;
         reflexivity).
   assert (Hbf : Z.to_nat (to_Z (fv_ctrl f).(opiter_Ctrl_value_stack_base))
                 = List.length (List.concat (List.map fv_seg pre))).
   { unfold cur_base_nat in Hbase3.
-    rewrite (cur_ctrl_snoc st3 (List.map fv_ctrl pre) (fv_ctrl f) Hsnoc)
+    rewrite (cur_ctrl_snoc st2 (List.map fv_ctrl pre) (fv_ctrl f) Hsnoc)
       in Hbase3.
     exact Hbase3. }
-  assert (Hsnoc5 : vec_list st5.(opiter_OpIterState_ctrls)
+  assert (Hsnoc5 : vec_list st4.(opiter_OpIterState_ctrls)
                    = List.map fv_ctrl pre ++ [fv_ctrl f])
-    by (rewrite Hc5; rewrite Hc4; exact Hsnoc).
+    by (rewrite Hc4; rewrite Hc3; exact Hsnoc).
   assert (Hle : (Z.to_nat (to_Z (fv_ctrl f).(opiter_Ctrl_value_stack_base))
-                 <= List.length (vec_list st5.(opiter_OpIterState_vals)))%nat)
-    by (rewrite Hbf; rewrite Hv5; rewrite List.app_length; lia).
-  destruct (mark_unreachable_spec st5 st6 (List.map fv_ctrl pre) (fv_ctrl f)
+                 <= List.length (vec_list st4.(opiter_OpIterState_vals)))%nat)
+    by (rewrite Hbf; rewrite Hv4; rewrite List.app_length; lia).
+  destruct (mark_unreachable_spec st4 st' (List.map fv_ctrl pre) (fv_ctrl f)
               Hsnoc5 Hle Hmu) as [Hmv Hmc].
   (* the labels, and the table's own obligation *)
   assert (Hlbls : tc_labels (ctx_at C0 st)
@@ -4548,10 +4342,10 @@ fv_then := fv_then f |}
       destruct Hd as [d [Hin ->]].
       apply depth_target_label.
       rewrite (List.Forall_forall) in Hdt. apply (Hdt d Hin). }
-  apply (Inv_step_last C0 st3 st6 pre f _ Hinv3).
+  apply (Inv_step_last C0 st2 st' pre f _ Hinv3).
   - reflexivity.
   - rewrite Hmc. rewrite List.map_app. reflexivity.
-  - rewrite Hmv. rewrite Hv5. rewrite Hbf. rewrite List.firstn_app.
+  - rewrite Hmv. rewrite Hv4. rewrite Hbf. rewrite List.firstn_app.
     rewrite List.firstn_all.
     assert (Hz : (List.length (List.concat (List.map fv_seg pre))
                   - List.length (List.concat (List.map fv_seg pre)))%nat
@@ -4593,49 +4387,40 @@ Theorem step_return : forall C0 ctx st fs pre f st',
 Proof.
   intros C0 ctx st fs pre f st' Hinv Hfs Hag H. subst fs.
   unfold opiter_read_return in H.
-  destruct (opiter_take_pending st opiter_op_return) as [[r0 st1]|] eqn:Htp;
-    cbn [bind] in H; [|discriminate].
-  destruct r0 as [u|e].
-  2: { rewrite branch_err in H. cbn [bind] in H.
-       rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
-  destruct u. rewrite branch_ok in H. cbn [bind] in H.
-  pose proof (take_pending_ok_inv st opiter_op_return st1 Htp) as Hobs.
-  assert (Hinv1 : Inv C0 st1 (pre ++ [f]))
-    by (apply (Inv_obs C0 st st1 _ Hobs Hinv)).
-  destruct (Inv_split C0 st1 pre f Hinv1) as [Hbase1 [Hsplit1 Hunr1]].
-  assert (Hsnoc : vec_list st1.(opiter_OpIterState_ctrls)
+  destruct (Inv_split C0 st pre f Hinv) as [Hbase1 [Hsplit1 Hunr1]].
+  assert (Hsnoc : vec_list st.(opiter_OpIterState_ctrls)
                   = List.map fv_ctrl pre ++ [fv_ctrl f]).
-  { destruct Hinv1 as [K1 _]. rewrite K1. rewrite List.map_app. reflexivity. }
+  { destruct Hinv as [K1 _]. rewrite K1. rewrite List.map_app. reflexivity. }
   unfold return_agree in Hag.
   rename Hag into Hret.
-  destruct (opiter_pop_types st1 (alloc_vec_Vec_deref ctx.(opiter_Context_results))) as [[r1 st2]|]
+  destruct (opiter_pop_types st (alloc_vec_Vec_deref ctx.(opiter_Context_results))) as [[r1 st1]|]
     eqn:Hpt; cbn [bind] in H; [|discriminate].
   destruct r1 as [u1|e1].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   destruct u1. rewrite branch_ok in H. cbn [bind] in H.
   rewrite vec_deref_spec in Hpt.
-  destruct (pop_types_sim st1 (List.concat (List.map fv_seg pre)) f ctx.(opiter_Context_results) st2
+  destruct (pop_types_sim st (List.concat (List.map fv_seg pre)) f ctx.(opiter_Context_results) st1
               Hsplit1 Hbase1 Hunr1 Hpt) as [seg1 [Hc2 [Hv2 Hcon]]].
-  destruct (opiter_mark_unreachable st2) as [st3|] eqn:Hmu; cbn [bind] in H;
+  destruct (opiter_mark_unreachable st1) as [st2|] eqn:Hmu; cbn [bind] in H;
     [|discriminate].
   injection H as <-.
   (* [mark_unreachable] truncates to the frame's base and sets its flag *)
   assert (Hbf : Z.to_nat (to_Z (fv_ctrl f).(opiter_Ctrl_value_stack_base))
                 = List.length (List.concat (List.map fv_seg pre))).
   { unfold cur_base_nat in Hbase1.
-    rewrite (cur_ctrl_snoc st1 (List.map fv_ctrl pre) (fv_ctrl f) Hsnoc)
+    rewrite (cur_ctrl_snoc st (List.map fv_ctrl pre) (fv_ctrl f) Hsnoc)
       in Hbase1.
     exact Hbase1. }
-  assert (Hsnoc2 : vec_list st2.(opiter_OpIterState_ctrls)
+  assert (Hsnoc2 : vec_list st1.(opiter_OpIterState_ctrls)
                    = List.map fv_ctrl pre ++ [fv_ctrl f]).
   { rewrite Hc2. exact Hsnoc. }
   assert (Hle : (Z.to_nat (to_Z (fv_ctrl f).(opiter_Ctrl_value_stack_base))
-                 <= List.length (vec_list st2.(opiter_OpIterState_vals)))%nat).
+                 <= List.length (vec_list st1.(opiter_OpIterState_vals)))%nat).
   { rewrite Hbf. rewrite Hv2. rewrite List.app_length. lia. }
-  destruct (mark_unreachable_spec st2 st3 (List.map fv_ctrl pre) (fv_ctrl f)
+  destruct (mark_unreachable_spec st1 st2 (List.map fv_ctrl pre) (fv_ctrl f)
               Hsnoc2 Hle Hmu) as [Hmv Hmc].
-  apply (Inv_step_last C0 st1 st3 pre f _ Hinv1).
+  apply (Inv_step_last C0 st st2 pre f _ Hinv).
   - reflexivity.
   - rewrite Hmc. rewrite List.map_app. reflexivity.
   - rewrite Hmv. rewrite Hv2. rewrite Hbf. rewrite List.firstn_app.
@@ -4652,7 +4437,7 @@ Proof.
     + reflexivity.
     + reflexivity.
     + reflexivity.
-    + destruct Hinv1 as [_ [_ [_ K4]]]. exact K4.
+    + destruct Hinv as [_ [_ [_ K4]]]. exact K4.
     + intros lbls. cbn [check_single]. cbn [tc_return with_labels].
       rewrite Hret. unfold type_update_top. rewrite Hcon. reflexivity.
 Qed.
@@ -4677,13 +4462,13 @@ Theorem step_call : forall C0 module st fs pre f data idx st',
 Proof.
   intros C0 module st fs pre f data idx st' Hinv Hfs Hag H. subst fs.
   unfold opiter_read_call in H.
-  destruct (opiter_take_index st data opiter_op_call) as [[r0 st1]|] eqn:Hti;
+  destruct (opiter_take_index st data) as [[r0 st1]|] eqn:Hti;
     cbn [bind] in H; [|discriminate].
   destruct r0 as [idx0|e].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (take_index_fields st data _ _ st1 Hti) as [Hv1 Hc1].
+  destruct (take_index_fields st data _ st1 Hti) as [Hv1 Hc1].
   assert (Hinv1 : Inv C0 st1 (pre ++ [f]))
     by (apply (Inv_fields C0 st st1 _ Hv1 Hc1 Hinv)).
   destruct (Inv_split C0 st1 pre f Hinv1) as [Hbase1 [Hsplit1 Hunr1]].
@@ -4758,13 +4543,13 @@ Theorem step_call_indirect : forall C0 module st fs pre f data idx st',
 Proof.
   intros C0 module st fs pre f data idx st' Hinv Hfs Hty Htab H. subst fs.
   unfold opiter_read_call_indirect in H.
-  destruct (opiter_take_index st data opiter_op_call_indirect) as [[r0 st1]|]
+  destruct (opiter_take_index st data) as [[r0 st1]|]
     eqn:Hti; cbn [bind] in H; [|discriminate].
   destruct r0 as [idx0|e].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (take_index_fields st data _ _ st1 Hti) as [Hv1 Hc1].
+  destruct (take_index_fields st data _ st1 Hti) as [Hv1 Hc1].
   destruct (opiter_read_reserved_zero st1 data) as [[r1 st2]|] eqn:Hrz;
     cbn [bind] in H; [|discriminate].
   destruct r1 as [u1|e1].
@@ -4886,24 +4671,15 @@ Theorem step_memory_size : forall C0 module st fs pre f data st',
 Proof.
   intros C0 module st fs pre f data st' Hinv Hfs Hag H. subst fs.
   unfold opiter_read_memory_size in H.
-  destruct (opiter_take_pending st opiter_op_memory_size) as [[r0 st1]|] eqn:Htp;
-    cbn [bind] in H; [|discriminate].
-  destruct r0 as [u|e].
-  2: { rewrite branch_err in H. cbn [bind] in H.
-       rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
-  destruct u. rewrite branch_ok in H. cbn [bind] in H.
-  pose proof (take_pending_ok_inv st opiter_op_memory_size st1 Htp) as Hobs.
-  assert (Hinv1 : Inv C0 st1 (pre ++ [f]))
-    by (apply (Inv_obs C0 st st1 _ Hobs Hinv)).
-  destruct (opiter_read_reserved_zero st1 data) as [[r1 st2]|] eqn:Hrz;
+  destruct (opiter_read_reserved_zero st data) as [[r1 st1]|] eqn:Hrz;
     cbn [bind] in H; [|discriminate].
   destruct r1 as [u1|e1].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   destruct u1. rewrite branch_ok in H. cbn [bind] in H.
-  destruct (read_reserved_zero_fields st1 data _ st2 Hrz) as [Hv2 Hc2].
-  assert (Hinv2 : Inv C0 st2 (pre ++ [f]))
-    by (apply (Inv_fields C0 st1 st2 _ Hv2 Hc2 Hinv1)).
+  destruct (read_reserved_zero_fields st data _ st1 Hrz) as [Hv2 Hc2].
+  assert (Hinv2 : Inv C0 st1 (pre ++ [f]))
+    by (apply (Inv_fields C0 st st1 _ Hv2 Hc2 Hinv)).
   destruct (opiter_require_memory module) as [r2|] eqn:Hrm; cbn [bind] in H;
     [|discriminate].
   destruct r2 as [u2|e2].
@@ -4911,11 +4687,11 @@ Proof.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   destruct u2. rewrite branch_ok in H. cbn [bind] in H.
   destruct (require_memory_lookup module C0 Hag Hrm) as [m Hlk].
-  destruct (opiter_push_val st2 (Opiter_StackType_Val Types_ValueType_I32))
-    as [st3|] eqn:Hpv; cbn [bind] in H; [|discriminate].
+  destruct (opiter_push_val st1 (Opiter_StackType_Val Types_ValueType_I32))
+    as [st2|] eqn:Hpv; cbn [bind] in H; [|discriminate].
   injection H as <-.
   destruct (push_val_spec _ _ _ Hpv) as [Hpvals [Hpctrls _]].
-  apply (Inv_step_last C0 st2 st3 pre f _ Hinv2).
+  apply (Inv_step_last C0 st1 st2 pre f _ Hinv2).
   - reflexivity.
   - rewrite Hpctrls. destruct Hinv2 as [K1 _]. rewrite K1.
     rewrite List.map_app. rewrite List.map_app. reflexivity.
@@ -4943,24 +4719,15 @@ Theorem step_memory_grow : forall C0 module st fs pre f data st',
 Proof.
   intros C0 module st fs pre f data st' Hinv Hfs Hag H. subst fs.
   unfold opiter_read_memory_grow in H.
-  destruct (opiter_take_pending st opiter_op_memory_grow) as [[r0 st1]|] eqn:Htp;
-    cbn [bind] in H; [|discriminate].
-  destruct r0 as [u|e].
-  2: { rewrite branch_err in H. cbn [bind] in H.
-       rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
-  destruct u. rewrite branch_ok in H. cbn [bind] in H.
-  pose proof (take_pending_ok_inv st opiter_op_memory_grow st1 Htp) as Hobs.
-  assert (Hinv1 : Inv C0 st1 (pre ++ [f]))
-    by (apply (Inv_obs C0 st st1 _ Hobs Hinv)).
-  destruct (opiter_read_reserved_zero st1 data) as [[r1 st2]|] eqn:Hrz;
+  destruct (opiter_read_reserved_zero st data) as [[r1 st1]|] eqn:Hrz;
     cbn [bind] in H; [|discriminate].
   destruct r1 as [u1|e1].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   destruct u1. rewrite branch_ok in H. cbn [bind] in H.
-  destruct (read_reserved_zero_fields st1 data _ st2 Hrz) as [Hv2 Hc2].
-  assert (Hinv2 : Inv C0 st2 (pre ++ [f]))
-    by (apply (Inv_fields C0 st1 st2 _ Hv2 Hc2 Hinv1)).
+  destruct (read_reserved_zero_fields st data _ st1 Hrz) as [Hv2 Hc2].
+  assert (Hinv2 : Inv C0 st1 (pre ++ [f]))
+    by (apply (Inv_fields C0 st st1 _ Hv2 Hc2 Hinv)).
   destruct (opiter_require_memory module) as [r2|] eqn:Hrm; cbn [bind] in H;
     [|discriminate].
   destruct r2 as [u2|e2].
@@ -4968,22 +4735,22 @@ Proof.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   destruct u2. rewrite branch_ok in H. cbn [bind] in H.
   destruct (require_memory_lookup module C0 Hag Hrm) as [m Hlk].
-  destruct (Inv_split C0 st2 pre f Hinv2) as [Hbase2 [Hsplit2 Hunr2]].
-  destruct (opiter_pop_with_type st2 Types_ValueType_I32) as [[r3 st3]|] eqn:Hp3;
+  destruct (Inv_split C0 st1 pre f Hinv2) as [Hbase2 [Hsplit2 Hunr2]].
+  destruct (opiter_pop_with_type st1 Types_ValueType_I32) as [[r3 st2]|] eqn:Hp3;
     cbn [bind] in H; [|discriminate].
   destruct r3 as [t3|e3].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (pop_with_type_sim st2 (List.concat (List.map fv_seg pre)) f
-              Types_ValueType_I32 t3 st3 Hsplit2 Hbase2 Hunr2 Hp3)
+  destruct (pop_with_type_sim st1 (List.concat (List.map fv_seg pre)) f
+              Types_ValueType_I32 t3 st2 Hsplit2 Hbase2 Hunr2 Hp3)
     as [seg3 [Hc3 [Hv3 Hcon3]]].
-  destruct (opiter_push_val st3 (Opiter_StackType_Val Types_ValueType_I32))
-    as [st4|] eqn:Hpv; cbn [bind] in H; [|discriminate].
+  destruct (opiter_push_val st2 (Opiter_StackType_Val Types_ValueType_I32))
+    as [st3|] eqn:Hpv; cbn [bind] in H; [|discriminate].
   injection H as <-.
   destruct (push_val_spec _ _ _ Hpv) as [Hpvals [Hpctrls _]].
   exists seg3.
-  apply (Inv_step_last C0 st2 st4 pre f _ Hinv2).
+  apply (Inv_step_last C0 st1 st3 pre f _ Hinv2).
   - reflexivity.
   - rewrite Hpctrls. rewrite Hc3. destruct Hinv2 as [K1 _]. rewrite K1.
     rewrite List.map_app. rewrite List.map_app. reflexivity.
@@ -5007,24 +4774,15 @@ Lemma read_else_frame : forall C0 st fs pre' g bt st',
 Proof.
   intros C0 st fs pre' g bt st' Hinv Hfs H. subst fs.
   unfold opiter_read_else in H.
-  destruct (opiter_take_pending st opiter_op_else) as [[r0 st1]|] eqn:Htp;
-    cbn [bind] in H; [|discriminate].
-  destruct r0 as [u|e].
-  2: { rewrite branch_err in H. cbn [bind] in H.
-       rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
-  destruct u. rewrite branch_ok in H. cbn [bind] in H.
-  pose proof (take_pending_ok_inv st opiter_op_else st1 Htp) as Hobs.
-  assert (Hinv1 : Inv C0 st1 (pre' ++ [g]))
-    by (apply (Inv_obs C0 st st1 _ Hobs Hinv)).
-  assert (Hsnoc : vec_list st1.(opiter_OpIterState_ctrls)
+  assert (Hsnoc : vec_list st.(opiter_OpIterState_ctrls)
                   = List.map fv_ctrl pre' ++ [fv_ctrl g]).
-  { destruct Hinv1 as [K1 _]. rewrite K1. rewrite List.map_app. reflexivity. }
-  destruct (alloc_vec_Vec_len st1.(opiter_OpIterState_ctrls) s= 0%usize) eqn:Hn;
+  { destruct Hinv as [K1 _]. rewrite K1. rewrite List.map_app. reflexivity. }
+  destruct (alloc_vec_Vec_len st.(opiter_OpIterState_ctrls) s= 0%usize) eqn:Hn;
     [discriminate|].
-  destruct (usize_sub (alloc_vec_Vec_len st1.(opiter_OpIterState_ctrls))
+  destruct (usize_sub (alloc_vec_Vec_len st.(opiter_OpIterState_ctrls))
               1%usize) as [i|] eqn:Hsub; cbn [bind] in H; [|discriminate].
   rewrite vec_index_spec in H.
-  rewrite (ctrls_last_index st1 (List.map fv_ctrl pre') (fv_ctrl g) i
+  rewrite (ctrls_last_index st (List.map fv_ctrl pre') (fv_ctrl g) i
              Hsnoc Hsub) in H.
   cbn [bind] in H.
   destruct (opiter_is_then (fv_ctrl g).(opiter_Ctrl_kind)) as [b|] eqn:Hit;

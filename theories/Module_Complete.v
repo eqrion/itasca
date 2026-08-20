@@ -42,6 +42,7 @@ Require Import Veriwasm.OpIter_Sim.
 (* for [op_spec_invert]: the opcode table read backwards, which is what the
    constant-expression reader's fallthrough needs *)
 Require Import Veriwasm.OpIter_Table.
+Require Import Veriwasm.OpIter_Visit.
 Require Import Veriwasm.OpIter_Complete.
 Require Import Veriwasm.Module_NoPanic.
 Require Import Veriwasm.Module_Sound.
@@ -1275,7 +1276,7 @@ Lemma decode_custom_section_complete :
   to_Z fin <= dlen data ->
   repr_name (section_content data start fin) nm mid ->
   module_decode_custom_section data start fin = Ok r ->
-  r = Core_result_Result_Ok tt.
+  exists c, r = Core_result_Result_Ok c.
 Proof.
   intros data start fin r nm mid Hmod Hle Hfin Hnm Hrun.
   pose proof (usize_nonneg start).
@@ -1293,7 +1294,7 @@ Proof.
   rewrite (scalar_gtb_of_le p fin) in Hw.
   2: { apply (bytes_from_len_le data p fin Hple Hfin).
        rewrite Hp. rewrite List.app_length. lia. }
-  injection Hw as <-. reflexivity.
+  injection Hw as <-. eexists. reflexivity.
 Qed.
 
 (* ================================================================== *)
@@ -3429,21 +3430,41 @@ Proof.
   - exists mid. exact Hm.
 Qed.
 
-Lemma decode_tail_loop_complete :
-  forall m data env segments q seen r datas,
+(** Every module hook returns [Ok]: the consumer accepts what it is shown.
+    Completeness needs this rather than totality, for the same reason
+    [OpIter_Visit.hooks_accept] does: a consumer that declines a module that
+    was fine stops the decode, and reporting that is the interface working. *)
+Definition module_hooks_accept {V : Type} (inst : module_ModuleVisitor_t V) : Prop :=
+  forall v c, exists v',
+    inst.(module_ModuleVisitor_t_on_custom_section) v c
+      = Ok (Core_result_Result_Ok tt, v').
+
+Lemma nop_module_hooks_accept :
+  module_hooks_accept module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor.
+Proof.
+  unfold module_hooks_accept,
+         module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor.
+  intros v c. cbn [module_ModuleVisitor_t_on_custom_section].
+  unfold module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor_on_custom_section.
+  eexists. reflexivity.
+Qed.
+
+Lemma decode_tail_with_loop_complete :
+  forall V (inst : module_ModuleVisitor_t V) m data env vis vis' segments q seen r datas,
+  module_hooks_accept inst ->
   dlen data - to_Z q <= Z.of_nat m ->
   to_Z q <= dlen data ->
   dlen data <= module_bytes ->
   tail_inv data q seen datas ->
   List.Forall (data_wasm10 env) datas ->
-  module_decode_tail_loop data env segments q seen = Ok r ->
+  module_decode_tail_with_loop inst data env vis segments q seen = Ok (r, vis') ->
   exists t, r = Core_result_Result_Ok t.
 Proof.
-  induction m as [|m IH];
-    intros data env segments q seen r datas Hmeas Hq Hmod Hinv Hall Hw;
-    unfold module_decode_tail_loop in Hw; rewrite loop_unfold in Hw;
+  intros V inst m. induction m as [|m IH];
+    intros data env vis vis' segments q seen r datas Hacc Hmeas Hq Hmod Hinv Hall Hw;
+    unfold module_decode_tail_with_loop in Hw; rewrite loop_unfold in Hw;
     cbn beta iota in Hw; destruct (q s>= slice_len data) eqn:Hge.
-  1,3: injection Hw as <-; eexists; reflexivity.
+  1,3: injection Hw as <- <-; eexists; reflexivity.
   - exfalso. apply scalar_geb_false_lt in Hge. cbn in Hmeas. lia.
   - apply scalar_geb_false_lt in Hge.
     pose proof (usize_nonneg q). rewrite Nat2Z.inj_succ in Hmeas.
@@ -3463,10 +3484,13 @@ Proof.
       guard_true_in Hw Hid.
       destruct (module_decode_custom_section data start fin) as [rc|] eqn:Ec;
         cbn [bind] in Hw; [|discriminate].
-      rewrite (decode_custom_section_complete data start fin rc nm m0 Hmod Hsf
-                 Hle Hnm Ec) in Hw.
+      destruct (decode_custom_section_complete data start fin rc nm m0 Hmod Hsf
+                  Hle Hnm Ec) as [c ->].
       rewrite branch_ok in Hw. cbn [bind] in Hw.
-      apply (IH data env segments fin true r datas (ltac:(lia)) Hle Hmod
+      destruct (Hacc vis c) as [vis1 Hh]. rewrite Hh in Hw. cbn [bind] in Hw.
+      cbn beta iota in Hw.
+      apply (IH data env vis1 vis' segments fin true r datas Hacc
+               (ltac:(lia)) Hle Hmod
                (ltac:(cbn [tail_inv]; rewrite Hfineq; exact Hrest)) Hall Hw).
     + destruct Hinv as [mid [fin0 [Hcm [Hopt Htr]]]].
       destruct (repr_customs_inv _ _ Hcm) as [[Hnb Hmideq]|[mid' [Hsec Hrest]]].
@@ -3496,7 +3520,8 @@ Proof.
                 | exact Hle
                 | rewrite Hq'; reflexivity ]. }
            cbn beta iota in Hw.
-           apply (IH data env out fin true r datas (ltac:(lia)) Hle Hmod
+           apply (IH data env vis vis' out fin true r datas Hacc
+                    (ltac:(lia)) Hle Hmod
                     (ltac:(cbn [tail_inv]; rewrite Hfineq; exact Htr)) Hall Hw).
         -- (* absent: the trailing customs would have to eat a non-empty stream
               that does not begin with [0] *)
@@ -3513,10 +3538,13 @@ Proof.
         guard_true_in Hw Hid.
         destruct (module_decode_custom_section data start fin) as [rc|] eqn:Ec;
           cbn [bind] in Hw; [|discriminate].
-        rewrite (decode_custom_section_complete data start fin rc nm m0 Hmod Hsf
-                   Hle Hnm Ec) in Hw.
+        destruct (decode_custom_section_complete data start fin rc nm m0 Hmod Hsf
+                    Hle Hnm Ec) as [c ->].
         rewrite branch_ok in Hw. cbn [bind] in Hw.
-        apply (IH data env segments fin false r datas (ltac:(lia)) Hle Hmod
+        destruct (Hacc vis c) as [vis1 Hh]. rewrite Hh in Hw. cbn [bind] in Hw.
+        cbn beta iota in Hw.
+        apply (IH data env vis1 vis' segments fin false r datas Hacc
+                 (ltac:(lia)) Hle Hmod
                  (ltac:(cbn [tail_inv]; exists mid, fin0;
                         split; [rewrite Hfineq; exact Hrest|];
                         split; [exact Hopt | exact Htr])) Hall Hw).
@@ -3532,12 +3560,16 @@ Lemma decode_tail_complete : forall data pos env r datas mid fin,
   module_decode_tail data pos env = Ok r ->
   exists t, r = Core_result_Result_Ok t.
 Proof.
-  intros data pos env r datas mid fin Hpos Hmod Hcm Hopt Htr Hall Hw.
-  unfold module_decode_tail in Hw.
+  intros data pos env r datas mid fin Hpos Hmod Hcm Hopt Htr Hall Hw0.
+  pose proof (Module_Sound.decode_tail_nop_inv _ _ _ _ Hw0) as Hw. clear Hw0.
+  unfold module_decode_tail_with in Hw.
   pose proof (usize_nonneg pos).
-  apply (decode_tail_loop_complete (Z.to_nat (dlen data)) data env
+  apply (decode_tail_with_loop_complete _
+           module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor
+           (Z.to_nat (dlen data)) data env tt tt
            (alloc_vec_Vec_new module_Data_t) pos false r datas);
-    [ rewrite Z2Nat.id by (pose proof (usize_nonneg (slice_len data)); lia); lia
+    [ exact nop_module_hooks_accept
+    | rewrite Z2Nat.id by (pose proof (usize_nonneg (slice_len data)); lia); lia
     | exact Hpos | exact Hmod
     | cbn [tail_inv]; exists mid, fin;
       split; [exact Hcm|]; split; [exact Hopt | exact Htr]
@@ -3791,8 +3823,10 @@ Definition code_typed_at (elems : list reference_type) (datas : list ok)
          (Tf [] (List.map translate_vt_v
                    (vec_list ft.(types_FuncType_results)))) = true.
 
-Lemma validate_code_entry_complete :
-  forall elems datas refs data pos env index r c rest tidx,
+Lemma validate_code_entry_with_complete :
+  forall V (inst : visit_OpVisitor_t V) vis vis'
+         elems datas refs data pos env index r c rest tidx,
+  hooks_accept inst ->
   dlen data <= module_bytes ->
   to_Z pos <= dlen data ->
   Module_Sound.types_wasm10 env ->
@@ -3804,17 +3838,19 @@ Lemma validate_code_entry_complete :
   Z.of_nat (List.length (fst c)) <= 50000 ->
   Z.of_nat (List.length (bytes_from data pos))
     - Z.of_nat (List.length rest) <= 7654321 ->
-  module_validate_code_entry data pos env index = Ok r ->
+  module_validate_code_entry_with inst data pos env index vis
+    = Ok (r, vis') ->
   exists end', r = Core_result_Result_Ok end'
                /\ bytes_from data end' = rest
                /\ to_Z end' <= dlen data.
 Proof.
-  intros elems datas refs data pos env index r c rest tidx Hmod Hpos Htw10
+  intros V inst vis vis' elems datas refs data pos env index r c rest tidx
+         Hacc Hmod Hpos Htw10
          Hfw10 Hnthi Hct Hcode Hlocs Hbody Hrun.
   destruct (repr_code_inv _ _ _ Hcode) as [size [content [Hn [Hclen Hfunc]]]].
   destruct (repr_func_inv _ _ _ Hfunc) as [gs [m1 [es [Hgs [Hes Hceq]]]]].
   destruct Hct as [ft [Hnthf [[ds Hds] Hchk]]].
-  pose proof Hrun as Hw. unfold module_validate_code_entry in Hw.
+  pose proof Hrun as Hw. unfold module_validate_code_entry_with in Hw.
   assert (Hidx : (index s>= alloc_vec_Vec_len env.(env_Env_func_type_indices))
                  = false).
   { apply scalar_lt_geb_false. rewrite vec_len_spec.
@@ -3892,6 +3928,11 @@ Proof.
   rewrite vec_deref_spec in Hw.
   destruct (module_copy_value_types ft.(types_FuncType_results))
     as [results|] eqn:Hcopy; cbn [bind] in Hw; [|discriminate].
+  (* the consumer accepts the frame, so the hook cannot be what stopped it *)
+  destruct (frame_hook_accept V inst vis
+              {| opiter_Context_locals := locals;
+                 opiter_Context_results := results |} tidx p1 end1 Hacc) as [vf Hhk].
+  rewrite Hhk in Hw. cbn [bind] in Hw. cbn beta iota in Hw.
   destruct (core_slice_index_Slice_index
               (core_slice_index_SliceIndexRangeUsizeSliceInst u8) data
               {| core_ops_range_Range_start := p1;
@@ -3935,19 +3976,49 @@ Proof.
              (copy_value_types_sound _ _ Hcopy)) in Hc0.
   rewrite context_reverseK in Hc0.
   rewrite <- (copy_value_types_sound _ _ Hcopy) in Hc0.
-  destruct (opiter_validate_body sub env
+  destruct (opiter_validate_body_with inst sub env
               {| opiter_Context_locals := locals;
-                 opiter_Context_results := results |}) as [rb|] eqn:Evb;
+                 opiter_Context_results := results |} vf) as [[rb vb]|] eqn:Evb;
     cbn [bind] in Hw; [|discriminate].
-  pose proof (validate_body_complete _ env _ sub es Hm Hl Hg Hr Hf Htt Htb
-                Hfw10 Htw10 Hlen1 Hsublen
-                (ltac:(rewrite Hbytes; exact Hes))
-                (ltac:(cbn [opiter_Context_results];
-                       unfold translate_typelist; exact Hc0))) as Hvbok.
-  rewrite Evb in Hvbok. injection Hvbok as Hvb.
+  destruct (validate_body_with_complete V inst vf
+              _ env _ sub es Hacc Hm Hl Hg Hr Hf Htt Htb
+              Hfw10 Htw10 Hlen1 Hsublen
+              (ltac:(rewrite Hbytes; exact Hes))
+              (ltac:(cbn [opiter_Context_results];
+                     unfold translate_typelist; exact Hc0))) as [vb' Hvbok].
+  rewrite Evb in Hvbok. injection Hvbok as Hvb _.
   rewrite Hvb in Hw. cbn beta iota in Hw.
-  injection Hw as <-. exists end1. split; [reflexivity|].
+  injection Hw as <- _. exists end1. split; [reflexivity|].
   split; [exact Hend1b | lia].
+Qed.
+
+(** The same for the validating-only consumer, which accepts every operator by
+    computation, so its completeness has no hypothesis about hooks. *)
+Corollary validate_code_entry_complete :
+  forall elems datas refs data pos env index r c rest tidx,
+  dlen data <= module_bytes ->
+  to_Z pos <= dlen data ->
+  Module_Sound.types_wasm10 env ->
+  funcs_wasm10 env ->
+  List.nth_error (vec_list env.(env_Env_func_type_indices))
+                 (Z.to_nat (to_Z index)) = Some tidx ->
+  code_typed_at elems datas refs env tidx c ->
+  repr_code (bytes_from data pos) c rest ->
+  Z.of_nat (List.length (fst c)) <= 50000 ->
+  Z.of_nat (List.length (bytes_from data pos))
+    - Z.of_nat (List.length rest) <= 7654321 ->
+  module_validate_code_entry data pos env index = Ok r ->
+  exists end', r = Core_result_Result_Ok end'
+               /\ bytes_from data end' = rest
+               /\ to_Z end' <= dlen data.
+Proof.
+  intros elems datas refs data pos env index r c rest tidx Hmod Hpos Htw10
+         Hfw10 Hnthi Hct Hcode Hlocs Hbody Hrun.
+  apply (validate_code_entry_with_complete _
+           visit_NopVisitor_Insts_VeriwasmVisitOpVisitor tt tt
+           elems datas refs data pos env index r c rest tidx nop_hooks_accept
+           Hmod Hpos Htw10 Hfw10 Hnthi Hct Hcode Hlocs Hbody).
+  apply code_entry_nop_inv. exact Hrun.
 Qed.
 
 (** The code entries, with the two Wasm 1.0 bounds each of them has to respect
@@ -4022,29 +4093,58 @@ Proof.
     cbn [List.length]. pose proof (IH l Heq). lia.
 Qed.
 
-Lemma validate_code_entries_loop_complete :
-  forall elems datas refs tidxs data env q i r codes rest,
+(** What a consumer that takes [on_code_entry] must not do: refuse an entry
+    the validator accepts. Phrased against the validator rather than
+    unconditionally, because the validating consumer's own answer on a bad
+    entry is a rejection and that is right; what completeness needs is that a
+    good entry is not turned away. *)
+Definition code_hooks_accept {V : Type} (inst : module_CodeVisitor_t V)
+                             (data : slice u8) (env : env_Env_t) : Prop :=
+  (forall v e, exists v',
+     inst.(module_CodeVisitor_t_on_need_bytes) v e
+       = Ok (Core_result_Result_Ok tt, v'))
+  /\ (forall v index pos contents fin q',
+        module_validate_code_entry data pos env index
+          = Ok (Core_result_Result_Ok q') ->
+        exists v',
+          inst.(module_CodeVisitor_t_on_code_entry) v data env index pos contents fin
+            = Ok (Core_result_Result_Ok tt, v')).
+
+Lemma validating_code_hooks_accept : forall data env,
+  code_hooks_accept
+    module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor data env.
+Proof.
+  intros data env. split.
+  - intros v e. destruct v. exists tt. apply Module_Sound.validating_need_bytes.
+  - intros v index pos contents fin q' H. destruct v. exists tt.
+    exact (Module_Sound.validating_entry_ok _ _ _ _ contents fin _ H).
+Qed.
+
+Lemma validate_code_entries_with_loop_complete :
+  forall V (inst : module_CodeVisitor_t V) elems datas refs tidxs data env vis q i r vis' codes rest,
+  code_hooks_accept inst data env ->
   dlen data <= module_bytes ->
   to_Z q <= dlen data ->
+  Module_NoPanic.env_small env q ->
   Module_Sound.types_wasm10 env ->
   funcs_wasm10 env ->
   List.skipn (Z.to_nat (to_Z i)) (vec_list env.(env_Env_func_type_indices))
     = tidxs ->
   List.Forall2 (code_typed_at elems datas refs env) tidxs codes ->
   codes_fit (bytes_from data q) codes rest ->
-  module_validate_code_entries_loop data env q i = Ok r ->
+  module_validate_code_entries_with_loop inst data env vis q i = Ok (r, vis') ->
   exists q', r = Core_result_Result_Ok q' /\ bytes_from data q' = rest
              /\ to_Z q' <= dlen data.
 Proof.
-  intros elems datas refs tidxs data env q i r codes rest Hmod Hq Htw10 Hfw10
-         Hskip Hf2 Hfit Hw.
-  revert q i r rest Hq Hskip Hfit Hw.
+  intros V inst elems datas refs tidxs data env vis q i r vis' codes rest
+         [Hneed Hentry] Hmod Hq Hsm Htw10 Hfw10 Hskip Hf2 Hfit Hw.
+  revert vis q i r rest Hq Hsm Hskip Hfit Hw.
   induction Hf2 as [|tidx c tidxs' codes' Hct Hf2 IH];
-    intros q i r rest Hq Hskip Hfit Hw;
-    unfold module_validate_code_entries_loop in Hw; rewrite loop_unfold in Hw;
-    cbn beta iota in Hw;
+    intros vis q i r rest Hq Hsm Hskip Hfit Hw;
+    unfold module_validate_code_entries_with_loop in Hw;
+    rewrite loop_unfold in Hw; cbn beta iota in Hw;
     destruct (i s>= alloc_vec_Vec_len env.(env_Env_func_type_indices)) eqn:Hge.
-  - injection Hw as <-. inversion Hfit; subst.
+  - injection Hw as <- <-. inversion Hfit; subst.
     exists q. split; [reflexivity|]. split; [reflexivity | exact Hq].
   - (* no entries left, so the index has reached the end *)
     exfalso. apply scalar_geb_false_lt in Hge. rewrite vec_len_spec in Hge.
@@ -4061,43 +4161,66 @@ Proof.
     apply Nat2Z.inj_lt in Hsome. rewrite Z2Nat.id in Hsome by lia. lia.
   - destruct (skipn_cons_inv _ _ _ _ _ Hskip) as [Hnth Hskip'].
     inversion Hfit as [|bs0 c0 mid cs0 rest0 Hc Hextent Hlocs Hrec]; subst.
-    destruct (module_validate_code_entry data q env i) as [re|] eqn:Ee;
-      cbn [bind] in Hw; [|discriminate].
+    (* the framing read's wait, then the framing itself *)
+    pose proof (usize_nonneg q).
+    destruct (usize_add_ok q limits_max_leb_bytes
+                (ltac:(unfold limits_max_leb_bytes;
+                       pose proof Module_NoPanic.module_bytes_fits; cbn; lia)))
+      as [qw [Hqw _]].
+    rewrite Hqw in Hw. cbn [bind] in Hw.
+    destruct (Hneed vis qw) as [v1 Hn]. rewrite Hn in Hw. cbn [bind] in Hw.
+    rewrite branch_ok in Hw. cbn [bind] in Hw.
+    (* the walk does not validate the entry, so completeness has to know the
+       validator answers at all before it can say what the answer was *)
+    destruct (Module_NoPanic.validate_code_entry_ok data q env i Hsm Hq Hmod)
+      as [re [Ee Hre]].
     destruct (validate_code_entry_complete elems datas refs data q env i re c
                 mid tidx Hmod Hq Htw10 Hfw10 Hnth Hct Hc Hlocs Hextent Ee)
       as [end' [-> [Hend Hendle]]].
+    destruct (Hre _ (ltac:(reflexivity))) as [Hqlt Hqle].
+    destruct (Module_Sound.code_entry_extent_of_valid data q env i end' Ee)
+      as [contents Hx].
+    rewrite Hx in Hw. cbn [bind] in Hw. rewrite branch_ok in Hw.
+    cbn [bind] in Hw.
+    destruct (Hneed v1 end') as [v2 Hn2]. rewrite Hn2 in Hw. cbn [bind] in Hw.
     rewrite branch_ok in Hw. cbn [bind] in Hw.
+    destruct (Hentry v2 i q contents end' end' Ee) as [v3 He].
+    rewrite He in Hw. cbn [bind] in Hw. rewrite branch_ok in Hw.
+    cbn [bind] in Hw.
     pose proof (usize_le_max (slice_len data)). pose proof (usize_nonneg i).
     destruct (usize_add i 1%usize) as [i2|] eqn:Hadd; cbn [bind] in Hw;
       [|discriminate].
     pose proof (scalar_add_val _ _ _ 1 Hadd eq_refl) as Hi2.
     (* [inversion Hfit; subst] eliminated the tail's name in favour of the
        [skipn] that produced it, so the index step is a computation *)
-    apply (IH end' i2 r rest Hendle
+    apply (IH v3 end' i2 r rest Hendle
+             (Module_NoPanic.env_small_mono env q end' Hsm (ltac:(lia)))
              (ltac:(rewrite Hi2; rewrite (Z_to_nat_add1 _ (usize_nonneg i));
                     reflexivity))
              (ltac:(rewrite Hend; exact Hrec)) Hw).
 Qed.
 
-Lemma validate_code_entries_complete :
-  forall elems datas refs data env q r codes rest,
+Lemma validate_code_entries_with_complete :
+  forall V (inst : module_CodeVisitor_t V) elems datas refs data env vis q r vis' codes rest,
+  code_hooks_accept inst data env ->
   dlen data <= module_bytes ->
   to_Z q <= dlen data ->
+  Module_NoPanic.env_small env q ->
   Module_Sound.types_wasm10 env ->
   funcs_wasm10 env ->
   List.Forall2 (code_typed_at elems datas refs env)
     (vec_list env.(env_Env_func_type_indices)) codes ->
   codes_fit (bytes_from data q) codes rest ->
-  module_validate_code_entries data q env = Ok r ->
+  module_validate_code_entries_with inst data q env vis = Ok (r, vis') ->
   exists q', r = Core_result_Result_Ok q' /\ bytes_from data q' = rest
              /\ to_Z q' <= dlen data.
 Proof.
-  intros elems datas refs data env q r codes rest Hmod Hq Htw10 Hfw10 Hf2 Hfit
-         Hw.
-  unfold module_validate_code_entries in Hw.
+  intros V inst elems datas refs data env vis q r vis' codes rest Hacc Hmod Hq
+         Hsm Htw10 Hfw10 Hf2 Hfit Hw.
+  unfold module_validate_code_entries_with in Hw.
   assert (H0 : to_Z 0%usize = 0) by reflexivity.
-  apply (validate_code_entries_loop_complete elems datas refs _ data env q
-           0%usize r codes rest Hmod Hq Htw10 Hfw10
+  apply (validate_code_entries_with_loop_complete V inst elems datas refs _ data
+           env vis q 0%usize r vis' codes rest Hacc Hmod Hq Hsm Htw10 Hfw10
            (ltac:(rewrite H0; reflexivity)) Hf2 Hfit Hw).
 Qed.
 
@@ -4135,26 +4258,31 @@ Proof.
   rewrite Hid. rewrite Hbs. reflexivity.
 Qed.
 
-(** Spec 5.5.16's code line. The function section fixed how many entries there
-    have to be, which is what the count check compares, and a missing code
-    section is an error exactly when the module declared functions -- so the
-    absent case needs the two lists to be empty together, which is what the
-    [Forall2] gives. *)
-Lemma validate_code_complete : forall elems datas refs data pos env r codes rest,
-  dlen data <= module_bytes ->
+(** The header half of spec 5.5.16's code line, read backwards: given that the
+    line is there, the reader finds it, agrees with the function section about
+    how many entries there are, and reports where they start and where the
+    section ends. Named on its own because a consumer that drives the entries
+    itself starts here, so this is the step that says the position it starts
+    from is the right one. *)
+Lemma code_section_complete : forall data pos env r codes rest,
   to_Z pos <= dlen data ->
-  Module_Sound.types_wasm10 env ->
-  funcs_wasm10 env ->
   repr_optsec 10 repr_vec_fit [] (bytes_from data pos) codes rest ->
   (bytes_from data pos = [] \/ framed (bytes_from data pos)) ->
-  List.Forall2 (code_typed_at elems datas refs env)
-    (vec_list env.(env_Env_func_type_indices)) codes ->
-  module_validate_code data pos env = Ok r ->
-  exists q', r = Core_result_Result_Ok q' /\ bytes_from data q' = rest.
+  List.length (vec_list env.(env_Env_func_type_indices)) = List.length codes ->
+  module_code_section data pos env = Ok r ->
+  (exists cs,
+     r = Core_result_Result_Ok (Some cs)
+     /\ bytes_from data cs.(module_CodeSection_end) = rest
+     /\ to_Z cs.(module_CodeSection_end) <= dlen data
+     /\ to_Z cs.(module_CodeSection_entries) <= dlen data
+     /\ codes_fit (bytes_from data cs.(module_CodeSection_entries)) codes
+          (bytes_from data cs.(module_CodeSection_end)))
+  \/ (r = Core_result_Result_Ok None
+      /\ codes = []
+      /\ bytes_from data pos = rest).
 Proof.
-  intros elems datas refs data pos env r codes rest Hmod Hpos Htw10 Hfw10 Hopt
-         Hfr Hf2 Hrun.
-  pose proof Hrun as Hw. unfold module_validate_code in Hw.
+  intros data pos env r codes rest Hpos Hopt Hfr Hlens Hrun.
+  unfold module_code_section in Hrun.
   destruct (repr_optsec_inv _ _ _ _ _ _ _ Hopt) as [Hpres|[Hnb [Hcs Hrest]]].
   - (* the code section is here *)
     assert (Hne : (pos s>= slice_len data) = false).
@@ -4164,59 +4292,49 @@ Proof.
       pose proof (usize_nonneg pos).
       apply (bytes_at_cons_lt data (to_Z pos) 10 p0 (ltac:(lia))).
       rewrite <- bytes_from_at. exact Hbs. }
-    rewrite Hne in Hw.
+    rewrite Hne in Hrun.
     destruct (module_read_section_header data pos) as [rh|] eqn:Eh;
-      cbn [bind] in Hw; [|discriminate].
+      cbn [bind] in Hrun; [|discriminate].
     destruct (section_here data pos 10 _ repr_vec_fit codes rest rh Hpres Eh)
       as [id [start [fin [-> [Hid [HR [Hfineq [Hle Hsf]]]]]]]].
-    rewrite branch_ok in Hw. cbn [bind] in Hw. tag_in Hw Hid.
+    rewrite branch_ok in Hrun. cbn [bind] in Hrun. tag_in Hrun Hid.
     (* the entry count, which the function section fixed *)
     destruct HR as [n [mid [Hn [Hcnt Hfit]]]].
-    assert (Hlift : repr_u32 (bytes_from data start) n (mid ++ bytes_from data fin)).
+    assert (Hlift : repr_u32 (bytes_from data start) n
+                      (mid ++ bytes_from data fin)).
     { apply (frame_lift _ repr_u32 _ (section_content data start fin)
                (bytes_from data fin) n mid repr_u32_prefix
                (section_content_app data start fin Hsf) Hn). }
-    destruct (read_u32_leb_complete _ _ _ _ Hlift) as [count [p [Eleb [Hcv Hp]]]].
-    rewrite Eleb in Hw. cbn [bind] in Hw. rewrite branch_ok in Hw.
-    cbn [bind] in Hw.
+    destruct (read_u32_leb_complete _ _ _ _ Hlift)
+      as [count [p [Eleb [Hcv Hp]]]].
+    rewrite Eleb in Hrun. cbn [bind] in Hrun. rewrite branch_ok in Hrun.
+    cbn [bind] in Hrun.
     destruct (cast_u32_usize_ok count) as [cn [Hcast Hcnv]].
-    rewrite Hcast in Hw. cbn [bind] in Hw.
-    assert (Hlens : List.length (vec_list env.(env_Env_func_type_indices))
-                    = List.length codes)
-      by (apply (Forall2_length Hf2)).
+    rewrite Hcast in Hrun. cbn [bind] in Hrun.
     rewrite (scalar_neqb_of_eq cn (alloc_vec_Vec_len
-               env.(env_Env_func_type_indices))) in Hw.
+               env.(env_Env_func_type_indices))) in Hrun.
     2: { rewrite vec_len_spec. rewrite Hcnv. rewrite Hcv. rewrite Hlens.
          rewrite <- Hcnt. pose proof (repr_u32_nonneg _ _ _ Hn).
          rewrite Z2Nat.id by lia. reflexivity. }
-    cbn beta iota in Hw.
-    (* the entries *)
-    destruct (module_validate_code_entries data p env) as [rc|] eqn:Ec;
-      cbn [bind] in Hw; [|discriminate].
-    pose proof (read_u32_leb_le_len _ _ _ _ Eleb) as Hple.
-    destruct (validate_code_entries_complete elems datas refs data env p rc
-                codes (bytes_from data fin) Hmod Hple Htw10 Hfw10 Hf2
-                (ltac:(rewrite Hp;
-                       exact (codes_fit_app _ _ _ (bytes_from data fin) Hfit)))
-                Ec) as [q' [-> [Hq' Hq'le]]].
-    rewrite branch_ok in Hw. cbn [bind] in Hw.
-    rewrite (scalar_neqb_of_eq q' fin) in Hw.
-    2: { apply (bytes_from_pos_eq data q' fin);
-         [ exact Hq'le | exact Hle | rewrite Hq'; reflexivity ]. }
-    cbn beta iota in Hw. injection Hw as <-.
-    exists fin. split; [reflexivity | exact Hfineq].
+    cbn beta iota in Hrun. injection Hrun as <-.
+    left. eexists. split; [reflexivity|]. cbn.
+    split; [exact Hfineq|].
+    split; [exact Hle|].
+    split; [exact (read_u32_leb_le_len _ _ _ _ Eleb)|].
+    rewrite Hp. exact (codes_fit_app _ _ _ (bytes_from data fin) Hfit).
   - (* the code section is absent, so the module declared no functions *)
     assert (Hempty : vec_list env.(env_Env_func_type_indices) = []).
-    { rewrite Hcs in Hf2.
+    { rewrite Hcs in Hlens.
       destruct (vec_list env.(env_Env_func_type_indices)) as [|a l];
-        [reflexivity | inversion Hf2]. }
-    assert (Hnc : module_no_code_section env pos
-                  = Ok (Core_result_Result_Ok pos)).
+        [reflexivity | cbn in Hlens; discriminate]. }
+    assert (Hnc : module_no_code_section env
+                  = Ok (Core_result_Result_Ok None)).
     { unfold module_no_code_section. rewrite vec_is_empty_spec.
       cbn [bind]. rewrite Hempty. reflexivity. }
     destruct (pos s>= slice_len data) eqn:Hge.
-    + rewrite Hnc in Hw. injection Hw as <-.
-      exists pos. split; [reflexivity | rewrite Hrest; reflexivity].
+    + rewrite Hnc in Hrun. injection Hrun as <-.
+      right. split; [reflexivity|]. split; [exact Hcs|].
+      rewrite Hrest. reflexivity.
     + (* not at the end, so the header still gets read *)
       destruct Hfr as [Hnil|Hframed].
       { exfalso. apply scalar_geb_false_lt in Hge.
@@ -4224,16 +4342,106 @@ Proof.
         pose proof (bytes_at_nil_ge data (to_Z pos) (ltac:(lia))
                       (ltac:(rewrite <- bytes_from_at; exact Hnil))). lia. }
       destruct (module_read_section_header data pos) as [rh|] eqn:Eh;
-        cbn [bind] in Hw; [|discriminate].
+        cbn [bind] in Hrun; [|discriminate].
       destruct (framed_here data pos rh Hframed Eh)
         as [id [start [fin [-> Hidb]]]].
-      rewrite branch_ok in Hw. cbn [bind] in Hw.
+      rewrite branch_ok in Hrun. cbn [bind] in Hrun.
       (* the id cannot be the code section's, because the line is absent *)
-      rewrite (scalar_neqb_of_neq id module_section_code) in Hw.
+      rewrite (scalar_neqb_of_neq id module_section_code) in Hrun.
       2: { intros Hbad. apply Hnb. exists (List.skipn 1 (bytes_from data pos)).
            rewrite Hidb. rewrite Hbad. reflexivity. }
-      rewrite Hnc in Hw. injection Hw as <-.
-      exists pos. split; [reflexivity | rewrite Hrest; reflexivity].
+      rewrite Hnc in Hrun. injection Hrun as <-.
+      right. split; [reflexivity|]. split; [exact Hcs|].
+      rewrite Hrest. reflexivity.
+Qed.
+
+(** Spec 5.5.16's code line. The header half is above; this is the entries
+    filling the section the header framed. *)
+Lemma validate_code_with_complete :
+  forall V (inst : module_CodeVisitor_t V) elems datas refs data pos env vis r vis' codes rest,
+  code_hooks_accept inst data env ->
+  dlen data <= module_bytes ->
+  to_Z pos <= dlen data ->
+  Module_NoPanic.env_small env pos ->
+  Module_Sound.types_wasm10 env ->
+  funcs_wasm10 env ->
+  repr_optsec 10 repr_vec_fit [] (bytes_from data pos) codes rest ->
+  (bytes_from data pos = [] \/ framed (bytes_from data pos)) ->
+  List.Forall2 (code_typed_at elems datas refs env)
+    (vec_list env.(env_Env_func_type_indices)) codes ->
+  module_validate_code_with inst data pos env vis = Ok (r, vis') ->
+  exists q', r = Core_result_Result_Ok q' /\ bytes_from data q' = rest.
+Proof.
+  intros V inst elems datas refs data pos env vis r vis' codes rest Hacc Hmod
+         Hpos Hsm Htw10 Hfw10 Hopt Hfr Hf2 Hrun.
+  pose proof Hacc as [Hneed _].
+  pose proof Hrun as Hw. unfold module_validate_code_with in Hw.
+  pose proof (usize_nonneg pos).
+  destruct (usize_add_ok pos limits_max_code_header_bytes
+              (ltac:(unfold limits_max_code_header_bytes,
+                            limits_max_code_header_bytes_body;
+                     pose proof Module_NoPanic.module_bytes_fits; cbn; lia)))
+    as [pw [Hpw _]].
+  rewrite Hpw in Hw. cbn [bind] in Hw.
+  destruct (Hneed vis pw) as [v1 Hn]. rewrite Hn in Hw. cbn [bind] in Hw.
+  rewrite branch_ok in Hw. cbn [bind] in Hw.
+  destruct (module_code_section data pos env) as [rcs|] eqn:Ecs;
+    cbn [bind] in Hw; [|discriminate].
+  assert (Hlens : List.length (vec_list env.(env_Env_func_type_indices))
+                  = List.length codes) by (apply (Forall2_length Hf2)).
+  destruct (code_section_complete data pos env rcs codes rest Hpos Hopt Hfr
+              Hlens Ecs)
+    as [[cs [-> [Hfineq [Hle [Hple Hfit]]]]] | [-> [Hcs Hrest]]].
+  - (* the section is here, so the entries have to fill it *)
+    rewrite branch_ok in Hw. cbn [bind] in Hw.
+    (* the entries begin past the header, which is what carries [env_small]
+       forward from the section's own position *)
+    assert (Hposent : to_Z pos <= to_Z cs.(module_CodeSection_entries)).
+    { destruct (Module_Sound.code_section_sound _ _ _ _ Ecs)
+        as [id [start [_ [Hhdr [Hcnt _]]]]].
+      pose proof (Module_NoPanic.read_section_header_step _ _ _ _ _ Hhdr)
+        as [Hlt1 _].
+      pose proof (read_u32_leb_lt _ _ _ _ Hcnt). lia. }
+    destruct (module_validate_code_entries_with inst data
+                cs.(module_CodeSection_entries) env v1) as [[rc v2]|] eqn:Ec;
+      cbn [bind] in Hw; [|discriminate].
+    destruct (validate_code_entries_with_complete V inst elems datas refs data
+                env v1 cs.(module_CodeSection_entries) rc v2 codes
+                (bytes_from data cs.(module_CodeSection_end))
+                Hacc Hmod Hple
+                (Module_NoPanic.env_small_mono env pos
+                   cs.(module_CodeSection_entries) Hsm Hposent)
+                Htw10 Hfw10 Hf2 Hfit Ec) as [q' [-> [Hq' Hq'le]]].
+    rewrite branch_ok in Hw. cbn [bind] in Hw.
+    rewrite (scalar_neqb_of_eq q' cs.(module_CodeSection_end)) in Hw.
+    2: { apply (bytes_from_pos_eq data q' cs.(module_CodeSection_end));
+         [ exact Hq'le | exact Hle | rewrite Hq'; reflexivity ]. }
+    cbn beta iota in Hw. injection Hw as <-.
+    exists cs.(module_CodeSection_end). split; [reflexivity | exact Hfineq].
+  - (* no section, so no codes, and the cursor has not moved *)
+    rewrite branch_ok in Hw. cbn [bind] in Hw. injection Hw as <-.
+    exists pos. split; [reflexivity | exact Hrest].
+Qed.
+
+Corollary validate_code_complete : forall elems datas refs data pos env r codes rest,
+  dlen data <= module_bytes ->
+  to_Z pos <= dlen data ->
+  Module_NoPanic.env_small env pos ->
+  Module_Sound.types_wasm10 env ->
+  funcs_wasm10 env ->
+  repr_optsec 10 repr_vec_fit [] (bytes_from data pos) codes rest ->
+  (bytes_from data pos = [] \/ framed (bytes_from data pos)) ->
+  List.Forall2 (code_typed_at elems datas refs env)
+    (vec_list env.(env_Env_func_type_indices)) codes ->
+  module_validate_code data pos env = Ok r ->
+  exists q', r = Core_result_Result_Ok q' /\ bytes_from data q' = rest.
+Proof.
+  intros elems datas refs data pos env r codes rest Hmod Hpos Hsm Htw10 Hfw10
+         Hopt Hfr Hf2 Hrun.
+  apply Module_Sound.validate_code_nop_inv in Hrun.
+  exact (validate_code_with_complete _ _ elems datas refs data pos env tt r tt
+           codes rest (validating_code_hooks_accept data env) Hmod Hpos Hsm
+           Htw10 Hfw10 Hopt Hfr Hf2 Hrun).
 Qed.
 
 (* ================================================================== *)
@@ -5886,7 +6094,9 @@ Qed.
     [env_small] rides along for one reason: the section decoder's own cursor
     bound, which is what turns "the two positions have the same stream left"
     into the equality the [p != end] check compares. *)
-Lemma decode_env_loop_complete : forall m data es env q last_id rest r,
+Lemma decode_env_with_loop_complete :
+  forall V (inst : module_ModuleVisitor_t V) m data es vis vis' env q last_id rest r,
+  module_hooks_accept inst ->
   dlen data - to_Z q <= Z.of_nat m ->
   to_Z q <= dlen data ->
   dlen data <= module_bytes ->
@@ -5897,7 +6107,7 @@ Lemma decode_env_loop_complete : forall m data es env q last_id rest r,
   env_at env es (to_Z last_id) ->
   no_env_id rest ->
   (rest = [] \/ framed rest) ->
-  module_decode_env_loop data env q last_id = Ok r ->
+  module_decode_env_with_loop inst data vis env q last_id = Ok (r, vis') ->
   exists envf qf, r = Core_result_Result_Ok (envf, qf)
                   /\ bytes_from data qf = rest
                   /\ to_Z qf <= dlen data
@@ -5906,14 +6116,14 @@ Lemma decode_env_loop_complete : forall m data es env q last_id rest r,
 Proof.
   assert (Hc0 : to_Z module_section_custom = 0) by reflexivity.
   assert (Hc10 : to_Z module_section_code = 10) by reflexivity.
-  induction m as [|m IH];
-    intros data es env q last_id rest r Hmeas Hq Hmod Hsmall Hlid Hw10 Hchain
-           Hat Hno Hfr Hw;
+  intros V inst m. induction m as [|m IH];
+    intros data es vis vis' env q last_id rest r Hacc Hmeas Hq Hmod Hsmall Hlid
+           Hw10 Hchain Hat Hno Hfr Hw;
     pose proof Hw10 as HW;
     destruct HW as [W1 [W2 [W3 [W4 [W5 [W6 [W7 [W8 [W9 [W10 [W11 W12]]]]]]]]]]];
-    unfold module_decode_env_loop in Hw; rewrite loop_unfold in Hw;
+    unfold module_decode_env_with_loop in Hw; rewrite loop_unfold in Hw;
     cbn beta iota in Hw; destruct (q s>= slice_len data) eqn:Hge.
-  1,3: injection Hw as <-;
+  1,3: injection Hw as <- <-;
        apply scalar_geb_true_ge in Hge; rewrite slice_len_spec in Hge;
        assert (Hnil : bytes_from data q = [])
          by (rewrite bytes_from_at; apply bytes_at_end; lia);
@@ -5949,10 +6159,12 @@ Proof.
       guard_true_in Hw Hid.
       destruct (module_decode_custom_section data start fin) as [rc|] eqn:Ec;
         cbn [bind] in Hw; [|discriminate].
-      rewrite (decode_custom_section_complete data start fin rc nm m1 Hmod Hsf
-                 Hle Hnm Ec) in Hw.
+      destruct (decode_custom_section_complete data start fin rc nm m1 Hmod Hsf
+                  Hle Hnm Ec) as [c ->].
       rewrite branch_ok in Hw. cbn [bind] in Hw.
-      exact (IH data es env fin last_id rest r (ltac:(lia)) Hle Hmod
+      destruct (Hacc vis c) as [vis1 Hh]. rewrite Hh in Hw. cbn [bind] in Hw.
+      cbn beta iota in Hw.
+      exact (IH data es vis1 vis' env fin last_id rest r Hacc (ltac:(lia)) Hle Hmod
                (env_small_mono env q fin Hsmall (ltac:(lia))) Hlid Hw10
                (ltac:(rewrite Hfineq;
                       exact (spec_chain_custom _ es _ _ _ Hsec Hchain)))
@@ -6025,7 +6237,7 @@ Proof.
     assert (Hchain2 : spec_chain_from (to_Z id) es (bytes_from data fin) rest)
       by (rewrite Hid; rewrite chain_from_1; rewrite Hfineq; exact Hnext).
     assert (Hat2 : env_at e0 es (to_Z id)) by (rewrite Hid; exact (env_at_step_types env e0 es vs Hat' Hlist Henv Hidn)).
-    exact (IH data es e0 fin id rest r (ltac:(lia)) Hfle Hmod
+    exact (IH data es vis vis' e0 fin id rest r Hacc (ltac:(lia)) Hfle Hmod
              (env_small_mono e0 q' fin Hsmall' (ltac:(lia)))
              (ltac:(lia)) Hw10 Hchain2 Hat2 Hno Hfr Hw). }
     destruct Hcases as [->|Hcases].
@@ -6074,7 +6286,7 @@ Proof.
     assert (Hchain2 : spec_chain_from (to_Z id) es (bytes_from data fin) rest)
       by (rewrite Hid; rewrite chain_from_2; rewrite Hfineq; exact Hnext).
     assert (Hat2 : env_at e0 es (to_Z id)) by (rewrite Hid; exact (env_at_step_imports env e0 es vs Hat' Hlist Henv Hsp Hidn)).
-    exact (IH data es e0 fin id rest r (ltac:(lia)) Hfle Hmod
+    exact (IH data es vis vis' e0 fin id rest r Hacc (ltac:(lia)) Hfle Hmod
              (env_small_mono e0 q' fin Hsmall' (ltac:(lia)))
              (ltac:(lia)) Hw10 Hchain2 Hat2 Hno Hfr Hw). }
     destruct Hcases as [->|Hcases].
@@ -6114,7 +6326,7 @@ Proof.
     assert (Hchain2 : spec_chain_from (to_Z id) es (bytes_from data fin) rest)
       by (rewrite Hid; rewrite chain_from_3; rewrite Hfineq; exact Hnext).
     assert (Hat2 : env_at e0 es (to_Z id)) by (rewrite Hid; exact (env_at_step_funcs env e0 es vs Hat' Hlist Henv Hfs Hidn)).
-    exact (IH data es e0 fin id rest r (ltac:(lia)) Hfle Hmod
+    exact (IH data es vis vis' e0 fin id rest r Hacc (ltac:(lia)) Hfle Hmod
              (env_small_mono e0 q' fin Hsmall' (ltac:(lia)))
              (ltac:(lia)) Hw10 Hchain2 Hat2 Hno Hfr Hw). }
     destruct Hcases as [->|Hcases].
@@ -6154,7 +6366,7 @@ Proof.
     assert (Hchain2 : spec_chain_from (to_Z id) es (bytes_from data fin) rest)
       by (rewrite Hid; rewrite chain_from_4; rewrite Hfineq; exact Hnext).
     assert (Hat2 : env_at e0 es (to_Z id)) by (rewrite Hid; exact (env_at_step_tables env e0 es vs Hat' Hlist Henv Hidn)).
-    exact (IH data es e0 fin id rest r (ltac:(lia)) Hfle Hmod
+    exact (IH data es vis vis' e0 fin id rest r Hacc (ltac:(lia)) Hfle Hmod
              (env_small_mono e0 q' fin Hsmall' (ltac:(lia)))
              (ltac:(lia)) Hw10 Hchain2 Hat2 Hno Hfr Hw). }
     destruct Hcases as [->|Hcases].
@@ -6194,7 +6406,7 @@ Proof.
     assert (Hchain2 : spec_chain_from (to_Z id) es (bytes_from data fin) rest)
       by (rewrite Hid; rewrite chain_from_5; rewrite Hfineq; exact Hnext).
     assert (Hat2 : env_at e0 es (to_Z id)) by (rewrite Hid; exact (env_at_step_mems env e0 es vs Hat' Hlist Henv Hidn)).
-    exact (IH data es e0 fin id rest r (ltac:(lia)) Hfle Hmod
+    exact (IH data es vis vis' e0 fin id rest r Hacc (ltac:(lia)) Hfle Hmod
              (env_small_mono e0 q' fin Hsmall' (ltac:(lia)))
              (ltac:(lia)) Hw10 Hchain2 Hat2 Hno Hfr Hw). }
     destruct Hcases as [->|Hcases].
@@ -6236,7 +6448,7 @@ Proof.
     assert (Hchain2 : spec_chain_from (to_Z id) es (bytes_from data fin) rest)
       by (rewrite Hid; rewrite chain_from_6; rewrite Hfineq; exact Hnext).
     assert (Hat2 : env_at e0 es (to_Z id)) by (rewrite Hid; exact (env_at_step_globals env e0 es vs Hat' Hlist Henv Hgts Hidn)).
-    exact (IH data es e0 fin id rest r (ltac:(lia)) Hfle Hmod
+    exact (IH data es vis vis' e0 fin id rest r Hacc (ltac:(lia)) Hfle Hmod
              (env_small_mono e0 q' fin Hsmall' (ltac:(lia)))
              (ltac:(lia)) Hw10 Hchain2 Hat2 Hno Hfr Hw). }
     destruct Hcases as [->|Hcases].
@@ -6279,7 +6491,7 @@ Proof.
     assert (Hchain2 : spec_chain_from (to_Z id) es (bytes_from data fin) rest)
       by (rewrite Hid; rewrite chain_from_7; rewrite Hfineq; exact Hnext).
     assert (Hat2 : env_at e0 es (to_Z id)) by (rewrite Hid; exact (env_at_step_exports env e0 es vs Hat' Hlist Henv Hidn)).
-    exact (IH data es e0 fin id rest r (ltac:(lia)) Hfle Hmod
+    exact (IH data es vis vis' e0 fin id rest r Hacc (ltac:(lia)) Hfle Hmod
              (env_small_mono e0 q' fin Hsmall' (ltac:(lia)))
              (ltac:(lia)) Hw10 Hchain2 Hat2 Hno Hfr Hw). }
     destruct Hcases as [->|Hcases].
@@ -6318,7 +6530,7 @@ Proof.
     assert (Hchain2 : spec_chain_from (to_Z id) es (bytes_from data fin) rest)
       by (rewrite Hid; rewrite chain_from_8; rewrite Hfineq; exact Hnext).
     assert (Hat2 : env_at e0 es (to_Z id)) by (rewrite Hid; exact (env_at_step_start env e0 es Hat' Henv Hidn)).
-    exact (IH data es e0 fin id rest r (ltac:(lia)) Hfle Hmod
+    exact (IH data es vis vis' e0 fin id rest r Hacc (ltac:(lia)) Hfle Hmod
              (env_small_mono e0 q' fin Hsmall' (ltac:(lia)))
              (ltac:(lia)) Hw10 Hchain2 Hat2 Hno Hfr Hw). }
     subst z.
@@ -6358,7 +6570,7 @@ Proof.
     assert (Hchain2 : spec_chain_from (to_Z id) es (bytes_from data fin) rest)
       by (rewrite Hid; rewrite chain_from_9; rewrite Hfineq; exact Hnext).
     assert (Hat2 : env_at e0 es (to_Z id)) by (rewrite Hid; exact (env_at_step_elements env e0 es vs Hat' Hlist Henv Hidn)).
-    exact (IH data es e0 fin id rest r (ltac:(lia)) Hfle Hmod
+    exact (IH data es vis vis' e0 fin id rest r Hacc (ltac:(lia)) Hfle Hmod
              (env_small_mono e0 q' fin Hsmall' (ltac:(lia)))
              (ltac:(lia)) Hw10 Hchain2 Hat2 Hno Hfr Hw). }
 Qed.
@@ -6378,16 +6590,19 @@ Lemma decode_env_complete : forall data es p0 rest r,
                   /\ env_small envf qf.
 Proof.
   intros data es p0 rest r Hmod Hw10 Hmagic Hchain Hno Hfr Hrun.
-  pose proof Hrun as Hw. unfold module_decode_env in Hw.
+  pose proof (Module_Sound.decode_env_nop_inv _ _ Hrun) as Hw.
+  unfold module_decode_env_with in Hw.
   destruct env_Env_new as [env0|] eqn:Hnew; cbn [bind] in Hw; [|discriminate].
   destruct (module_read_header data) as [rh|] eqn:Eh; cbn [bind] in Hw;
     [|discriminate].
   destruct (read_header_complete data rh p0 Eh Hmagic) as [p [-> [Hp Hple]]].
   rewrite branch_ok in Hw. cbn [bind] in Hw.
   assert (Hz : to_Z 0%u8 = 0) by reflexivity.
-  apply (decode_env_loop_complete (Z.to_nat (dlen data)) data es env0 p 0%u8
-           rest r);
-    [ pose proof (usize_nonneg p);
+  apply (decode_env_with_loop_complete _
+           module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor
+           (Z.to_nat (dlen data)) data es tt tt env0 p 0%u8 rest r);
+    [ exact nop_module_hooks_accept
+    | pose proof (usize_nonneg p);
       rewrite Z2Nat.id by (pose proof (usize_nonneg (slice_len data)); lia); lia
     | exact Hple | exact Hmod | exact (env_small_new p env0 Hnew)
     | rewrite Hz; lia | exact Hw10
@@ -6695,7 +6910,7 @@ Proof.
     rewrite Hti. unfold at_tidxs, upto.
     cbn [Z.leb Z.compare Pos.compare Pos.compare_cont]. exact Hcode. }
   destruct (validate_code_complete elems dts refs data cp envf rc _ q10 Hmod
-              Hcple
+              Hcple Hsm
               (env_at_types_wasm10 envf es 9
                  (ltac:(rewrite (at_types_full es 9 (ltac:(lia)));
                         exact (proj1 Hw10))) Hat9)

@@ -110,7 +110,7 @@ mkenv_Global_t {
 Inductive types_ElemType_t := | Types_ElemType_FuncRef : types_ElemType_t.
 
 (** [veriwasm::limits::Limits]
-    Source: 'src/limits.rs', lines 53:0-56:1 *)
+    Source: 'src/limits.rs', lines 63:0-66:1 *)
 Record limits_Limits_t :=
 mklimits_Limits_t {
   limits_Limits_min : u32; limits_Limits_max : option u32;
@@ -190,7 +190,7 @@ mktypes_FuncType_t {
 .
 
 (** [veriwasm::env::Env]
-    Source: 'src/env.rs', lines 76:0-108:1 *)
+    Source: 'src/env.rs', lines 81:0-113:1 *)
 Record env_Env_t :=
 mkenv_Env_t {
   env_Env_types : alloc_vec_Vec types_FuncType_t;
@@ -209,8 +209,14 @@ mkenv_Env_t {
 }
 .
 
+(** [veriwasm::error::VisitError]
+    Source: 'src/error.rs', lines 51:0-53:1 *)
+Inductive error_VisitError_t :=
+| Error_VisitError_OutOfMemory : error_VisitError_t
+.
+
 (** [veriwasm::error::OpError]
-    Source: 'src/error.rs', lines 19:0-44:1 *)
+    Source: 'src/error.rs', lines 19:0-46:1 *)
 Inductive error_OpError_t :=
 | Error_OpError_UnexpectedEof : error_OpError_t
 | Error_OpError_LebTooLong : error_OpError_t
@@ -230,13 +236,13 @@ Inductive error_OpError_t :=
 | Error_OpError_TooManyResults : error_OpError_t
 | Error_OpError_ReservedByteNotZero : error_OpError_t
 | Error_OpError_InvalidAlignment : error_OpError_t
-| Error_OpError_ProtocolViolation : error_OpError_t
 | Error_OpError_TrailingBytes : error_OpError_t
 | Error_OpError_BodyTooLarge : error_OpError_t
+| Error_OpError_Visitor : error_VisitError_t -> error_OpError_t
 .
 
 (** [veriwasm::error::Error]
-    Source: 'src/error.rs', lines 49:0-90:1 *)
+    Source: 'src/error.rs', lines 58:0-110:1 *)
 Inductive error_Error_t :=
 | Error_Error_Read : error_OpError_t -> error_Error_t
 | Error_Error_InvalidMagic : error_Error_t
@@ -247,6 +253,7 @@ Inductive error_Error_t :=
 | Error_Error_SectionOutOfOrder : error_Error_t
 | Error_Error_SectionSizeMismatch : error_Error_t
 | Error_Error_FuncCodeMismatch : error_Error_t
+| Error_Error_MissingCodeSection : error_Error_t
 | Error_Error_InvalidUtf8 : error_Error_t
 | Error_Error_UnknownType : u32 -> error_Error_t
 | Error_Error_UnknownFunc : u32 -> error_Error_t
@@ -264,10 +271,11 @@ Inductive error_Error_t :=
 | Error_Error_TooManyLocals : error_Error_t
 | Error_Error_ModuleTooLarge : error_Error_t
 | Error_Error_Body : error_OpError_t -> error_Error_t
+| Error_Error_Visitor : error_VisitError_t -> error_Error_t
 .
 
 (** [veriwasm::module::Data]
-    Source: 'src/module.rs', lines 52:0-56:1 *)
+    Source: 'src/module.rs', lines 54:0-58:1 *)
 Record module_Data_t :=
 mkmodule_Data_t {
   module_Data_memory_idx : u32;
@@ -277,7 +285,7 @@ mkmodule_Data_t {
 .
 
 (** [veriwasm::module::Tail]
-    Source: 'src/module.rs', lines 60:0-62:1 *)
+    Source: 'src/module.rs', lines 62:0-64:1 *)
 Record module_Tail_t :=
 mkmodule_Tail_t {
   module_Tail_data : alloc_vec_Vec module_Data_t;
@@ -285,7 +293,7 @@ mkmodule_Tail_t {
 .
 
 (** [veriwasm::module::ValidatedModule]
-    Source: 'src/module.rs', lines 66:0-69:1 *)
+    Source: 'src/module.rs', lines 68:0-71:1 *)
 Record module_ValidatedModule_t :=
 mkmodule_ValidatedModule_t {
   module_ValidatedModule_env : env_Env_t;
@@ -293,8 +301,56 @@ mkmodule_ValidatedModule_t {
 }
 .
 
+(** Trait declaration: [veriwasm::module::CodeVisitor]
+    Source: 'src/module.rs', lines 1454:0-1490:1 *)
+Record module_CodeVisitor_t (Self : Type) := mkmodule_CodeVisitor_t {
+  module_CodeVisitor_t_on_need_bytes : Self -> usize -> result
+    ((core_result_Result_t unit error_Error_t) * Self);
+  module_CodeVisitor_t_on_code_entry : Self -> slice u8 -> env_Env_t -> usize
+    -> usize -> usize -> usize -> result ((core_result_Result_t unit
+    error_Error_t) * Self);
+}.
+
+Arguments mkmodule_CodeVisitor_t { _ }.
+Arguments module_CodeVisitor_t_on_need_bytes { _ } _.
+Arguments module_CodeVisitor_t_on_code_entry { _ } _.
+
+(** [veriwasm::types::CustomSection]
+    Source: 'src/types.rs', lines 131:0-142:1 *)
+Record types_CustomSection_t :=
+mktypes_CustomSection_t {
+  types_CustomSection_name_len : usize;
+  types_CustomSection_payload_start : usize;
+  types_CustomSection_payload_end : usize;
+}
+.
+
+(** Trait declaration: [veriwasm::module::ModuleVisitor]
+    Source: 'src/module.rs', lines 1401:0-1411:1 *)
+Record module_ModuleVisitor_t (Self : Type) := mkmodule_ModuleVisitor_t {
+  module_ModuleVisitor_t_on_custom_section : Self -> types_CustomSection_t ->
+    result ((core_result_Result_t unit error_VisitError_t) * Self);
+}.
+
+Arguments mkmodule_ModuleVisitor_t { _ }.
+Arguments module_ModuleVisitor_t_on_custom_section { _ } _.
+
+(** [veriwasm::module::CodeSection]
+    Source: 'src/module.rs', lines 1151:0-1160:1 *)
+Record module_CodeSection_t :=
+mkmodule_CodeSection_t {
+  module_CodeSection_count : u32;
+  module_CodeSection_entries : usize;
+  module_CodeSection_end : usize;
+}
+.
+
+(** [veriwasm::visit::NopVisitor]
+    Source: 'src/visit.rs', lines 413:0-413:22 *)
+Definition visit_NopVisitor_t : Type := unit.
+
 (** [veriwasm::opiter::LabelKind]
-    Source: 'src/opiter.rs', lines 83:0-89:1 *)
+    Source: 'src/opiter.rs', lines 106:0-112:1 *)
 Inductive opiter_LabelKind_t :=
 | Opiter_LabelKind_Body : opiter_LabelKind_t
 | Opiter_LabelKind_Block : opiter_LabelKind_t
@@ -304,14 +360,14 @@ Inductive opiter_LabelKind_t :=
 .
 
 (** [veriwasm::opiter::BlockType]
-    Source: 'src/opiter.rs', lines 28:0-31:1 *)
+    Source: 'src/opiter.rs', lines 36:0-39:1 *)
 Inductive opiter_BlockType_t :=
 | Opiter_BlockType_Empty : opiter_BlockType_t
 | Opiter_BlockType_Value : types_ValueType_t -> opiter_BlockType_t
 .
 
 (** [veriwasm::opiter::Ctrl]
-    Source: 'src/opiter.rs', lines 94:0-101:1 *)
+    Source: 'src/opiter.rs', lines 117:0-124:1 *)
 Record opiter_Ctrl_t :=
 mkopiter_Ctrl_t {
   opiter_Ctrl_kind : opiter_LabelKind_t;
@@ -322,25 +378,24 @@ mkopiter_Ctrl_t {
 .
 
 (** [veriwasm::opiter::StackType]
-    Source: 'src/opiter.rs', lines 74:0-77:1 *)
+    Source: 'src/opiter.rs', lines 97:0-100:1 *)
 Inductive opiter_StackType_t :=
 | Opiter_StackType_Val : types_ValueType_t -> opiter_StackType_t
 | Opiter_StackType_Bot : opiter_StackType_t
 .
 
 (** [veriwasm::opiter::OpIterState]
-    Source: 'src/opiter.rs', lines 106:0-114:1 *)
+    Source: 'src/opiter.rs', lines 129:0-133:1 *)
 Record opiter_OpIterState_t :=
 mkopiter_OpIterState_t {
   opiter_OpIterState_vals : alloc_vec_Vec opiter_StackType_t;
   opiter_OpIterState_ctrls : alloc_vec_Vec opiter_Ctrl_t;
   opiter_OpIterState_pos : usize;
-  opiter_OpIterState_pending : option u8;
 }
 .
 
 (** [veriwasm::opiter::MemArg]
-    Source: 'src/opiter.rs', lines 48:0-51:1 *)
+    Source: 'src/opiter.rs', lines 56:0-59:1 *)
 Record opiter_MemArg_t :=
 mkopiter_MemArg_t {
   opiter_MemArg_align : u32; opiter_MemArg_offset : u32;
@@ -348,13 +403,583 @@ mkopiter_MemArg_t {
 .
 
 (** [veriwasm::opiter::Context]
-    Source: 'src/opiter.rs', lines 57:0-61:1 *)
+    Source: 'src/opiter.rs', lines 70:0-74:1 *)
 Record opiter_Context_t :=
 mkopiter_Context_t {
   opiter_Context_locals : alloc_vec_Vec types_ValueType_t;
   opiter_Context_results : alloc_vec_Vec types_ValueType_t;
 }
 .
+
+(** Trait declaration: [veriwasm::visit::OpVisitor]
+    Source: 'src/visit.rs', lines 234:0-409:1 *)
+Record visit_OpVisitor_t (Self : Type) := mkvisit_OpVisitor_t {
+  visit_OpVisitor_t_on_function_start : Self -> opiter_Context_t -> u32 ->
+    usize -> usize -> result ((core_result_Result_t unit error_VisitError_t) *
+    Self);
+  visit_OpVisitor_t_on_unreachable : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_nop : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_block : Self -> opiter_OpIterState_t ->
+    opiter_BlockType_t -> result ((core_result_Result_t unit
+    error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_loop : Self -> opiter_OpIterState_t ->
+    opiter_BlockType_t -> result ((core_result_Result_t unit
+    error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_if : Self -> opiter_OpIterState_t -> opiter_BlockType_t
+    -> result ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_else : Self -> opiter_OpIterState_t ->
+    opiter_BlockType_t -> result ((core_result_Result_t unit
+    error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_end : Self -> opiter_OpIterState_t -> opiter_LabelKind_t
+    -> opiter_BlockType_t -> result ((core_result_Result_t unit
+    error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_br : Self -> opiter_OpIterState_t -> u32 ->
+    opiter_BlockType_t -> result ((core_result_Result_t unit
+    error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_br_if : Self -> opiter_OpIterState_t -> u32 ->
+    opiter_BlockType_t -> result ((core_result_Result_t unit
+    error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_br_table_label : Self -> opiter_OpIterState_t -> u32 ->
+    result ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_br_table : Self -> opiter_OpIterState_t -> u32 ->
+    opiter_BlockType_t -> result ((core_result_Result_t unit
+    error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_return : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_call : Self -> opiter_OpIterState_t -> u32 -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_call_indirect : Self -> opiter_OpIterState_t -> u32 ->
+    result ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_drop : Self -> opiter_OpIterState_t ->
+    opiter_StackType_t -> result ((core_result_Result_t unit
+    error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_select : Self -> opiter_OpIterState_t ->
+    opiter_StackType_t -> result ((core_result_Result_t unit
+    error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_local_get : Self -> opiter_OpIterState_t -> u32 ->
+    result ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_local_set : Self -> opiter_OpIterState_t -> u32 ->
+    result ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_local_tee : Self -> opiter_OpIterState_t -> u32 ->
+    result ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_global_get : Self -> opiter_OpIterState_t -> u32 ->
+    result ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_global_set : Self -> opiter_OpIterState_t -> u32 ->
+    result ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_memory_size : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_memory_grow : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_const : Self -> opiter_OpIterState_t -> i32 ->
+    result ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_const : Self -> opiter_OpIterState_t -> i64 ->
+    result ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f32_const : Self -> opiter_OpIterState_t -> u32 ->
+    result ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f64_const : Self -> opiter_OpIterState_t -> u64 ->
+    result ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_load : Self -> opiter_OpIterState_t ->
+    opiter_MemArg_t -> result ((core_result_Result_t unit error_VisitError_t) *
+    Self);
+  visit_OpVisitor_t_on_i64_load : Self -> opiter_OpIterState_t ->
+    opiter_MemArg_t -> result ((core_result_Result_t unit error_VisitError_t) *
+    Self);
+  visit_OpVisitor_t_on_f32_load : Self -> opiter_OpIterState_t ->
+    opiter_MemArg_t -> result ((core_result_Result_t unit error_VisitError_t) *
+    Self);
+  visit_OpVisitor_t_on_f64_load : Self -> opiter_OpIterState_t ->
+    opiter_MemArg_t -> result ((core_result_Result_t unit error_VisitError_t) *
+    Self);
+  visit_OpVisitor_t_on_i32_load8_s : Self -> opiter_OpIterState_t ->
+    opiter_MemArg_t -> result ((core_result_Result_t unit error_VisitError_t) *
+    Self);
+  visit_OpVisitor_t_on_i32_load8_u : Self -> opiter_OpIterState_t ->
+    opiter_MemArg_t -> result ((core_result_Result_t unit error_VisitError_t) *
+    Self);
+  visit_OpVisitor_t_on_i32_load16_s : Self -> opiter_OpIterState_t ->
+    opiter_MemArg_t -> result ((core_result_Result_t unit error_VisitError_t) *
+    Self);
+  visit_OpVisitor_t_on_i32_load16_u : Self -> opiter_OpIterState_t ->
+    opiter_MemArg_t -> result ((core_result_Result_t unit error_VisitError_t) *
+    Self);
+  visit_OpVisitor_t_on_i64_load8_s : Self -> opiter_OpIterState_t ->
+    opiter_MemArg_t -> result ((core_result_Result_t unit error_VisitError_t) *
+    Self);
+  visit_OpVisitor_t_on_i64_load8_u : Self -> opiter_OpIterState_t ->
+    opiter_MemArg_t -> result ((core_result_Result_t unit error_VisitError_t) *
+    Self);
+  visit_OpVisitor_t_on_i64_load16_s : Self -> opiter_OpIterState_t ->
+    opiter_MemArg_t -> result ((core_result_Result_t unit error_VisitError_t) *
+    Self);
+  visit_OpVisitor_t_on_i64_load16_u : Self -> opiter_OpIterState_t ->
+    opiter_MemArg_t -> result ((core_result_Result_t unit error_VisitError_t) *
+    Self);
+  visit_OpVisitor_t_on_i64_load32_s : Self -> opiter_OpIterState_t ->
+    opiter_MemArg_t -> result ((core_result_Result_t unit error_VisitError_t) *
+    Self);
+  visit_OpVisitor_t_on_i64_load32_u : Self -> opiter_OpIterState_t ->
+    opiter_MemArg_t -> result ((core_result_Result_t unit error_VisitError_t) *
+    Self);
+  visit_OpVisitor_t_on_i32_store : Self -> opiter_OpIterState_t ->
+    opiter_MemArg_t -> result ((core_result_Result_t unit error_VisitError_t) *
+    Self);
+  visit_OpVisitor_t_on_i64_store : Self -> opiter_OpIterState_t ->
+    opiter_MemArg_t -> result ((core_result_Result_t unit error_VisitError_t) *
+    Self);
+  visit_OpVisitor_t_on_f32_store : Self -> opiter_OpIterState_t ->
+    opiter_MemArg_t -> result ((core_result_Result_t unit error_VisitError_t) *
+    Self);
+  visit_OpVisitor_t_on_f64_store : Self -> opiter_OpIterState_t ->
+    opiter_MemArg_t -> result ((core_result_Result_t unit error_VisitError_t) *
+    Self);
+  visit_OpVisitor_t_on_i32_store8 : Self -> opiter_OpIterState_t ->
+    opiter_MemArg_t -> result ((core_result_Result_t unit error_VisitError_t) *
+    Self);
+  visit_OpVisitor_t_on_i32_store16 : Self -> opiter_OpIterState_t ->
+    opiter_MemArg_t -> result ((core_result_Result_t unit error_VisitError_t) *
+    Self);
+  visit_OpVisitor_t_on_i64_store8 : Self -> opiter_OpIterState_t ->
+    opiter_MemArg_t -> result ((core_result_Result_t unit error_VisitError_t) *
+    Self);
+  visit_OpVisitor_t_on_i64_store16 : Self -> opiter_OpIterState_t ->
+    opiter_MemArg_t -> result ((core_result_Result_t unit error_VisitError_t) *
+    Self);
+  visit_OpVisitor_t_on_i64_store32 : Self -> opiter_OpIterState_t ->
+    opiter_MemArg_t -> result ((core_result_Result_t unit error_VisitError_t) *
+    Self);
+  visit_OpVisitor_t_on_i32_eqz : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_eq : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_ne : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_lt_s : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_lt_u : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_gt_s : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_gt_u : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_le_s : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_le_u : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_ge_s : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_ge_u : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_eqz : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_eq : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_ne : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_lt_s : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_lt_u : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_gt_s : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_gt_u : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_le_s : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_le_u : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_ge_s : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_ge_u : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f32_eq : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f32_ne : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f32_lt : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f32_gt : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f32_le : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f32_ge : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f64_eq : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f64_ne : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f64_lt : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f64_gt : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f64_le : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f64_ge : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_sub : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_mul : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_div_s : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_div_u : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_rem_s : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_rem_u : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_and : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_or : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_xor : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_shl : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_shr_s : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_shr_u : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_rotl : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_rotr : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_add : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_sub : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_mul : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_div_s : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_div_u : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_rem_s : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_rem_u : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_and : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_or : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_xor : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_shl : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_shr_s : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_shr_u : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_rotl : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_rotr : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f32_add : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f32_sub : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f32_mul : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f32_div : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f32_min : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f32_max : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f32_copysign : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f64_add : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f64_sub : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f64_mul : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f64_div : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f64_min : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f64_max : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f64_copysign : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_clz : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_ctz : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_popcnt : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_add : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_clz : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_ctz : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_popcnt : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f32_abs : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f32_neg : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f32_ceil : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f32_floor : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f32_trunc : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f32_nearest : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f32_sqrt : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f64_abs : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f64_neg : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f64_ceil : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f64_floor : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f64_trunc : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f64_nearest : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f64_sqrt : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_wrap_i64 : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_trunc_f32_s : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_trunc_f32_u : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_trunc_f64_s : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_trunc_f64_u : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_extend_i32_s : Self -> opiter_OpIterState_t ->
+    result ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_extend_i32_u : Self -> opiter_OpIterState_t ->
+    result ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_trunc_f32_s : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_trunc_f32_u : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_trunc_f64_s : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_trunc_f64_u : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f32_convert_i32_s : Self -> opiter_OpIterState_t ->
+    result ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f32_convert_i32_u : Self -> opiter_OpIterState_t ->
+    result ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f32_convert_i64_s : Self -> opiter_OpIterState_t ->
+    result ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f32_convert_i64_u : Self -> opiter_OpIterState_t ->
+    result ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f32_demote_f64 : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f64_convert_i32_s : Self -> opiter_OpIterState_t ->
+    result ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f64_convert_i32_u : Self -> opiter_OpIterState_t ->
+    result ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f64_convert_i64_s : Self -> opiter_OpIterState_t ->
+    result ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f64_convert_i64_u : Self -> opiter_OpIterState_t ->
+    result ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f64_promote_f32 : Self -> opiter_OpIterState_t -> result
+    ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i32_reinterpret_f32 : Self -> opiter_OpIterState_t ->
+    result ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_i64_reinterpret_f64 : Self -> opiter_OpIterState_t ->
+    result ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f32_reinterpret_i32 : Self -> opiter_OpIterState_t ->
+    result ((core_result_Result_t unit error_VisitError_t) * Self);
+  visit_OpVisitor_t_on_f64_reinterpret_i64 : Self -> opiter_OpIterState_t ->
+    result ((core_result_Result_t unit error_VisitError_t) * Self);
+}.
+
+Arguments mkvisit_OpVisitor_t { _ }.
+Arguments visit_OpVisitor_t_on_function_start { _ } _.
+Arguments visit_OpVisitor_t_on_unreachable { _ } _.
+Arguments visit_OpVisitor_t_on_nop { _ } _.
+Arguments visit_OpVisitor_t_on_block { _ } _.
+Arguments visit_OpVisitor_t_on_loop { _ } _.
+Arguments visit_OpVisitor_t_on_if { _ } _.
+Arguments visit_OpVisitor_t_on_else { _ } _.
+Arguments visit_OpVisitor_t_on_end { _ } _.
+Arguments visit_OpVisitor_t_on_br { _ } _.
+Arguments visit_OpVisitor_t_on_br_if { _ } _.
+Arguments visit_OpVisitor_t_on_br_table_label { _ } _.
+Arguments visit_OpVisitor_t_on_br_table { _ } _.
+Arguments visit_OpVisitor_t_on_return { _ } _.
+Arguments visit_OpVisitor_t_on_call { _ } _.
+Arguments visit_OpVisitor_t_on_call_indirect { _ } _.
+Arguments visit_OpVisitor_t_on_drop { _ } _.
+Arguments visit_OpVisitor_t_on_select { _ } _.
+Arguments visit_OpVisitor_t_on_local_get { _ } _.
+Arguments visit_OpVisitor_t_on_local_set { _ } _.
+Arguments visit_OpVisitor_t_on_local_tee { _ } _.
+Arguments visit_OpVisitor_t_on_global_get { _ } _.
+Arguments visit_OpVisitor_t_on_global_set { _ } _.
+Arguments visit_OpVisitor_t_on_memory_size { _ } _.
+Arguments visit_OpVisitor_t_on_memory_grow { _ } _.
+Arguments visit_OpVisitor_t_on_i32_const { _ } _.
+Arguments visit_OpVisitor_t_on_i64_const { _ } _.
+Arguments visit_OpVisitor_t_on_f32_const { _ } _.
+Arguments visit_OpVisitor_t_on_f64_const { _ } _.
+Arguments visit_OpVisitor_t_on_i32_load { _ } _.
+Arguments visit_OpVisitor_t_on_i64_load { _ } _.
+Arguments visit_OpVisitor_t_on_f32_load { _ } _.
+Arguments visit_OpVisitor_t_on_f64_load { _ } _.
+Arguments visit_OpVisitor_t_on_i32_load8_s { _ } _.
+Arguments visit_OpVisitor_t_on_i32_load8_u { _ } _.
+Arguments visit_OpVisitor_t_on_i32_load16_s { _ } _.
+Arguments visit_OpVisitor_t_on_i32_load16_u { _ } _.
+Arguments visit_OpVisitor_t_on_i64_load8_s { _ } _.
+Arguments visit_OpVisitor_t_on_i64_load8_u { _ } _.
+Arguments visit_OpVisitor_t_on_i64_load16_s { _ } _.
+Arguments visit_OpVisitor_t_on_i64_load16_u { _ } _.
+Arguments visit_OpVisitor_t_on_i64_load32_s { _ } _.
+Arguments visit_OpVisitor_t_on_i64_load32_u { _ } _.
+Arguments visit_OpVisitor_t_on_i32_store { _ } _.
+Arguments visit_OpVisitor_t_on_i64_store { _ } _.
+Arguments visit_OpVisitor_t_on_f32_store { _ } _.
+Arguments visit_OpVisitor_t_on_f64_store { _ } _.
+Arguments visit_OpVisitor_t_on_i32_store8 { _ } _.
+Arguments visit_OpVisitor_t_on_i32_store16 { _ } _.
+Arguments visit_OpVisitor_t_on_i64_store8 { _ } _.
+Arguments visit_OpVisitor_t_on_i64_store16 { _ } _.
+Arguments visit_OpVisitor_t_on_i64_store32 { _ } _.
+Arguments visit_OpVisitor_t_on_i32_eqz { _ } _.
+Arguments visit_OpVisitor_t_on_i32_eq { _ } _.
+Arguments visit_OpVisitor_t_on_i32_ne { _ } _.
+Arguments visit_OpVisitor_t_on_i32_lt_s { _ } _.
+Arguments visit_OpVisitor_t_on_i32_lt_u { _ } _.
+Arguments visit_OpVisitor_t_on_i32_gt_s { _ } _.
+Arguments visit_OpVisitor_t_on_i32_gt_u { _ } _.
+Arguments visit_OpVisitor_t_on_i32_le_s { _ } _.
+Arguments visit_OpVisitor_t_on_i32_le_u { _ } _.
+Arguments visit_OpVisitor_t_on_i32_ge_s { _ } _.
+Arguments visit_OpVisitor_t_on_i32_ge_u { _ } _.
+Arguments visit_OpVisitor_t_on_i64_eqz { _ } _.
+Arguments visit_OpVisitor_t_on_i64_eq { _ } _.
+Arguments visit_OpVisitor_t_on_i64_ne { _ } _.
+Arguments visit_OpVisitor_t_on_i64_lt_s { _ } _.
+Arguments visit_OpVisitor_t_on_i64_lt_u { _ } _.
+Arguments visit_OpVisitor_t_on_i64_gt_s { _ } _.
+Arguments visit_OpVisitor_t_on_i64_gt_u { _ } _.
+Arguments visit_OpVisitor_t_on_i64_le_s { _ } _.
+Arguments visit_OpVisitor_t_on_i64_le_u { _ } _.
+Arguments visit_OpVisitor_t_on_i64_ge_s { _ } _.
+Arguments visit_OpVisitor_t_on_i64_ge_u { _ } _.
+Arguments visit_OpVisitor_t_on_f32_eq { _ } _.
+Arguments visit_OpVisitor_t_on_f32_ne { _ } _.
+Arguments visit_OpVisitor_t_on_f32_lt { _ } _.
+Arguments visit_OpVisitor_t_on_f32_gt { _ } _.
+Arguments visit_OpVisitor_t_on_f32_le { _ } _.
+Arguments visit_OpVisitor_t_on_f32_ge { _ } _.
+Arguments visit_OpVisitor_t_on_f64_eq { _ } _.
+Arguments visit_OpVisitor_t_on_f64_ne { _ } _.
+Arguments visit_OpVisitor_t_on_f64_lt { _ } _.
+Arguments visit_OpVisitor_t_on_f64_gt { _ } _.
+Arguments visit_OpVisitor_t_on_f64_le { _ } _.
+Arguments visit_OpVisitor_t_on_f64_ge { _ } _.
+Arguments visit_OpVisitor_t_on_i32_sub { _ } _.
+Arguments visit_OpVisitor_t_on_i32_mul { _ } _.
+Arguments visit_OpVisitor_t_on_i32_div_s { _ } _.
+Arguments visit_OpVisitor_t_on_i32_div_u { _ } _.
+Arguments visit_OpVisitor_t_on_i32_rem_s { _ } _.
+Arguments visit_OpVisitor_t_on_i32_rem_u { _ } _.
+Arguments visit_OpVisitor_t_on_i32_and { _ } _.
+Arguments visit_OpVisitor_t_on_i32_or { _ } _.
+Arguments visit_OpVisitor_t_on_i32_xor { _ } _.
+Arguments visit_OpVisitor_t_on_i32_shl { _ } _.
+Arguments visit_OpVisitor_t_on_i32_shr_s { _ } _.
+Arguments visit_OpVisitor_t_on_i32_shr_u { _ } _.
+Arguments visit_OpVisitor_t_on_i32_rotl { _ } _.
+Arguments visit_OpVisitor_t_on_i32_rotr { _ } _.
+Arguments visit_OpVisitor_t_on_i64_add { _ } _.
+Arguments visit_OpVisitor_t_on_i64_sub { _ } _.
+Arguments visit_OpVisitor_t_on_i64_mul { _ } _.
+Arguments visit_OpVisitor_t_on_i64_div_s { _ } _.
+Arguments visit_OpVisitor_t_on_i64_div_u { _ } _.
+Arguments visit_OpVisitor_t_on_i64_rem_s { _ } _.
+Arguments visit_OpVisitor_t_on_i64_rem_u { _ } _.
+Arguments visit_OpVisitor_t_on_i64_and { _ } _.
+Arguments visit_OpVisitor_t_on_i64_or { _ } _.
+Arguments visit_OpVisitor_t_on_i64_xor { _ } _.
+Arguments visit_OpVisitor_t_on_i64_shl { _ } _.
+Arguments visit_OpVisitor_t_on_i64_shr_s { _ } _.
+Arguments visit_OpVisitor_t_on_i64_shr_u { _ } _.
+Arguments visit_OpVisitor_t_on_i64_rotl { _ } _.
+Arguments visit_OpVisitor_t_on_i64_rotr { _ } _.
+Arguments visit_OpVisitor_t_on_f32_add { _ } _.
+Arguments visit_OpVisitor_t_on_f32_sub { _ } _.
+Arguments visit_OpVisitor_t_on_f32_mul { _ } _.
+Arguments visit_OpVisitor_t_on_f32_div { _ } _.
+Arguments visit_OpVisitor_t_on_f32_min { _ } _.
+Arguments visit_OpVisitor_t_on_f32_max { _ } _.
+Arguments visit_OpVisitor_t_on_f32_copysign { _ } _.
+Arguments visit_OpVisitor_t_on_f64_add { _ } _.
+Arguments visit_OpVisitor_t_on_f64_sub { _ } _.
+Arguments visit_OpVisitor_t_on_f64_mul { _ } _.
+Arguments visit_OpVisitor_t_on_f64_div { _ } _.
+Arguments visit_OpVisitor_t_on_f64_min { _ } _.
+Arguments visit_OpVisitor_t_on_f64_max { _ } _.
+Arguments visit_OpVisitor_t_on_f64_copysign { _ } _.
+Arguments visit_OpVisitor_t_on_i32_clz { _ } _.
+Arguments visit_OpVisitor_t_on_i32_ctz { _ } _.
+Arguments visit_OpVisitor_t_on_i32_popcnt { _ } _.
+Arguments visit_OpVisitor_t_on_i32_add { _ } _.
+Arguments visit_OpVisitor_t_on_i64_clz { _ } _.
+Arguments visit_OpVisitor_t_on_i64_ctz { _ } _.
+Arguments visit_OpVisitor_t_on_i64_popcnt { _ } _.
+Arguments visit_OpVisitor_t_on_f32_abs { _ } _.
+Arguments visit_OpVisitor_t_on_f32_neg { _ } _.
+Arguments visit_OpVisitor_t_on_f32_ceil { _ } _.
+Arguments visit_OpVisitor_t_on_f32_floor { _ } _.
+Arguments visit_OpVisitor_t_on_f32_trunc { _ } _.
+Arguments visit_OpVisitor_t_on_f32_nearest { _ } _.
+Arguments visit_OpVisitor_t_on_f32_sqrt { _ } _.
+Arguments visit_OpVisitor_t_on_f64_abs { _ } _.
+Arguments visit_OpVisitor_t_on_f64_neg { _ } _.
+Arguments visit_OpVisitor_t_on_f64_ceil { _ } _.
+Arguments visit_OpVisitor_t_on_f64_floor { _ } _.
+Arguments visit_OpVisitor_t_on_f64_trunc { _ } _.
+Arguments visit_OpVisitor_t_on_f64_nearest { _ } _.
+Arguments visit_OpVisitor_t_on_f64_sqrt { _ } _.
+Arguments visit_OpVisitor_t_on_i32_wrap_i64 { _ } _.
+Arguments visit_OpVisitor_t_on_i32_trunc_f32_s { _ } _.
+Arguments visit_OpVisitor_t_on_i32_trunc_f32_u { _ } _.
+Arguments visit_OpVisitor_t_on_i32_trunc_f64_s { _ } _.
+Arguments visit_OpVisitor_t_on_i32_trunc_f64_u { _ } _.
+Arguments visit_OpVisitor_t_on_i64_extend_i32_s { _ } _.
+Arguments visit_OpVisitor_t_on_i64_extend_i32_u { _ } _.
+Arguments visit_OpVisitor_t_on_i64_trunc_f32_s { _ } _.
+Arguments visit_OpVisitor_t_on_i64_trunc_f32_u { _ } _.
+Arguments visit_OpVisitor_t_on_i64_trunc_f64_s { _ } _.
+Arguments visit_OpVisitor_t_on_i64_trunc_f64_u { _ } _.
+Arguments visit_OpVisitor_t_on_f32_convert_i32_s { _ } _.
+Arguments visit_OpVisitor_t_on_f32_convert_i32_u { _ } _.
+Arguments visit_OpVisitor_t_on_f32_convert_i64_s { _ } _.
+Arguments visit_OpVisitor_t_on_f32_convert_i64_u { _ } _.
+Arguments visit_OpVisitor_t_on_f32_demote_f64 { _ } _.
+Arguments visit_OpVisitor_t_on_f64_convert_i32_s { _ } _.
+Arguments visit_OpVisitor_t_on_f64_convert_i32_u { _ } _.
+Arguments visit_OpVisitor_t_on_f64_convert_i64_s { _ } _.
+Arguments visit_OpVisitor_t_on_f64_convert_i64_u { _ } _.
+Arguments visit_OpVisitor_t_on_f64_promote_f32 { _ } _.
+Arguments visit_OpVisitor_t_on_i32_reinterpret_f32 { _ } _.
+Arguments visit_OpVisitor_t_on_i64_reinterpret_f64 { _ } _.
+Arguments visit_OpVisitor_t_on_f32_reinterpret_i32 { _ } _.
+Arguments visit_OpVisitor_t_on_f64_reinterpret_i64 { _ } _.
+
+(** [veriwasm::module::NopModuleVisitor]
+    Source: 'src/module.rs', lines 1416:0-1416:28 *)
+Definition module_NopModuleVisitor_t : Type := unit.
+
+(** [veriwasm::module::ValidatingCodeVisitor]
+    Source: 'src/module.rs', lines 1497:0-1497:33 *)
+Definition module_ValidatingCodeVisitor_t : Type := unit.
 
 (** [veriwasm::types::ExternType]
     Source: 'src/types.rs', lines 96:0-101:1 *)

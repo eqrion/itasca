@@ -575,14 +575,13 @@ Qed.
     mismatch is silent otherwise: [frames_flat] ignores [fv_seg], so a step that
     changed the segment differently than expected would go unnoticed. *)
 
-Corollary step_nop_op : forall C0 bt0 st fs pre f st',
+Corollary step_nop_op : forall C0 bt0 st fs pre f,
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
-  opiter_read_nop st = Ok (Core_result_Result_Ok tt, st') ->
-  exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
+  exists fs', Inv C0 st fs' /\ body_first bt0 fs'
               /\ frames_flat fs' = frames_flat fs ++ [FO_plain BI_nop].
 Proof.
-  intros C0 bt0 st fs pre f st' Hinv Hbf Hfs H.
-  eexists. split; [apply (step_nop C0 st fs pre f st' Hinv Hfs H)|].
+  intros C0 bt0 st fs pre f Hinv Hbf Hfs.
+  eexists. split; [apply (step_nop C0 st fs pre f Hinv Hfs)|].
   subst fs. split.
   - apply (body_first_last bt0 pre f _); [reflexivity | reflexivity | exact Hbf].
   - apply (frames_flat_plain pre f (fv_ctrl f) (fv_seg f) BI_nop);
@@ -735,16 +734,16 @@ Qed.
 
 (** The binary shape, generic in the instruction, as [step_conversion_op] is for
     the one-operand shape. *)
-Corollary step_binary_op : forall C0 bt0 st fs pre f opcode ty res be st',
+Corollary step_binary_op : forall C0 bt0 st fs pre f ty res be st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
   effect_in C0 be [translate_vt_v ty; translate_vt_v ty] [translate_vt_v res] ->
   flat_of_one be = [FO_plain be] ->
-  opiter_read_binary st opcode ty res = Ok (Core_result_Result_Ok tt, st') ->
+  opiter_read_binary st ty res = Ok (Core_result_Result_Ok tt, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs' = frames_flat fs ++ [FO_plain be].
 Proof.
-  intros C0 bt0 st fs pre f opcode ty res be st' Hinv Hbf Hfs Heff Hflat H.
-  destruct (step_binary C0 st fs pre f opcode ty res be st' Hinv Hfs Heff H)
+  intros C0 bt0 st fs pre f ty res be st' Hinv Hbf Hfs Heff Hflat H.
+  destruct (step_binary C0 st fs pre f ty res be st' Hinv Hfs Heff H)
     as [seg' Hinv'].
   apply (step_plain_op C0 bt0 st' fs pre f be seg' Hinv' Hbf Hfs Hflat).
 Qed.
@@ -754,17 +753,17 @@ Qed.
     [frames_flat_plain] needs, and it holds by computation for every instruction
     the table can produce, none of which carries a body. *)
 Corollary step_conversion_op :
-  forall C0 bt0 st fs pre f opcode from to be st',
+  forall C0 bt0 st fs pre f from to be st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
   effect_in C0 be [translate_vt_v from] [translate_vt_v to] ->
   flat_of_one be = [FO_plain be] ->
-  opiter_read_conversion st opcode from to
+  opiter_read_conversion st from to
     = Ok (Core_result_Result_Ok tt, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs' = frames_flat fs ++ [FO_plain be].
 Proof.
-  intros C0 bt0 st fs pre f opcode from to be st' Hinv Hbf Hfs Heff Hflat H.
-  destruct (step_conversion C0 st fs pre f opcode from to be st'
+  intros C0 bt0 st fs pre f from to be st' Hinv Hbf Hfs Heff Hflat H.
+  destruct (step_conversion C0 st fs pre f from to be st'
               Hinv Hfs Heff H) as [seg' Hinv'].
   apply (step_plain_op C0 bt0 st' fs pre f be seg' Hinv' Hbf Hfs Hflat).
 Qed.
@@ -848,13 +847,13 @@ Proof.
 Qed.
 
 Corollary step_load_op :
-  forall C0 bt0 st fs pre f data module opcode ty natural nt tp_sx m st',
+  forall C0 bt0 st fs pre f data module ty natural nt tp_sx m st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
   mems_agree module C0 ->
   translate_vt_v ty = T_num nt ->
   (forall a, 0 <= a <= to_Z natural ->
      load_store_t_bounds (Z.to_N a) (option_projl tp_sx) nt = true) ->
-  opiter_read_load st data module opcode ty natural
+  opiter_read_load st data module ty natural
     = Ok (Core_result_Result_Ok m, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs'
@@ -863,9 +862,9 @@ Corollary step_load_op :
                                    (Z.to_N (to_Z m.(opiter_MemArg_align)))
                                    (Z.to_N (to_Z m.(opiter_MemArg_offset))))].
 Proof.
-  intros C0 bt0 st fs pre f data module opcode ty natural nt tp_sx m st'
+  intros C0 bt0 st fs pre f data module ty natural nt tp_sx m st'
          Hinv Hbf Hfs Hmems Hty Hbounds H.
-  destruct (step_load C0 st fs pre f data module opcode ty natural nt tp_sx m st'
+  destruct (step_load C0 st fs pre f data module ty natural nt tp_sx m st'
               Hinv Hfs Hmems Hty Hbounds H) as [seg' Hinv'].
   eexists. split; [exact Hinv'|]. subst fs. split.
   - apply (body_first_last bt0 pre f _); [reflexivity | reflexivity | exact Hbf].
@@ -875,13 +874,13 @@ Proof.
 Qed.
 
 Corollary step_store_op :
-  forall C0 bt0 st fs pre f data module opcode ty natural nt tp m st',
+  forall C0 bt0 st fs pre f data module ty natural nt tp m st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
   mems_agree module C0 ->
   translate_vt_v ty = T_num nt ->
   (forall a, 0 <= a <= to_Z natural ->
      load_store_t_bounds (Z.to_N a) tp nt = true) ->
-  opiter_read_store st data module opcode ty natural
+  opiter_read_store st data module ty natural
     = Ok (Core_result_Result_Ok m, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs'
@@ -890,9 +889,9 @@ Corollary step_store_op :
                                    (Z.to_N (to_Z m.(opiter_MemArg_align)))
                                    (Z.to_N (to_Z m.(opiter_MemArg_offset))))].
 Proof.
-  intros C0 bt0 st fs pre f data module opcode ty natural nt tp m st'
+  intros C0 bt0 st fs pre f data module ty natural nt tp m st'
          Hinv Hbf Hfs Hmems Hty Hbounds H.
-  destruct (step_store C0 st fs pre f data module opcode ty natural nt tp m st'
+  destruct (step_store C0 st fs pre f data module ty natural nt tp m st'
               Hinv Hfs Hmems Hty Hbounds H) as [seg' Hinv'].
   eexists. split; [exact Hinv'|]. subst fs. split.
   - apply (body_first_last bt0 pre f _); [reflexivity | reflexivity | exact Hbf].
@@ -942,19 +941,23 @@ Qed.
 
 (** [br_table] rewrites the frame's ctrl exactly as [br] does, so this is
     [step_br_op]'s shape with the label list threaded through. *)
-Corollary step_br_table_op : forall C0 bt0 st fs pre f data ls x common st',
+Corollary step_br_table_op : forall V (inst : visit_OpVisitor_t V) v v' dflt
+                                    C0 bt0 st fs pre f data ls x common st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
   List.Forall (fun d => depth_target st d common) (ls ++ [x]) ->
-  opiter_read_br_table st data = Ok (Core_result_Result_Ok common, st') ->
+  opiter_read_br_table inst st data v
+    = Ok (Core_result_Result_Ok (dflt, common), st', v') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs'
                  = frames_flat fs
                    ++ [FO_plain (BI_br_table (List.map Z.to_N ls) (Z.to_N x))].
 Proof.
-  intros C0 bt0 st fs pre f data ls x common st' Hinv Hbf Hfs Hdt H.
+  intros V inst v v' dflt C0 bt0 st fs pre f data ls x common st'
+         Hinv Hbf Hfs Hdt H.
   eexists.
   split;
-    [apply (step_br_table C0 st fs pre f data ls x common st' Hinv Hfs Hdt H)|].
+    [apply (step_br_table V inst v v' dflt C0 st fs pre f data ls x common st'
+              Hinv Hfs Hdt H)|].
   subst fs. split.
   - apply (body_first_last bt0 pre f _); [reflexivity | reflexivity | exact Hbf].
   - apply (frames_flat_plain pre f

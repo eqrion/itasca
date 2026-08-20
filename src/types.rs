@@ -118,3 +118,25 @@ pub enum ConstExpr {
     /// in an initialiser.
     GlobalGet(u32),
 }
+
+/// Where a custom section's name and contents are.
+///
+/// Ranges rather than bytes: a custom section is padding as far as the module
+/// a binary denotes is concerned (`Spec_Module.v` reads it as such), so nothing
+/// here needs its contents, and a consumer that wants them has the bytes
+/// already. Positions index whatever was handed to the decoder that reported
+/// it, the same frame as every other position in this interface.
+#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
+#[derive(Clone, Copy)]
+pub struct CustomSection {
+    /// The name's length. It ends where the payload starts, so the name is
+    /// `[payload_start - name_len, payload_start)`. A length rather than a
+    /// start because that is what the decoder has without subtracting, and a
+    /// subtraction here would be a panic site in verified code for something
+    /// a consumer can do for itself. Checked for UTF-8 validity as it was
+    /// read (spec 5.2.4), and not copied out.
+    pub name_len: usize,
+    /// The bytes after the name: `[payload_start, payload_end)`.
+    pub payload_start: usize,
+    pub payload_end: usize,
+}

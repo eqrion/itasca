@@ -25,9 +25,9 @@ Local Open Scope Primitives_scope.
 Require Import Veriwasm.Aeneas_Specs.
 Require Import Veriwasm.Translate.
 Require Import Veriwasm.Spec_Binary.
+Require Import Veriwasm.OpIter_Visit.
 Require Import Veriwasm.OpIter_State.
 Require Import Veriwasm.OpIter_Decode.
-Require Import Veriwasm.OpIter_Protocol.
 Require Import Veriwasm.OpIter_Sim.
 Require Import Veriwasm.OpIter_Expr.
 Require Import Veriwasm.OpIter_Table.
@@ -41,8 +41,11 @@ Open Scope Z_scope.
 (** One operator's worth of progress. *)
 Definition op_step (C0 : t_context) (bt0 : opiter_BlockType_t) (data : slice u8)
                    (st st' : opiter_OpIterState_t)
-                   (fs fs' : list fview) (op : flat_op) : Prop :=
-  Inv C0 st' fs'
+                   (fs fs' : list fview) (op : flat_op)
+                   {V : Type} (inst : visit_OpVisitor_t V) (vis vis' : V) : Prop :=
+  (* the consumer was shown this operator, and nothing else *)
+  traced inst vis vis' [op]
+  /\ Inv C0 st' fs'
   /\ body_first bt0 fs'
   /\ frames_flat fs' = frames_flat fs ++ [op]
   /\ repr_op (bytes_from data st.(opiter_OpIterState_pos)) op
@@ -56,8 +59,11 @@ Definition op_step (C0 : t_context) (bt0 : opiter_BlockType_t) (data : slice u8)
     first [if] production. *)
 Definition bare_if_step (C0 : t_context) (bt0 : opiter_BlockType_t)
                         (data : slice u8) (st st' : opiter_OpIterState_t)
-                        (fs fs' : list fview) : Prop :=
-  Inv C0 st' fs'
+                        (fs fs' : list fview)
+                        {V : Type} (inst : visit_OpVisitor_t V) (vis vis' : V) : Prop :=
+  (* one byte, one hook call: the [else] the frames gain was never written *)
+  traced inst vis vis' [FO_end]
+  /\ Inv C0 st' fs'
   /\ body_first bt0 fs'
   /\ frames_flat fs' = frames_flat fs ++ [FO_else; FO_end]
   /\ repr_op (bytes_from data st.(opiter_OpIterState_pos)) FO_end
@@ -66,8 +72,10 @@ Definition bare_if_step (C0 : t_context) (bt0 : opiter_BlockType_t)
 (** The body has been read to its closing [end]: nothing is left on the control
     stack, and the outermost frame's ghost list is the instruction sequence. *)
 Definition body_done (C0 : t_context) (bt0 : opiter_BlockType_t) (data : slice u8)
-                     (st st' : opiter_OpIterState_t) (fs : list fview) : Prop :=
-  exists f,
+                     (st st' : opiter_OpIterState_t) (fs : list fview)
+                     {V : Type} (inst : visit_OpVisitor_t V) (vis vis' : V) : Prop :=
+  traced inst vis vis' [FO_end]
+  /\ exists f,
     fs = [f]
     /\ (fv_ctrl f).(opiter_Ctrl_kind) = Opiter_LabelKind_Body
     /\ (fv_ctrl f).(opiter_Ctrl_block_type) = bt0
@@ -90,18 +98,31 @@ Local Ltac ls_bounds :=
         | (assert (Hz : a = 0 \/ a = 1 \/ a = 2 \/ a = 3) by lia;
            destruct Hz as [Hz|[Hz|[Hz|Hz]]]; subst a; reflexivity) ].
 
-Theorem step_op_step : forall C0 bt0 module ctx data st fs b st1 st2,
+(** Opening a [traced] goal: one name per row of the recorder, so the branch
+    can reach for its own. *)
+Local Ltac trace_pre :=
+  intros obs pend Hrec Hpd;
+  pose proof Hrec as Hrec0;
+  destruct Hrec as [Hnum_c [Hnum_b [Hload [Hstore [Hfstart [Hlabel [Hbrt
+    [Hunr [Hnop [Hblock [Hloop [Hif [Helse [Hend [Hbr [Hbrif [Hret_
+    [Hcall [Hcalli [Hdrop [Hsel [Hlget [Hlset [Hltee [Hgget [Hgset
+    [Hmsize [Hmgrow [Hi32c [Hi64c [Hf32c Hf64c]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]].
+
+Theorem step_op_step : forall V (inst : visit_OpVisitor_t V) vis vis2
+                              C0 bt0 module ctx data st fs b st1 st2,
   Inv C0 st fs -> body_first bt0 fs ->
   mems_agree module C0 -> locals_agree ctx C0 -> globals_agree module C0 ->
   return_agree ctx C0 -> funcs_agree module C0 -> types_agree module C0 ->
   tables_agree module C0 ->
   opiter_read_op st data = Ok (Core_result_Result_Ok b, st1) ->
-  opiter_step st1 data module ctx b = Ok (Core_result_Result_Ok tt, st2) ->
-  (exists fs' op, op_step C0 bt0 data st st2 fs fs' op)
-  \/ (exists fs', bare_if_step C0 bt0 data st st2 fs fs')
-  \/ body_done C0 bt0 data st st2 fs.
+  opiter_step inst st1 data module ctx b vis
+    = Ok (Core_result_Result_Ok tt, st2, vis2) ->
+  (exists fs' op, op_step C0 bt0 data st st2 fs fs' op inst vis vis2)
+  \/ (exists fs', bare_if_step C0 bt0 data st st2 fs fs' inst vis vis2)
+  \/ body_done C0 bt0 data st st2 fs inst vis vis2.
 Proof.
-  intros C0 bt0 module ctx data st fs b st1 st2 Hinv Hbf Hmems Hlocals Hglobals Hret
+  intros V inst vis vis2 C0 bt0 module ctx data st fs b st1 st2
+         Hinv Hbf Hmems Hlocals Hglobals Hret
          Hfuncs Htypes Htables Hro Hstep.
   (* [read_op] moves only the cursor, so the invariant transports to [st1] *)
   destruct (read_op_state st data _ st1 Hro) as [Hv1 Hc1].
@@ -112,136 +133,196 @@ Proof.
   unfold opiter_step in Hstep.
   destruct (b s= opiter_op_nop) eqn:E1.
   { left. apply scalar_eqb_true in E1.
-    destruct (step_nop_op C0 bt0 st1 fs pre f st2 Hinv1 Hbf Hfs Hstep)
+    (* [nop] has no reader, so [st2] is the state [read_op] left, and the
+       whole of the dispatch is the hook call *)
+    pose proof (visit_hook_ok V _ st1 st2 vis2 Hstep) as Hhk.
+    rewrite (visit_hook_state V _ st1 _ st2 vis2 Hstep) in *.
+    destruct (step_nop_op C0 bt0 st1 fs pre f Hinv1 Hbf Hfs)
       as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain BI_nop). unfold op_step.
+    split.
+    { trace_pre.
+      destruct (Hnop _ _ _ Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_of_inert; [rewrite E1; reflexivity|].
-    apply (read_nop_pos st1 _ st2 Hstep). }
+    reflexivity. }
   destruct (b s= opiter_op_unreachable) eqn:E2.
   { left. apply scalar_eqb_true in E2.
-    destruct (step_unreachable_op C0 bt0 st1 fs pre f st2 Hinv1 Hbf Hfs Hstep)
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [u [Hrd Hhk]].
+    destruct u.
+    destruct (step_unreachable_op C0 bt0 st1 fs pre f st2 Hinv1 Hbf Hfs Hrd)
       as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain BI_unreachable). unfold op_step.
+    split.
+    { trace_pre.
+      destruct (Hunr _ _ _ Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_of_inert; [rewrite E2; reflexivity|].
-    apply (read_unreachable_pos st1 _ st2 Hstep). }
+    apply (read_unreachable_pos st1 _ st2 Hrd). }
   destruct (b s= opiter_op_i32_const) eqn:E3.
   { left. apply scalar_eqb_true in E3.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [v Hrd].
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [v [Hrd Hhk]].
     destruct (step_i32_const_op C0 bt0 st1 fs pre f data v st2 Hinv1 Hbf Hfs Hrd)
       as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_const_num
                              (VAL_int32 (Wasm_int.Int32.repr (to_Z v))))).
     unfold op_step.
+    split.
+    { trace_pre.
+      destruct (Hi32c _ _ _ _ Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply (repr_op_const _ T_i32);
       [rewrite E3; reflexivity|].
     apply (read_i32_const_sound st1 data v st2 Hrd). }
   destruct (b s= opiter_op_i64_const) eqn:E3b.
   { left. apply scalar_eqb_true in E3b.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [v Hrd].
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [v [Hrd Hhk]].
     destruct (step_i64_const_op C0 bt0 st1 fs pre f data v st2 Hinv1 Hbf Hfs Hrd)
       as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_const_num
                              (VAL_int64 (Wasm_int.Int64.repr (to_Z v))))).
     unfold op_step.
+    split.
+    { trace_pre.
+      destruct (Hi64c _ _ _ _ Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply (repr_op_const _ T_i64);
       [rewrite E3b; reflexivity|].
     apply (read_i64_const_sound st1 data v st2 Hrd). }
   destruct (b s= opiter_op_f32_const) eqn:E3c.
   { left. apply scalar_eqb_true in E3c.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [v Hrd].
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [v [Hrd Hhk]].
     destruct (step_f32_const_op C0 bt0 st1 fs pre f data v st2 Hinv1 Hbf Hfs Hrd)
       as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_const_num (fconst_val T_f32 (to_Z v)))).
     unfold op_step.
+    split.
+    { trace_pre.
+      destruct (Hf32c _ _ _ _ Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply (repr_op_fconst _ T_f32);
       [rewrite E3c; reflexivity|].
     apply (read_f32_const_sound st1 data v st2 Hrd). }
   destruct (b s= opiter_op_f64_const) eqn:E3d.
   { left. apply scalar_eqb_true in E3d.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [v Hrd].
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [v [Hrd Hhk]].
     destruct (step_f64_const_op C0 bt0 st1 fs pre f data v st2 Hinv1 Hbf Hfs Hrd)
       as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_const_num (fconst_val T_f64 (to_Z v)))).
     unfold op_step.
+    split.
+    { trace_pre.
+      destruct (Hf64c _ _ _ _ Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply (repr_op_fconst _ T_f64);
       [rewrite E3d; reflexivity|].
     apply (read_f64_const_sound st1 data v st2 Hrd). }
   destruct (b s= opiter_op_drop) eqn:E5.
   { left. apply scalar_eqb_true in E5.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [t Hrd].
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [t [Hrd Hhk]].
     destruct (step_drop_op C0 bt0 st1 fs pre f t st2 Hinv1 Hbf Hfs Hrd)
       as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain BI_drop). unfold op_step.
+    split.
+    { trace_pre.
+      destruct (Hdrop _ _ _ _ Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_of_inert; [rewrite E5; reflexivity|].
     apply (read_drop_pos st1 _ st2 Hrd). }
   destruct (b s= opiter_op_select) eqn:E5s.
   { left. apply scalar_eqb_true in E5s.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [t Hrd].
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [t [Hrd Hhk]].
     destruct (step_select_op C0 bt0 st1 fs pre f t st2 Hinv1 Hbf Hfs Hrd)
       as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_select None)). unfold op_step.
+    split.
+    { trace_pre.
+      destruct (Hsel _ _ _ _ Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_of_inert; [rewrite E5s; reflexivity|].
     apply (read_select_pos st1 _ st2 Hrd). }
   destruct (b s= opiter_op_block) eqn:E6.
   { left. apply scalar_eqb_true in E6.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [bt Hrd].
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [bt [Hrd Hhk]].
     destruct (step_block_op C0 bt0 st1 fs data bt st2 Hinv1 Hbf Hrd)
       as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_block (translate_bt bt)). unfold op_step.
+    split.
+    { trace_pre.
+      destruct (Hblock _ _ _ _ Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     destruct (read_block_sound st1 data bt st2 Hrd) as [bb [Hbb Hspec]].
     rewrite Hbytes. rewrite Hbb.
     apply repr_op_block; [rewrite E6; reflexivity | exact Hspec]. }
   destruct (b s= opiter_op_loop) eqn:E7.
   { left. apply scalar_eqb_true in E7.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [bt Hrd].
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [bt [Hrd Hhk]].
     destruct (step_loop_op C0 bt0 st1 fs data bt st2 Hinv1 Hbf Hrd)
       as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_loop (translate_bt bt)). unfold op_step.
+    split.
+    { trace_pre.
+      destruct (Hloop _ _ _ _ Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     destruct (read_loop_sound st1 data bt st2 Hrd) as [bb [Hbb Hspec]].
     rewrite Hbytes. rewrite Hbb.
     apply repr_op_loop; [rewrite E7; reflexivity | exact Hspec]. }
   destruct (b s= opiter_op_if) eqn:E7i.
   { left. apply scalar_eqb_true in E7i.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [bt Hrd].
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [bt [Hrd Hhk]].
     destruct (step_if_op C0 bt0 st1 fs pre f data bt st2 Hinv1 Hbf Hfs Hrd)
       as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_if (translate_bt bt)). unfold op_step.
+    split.
+    { trace_pre.
+      destruct (Hif _ _ _ _ Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     destruct (read_if_sound st1 data bt st2 Hrd) as [bb [Hbb Hspec]].
     rewrite Hbytes. rewrite Hbb.
     apply repr_op_if; [rewrite E7i; reflexivity | exact Hspec]. }
   destruct (b s= opiter_op_else) eqn:E7e.
   { left. apply scalar_eqb_true in E7e.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [bt Hrd].
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [bt [Hrd Hhk]].
     (* [read_else] rejects anything but an open then-branch, so the innermost
        frame's kind is settled by the run rather than assumed *)
     pose proof (read_else_frame C0 st1 fs pre f bt st2 Hinv1 Hfs Hrd) as Hkind.
     destruct (step_switch_else_op C0 bt0 st1 fs pre f bt st2
                 Hinv1 Hbf Hfs Hkind Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', FO_else. unfold op_step.
+    split.
+    { trace_pre.
+      destruct (Helse _ _ _ _ Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_of_else; [rewrite E7e; reflexivity|].
     apply (read_else_pos st1 _ st2 Hrd). }
   (* [end] is the one branch that can finish the run *)
   destruct (b s= opiter_op_end) eqn:E8.
   { apply scalar_eqb_true in E8.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [r Hrd].
-    destruct (end_state C0 st1 fs pre f r st2 Hinv1 Hfs Hrd)
+    destruct (visit_wrap2_hook _ _ V _ _ vis st2 vis2 Hstep)
+      as [ekind [ebt [Hrd Hhk]]].
+    destruct (end_state C0 st1 fs pre f (ekind, ebt) st2 Hinv1 Hfs Hrd)
       as [_ [Hagree [_ [Hc2 _]]]].
     destruct (body_first_innermost bt0 fs pre f Hbf Hfs)
       as [[Hprenil [Hk Hbt]] | [pre2 [f2 [Hfs2 Hk]]]].
     - (* the body's own [end]: the run is over *)
-      right. right. unfold body_done. exists f.
+      right. right. unfold body_done.
+      split.
+      { trace_pre.
+        destruct (Hend _ _ _ _ _ Hhk) as [Ho Hp].
+        split; [exact Ho | rewrite Hp; exact Hpd]. }
+      exists f.
       split; [rewrite Hfs; rewrite Hprenil; reflexivity|].
       split; [exact Hk|]. split; [exact Hbt|].
       split; [rewrite <- Hbt; exact Hagree|]. split.
@@ -252,145 +333,212 @@ Proof.
          else, which is the two-operator case *)
       destruct Hk as [Hkb | [Hkl | [Hkt | Hke]]].
       + left.
-        destruct (step_end_block_op C0 bt0 st1 fs pre2 f2 f r st2
+        destruct (step_end_block_op C0 bt0 st1 fs pre2 f2 f (ekind, ebt) st2
                     Hinv1 Hbf Hfs2 Hkb Hrd) as [fs' [Hinv' [Hbf' Hff]]].
         exists fs', FO_end. unfold op_step.
+        split.
+        { trace_pre.
+          destruct (Hend _ _ _ _ _ Hhk) as [Ho Hp].
+          split; [exact Ho | rewrite Hp; exact Hpd]. }
         split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
         rewrite Hbytes. apply repr_op_of_end; [rewrite E8; reflexivity|].
         apply (read_end_pos st1 _ st2 Hrd).
       + left.
-        destruct (step_end_loop_op C0 bt0 st1 fs pre2 f2 f r st2
+        destruct (step_end_loop_op C0 bt0 st1 fs pre2 f2 f (ekind, ebt) st2
                     Hinv1 Hbf Hfs2 Hkl Hrd) as [fs' [Hinv' [Hbf' Hff]]].
         exists fs', FO_end. unfold op_step.
+        split.
+        { trace_pre.
+          destruct (Hend _ _ _ _ _ Hhk) as [Ho Hp].
+          split; [exact Ho | rewrite Hp; exact Hpd]. }
         split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
         rewrite Hbytes. apply repr_op_of_end; [rewrite E8; reflexivity|].
         apply (read_end_pos st1 _ st2 Hrd).
       + right. left.
-        destruct (step_end_then_op C0 bt0 st1 fs pre2 f2 f r st2
+        destruct (step_end_then_op C0 bt0 st1 fs pre2 f2 f (ekind, ebt) st2
                     Hinv1 Hbf Hfs2 Hkt Hrd) as [fs' [Hinv' [Hbf' Hff]]].
         exists fs'. unfold bare_if_step.
+        split.
+        { trace_pre.
+          destruct (Hend _ _ _ _ _ Hhk) as [Ho Hp].
+          split; [exact Ho | rewrite Hp; exact Hpd]. }
         split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
         rewrite Hbytes. apply repr_op_of_end; [rewrite E8; reflexivity|].
         apply (read_end_pos st1 _ st2 Hrd).
       + left.
-        destruct (step_end_else_op C0 bt0 st1 fs pre2 f2 f r st2
+        destruct (step_end_else_op C0 bt0 st1 fs pre2 f2 f (ekind, ebt) st2
                     Hinv1 Hbf Hfs2 Hke Hrd) as [fs' [Hinv' [Hbf' Hff]]].
         exists fs', FO_end. unfold op_step.
+        split.
+        { trace_pre.
+          destruct (Hend _ _ _ _ _ Hhk) as [Ho Hp].
+          split; [exact Ho | rewrite Hp; exact Hpd]. }
         split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
         rewrite Hbytes. apply repr_op_of_end; [rewrite E8; reflexivity|].
         apply (read_end_pos st1 _ st2 Hrd). }
   destruct (b s= opiter_op_br) eqn:E9.
   { left. apply scalar_eqb_true in E9.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [dbt Hrd].
-    destruct dbt as [depth bt].
+    destruct (visit_wrap2_hook _ _ V _ _ vis st2 vis2 Hstep)
+      as [depth [bt [Hrd Hhk]]].
     destruct (step_br_op C0 bt0 st1 fs pre f data depth bt st2 Hinv1 Hbf Hfs Hrd)
       as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_br (Z.to_N (to_Z depth)))). unfold op_step.
+    split.
+    { trace_pre.
+      destruct (Hbr _ _ _ _ _ Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_idx with (io := IO_br);
       [rewrite E9; reflexivity|].
     apply (read_br_sound st1 data depth bt st2 Hrd). }
   destruct (b s= opiter_op_br_if) eqn:E9b.
   { left. apply scalar_eqb_true in E9b.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [[depth bt] Hrd].
+    destruct (visit_wrap2_hook _ _ V _ _ vis st2 vis2 Hstep)
+      as [depth [bt [Hrd Hhk]]].
     destruct (step_br_if_op C0 bt0 st1 fs pre f data depth bt st2
                 Hinv1 Hbf Hfs Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_br_if (Z.to_N (to_Z depth)))). unfold op_step.
+    split.
+    { trace_pre.
+      destruct (Hbrif _ _ _ _ _ Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_idx with (io := IO_br_if);
       [rewrite E9b; reflexivity|].
     apply (read_br_if_sound st1 data depth bt st2 Hrd). }
   destruct (b s= opiter_op_br_table) eqn:E9t.
   { left. apply scalar_eqb_true in E9t.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [common Hrd].
+    destruct (visit_wrapv_hook _ _ V _ _ st2 vis2 Hstep)
+      as [dflt [common [vis1 [Hrd Hhk]]]].
     (* the label list and the per-label frame facts come out of the same run *)
-    destruct (read_br_table_sound st1 data common st2 Hrd)
-      as [ls [x [mid [Hvec [Hdef Hdt]]]]].
-    destruct (step_br_table_op C0 bt0 st1 fs pre f data ls x common st2
-                Hinv1 Hbf Hfs Hdt Hrd) as [fs' [Hinv' [Hbf' Hff]]].
+    destruct (read_br_table_sound V inst vis st1 data dflt common st2 vis1 Hrd)
+      as [ls [x [mid [Hvec [Hdef [Hdt [Hlbl Hxd]]]]]]].
+    destruct (step_br_table_op V inst vis vis1 dflt C0 bt0 st1 fs pre f data ls x
+                common st2 Hinv1 Hbf Hfs Hdt Hrd)
+      as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_br_table (List.map Z.to_N ls) (Z.to_N x))).
     unfold op_step.
+    split.
+    { (* the labels went over one at a time; the closing hook is the operator *)
+      trace_pre.
+      destruct (Hlbl obs pend Hrec0) as [Hobs1 Hpend1].
+      destruct (Hbrt _ _ _ _ _ Hhk) as [Ho Hp].
+      split; [|exact Hp].
+      rewrite Ho. rewrite Hobs1. rewrite Hpend1. rewrite Hpd.
+      cbn [List.app]. rewrite Hxd. reflexivity. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes.
     apply repr_op_br_table with (mid := mid);
       [rewrite E9t; reflexivity | exact Hvec | exact Hdef]. }
   destruct (b s= opiter_op_return) eqn:E9r.
   { left. apply scalar_eqb_true in E9r.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [u Hrd]. destruct u.
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [u [Hrd Hhk]]. destruct u.
     destruct (step_return_op C0 bt0 ctx st1 fs pre f st2
                 Hinv1 Hbf Hfs Hret Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain BI_return). unfold op_step.
+    split.
+    { trace_pre.
+      destruct (Hret_ _ _ _ Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_of_inert; [rewrite E9r; reflexivity|].
     apply (read_return_pos st1 ctx _ st2 Hrd). }
   destruct (b s= opiter_op_call) eqn:EC1.
   { left. apply scalar_eqb_true in EC1.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [idx Hrd].
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [idx [Hrd Hhk]].
     destruct (step_call_op C0 bt0 module st1 fs pre f data idx st2
                 Hinv1 Hbf Hfs Hfuncs Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_call (Z.to_N (to_Z idx)))). unfold op_step.
+    split.
+    { trace_pre.
+      destruct (Hcall _ _ _ _ Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_idx with (io := IO_call);
       [rewrite EC1; reflexivity|].
     apply (read_call_sound st1 data module idx st2 Hrd). }
   destruct (b s= opiter_op_call_indirect) eqn:EC2.
   { left. apply scalar_eqb_true in EC2.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [idx Hrd].
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [idx [Hrd Hhk]].
     destruct (step_call_indirect_op C0 bt0 module st1 fs pre f data idx st2
                 Hinv1 Hbf Hfs Htypes Htables Hrd)
       as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_call_indirect 0%N (Z.to_N (to_Z idx)))).
     unfold op_step.
+    split.
+    { trace_pre.
+      destruct (Hcalli _ _ _ _ Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_call_indirect;
       [rewrite EC2; reflexivity|].
     apply (read_call_indirect_sound st1 data module idx st2 Hrd). }
   destruct (b s= opiter_op_local_get) eqn:EL1.
   { left. apply scalar_eqb_true in EL1.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [idx Hrd].
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [idx [Hrd Hhk]].
     destruct (step_local_get_op C0 bt0 ctx st1 fs pre f data idx st2
                 Hinv1 Hbf Hfs Hlocals Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_local_get (Z.to_N (to_Z idx)))). unfold op_step.
+    split.
+    { trace_pre.
+      destruct (Hlget _ _ _ _ Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_idx with (io := IO_local_get);
       [rewrite EL1; reflexivity|].
     apply (take_local_sound_of_get st1 data ctx idx st2 Hrd). }
   destruct (b s= opiter_op_local_set) eqn:EL2.
   { left. apply scalar_eqb_true in EL2.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [idx Hrd].
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [idx [Hrd Hhk]].
     destruct (step_local_set_op C0 bt0 ctx st1 fs pre f data idx st2
                 Hinv1 Hbf Hfs Hlocals Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_local_set (Z.to_N (to_Z idx)))). unfold op_step.
+    split.
+    { trace_pre.
+      destruct (Hlset _ _ _ _ Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_idx with (io := IO_local_set);
       [rewrite EL2; reflexivity|].
     apply (take_local_sound_of_set st1 data ctx idx st2 Hrd). }
   destruct (b s= opiter_op_local_tee) eqn:EL3.
   { left. apply scalar_eqb_true in EL3.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [idx Hrd].
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [idx [Hrd Hhk]].
     destruct (step_local_tee_op C0 bt0 ctx st1 fs pre f data idx st2
                 Hinv1 Hbf Hfs Hlocals Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_local_tee (Z.to_N (to_Z idx)))). unfold op_step.
+    split.
+    { trace_pre.
+      destruct (Hltee _ _ _ _ Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_idx with (io := IO_local_tee);
       [rewrite EL3; reflexivity|].
     apply (take_local_sound_of_tee st1 data ctx idx st2 Hrd). }
   destruct (b s= opiter_op_global_get) eqn:EG1.
   { left. apply scalar_eqb_true in EG1.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [idx Hrd].
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [idx [Hrd Hhk]].
     destruct (step_global_get_op C0 bt0 module st1 fs pre f data idx st2
                 Hinv1 Hbf Hfs Hglobals Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_global_get (Z.to_N (to_Z idx)))). unfold op_step.
+    split.
+    { trace_pre.
+      destruct (Hgget _ _ _ _ Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_idx with (io := IO_global_get);
       [rewrite EG1; reflexivity|].
     apply (take_global_sound_of_get st1 data module idx st2 Hrd). }
   destruct (b s= opiter_op_global_set) eqn:EG2.
   { left. apply scalar_eqb_true in EG2.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [idx Hrd].
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [idx [Hrd Hhk]].
     destruct (step_global_set_op C0 bt0 module st1 fs pre f data idx st2
                 Hinv1 Hbf Hfs Hglobals Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_global_set (Z.to_N (to_Z idx)))). unfold op_step.
+    split.
+    { trace_pre.
+      destruct (Hgset _ _ _ _ Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_idx with (io := IO_global_set);
       [rewrite EG2; reflexivity|].
@@ -398,318 +546,464 @@ Proof.
   unfold opiter_step_memory in Hstep.
   destruct (b s= opiter_op_i32_load) eqn:E10.
   { left. apply scalar_eqb_true in E10.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [m Hrd].
-    destruct (step_load_op C0 bt0 st1 fs pre f data module b Types_ValueType_I32 2%u32
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [m [Hrd Hhk]].
+    destruct (step_load_op C0 bt0 st1 fs pre f data module Types_ValueType_I32 2%u32
                 T_i32 None m st2 Hinv1 Hbf Hfs Hmems (eq_refl _)
                 (ltac:(ls_bounds)) Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_load T_i32 None
                              (Z.to_N (to_Z m.(opiter_MemArg_align)))
                              (Z.to_N (to_Z m.(opiter_MemArg_offset))))).
     unfold op_step.
+    split.
+    { trace_pre.
+      assert (Hsp : op_spec (to_Z b) = Some (Sh_load _ _))
+        by (rewrite E10; reflexivity).
+      destruct (Hload _ _ _ _ _ _ _ Hsp Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_load; [rewrite E10; reflexivity|].
-    apply (read_load_sound st1 data module b Types_ValueType_I32 2%u32 m st2 Hrd). }
+    apply (read_load_sound st1 data module Types_ValueType_I32 2%u32 m st2 Hrd). }
   destruct (b s= opiter_op_i64_load) eqn:E11.
   { left. apply scalar_eqb_true in E11.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [m Hrd].
-    destruct (step_load_op C0 bt0 st1 fs pre f data module b Types_ValueType_I64 3%u32
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [m [Hrd Hhk]].
+    destruct (step_load_op C0 bt0 st1 fs pre f data module Types_ValueType_I64 3%u32
                 T_i64 None m st2 Hinv1 Hbf Hfs Hmems (eq_refl _)
                 (ltac:(ls_bounds)) Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_load T_i64 None
                              (Z.to_N (to_Z m.(opiter_MemArg_align)))
                              (Z.to_N (to_Z m.(opiter_MemArg_offset))))).
     unfold op_step.
+    split.
+    { trace_pre.
+      assert (Hsp : op_spec (to_Z b) = Some (Sh_load _ _))
+        by (rewrite E11; reflexivity).
+      destruct (Hload _ _ _ _ _ _ _ Hsp Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_load; [rewrite E11; reflexivity|].
-    apply (read_load_sound st1 data module b Types_ValueType_I64 3%u32 m st2 Hrd). }
+    apply (read_load_sound st1 data module Types_ValueType_I64 3%u32 m st2 Hrd). }
   destruct (b s= opiter_op_f32_load) eqn:E12.
   { left. apply scalar_eqb_true in E12.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [m Hrd].
-    destruct (step_load_op C0 bt0 st1 fs pre f data module b Types_ValueType_F32 2%u32
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [m [Hrd Hhk]].
+    destruct (step_load_op C0 bt0 st1 fs pre f data module Types_ValueType_F32 2%u32
                 T_f32 None m st2 Hinv1 Hbf Hfs Hmems (eq_refl _)
                 (ltac:(ls_bounds)) Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_load T_f32 None
                              (Z.to_N (to_Z m.(opiter_MemArg_align)))
                              (Z.to_N (to_Z m.(opiter_MemArg_offset))))).
     unfold op_step.
+    split.
+    { trace_pre.
+      assert (Hsp : op_spec (to_Z b) = Some (Sh_load _ _))
+        by (rewrite E12; reflexivity).
+      destruct (Hload _ _ _ _ _ _ _ Hsp Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_load; [rewrite E12; reflexivity|].
-    apply (read_load_sound st1 data module b Types_ValueType_F32 2%u32 m st2 Hrd). }
+    apply (read_load_sound st1 data module Types_ValueType_F32 2%u32 m st2 Hrd). }
   destruct (b s= opiter_op_f64_load) eqn:E13.
   { left. apply scalar_eqb_true in E13.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [m Hrd].
-    destruct (step_load_op C0 bt0 st1 fs pre f data module b Types_ValueType_F64 3%u32
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [m [Hrd Hhk]].
+    destruct (step_load_op C0 bt0 st1 fs pre f data module Types_ValueType_F64 3%u32
                 T_f64 None m st2 Hinv1 Hbf Hfs Hmems (eq_refl _)
                 (ltac:(ls_bounds)) Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_load T_f64 None
                              (Z.to_N (to_Z m.(opiter_MemArg_align)))
                              (Z.to_N (to_Z m.(opiter_MemArg_offset))))).
     unfold op_step.
+    split.
+    { trace_pre.
+      assert (Hsp : op_spec (to_Z b) = Some (Sh_load _ _))
+        by (rewrite E13; reflexivity).
+      destruct (Hload _ _ _ _ _ _ _ Hsp Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_load; [rewrite E13; reflexivity|].
-    apply (read_load_sound st1 data module b Types_ValueType_F64 3%u32 m st2 Hrd). }
+    apply (read_load_sound st1 data module Types_ValueType_F64 3%u32 m st2 Hrd). }
   destruct (b s= opiter_op_i32_load8_s) eqn:E14.
   { left. apply scalar_eqb_true in E14.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [m Hrd].
-    destruct (step_load_op C0 bt0 st1 fs pre f data module b Types_ValueType_I32 0%u32
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [m [Hrd Hhk]].
+    destruct (step_load_op C0 bt0 st1 fs pre f data module Types_ValueType_I32 0%u32
                 T_i32 (Some (Tp_i8, SX_S)) m st2 Hinv1 Hbf Hfs Hmems (eq_refl _)
                 (ltac:(ls_bounds)) Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_load T_i32 (Some (Tp_i8, SX_S))
                              (Z.to_N (to_Z m.(opiter_MemArg_align)))
                              (Z.to_N (to_Z m.(opiter_MemArg_offset))))).
     unfold op_step.
+    split.
+    { trace_pre.
+      assert (Hsp : op_spec (to_Z b) = Some (Sh_load _ _))
+        by (rewrite E14; reflexivity).
+      destruct (Hload _ _ _ _ _ _ _ Hsp Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_load; [rewrite E14; reflexivity|].
-    apply (read_load_sound st1 data module b Types_ValueType_I32 0%u32 m st2 Hrd). }
+    apply (read_load_sound st1 data module Types_ValueType_I32 0%u32 m st2 Hrd). }
   destruct (b s= opiter_op_i32_load8_u) eqn:E15.
   { left. apply scalar_eqb_true in E15.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [m Hrd].
-    destruct (step_load_op C0 bt0 st1 fs pre f data module b Types_ValueType_I32 0%u32
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [m [Hrd Hhk]].
+    destruct (step_load_op C0 bt0 st1 fs pre f data module Types_ValueType_I32 0%u32
                 T_i32 (Some (Tp_i8, SX_U)) m st2 Hinv1 Hbf Hfs Hmems (eq_refl _)
                 (ltac:(ls_bounds)) Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_load T_i32 (Some (Tp_i8, SX_U))
                              (Z.to_N (to_Z m.(opiter_MemArg_align)))
                              (Z.to_N (to_Z m.(opiter_MemArg_offset))))).
     unfold op_step.
+    split.
+    { trace_pre.
+      assert (Hsp : op_spec (to_Z b) = Some (Sh_load _ _))
+        by (rewrite E15; reflexivity).
+      destruct (Hload _ _ _ _ _ _ _ Hsp Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_load; [rewrite E15; reflexivity|].
-    apply (read_load_sound st1 data module b Types_ValueType_I32 0%u32 m st2 Hrd). }
+    apply (read_load_sound st1 data module Types_ValueType_I32 0%u32 m st2 Hrd). }
   destruct (b s= opiter_op_i32_load16_s) eqn:E16.
   { left. apply scalar_eqb_true in E16.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [m Hrd].
-    destruct (step_load_op C0 bt0 st1 fs pre f data module b Types_ValueType_I32 1%u32
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [m [Hrd Hhk]].
+    destruct (step_load_op C0 bt0 st1 fs pre f data module Types_ValueType_I32 1%u32
                 T_i32 (Some (Tp_i16, SX_S)) m st2 Hinv1 Hbf Hfs Hmems (eq_refl _)
                 (ltac:(ls_bounds)) Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_load T_i32 (Some (Tp_i16, SX_S))
                              (Z.to_N (to_Z m.(opiter_MemArg_align)))
                              (Z.to_N (to_Z m.(opiter_MemArg_offset))))).
     unfold op_step.
+    split.
+    { trace_pre.
+      assert (Hsp : op_spec (to_Z b) = Some (Sh_load _ _))
+        by (rewrite E16; reflexivity).
+      destruct (Hload _ _ _ _ _ _ _ Hsp Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_load; [rewrite E16; reflexivity|].
-    apply (read_load_sound st1 data module b Types_ValueType_I32 1%u32 m st2 Hrd). }
+    apply (read_load_sound st1 data module Types_ValueType_I32 1%u32 m st2 Hrd). }
   destruct (b s= opiter_op_i32_load16_u) eqn:E17.
   { left. apply scalar_eqb_true in E17.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [m Hrd].
-    destruct (step_load_op C0 bt0 st1 fs pre f data module b Types_ValueType_I32 1%u32
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [m [Hrd Hhk]].
+    destruct (step_load_op C0 bt0 st1 fs pre f data module Types_ValueType_I32 1%u32
                 T_i32 (Some (Tp_i16, SX_U)) m st2 Hinv1 Hbf Hfs Hmems (eq_refl _)
                 (ltac:(ls_bounds)) Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_load T_i32 (Some (Tp_i16, SX_U))
                              (Z.to_N (to_Z m.(opiter_MemArg_align)))
                              (Z.to_N (to_Z m.(opiter_MemArg_offset))))).
     unfold op_step.
+    split.
+    { trace_pre.
+      assert (Hsp : op_spec (to_Z b) = Some (Sh_load _ _))
+        by (rewrite E17; reflexivity).
+      destruct (Hload _ _ _ _ _ _ _ Hsp Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_load; [rewrite E17; reflexivity|].
-    apply (read_load_sound st1 data module b Types_ValueType_I32 1%u32 m st2 Hrd). }
+    apply (read_load_sound st1 data module Types_ValueType_I32 1%u32 m st2 Hrd). }
   destruct (b s= opiter_op_i64_load8_s) eqn:E18.
   { left. apply scalar_eqb_true in E18.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [m Hrd].
-    destruct (step_load_op C0 bt0 st1 fs pre f data module b Types_ValueType_I64 0%u32
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [m [Hrd Hhk]].
+    destruct (step_load_op C0 bt0 st1 fs pre f data module Types_ValueType_I64 0%u32
                 T_i64 (Some (Tp_i8, SX_S)) m st2 Hinv1 Hbf Hfs Hmems (eq_refl _)
                 (ltac:(ls_bounds)) Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_load T_i64 (Some (Tp_i8, SX_S))
                              (Z.to_N (to_Z m.(opiter_MemArg_align)))
                              (Z.to_N (to_Z m.(opiter_MemArg_offset))))).
     unfold op_step.
+    split.
+    { trace_pre.
+      assert (Hsp : op_spec (to_Z b) = Some (Sh_load _ _))
+        by (rewrite E18; reflexivity).
+      destruct (Hload _ _ _ _ _ _ _ Hsp Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_load; [rewrite E18; reflexivity|].
-    apply (read_load_sound st1 data module b Types_ValueType_I64 0%u32 m st2 Hrd). }
+    apply (read_load_sound st1 data module Types_ValueType_I64 0%u32 m st2 Hrd). }
   destruct (b s= opiter_op_i64_load8_u) eqn:E19.
   { left. apply scalar_eqb_true in E19.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [m Hrd].
-    destruct (step_load_op C0 bt0 st1 fs pre f data module b Types_ValueType_I64 0%u32
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [m [Hrd Hhk]].
+    destruct (step_load_op C0 bt0 st1 fs pre f data module Types_ValueType_I64 0%u32
                 T_i64 (Some (Tp_i8, SX_U)) m st2 Hinv1 Hbf Hfs Hmems (eq_refl _)
                 (ltac:(ls_bounds)) Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_load T_i64 (Some (Tp_i8, SX_U))
                              (Z.to_N (to_Z m.(opiter_MemArg_align)))
                              (Z.to_N (to_Z m.(opiter_MemArg_offset))))).
     unfold op_step.
+    split.
+    { trace_pre.
+      assert (Hsp : op_spec (to_Z b) = Some (Sh_load _ _))
+        by (rewrite E19; reflexivity).
+      destruct (Hload _ _ _ _ _ _ _ Hsp Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_load; [rewrite E19; reflexivity|].
-    apply (read_load_sound st1 data module b Types_ValueType_I64 0%u32 m st2 Hrd). }
+    apply (read_load_sound st1 data module Types_ValueType_I64 0%u32 m st2 Hrd). }
   destruct (b s= opiter_op_i64_load16_s) eqn:E20.
   { left. apply scalar_eqb_true in E20.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [m Hrd].
-    destruct (step_load_op C0 bt0 st1 fs pre f data module b Types_ValueType_I64 1%u32
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [m [Hrd Hhk]].
+    destruct (step_load_op C0 bt0 st1 fs pre f data module Types_ValueType_I64 1%u32
                 T_i64 (Some (Tp_i16, SX_S)) m st2 Hinv1 Hbf Hfs Hmems (eq_refl _)
                 (ltac:(ls_bounds)) Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_load T_i64 (Some (Tp_i16, SX_S))
                              (Z.to_N (to_Z m.(opiter_MemArg_align)))
                              (Z.to_N (to_Z m.(opiter_MemArg_offset))))).
     unfold op_step.
+    split.
+    { trace_pre.
+      assert (Hsp : op_spec (to_Z b) = Some (Sh_load _ _))
+        by (rewrite E20; reflexivity).
+      destruct (Hload _ _ _ _ _ _ _ Hsp Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_load; [rewrite E20; reflexivity|].
-    apply (read_load_sound st1 data module b Types_ValueType_I64 1%u32 m st2 Hrd). }
+    apply (read_load_sound st1 data module Types_ValueType_I64 1%u32 m st2 Hrd). }
   destruct (b s= opiter_op_i64_load16_u) eqn:E21.
   { left. apply scalar_eqb_true in E21.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [m Hrd].
-    destruct (step_load_op C0 bt0 st1 fs pre f data module b Types_ValueType_I64 1%u32
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [m [Hrd Hhk]].
+    destruct (step_load_op C0 bt0 st1 fs pre f data module Types_ValueType_I64 1%u32
                 T_i64 (Some (Tp_i16, SX_U)) m st2 Hinv1 Hbf Hfs Hmems (eq_refl _)
                 (ltac:(ls_bounds)) Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_load T_i64 (Some (Tp_i16, SX_U))
                              (Z.to_N (to_Z m.(opiter_MemArg_align)))
                              (Z.to_N (to_Z m.(opiter_MemArg_offset))))).
     unfold op_step.
+    split.
+    { trace_pre.
+      assert (Hsp : op_spec (to_Z b) = Some (Sh_load _ _))
+        by (rewrite E21; reflexivity).
+      destruct (Hload _ _ _ _ _ _ _ Hsp Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_load; [rewrite E21; reflexivity|].
-    apply (read_load_sound st1 data module b Types_ValueType_I64 1%u32 m st2 Hrd). }
+    apply (read_load_sound st1 data module Types_ValueType_I64 1%u32 m st2 Hrd). }
   destruct (b s= opiter_op_i64_load32_s) eqn:E22.
   { left. apply scalar_eqb_true in E22.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [m Hrd].
-    destruct (step_load_op C0 bt0 st1 fs pre f data module b Types_ValueType_I64 2%u32
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [m [Hrd Hhk]].
+    destruct (step_load_op C0 bt0 st1 fs pre f data module Types_ValueType_I64 2%u32
                 T_i64 (Some (Tp_i32, SX_S)) m st2 Hinv1 Hbf Hfs Hmems (eq_refl _)
                 (ltac:(ls_bounds)) Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_load T_i64 (Some (Tp_i32, SX_S))
                              (Z.to_N (to_Z m.(opiter_MemArg_align)))
                              (Z.to_N (to_Z m.(opiter_MemArg_offset))))).
     unfold op_step.
+    split.
+    { trace_pre.
+      assert (Hsp : op_spec (to_Z b) = Some (Sh_load _ _))
+        by (rewrite E22; reflexivity).
+      destruct (Hload _ _ _ _ _ _ _ Hsp Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_load; [rewrite E22; reflexivity|].
-    apply (read_load_sound st1 data module b Types_ValueType_I64 2%u32 m st2 Hrd). }
+    apply (read_load_sound st1 data module Types_ValueType_I64 2%u32 m st2 Hrd). }
   destruct (b s= opiter_op_i64_load32_u) eqn:E23.
   { left. apply scalar_eqb_true in E23.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [m Hrd].
-    destruct (step_load_op C0 bt0 st1 fs pre f data module b Types_ValueType_I64 2%u32
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [m [Hrd Hhk]].
+    destruct (step_load_op C0 bt0 st1 fs pre f data module Types_ValueType_I64 2%u32
                 T_i64 (Some (Tp_i32, SX_U)) m st2 Hinv1 Hbf Hfs Hmems (eq_refl _)
                 (ltac:(ls_bounds)) Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_load T_i64 (Some (Tp_i32, SX_U))
                              (Z.to_N (to_Z m.(opiter_MemArg_align)))
                              (Z.to_N (to_Z m.(opiter_MemArg_offset))))).
     unfold op_step.
+    split.
+    { trace_pre.
+      assert (Hsp : op_spec (to_Z b) = Some (Sh_load _ _))
+        by (rewrite E23; reflexivity).
+      destruct (Hload _ _ _ _ _ _ _ Hsp Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_load; [rewrite E23; reflexivity|].
-    apply (read_load_sound st1 data module b Types_ValueType_I64 2%u32 m st2 Hrd). }
+    apply (read_load_sound st1 data module Types_ValueType_I64 2%u32 m st2 Hrd). }
   destruct (b s= opiter_op_i32_store) eqn:E24.
   { left. apply scalar_eqb_true in E24.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [m Hrd].
-    destruct (step_store_op C0 bt0 st1 fs pre f data module b Types_ValueType_I32 2%u32
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [m [Hrd Hhk]].
+    destruct (step_store_op C0 bt0 st1 fs pre f data module Types_ValueType_I32 2%u32
                 T_i32 None m st2 Hinv1 Hbf Hfs Hmems (eq_refl _)
                 (ltac:(ls_bounds)) Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_store T_i32 None
                              (Z.to_N (to_Z m.(opiter_MemArg_align)))
                              (Z.to_N (to_Z m.(opiter_MemArg_offset))))).
     unfold op_step.
+    split.
+    { trace_pre.
+      assert (Hsp : op_spec (to_Z b) = Some (Sh_store _ _))
+        by (rewrite E24; reflexivity).
+      destruct (Hstore _ _ _ _ _ _ _ Hsp Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_store; [rewrite E24; reflexivity|].
-    apply (read_store_sound st1 data module b Types_ValueType_I32 2%u32 m st2 Hrd). }
+    apply (read_store_sound st1 data module Types_ValueType_I32 2%u32 m st2 Hrd). }
   destruct (b s= opiter_op_i64_store) eqn:E25.
   { left. apply scalar_eqb_true in E25.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [m Hrd].
-    destruct (step_store_op C0 bt0 st1 fs pre f data module b Types_ValueType_I64 3%u32
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [m [Hrd Hhk]].
+    destruct (step_store_op C0 bt0 st1 fs pre f data module Types_ValueType_I64 3%u32
                 T_i64 None m st2 Hinv1 Hbf Hfs Hmems (eq_refl _)
                 (ltac:(ls_bounds)) Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_store T_i64 None
                              (Z.to_N (to_Z m.(opiter_MemArg_align)))
                              (Z.to_N (to_Z m.(opiter_MemArg_offset))))).
     unfold op_step.
+    split.
+    { trace_pre.
+      assert (Hsp : op_spec (to_Z b) = Some (Sh_store _ _))
+        by (rewrite E25; reflexivity).
+      destruct (Hstore _ _ _ _ _ _ _ Hsp Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_store; [rewrite E25; reflexivity|].
-    apply (read_store_sound st1 data module b Types_ValueType_I64 3%u32 m st2 Hrd). }
+    apply (read_store_sound st1 data module Types_ValueType_I64 3%u32 m st2 Hrd). }
   destruct (b s= opiter_op_f32_store) eqn:E26.
   { left. apply scalar_eqb_true in E26.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [m Hrd].
-    destruct (step_store_op C0 bt0 st1 fs pre f data module b Types_ValueType_F32 2%u32
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [m [Hrd Hhk]].
+    destruct (step_store_op C0 bt0 st1 fs pre f data module Types_ValueType_F32 2%u32
                 T_f32 None m st2 Hinv1 Hbf Hfs Hmems (eq_refl _)
                 (ltac:(ls_bounds)) Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_store T_f32 None
                              (Z.to_N (to_Z m.(opiter_MemArg_align)))
                              (Z.to_N (to_Z m.(opiter_MemArg_offset))))).
     unfold op_step.
+    split.
+    { trace_pre.
+      assert (Hsp : op_spec (to_Z b) = Some (Sh_store _ _))
+        by (rewrite E26; reflexivity).
+      destruct (Hstore _ _ _ _ _ _ _ Hsp Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_store; [rewrite E26; reflexivity|].
-    apply (read_store_sound st1 data module b Types_ValueType_F32 2%u32 m st2 Hrd). }
+    apply (read_store_sound st1 data module Types_ValueType_F32 2%u32 m st2 Hrd). }
   destruct (b s= opiter_op_f64_store) eqn:E27.
   { left. apply scalar_eqb_true in E27.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [m Hrd].
-    destruct (step_store_op C0 bt0 st1 fs pre f data module b Types_ValueType_F64 3%u32
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [m [Hrd Hhk]].
+    destruct (step_store_op C0 bt0 st1 fs pre f data module Types_ValueType_F64 3%u32
                 T_f64 None m st2 Hinv1 Hbf Hfs Hmems (eq_refl _)
                 (ltac:(ls_bounds)) Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_store T_f64 None
                              (Z.to_N (to_Z m.(opiter_MemArg_align)))
                              (Z.to_N (to_Z m.(opiter_MemArg_offset))))).
     unfold op_step.
+    split.
+    { trace_pre.
+      assert (Hsp : op_spec (to_Z b) = Some (Sh_store _ _))
+        by (rewrite E27; reflexivity).
+      destruct (Hstore _ _ _ _ _ _ _ Hsp Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_store; [rewrite E27; reflexivity|].
-    apply (read_store_sound st1 data module b Types_ValueType_F64 3%u32 m st2 Hrd). }
+    apply (read_store_sound st1 data module Types_ValueType_F64 3%u32 m st2 Hrd). }
   destruct (b s= opiter_op_i32_store8) eqn:E28.
   { left. apply scalar_eqb_true in E28.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [m Hrd].
-    destruct (step_store_op C0 bt0 st1 fs pre f data module b Types_ValueType_I32 0%u32
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [m [Hrd Hhk]].
+    destruct (step_store_op C0 bt0 st1 fs pre f data module Types_ValueType_I32 0%u32
                 T_i32 (Some Tp_i8) m st2 Hinv1 Hbf Hfs Hmems (eq_refl _)
                 (ltac:(ls_bounds)) Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_store T_i32 (Some Tp_i8)
                              (Z.to_N (to_Z m.(opiter_MemArg_align)))
                              (Z.to_N (to_Z m.(opiter_MemArg_offset))))).
     unfold op_step.
+    split.
+    { trace_pre.
+      assert (Hsp : op_spec (to_Z b) = Some (Sh_store _ _))
+        by (rewrite E28; reflexivity).
+      destruct (Hstore _ _ _ _ _ _ _ Hsp Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_store; [rewrite E28; reflexivity|].
-    apply (read_store_sound st1 data module b Types_ValueType_I32 0%u32 m st2 Hrd). }
+    apply (read_store_sound st1 data module Types_ValueType_I32 0%u32 m st2 Hrd). }
   destruct (b s= opiter_op_i32_store16) eqn:E29.
   { left. apply scalar_eqb_true in E29.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [m Hrd].
-    destruct (step_store_op C0 bt0 st1 fs pre f data module b Types_ValueType_I32 1%u32
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [m [Hrd Hhk]].
+    destruct (step_store_op C0 bt0 st1 fs pre f data module Types_ValueType_I32 1%u32
                 T_i32 (Some Tp_i16) m st2 Hinv1 Hbf Hfs Hmems (eq_refl _)
                 (ltac:(ls_bounds)) Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_store T_i32 (Some Tp_i16)
                              (Z.to_N (to_Z m.(opiter_MemArg_align)))
                              (Z.to_N (to_Z m.(opiter_MemArg_offset))))).
     unfold op_step.
+    split.
+    { trace_pre.
+      assert (Hsp : op_spec (to_Z b) = Some (Sh_store _ _))
+        by (rewrite E29; reflexivity).
+      destruct (Hstore _ _ _ _ _ _ _ Hsp Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_store; [rewrite E29; reflexivity|].
-    apply (read_store_sound st1 data module b Types_ValueType_I32 1%u32 m st2 Hrd). }
+    apply (read_store_sound st1 data module Types_ValueType_I32 1%u32 m st2 Hrd). }
   destruct (b s= opiter_op_i64_store8) eqn:E30.
   { left. apply scalar_eqb_true in E30.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [m Hrd].
-    destruct (step_store_op C0 bt0 st1 fs pre f data module b Types_ValueType_I64 0%u32
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [m [Hrd Hhk]].
+    destruct (step_store_op C0 bt0 st1 fs pre f data module Types_ValueType_I64 0%u32
                 T_i64 (Some Tp_i8) m st2 Hinv1 Hbf Hfs Hmems (eq_refl _)
                 (ltac:(ls_bounds)) Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_store T_i64 (Some Tp_i8)
                              (Z.to_N (to_Z m.(opiter_MemArg_align)))
                              (Z.to_N (to_Z m.(opiter_MemArg_offset))))).
     unfold op_step.
+    split.
+    { trace_pre.
+      assert (Hsp : op_spec (to_Z b) = Some (Sh_store _ _))
+        by (rewrite E30; reflexivity).
+      destruct (Hstore _ _ _ _ _ _ _ Hsp Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_store; [rewrite E30; reflexivity|].
-    apply (read_store_sound st1 data module b Types_ValueType_I64 0%u32 m st2 Hrd). }
+    apply (read_store_sound st1 data module Types_ValueType_I64 0%u32 m st2 Hrd). }
   destruct (b s= opiter_op_i64_store16) eqn:E31.
   { left. apply scalar_eqb_true in E31.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [m Hrd].
-    destruct (step_store_op C0 bt0 st1 fs pre f data module b Types_ValueType_I64 1%u32
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [m [Hrd Hhk]].
+    destruct (step_store_op C0 bt0 st1 fs pre f data module Types_ValueType_I64 1%u32
                 T_i64 (Some Tp_i16) m st2 Hinv1 Hbf Hfs Hmems (eq_refl _)
                 (ltac:(ls_bounds)) Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_store T_i64 (Some Tp_i16)
                              (Z.to_N (to_Z m.(opiter_MemArg_align)))
                              (Z.to_N (to_Z m.(opiter_MemArg_offset))))).
     unfold op_step.
+    split.
+    { trace_pre.
+      assert (Hsp : op_spec (to_Z b) = Some (Sh_store _ _))
+        by (rewrite E31; reflexivity).
+      destruct (Hstore _ _ _ _ _ _ _ Hsp Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_store; [rewrite E31; reflexivity|].
-    apply (read_store_sound st1 data module b Types_ValueType_I64 1%u32 m st2 Hrd). }
+    apply (read_store_sound st1 data module Types_ValueType_I64 1%u32 m st2 Hrd). }
   destruct (b s= opiter_op_i64_store32) eqn:E32.
   { left. apply scalar_eqb_true in E32.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [m Hrd].
-    destruct (step_store_op C0 bt0 st1 fs pre f data module b Types_ValueType_I64 2%u32
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [m [Hrd Hhk]].
+    destruct (step_store_op C0 bt0 st1 fs pre f data module Types_ValueType_I64 2%u32
                 T_i64 (Some Tp_i32) m st2 Hinv1 Hbf Hfs Hmems (eq_refl _)
                 (ltac:(ls_bounds)) Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain (BI_store T_i64 (Some Tp_i32)
                              (Z.to_N (to_Z m.(opiter_MemArg_align)))
                              (Z.to_N (to_Z m.(opiter_MemArg_offset))))).
     unfold op_step.
+    split.
+    { trace_pre.
+      assert (Hsp : op_spec (to_Z b) = Some (Sh_store _ _))
+        by (rewrite E32; reflexivity).
+      destruct (Hstore _ _ _ _ _ _ _ Hsp Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_store; [rewrite E32; reflexivity|].
-    apply (read_store_sound st1 data module b Types_ValueType_I64 2%u32 m st2 Hrd). }
+    apply (read_store_sound st1 data module Types_ValueType_I64 2%u32 m st2 Hrd). }
   destruct (b s= opiter_op_memory_size) eqn:EM1.
   { left. apply scalar_eqb_true in EM1.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [u Hrd]. destruct u.
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [u [Hrd Hhk]]. destruct u.
     destruct (step_memory_size_op C0 bt0 module st1 fs pre f data st2
                 Hinv1 Hbf Hfs Hmems Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain BI_memory_size). unfold op_step.
+    split.
+    { trace_pre.
+      destruct (Hmsize _ _ _ Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_of_reserved; [rewrite EM1; reflexivity|].
     apply (read_memory_size_reserved st1 data module st2 Hrd). }
   destruct (b s= opiter_op_memory_grow) eqn:EM2.
   { left. apply scalar_eqb_true in EM2.
-    destruct (step_wrap_ok _ _ st2 Hstep) as [u Hrd]. destruct u.
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [u [Hrd Hhk]]. destruct u.
     destruct (step_memory_grow_op C0 bt0 module st1 fs pre f data st2
                 Hinv1 Hbf Hfs Hmems Hrd) as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain BI_memory_grow). unfold op_step.
+    split.
+    { trace_pre.
+      destruct (Hmgrow _ _ _ Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_of_reserved; [rewrite EM2; reflexivity|].
     apply (read_memory_grow_reserved st1 data module st2 Hrd). }
@@ -720,26 +1014,38 @@ Proof.
     [|discriminate].
   destruct o as [[from to]|].
   { left.
+    destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [u [Hrd Hhk]].
+    destruct u.
     destruct (convert_types_spec b from to Hcv) as [be [Hsp [Heff Hflat]]].
-    destruct (step_conversion_op C0 bt0 st1 fs pre f b from to be st2
-                Hinv1 Hbf Hfs (plain_effect_in C0 _ _ _ Heff) Hflat Hstep)
+    destruct (step_conversion_op C0 bt0 st1 fs pre f from to be st2
+                Hinv1 Hbf Hfs (plain_effect_in C0 _ _ _ Heff) Hflat Hrd)
       as [fs' [Hinv' [Hbf' Hff]]].
     exists fs', (FO_plain be). unfold op_step.
+    split.
+    { trace_pre.
+      destruct (Hnum_c _ _ _ _ _ _ _ Hcv Hsp Hhk) as [Ho Hp].
+      split; [exact Ho | rewrite Hp; exact Hpd]. }
     split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
     rewrite Hbytes. apply repr_op_of_inert; [exact Hsp|].
-    apply (read_conversion_pos st1 _ _ _ _ st2 Hstep). }
+    apply (read_conversion_pos st1 _ _ _ st2 Hrd). }
   destruct (opiter_binary_types b) as [o1|] eqn:Hbt; cbn [bind] in Hstep;
     [|discriminate].
   destruct o1 as [[ty res]|]; [|discriminate].
   left.
+  destruct (visit_wrap_hook _ V _ _ vis st2 vis2 Hstep) as [u [Hrd Hhk]].
+  destruct u.
   destruct (binary_types_spec b ty res Hbt) as [be [Hsp [Heff Hflat]]].
-  destruct (step_binary_op C0 bt0 st1 fs pre f b ty res be st2
-              Hinv1 Hbf Hfs (plain_effect_in C0 _ _ _ Heff) Hflat Hstep)
+  destruct (step_binary_op C0 bt0 st1 fs pre f ty res be st2
+              Hinv1 Hbf Hfs (plain_effect_in C0 _ _ _ Heff) Hflat Hrd)
     as [fs' [Hinv' [Hbf' Hff]]].
   exists fs', (FO_plain be). unfold op_step.
+  split.
+  { trace_pre.
+    destruct (Hnum_b _ _ _ _ _ _ _ Hbt Hsp Hhk) as [Ho Hp].
+    split; [exact Ho | rewrite Hp; exact Hpd]. }
   split; [exact Hinv'|]. split; [exact Hbf'|]. split; [exact Hff|].
   rewrite Hbytes. apply repr_op_of_inert; [exact Hsp|].
-  apply (read_binary_pos st1 _ _ _ _ st2 Hstep).
+  apply (read_binary_pos st1 _ _ _ st2 Hrd).
 Qed.
 
 (* ================================================================== *)
@@ -749,14 +1055,15 @@ Qed.
 (** Once the control stack is empty the loop does no more reading: it accepts if
     the cursor reached the end of the body and reports trailing bytes otherwise.
     So an accepting run that got here consumed every byte. *)
-Lemma validate_body_loop_finished : forall data module ctx st,
+Lemma validate_body_loop_finished : forall V (inst : visit_OpVisitor_t V) vis
+                                           vis' data module ctx st,
   vec_list st.(opiter_OpIterState_ctrls) = [] ->
-  opiter_validate_body_loop data module ctx.(opiter_Context_locals)
-    ctx.(opiter_Context_results) st = Ok (Core_result_Result_Ok tt) ->
+  opiter_validate_body_with_loop inst data module ctx.(opiter_Context_locals)
+    ctx.(opiter_Context_results) vis st = Ok (Core_result_Result_Ok tt, vis') ->
   to_Z st.(opiter_OpIterState_pos) = to_Z (slice_len data).
 Proof.
-  intros data module ctx st Hnil H.
-  unfold opiter_validate_body_loop in H. rewrite loop_unfold in H.
+  intros V inst vis vis' data module ctx st Hnil H.
+  unfold opiter_validate_body_with_loop in H. rewrite loop_unfold in H.
   cbn beta iota in H. unfold opiter_control_stack_empty in H.
   rewrite vec_is_empty_spec in H. rewrite Hnil in H. cbn [bind] in H.
   destruct (st.(opiter_OpIterState_pos) s= slice_len data) eqn:Heq;
@@ -764,30 +1071,58 @@ Proof.
   apply scalar_eqb_true in Heq. exact Heq.
 Qed.
 
+(** And it reports the visitor state it was given: the accepting branch calls
+    no hook. *)
+Lemma validate_body_loop_done : forall V (inst : visit_OpVisitor_t V) vis vis'
+                                       data module ctx st,
+  vec_list st.(opiter_OpIterState_ctrls) = [] ->
+  opiter_validate_body_with_loop inst data module ctx.(opiter_Context_locals)
+    ctx.(opiter_Context_results) vis st = Ok (Core_result_Result_Ok tt, vis') ->
+  vis' = vis.
+Proof.
+  intros V inst vis vis' data module ctx st Hnil H.
+  unfold opiter_validate_body_with_loop in H. rewrite loop_unfold in H.
+  cbn beta iota in H. unfold opiter_control_stack_empty in H.
+  rewrite vec_is_empty_spec in H. rewrite Hnil in H. cbn [bind] in H.
+  destruct (st.(opiter_OpIterState_pos) s= slice_len data) eqn:Heq;
+    [|discriminate].
+  inversion H. reflexivity.
+Qed.
+
 (** The run, by induction on the bytes left. While the body frame is on the stack
     the control stack is non-empty, so the loop cannot take its accepting branch;
     the only way out is the body's own [end], and [step_op_step] is what says so. *)
-Lemma validate_body_loop_sound : forall m C0 bt0 module ctx data st fs,
+Lemma validate_body_loop_sound : forall m V (inst : visit_OpVisitor_t V) vis vis'
+                                        C0 bt0 module ctx data st fs ops0,
   Inv C0 st fs -> body_first bt0 fs ->
   mems_agree module C0 -> locals_agree ctx C0 -> globals_agree module C0 ->
   return_agree ctx C0 -> funcs_agree module C0 -> types_agree module C0 ->
   tables_agree module C0 ->
-  (exists ops, else_sugar (frames_flat fs) ops
-               /\ repr_ops (byte_list data) ops
-                    (bytes_from data st.(opiter_OpIterState_pos))) ->
+  (* [ops0] is what the run has read so far; at the entry point it is empty *)
+  else_sugar (frames_flat fs) ops0 ->
+  repr_ops (byte_list data) ops0
+           (bytes_from data st.(opiter_OpIterState_pos)) ->
   to_Z (slice_len data) - to_Z st.(opiter_OpIterState_pos) <= Z.of_nat m ->
-  opiter_validate_body_loop data module ctx.(opiter_Context_locals)
-    ctx.(opiter_Context_results) st = Ok (Core_result_Result_Ok tt) ->
+  opiter_validate_body_with_loop inst data module ctx.(opiter_Context_locals)
+    ctx.(opiter_Context_results) vis st = Ok (Core_result_Result_Ok tt, vis') ->
   exists f,
     frames_ok C0 [] [f]
     /\ (fv_ctrl f).(opiter_Ctrl_kind) = Opiter_LabelKind_Body
     /\ (fv_ctrl f).(opiter_Ctrl_block_type) = bt0
     /\ c_types_agree (fv_ct f) (translate_typelist (block_results_of bt0)) = true
-    /\ repr_expr (byte_list data) (fv_done f) [].
+    (* [repr_expr], with the operator list named so the trace can be tied to
+       it: the run read [ops], and the consumer was shown the part of it this
+       call read, which is everything past [ops0] *)
+    /\ exists ops rest,
+         else_sugar (flat_of (fv_done f) ++ [FO_end]) ops
+         /\ repr_ops (byte_list data) ops []
+         /\ ops = ops0 ++ rest
+         /\ traced inst vis vis' rest.
 Proof.
-  induction m as [|m IH]; intros C0 bt0 module ctx data st fs Hinv Hbf Hmems Hlocals
-                                 Hglobals Hret Hfuncs Htypes Htables
-                                 [ops [Hsug Hops]] Hmeas H.
+  induction m as [|m IH];
+    intros V inst vis vis' C0 bt0 module ctx data st fs ops0
+           Hinv Hbf Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables
+           Hsug Hops Hmeas H.
   (* the body frame is still on the stack, so the accepting branch is not taken *)
   all: assert (Hcons : exists c cs,
                  vec_list st.(opiter_OpIterState_ctrls) = c :: cs)
@@ -795,7 +1130,7 @@ Proof.
              [exfalso; exact Hbf
              | exists (fv_ctrl h), (List.map fv_ctrl t); reflexivity]).
   all: destruct Hcons as [c [cs Hcons]].
-  all: unfold opiter_validate_body_loop in H; rewrite loop_unfold in H;
+  all: unfold opiter_validate_body_with_loop in H; rewrite loop_unfold in H;
        cbn beta iota in H; unfold opiter_control_stack_empty in H;
        rewrite vec_is_empty_spec in H; rewrite Hcons in H; cbn [bind] in H;
        rewrite ctx_eta in H.
@@ -813,49 +1148,82 @@ Proof.
     2: { rewrite branch_err in H. cbn [bind] in H.
          rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
     rewrite branch_ok in H. cbn [bind] in H.
-    destruct (opiter_step st1 data module ctx b) as [[r1 st2]|] eqn:Hstep;
-      cbn [bind] in H; [|discriminate].
+    destruct (opiter_step inst st1 data module ctx b vis)
+      as [[[r1 st2] vis2]|] eqn:Hstep; cbn [bind] in H; [|discriminate].
     destruct r1 as [u1|e1].
     2: { rewrite branch_err in H. cbn [bind] in H.
          rewrite from_residual_err in H. cbn [bind] in H. discriminate. }
     destruct u1. rewrite branch_ok in H. cbn [bind] in H.
     pose proof (read_op_advance st data b st1 Hro) as Hadv.
-    pose proof (step_mono st1 data module ctx b _ st2 Hstep) as Hmono.
-    destruct (step_op_step C0 bt0 module ctx data st fs b st1 st2
+    pose proof (step_mono V inst vis st1 data module ctx b _ st2 vis2 Hstep)
+      as Hmono.
+    destruct (step_op_step V inst vis vis2 C0 bt0 module ctx data st fs
+                b st1 st2
                 Hinv Hbf Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables
                 Hro Hstep)
-      as [[fs' [op [Hinv' [Hbf' [Hff Hrop]]]]]
-         | [[fs' [Hinv' [Hbf' [Hff Hrop]]]] | Hdone]].
-    + apply (IH C0 bt0 module ctx data st2 fs'); try assumption.
-      * exists (ops ++ [op]). split.
-        { rewrite Hff. apply else_sugar_snoc. exact Hsug. }
-        apply (repr_ops_snoc _ _ (bytes_from data st.(opiter_OpIterState_pos)));
-          [exact Hops | exact Hrop].
-      * cbn in Hmeas. lia.
+      as [[fs' [op [Htrc [Hinv' [Hbf' [Hff Hrop]]]]]]
+         | [[fs' [Htrc [Hinv' [Hbf' [Hff Hrop]]]]] | Hdone]].
+    + assert (Hsug' : else_sugar (frames_flat fs') (ops0 ++ [op]))
+        by (rewrite Hff; apply else_sugar_snoc; exact Hsug).
+      assert (Hops' : repr_ops (byte_list data) (ops0 ++ [op])
+                        (bytes_from data st2.(opiter_OpIterState_pos)))
+        by (apply (repr_ops_snoc _ _
+                     (bytes_from data st.(opiter_OpIterState_pos)));
+            [exact Hops | exact Hrop]).
+      destruct (IH V inst vis2 vis' C0 bt0 module ctx data st2 fs' (ops0 ++ [op])
+                  Hinv' Hbf' Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables
+                  Hsug' Hops' (ltac:(cbn in Hmeas; lia)) H)
+        as [f [Hfo [Hk [Hbt [Hagree [ops [rest [Hsug2 [Hops2 [Heq Htrr]]]]]]]]]].
+      exists f. split; [exact Hfo|]. split; [exact Hk|]. split; [exact Hbt|].
+      split; [exact Hagree|].
+      exists ops, ([op] ++ rest).
+      split; [exact Hsug2|]. split; [exact Hops2|].
+      split; [rewrite Heq; rewrite <- List.app_assoc; reflexivity|].
+      apply (traced_trans V inst vis vis2 vis' [op] rest Htrc Htrr).
     + (* the [end] of an [if] with no [else]: two operators for one byte, which
          is what [else_sugar] absorbs *)
-      apply (IH C0 bt0 module ctx data st2 fs'); try assumption.
-      * exists (ops ++ [FO_end]). split.
-        { rewrite Hff. apply else_sugar_snoc_else_end. exact Hsug. }
-        apply (repr_ops_snoc _ _ (bytes_from data st.(opiter_OpIterState_pos)));
-          [exact Hops | exact Hrop].
-      * cbn in Hmeas. lia.
+      assert (Hsug' : else_sugar (frames_flat fs') (ops0 ++ [FO_end]))
+        by (rewrite Hff; apply else_sugar_snoc_else_end; exact Hsug).
+      assert (Hops' : repr_ops (byte_list data) (ops0 ++ [FO_end])
+                        (bytes_from data st2.(opiter_OpIterState_pos)))
+        by (apply (repr_ops_snoc _ _
+                     (bytes_from data st.(opiter_OpIterState_pos)));
+            [exact Hops | exact Hrop]).
+      destruct (IH V inst vis2 vis' C0 bt0 module ctx data st2 fs'
+                  (ops0 ++ [FO_end])
+                  Hinv' Hbf' Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables
+                  Hsug' Hops' (ltac:(cbn in Hmeas; lia)) H)
+        as [f [Hfo [Hk [Hbt [Hagree [ops [rest [Hsug2 [Hops2 [Heq Htrr]]]]]]]]]].
+      exists f. split; [exact Hfo|]. split; [exact Hk|]. split; [exact Hbt|].
+      split; [exact Hagree|].
+      exists ops, ([FO_end] ++ rest).
+      split; [exact Hsug2|]. split; [exact Hops2|].
+      split; [rewrite Heq; rewrite <- List.app_assoc; reflexivity|].
+      apply (traced_trans V inst vis vis2 vis' [FO_end] rest Htrc Htrr).
     + (* the body's [end]: the stream is complete and the cursor is at the end *)
-      destruct Hdone as [f [Hfs [Hk [Hbt [Hagree [Hc2 Hrop]]]]]].
-      pose proof (validate_body_loop_finished data module ctx st2 Hc2 H) as Hpos.
+      destruct Hdone as [Htrc [f [Hfs [Hk [Hbt [Hagree [Hc2 Hrop]]]]]]].
+      pose proof (validate_body_loop_finished V inst vis2 vis' data module ctx
+                    st2 Hc2 H) as Hpos.
       exists f. split.
       { destruct Hinv as [_ [_ [_ K4]]]. rewrite Hfs in K4. exact K4. }
       split; [exact Hk|]. split; [exact Hbt|]. split; [exact Hagree|].
       assert (Hflat : frames_flat fs ++ [FO_end]
                       = flat_of (fv_done f) ++ [FO_end]).
       { rewrite Hfs. apply frames_flat_body. exact Hk. }
-      exists (ops ++ [FO_end]). split.
+      exists (ops0 ++ [FO_end]), [FO_end]. split.
       { rewrite <- Hflat. apply else_sugar_snoc. exact Hsug. }
       assert (Hnilb : bytes_from data st2.(opiter_OpIterState_pos) = []).
       { apply bytes_from_end. exact Hpos. }
-      rewrite <- Hnilb.
-      apply (repr_ops_snoc _ _ (bytes_from data st.(opiter_OpIterState_pos)));
-        [exact Hops | exact Hrop].
+      split.
+      { rewrite <- Hnilb.
+        apply (repr_ops_snoc _ _ (bytes_from data st.(opiter_OpIterState_pos)));
+          [exact Hops | exact Hrop]. }
+      split; [reflexivity|].
+      (* the run ends here: the accepting branch calls no hook, so the visitor
+         the loop returns is the one this step left *)
+      rewrite (validate_body_loop_done V inst vis2 vis' data module ctx st2
+                 Hc2 H).
+      exact Htrc.
 Qed.
 
 (* ================================================================== *)
@@ -868,21 +1236,23 @@ Qed.
     The Wasm 1.0 restriction to at most one result is a hypothesis: with more,
     [start_function] reads the signature as returning nothing, and the module
     validator is what rules that out. *)
-Theorem validate_body_sound : forall C0 module ctx data,
+Theorem validate_body_with_sound : forall V (inst : visit_OpVisitor_t V) vis
+                                          vis' C0 module ctx data,
   mems_agree module C0 -> locals_agree ctx C0 -> globals_agree module C0 ->
   return_agree ctx C0 -> funcs_agree module C0 -> types_agree module C0 ->
   tables_agree module C0 ->
   (List.length (vec_list ctx.(opiter_Context_results)) <= 1)%nat ->
-  opiter_validate_body data module ctx = Ok (Core_result_Result_Ok tt) ->
+  opiter_validate_body_with inst data module ctx vis
+    = Ok (Core_result_Result_Ok tt, vis') ->
   exists es,
     repr_expr (byte_list data) es []
     /\ b_e_type_checker_aux
          (upd_label C0 [translate_typelist (vec_list ctx.(opiter_Context_results))]) es
          (Tf [] (translate_typelist (vec_list ctx.(opiter_Context_results)))) = true.
 Proof.
-  intros C0 module ctx data Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables
-         Hlen1 H.
-  unfold opiter_validate_body in H.
+  intros V inst vis vis' C0 module ctx data Hmems Hlocals Hglobals Hret Hfuncs
+         Htypes Htables Hlen1 H.
+  unfold opiter_validate_body_with in H.
   destruct (slice_len data s> limits_max_function_bytes); [discriminate|].
   rewrite vec_deref_spec in H.
   destruct (opiter_start_function ctx.(opiter_Context_results)) as [st|] eqn:Hsf; cbn [bind] in H;
@@ -890,17 +1260,73 @@ Proof.
   destruct (Inv_start C0 st ctx.(opiter_Context_results) Hlen1 Hsf) as [bt [Hinv Hbt]].
   pose proof (start_function_pos ctx.(opiter_Context_results) st Hsf) as Hpos.
   destruct (validate_body_loop_sound (Z.to_nat (to_Z (slice_len data)))
-              C0 bt module ctx data st [body_fview bt] Hinv (body_first_start bt)
-              Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables)
-    as [f [Hfok [Hk [Hfbt [Hagree Hexpr]]]]].
-  - exists []. rewrite frames_flat_start.
-    split; [apply else_sugar_nil|].
-    rewrite (bytes_from_at_zero data _ Hpos). apply repr_ops_nil.
-  - rewrite Hpos. rewrite Z2Nat.id by apply usize_nonneg. lia.
-  - exact H.
-  - exists (fv_done f). split; [exact Hexpr|].
-    rewrite <- Hbt.
-    apply (end_body_typing C0 f bt Hk Hfbt Hfok). exact Hagree.
+              V inst vis vis'
+              C0 bt module ctx data st [body_fview bt] [] Hinv
+              (body_first_start bt)
+              Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables
+              (ltac:(rewrite frames_flat_start; apply else_sugar_nil))
+              (ltac:(rewrite (bytes_from_at_zero data _ Hpos);
+                     apply repr_ops_nil))
+              (ltac:(rewrite Hpos; rewrite Z2Nat.id by apply usize_nonneg; lia))
+              H)
+    as [f [Hfok [Hk [Hfbt [Hagree [ops [rest [Hsug [Hops [Heq Htr]]]]]]]]]].
+  exists (fv_done f). split; [exists ops; split; assumption|].
+  rewrite <- Hbt.
+  apply (end_body_typing C0 f bt Hk Hfbt Hfok). exact Hagree.
+Qed.
+
+(** The trace: an accepting run showed the consumer exactly the operators the
+    body's bytes encode, in the order the bytes give them, and nothing else.
+
+    This is the statement a compiler leans on. Soundness says the loop's verdict
+    is right; this says the hooks a compiler generates code from are the run
+    that earned that verdict. It holds for any consumer that can say what its
+    own state records, which is what [records] is for -- [OpIter_Table.trace_visitor]
+    is one such consumer, and the proof that it qualifies is what ties each
+    hook to the operator its name claims. *)
+Theorem validate_body_with_trace : forall V (inst : visit_OpVisitor_t V) vis
+                                          vis' C0 module ctx data,
+  mems_agree module C0 -> locals_agree ctx C0 -> globals_agree module C0 ->
+  return_agree ctx C0 -> funcs_agree module C0 -> types_agree module C0 ->
+  tables_agree module C0 ->
+  (List.length (vec_list ctx.(opiter_Context_results)) <= 1)%nat ->
+  opiter_validate_body_with inst data module ctx vis
+    = Ok (Core_result_Result_Ok tt, vis') ->
+  exists es ops,
+    (* the bytes are this instruction sequence *)
+    repr_expr (byte_list data) es []
+    (* whose operator form is [ops] *)
+    /\ else_sugar (flat_of es ++ [FO_end]) ops
+    /\ repr_ops (byte_list data) ops []
+    (* and [ops] is what the consumer was shown *)
+    /\ traced inst vis vis' ops.
+Proof.
+  intros V inst vis vis' C0 module ctx data Hmems Hlocals Hglobals Hret Hfuncs
+         Htypes Htables Hlen1 H.
+  unfold opiter_validate_body_with in H.
+  destruct (slice_len data s> limits_max_function_bytes); [discriminate|].
+  rewrite vec_deref_spec in H.
+  destruct (opiter_start_function ctx.(opiter_Context_results)) as [st|] eqn:Hsf;
+    cbn [bind] in H; [|discriminate].
+  destruct (Inv_start C0 st ctx.(opiter_Context_results) Hlen1 Hsf)
+    as [bt [Hinv Hbt]].
+  pose proof (start_function_pos ctx.(opiter_Context_results) st Hsf) as Hpos.
+  destruct (validate_body_loop_sound (Z.to_nat (to_Z (slice_len data)))
+              V inst vis vis'
+              C0 bt module ctx data st [body_fview bt] [] Hinv
+              (body_first_start bt)
+              Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables
+              (ltac:(rewrite frames_flat_start; apply else_sugar_nil))
+              (ltac:(rewrite (bytes_from_at_zero data _ Hpos);
+                     apply repr_ops_nil))
+              (ltac:(rewrite Hpos; rewrite Z2Nat.id by apply usize_nonneg; lia))
+              H)
+    as [f [Hfok [Hk [Hfbt [Hagree [ops [rest [Hsug [Hops [Heq Htr]]]]]]]]]].
+  (* nothing was read before the loop started, so the whole stream is the trace *)
+  cbn [List.app] in Heq. subst rest.
+  exists (fv_done f), ops.
+  split; [exists ops; split; assumption|].
+  split; [exact Hsug|]. split; [exact Hops | exact Htr].
 Qed.
 
 (** The same result in the form WasmCert states its reflection lemma over.
@@ -909,12 +1335,14 @@ Qed.
     [context_reverse] first, so getting there means reversing back. Chaining
     [b_e_type_checker_reflects_typing] from here gives [be_typing], which is the
     specification-level statement. *)
-Corollary validate_body_checker : forall C0 module ctx data,
+Corollary validate_body_with_checker : forall V (inst : visit_OpVisitor_t V) vis
+                                             vis' C0 module ctx data,
   mems_agree module C0 -> locals_agree ctx C0 -> globals_agree module C0 ->
   return_agree ctx C0 -> funcs_agree module C0 -> types_agree module C0 ->
   tables_agree module C0 ->
   (List.length (vec_list ctx.(opiter_Context_results)) <= 1)%nat ->
-  opiter_validate_body data module ctx = Ok (Core_result_Result_Ok tt) ->
+  opiter_validate_body_with inst data module ctx vis
+    = Ok (Core_result_Result_Ok tt, vis') ->
   exists es,
     repr_expr (byte_list data) es []
     /\ b_e_type_checker
@@ -922,10 +1350,10 @@ Corollary validate_body_checker : forall C0 module ctx data,
             (upd_label C0 [translate_typelist (vec_list ctx.(opiter_Context_results))])) es
          (Tf [] (List.map translate_vt_v (vec_list ctx.(opiter_Context_results)))) = true.
 Proof.
-  intros C0 module ctx data Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables
-         Hlen1 H.
-  destruct (validate_body_sound C0 module ctx data Hmems Hlocals Hglobals Hret
-              Hfuncs Htypes Htables Hlen1 H)
+  intros V inst vis vis' C0 module ctx data Hmems Hlocals Hglobals Hret Hfuncs
+         Htypes Htables Hlen1 H.
+  destruct (validate_body_with_sound V inst vis vis' C0 module ctx data Hmems
+              Hlocals Hglobals Hret Hfuncs Htypes Htables Hlen1 H)
     as [es [Hexpr Hchk]].
   exists es. split; [exact Hexpr|].
   unfold b_e_type_checker.
@@ -955,6 +1383,100 @@ Qed.
     consumes, so [context_reverse C0] is the context the specification talks
     about, and the body checks in it with the function's result type as its one
     label. *)
+Corollary validate_body_with_typed : forall V (inst : visit_OpVisitor_t V) vis
+                                           vis' C0 module ctx data,
+  mems_agree module C0 -> locals_agree ctx C0 -> globals_agree module C0 ->
+  return_agree ctx C0 -> funcs_agree module C0 -> types_agree module C0 ->
+  tables_agree module C0 ->
+  (List.length (vec_list ctx.(opiter_Context_results)) <= 1)%nat ->
+  opiter_validate_body_with inst data module ctx vis
+    = Ok (Core_result_Result_Ok tt, vis') ->
+  exists es,
+    repr_expr (byte_list data) es []
+    /\ be_typing
+         (upd_label (context_reverse C0)
+            [List.map translate_vt_v (vec_list ctx.(opiter_Context_results))])
+         es
+         (Tf [] (List.map translate_vt_v (vec_list ctx.(opiter_Context_results)))).
+Proof.
+  intros V inst vis vis' C0 module ctx data Hmems Hlocals Hglobals Hret Hfuncs
+         Htypes Htables Hlen1 H.
+  destruct (validate_body_with_checker V inst vis vis' C0 module ctx data Hmems
+              Hlocals Hglobals Hret Hfuncs Htypes Htables Hlen1 H)
+    as [es [Hexpr Hchk]].
+  exists es. split; [exact Hexpr|].
+  rewrite <- context_reverse_upd_label.
+  pose proof (b_e_type_checker_reflects_typing
+                (context_reverse
+                   (upd_label C0
+                      [translate_typelist (vec_list ctx.(opiter_Context_results))]))
+                es
+                (Tf [] (List.map translate_vt_v
+                          (vec_list ctx.(opiter_Context_results))))) as Hr.
+  rewrite Hchk in Hr. inversion Hr as [Hty|]. exact Hty.
+Qed.
+
+(* ================================================================== *)
+(** ** The validating-only consumer                                    *)
+(* ================================================================== *)
+
+(** [validate_body] is [validate_body_with] at [NopVisitor], whose state is the
+    unit, so a run of the one is a run of the other. *)
+Lemma validate_body_nop : forall data module ctx r,
+  opiter_validate_body data module ctx = Ok r ->
+  opiter_validate_body_with visit_NopVisitor_Insts_VeriwasmVisitOpVisitor
+    data module ctx tt = Ok (r, tt).
+Proof.
+  intros data module ctx r H. unfold opiter_validate_body in H.
+  destruct (opiter_validate_body_with
+              visit_NopVisitor_Insts_VeriwasmVisitOpVisitor data module ctx tt)
+    as [[r0 v0]|] eqn:Hw; cbn [bind] in H; [|discriminate].
+  injection H as <-. destruct v0. reflexivity.
+Qed.
+
+(** The three theorems above at that instance, which is where they were before
+    there was a consumer to be generic over. *)
+Corollary validate_body_sound : forall C0 module ctx data,
+  mems_agree module C0 -> locals_agree ctx C0 -> globals_agree module C0 ->
+  return_agree ctx C0 -> funcs_agree module C0 -> types_agree module C0 ->
+  tables_agree module C0 ->
+  (List.length (vec_list ctx.(opiter_Context_results)) <= 1)%nat ->
+  opiter_validate_body data module ctx = Ok (Core_result_Result_Ok tt) ->
+  exists es,
+    repr_expr (byte_list data) es []
+    /\ b_e_type_checker_aux
+         (upd_label C0 [translate_typelist (vec_list ctx.(opiter_Context_results))]) es
+         (Tf [] (translate_typelist (vec_list ctx.(opiter_Context_results)))) = true.
+Proof.
+  intros C0 module ctx data Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables
+         Hlen1 H.
+  apply (validate_body_with_sound _ visit_NopVisitor_Insts_VeriwasmVisitOpVisitor
+           tt tt C0 module ctx data Hmems Hlocals Hglobals Hret Hfuncs Htypes
+           Htables Hlen1).
+  apply validate_body_nop. exact H.
+Qed.
+
+Corollary validate_body_checker : forall C0 module ctx data,
+  mems_agree module C0 -> locals_agree ctx C0 -> globals_agree module C0 ->
+  return_agree ctx C0 -> funcs_agree module C0 -> types_agree module C0 ->
+  tables_agree module C0 ->
+  (List.length (vec_list ctx.(opiter_Context_results)) <= 1)%nat ->
+  opiter_validate_body data module ctx = Ok (Core_result_Result_Ok tt) ->
+  exists es,
+    repr_expr (byte_list data) es []
+    /\ b_e_type_checker
+         (context_reverse
+            (upd_label C0 [translate_typelist (vec_list ctx.(opiter_Context_results))])) es
+         (Tf [] (List.map translate_vt_v (vec_list ctx.(opiter_Context_results)))) = true.
+Proof.
+  intros C0 module ctx data Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables
+         Hlen1 H.
+  apply (validate_body_with_checker _
+           visit_NopVisitor_Insts_VeriwasmVisitOpVisitor tt tt C0 module ctx data
+           Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables Hlen1).
+  apply validate_body_nop. exact H.
+Qed.
+
 Corollary validate_body_typed : forall C0 module ctx data,
   mems_agree module C0 -> locals_agree ctx C0 -> globals_agree module C0 ->
   return_agree ctx C0 -> funcs_agree module C0 -> types_agree module C0 ->
@@ -971,16 +1493,41 @@ Corollary validate_body_typed : forall C0 module ctx data,
 Proof.
   intros C0 module ctx data Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables
          Hlen1 H.
-  destruct (validate_body_checker C0 module ctx data Hmems Hlocals Hglobals Hret
-              Hfuncs Htypes Htables Hlen1 H) as [es [Hexpr Hchk]].
-  exists es. split; [exact Hexpr|].
-  rewrite <- context_reverse_upd_label.
-  pose proof (b_e_type_checker_reflects_typing
-                (context_reverse
-                   (upd_label C0
-                      [translate_typelist (vec_list ctx.(opiter_Context_results))]))
-                es
-                (Tf [] (List.map translate_vt_v
-                          (vec_list ctx.(opiter_Context_results))))) as Hr.
-  rewrite Hchk in Hr. inversion Hr as [Hty|]. exact Hty.
+  apply (validate_body_with_typed _ visit_NopVisitor_Insts_VeriwasmVisitOpVisitor
+           tt tt C0 module ctx data Hmems Hlocals Hglobals Hret Hfuncs Htypes
+           Htables Hlen1).
+  apply validate_body_nop. exact H.
+Qed.
+
+(** The trace at a consumer that does nothing but record. [trace_visitor] is
+    the one visitor whose every hook appends the instruction its own name
+    claims, and [trace_records] is the proof that it does; running the loop on
+    it turns the generic trace theorem into an equation between the list the
+    hooks built and the operator sequence the bytes encode.
+
+    This is what keeps the fan-out tables honest: a row that sent [0x6B] to
+    [on_i32_add] would make [trace_records] unprovable, and no other theorem
+    here would notice. *)
+Corollary validate_body_trace : forall C0 module ctx data tr pd,
+  mems_agree module C0 -> locals_agree ctx C0 -> globals_agree module C0 ->
+  return_agree ctx C0 -> funcs_agree module C0 -> types_agree module C0 ->
+  tables_agree module C0 ->
+  (List.length (vec_list ctx.(opiter_Context_results)) <= 1)%nat ->
+  opiter_validate_body_with trace_visitor data module ctx ([], [])
+    = Ok (Core_result_Result_Ok tt, (tr, pd)) ->
+  exists es,
+    repr_expr (byte_list data) es []
+    /\ else_sugar (flat_of es ++ [FO_end]) tr
+    /\ repr_ops (byte_list data) tr []
+    /\ pd = [].
+Proof.
+  intros C0 module ctx data tr pd Hmems Hlocals Hglobals Hret Hfuncs Htypes
+         Htables Hlen1 H.
+  destruct (validate_body_with_trace _ trace_visitor ([], []) (tr, pd) C0 module
+              ctx data Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables Hlen1 H)
+    as [es [ops [Hexpr [Hsug [Hops Htr]]]]].
+  destruct (Htr fst snd trace_records (eq_refl _)) as [Hobs Hpend].
+  cbn [fst snd List.app] in Hobs, Hpend. subst tr.
+  exists es. split; [exact Hexpr|]. split; [exact Hsug|].
+  split; [exact Hops | exact Hpend].
 Qed.

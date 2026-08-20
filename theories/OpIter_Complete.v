@@ -29,9 +29,9 @@ Local Open Scope Primitives_scope.
 Require Import Veriwasm.Aeneas_Specs.
 Require Import Veriwasm.Translate.
 Require Import Veriwasm.Spec_Binary.
+Require Import Veriwasm.OpIter_Visit.
 Require Import Veriwasm.OpIter_State.
 Require Import Veriwasm.OpIter_Decode.
-Require Import Veriwasm.OpIter_Protocol.
 Require Import Veriwasm.OpIter_Sim.
 Require Import Veriwasm.OpIter_Expr.
 Require Import Veriwasm.OpIter_Table.
@@ -642,10 +642,7 @@ Qed.
     alignment side conditions are the same fact in both directions: WasmCert
     bounds [2 ^ a] by the access width, the Rust bounds [a] by the natural
     alignment exponent. *)
-Lemma load_branch :
-  forall C0 module data st1 pre f b ty natural nt tp a o mid ct,
-  Inv C0 st1 (pre ++ [f]) ->
-  st1.(opiter_OpIterState_pending) = Some b ->
+Lemma load_branch : forall C0 module data st1 pre f ty natural nt tp a o mid ct, Inv C0 st1 (pre ++ [f]) ->
   translate_vt_v ty = T_num nt ->
   (forall x, 0 <= x <= to_Z natural ->
      load_store_t_bounds (Z.to_N x) (option_projl tp) nt = true) ->
@@ -657,13 +654,13 @@ Lemma load_branch :
               (Some (fv_ct f)) (BI_load nt tp (Z.to_N a) (Z.to_N o)) = Some ct ->
   room st1 ->
   exists m st2,
-    opiter_read_load st1 data module b ty natural
+    opiter_read_load st1 data module ty natural
       = Ok (Core_result_Result_Ok m, st2)
     /\ exists fs', adv_plain C0 st2 (pre ++ [f]) fs'
                      (BI_load nt tp (Z.to_N a) (Z.to_N o)).
 Proof.
-  intros C0 module data st1 pre f b ty natural nt tp a o mid ct
-         Hinv Hpend Hnt Hbounds Halim Hmems Hrep Hct Hroom.
+  intros C0 module data st1 pre f ty natural nt tp a o mid ct
+         Hinv Hnt Hbounds Halim Hmems Hrep Hct Hroom.
   destruct (check_single_load_inv _ _ _ _ _ _ _ Hct)
     as [[m0 Hlk] [Hbnd [ct1 Hcon]]].
   assert (Hlk' : lookup_N (tc_mems C0) 0%N = Some m0) by exact Hlk.
@@ -673,11 +670,10 @@ Proof.
                   (Z.to_nat (to_Z natural)) Hann Hbnd Halim) as Hb'.
     pose proof (u32_nonneg natural) as Hnn.
     rewrite Z2Nat.id in Hb'; [exact Hb' | exact Hnn]. }
-  destruct (read_load_complete C0 st1 pre f data module b b ty natural a o mid m0
-              ct1 Hinv Hpend (eq_refl _) Hrep Hmems Hlk' Hale Hcon Hroom)
+  destruct (read_load_complete C0 st1 pre f data module ty natural a o mid m0 ct1 Hinv Hrep Hmems Hlk' Hale Hcon Hroom)
     as [m [st2 [Hrd [Hmal Hmof]]]].
   exists m, st2. split; [exact Hrd|].
-  destruct (step_load C0 st1 (pre ++ [f]) pre f data module b ty natural nt tp m st2
+  destruct (step_load C0 st1 (pre ++ [f]) pre f data module ty natural nt tp m st2
               Hinv (eq_refl _) Hmems Hnt Hbounds Hrd) as [seg' Hinv2].
   rewrite Hmal in Hinv2. rewrite Hmof in Hinv2.
   eexists. unfold adv_plain.
@@ -691,10 +687,7 @@ Proof.
   split; [reflexivity|]. split; [apply flat_of_one_load | exact Hinv2].
 Qed.
 
-Lemma store_branch :
-  forall C0 module data st1 pre f b ty natural nt tp a o mid ct,
-  Inv C0 st1 (pre ++ [f]) ->
-  st1.(opiter_OpIterState_pending) = Some b ->
+Lemma store_branch : forall C0 module data st1 pre f ty natural nt tp a o mid ct, Inv C0 st1 (pre ++ [f]) ->
   translate_vt_v ty = T_num nt ->
   (forall x, 0 <= x <= to_Z natural ->
      load_store_t_bounds (Z.to_N x) tp nt = true) ->
@@ -705,13 +698,13 @@ Lemma store_branch :
               (Some (fv_ct f)) (BI_store nt tp (Z.to_N a) (Z.to_N o))
     = Some ct ->
   exists m st2,
-    opiter_read_store st1 data module b ty natural
+    opiter_read_store st1 data module ty natural
       = Ok (Core_result_Result_Ok m, st2)
     /\ exists fs', adv_plain C0 st2 (pre ++ [f]) fs'
                      (BI_store nt tp (Z.to_N a) (Z.to_N o)).
 Proof.
-  intros C0 module data st1 pre f b ty natural nt tp a o mid ct
-         Hinv Hpend Hnt Hbounds Halim Hmems Hrep Hct.
+  intros C0 module data st1 pre f ty natural nt tp a o mid ct
+         Hinv Hnt Hbounds Halim Hmems Hrep Hct.
   destruct (check_single_store_inv _ _ _ _ _ _ _ Hct)
     as [[m0 Hlk] [Hbnd [ct1 Hcon]]].
   assert (Hlk' : lookup_N (tc_mems C0) 0%N = Some m0) by exact Hlk.
@@ -724,11 +717,10 @@ Proof.
   assert (Hcon' : consume (fv_ct f)
                     [translate_vt_v ty; translate_vt_v Types_ValueType_I32]
                   = Some ct1) by (rewrite Hnt; exact Hcon).
-  destruct (read_store_complete C0 st1 pre f data module b b ty natural a o mid m0
-              ct1 Hinv Hpend (eq_refl _) Hrep Hmems Hlk' Hale Hcon')
+  destruct (read_store_complete C0 st1 pre f data module ty natural a o mid m0 ct1 Hinv Hrep Hmems Hlk' Hale Hcon')
     as [m [st2 [Hrd [Hmal Hmof]]]].
   exists m, st2. split; [exact Hrd|].
-  destruct (step_store C0 st1 (pre ++ [f]) pre f data module b ty natural nt tp m
+  destruct (step_store C0 st1 (pre ++ [f]) pre f data module ty natural nt tp m
               st2 Hinv (eq_refl _) Hmems Hnt Hbounds Hrd) as [seg' Hinv2].
   rewrite Hmal in Hinv2. rewrite Hmof in Hinv2.
   eexists. unfold adv_plain.
@@ -777,7 +769,9 @@ Local Ltac align_lt := vm_compute; lia.
     chain decides the branch, and the two lookups of [op_spec] on the same byte
     then collapse, which is what rules out every rule but one. *)
 Theorem step_complete :
-  forall C0 bt0 module ctx data st fs pre f b st1 op mid,
+  forall V (inst : visit_OpVisitor_t V) vis
+         C0 bt0 module ctx data st fs pre f b st1 op mid,
+  hooks_accept inst ->
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
   room st ->
   mems_agree module C0 -> locals_agree ctx C0 ->
@@ -787,17 +781,21 @@ Theorem step_complete :
   opiter_read_op st data = Ok (Core_result_Result_Ok b, st1) ->
   repr_op (bytes_from data st.(opiter_OpIterState_pos)) op mid ->
   op_typed C0 (labels_after [] pre) f op ->
-  exists st2, opiter_step st1 data module ctx b = Ok (Core_result_Result_Ok tt, st2)
-              /\ step_shape C0 st1 st2 fs op.
+  exists st2,
+    (exists vis2, opiter_step inst st1 data module ctx b vis
+                  = Ok (Core_result_Result_Ok tt, st2, vis2))
+    /\ step_shape C0 st1 st2 fs op.
 Proof.
-  intros C0 bt0 module ctx data st fs pre f b st1 op mid
-         Hinv Hbfirst Hfs Hroom Hmems Hlocals Hglobals
+  intros V inst vis C0 bt0 module ctx data st fs pre f b st1 op mid
+         Hacc Hinv Hbfirst Hfs Hroom Hmems Hlocals Hglobals
          Hret Hfuncs Htypes Htables Hfw10 Htw10 Hro Hrop Hty0.
   subst fs.
+  (* the hooks, one hypothesis each, so [eauto] can close a hook goal *)
+  pose proof Hacc as Hall. unfold hooks_accept in Hall.
+  repeat match goal with Hc : _ /\ _ |- _ => destruct Hc end.
   destruct (read_op_state st data _ st1 Hro) as [Hv1 Hc1].
   assert (Hinv1 : Inv C0 st1 (pre ++ [f]))
     by (apply (Inv_fields C0 st st1 _ Hv1 Hc1 Hinv)).
-  pose proof (read_op_sets_pending st data b st1 Hro) as Hpend.
   pose proof (read_op_sound st data b st1 Hro) as Hbytes.
   pose proof (read_op_size st data _ st1 Hro) as Hsz1.
   assert (Hroom1 : room st1) by (unfold room in Hroom |- *; lia).
@@ -814,8 +812,8 @@ Proof.
   { apply scalar_eqb_true in E1.
     assert (Hb : to_Z b = 1) by (rewrite E1; reflexivity).
     op_cases Hd Hb. injection Hsp as Hbe. subst cbe. subst op.
-    destruct (read_nop_complete st1 b Hpend E1) as [st2 Hrd].
-    exists st2. split; [exact Hrd|].
+    (* [nop] has no reader: the hook is the whole of the dispatch *)
+    exists st1. split; [apply visit_hook_accept; eauto|].
     unfold step_shape.
     eexists. unfold adv_plain.
     exists pre, f, {| fv_ctrl := fv_ctrl f; fv_seg := fv_seg f;
@@ -824,15 +822,15 @@ Proof.
     split; [reflexivity|]. split; [reflexivity|].
     cbn [fv_ctrl fv_seg fv_done]. split; [reflexivity|]. split; [reflexivity|].
     split; [reflexivity|]. split; [apply flat_of_one_nop|].
-    apply (step_nop C0 st1 (pre ++ [f]) pre f st2 Hinv1 (eq_refl _) Hrd). }
+    apply (step_nop C0 st1 (pre ++ [f]) pre f Hinv1 (eq_refl _)). }
   (* unreachable *)
   destruct (b s= opiter_op_unreachable) eqn:E2.
   { apply scalar_eqb_true in E2.
     assert (Hb : to_Z b = 0) by (rewrite E2; reflexivity).
     op_cases Hd Hb. injection Hsp as Hbe. subst cbe. subst op.
-    destruct (read_unreachable_complete st1 b Hpend E2)
+    destruct (read_unreachable_complete st1)
       as [st2 Hrd].
-    exists st2. split; [exact Hrd|].
+    exists st2. split; [eapply visit_wrap_accept; [exact Hrd | eauto]|].
     unfold step_shape.
     eexists. unfold adv_plain.
     exists pre, f,
@@ -856,10 +854,10 @@ Proof.
     assert (Hb : to_Z b = 65) by (rewrite E3; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt. subst cnt2.
     cbn [const_bits] in Himm. cbn [const_val] in Hop. subst op.
-    destruct (read_i32_const_complete st1 data b cz mid Hpend E3 Himm Hroom1
+    destruct (read_i32_const_complete st1 data cz mid Himm Hroom1
                ) as [v [st2 [Hrd Hval]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept; [exact Hrd | eauto]. }
     unfold step_shape.
     pose proof (step_i32_const C0 st1 (pre ++ [f]) pre f data v st2 Hinv1
                   (eq_refl _) Hrd) as Hinv2.
@@ -879,10 +877,10 @@ Proof.
     assert (Hb : to_Z b = 66) by (rewrite E3b; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt. subst cnt2.
     cbn [const_bits] in Himm. cbn [const_val] in Hop. subst op.
-    destruct (read_i64_const_complete st1 data b cz mid Hpend E3b Himm Hroom1
+    destruct (read_i64_const_complete st1 data cz mid Himm Hroom1
                ) as [v [st2 [Hrd Hval]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept; [exact Hrd | eauto]. }
     unfold step_shape.
     pose proof (step_i64_const C0 st1 (pre ++ [f]) pre f data v st2 Hinv1
                   (eq_refl _) Hrd) as Hinv2.
@@ -902,10 +900,10 @@ Proof.
     assert (Hb : to_Z b = 67) by (rewrite E3c; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt. subst cnt3.
     cbn [fconst_bytes] in Himm. subst op.
-    destruct (read_f32_const_complete st1 data b cbits mid Hpend E3c Himm Hroom1
+    destruct (read_f32_const_complete st1 data cbits mid Himm Hroom1
                ) as [v [st2 [Hrd Hval]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept; [exact Hrd | eauto]. }
     unfold step_shape.
     pose proof (step_f32_const C0 st1 (pre ++ [f]) pre f data v st2 Hinv1
                   (eq_refl _) Hrd) as Hinv2.
@@ -924,10 +922,10 @@ Proof.
     assert (Hb : to_Z b = 68) by (rewrite E3d; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt. subst cnt3.
     cbn [fconst_bytes] in Himm. subst op.
-    destruct (read_f64_const_complete st1 data b cbits mid Hpend E3d Himm Hroom1
+    destruct (read_f64_const_complete st1 data cbits mid Himm Hroom1
                ) as [v [st2 [Hrd Hval]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept; [exact Hrd | eauto]. }
     unfold step_shape.
     pose proof (step_f64_const C0 st1 (pre ++ [f]) pre f data v st2 Hinv1
                   (eq_refl _) Hrd) as Hinv2.
@@ -948,10 +946,10 @@ Proof.
     op_cases Hd Hb. injection Hsp as Hbe. subst cbe. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
     pose proof (check_single_drop_inv _ _ _ Hct) as Hdrop.
-    destruct (read_drop_complete C0 st1 pre f b ct Hinv1 Hpend E5 Hdrop)
+    destruct (read_drop_complete C0 st1 pre f ct Hinv1 Hdrop)
       as [t [st2 Hrd]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept; [exact Hrd | eauto]. }
     unfold step_shape.
     destruct (step_drop C0 st1 (pre ++ [f]) pre f t st2 Hinv1 (eq_refl _) Hrd)
       as [seg' Hinv2].
@@ -970,10 +968,9 @@ Proof.
     op_cases Hd Hb. injection Hsp as Hbe. subst cbe. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
     pose proof (check_single_select_inv _ _ _ _ Hct) as Hsel.
-    destruct (read_select_complete C0 st1 pre f b ct Hinv1 Hpend E5s Hsel
-                Hroom1) as [t [st2 Hrd]].
+    destruct (read_select_complete C0 st1 pre f ct Hinv1 Hsel Hroom1) as [t [st2 Hrd]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept; [exact Hrd | eauto]. }
     unfold step_shape.
     destruct (step_select C0 st1 (pre ++ [f]) pre f t st2 Hinv1 (eq_refl _) Hrd)
       as [seg' Hinv2].
@@ -990,10 +987,9 @@ Proof.
   { apply scalar_eqb_true in E6.
     assert (Hb : to_Z b = 2) by (rewrite E6; reflexivity).
     op_cases Hd Hb. subst op.
-    destruct (read_block_complete st1 data b cbtb cbt cr Hpend E6 Hbs2 Hbtspec
-                Hroom1) as [bt' [st2 [Hrd Htr]]].
+    destruct (read_block_complete st1 data cbtb cbt cr Hbs2 Hbtspec Hroom1) as [bt' [st2 [Hrd Htr]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept; [exact Hrd | eauto]. }
     unfold step_shape.
     destruct (step_block C0 st1 (pre ++ [f]) data bt' st2 Hinv1 Hrd)
       as [base Hinv2].
@@ -1014,10 +1010,9 @@ Proof.
   { apply scalar_eqb_true in E7.
     assert (Hb : to_Z b = 3) by (rewrite E7; reflexivity).
     op_cases Hd Hb. subst op.
-    destruct (read_loop_complete st1 data b cbtb cbt cr Hpend E7 Hbs2 Hbtspec
-                Hroom1) as [bt' [st2 [Hrd Htr]]].
+    destruct (read_loop_complete st1 data cbtb cbt cr Hbs2 Hbtspec Hroom1) as [bt' [st2 [Hrd Htr]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept; [exact Hrd | eauto]. }
     unfold step_shape.
     destruct (step_loop C0 st1 (pre ++ [f]) data bt' st2 Hinv1 Hrd)
       as [base Hinv2].
@@ -1045,11 +1040,10 @@ Proof.
                 cr Hbs2 Hbtspec) as [btw [pw [_ [Htrw _]]]].
     rewrite <- Htrw in Hct.
     destruct (check_single_if_inv _ _ _ _ _ _ Hct) as [_ [_ [ct1 [Hcon _]]]].
-    destruct (read_if_complete C0 st1 pre f data b cbtb cbt cr ct1 Hinv1 Hpend
-                E7i Hbs2 Hbtspec Hcon Hroom1)
+    destruct (read_if_complete C0 st1 pre f data cbtb cbt cr ct1 Hinv1 Hbs2 Hbtspec Hcon Hroom1)
       as [bt' [st2 [Hrd Htr]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept; [exact Hrd | eauto]. }
     unfold step_shape.
     destruct (step_if C0 st1 (pre ++ [f]) pre f data bt' st2 Hinv1 (eq_refl _)
                 Hrd) as [seg' [base Hinv2]].
@@ -1075,10 +1069,10 @@ Proof.
     assert (Hb : to_Z b = 5) by (rewrite E7e; reflexivity).
     op_cases Hd Hb. subst op. cbn [op_typed] in Hty0.
     destruct Hty0 as [Hkind Hagree]. unfold ctrl_results in Hagree.
-    destruct (read_else_complete C0 st1 pre f b Hinv1 Hpend E7e Hkind Hagree
+    destruct (read_else_complete C0 st1 pre f Hinv1 Hkind Hagree
                ) as [bt [st2 Hrd]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept; [exact Hrd | eauto]. }
     unfold step_shape.
     pose proof (step_switch_else C0 st1 (pre ++ [f]) pre f st2 bt Hinv1
                   (eq_refl _) Hkind Hrd) as Hinv2.
@@ -1101,10 +1095,11 @@ Proof.
     assert (Hb : to_Z b = 11) by (rewrite E8; reflexivity).
     op_cases Hd Hb. subst op. cbn [op_typed] in Hty0.
     destruct Hty0 as [Hagree Hthen].
-    destruct (read_end_complete C0 st1 pre f b Hinv1 Hpend E8 Hagree Hthen
-                Hroom1) as [r [st2 Hrd]].
+    destruct (read_end_complete C0 st1 pre f Hinv1 Hagree Hthen Hroom1)
+      as [r [st2 Hrd]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { destruct r as [ekind ebt].
+      eapply visit_wrap2_accept; [exact Hrd | eauto]. }
     unfold step_shape.
     destruct (body_first_innermost bt0 (pre ++ [f]) pre f Hbfirst (eq_refl _))
       as [[Hprenil [Hk Hbt]] | [pre2 [f2 [Hfs2 Hkind]]]].
@@ -1201,11 +1196,10 @@ Proof.
     assert (Hcon' : consume (fv_ct f) (translate_typelist (ctrl_target c))
                     = Some ct1).
     { unfold ctrl_label in Hcl. rewrite Hcl. exact Hcon. }
-    destruct (read_br_complete C0 st1 pre f data b cx mid c ct1 Hinv1 Hpend E9
-                Himm Hlt Hnth Hcon')
+    destruct (read_br_complete C0 st1 pre f data cx mid c ct1 Hinv1 Himm Hlt Hnth Hcon')
       as [depth [bt' [st2 [Hrd Hdepth]]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap2_accept; [exact Hrd | eauto]. }
     unfold step_shape.
     pose proof (step_br C0 st1 (pre ++ [f]) pre f data depth bt' st2 Hinv1
                   (eq_refl _) Hrd) as Hinv2.
@@ -1247,11 +1241,10 @@ Proof.
                       (T_num T_i32 :: translate_typelist (ctrl_target c))
                     = Some ct1).
     { unfold ctrl_label in Hcl. rewrite Hcl. exact Hcon. }
-    destruct (read_br_if_complete C0 st1 pre f data b cx mid c ct1 Hinv1 Hpend
-                E9b Himm Hlt Hnth Hcon' Hroom1)
+    destruct (read_br_if_complete C0 st1 pre f data cx mid c ct1 Hinv1 Himm Hlt Hnth Hcon' Hroom1)
       as [depth [bt' [st2 [Hrd Hdepth]]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap2_accept; [exact Hrd | eauto]. }
     unfold step_shape.
     destruct (step_br_if C0 st1 (pre ++ [f]) pre f data depth bt' st2 Hinv1
                 (eq_refl _) Hrd) as [seg' Hinv2].
@@ -1316,14 +1309,15 @@ Proof.
                             (block_results_of (branch_target_bt_of cdef)))
                     = Some ct1)
       by (unfold ctrl_label, ctrl_target in Hcld; rewrite Hcld; exact Hcon).
-    destruct (read_br_table_complete C0 st1 pre f data b cls cx2 cmid mid
-                (branch_target_bt_of cdef) ct1 Hinv1 Hpend E9t Hvec Himm Hall
-                Hcon') as [st2 Hrd].
+    destruct (read_br_table_complete V inst vis C0 st1 pre f data cls cx2 cmid
+                mid (branch_target_bt_of cdef) ct1 Hacc Hinv1 Hvec Himm Hall
+                Hcon') as [dflt [st2 [vis1 Hrd]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrapv_accept; [exact Hrd | eauto]. }
     unfold step_shape.
-    pose proof (step_br_table C0 st1 (pre ++ [f]) pre f data cls cx2
-                  (branch_target_bt_of cdef) st2 Hinv1 (eq_refl _) Hall Hrd)
+    pose proof (step_br_table V inst vis vis1 dflt C0 st1 (pre ++ [f]) pre f data
+                  cls cx2 (branch_target_bt_of cdef) st2 Hinv1 (eq_refl _) Hall
+                  Hrd)
       as Hinv2.
     eexists. unfold adv_plain.
     exists pre, f,
@@ -1356,10 +1350,9 @@ Proof.
                        (vec_list ctx.(opiter_Context_results)))
       by (rewrite Hret in Hrc; injection Hrc as Hrc; symmetry; exact Hrc).
     rewrite Htls in Hcon.
-    destruct (read_return_complete C0 ctx st1 pre f b ct1 Hinv1 Hpend E9r
-                Hcon) as [st2 Hrd].
+    destruct (read_return_complete C0 ctx st1 pre f ct1 Hinv1 Hcon) as [st2 Hrd].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept; [exact Hrd | eauto]. }
     unfold step_shape.
     pose proof (step_return C0 ctx st1 (pre ++ [f]) pre f st2 Hinv1
                   (eq_refl _) Hret Hrd) as Hinv2.
@@ -1388,11 +1381,10 @@ Proof.
     cbn [op_typed idx_instr] in Hty0. destruct Hty0 as [ct Hct].
     destruct (check_single_call_inv _ _ _ _ Hct) as [tn [tm [ct1 [Hlk Hcon]]]].
     cbn [with_labels tc_funcs] in Hlk.
-    destruct (read_call_complete C0 module st1 pre f data b cx mid tn tm ct1
-                Hinv1 Hfuncs Hfw10 Hpend EC1 Himm Hlk Hcon Hroom1)
+    destruct (read_call_complete C0 module st1 pre f data cx mid tn tm ct1 Hinv1 Hfuncs Hfw10 Himm Hlk Hcon Hroom1)
       as [idx [st2 [Hrd Hidx]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept; [exact Hrd | eauto]. }
     unfold step_shape.
     destruct (step_call C0 module st1 (pre ++ [f]) pre f data idx st2
                 Hinv1 (eq_refl _) Hfuncs Hrd) as [seg' Hinv2].
@@ -1414,11 +1406,9 @@ Proof.
     destruct (check_single_call_indirect_inv _ _ _ _ _ Hct)
       as [tabt [tn [tm [ct1 [Htlk [Helem [Hlk Hcon]]]]]]].
     cbn [with_labels tc_tables tc_types] in Htlk, Hlk.
-    destruct (read_call_indirect_complete C0 module st1 pre f data b cy mid tabt
-                tn tm ct1 Hinv1 Htypes Htables Htw10 Hpend EC2 Himm Htlk Hlk
-                Hcon Hroom1) as [idx [st2 [Hrd Hidx]]].
+    destruct (read_call_indirect_complete C0 module st1 pre f data cy mid tabt tn tm ct1 Hinv1 Htypes Htables Htw10 Himm Htlk Hlk Hcon Hroom1) as [idx [st2 [Hrd Hidx]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept; [exact Hrd | eauto]. }
     unfold step_shape.
     destruct (step_call_indirect C0 module st1 (pre ++ [f]) pre f data idx st2
                 Hinv1 (eq_refl _) Htypes Htables Hrd) as [seg' Hinv2].
@@ -1439,11 +1429,10 @@ Proof.
     cbn [op_typed idx_instr] in Hty0. destruct Hty0 as [ct Hct].
     destruct (check_single_local_get_inv _ _ _ _ Hct) as [xx Hlk].
     cbn [with_labels tc_locals] in Hlk.
-    destruct (read_local_get_complete C0 ctx st1 pre f data b cx mid xx
-                Hinv1 Hlocals Hpend EL1 Himm Hlk Hroom1)
+    destruct (read_local_get_complete C0 ctx st1 pre f data cx mid xx Hinv1 Hlocals Himm Hlk Hroom1)
       as [idx [st2 [Hrd Hidx]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept; [exact Hrd | eauto]. }
     unfold step_shape.
     destruct (step_local_get C0 ctx st1 (pre ++ [f]) pre f data idx st2
                 Hinv1 (eq_refl _) Hlocals Hrd) as [t Hinv2].
@@ -1464,11 +1453,10 @@ Proof.
     cbn [op_typed idx_instr] in Hty0. destruct Hty0 as [ct Hct].
     destruct (check_single_local_set_inv _ _ _ _ Hct) as [xx [ct1 [Hlk Hcon]]].
     cbn [with_labels tc_locals] in Hlk.
-    destruct (read_local_set_complete C0 ctx st1 pre f data b cx mid xx ct1
-                Hinv1 Hlocals Hpend EL2 Himm Hlk Hcon)
+    destruct (read_local_set_complete C0 ctx st1 pre f data cx mid xx ct1 Hinv1 Hlocals Himm Hlk Hcon)
       as [idx [st2 [Hrd Hidx]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept; [exact Hrd | eauto]. }
     unfold step_shape.
     destruct (step_local_set C0 ctx st1 (pre ++ [f]) pre f data idx st2
                 Hinv1 (eq_refl _) Hlocals Hrd) as [seg' Hinv2].
@@ -1488,12 +1476,10 @@ Proof.
     cbn [op_typed idx_instr] in Hty0. destruct Hty0 as [ct Hct].
     destruct (check_single_local_tee_inv _ _ _ _ Hct) as [xx [ct1 [Hlk Hcon]]].
     cbn [with_labels tc_locals] in Hlk.
-    destruct (read_local_tee_complete C0 ctx st1 pre f data b cx mid xx ct1
-                Hinv1 Hlocals Hpend EL3 Himm Hlk
-                Hcon Hroom1)
+    destruct (read_local_tee_complete C0 ctx st1 pre f data cx mid xx ct1 Hinv1 Hlocals Himm Hlk Hcon Hroom1)
       as [idx [st2 [Hrd Hidx]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept; [exact Hrd | eauto]. }
     unfold step_shape.
     destruct (step_local_tee C0 ctx st1 (pre ++ [f]) pre f data idx st2
                 Hinv1 (eq_refl _) Hlocals Hrd) as [seg' [t Hinv2]].
@@ -1515,12 +1501,10 @@ Proof.
     cbn [op_typed idx_instr] in Hty0. destruct Hty0 as [ct Hct].
     destruct (check_single_global_get_inv _ _ _ _ Hct) as [xx Hlk].
     cbn [with_labels tc_globals] in Hlk.
-    destruct (read_global_get_complete C0 module st1 pre f data b cx mid xx
-                Hinv1 Hglobals Hpend EG1 Himm Hlk
-                Hroom1)
+    destruct (read_global_get_complete C0 module st1 pre f data cx mid xx Hinv1 Hglobals Himm Hlk Hroom1)
       as [idx [st2 [Hrd Hidx]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept; [exact Hrd | eauto]. }
     unfold step_shape.
     destruct (step_global_get C0 module st1 (pre ++ [f]) pre f data idx st2
                 Hinv1 (eq_refl _) Hglobals Hrd) as [t Hinv2].
@@ -1542,11 +1526,10 @@ Proof.
     destruct (check_single_global_set_inv _ _ _ _ Hct)
       as [xx [ct1 [Hlk [Hmut Hcon]]]].
     cbn [with_labels tc_globals] in Hlk.
-    destruct (read_global_set_complete C0 module st1 pre f data b cx mid xx ct1
-                Hinv1 Hglobals Hpend EG2 Himm Hlk Hmut Hcon)
+    destruct (read_global_set_complete C0 module st1 pre f data cx mid xx ct1 Hinv1 Hglobals Himm Hlk Hmut Hcon)
       as [idx [st2 [Hrd Hidx]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept; [exact Hrd | eauto]. }
     unfold step_shape.
     destruct (step_global_set C0 module st1 (pre ++ [f]) pre f data idx st2
                 Hinv1 (eq_refl _) Hglobals Hrd) as [seg' Hinv2].
@@ -1565,276 +1548,291 @@ Proof.
     assert (Hb : to_Z b = 40) by (rewrite E10; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
-    destruct (load_branch C0 module data st1 pre f b Types_ValueType_I32 2%u32 T_i32 None
-                ca co mid ct Hinv1 Hpend (eq_refl _) (ltac:(ls_bounds))
+    destruct (load_branch C0 module data st1 pre f Types_ValueType_I32 2%u32 T_i32 None ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
                 (ltac:(align_lt)) Hmems Himm Hct Hroom1
                ) as [m [st2 [Hrd Hadv]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept;
+        [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
   destruct (b s= opiter_op_i64_load) eqn:E11.
   { apply scalar_eqb_true in E11.
     assert (Hb : to_Z b = 41) by (rewrite E11; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
-    destruct (load_branch C0 module data st1 pre f b Types_ValueType_I64 3%u32 T_i64 None
-                ca co mid ct Hinv1 Hpend (eq_refl _) (ltac:(ls_bounds))
+    destruct (load_branch C0 module data st1 pre f Types_ValueType_I64 3%u32 T_i64 None ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
                 (ltac:(align_lt)) Hmems Himm Hct Hroom1
                ) as [m [st2 [Hrd Hadv]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept;
+        [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
   destruct (b s= opiter_op_f32_load) eqn:E12.
   { apply scalar_eqb_true in E12.
     assert (Hb : to_Z b = 42) by (rewrite E12; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
-    destruct (load_branch C0 module data st1 pre f b Types_ValueType_F32 2%u32 T_f32 None
-                ca co mid ct Hinv1 Hpend (eq_refl _) (ltac:(ls_bounds))
+    destruct (load_branch C0 module data st1 pre f Types_ValueType_F32 2%u32 T_f32 None ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
                 (ltac:(align_lt)) Hmems Himm Hct Hroom1
                ) as [m [st2 [Hrd Hadv]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept;
+        [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
   destruct (b s= opiter_op_f64_load) eqn:E13.
   { apply scalar_eqb_true in E13.
     assert (Hb : to_Z b = 43) by (rewrite E13; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
-    destruct (load_branch C0 module data st1 pre f b Types_ValueType_F64 3%u32 T_f64 None
-                ca co mid ct Hinv1 Hpend (eq_refl _) (ltac:(ls_bounds))
+    destruct (load_branch C0 module data st1 pre f Types_ValueType_F64 3%u32 T_f64 None ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
                 (ltac:(align_lt)) Hmems Himm Hct Hroom1
                ) as [m [st2 [Hrd Hadv]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept;
+        [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
   destruct (b s= opiter_op_i32_load8_s) eqn:E14.
   { apply scalar_eqb_true in E14.
     assert (Hb : to_Z b = 44) by (rewrite E14; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
-    destruct (load_branch C0 module data st1 pre f b Types_ValueType_I32 0%u32 T_i32 (Some (Tp_i8, SX_S))
-                ca co mid ct Hinv1 Hpend (eq_refl _) (ltac:(ls_bounds))
+    destruct (load_branch C0 module data st1 pre f Types_ValueType_I32 0%u32 T_i32 (Some (Tp_i8, SX_S))
+                ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
                 (ltac:(align_lt)) Hmems Himm Hct Hroom1
                ) as [m [st2 [Hrd Hadv]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept;
+        [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
   destruct (b s= opiter_op_i32_load8_u) eqn:E15.
   { apply scalar_eqb_true in E15.
     assert (Hb : to_Z b = 45) by (rewrite E15; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
-    destruct (load_branch C0 module data st1 pre f b Types_ValueType_I32 0%u32 T_i32 (Some (Tp_i8, SX_U))
-                ca co mid ct Hinv1 Hpend (eq_refl _) (ltac:(ls_bounds))
+    destruct (load_branch C0 module data st1 pre f Types_ValueType_I32 0%u32 T_i32 (Some (Tp_i8, SX_U))
+                ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
                 (ltac:(align_lt)) Hmems Himm Hct Hroom1
                ) as [m [st2 [Hrd Hadv]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept;
+        [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
   destruct (b s= opiter_op_i32_load16_s) eqn:E16.
   { apply scalar_eqb_true in E16.
     assert (Hb : to_Z b = 46) by (rewrite E16; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
-    destruct (load_branch C0 module data st1 pre f b Types_ValueType_I32 1%u32 T_i32 (Some (Tp_i16, SX_S))
-                ca co mid ct Hinv1 Hpend (eq_refl _) (ltac:(ls_bounds))
+    destruct (load_branch C0 module data st1 pre f Types_ValueType_I32 1%u32 T_i32 (Some (Tp_i16, SX_S))
+                ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
                 (ltac:(align_lt)) Hmems Himm Hct Hroom1
                ) as [m [st2 [Hrd Hadv]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept;
+        [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
   destruct (b s= opiter_op_i32_load16_u) eqn:E17.
   { apply scalar_eqb_true in E17.
     assert (Hb : to_Z b = 47) by (rewrite E17; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
-    destruct (load_branch C0 module data st1 pre f b Types_ValueType_I32 1%u32 T_i32 (Some (Tp_i16, SX_U))
-                ca co mid ct Hinv1 Hpend (eq_refl _) (ltac:(ls_bounds))
+    destruct (load_branch C0 module data st1 pre f Types_ValueType_I32 1%u32 T_i32 (Some (Tp_i16, SX_U))
+                ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
                 (ltac:(align_lt)) Hmems Himm Hct Hroom1
                ) as [m [st2 [Hrd Hadv]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept;
+        [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
   destruct (b s= opiter_op_i64_load8_s) eqn:E18.
   { apply scalar_eqb_true in E18.
     assert (Hb : to_Z b = 48) by (rewrite E18; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
-    destruct (load_branch C0 module data st1 pre f b Types_ValueType_I64 0%u32 T_i64 (Some (Tp_i8, SX_S))
-                ca co mid ct Hinv1 Hpend (eq_refl _) (ltac:(ls_bounds))
+    destruct (load_branch C0 module data st1 pre f Types_ValueType_I64 0%u32 T_i64 (Some (Tp_i8, SX_S))
+                ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
                 (ltac:(align_lt)) Hmems Himm Hct Hroom1
                ) as [m [st2 [Hrd Hadv]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept;
+        [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
   destruct (b s= opiter_op_i64_load8_u) eqn:E19.
   { apply scalar_eqb_true in E19.
     assert (Hb : to_Z b = 49) by (rewrite E19; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
-    destruct (load_branch C0 module data st1 pre f b Types_ValueType_I64 0%u32 T_i64 (Some (Tp_i8, SX_U))
-                ca co mid ct Hinv1 Hpend (eq_refl _) (ltac:(ls_bounds))
+    destruct (load_branch C0 module data st1 pre f Types_ValueType_I64 0%u32 T_i64 (Some (Tp_i8, SX_U))
+                ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
                 (ltac:(align_lt)) Hmems Himm Hct Hroom1
                ) as [m [st2 [Hrd Hadv]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept;
+        [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
   destruct (b s= opiter_op_i64_load16_s) eqn:E20.
   { apply scalar_eqb_true in E20.
     assert (Hb : to_Z b = 50) by (rewrite E20; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
-    destruct (load_branch C0 module data st1 pre f b Types_ValueType_I64 1%u32 T_i64 (Some (Tp_i16, SX_S))
-                ca co mid ct Hinv1 Hpend (eq_refl _) (ltac:(ls_bounds))
+    destruct (load_branch C0 module data st1 pre f Types_ValueType_I64 1%u32 T_i64 (Some (Tp_i16, SX_S))
+                ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
                 (ltac:(align_lt)) Hmems Himm Hct Hroom1
                ) as [m [st2 [Hrd Hadv]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept;
+        [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
   destruct (b s= opiter_op_i64_load16_u) eqn:E21.
   { apply scalar_eqb_true in E21.
     assert (Hb : to_Z b = 51) by (rewrite E21; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
-    destruct (load_branch C0 module data st1 pre f b Types_ValueType_I64 1%u32 T_i64 (Some (Tp_i16, SX_U))
-                ca co mid ct Hinv1 Hpend (eq_refl _) (ltac:(ls_bounds))
+    destruct (load_branch C0 module data st1 pre f Types_ValueType_I64 1%u32 T_i64 (Some (Tp_i16, SX_U))
+                ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
                 (ltac:(align_lt)) Hmems Himm Hct Hroom1
                ) as [m [st2 [Hrd Hadv]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept;
+        [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
   destruct (b s= opiter_op_i64_load32_s) eqn:E22.
   { apply scalar_eqb_true in E22.
     assert (Hb : to_Z b = 52) by (rewrite E22; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
-    destruct (load_branch C0 module data st1 pre f b Types_ValueType_I64 2%u32 T_i64 (Some (Tp_i32, SX_S))
-                ca co mid ct Hinv1 Hpend (eq_refl _) (ltac:(ls_bounds))
+    destruct (load_branch C0 module data st1 pre f Types_ValueType_I64 2%u32 T_i64 (Some (Tp_i32, SX_S))
+                ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
                 (ltac:(align_lt)) Hmems Himm Hct Hroom1
                ) as [m [st2 [Hrd Hadv]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept;
+        [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
   destruct (b s= opiter_op_i64_load32_u) eqn:E23.
   { apply scalar_eqb_true in E23.
     assert (Hb : to_Z b = 53) by (rewrite E23; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
-    destruct (load_branch C0 module data st1 pre f b Types_ValueType_I64 2%u32 T_i64 (Some (Tp_i32, SX_U))
-                ca co mid ct Hinv1 Hpend (eq_refl _) (ltac:(ls_bounds))
+    destruct (load_branch C0 module data st1 pre f Types_ValueType_I64 2%u32 T_i64 (Some (Tp_i32, SX_U))
+                ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
                 (ltac:(align_lt)) Hmems Himm Hct Hroom1
                ) as [m [st2 [Hrd Hadv]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept;
+        [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
   destruct (b s= opiter_op_i32_store) eqn:E24.
   { apply scalar_eqb_true in E24.
     assert (Hb : to_Z b = 54) by (rewrite E24; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
-    destruct (store_branch C0 module data st1 pre f b Types_ValueType_I32 2%u32 T_i32 None
-                ca co mid ct Hinv1 Hpend (eq_refl _) (ltac:(ls_bounds))
+    destruct (store_branch C0 module data st1 pre f Types_ValueType_I32 2%u32 T_i32 None ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
                 (ltac:(align_lt)) Hmems Himm Hct)
       as [m [st2 [Hrd Hadv]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept;
+        [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
   destruct (b s= opiter_op_i64_store) eqn:E25.
   { apply scalar_eqb_true in E25.
     assert (Hb : to_Z b = 55) by (rewrite E25; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
-    destruct (store_branch C0 module data st1 pre f b Types_ValueType_I64 3%u32 T_i64 None
-                ca co mid ct Hinv1 Hpend (eq_refl _) (ltac:(ls_bounds))
+    destruct (store_branch C0 module data st1 pre f Types_ValueType_I64 3%u32 T_i64 None ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
                 (ltac:(align_lt)) Hmems Himm Hct)
       as [m [st2 [Hrd Hadv]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept;
+        [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
   destruct (b s= opiter_op_f32_store) eqn:E26.
   { apply scalar_eqb_true in E26.
     assert (Hb : to_Z b = 56) by (rewrite E26; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
-    destruct (store_branch C0 module data st1 pre f b Types_ValueType_F32 2%u32 T_f32 None
-                ca co mid ct Hinv1 Hpend (eq_refl _) (ltac:(ls_bounds))
+    destruct (store_branch C0 module data st1 pre f Types_ValueType_F32 2%u32 T_f32 None ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
                 (ltac:(align_lt)) Hmems Himm Hct)
       as [m [st2 [Hrd Hadv]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept;
+        [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
   destruct (b s= opiter_op_f64_store) eqn:E27.
   { apply scalar_eqb_true in E27.
     assert (Hb : to_Z b = 57) by (rewrite E27; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
-    destruct (store_branch C0 module data st1 pre f b Types_ValueType_F64 3%u32 T_f64 None
-                ca co mid ct Hinv1 Hpend (eq_refl _) (ltac:(ls_bounds))
+    destruct (store_branch C0 module data st1 pre f Types_ValueType_F64 3%u32 T_f64 None ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
                 (ltac:(align_lt)) Hmems Himm Hct)
       as [m [st2 [Hrd Hadv]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept;
+        [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
   destruct (b s= opiter_op_i32_store8) eqn:E28.
   { apply scalar_eqb_true in E28.
     assert (Hb : to_Z b = 58) by (rewrite E28; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
-    destruct (store_branch C0 module data st1 pre f b Types_ValueType_I32 0%u32 T_i32 (Some Tp_i8)
-                ca co mid ct Hinv1 Hpend (eq_refl _) (ltac:(ls_bounds))
+    destruct (store_branch C0 module data st1 pre f Types_ValueType_I32 0%u32 T_i32 (Some Tp_i8)
+                ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
                 (ltac:(align_lt)) Hmems Himm Hct)
       as [m [st2 [Hrd Hadv]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept;
+        [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
   destruct (b s= opiter_op_i32_store16) eqn:E29.
   { apply scalar_eqb_true in E29.
     assert (Hb : to_Z b = 59) by (rewrite E29; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
-    destruct (store_branch C0 module data st1 pre f b Types_ValueType_I32 1%u32 T_i32 (Some Tp_i16)
-                ca co mid ct Hinv1 Hpend (eq_refl _) (ltac:(ls_bounds))
+    destruct (store_branch C0 module data st1 pre f Types_ValueType_I32 1%u32 T_i32 (Some Tp_i16)
+                ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
                 (ltac:(align_lt)) Hmems Himm Hct)
       as [m [st2 [Hrd Hadv]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept;
+        [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
   destruct (b s= opiter_op_i64_store8) eqn:E30.
   { apply scalar_eqb_true in E30.
     assert (Hb : to_Z b = 60) by (rewrite E30; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
-    destruct (store_branch C0 module data st1 pre f b Types_ValueType_I64 0%u32 T_i64 (Some Tp_i8)
-                ca co mid ct Hinv1 Hpend (eq_refl _) (ltac:(ls_bounds))
+    destruct (store_branch C0 module data st1 pre f Types_ValueType_I64 0%u32 T_i64 (Some Tp_i8)
+                ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
                 (ltac:(align_lt)) Hmems Himm Hct)
       as [m [st2 [Hrd Hadv]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept;
+        [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
   destruct (b s= opiter_op_i64_store16) eqn:E31.
   { apply scalar_eqb_true in E31.
     assert (Hb : to_Z b = 61) by (rewrite E31; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
-    destruct (store_branch C0 module data st1 pre f b Types_ValueType_I64 1%u32 T_i64 (Some Tp_i16)
-                ca co mid ct Hinv1 Hpend (eq_refl _) (ltac:(ls_bounds))
+    destruct (store_branch C0 module data st1 pre f Types_ValueType_I64 1%u32 T_i64 (Some Tp_i16)
+                ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
                 (ltac:(align_lt)) Hmems Himm Hct)
       as [m [st2 [Hrd Hadv]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept;
+        [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
   destruct (b s= opiter_op_i64_store32) eqn:E32.
   { apply scalar_eqb_true in E32.
     assert (Hb : to_Z b = 62) by (rewrite E32; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
-    destruct (store_branch C0 module data st1 pre f b Types_ValueType_I64 2%u32 T_i64 (Some Tp_i32)
-                ca co mid ct Hinv1 Hpend (eq_refl _) (ltac:(ls_bounds))
+    destruct (store_branch C0 module data st1 pre f Types_ValueType_I64 2%u32 T_i64 (Some Tp_i32)
+                ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
                 (ltac:(align_lt)) Hmems Himm Hct)
       as [m [st2 [Hrd Hadv]]].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept;
+        [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
   (* memory.size and memory.grow: the immediate is the reserved zero byte, and
      the memory the checker looked up is the one the context has *)
@@ -1845,10 +1843,9 @@ Proof.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
     destruct (check_single_memory_size_inv _ _ _ Hct) as [m Hlk].
     cbn [with_labels tc_mems] in Hlk.
-    destruct (read_memory_size_complete C0 module st1 pre f data b m crr
-                Hinv1 Hpend EM1 Hbs2 Hmems Hlk Hroom1) as [st2 Hrd].
+    destruct (read_memory_size_complete C0 module st1 pre f data m crr Hinv1 Hbs2 Hmems Hlk Hroom1) as [st2 Hrd].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept; [exact Hrd | eauto]. }
     unfold step_shape.
     pose proof (step_memory_size C0 module st1 (pre ++ [f]) pre f data st2
                   Hinv1 (eq_refl _) Hmems Hrd) as Hinv2.
@@ -1868,10 +1865,9 @@ Proof.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
     destruct (check_single_memory_grow_inv _ _ _ Hct) as [[m Hlk] [ct1 Hcon]].
     cbn [with_labels tc_mems] in Hlk.
-    destruct (read_memory_grow_complete C0 module st1 pre f data b m crr ct1
-                Hinv1 Hpend EM2 Hbs2 Hmems Hlk Hcon Hroom1) as [st2 Hrd].
+    destruct (read_memory_grow_complete C0 module st1 pre f data m crr ct1 Hinv1 Hbs2 Hmems Hlk Hcon Hroom1) as [st2 Hrd].
     exists st2. split.
-    { rewrite Hrd. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity. }
+    { eapply visit_wrap_accept; [exact Hrd | eauto]. }
     unfold step_shape.
     destruct (step_memory_grow C0 module st1 (pre ++ [f]) pre f data st2
                 Hinv1 (eq_refl _) Hmems Hrd) as [seg' Hinv2].
@@ -1911,11 +1907,13 @@ Proof.
     injection Hsp as Hbe. subst cbe. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
     destruct (plain_effect_consume _ _ _ _ _ _ Heff Hct) as [ct1 Hcon].
-    destruct (read_conversion_complete C0 st1 pre f b b from to ct1 Hinv1 Hpend
-                (eq_refl _) Hcon Hroom1) as [st2 Hrd].
-    exists st2. split; [exact Hrd|].
+    destruct (read_conversion_complete C0 st1 pre f from to ct1 Hinv1
+                Hcon Hroom1) as [st2 Hrd].
+    exists st2. split;
+      [eapply visit_wrap_accept;
+         [exact Hrd | intros; apply visit_numeric_accept; exact Hacc]|].
     unfold step_shape.
-    destruct (step_conversion C0 st1 (pre ++ [f]) pre f b from to be st2 Hinv1
+    destruct (step_conversion C0 st1 (pre ++ [f]) pre f from to be st2 Hinv1
                 (eq_refl _) (plain_effect_in C0 _ _ _ Heff) Hrd)
       as [seg' Hinv2].
     eexists. unfold adv_plain.
@@ -1948,11 +1946,13 @@ Proof.
     injection Hsp as Hbe. subst cbe. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
     destruct (plain_effect_consume _ _ _ _ _ _ Heff Hct) as [ct1 Hcon].
-    destruct (read_binary_complete C0 st1 pre f b b ty res ct1 Hinv1 Hpend
-                (eq_refl _) Hcon Hroom1) as [st2 Hrd].
-    exists st2. split; [exact Hrd|].
+    destruct (read_binary_complete C0 st1 pre f ty res ct1 Hinv1
+                Hcon Hroom1) as [st2 Hrd].
+    exists st2. split;
+      [eapply visit_wrap_accept;
+         [exact Hrd | intros; apply visit_numeric_accept; exact Hacc]|].
     unfold step_shape.
-    destruct (step_binary C0 st1 (pre ++ [f]) pre f b ty res be st2 Hinv1
+    destruct (step_binary C0 st1 (pre ++ [f]) pre f ty res be st2 Hinv1
                 (eq_refl _) (plain_effect_in C0 _ _ _ Heff) Hrd)
       as [seg' Hinv2].
     eexists. unfold adv_plain.
@@ -2691,25 +2691,30 @@ Proof. pose proof usize_max_bound as H. rewrite u32_max_val in H. lia. Qed.
 (** The bytes a step consumed, borrowed from the soundness direction: which
     operator they encode is settled there, and [repr_op_det] then identifies it
     with the one the stream named. *)
-Lemma step_bytes : forall C0 bt0 module ctx data st fs b st1 st2,
+Lemma step_bytes : forall V (inst : visit_OpVisitor_t V) vis vis2
+                           C0 bt0 module ctx data st fs b st1 st2,
   Inv C0 st fs -> body_first bt0 fs ->
   mems_agree module C0 -> locals_agree ctx C0 -> globals_agree module C0 ->
   return_agree ctx C0 -> funcs_agree module C0 -> types_agree module C0 ->
   tables_agree module C0 ->
   opiter_read_op st data = Ok (Core_result_Result_Ok b, st1) ->
-  opiter_step st1 data module ctx b = Ok (Core_result_Result_Ok tt, st2) ->
+  opiter_step inst st1 data module ctx b vis
+    = Ok (Core_result_Result_Ok tt, st2, vis2) ->
   exists op, repr_op (bytes_from data st.(opiter_OpIterState_pos)) op
                      (bytes_from data st2.(opiter_OpIterState_pos)).
 Proof.
-  intros C0 bt0 module ctx data st fs b st1 st2 Hinv Hbfirst Hmems Hlocals
+  intros V inst vis vis2 C0 bt0 module ctx data st fs b st1 st2 Hinv Hbfirst
+         Hmems Hlocals
          Hglobals Hret Hfuncs Htypes Htables Hro Hstep.
-  destruct (step_op_step C0 bt0 module ctx data st fs b st1 st2 Hinv Hbfirst Hmems
+  destruct (step_op_step V inst vis vis2 C0 bt0 module ctx data st fs b st1 st2
+              Hinv Hbfirst Hmems
               Hlocals Hglobals Hret Hfuncs Htypes Htables Hro Hstep)
-    as [[fs' [op [_ [_ [_ Hrop]]]]]
-       | [[fs' [_ [_ [_ Hrop]]]] | Hdone]].
+    as [[fs' [op [_ [_ [_ [_ Hrop]]]]]]
+       | [[fs' [_ [_ [_ [_ Hrop]]]]] | Hdone]].
   - exists op. exact Hrop.
   - exists FO_end. exact Hrop.
-  - destruct Hdone as [f0 [_ [_ [_ [_ [_ Hrop]]]]]]. exists FO_end. exact Hrop.
+  - destruct Hdone as [_ [f0 [_ [_ [_ [_ [_ Hrop]]]]]]].
+    exists FO_end. exact Hrop.
 Qed.
 
 Lemma frame_todo_ok_nil : forall C0 labels f tdo,
@@ -2830,7 +2835,9 @@ Qed.
     exactly the one the stream names. The body's [end] is where the stream runs
     out and the cursor is at the end of the body, which is the accepting branch's
     condition. *)
-Lemma validate_body_loop_complete : forall m C0 bt0 module ctx data st fs tds,
+Lemma validate_body_loop_complete : forall m V (inst : visit_OpVisitor_t V) vis
+                                           C0 bt0 module ctx data st fs tds,
+  hooks_accept inst ->
   Inv C0 st fs -> body_first bt0 fs ->
   mems_agree module C0 -> locals_agree ctx C0 ->
   globals_agree module C0 -> return_agree ctx C0 ->
@@ -2842,11 +2849,12 @@ Lemma validate_body_loop_complete : forall m C0 bt0 module ctx data st fs tds,
   to_Z (slice_len data) - to_Z st.(opiter_OpIterState_pos) <= Z.of_nat m ->
   Z.of_nat (stack_size st) + Z.of_nat m <= to_Z (slice_len data) + 1 ->
   to_Z (slice_len data) <= 7654321 ->
-  opiter_validate_body_loop data module ctx.(opiter_Context_locals)
-    ctx.(opiter_Context_results) st = Ok (Core_result_Result_Ok tt).
+  exists vis', opiter_validate_body_with_loop inst data module
+                 ctx.(opiter_Context_locals) ctx.(opiter_Context_results) vis st
+               = Ok (Core_result_Result_Ok tt, vis').
 Proof.
-  induction m as [|m IH]; intros C0 bt0 module ctx data st fs tds
-                  Hinv Hbfirst Hmems Hlocals Hglobals Hret
+  induction m as [|m IH]; intros V inst vis C0 bt0 module ctx data st fs tds
+                  Hacc Hinv Hbfirst Hmems Hlocals Hglobals Hret
                   Hfuncs Htypes Htables Hfw10 Htw10
                   Hok [ops [Hsug Hops]] Hmeas
                   Hbudget Hlim;
@@ -2875,7 +2883,7 @@ Proof.
         | exists (fv_ctrl h), (List.map fv_ctrl (t ++ [f]));
           cbn [List.app List.map]; reflexivity]. }
     destruct Hcons as [c [cs Hcons]].
-    unfold opiter_validate_body_loop. rewrite loop_unfold. cbn beta iota.
+    unfold opiter_validate_body_with_loop. rewrite loop_unfold. cbn beta iota.
     unfold opiter_control_stack_empty. rewrite vec_is_empty_spec.
     rewrite Hcons. cbn [bind]. rewrite ctx_eta.
     destruct (list_cons_or_nil (bytes_from data st.(opiter_OpIterState_pos)))
@@ -2909,18 +2917,20 @@ Proof.
            destruct (repr_ops_cons_inv _ _ _ _ Hops) as [mid [Hrop Hops']].
            assert (Hty : op_typed C0 (labels_after [] pre) f FO_else)
              by (cbn [op_typed]; split; [exact Hkindf | exact Hagree]).
-           destruct (step_complete C0 bt0 module ctx data st (pre ++ [f]) pre f b st1
-                       FO_else mid Hinv Hbfirst (eq_refl _) Hroomst Hmems
+           destruct (step_complete V inst vis C0 bt0 module ctx data st (pre ++ [f]) pre f b st1
+                       FO_else mid Hacc Hinv Hbfirst (eq_refl _) Hroomst Hmems
                        Hlocals Hglobals Hret Hfuncs Htypes Htables
                        Hfw10 Htw10 Hro Hrop Hty)
-             as [st2 [Hstep Hshape]].
+             as [st2 [[vis2 Hstep] Hshape]].
            rewrite Hstep. cbn [bind]. rewrite branch_ok. cbn [bind].
-           destruct (step_bytes C0 bt0 module ctx data st (pre ++ [f]) b st1 st2 Hinv
+           destruct (step_bytes V inst vis vis2 C0 bt0 module ctx data st (pre ++ [f]) b st1 st2 Hinv
                        Hbfirst Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables
                        Hro Hstep) as [op' Hrop'].
            destruct (repr_op_det _ _ _ _ _ Hrop Hrop') as [_ Hmid].
-           pose proof (step_mono st1 data module ctx b _ st2 Hstep) as Hmono.
-           pose proof (step_size st1 data module ctx b _ st2 Hstep) as Hsz2.
+           pose proof (step_mono V inst vis st1 data module ctx b _ st2 vis2 Hstep)
+             as Hmono.
+           pose proof (step_size V inst vis st1 data module ctx b _ st2 vis2 Hstep)
+             as Hsz2.
            destruct Hshape as [fs' Hae].
            destruct Hae as [pre2 [g2 [g' [Hfs2 [Hfs2' [Hk' [Hbt'
                              [Hpoly' [Hseg' [Hdone' Hinv2]]]]]]]]]].
@@ -2932,7 +2942,7 @@ Proof.
              destruct Hbfirst as [Hb' _]. rewrite Hkindf in Hb'. discriminate. }
            pose proof (todo_ok_switch_else (h :: pre3) C0 [] g2 g' tds0 els
                          Hkindf Hk' Hbt' Hseg' Hpoly' Hok) as Hok'.
-           apply (IH C0 bt0 module ctx data st2 ((h :: pre3) ++ [g'])
+           apply (IH V inst vis2 C0 bt0 module ctx data st2 ((h :: pre3) ++ [g'])
                     (tds0 ++ [(els, None)])); try assumption.
            ++ apply (body_first_switch bt0 h pre3 g2);
                 [right; right; right; exact Hk' | exact Hbfirst].
@@ -2960,18 +2970,20 @@ Proof.
            { cbn [op_typed]. split; [exact Hagree|].
              intros _. apply (frame_todo_ok_bare_if C0 (labels_after [] pre) f).
              exact Hftd. }
-           destruct (step_complete C0 bt0 module ctx data st (pre ++ [f]) pre f b st1
-                       FO_end mid Hinv Hbfirst (eq_refl _) Hroomst Hmems
+           destruct (step_complete V inst vis C0 bt0 module ctx data st (pre ++ [f]) pre f b st1
+                       FO_end mid Hacc Hinv Hbfirst (eq_refl _) Hroomst Hmems
                        Hlocals Hglobals Hret Hfuncs Htypes Htables
                        Hfw10 Htw10 Hro Hrop Hty)
-             as [st2 [Hstep Hshape]].
+             as [st2 [[vis2 Hstep] Hshape]].
            rewrite Hstep. cbn [bind]. rewrite branch_ok. cbn [bind].
-           destruct (step_bytes C0 bt0 module ctx data st (pre ++ [f]) b st1 st2 Hinv
+           destruct (step_bytes V inst vis vis2 C0 bt0 module ctx data st (pre ++ [f]) b st1 st2 Hinv
                        Hbfirst Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables
                        Hro Hstep) as [op' Hrop'].
            destruct (repr_op_det _ _ _ _ _ Hrop Hrop') as [_ Hmid].
-           pose proof (step_mono st1 data module ctx b _ st2 Hstep) as Hmono.
-           pose proof (step_size st1 data module ctx b _ st2 Hstep) as Hsz2.
+           pose proof (step_mono V inst vis st1 data module ctx b _ st2 vis2 Hstep)
+             as Hmono.
+           pose proof (step_size V inst vis st1 data module ctx b _ st2 vis2 Hstep)
+             as Hsz2.
            destruct Hshape as [[fs' Hae] | Hbody].
            2: { (* not the body's frame: that one is not a then-branch *)
                 exfalso. destruct Hbody as [f0 [Hfs0 _]].
@@ -2995,7 +3007,7 @@ Proof.
            rewrite <- List.app_assoc in Hok.
            pose proof (todo_ok_end pre2 C0 [] f2 f f' tds1 td1 (Some [])
                          Hcf Hsf Hok) as Hok'.
-           apply (IH C0 bt0 module ctx data st2 (pre2 ++ [f']) (tds1 ++ [td1]));
+           apply (IH V inst vis2 C0 bt0 module ctx data st2 (pre2 ++ [f']) (tds1 ++ [td1]));
              try assumption.
            ++ apply (body_first_end bt0 pre2 f2 f' f);
                 [rewrite Hcf; reflexivity | rewrite Hcf; reflexivity
@@ -3012,18 +3024,20 @@ Proof.
         { cbn [op_typed]. split; [exact Hagree|].
           intros Hk. exfalso. destruct Hftd as [_ Hnt]. cbn [snd] in Hnt.
           apply Hnt. exact Hk. }
-        destruct (step_complete C0 bt0 module ctx data st (pre ++ [f]) pre f b st1 FO_end
-                    mid Hinv Hbfirst (eq_refl _) Hroomst Hmems Hlocals
+        destruct (step_complete V inst vis C0 bt0 module ctx data st (pre ++ [f]) pre f b st1 FO_end
+                    mid Hacc Hinv Hbfirst (eq_refl _) Hroomst Hmems Hlocals
                     Hglobals Hret Hfuncs Htypes Htables Hfw10 Htw10
                     Hro Hrop Hty)
-          as [st2 [Hstep Hshape]].
+          as [st2 [[vis2 Hstep] Hshape]].
         rewrite Hstep. cbn [bind]. rewrite branch_ok. cbn [bind].
-        destruct (step_bytes C0 bt0 module ctx data st (pre ++ [f]) b st1 st2 Hinv
+        destruct (step_bytes V inst vis vis2 C0 bt0 module ctx data st (pre ++ [f]) b st1 st2 Hinv
                     Hbfirst Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables
                     Hro Hstep) as [op' Hrop'].
         destruct (repr_op_det _ _ _ _ _ Hrop Hrop') as [_ Hmid].
-        pose proof (step_mono st1 data module ctx b _ st2 Hstep) as Hmono.
-        pose proof (step_size st1 data module ctx b _ st2 Hstep) as Hsz2.
+        pose proof (step_mono V inst vis st1 data module ctx b _ st2 vis2 Hstep)
+             as Hmono.
+        pose proof (step_size V inst vis st1 data module ctx b _ st2 vis2 Hstep)
+             as Hsz2.
         destruct Hshape as [[fs' Hae] | Hbody].
         -- (* a nested frame closed *)
            destruct Hae as [pre2 [f2 [g2 [f' [Hfs2 [Hfs2' [Hcf [Hsf Hinv2]]]]]]]].
@@ -3039,7 +3053,7 @@ Proof.
            rewrite <- List.app_assoc in Hok.
            pose proof (todo_ok_end pre2 C0 [] f2 f f' tds1 td1 None
                          Hcf Hsf Hok) as Hok'.
-           apply (IH C0 bt0 module ctx data st2 (pre2 ++ [f']) (tds1 ++ [td1]));
+           apply (IH V inst vis2 C0 bt0 module ctx data st2 (pre2 ++ [f']) (tds1 ++ [td1]));
              try assumption.
            ++ apply (body_first_end bt0 pre2 f2 f' f);
                 [rewrite Hcf; reflexivity | rewrite Hcf; reflexivity
@@ -3074,7 +3088,7 @@ Proof.
            { apply scalar_eqb_of_eq.
              pose proof (bytes_from_nil_ge data _ Hnil2) as Hge.
              pose proof (read_op_pos_le st data b st1 Hro) as Hle. lia. }
-           rewrite Heq. reflexivity.
+           rewrite Heq. eexists. reflexivity.
     + (* one more instruction in this frame *)
       subst tdf.
       destruct (flat_of_one_cases be) as [[bt [inner [Hbe Hfo]]]
@@ -3084,19 +3098,21 @@ Proof.
         subst be. rewrite todo_ops_block in Hsug.
         destruct (sugar_head _ _ _ _ Hsug Hops (ltac:(discriminate)))
           as [mid [lean' [Hrop [Hsug' Hops']]]].
-        destruct (step_complete C0 bt0 module ctx data st (pre ++ [f]) pre f b st1
-                    (FO_block bt) mid Hinv Hbfirst (eq_refl _) Hroomst Hmems
+        destruct (step_complete V inst vis C0 bt0 module ctx data st (pre ++ [f]) pre f b st1
+                    (FO_block bt) mid Hacc Hinv Hbfirst (eq_refl _) Hroomst Hmems
                     Hlocals Hglobals Hret Hfuncs Htypes Htables
                     Hfw10 Htw10 Hro Hrop I)
-          as [st2 [Hstep Hshape]].
+          as [st2 [[vis2 Hstep] Hshape]].
         rewrite Hstep. cbn [bind]. rewrite branch_ok. cbn [bind].
-        destruct (step_bytes C0 bt0 module ctx data st (pre ++ [f]) b st1 st2 Hinv
+        destruct (step_bytes V inst vis vis2 C0 bt0 module ctx data st (pre ++ [f]) b st1 st2 Hinv
                     Hbfirst Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables
                     Hro Hstep)
           as [op' Hrop'].
         destruct (repr_op_det _ _ _ _ _ Hrop Hrop') as [_ Hmid].
-        pose proof (step_mono st1 data module ctx b _ st2 Hstep) as Hmono.
-        pose proof (step_size st1 data module ctx b _ st2 Hstep) as Hsz2.
+        pose proof (step_mono V inst vis st1 data module ctx b _ st2 vis2 Hstep)
+             as Hmono.
+        pose proof (step_size V inst vis st1 data module ctx b _ st2 vis2 Hstep)
+             as Hsz2.
         destruct Hshape as [fs' [bt' [Htr Hae]]].
         destruct Hae as [g [Hfs' [Hseg [Hdone [Hkind [Hbt [Hpoly Hinv2]]]]]]].
         subst fs'.
@@ -3105,7 +3121,7 @@ Proof.
         rewrite <- Hbteq in Hok.
         pose proof (todo_ok_push_block pre C0 [] f g tds0 inner tdrest tdo
                       Hseg Hpoly Hkind Hok) as Hok'.
-        apply (IH C0 bt0 module ctx data st2 ((pre ++ [f]) ++ [g])
+        apply (IH V inst vis2 C0 bt0 module ctx data st2 ((pre ++ [f]) ++ [g])
                  ((tds0 ++ [(tdrest, tdo)]) ++ [(inner, None)]));
           try assumption.
         -- apply body_first_push; [left; exact Hkind | exact Hbfirst].
@@ -3116,19 +3132,21 @@ Proof.
         subst be. rewrite todo_ops_loop in Hsug.
         destruct (sugar_head _ _ _ _ Hsug Hops (ltac:(discriminate)))
           as [mid [lean' [Hrop [Hsug' Hops']]]].
-        destruct (step_complete C0 bt0 module ctx data st (pre ++ [f]) pre f b st1
-                    (FO_loop bt) mid Hinv Hbfirst (eq_refl _) Hroomst Hmems
+        destruct (step_complete V inst vis C0 bt0 module ctx data st (pre ++ [f]) pre f b st1
+                    (FO_loop bt) mid Hacc Hinv Hbfirst (eq_refl _) Hroomst Hmems
                     Hlocals Hglobals Hret Hfuncs Htypes Htables
                     Hfw10 Htw10 Hro Hrop I)
-          as [st2 [Hstep Hshape]].
+          as [st2 [[vis2 Hstep] Hshape]].
         rewrite Hstep. cbn [bind]. rewrite branch_ok. cbn [bind].
-        destruct (step_bytes C0 bt0 module ctx data st (pre ++ [f]) b st1 st2 Hinv
+        destruct (step_bytes V inst vis vis2 C0 bt0 module ctx data st (pre ++ [f]) b st1 st2 Hinv
                     Hbfirst Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables
                     Hro Hstep)
           as [op' Hrop'].
         destruct (repr_op_det _ _ _ _ _ Hrop Hrop') as [_ Hmid].
-        pose proof (step_mono st1 data module ctx b _ st2 Hstep) as Hmono.
-        pose proof (step_size st1 data module ctx b _ st2 Hstep) as Hsz2.
+        pose proof (step_mono V inst vis st1 data module ctx b _ st2 vis2 Hstep)
+             as Hmono.
+        pose proof (step_size V inst vis st1 data module ctx b _ st2 vis2 Hstep)
+             as Hsz2.
         destruct Hshape as [fs' [bt' [Htr Hae]]].
         destruct Hae as [g [Hfs' [Hseg [Hdone [Hkind [Hbt [Hpoly Hinv2]]]]]]].
         subst fs'.
@@ -3137,7 +3155,7 @@ Proof.
         rewrite <- Hbteq in Hok.
         pose proof (todo_ok_push_loop pre C0 [] f g tds0 inner tdrest tdo
                       Hseg Hpoly Hkind Hok) as Hok'.
-        apply (IH C0 bt0 module ctx data st2 ((pre ++ [f]) ++ [g])
+        apply (IH V inst vis2 C0 bt0 module ctx data st2 ((pre ++ [f]) ++ [g])
                  ((tds0 ++ [(tdrest, tdo)]) ++ [(inner, None)]));
           try assumption.
         -- apply body_first_push; [right; left; exact Hkind | exact Hbfirst].
@@ -3153,19 +3171,21 @@ Proof.
         { cbn [op_typed]. exists es1, es2.
           apply (todo_ok_plain_typed pre C0 [] f tds0 (BI_if bt es1 es2) tdrest
                    tdo). exact Hok. }
-        destruct (step_complete C0 bt0 module ctx data st (pre ++ [f]) pre f b st1
-                    (FO_if bt) mid Hinv Hbfirst (eq_refl _) Hroomst Hmems
+        destruct (step_complete V inst vis C0 bt0 module ctx data st (pre ++ [f]) pre f b st1
+                    (FO_if bt) mid Hacc Hinv Hbfirst (eq_refl _) Hroomst Hmems
                     Hlocals Hglobals Hret Hfuncs Htypes Htables
                     Hfw10 Htw10 Hro Hrop Hty)
-          as [st2 [Hstep Hshape]].
+          as [st2 [[vis2 Hstep] Hshape]].
         rewrite Hstep. cbn [bind]. rewrite branch_ok. cbn [bind].
-        destruct (step_bytes C0 bt0 module ctx data st (pre ++ [f]) b st1 st2 Hinv
+        destruct (step_bytes V inst vis vis2 C0 bt0 module ctx data st (pre ++ [f]) b st1 st2 Hinv
                     Hbfirst Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables
                     Hro Hstep)
           as [op' Hrop'].
         destruct (repr_op_det _ _ _ _ _ Hrop Hrop') as [_ Hmid].
-        pose proof (step_mono st1 data module ctx b _ st2 Hstep) as Hmono.
-        pose proof (step_size st1 data module ctx b _ st2 Hstep) as Hsz2.
+        pose proof (step_mono V inst vis st1 data module ctx b _ st2 vis2 Hstep)
+             as Hmono.
+        pose proof (step_size V inst vis st1 data module ctx b _ st2 vis2 Hstep)
+             as Hsz2.
         destruct Hshape as [fs' [bt' [Htr Hae]]].
         destruct Hae as [pre2 [f2 [f' [g [Hfs2 [Hfs2' [Hcf [Hdf
                           [Hseg [Hdone [Hkind [Hbt [Hpoly Hinv2]]]]]]]]]]]]].
@@ -3188,7 +3208,7 @@ Proof.
           rewrite <- Hct0 in Hcon0. exact Hcon0. }
         pose proof (todo_ok_push_if pre2 C0 [] f2 f' g tds0 es1 es2 tdrest tdo
                       Hcf Hcon Hseg Hpoly Hkind Hok) as Hok'.
-        apply (IH C0 bt0 module ctx data st2 ((pre2 ++ [f']) ++ [g])
+        apply (IH V inst vis2 C0 bt0 module ctx data st2 ((pre2 ++ [f']) ++ [g])
                  ((tds0 ++ [(tdrest, tdo)]) ++ [(es1, Some es2)]));
           try assumption.
         -- apply body_first_push; [right; right; left; exact Hkind|].
@@ -3206,19 +3226,21 @@ Proof.
           by (cbn [op_typed];
               apply (todo_ok_plain_typed pre C0 [] f tds0 be tdrest tdo);
               exact Hok).
-        destruct (step_complete C0 bt0 module ctx data st (pre ++ [f]) pre f b st1
-                    (FO_plain be) mid Hinv Hbfirst (eq_refl _) Hroomst
+        destruct (step_complete V inst vis C0 bt0 module ctx data st (pre ++ [f]) pre f b st1
+                    (FO_plain be) mid Hacc Hinv Hbfirst (eq_refl _) Hroomst
                     Hmems Hlocals Hglobals Hret Hfuncs Htypes
                     Htables Hfw10 Htw10 Hro Hrop Hty)
-          as [st2 [Hstep Hshape]].
+          as [st2 [[vis2 Hstep] Hshape]].
         rewrite Hstep. cbn [bind]. rewrite branch_ok. cbn [bind].
-        destruct (step_bytes C0 bt0 module ctx data st (pre ++ [f]) b st1 st2 Hinv
+        destruct (step_bytes V inst vis vis2 C0 bt0 module ctx data st (pre ++ [f]) b st1 st2 Hinv
                     Hbfirst Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables
                     Hro Hstep)
           as [op' Hrop'].
         destruct (repr_op_det _ _ _ _ _ Hrop Hrop') as [_ Hmid].
-        pose proof (step_mono st1 data module ctx b _ st2 Hstep) as Hmono.
-        pose proof (step_size st1 data module ctx b _ st2 Hstep) as Hsz2.
+        pose proof (step_mono V inst vis st1 data module ctx b _ st2 vis2 Hstep)
+             as Hmono.
+        pose proof (step_size V inst vis st1 data module ctx b _ st2 vis2 Hstep)
+             as Hsz2.
         destruct Hshape as [fs' Hae].
         destruct Hae as [pre' [f0 [f' [Hfs1 [Hfs1' [Hk [Hb2 [Hd [Hfo' Hinv2]]]]]]]]].
         destruct (List.app_inj_tail _ _ _ _ Hfs1) as [Hpe Hfe].
@@ -3232,7 +3254,7 @@ Proof.
                       (ctrl_label_eq (fv_ctrl f0) (fv_ctrl f') Hk Hb2)
                       (ctrl_results_eq (fv_ctrl f0) (fv_ctrl f') Hb2)
                       Hk Hstep2 Hok) as Hok'.
-        apply (IH C0 bt0 module ctx data st2 (pre' ++ [f']) (tds0 ++ [(tdrest, tdo)]));
+        apply (IH V inst vis2 C0 bt0 module ctx data st2 (pre' ++ [f']) (tds0 ++ [(tdrest, tdo)]));
           try assumption.
         -- apply (body_first_last bt0 pre' f0 f'); assumption.
         -- exists lean'. split; [exact Hsug'|]. rewrite <- Hmid. exact Hops'.
@@ -3252,7 +3274,9 @@ Qed.
     and the body is within the size limit. The second has to be stated, unlike
     in the soundness direction: the validator rejects a longer body for size, so
     the agreement is with WasmCert *on bodies within the limit*. *)
-Theorem validate_body_complete : forall C0 module ctx data es,
+Theorem validate_body_with_complete : forall V (inst : visit_OpVisitor_t V) vis
+                                             C0 module ctx data es,
+  hooks_accept inst ->
   mems_agree module C0 -> locals_agree ctx C0 ->
   globals_agree module C0 -> return_agree ctx C0 ->
   funcs_agree module C0 -> types_agree module C0 -> tables_agree module C0 ->
@@ -3263,11 +3287,12 @@ Theorem validate_body_complete : forall C0 module ctx data es,
   b_e_type_checker_aux
     (upd_label C0 [translate_typelist (vec_list ctx.(opiter_Context_results))]) es
     (Tf [] (translate_typelist (vec_list ctx.(opiter_Context_results)))) = true ->
-  opiter_validate_body data module ctx = Ok (Core_result_Result_Ok tt).
+  exists vis', opiter_validate_body_with inst data module ctx vis
+               = Ok (Core_result_Result_Ok tt, vis').
 Proof.
-  intros C0 module ctx data es Hmems Hlocals Hglobals Hret
+  intros V inst vis C0 module ctx data es Hacc Hmems Hlocals Hglobals Hret
          Hfuncs Htypes Htables Hfw10 Htw10 Hlen1 Hlim Hexpr Hchk.
-  unfold opiter_validate_body.
+  unfold opiter_validate_body_with.
   assert (Hbig : (slice_len data s> limits_max_function_bytes) = false).
   { unfold scalar_gtb. rewrite Z.gtb_ltb. apply Z.ltb_ge.
     assert (Hm : to_Z limits_max_function_bytes = 7654321) by reflexivity.
@@ -3288,7 +3313,8 @@ Proof.
     unfold frame_todo_ok. split; [|cbn [snd fv_ctrl body_fview]; discriminate].
     exists ct. cbn [fst]. split; [exact Hf | exact Hchk]. }
   apply (validate_body_loop_complete (Z.to_nat (to_Z (slice_len data)))
-           C0 bt module ctx data st [body_fview bt] [(es, None)] Hinv
+           V inst vis
+           C0 bt module ctx data st [body_fview bt] [(es, None)] Hacc Hinv
            (body_first_start bt)
            Hmems Hlocals Hglobals Hret
            Hfuncs Htypes Htables Hfw10 Htw10 Hok).
@@ -3300,4 +3326,28 @@ Proof.
   - rewrite Hpos. rewrite Z2Nat.id by apply usize_nonneg. lia.
   - rewrite Hsz. rewrite Z2Nat.id by apply usize_nonneg. lia.
   - exact Hlim.
+Qed.
+
+(** The validating-only consumer accepts every operator, so completeness for
+    [validate_body] itself has no hypothesis about hooks. *)
+Corollary validate_body_complete : forall C0 module ctx data es,
+  mems_agree module C0 -> locals_agree ctx C0 ->
+  globals_agree module C0 -> return_agree ctx C0 ->
+  funcs_agree module C0 -> types_agree module C0 -> tables_agree module C0 ->
+  funcs_wasm10 module -> types_wasm10 module ->
+  (List.length (vec_list ctx.(opiter_Context_results)) <= 1)%nat ->
+  to_Z (slice_len data) <= 7654321 ->
+  repr_expr (byte_list data) es [] ->
+  b_e_type_checker_aux
+    (upd_label C0 [translate_typelist (vec_list ctx.(opiter_Context_results))]) es
+    (Tf [] (translate_typelist (vec_list ctx.(opiter_Context_results)))) = true ->
+  opiter_validate_body data module ctx = Ok (Core_result_Result_Ok tt).
+Proof.
+  intros C0 module ctx data es Hmems Hlocals Hglobals Hret
+         Hfuncs Htypes Htables Hfw10 Htw10 Hlen1 Hlim Hexpr Hchk.
+  destruct (validate_body_with_complete _
+              visit_NopVisitor_Insts_VeriwasmVisitOpVisitor tt C0 module ctx data
+              es nop_hooks_accept Hmems Hlocals Hglobals Hret Hfuncs Htypes
+              Htables Hfw10 Htw10 Hlen1 Hlim Hexpr Hchk) as [vis' Hw].
+  unfold opiter_validate_body. rewrite Hw. cbn [bind]. reflexivity.
 Qed.

@@ -1609,12 +1609,18 @@ fn test_code_section_without_function_section() {
     assert_eq!(veriwasm::validate_module(&b.build()), Err(Error::FuncCodeMismatch));
 }
 
+/// Reported apart from a count mismatch, because a consumer reading a module as
+/// it arrives has to tell "the code section is not here yet" from "the code
+/// section is wrong".
 #[test]
 fn test_function_section_without_code_section() {
     let mut b = ModuleBuilder::new();
     b.section(1, &type_section(&[(&[], &[])]));
     b.section(3, &func_section(&[0]));
-    assert_eq!(veriwasm::validate_module(&b.build()), Err(Error::FuncCodeMismatch));
+    assert_eq!(
+        veriwasm::validate_module(&b.build()),
+        Err(Error::MissingCodeSection)
+    );
 }
 
 #[test]
@@ -1792,4 +1798,377 @@ fn test_section_size_must_match_its_contents() {
     bytes.extend_from_slice(&contents);
     bytes.push(0x00);
     assert_eq!(veriwasm::validate_module(&bytes), Err(Error::SectionSizeMismatch));
+}
+
+/// `MAX_LOCALS` caps what a function *declares*, not its whole frame, so a
+/// parameter does not count against it. That is a deliberate divergence from
+/// SpiderMonkey, whose `MaxLocals` counts parameters too, and it is pinned here
+/// because it looks like an oversight and is not one.
+///
+/// The cap exists to bound what `decode_locals` allocates, and it does. Making
+/// it cover the frame would import an implementation limit the specification
+/// does not have, and would cost a weaker completeness theorem to do it: the
+/// bound would have to become a joint condition on a function's type and its
+/// body, carried through `repr_module_fit` to the top. SpiderMonkey has to
+/// enforce its own limits on its own side anyway -- `MaxParams` is a
+/// `MOZ_RELEASE_ASSERT` in `WasmTypeDef.h`, so nothing else can be relied on to
+/// keep it -- and this belongs with those.
+#[test]
+fn test_the_locals_cap_is_on_the_declaration_not_the_frame() {
+    let build = |params: &[u8], locals: u32| {
+        let mut b = ModuleBuilder::new();
+        b.section(1, &type_section(&[(params, &[])]));
+        b.section(3, &func_section(&[0]));
+        b.section(10, &code_section(&[(&[(locals, I32)], &[])]));
+        b.build()
+    };
+
+    // The declaration's own cap.
+    assert!(veriwasm::validate_module(&build(&[], 50_000)).is_ok());
+    assert_eq!(
+        veriwasm::validate_module(&build(&[], 50_001)),
+        Err(Error::TooManyLocals)
+    );
+
+    // A parameter buys no less room, which is where SpiderMonkey would differ:
+    // 1 + 50000 slots is over its MaxLocals and within our cap.
+    assert!(veriwasm::validate_module(&build(&[I32], 50_000)).is_ok());
+}
+
+/// A visitor that records every custom section it is shown, which is what a
+/// consumer that wants them does.
+#[derive(Default)]
+struct Customs(Vec<veriwasm::types::CustomSection>);
+
+impl veriwasm::module::ModuleVisitor for Customs {
+    fn on_custom_section(
+        &mut self,
+        s: veriwasm::types::CustomSection,
+    ) -> veriwasm::VisitResult {
+        self.0.push(s);
+        Ok(())
+    }
+}
+
+/// The name a custom section reports, resolved in the bytes the decoder that
+/// reported it was handed.
+fn custom_name<'a>(bytes: &'a [u8], c: &veriwasm::types::CustomSection) -> &'a [u8] {
+    &bytes[c.payload_start - c.name_len..c.payload_start]
+}
+
+#[test]
+fn test_custom_sections_are_reported_with_their_ranges() {
+    // Two customs, one before the type section and one at the end, plus a
+    // nameless one to check that an empty name is a name.
+    let mut b = ModuleBuilder::new();
+    let custom = |name: &[u8], payload: &[u8]| {
+        let mut s = leb128_u32(name.len() as u32);
+        s.extend_from_slice(name);
+        s.extend_from_slice(payload);
+        s
+    };
+    b.section(0, &custom(b"first", &[1, 2, 3]));
+    b.section(1, &type_section(&[(&[], &[])]));
+    b.section(0, &custom(b"", &[]));
+    b.section(0, &custom(b"last", &[9]));
+    let bytes = b.build();
+
+    assert!(veriwasm::validate_module(&bytes).is_ok());
+
+    // No code section, so the environment ran to the end and saw all three.
+    let mut seen = Customs::default();
+    veriwasm::module::decode_env_with(&bytes, &mut seen).unwrap();
+    let names: Vec<&[u8]> = seen.0.iter().map(|c| custom_name(&bytes, c)).collect();
+    assert_eq!(names, vec![&b"first"[..], &b""[..], &b"last"[..]]);
+
+    // The ranges are into the module, and hold what was put in them.
+    let payload = |c: &veriwasm::types::CustomSection| &bytes[c.payload_start..c.payload_end];
+    assert_eq!(payload(&seen.0[0]), &[1, 2, 3]);
+    assert_eq!(payload(&seen.0[1]), &[] as &[u8]);
+    assert_eq!(payload(&seen.0[2]), &[9]);
+}
+
+/// A custom section is legal between any two others and the code section
+/// cannot hold one, so one walk reports the ones before it and the other the
+/// ones after. The same visitor takes both, which is why it is one trait.
+#[test]
+fn test_custom_sections_are_split_across_the_code_section() {
+    let mut b = ModuleBuilder::new();
+    b.section(1, &type_section(&[(&[], &[])]));
+    b.section(3, &func_section(&[0]));
+    b.section(0, &custom_section("before.code", b"x"));
+    b.section(10, &code_section(&[(&[], &[])]));
+    b.section(0, &custom_section("after.code", b"y"));
+    let bytes = b.build();
+
+    let mut seen = Customs::default();
+    let (env, code_pos) = veriwasm::module::decode_env_with(&bytes, &mut seen).unwrap();
+    assert_eq!(
+        seen.0.iter().map(|c| custom_name(&bytes, c)).collect::<Vec<_>>(),
+        vec![&b"before.code"[..]]
+    );
+
+    let tail_pos = veriwasm::module::code_section(&bytes, code_pos, &env)
+        .unwrap()
+        .unwrap()
+        .end;
+
+    // Carrying on with the same visitor gives the module's customs in order.
+    veriwasm::module::decode_tail_with(&bytes, tail_pos, &env, &mut seen).unwrap();
+    assert_eq!(
+        seen.0.iter().map(|c| custom_name(&bytes, c)).collect::<Vec<_>>(),
+        vec![&b"before.code"[..], &b"after.code"[..]]
+    );
+    let after = seen.0[1];
+    assert_eq!(&bytes[after.payload_start..after.payload_end], b"y");
+
+    // Held in pieces, the tail's region does not begin with the module's
+    // header and its positions are into the region.
+    let region = &bytes[tail_pos..];
+    let mut piece = Customs::default();
+    veriwasm::module::decode_tail_with(region, 0, &env, &mut piece).unwrap();
+    assert_eq!(
+        piece.0.iter().map(|c| custom_name(region, c)).collect::<Vec<_>>(),
+        vec![&b"after.code"[..]]
+    );
+    assert_eq!(piece.0[0].payload_start + tail_pos, after.payload_start);
+}
+
+/// A consumer that declines stops the decode, and says so as a decline rather
+/// than as a verdict about the module.
+#[test]
+fn test_a_declining_module_consumer_stops_the_decode() {
+    struct Refuser;
+    impl veriwasm::module::ModuleVisitor for Refuser {
+        fn on_custom_section(
+            &mut self,
+            _s: veriwasm::types::CustomSection,
+        ) -> veriwasm::VisitResult {
+            Err(veriwasm::VisitError::OutOfMemory)
+        }
+    }
+
+    let mut b = ModuleBuilder::new();
+    b.section(0, &custom_section("nope", b""));
+    b.section(1, &type_section(&[(&[], &[])]));
+    let bytes = b.build();
+
+    // The module itself is fine.
+    assert!(veriwasm::validate_module(&bytes).is_ok());
+    assert_eq!(
+        veriwasm::module::decode_env_with(&bytes, &mut Refuser).unwrap_err(),
+        Error::Visitor(veriwasm::VisitError::OutOfMemory)
+    );
+}
+
+#[test]
+fn test_a_module_with_no_custom_sections_reports_none() {
+    let mut b = ModuleBuilder::new();
+    b.section(1, &type_section(&[(&[], &[])]));
+    let bytes = b.build();
+    let mut seen = Customs::default();
+    veriwasm::module::decode_env_with(&bytes, &mut seen).unwrap();
+    assert!(seen.0.is_empty());
+}
+
+/// A consumer that records each entry it is shown and validates it where it
+/// stands, which is what a compiler does except for the compiling.
+#[derive(Default)]
+struct Entries {
+    seen: Vec<(usize, usize, usize, usize)>,
+    waits: Vec<usize>,
+}
+
+impl veriwasm::module::CodeVisitor for Entries {
+    fn on_need_bytes(&mut self, end: usize) -> Result<(), Error> {
+        self.waits.push(end);
+        Ok(())
+    }
+
+    fn on_code_entry(
+        &mut self,
+        data: &[u8],
+        env: &veriwasm::env::Env,
+        index: usize,
+        entry_pos: usize,
+        contents_start: usize,
+        entry_end: usize,
+    ) -> Result<(), Error> {
+        self.seen.push((index, entry_pos, contents_start, entry_end));
+        veriwasm::module::validate_code_entry(data, entry_pos, env, index)?;
+        Ok(())
+    }
+}
+
+/// The driven walk and `validate_code` accept the same bytes and land on the
+/// same position, and the entries the consumer was shown tile the section.
+#[test]
+fn test_validate_code_with_agrees_with_validate_code() {
+    let mut b = ModuleBuilder::new();
+    b.section(1, &type_section(&[(&[], &[]), (&[I32], &[I32])]));
+    b.section(3, &func_section(&[0, 1, 0]));
+    b.section(
+        10,
+        &code_section(&[
+            (&[], &[]),
+            (&[(1, I64)], &[0x20, 0x00]),
+            (&[], &[0x01]),
+        ]),
+    );
+    let bytes = b.build();
+
+    let (env, code_pos) = veriwasm::module::decode_env(&bytes).unwrap();
+    let cs = veriwasm::module::code_section(&bytes, code_pos, &env)
+        .unwrap()
+        .unwrap();
+
+    let mut seen = Entries::default();
+    let next =
+        veriwasm::module::validate_code_with(&bytes, code_pos, &env, &mut seen).unwrap();
+    assert_eq!(next, veriwasm::module::validate_code(&bytes, code_pos, &env).unwrap());
+    assert_eq!(next, cs.end);
+
+    // Three entries, in order, and their extents tile the section exactly.
+    assert_eq!(seen.seen.len(), 3);
+    let mut q = cs.entries;
+    for (i, &(index, entry_pos, contents, end)) in seen.seen.iter().enumerate() {
+        assert_eq!(index, i);
+        assert_eq!(entry_pos, q);
+        assert!(entry_pos < contents && contents <= end);
+        q = end;
+    }
+    assert_eq!(q, cs.end);
+
+    // Every read was waited for first, and never past the section's end.
+    assert!(!seen.waits.is_empty());
+    assert!(seen.waits.iter().all(|&w| w >= code_pos));
+}
+
+/// A consumer that declines stops the walk. Nothing about the bytes changed:
+/// the same section is fine when validated in place.
+#[test]
+fn test_a_declining_code_consumer_stops_the_walk() {
+    struct Refuser;
+    impl veriwasm::module::CodeVisitor for Refuser {
+        fn on_code_entry(
+            &mut self,
+            _data: &[u8],
+            _env: &veriwasm::env::Env,
+            _index: usize,
+            _entry_pos: usize,
+            _contents_start: usize,
+            _entry_end: usize,
+        ) -> Result<(), Error> {
+            Err(Error::Visitor(veriwasm::VisitError::OutOfMemory))
+        }
+    }
+
+    let mut b = ModuleBuilder::new();
+    b.section(1, &type_section(&[(&[], &[])]));
+    b.section(3, &func_section(&[0]));
+    b.section(10, &code_section(&[(&[], &[])]));
+    let bytes = b.build();
+
+    let (env, code_pos) = veriwasm::module::decode_env(&bytes).unwrap();
+    assert!(veriwasm::module::validate_code(&bytes, code_pos, &env).is_ok());
+    assert_eq!(
+        veriwasm::module::validate_code_with(&bytes, code_pos, &env, &mut Refuser)
+            .unwrap_err(),
+        Error::Visitor(veriwasm::VisitError::OutOfMemory)
+    );
+}
+
+/// One consumer for a whole module: it hears the custom sections on both sides
+/// of the code section and validates every entry it is shown, which is the
+/// shape a compiler drives.
+#[derive(Default)]
+struct Driver {
+    customs: Vec<veriwasm::types::CustomSection>,
+    entries: Vec<(usize, usize)>,
+}
+
+impl veriwasm::module::ModuleVisitor for Driver {
+    fn on_custom_section(
+        &mut self,
+        s: veriwasm::types::CustomSection,
+    ) -> veriwasm::VisitResult {
+        self.customs.push(s);
+        Ok(())
+    }
+}
+
+impl veriwasm::module::CodeVisitor for Driver {
+    fn on_code_entry(
+        &mut self,
+        data: &[u8],
+        env: &veriwasm::env::Env,
+        index: usize,
+        entry_pos: usize,
+        _contents_start: usize,
+        entry_end: usize,
+    ) -> Result<(), Error> {
+        self.entries.push((entry_pos, entry_end));
+        veriwasm::module::validate_code_entry(data, entry_pos, env, index)?;
+        Ok(())
+    }
+}
+
+/// The driven whole-module run is the plain one: same verdict, same module,
+/// and the consumer saw the sections in module order.
+#[test]
+fn test_validate_module_with_agrees_with_validate_module() {
+    let mut b = ModuleBuilder::new();
+    b.section(0, &custom_section("before", b"a"));
+    b.section(1, &type_section(&[(&[], &[])]));
+    b.section(3, &func_section(&[0]));
+    b.section(10, &code_section(&[(&[], &[])]));
+    b.section(0, &custom_section("after", b"b"));
+    let bytes = b.build();
+
+    let mut d = Driver::default();
+    let driven = veriwasm::module::validate_module_with(&bytes, &mut d).unwrap();
+    let plain = veriwasm::validate_module(&bytes).unwrap();
+    assert_eq!(driven, plain);
+
+    // Both sides of the code section, in module order.
+    let names: Vec<&[u8]> = d
+        .customs
+        .iter()
+        .map(|c| &bytes[c.payload_start - c.name_len..c.payload_start])
+        .collect();
+    assert_eq!(names, vec![&b"before"[..], &b"after"[..]]);
+    assert_eq!(d.entries.len(), 1);
+}
+
+/// A consumer that refuses an entry stops the whole module, and says so as a
+/// decline rather than as a verdict about the bytes.
+#[test]
+fn test_a_declining_driver_stops_the_module() {
+    struct Refuser;
+    impl veriwasm::module::ModuleVisitor for Refuser {}
+    impl veriwasm::module::CodeVisitor for Refuser {
+        fn on_code_entry(
+            &mut self,
+            _data: &[u8],
+            _env: &veriwasm::env::Env,
+            _index: usize,
+            _entry_pos: usize,
+            _contents_start: usize,
+            _entry_end: usize,
+        ) -> Result<(), Error> {
+            Err(Error::Visitor(veriwasm::VisitError::OutOfMemory))
+        }
+    }
+
+    let mut b = ModuleBuilder::new();
+    b.section(1, &type_section(&[(&[], &[])]));
+    b.section(3, &func_section(&[0]));
+    b.section(10, &code_section(&[(&[], &[])]));
+    let bytes = b.build();
+
+    assert!(veriwasm::validate_module(&bytes).is_ok());
+    assert_eq!(
+        veriwasm::module::validate_module_with(&bytes, &mut Refuser).unwrap_err(),
+        Error::Visitor(veriwasm::VisitError::OutOfMemory)
+    );
 }

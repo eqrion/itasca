@@ -9,15 +9,23 @@
 //! cursor is `data` plus `pos`, threaded explicitly), no closures or stdlib
 //! combinator chains, and hand-written `PartialEq`. The byte-level reads are
 //! in `reader`, which the module decoder shares.
+//!
+//! What is public here is the vocabulary a hook is handed -- `OpIterState`,
+//! `Ctrl`, `Context`, `BlockType`, `MemArg` and the two stack enums -- the
+//! `OP_*` opcode bytes, which are the binary format's and are inert, and
+//! `validate_body`/`validate_body_with`, which are the raw entry point below
+//! the code section's framing and carry the preconditions to prove it.
+//! `module::validate_code_entry_with` is the one a consumer should call.
 
 use alloc::vec::Vec;
 use crate::env::Env;
-use crate::error::OpError;
+use crate::error::{OpError, VisitError};
 use crate::limits::{MAX_FUNCTION_BYTES, MAX_RESULTS};
 use crate::reader::{
     read_byte, read_f32_bits, read_f64_bits, read_s32_leb, read_s64_leb, read_u32_leb,
 };
 use crate::types::{GlobalType, Mut, ValueType};
+use crate::visit::{visit_memory, visit_numeric, NopVisitor, OpVisitor};
 
 /// Mirrors `block_type` (Wasm 1.0: single optional result).
 ///
@@ -54,6 +62,11 @@ pub struct MemArg {
 /// function: its locals and result types. Everything module-wide stays on
 /// the `Env`, so validating a second function costs one of these rather than
 /// a copy of the index spaces.
+///
+/// A hook receives one of these built by `validate_code_entry_with` from the
+/// module's own declarations. Building one by hand is only sound as an
+/// argument to `validate_body_with`, whose preconditions say what it has to
+/// hold.
 pub struct Context {
     pub locals: Vec<ValueType>,
     /// The function's result types, which `return` branches to.
@@ -61,6 +74,16 @@ pub struct Context {
 }
 
 type Result<T> = core::result::Result<T, OpError>;
+
+/// A hook's verdict as a validator verdict. A `match` rather than `?`: `?`
+/// would want a `From<VisitError> for OpError` impl, and Aeneas models `?`'s
+/// error arm as one axiom per impl, so this keeps the trust base where it was.
+fn visit(r: core::result::Result<(), VisitError>) -> Result<()> {
+    match r {
+        Ok(()) => Ok(()),
+        Err(e) => Err(OpError::Visitor(e)),
+    }
+}
 
 /// The type of a value on the operand stack: a value type, or bottom for
 /// unreachable code. Kept separate from `ValueType` so bottom cannot leak
@@ -107,10 +130,6 @@ pub struct OpIterState {
     pub vals: Vec<StackType>,
     pub ctrls: Vec<Ctrl>,
     pub pos: usize,
-    /// Opcode returned by `read_op` and not yet consumed by a reader. Kept
-    /// unconditionally so dispatching to the wrong reader is a caught error
-    /// rather than a silent misparse.
-    pub pending: Option<u8>,
 }
 
 // --- Opcodes (Wasm 1.0, all single-byte; prefixed opcodes are post-1.0) ---
@@ -306,7 +325,7 @@ pub const OP_I64_REINTERPRET_F64: u8 = 0xbd;
 pub const OP_F32_REINTERPRET_I32: u8 = 0xbe;
 pub const OP_F64_REINTERPRET_I64: u8 = 0xbf;
 
-pub fn read_block_type(data: &[u8], pos: usize) -> Result<(BlockType, usize)> {
+fn read_block_type(data: &[u8], pos: usize) -> Result<(BlockType, usize)> {
     let (b, p) = read_byte(data, pos)?;
     if b == 0x40 {
         return Ok((BlockType::Empty, p));
@@ -459,14 +478,13 @@ fn mark_unreachable(st: &mut OpIterState) {
     st.ctrls[n - 1].polymorphic_base = true;
 }
 
-// --- Protocol ---
+// --- Driving one body ---
 
-pub fn start_function(results: &[ValueType]) -> OpIterState {
+fn start_function(results: &[ValueType]) -> OpIterState {
     let mut st = OpIterState {
         vals: Vec::new(),
         ctrls: Vec::new(),
         pos: 0,
-        pending: None,
     };
     let mut bt = BlockType::Empty;
     if results.len() == 1 {
@@ -476,58 +494,32 @@ pub fn start_function(results: &[ValueType]) -> OpIterState {
     st
 }
 
-pub fn control_stack_empty(st: &OpIterState) -> bool {
+fn control_stack_empty(st: &OpIterState) -> bool {
     st.ctrls.is_empty()
 }
 
-/// Read the next opcode and record it as pending.
-pub fn read_op(st: &mut OpIterState, data: &[u8]) -> Result<u8> {
+/// Read the next opcode and advance past it.
+fn read_op(st: &mut OpIterState, data: &[u8]) -> Result<u8> {
     let (b, p) = read_byte(data, st.pos)?;
     st.pos = p;
-    st.pending = Some(b);
     Ok(b)
-}
-
-/// Consume the pending opcode, requiring it to be `expected`.
-///
-/// This is what makes the API safe for a consumer that dispatches itself: a
-/// mismatched reader fails here without touching either stack, so a
-/// mis-dispatch cannot corrupt the validation state.
-fn take_pending(st: &mut OpIterState, expected: u8) -> Result<()> {
-    match st.pending {
-        Some(b) => {
-            if b != expected {
-                return Err(OpError::ProtocolViolation);
-            }
-            st.pending = None;
-            Ok(())
-        }
-        None => Err(OpError::ProtocolViolation),
-    }
 }
 
 // --- Readers ---
 
-pub fn read_nop(st: &mut OpIterState) -> Result<()> {
-    take_pending(st, OP_NOP)
-}
-
-pub fn read_unreachable(st: &mut OpIterState) -> Result<()> {
-    take_pending(st, OP_UNREACHABLE)?;
+fn read_unreachable(st: &mut OpIterState) -> Result<()> {
     mark_unreachable(st);
     Ok(())
 }
 
-pub fn read_i32_const(st: &mut OpIterState, data: &[u8]) -> Result<i32> {
-    take_pending(st, OP_I32_CONST)?;
+fn read_i32_const(st: &mut OpIterState, data: &[u8]) -> Result<i32> {
     let (v, p) = read_s32_leb(data, st.pos)?;
     st.pos = p;
     push_val(st, StackType::Val(ValueType::I32));
     Ok(v)
 }
 
-pub fn read_i64_const(st: &mut OpIterState, data: &[u8]) -> Result<i64> {
-    take_pending(st, OP_I64_CONST)?;
+fn read_i64_const(st: &mut OpIterState, data: &[u8]) -> Result<i64> {
     let (v, p) = read_s64_leb(data, st.pos)?;
     st.pos = p;
     push_val(st, StackType::Val(ValueType::I64));
@@ -535,8 +527,7 @@ pub fn read_i64_const(st: &mut OpIterState, data: &[u8]) -> Result<i64> {
 }
 
 /// `[] -> [f32]`. The immediate's bits are returned; see `read_f32_bits`.
-pub fn read_f32_const(st: &mut OpIterState, data: &[u8]) -> Result<u32> {
-    take_pending(st, OP_F32_CONST)?;
+fn read_f32_const(st: &mut OpIterState, data: &[u8]) -> Result<u32> {
     let (v, p) = read_f32_bits(data, st.pos)?;
     st.pos = p;
     push_val(st, StackType::Val(ValueType::F32));
@@ -544,8 +535,7 @@ pub fn read_f32_const(st: &mut OpIterState, data: &[u8]) -> Result<u32> {
 }
 
 /// `[] -> [f64]`.
-pub fn read_f64_const(st: &mut OpIterState, data: &[u8]) -> Result<u64> {
-    take_pending(st, OP_F64_CONST)?;
+fn read_f64_const(st: &mut OpIterState, data: &[u8]) -> Result<u64> {
     let (v, p) = read_f64_bits(data, st.pos)?;
     st.pos = p;
     push_val(st, StackType::Val(ValueType::F64));
@@ -556,13 +546,7 @@ pub fn read_f64_const(st: &mut OpIterState, data: &[u8]) -> Result<u64> {
 /// comparisons, where `result == i32`. Validation cannot tell the two apart:
 /// a comparison has a binary operator's stack effect with a different result
 /// type, so one reader covers both and the opcode table supplies the pair.
-pub fn read_binary(
-    st: &mut OpIterState,
-    opcode: u8,
-    ty: ValueType,
-    result: ValueType,
-) -> Result<()> {
-    take_pending(st, opcode)?;
+fn read_binary(st: &mut OpIterState, ty: ValueType, result: ValueType) -> Result<()> {
     pop_with_type(st, ty)?;
     pop_with_type(st, ty)?;
     push_val(st, StackType::Val(result));
@@ -573,20 +557,13 @@ pub fn read_binary(
 /// `i32.eqz`/`i64.eqz`, where `to == i32`. As with `read_binary`, validation
 /// cannot tell those apart, so one reader covers them and the opcode table
 /// supplies the pair.
-pub fn read_conversion(
-    st: &mut OpIterState,
-    opcode: u8,
-    from: ValueType,
-    to: ValueType,
-) -> Result<()> {
-    take_pending(st, opcode)?;
+fn read_conversion(st: &mut OpIterState, from: ValueType, to: ValueType) -> Result<()> {
     pop_with_type(st, from)?;
     push_val(st, StackType::Val(to));
     Ok(())
 }
 
-pub fn read_drop(st: &mut OpIterState) -> Result<StackType> {
-    take_pending(st, OP_DROP)?;
+fn read_drop(st: &mut OpIterState) -> Result<StackType> {
     pop_stack_type(st)
 }
 
@@ -617,8 +594,7 @@ fn join_stack_type(a: StackType, b: StackType) -> Result<StackType> {
 /// the opcode. That also covers unreachable code: an exhausted polymorphic
 /// frame yields `Bot` for both, the join is `Bot`, and `Bot` is what gets
 /// pushed.
-pub fn read_select(st: &mut OpIterState) -> Result<StackType> {
-    take_pending(st, OP_SELECT)?;
+fn read_select(st: &mut OpIterState) -> Result<StackType> {
     pop_with_type(st, ValueType::I32)?;
     // Named t2/t3 because the condition that just came off is conventionally
     // t1: these are the two operands below it.
@@ -638,16 +614,10 @@ fn local_type(ctx: &Context, idx: u32) -> Result<ValueType> {
     Ok(ctx.locals[i])
 }
 
-/// The prologue the three local operators share: consume the opcode, read the
-/// index, and look its type up. They differ only in the stack effect that
-/// follows, so this is where the cursor moves and the context is consulted.
-fn take_local(
-    st: &mut OpIterState,
-    data: &[u8],
-    ctx: &Context,
-    opcode: u8,
-) -> Result<(u32, ValueType)> {
-    take_pending(st, opcode)?;
+/// The prologue the three local operators share: read the index and look its
+/// type up. They differ only in the stack effect that follows, so this is where
+/// the cursor moves and the context is consulted.
+fn take_local(st: &mut OpIterState, data: &[u8], ctx: &Context) -> Result<(u32, ValueType)> {
     let (idx, p) = read_u32_leb(data, st.pos)?;
     st.pos = p;
     let t = local_type(ctx, idx)?;
@@ -655,22 +625,22 @@ fn take_local(
 }
 
 /// `[] -> [t]`, `t` being local `idx`'s type.
-pub fn read_local_get(st: &mut OpIterState, data: &[u8], ctx: &Context) -> Result<u32> {
-    let (idx, t) = take_local(st, data, ctx, OP_LOCAL_GET)?;
+fn read_local_get(st: &mut OpIterState, data: &[u8], ctx: &Context) -> Result<u32> {
+    let (idx, t) = take_local(st, data, ctx)?;
     push_val(st, StackType::Val(t));
     Ok(idx)
 }
 
 /// `[t] -> []`.
-pub fn read_local_set(st: &mut OpIterState, data: &[u8], ctx: &Context) -> Result<u32> {
-    let (idx, t) = take_local(st, data, ctx, OP_LOCAL_SET)?;
+fn read_local_set(st: &mut OpIterState, data: &[u8], ctx: &Context) -> Result<u32> {
+    let (idx, t) = take_local(st, data, ctx)?;
     pop_with_type(st, t)?;
     Ok(idx)
 }
 
 /// `[t] -> [t]`.
-pub fn read_local_tee(st: &mut OpIterState, data: &[u8], ctx: &Context) -> Result<u32> {
-    let (idx, t) = take_local(st, data, ctx, OP_LOCAL_TEE)?;
+fn read_local_tee(st: &mut OpIterState, data: &[u8], ctx: &Context) -> Result<u32> {
+    let (idx, t) = take_local(st, data, ctx)?;
     pop_with_type(st, t)?;
     push_val(st, StackType::Val(t));
     Ok(idx)
@@ -685,16 +655,10 @@ fn global_type(env: &Env, idx: u32) -> Result<GlobalType> {
     Ok(env.global_types[i])
 }
 
-/// `take_local`'s counterpart for the two global operators: the opcode, the
-/// index, and the lookup. It yields the whole `GlobalType` because `global.set`
-/// consults the mutability as well as the value type.
-fn take_global(
-    st: &mut OpIterState,
-    data: &[u8],
-    env: &Env,
-    opcode: u8,
-) -> Result<(u32, GlobalType)> {
-    take_pending(st, opcode)?;
+/// `take_local`'s counterpart for the two global operators: the index and the
+/// lookup. It yields the whole `GlobalType` because `global.set` consults the
+/// mutability as well as the value type.
+fn take_global(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<(u32, GlobalType)> {
     let (idx, p) = read_u32_leb(data, st.pos)?;
     st.pos = p;
     let g = global_type(env, idx)?;
@@ -702,8 +666,8 @@ fn take_global(
 }
 
 /// `[] -> [t]`, `t` being global `idx`'s type.
-pub fn read_global_get(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
-    let (idx, g) = take_global(st, data, env, OP_GLOBAL_GET)?;
+fn read_global_get(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
+    let (idx, g) = take_global(st, data, env)?;
     push_val(st, StackType::Val(g.valtype));
     Ok(idx)
 }
@@ -711,8 +675,8 @@ pub fn read_global_get(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u
 /// `[t] -> []`, and only for a mutable global. The mutability check is a
 /// match rather than `PartialEq` so that no equality axiom is needed under
 /// charon.
-pub fn read_global_set(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
-    let (idx, g) = take_global(st, data, env, OP_GLOBAL_SET)?;
+fn read_global_set(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
+    let (idx, g) = take_global(st, data, env)?;
     match g.mutability {
         Mut::Const => return Err(OpError::ImmutableGlobal),
         Mut::Var => {}
@@ -735,8 +699,7 @@ fn read_reserved_zero(st: &mut OpIterState, data: &[u8]) -> Result<()> {
 }
 
 /// `[] -> [i32]`.
-pub fn read_memory_size(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<()> {
-    take_pending(st, OP_MEMORY_SIZE)?;
+fn read_memory_size(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<()> {
     read_reserved_zero(st, data)?;
     require_memory(env)?;
     push_val(st, StackType::Val(ValueType::I32));
@@ -744,8 +707,7 @@ pub fn read_memory_size(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<
 }
 
 /// `[i32] -> [i32]`.
-pub fn read_memory_grow(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<()> {
-    take_pending(st, OP_MEMORY_GROW)?;
+fn read_memory_grow(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<()> {
     read_reserved_zero(st, data)?;
     require_memory(env)?;
     pop_with_type(st, ValueType::I32)?;
@@ -753,16 +715,14 @@ pub fn read_memory_grow(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<
     Ok(())
 }
 
-pub fn read_block(st: &mut OpIterState, data: &[u8]) -> Result<BlockType> {
-    take_pending(st, OP_BLOCK)?;
+fn read_block(st: &mut OpIterState, data: &[u8]) -> Result<BlockType> {
     let (bt, p) = read_block_type(data, st.pos)?;
     st.pos = p;
     push_ctrl(st, LabelKind::Block, bt);
     Ok(bt)
 }
 
-pub fn read_loop(st: &mut OpIterState, data: &[u8]) -> Result<BlockType> {
-    take_pending(st, OP_LOOP)?;
+fn read_loop(st: &mut OpIterState, data: &[u8]) -> Result<BlockType> {
     let (bt, p) = read_block_type(data, st.pos)?;
     st.pos = p;
     push_ctrl(st, LabelKind::Loop, bt);
@@ -786,8 +746,7 @@ fn is_then(kind: LabelKind) -> bool {
 
 /// `[i32] -> []`, opening the then-branch: the condition is consumed and a
 /// `Then` frame is opened, exactly like `block` otherwise.
-pub fn read_if(st: &mut OpIterState, data: &[u8]) -> Result<BlockType> {
-    take_pending(st, OP_IF)?;
+fn read_if(st: &mut OpIterState, data: &[u8]) -> Result<BlockType> {
     let (bt, p) = read_block_type(data, st.pos)?;
     st.pos = p;
     pop_with_type(st, ValueType::I32)?;
@@ -799,8 +758,7 @@ pub fn read_if(st: &mut OpIterState, data: &[u8]) -> Result<BlockType> {
 /// then-branch's results must be on the stack, nothing else may be, and the
 /// frame is rewritten in place rather than popped, since the block's own
 /// `end` still has to close it.
-pub fn read_else(st: &mut OpIterState) -> Result<BlockType> {
-    take_pending(st, OP_ELSE)?;
+fn read_else(st: &mut OpIterState) -> Result<BlockType> {
     let n = st.ctrls.len();
     if n == 0 {
         return Err(OpError::StackMismatch);
@@ -826,8 +784,7 @@ pub fn read_else(st: &mut OpIterState) -> Result<BlockType> {
 /// it can only supply results the empty sequence already has: none. Wasm 1.0
 /// requires an `if` with a result type to have an `else`; rejecting it here
 /// rather than leaving it to `read_else`'s absence is what keeps this sound.
-pub fn read_end(st: &mut OpIterState) -> Result<(LabelKind, BlockType)> {
-    take_pending(st, OP_END)?;
+fn read_end(st: &mut OpIterState) -> Result<(LabelKind, BlockType)> {
     let n = st.ctrls.len();
     if n == 0 {
         return Err(OpError::StackMismatch);
@@ -863,20 +820,10 @@ fn read_label(st: &mut OpIterState, data: &[u8]) -> Result<(u32, Ctrl)> {
     Ok((depth, st.ctrls[n - 1 - d]))
 }
 
-/// The prologue `br` and `br_if` share: consume the opcode, then one label.
-fn take_branch_target(
-    st: &mut OpIterState,
-    data: &[u8],
-    opcode: u8,
-) -> Result<(u32, Ctrl)> {
-    take_pending(st, opcode)?;
-    read_label(st, data)
-}
-
 /// Unconditional branch: the target's types must be available, and the rest
 /// of the frame becomes unreachable.
-pub fn read_br(st: &mut OpIterState, data: &[u8]) -> Result<(u32, BlockType)> {
-    let (depth, target) = take_branch_target(st, data, OP_BR)?;
+fn read_br(st: &mut OpIterState, data: &[u8]) -> Result<(u32, BlockType)> {
+    let (depth, target) = read_label(st, data)?;
     let types = branch_target_types(&target);
     pop_types(st, &types)?;
     mark_unreachable(st);
@@ -886,8 +833,7 @@ pub fn read_br(st: &mut OpIterState, data: &[u8]) -> Result<(u32, BlockType)> {
 /// Return: the function's results must be on the stack, and the rest of the
 /// frame becomes unreachable, as for `br`. The result list comes from the
 /// context rather than from a control frame, which is the only difference.
-pub fn read_return(st: &mut OpIterState, ctx: &Context) -> Result<()> {
-    take_pending(st, OP_RETURN)?;
+fn read_return(st: &mut OpIterState, ctx: &Context) -> Result<()> {
     pop_types(st, &ctx.results)?;
     mark_unreachable(st);
     Ok(())
@@ -896,8 +842,8 @@ pub fn read_return(st: &mut OpIterState, ctx: &Context) -> Result<()> {
 /// Conditional branch: the condition is consumed and the target's types must
 /// be available, but they stay on the stack, because the fall-through path
 /// continues with them.
-pub fn read_br_if(st: &mut OpIterState, data: &[u8]) -> Result<(u32, BlockType)> {
-    let (depth, target) = take_branch_target(st, data, OP_BR_IF)?;
+fn read_br_if(st: &mut OpIterState, data: &[u8]) -> Result<(u32, BlockType)> {
+    let (depth, target) = read_label(st, data)?;
     let types = branch_target_types(&target);
     pop_with_type(st, ValueType::I32)?;
     pop_types(st, &types)?;
@@ -926,10 +872,11 @@ fn merge_target(expect: Option<BlockType>, bt: BlockType) -> Result<BlockType> {
 ///
 /// A function of its own rather than a loop inside `read_br_table` because the
 /// reader has work to do afterwards, and Aeneas has no `break`.
-fn read_table_labels(
+fn read_table_labels<V: OpVisitor>(
     st: &mut OpIterState,
     data: &[u8],
     count: u32,
+    v: &mut V,
 ) -> Result<Option<BlockType>> {
     let mut expect: Option<BlockType> = None;
     let mut i: u32 = 0;
@@ -937,7 +884,11 @@ fn read_table_labels(
         if i == count {
             return Ok(expect);
         }
-        let (_, target) = read_label(st, data)?;
+        let (depth, target) = read_label(st, data)?;
+        // The one hook inside a reader. The depths cannot be handed over in a
+        // `Vec`, whose only bound would be the byte count, so they are handed
+        // over one at a time as they are read.
+        visit(v.on_br_table_label(st, depth))?;
         let bt = merge_target(expect, branch_target_bt(&target))?;
         expect = Some(bt);
         i += 1;
@@ -952,26 +903,27 @@ fn read_table_labels(
 /// bound is the byte count, which would put `Vec::push` back on the live
 /// panic list; the common target type is `Copy` and is all validation needs.
 /// A compiler consumer has to re-read them.
-pub fn read_br_table(st: &mut OpIterState, data: &[u8]) -> Result<BlockType> {
-    take_pending(st, OP_BR_TABLE)?;
+fn read_br_table<V: OpVisitor>(
+    st: &mut OpIterState,
+    data: &[u8],
+    v: &mut V,
+) -> Result<(u32, BlockType)> {
     let (count, p) = read_u32_leb(data, st.pos)?;
     st.pos = p;
-    let expect = read_table_labels(st, data, count)?;
-    let (_, target) = read_label(st, data)?;
+    let expect = read_table_labels(st, data, count, v)?;
+    let (default, target) = read_label(st, data)?;
     let common = merge_target(expect, branch_target_bt(&target))?;
     pop_with_type(st, ValueType::I32)?;
     let types = block_results(&common);
     pop_types(st, &types)?;
     mark_unreachable(st);
-    Ok(common)
+    Ok((default, common))
 }
 
-/// The prologue the two call operators share: consume the opcode and read the
-/// index immediate. `take_local`, `take_global` and `take_branch_target` are the
-/// same three lines followed by their own lookup; these two look up different
-/// tables, so this is the whole of what they have in common.
-fn take_index(st: &mut OpIterState, data: &[u8], opcode: u8) -> Result<u32> {
-    take_pending(st, opcode)?;
+/// The index immediate the two call operators share. `take_local` and
+/// `take_global` are the same two lines followed by their own lookup; these two
+/// look up different tables, so this is the whole of what they have in common.
+fn take_index(st: &mut OpIterState, data: &[u8]) -> Result<u32> {
     let (idx, p) = read_u32_leb(data, st.pos)?;
     st.pos = p;
     Ok(idx)
@@ -996,8 +948,8 @@ fn require_single_result(results: &[ValueType]) -> Result<()> {
 /// have to handle lists of any length. The type is indexed twice rather than
 /// bound, because binding it would mean cloning a `FuncType`, and no `Clone`
 /// impl reaches the extraction (Charon.toml).
-pub fn read_call(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
-    let idx = take_index(st, data, OP_CALL)?;
+fn read_call(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
+    let idx = take_index(st, data)?;
     let i = idx as usize;
     if i >= env.func_types.len() {
         return Err(OpError::UnknownFunc);
@@ -1015,12 +967,12 @@ pub fn read_call(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
 /// table is table 0, so the table index is the reserved zero byte. The table
 /// still has to exist, and its element type is `funcref`, which is the only
 /// one Wasm 1.0 has.
-pub fn read_call_indirect(
+fn read_call_indirect(
     st: &mut OpIterState,
     data: &[u8],
     env: &Env,
 ) -> Result<u32> {
-    let idx = take_index(st, data, OP_CALL_INDIRECT)?;
+    let idx = take_index(st, data)?;
     read_reserved_zero(st, data)?;
     if env.table_types.is_empty() {
         return Err(OpError::UnknownTable);
@@ -1038,15 +990,13 @@ pub fn read_call_indirect(
 
 /// `[i32] -> [ty]`, with a memory and an alignment constraint. One function
 /// for all fourteen load opcodes.
-pub fn read_load(
+fn read_load(
     st: &mut OpIterState,
     data: &[u8],
     env: &Env,
-    opcode: u8,
     ty: ValueType,
     natural_align: u32,
 ) -> Result<MemArg> {
-    take_pending(st, opcode)?;
     let memarg = read_memarg(st, data)?;
     check_memory_and_alignment(env, &memarg, natural_align)?;
     pop_with_type(st, ValueType::I32)?;
@@ -1055,15 +1005,13 @@ pub fn read_load(
 }
 
 /// `[i32 ty] -> []`. One function for all nine store opcodes.
-pub fn read_store(
+fn read_store(
     st: &mut OpIterState,
     data: &[u8],
     env: &Env,
-    opcode: u8,
     ty: ValueType,
     natural_align: u32,
 ) -> Result<MemArg> {
-    take_pending(st, opcode)?;
     let memarg = read_memarg(st, data)?;
     check_memory_and_alignment(env, &memarg, natural_align)?;
     pop_with_type(st, ty)?;
@@ -1112,7 +1060,7 @@ fn check_memory_and_alignment(env: &Env, memarg: &MemArg, natural_align: u32) ->
 /// integer constants is not something Aeneas can express in Coq: it emits a
 /// Coq `match` with numeric literals for patterns, which does not typecheck.
 /// Every opcode still appears exactly once, under the pair it has.
-pub fn convert_types(opcode: u8) -> Option<(ValueType, ValueType)> {
+pub(crate) fn convert_types(opcode: u8) -> Option<(ValueType, ValueType)> {
     if opcode == OP_I32_EQZ
         || opcode == OP_I32_CLZ
         || opcode == OP_I32_CTZ
@@ -1200,7 +1148,7 @@ pub fn convert_types(opcode: u8) -> Option<(ValueType, ValueType)> {
 /// Wasm 1.0 section 5.4.5. Ranges: `0x46`-`0x4F`, `0x51`-`0x5A`, `0x5B`-`0x60`
 /// and `0x61`-`0x66` comparisons, `0x6A`-`0x78`, `0x7C`-`0x8A`, `0x92`-`0x98`
 /// and `0xA0`-`0xA6` binary.
-pub fn binary_types(opcode: u8) -> Option<(ValueType, ValueType)> {
+pub(crate) fn binary_types(opcode: u8) -> Option<(ValueType, ValueType)> {
     if opcode == OP_I32_EQ
         || opcode == OP_I32_NE
         || opcode == OP_I32_LT_S
@@ -1301,222 +1249,339 @@ pub fn binary_types(opcode: u8) -> Option<(ValueType, ValueType)> {
     None
 }
 
-// --- The validation-only consumer ---
+// --- Dispatch ---
 
-/// Dispatch one operator. A consumer with its own dispatch loop can call the
-/// same readers directly instead, which is why `take_pending` has to reject
-/// a mismatch rather than trust the caller.
-fn step(
+/// Dispatch one operator: its reader, then the consumer's hook for it.
+///
+/// The hook runs after the reader, so it sees the immediates the reader
+/// decoded, the checks it made, and the state its effect left behind. A hook
+/// that declines stops the loop, reported as `OpError::Visitor`.
+fn step<V: OpVisitor>(
     st: &mut OpIterState,
     data: &[u8],
     env: &Env,
     ctx: &Context,
     opcode: u8,
+    v: &mut V,
 ) -> Result<()> {
     if opcode == OP_NOP {
-        return read_nop(st);
+        visit(v.on_nop(st))?;
+        return Ok(());
     }
     if opcode == OP_UNREACHABLE {
-        return read_unreachable(st);
+        read_unreachable(st)?;
+        visit(v.on_unreachable(st))?;
+        return Ok(());
     }
     if opcode == OP_I32_CONST {
-        read_i32_const(st, data)?;
+        let imm = read_i32_const(st, data)?;
+        visit(v.on_i32_const(st, imm))?;
         return Ok(());
     }
     if opcode == OP_I64_CONST {
-        read_i64_const(st, data)?;
+        let imm = read_i64_const(st, data)?;
+        visit(v.on_i64_const(st, imm))?;
         return Ok(());
     }
     if opcode == OP_F32_CONST {
-        read_f32_const(st, data)?;
+        let bits = read_f32_const(st, data)?;
+        visit(v.on_f32_const(st, bits))?;
         return Ok(());
     }
     if opcode == OP_F64_CONST {
-        read_f64_const(st, data)?;
+        let bits = read_f64_const(st, data)?;
+        visit(v.on_f64_const(st, bits))?;
         return Ok(());
     }
     if opcode == OP_DROP {
-        read_drop(st)?;
+        let ty = read_drop(st)?;
+        visit(v.on_drop(st, ty))?;
         return Ok(());
     }
     if opcode == OP_SELECT {
-        read_select(st)?;
+        let ty = read_select(st)?;
+        visit(v.on_select(st, ty))?;
         return Ok(());
     }
     if opcode == OP_BLOCK {
-        read_block(st, data)?;
+        let bt = read_block(st, data)?;
+        visit(v.on_block(st, bt))?;
         return Ok(());
     }
     if opcode == OP_LOOP {
-        read_loop(st, data)?;
+        let bt = read_loop(st, data)?;
+        visit(v.on_loop(st, bt))?;
         return Ok(());
     }
     if opcode == OP_IF {
-        read_if(st, data)?;
+        let bt = read_if(st, data)?;
+        visit(v.on_if(st, bt))?;
         return Ok(());
     }
     if opcode == OP_ELSE {
-        read_else(st)?;
+        let bt = read_else(st)?;
+        visit(v.on_else(st, bt))?;
         return Ok(());
     }
     if opcode == OP_END {
-        read_end(st)?;
+        let (kind, bt) = read_end(st)?;
+        visit(v.on_end(st, kind, bt))?;
         return Ok(());
     }
     if opcode == OP_BR {
-        read_br(st, data)?;
+        let (depth, bt) = read_br(st, data)?;
+        visit(v.on_br(st, depth, bt))?;
         return Ok(());
     }
     if opcode == OP_BR_IF {
-        read_br_if(st, data)?;
+        let (depth, bt) = read_br_if(st, data)?;
+        visit(v.on_br_if(st, depth, bt))?;
         return Ok(());
     }
     if opcode == OP_BR_TABLE {
-        read_br_table(st, data)?;
+        let (default, common) = read_br_table(st, data, v)?;
+        visit(v.on_br_table(st, default, common))?;
         return Ok(());
     }
     if opcode == OP_RETURN {
         read_return(st, ctx)?;
+        visit(v.on_return(st))?;
         return Ok(());
     }
     if opcode == OP_CALL {
-        read_call(st, data, env)?;
+        let idx = read_call(st, data, env)?;
+        visit(v.on_call(st, idx))?;
         return Ok(());
     }
     if opcode == OP_CALL_INDIRECT {
-        read_call_indirect(st, data, env)?;
+        let idx = read_call_indirect(st, data, env)?;
+        visit(v.on_call_indirect(st, idx))?;
         return Ok(());
     }
     if opcode == OP_LOCAL_GET {
-        read_local_get(st, data, ctx)?;
+        let idx = read_local_get(st, data, ctx)?;
+        visit(v.on_local_get(st, idx))?;
         return Ok(());
     }
     if opcode == OP_LOCAL_SET {
-        read_local_set(st, data, ctx)?;
+        let idx = read_local_set(st, data, ctx)?;
+        visit(v.on_local_set(st, idx))?;
         return Ok(());
     }
     if opcode == OP_LOCAL_TEE {
-        read_local_tee(st, data, ctx)?;
+        let idx = read_local_tee(st, data, ctx)?;
+        visit(v.on_local_tee(st, idx))?;
         return Ok(());
     }
     if opcode == OP_GLOBAL_GET {
-        read_global_get(st, data, env)?;
+        let idx = read_global_get(st, data, env)?;
+        visit(v.on_global_get(st, idx))?;
         return Ok(());
     }
     if opcode == OP_GLOBAL_SET {
-        read_global_set(st, data, env)?;
+        let idx = read_global_set(st, data, env)?;
+        visit(v.on_global_set(st, idx))?;
         return Ok(());
     }
-    step_memory(st, data, env, opcode)
+    step_memory(st, data, env, opcode, v)
 }
 
-fn step_memory(
+fn step_memory<V: OpVisitor>(
     st: &mut OpIterState,
     data: &[u8],
     env: &Env,
     opcode: u8,
+    v: &mut V,
 ) -> Result<()> {
     if opcode == OP_I32_LOAD {
-        read_load(st, data, env, opcode, ValueType::I32, 2)?;
+        let memarg = read_load(st, data, env, ValueType::I32, 2)?;
+        visit(visit_memory(v, st, opcode, memarg))?;
         return Ok(());
     }
     if opcode == OP_I64_LOAD {
-        read_load(st, data, env, opcode, ValueType::I64, 3)?;
+        let memarg = read_load(st, data, env, ValueType::I64, 3)?;
+        visit(visit_memory(v, st, opcode, memarg))?;
         return Ok(());
     }
     if opcode == OP_F32_LOAD {
-        read_load(st, data, env, opcode, ValueType::F32, 2)?;
+        let memarg = read_load(st, data, env, ValueType::F32, 2)?;
+        visit(visit_memory(v, st, opcode, memarg))?;
         return Ok(());
     }
     if opcode == OP_F64_LOAD {
-        read_load(st, data, env, opcode, ValueType::F64, 3)?;
+        let memarg = read_load(st, data, env, ValueType::F64, 3)?;
+        visit(visit_memory(v, st, opcode, memarg))?;
         return Ok(());
     }
-    if opcode == OP_I32_LOAD8_S || opcode == OP_I32_LOAD8_U {
-        read_load(st, data, env, opcode, ValueType::I32, 0)?;
+    if opcode == OP_I32_LOAD8_S {
+        let memarg = read_load(st, data, env, ValueType::I32, 0)?;
+        visit(visit_memory(v, st, opcode, memarg))?;
         return Ok(());
     }
-    if opcode == OP_I32_LOAD16_S || opcode == OP_I32_LOAD16_U {
-        read_load(st, data, env, opcode, ValueType::I32, 1)?;
+    if opcode == OP_I32_LOAD8_U {
+        let memarg = read_load(st, data, env, ValueType::I32, 0)?;
+        visit(visit_memory(v, st, opcode, memarg))?;
         return Ok(());
     }
-    if opcode == OP_I64_LOAD8_S || opcode == OP_I64_LOAD8_U {
-        read_load(st, data, env, opcode, ValueType::I64, 0)?;
+    if opcode == OP_I32_LOAD16_S {
+        let memarg = read_load(st, data, env, ValueType::I32, 1)?;
+        visit(visit_memory(v, st, opcode, memarg))?;
         return Ok(());
     }
-    if opcode == OP_I64_LOAD16_S || opcode == OP_I64_LOAD16_U {
-        read_load(st, data, env, opcode, ValueType::I64, 1)?;
+    if opcode == OP_I32_LOAD16_U {
+        let memarg = read_load(st, data, env, ValueType::I32, 1)?;
+        visit(visit_memory(v, st, opcode, memarg))?;
         return Ok(());
     }
-    if opcode == OP_I64_LOAD32_S || opcode == OP_I64_LOAD32_U {
-        read_load(st, data, env, opcode, ValueType::I64, 2)?;
+    if opcode == OP_I64_LOAD8_S {
+        let memarg = read_load(st, data, env, ValueType::I64, 0)?;
+        visit(visit_memory(v, st, opcode, memarg))?;
         return Ok(());
     }
-
+    if opcode == OP_I64_LOAD8_U {
+        let memarg = read_load(st, data, env, ValueType::I64, 0)?;
+        visit(visit_memory(v, st, opcode, memarg))?;
+        return Ok(());
+    }
+    if opcode == OP_I64_LOAD16_S {
+        let memarg = read_load(st, data, env, ValueType::I64, 1)?;
+        visit(visit_memory(v, st, opcode, memarg))?;
+        return Ok(());
+    }
+    if opcode == OP_I64_LOAD16_U {
+        let memarg = read_load(st, data, env, ValueType::I64, 1)?;
+        visit(visit_memory(v, st, opcode, memarg))?;
+        return Ok(());
+    }
+    if opcode == OP_I64_LOAD32_S {
+        let memarg = read_load(st, data, env, ValueType::I64, 2)?;
+        visit(visit_memory(v, st, opcode, memarg))?;
+        return Ok(());
+    }
+    if opcode == OP_I64_LOAD32_U {
+        let memarg = read_load(st, data, env, ValueType::I64, 2)?;
+        visit(visit_memory(v, st, opcode, memarg))?;
+        return Ok(());
+    }
     if opcode == OP_I32_STORE {
-        read_store(st, data, env, opcode, ValueType::I32, 2)?;
+        let memarg = read_store(st, data, env, ValueType::I32, 2)?;
+        visit(visit_memory(v, st, opcode, memarg))?;
         return Ok(());
     }
     if opcode == OP_I64_STORE {
-        read_store(st, data, env, opcode, ValueType::I64, 3)?;
+        let memarg = read_store(st, data, env, ValueType::I64, 3)?;
+        visit(visit_memory(v, st, opcode, memarg))?;
         return Ok(());
     }
     if opcode == OP_F32_STORE {
-        read_store(st, data, env, opcode, ValueType::F32, 2)?;
+        let memarg = read_store(st, data, env, ValueType::F32, 2)?;
+        visit(visit_memory(v, st, opcode, memarg))?;
         return Ok(());
     }
     if opcode == OP_F64_STORE {
-        read_store(st, data, env, opcode, ValueType::F64, 3)?;
+        let memarg = read_store(st, data, env, ValueType::F64, 3)?;
+        visit(visit_memory(v, st, opcode, memarg))?;
         return Ok(());
     }
     if opcode == OP_I32_STORE8 {
-        read_store(st, data, env, opcode, ValueType::I32, 0)?;
+        let memarg = read_store(st, data, env, ValueType::I32, 0)?;
+        visit(visit_memory(v, st, opcode, memarg))?;
         return Ok(());
     }
     if opcode == OP_I32_STORE16 {
-        read_store(st, data, env, opcode, ValueType::I32, 1)?;
+        let memarg = read_store(st, data, env, ValueType::I32, 1)?;
+        visit(visit_memory(v, st, opcode, memarg))?;
         return Ok(());
     }
     if opcode == OP_I64_STORE8 {
-        read_store(st, data, env, opcode, ValueType::I64, 0)?;
+        let memarg = read_store(st, data, env, ValueType::I64, 0)?;
+        visit(visit_memory(v, st, opcode, memarg))?;
         return Ok(());
     }
     if opcode == OP_I64_STORE16 {
-        read_store(st, data, env, opcode, ValueType::I64, 1)?;
+        let memarg = read_store(st, data, env, ValueType::I64, 1)?;
+        visit(visit_memory(v, st, opcode, memarg))?;
         return Ok(());
     }
     if opcode == OP_I64_STORE32 {
-        read_store(st, data, env, opcode, ValueType::I64, 2)?;
+        let memarg = read_store(st, data, env, ValueType::I64, 2)?;
+        visit(visit_memory(v, st, opcode, memarg))?;
         return Ok(());
     }
     if opcode == OP_MEMORY_SIZE {
         read_memory_size(st, data, env)?;
+        visit(v.on_memory_size(st))?;
         return Ok(());
     }
     if opcode == OP_MEMORY_GROW {
         read_memory_grow(st, data, env)?;
+        visit(v.on_memory_grow(st))?;
         return Ok(());
     }
-    step_numeric(st, opcode)
+    step_numeric(st, opcode, v)
 }
 
 /// The numeric operators, dispatched through the opcode table rather than
-/// through a branch each.
-fn step_numeric(st: &mut OpIterState, opcode: u8) -> Result<()> {
+/// through a branch each. `visit_numeric` is the one place that turns an opcode
+/// into a hook, so it is where a wrong row would show up.
+fn step_numeric<V: OpVisitor>(
+    st: &mut OpIterState,
+    opcode: u8,
+    v: &mut V,
+) -> Result<()> {
     match convert_types(opcode) {
-        Some((from, to)) => return read_conversion(st, opcode, from, to),
+        Some((from, to)) => {
+            read_conversion(st, from, to)?;
+            visit(visit_numeric(v, st, opcode))?;
+            return Ok(());
+        }
         None => {}
     }
     match binary_types(opcode) {
-        Some((ty, result)) => return read_binary(st, opcode, ty, result),
+        Some((ty, result)) => {
+            read_binary(st, ty, result)?;
+            visit(visit_numeric(v, st, opcode))?;
+            return Ok(());
+        }
         None => {}
     }
     Err(OpError::UnrecognizedOpcode)
 }
 
-/// Validate one function body. Terminates because `read_op` advances `pos` by
-/// at least one byte per iteration and `pos` is bounded by `data.len()`.
-pub fn validate_body(data: &[u8], env: &Env, ctx: &Context) -> Result<()> {
+/// Validate one function body, pushing each operator to `v` as it is accepted.
+///
+/// Terminates because `read_op` advances `pos` by at least one byte per
+/// iteration and `pos` is bounded by `data.len()`, provided the hooks return.
+///
+/// # Preconditions
+///
+/// This is the raw entry point, below the code section's framing, and its four
+/// arguments are four ways to prove something about a different function than
+/// the one you have. [`module::validate_code_entry_with`] establishes all of
+/// them from a position and an index, and is what a consumer should call.
+///
+/// - `data` is *exactly* the body's bytes, locals declarations already
+///   stripped and nothing after the terminating `end`. This function is what
+///   decides the last byte is that `end`, so a slice that is one byte long or
+///   short is a different question.
+/// - `ctx.locals` is the function's parameters followed by its declared
+///   locals, in that order.
+/// - `ctx.results` is the function's declared result types. Every theorem
+///   below also asks for at most one of them, which is Wasm 1.0.
+/// - `env` is the decoded environment of the module this body belongs to.
+///
+/// `OpIter_NoPanic.validate_body_with_no_panic` (given `hooks_total`),
+/// `OpIter_Validate.validate_body_with_typed` -- which needs no hypothesis on
+/// the consumer at all -- `OpIter_Validate.validate_body_with_trace` and
+/// `OpIter_Complete.validate_body_with_complete` (given `hooks_accept`).
+///
+/// [`module::validate_code_entry_with`]: crate::module::validate_code_entry_with
+pub fn validate_body_with<V: OpVisitor>(
+    data: &[u8],
+    env: &Env,
+    ctx: &Context,
+    v: &mut V,
+) -> Result<()> {
     if data.len() > MAX_FUNCTION_BYTES {
         return Err(OpError::BodyTooLarge);
     }
@@ -1530,6 +1595,86 @@ pub fn validate_body(data: &[u8], env: &Env, ctx: &Context) -> Result<()> {
             return Err(OpError::TrailingBytes);
         }
         let opcode = read_op(&mut st, data)?;
-        step(&mut st, data, env, ctx, opcode)?;
+        step(&mut st, data, env, ctx, opcode, v)?;
+    }
+}
+
+/// Validate one function body and nothing else. `validate_body_with` at
+/// `NopVisitor`, so the two accept exactly the same bodies by construction.
+///
+/// Same four preconditions as `validate_body_with`, and
+/// `validate_body_no_panic`, `validate_body_typed` and
+/// `validate_body_complete` with no hypothesis on a consumer.
+pub fn validate_body(data: &[u8], env: &Env, ctx: &Context) -> Result<()> {
+    let mut nop = NopVisitor;
+    validate_body_with(data, env, ctx, &mut nop)
+}
+
+// Declared here at the bottom so that adding them moved no line above: the
+// extraction records a source line per definition and `Veriwasm_Funs.v` is
+// generated and committed.
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_table_covers_every_numeric_opcode_in_its_ranges() {
+        // 0x45, 0x50, 0x67-0x69, 0x79-0x7b, 0x8b-0x91, 0x99-0x9f, 0xa7-0xbf.
+        let mut covered = 0;
+        for op in 0u8..=0xffu8 {
+            if convert_types(op).is_some() {
+                covered += 1;
+            }
+        }
+        assert_eq!(covered, 47);
+    }
+
+    #[test]
+    fn the_table_has_no_row_outside_the_numeric_block() {
+        for op in 0u8..=0xffu8 {
+            let in_range = op == 0x45
+                || op == 0x50
+                || (0x67..=0x69).contains(&op)
+                || (0x79..=0x7b).contains(&op)
+                || (0x8b..=0x91).contains(&op)
+                || (0x99..=0x9f).contains(&op)
+                || (0xa7..=0xbf).contains(&op);
+            assert_eq!(convert_types(op).is_some(), in_range, "opcode {op:#x}");
+        }
+    }
+
+    #[test]
+    fn the_binary_table_covers_its_ranges_exactly() {
+        // 0x46-0x4f, 0x51-0x5a, 0x5b-0x60, 0x61-0x66 comparisons;
+        // 0x6a-0x78, 0x7c-0x8a, 0x92-0x98, 0xa0-0xa6 binary.
+        for op in 0u8..=0xffu8 {
+            let in_range = (0x46..=0x4f).contains(&op)
+                || (0x51..=0x66).contains(&op)
+                || (0x6a..=0x78).contains(&op)
+                || (0x7c..=0x8a).contains(&op)
+                || (0x92..=0x98).contains(&op)
+                || (0xa0..=0xa6).contains(&op);
+            assert_eq!(binary_types(op).is_some(), in_range, "opcode {op:#x}");
+        }
+    }
+
+    #[test]
+    fn the_two_tables_do_not_overlap() {
+        for op in 0u8..=0xffu8 {
+            assert!(
+                !(convert_types(op).is_some() && binary_types(op).is_some()),
+                "opcode {op:#x} is in both tables"
+            );
+        }
+    }
+
+    #[test]
+    fn every_opcode_from_0x45_to_0xbf_is_in_one_of_the_tables() {
+        for op in 0x45u8..=0xbfu8 {
+            assert!(
+                convert_types(op).is_some() || binary_types(op).is_some(),
+                "opcode {op:#x} is in neither table"
+            );
+        }
     }
 }

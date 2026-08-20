@@ -25,6 +25,7 @@ Require Import Coq.Lists.List.
 Import ListNotations.
 Local Open Scope Primitives_scope.
 Require Import Veriwasm.Aeneas_Specs.
+Require Import Veriwasm.OpIter_Visit.
 Require Import Veriwasm.OpIter_State.
 Require Import Veriwasm.OpIter_Decode.
 
@@ -67,8 +68,7 @@ Proof.
   destruct (push_ctrl_total
               {| opiter_OpIterState_vals := alloc_vec_Vec_new opiter_StackType_t;
                  opiter_OpIterState_ctrls := alloc_vec_Vec_new opiter_Ctrl_t;
-                 opiter_OpIterState_pos := 0%usize;
-                 opiter_OpIterState_pending := None |}
+                 opiter_OpIterState_pos := 0%usize |}
               Opiter_LabelKind_Body bt) as [st Hpc].
   { cbn [opiter_OpIterState_ctrls]. pose proof max_function_bytes_fits. cbn. lia. }
   exists st. split; [exact Hpc|].
@@ -89,14 +89,18 @@ Qed.
     invariant is that the current size plus the remaining iterations stays within
     the body length, which holds because each iteration trades one byte for at
     most one entry. *)
-Lemma validate_body_loop_total : forall m data module locals results st,
+Lemma validate_body_loop_total : forall m V (inst : visit_OpVisitor_t V) v
+                                        data module locals results st,
+  hooks_total inst ->
   to_Z (slice_len data) - to_Z st.(opiter_OpIterState_pos) <= Z.of_nat m ->
   Z.of_nat (stack_size st) + Z.of_nat m <= to_Z (slice_len data) + 1 ->
   to_Z (slice_len data) <= 7654321 ->
-  exists r, opiter_validate_body_loop data module locals results st = Ok r.
+  exists r, opiter_validate_body_with_loop inst data module locals results v st
+            = Ok r.
 Proof.
-  induction m as [|m IH]; intros data module locals results st Hmeas Hbudget Hlim;
-    unfold opiter_validate_body_loop; rewrite loop_unfold; cbn beta iota;
+  induction m as [|m IH];
+    intros V inst v data module locals results st Hvt Hmeas Hbudget Hlim;
+    unfold opiter_validate_body_with_loop; rewrite loop_unfold; cbn beta iota;
     unfold opiter_control_stack_empty; rewrite vec_is_empty_spec; cbn [bind];
     destruct (vec_list st.(opiter_OpIterState_ctrls)) eqn:Hctrls;
     [ destruct (st.(opiter_OpIterState_pos) s= slice_len data);
@@ -122,15 +126,19 @@ Proof.
     pose proof (read_op_advance st data b st2 Hro) as Hadv.
     assert (Hroom2 : room st2).
     { unfold room. rewrite Hsz2. pose proof max_function_bytes_fits. lia. }
-    destruct (step_total st2 data module (mkopiter_Context_t locals results) b Hroom2) as [r1 [st3 Hstep]].
+    destruct (step_total V inst v st2 data module
+                (mkopiter_Context_t locals results) b Hvt Hroom2)
+      as [r1 [st3 [v4 Hstep]]].
     rewrite Hstep. cbn [bind].
-    pose proof (step_mono st2 data module (mkopiter_Context_t locals results) b r1 st3 Hstep) as Hmono.
-    pose proof (step_size st2 data module (mkopiter_Context_t locals results) b r1 st3 Hstep) as Hsz3.
+    pose proof (step_mono V inst v st2 data module
+                  (mkopiter_Context_t locals results) b r1 st3 v4 Hstep) as Hmono.
+    pose proof (step_size V inst v st2 data module
+                  (mkopiter_Context_t locals results) b r1 st3 v4 Hstep) as Hsz3.
     destruct r1 as [u1|e1].
     2: { rewrite branch_err. cbn [bind]. rewrite from_residual_err. cbn [bind].
          eexists. reflexivity. }
     destruct u1. rewrite branch_ok. cbn [bind].
-    apply (IH data module locals results st3).
+    apply (IH V inst v4 data module locals results st3 Hvt).
     + cbn in Hmeas. lia.
     + cbn in Hbudget. lia.
     + exact Hlim.
@@ -140,13 +148,15 @@ Qed.
 (** ** The theorem                                                     *)
 (* ================================================================== *)
 
-(** No input makes the streaming validator panic or diverge. Unconditional: the
-    size check is inside [validate_body], so there is no precondition for a caller
-    to get wrong. *)
-Theorem validate_body_no_panic : forall data module ctx,
-  exists r, opiter_validate_body data module ctx = Ok r.
+(** No input makes the push validator panic or diverge, whatever the consumer
+    is, provided its hooks return. The size check is inside the function, so
+    there is no precondition for a caller to get wrong. *)
+Theorem validate_body_with_no_panic : forall V (inst : visit_OpVisitor_t V) v
+                                             data module ctx,
+  hooks_total inst ->
+  exists r, opiter_validate_body_with inst data module ctx v = Ok r.
 Proof.
-  intros data module ctx. unfold opiter_validate_body.
+  intros V inst v data module ctx Hvt. unfold opiter_validate_body_with.
   destruct (slice_len data s> limits_max_function_bytes) eqn:Hbig;
     [eexists; reflexivity|].
   apply scalar_gtb_false in Hbig. rewrite max_function_bytes_val in Hbig.
@@ -155,9 +165,21 @@ Proof.
     as [st [Hsf [Hpos Hsz]]].
   rewrite Hsf. cbn [bind].
   apply (validate_body_loop_total
-           (Z.to_nat (to_Z (slice_len data))) data module
-           ctx.(opiter_Context_locals) ctx.(opiter_Context_results) st).
+           (Z.to_nat (to_Z (slice_len data))) V inst v data module
+           ctx.(opiter_Context_locals) ctx.(opiter_Context_results) st Hvt).
   - rewrite Hpos. rewrite Z2Nat.id by apply usize_nonneg. lia.
   - rewrite Hsz. rewrite Z2Nat.id by apply usize_nonneg. lia.
   - exact Hbig.
+Qed.
+
+(** The validating-only consumer accepts every hook, so [validate_body] itself
+    never panics and never diverges: no hypothesis at all. *)
+Theorem validate_body_no_panic : forall data module ctx,
+  exists r, opiter_validate_body data module ctx = Ok r.
+Proof.
+  intros data module ctx. unfold opiter_validate_body.
+  destruct (validate_body_with_no_panic _
+              visit_NopVisitor_Insts_VeriwasmVisitOpVisitor tt data module ctx
+              nop_hooks_total) as [r Hr].
+  rewrite Hr. cbn [bind]. destruct r as [r0 v0]. eexists. reflexivity.
 Qed.

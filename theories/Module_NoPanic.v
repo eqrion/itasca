@@ -32,6 +32,7 @@ Local Open Scope Primitives_scope.
 Require Import Veriwasm.Aeneas_Specs.
 Require Import Veriwasm.OpIter_State.
 Require Import Veriwasm.OpIter_Decode.
+Require Import Veriwasm.OpIter_Visit.
 Require Import Veriwasm.OpIter_NoPanic.
 
 Open Scope Z_scope.
@@ -788,8 +789,11 @@ Qed.
     The invariant is [length out <= to_Z q]: an element costs a byte, and the
     cursor counts the bytes. With the cursor bounded by [module_bytes] that is
     what keeps [Vec::push] away from [usize_max]. *)
+(** The visitor-carrying functions report a pair, so an exit has one existential
+    more than the rest of the file's do. *)
 Ltac finish_post :=
-  solve [eexists; split; [reflexivity | intros; discriminate]].
+  solve [ eexists; split; [reflexivity | intros; discriminate]
+        | eexists; eexists; split; [reflexivity | intros; discriminate] ].
 
 Ltac try_err_post := try_err_rw; finish_post.
 
@@ -2248,25 +2252,47 @@ Proof.
       end ].
 Qed.
 
+(** Every module hook returns. The module visitor has one hook, so this is one
+    conjunct where [OpIter_Visit.hooks_total] is 174, but it is the same claim
+    and it is discharged the same way: a hook is unverified code, and nothing
+    in its type stops it looping or failing. *)
+Definition module_hooks_total {V : Type} (inst : module_ModuleVisitor_t V) : Prop :=
+  forall v c, exists r v',
+    inst.(module_ModuleVisitor_t_on_custom_section) v c = Ok (r, v').
+
+Lemma nop_module_hooks_total :
+  module_hooks_total module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor.
+Proof.
+  unfold module_hooks_total,
+         module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor.
+  intros v c. cbn [module_ModuleVisitor_t_on_custom_section].
+  unfold module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor_on_custom_section.
+  eexists. eexists. reflexivity.
+Qed.
+
 (** Spec 5.5.16 up to the code section. The measure is the bytes left: a
     section header ends strictly after the position it was read at, so the
     cursor advances even for an empty section. *)
-Lemma decode_env_loop_ok : forall m data env q last_id,
+Lemma decode_env_with_loop_ok :
+  forall V (inst : module_ModuleVisitor_t V) m data vis env q last_id,
+  module_hooks_total inst ->
   dlen data - to_Z q <= Z.of_nat m ->
   env_small env q ->
   to_Z q <= dlen data ->
   dlen data <= module_bytes ->
-  exists r, module_decode_env_loop data env q last_id = Ok r
-            /\ forall e q', r = Core_result_Result_Ok (e, q') ->
-                 to_Z q' <= dlen data /\ env_small e q'.
+  exists r vis',
+    module_decode_env_with_loop inst data vis env q last_id = Ok (r, vis')
+    /\ forall e q', r = Core_result_Result_Ok (e, q') ->
+         to_Z q' <= dlen data /\ env_small e q'.
 Proof.
-  induction m as [|m IH]; intros data env q last_id Hmeas Henv Hq Hlen;
-    unfold module_decode_env_loop; rewrite loop_unfold; cbn beta iota;
+  intros V inst m. induction m as [|m IH];
+    intros data vis env q last_id Hhooks Hmeas Henv Hq Hlen;
+    unfold module_decode_env_with_loop; rewrite loop_unfold; cbn beta iota;
     destruct (q s>= slice_len data) eqn:Hge;
-    [ eexists; split; [reflexivity|]; intros ? ? Hc; injection Hc as <- <-;
-      split; [lia | exact Henv]
-    | | eexists; split; [reflexivity|]; intros ? ? Hc; injection Hc as <- <-;
-        split; [lia | exact Henv]
+    [ eexists; eexists; split; [reflexivity|]; intros ? ? Hc;
+      injection Hc as <- <-; split; [lia | exact Henv]
+    | | eexists; eexists; split; [reflexivity|]; intros ? ? Hc;
+        injection Hc as <- <-; split; [lia | exact Henv]
     | ].
   - exfalso. apply scalar_geb_false_lt in Hge. cbn in Hmeas. lia.
   - apply scalar_geb_false_lt in Hge.
@@ -2277,19 +2303,25 @@ Proof.
     destruct (id s= module_section_custom).
     { destruct (decode_custom_section_ok data start end1 (ltac:(lia)) Hlen)
         as [r1 Hr1]. rewrite Hr1. cbn [bind].
-      destruct r1 as [u|e]; [|try_err_post].
-      rewrite branch_ok. cbn [bind]. cbn beta iota.
-      destruct (IH data env end1 last_id) as [r2 [Hr2 Hpost]].
+      destruct r1 as [c|e]; [|try_err_post].
+      rewrite branch_ok. cbn [bind].
+      (* the consumer is shown the section, and its hook returns *)
+      destruct (Hhooks vis c) as [rh [vis1 Hh]]. rewrite Hh. cbn [bind].
+      destruct rh as [u|ev];
+        [|cbn beta iota; finish_post].
+      cbn beta iota.
+      destruct (IH data vis1 env end1 last_id) as [r2 [vis2 [Hr2 Hpost]]].
+      - exact Hhooks.
       - rewrite Nat2Z.inj_succ in Hmeas. lia.
       - apply (env_small_mono _ q); [exact Henv | lia].
       - lia.
       - exact Hlen.
-      - exists r2. split; [exact Hr2|]. exact Hpost. }
+      - exists r2. exists vis2. split; [exact Hr2|]. exact Hpost. }
     destruct (id s>= module_section_code).
-    { eexists; split; [reflexivity|]; intros ? ? Hc; injection Hc as <- <-.
-      split; [lia | exact Henv]. }
+    { eexists; eexists; split; [reflexivity|]; intros ? ? Hc;
+      injection Hc as <- <-. split; [lia | exact Henv]. }
     destruct (id s<= last_id);
-      [eexists; split; [reflexivity|]; intros ? ? Hc; discriminate|].
+      [eexists; eexists; split; [reflexivity|]; intros ? ? Hc; discriminate|].
     destruct (decode_env_section_ok data start id env
                 (ltac:(apply (env_small_mono _ q); [exact Henv | lia]))
                 (ltac:(lia)) Hlen) as [r1 [e1 [Hr1 Hpost1]]].
@@ -2298,37 +2330,75 @@ Proof.
     rewrite branch_ok. cbn [bind].
     destruct (Hpost1 _ (ltac:(reflexivity))) as [Hp1 [Hp2 Henv1]].
     destruct (p s<> end1) eqn:Hne;
-      [eexists; split; [reflexivity|]; intros ? ? Hc; discriminate|].
+      [eexists; eexists; split; [reflexivity|]; intros ? ? Hc; discriminate|].
     apply Bool.negb_false_iff in Hne. apply scalar_eqb_true in Hne.
     cbn beta iota.
-    destruct (IH data e1 end1 id) as [r2 [Hr2 Hpost]].
+    destruct (IH data vis e1 end1 id) as [r2 [vis2 [Hr2 Hpost]]].
+    + exact Hhooks.
     + rewrite Nat2Z.inj_succ in Hmeas. lia.
     + apply (env_small_mono _ p); [exact Henv1 | lia].
     + lia.
     + exact Hlen.
-    + exists r2. split; [exact Hr2|]. exact Hpost.
+    + exists r2. exists vis2. split; [exact Hr2|]. exact Hpost.
 Qed.
 
-Lemma decode_env_ok : forall data,
+(** The bridges between a decoder and its `_with` form at the do-nothing
+    consumer, the same pair [code_entry_nop] and [code_entry_nop_inv] are one
+    level down. The projection is the only content: [decode_env] is
+    [decode_env_with] at [tt] with the visitor state thrown away. *)
+Lemma decode_env_nop : forall data r,
+  module_decode_env_with module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor
+    data tt = Ok (r, tt) ->
+  module_decode_env data = Ok r.
+Proof.
+  intros data r H. unfold module_decode_env. rewrite H. cbn [bind]. reflexivity.
+Qed.
+
+Lemma decode_tail_nop : forall data pos env r,
+  module_decode_tail_with module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor
+    data pos env tt = Ok (r, tt) ->
+  module_decode_tail data pos env = Ok r.
+Proof.
+  intros data pos env r H. unfold module_decode_tail. rewrite H. cbn [bind].
+  reflexivity.
+Qed.
+
+Lemma decode_env_with_ok : forall V (inst : module_ModuleVisitor_t V) vis data,
+  module_hooks_total inst ->
   dlen data <= module_bytes ->
-  exists r, module_decode_env data = Ok r
+  exists r vis', module_decode_env_with inst data vis = Ok (r, vis')
             /\ forall e q', r = Core_result_Result_Ok (e, q') ->
                  to_Z q' <= dlen data /\ env_small e q'.
 Proof.
-  intros data Hlen. unfold module_decode_env.
+  intros V inst vis data Hhooks Hlen. unfold module_decode_env_with.
   destruct env_Env_new as [env0|] eqn:Hnew; cbn [bind]; [|discriminate Hnew].
   destruct (read_header_ok data) as [r Hr]. rewrite Hr. cbn [bind].
   destruct r as [p|e]; [|try_err_post].
   rewrite branch_ok. cbn [bind].
   pose proof (read_header_step _ _ Hr) as Hp.
   pose proof (usize_nonneg p).
-  destruct (decode_env_loop_ok (Z.to_nat (dlen data)) data env0 p 0%u8)
-    as [r2 [Hr2 Hpost]].
+  destruct (decode_env_with_loop_ok V inst (Z.to_nat (dlen data)) data vis env0
+              p 0%u8) as [r2 [vis2 [Hr2 Hpost]]].
+  - exact Hhooks.
   - rewrite Z2Nat.id by (pose proof (usize_nonneg (slice_len data)); lia). lia.
   - exact (env_small_new p env0 Hnew).
   - exact Hp.
   - exact Hlen.
-  - exists r2. split; [exact Hr2|]. exact Hpost.
+  - exists r2. exists vis2. split; [exact Hr2|]. exact Hpost.
+Qed.
+
+Corollary decode_env_ok : forall data,
+  dlen data <= module_bytes ->
+  exists r, module_decode_env data = Ok r
+            /\ forall e q', r = Core_result_Result_Ok (e, q') ->
+                 to_Z q' <= dlen data /\ env_small e q'.
+Proof.
+  intros data Hlen.
+  destruct (decode_env_with_ok _
+              module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor tt data
+              nop_module_hooks_total Hlen) as [r [vis' [Hr Hpost]]].
+  exists r. split; [|exact Hpost].
+  apply decode_env_nop. destruct vis'. exact Hr.
 Qed.
 
 (* ================================================================== *)
@@ -2338,17 +2408,57 @@ Qed.
 (** One code entry. Everything before the body is the same accounting as the
     rest of the file; the body itself is the one sub-slice the decoder takes,
     and [validate_body_no_panic] carries it from there. *)
-Lemma validate_code_entry_ok : forall data pos env index,
+(** [validate_code_entry] is [validate_code_entry_with] at [NopVisitor], whose
+    state is the unit, so a run of the one is a run of the other. Every proof
+    below is about the generic function; these two carry it across. *)
+(** The frame hook, named on its own so the entry's totality proof does not
+    destructure the whole conjunction. *)
+Lemma frame_hook_total : forall V (inst : visit_OpVisitor_t V) v ctx tidx bb ee,
+  hooks_total inst ->
+  exists r v', inst.(visit_OpVisitor_t_on_function_start) v ctx tidx bb ee
+               = Ok (r, v').
+Proof.
+  intros V inst v ctx tidx bb ee H. unfold hooks_total in H.
+  repeat match goal with Hc : _ /\ _ |- _ => destruct Hc end.
+  eauto.
+Qed.
+
+Lemma code_entry_nop : forall data pos env index r,
+  module_validate_code_entry_with visit_NopVisitor_Insts_VeriwasmVisitOpVisitor
+    data pos env index tt = Ok (r, tt) ->
+  module_validate_code_entry data pos env index = Ok r.
+Proof.
+  intros data pos env index r H. unfold module_validate_code_entry.
+  rewrite H. cbn [bind]. reflexivity.
+Qed.
+
+Lemma code_entry_nop_inv : forall data pos env index r,
+  module_validate_code_entry data pos env index = Ok r ->
+  module_validate_code_entry_with visit_NopVisitor_Insts_VeriwasmVisitOpVisitor
+    data pos env index tt = Ok (r, tt).
+Proof.
+  intros data pos env index r H. unfold module_validate_code_entry in H.
+  destruct (module_validate_code_entry_with
+              visit_NopVisitor_Insts_VeriwasmVisitOpVisitor data pos env index tt)
+    as [[r0 v0]|] eqn:Hw; cbn [bind] in H; [|discriminate].
+  injection H as <-. destruct v0. reflexivity.
+Qed.
+
+Lemma validate_code_entry_with_ok : forall V (inst : visit_OpVisitor_t V) vis
+                                          data pos env index,
+  hooks_total inst ->
   env_small env pos ->
   to_Z pos <= dlen data ->
   dlen data <= module_bytes ->
-  exists r, module_validate_code_entry data pos env index = Ok r
-            /\ forall q', r = Core_result_Result_Ok q' ->
-                 to_Z pos < to_Z q' /\ to_Z q' <= dlen data.
+  exists r vis',
+    module_validate_code_entry_with inst data pos env index vis = Ok (r, vis')
+    /\ forall q', r = Core_result_Result_Ok q' ->
+         to_Z pos < to_Z q' /\ to_Z q' <= dlen data.
 Proof.
-  intros data pos env index Henv Hpos Hlen. unfold module_validate_code_entry.
+  intros V inst vis data pos env index Hvt Henv Hpos Hlen.
+  unfold module_validate_code_entry_with.
   destruct (index s>= alloc_vec_Vec_len env.(env_Env_func_type_indices)) eqn:Hix;
-    [eexists; split; [reflexivity|]; intros ? Hc; discriminate|].
+    [finish_post|].
   destruct (read_u32_leb_ok data pos) as [r Hr]. rewrite Hr. cbn [bind].
   destruct r as [[size p]|e]; [|try_err_post].
   rewrite branch_ok. cbn [bind].
@@ -2370,7 +2480,7 @@ Proof.
   rewrite branch_ok. cbn [bind].
   destruct (Hloc _ _ (ltac:(reflexivity))) as [Hlt1 [Hp1 Hdec]].
   destruct (p1 s> end1) eqn:Hover;
-    [eexists; split; [reflexivity|]; intros ? Hc; discriminate|].
+    [finish_post|].
   apply scalar_gtb_false in Hover.
   destruct (vec_index_ok env.(env_Env_func_type_indices) index Hix)
     as [tidx Hidx].
@@ -2378,7 +2488,7 @@ Proof.
   destruct (scalar_cast_u32_usize tidx) as [t [Hcast2 Ht]].
   rewrite Hcast2. cbn [bind].
   destruct (t s>= alloc_vec_Vec_len env.(env_Env_types)) eqn:Hty;
-    [eexists; split; [reflexivity|]; intros ? Hc; discriminate|].
+    [finish_post|].
   destruct (vec_index_ok env.(env_Env_types) t Hty) as [ft Hft].
   rewrite Hft. cbn [bind].
   assert (Hsmall : ft_small ft).
@@ -2398,92 +2508,214 @@ Proof.
   rewrite vec_deref_spec.
   destruct (copy_value_types_ok ft.(types_FuncType_results)) as [res [Hres _]].
   rewrite Hres. cbn [bind].
+  (* the frame hook returns, since the consumer's hooks do *)
+  destruct (frame_hook_total V inst vis
+              {| opiter_Context_locals := locals;
+                 opiter_Context_results := res |} tidx p1 end1 Hvt) as [rf [vf Hhk]].
+  rewrite Hhk. cbn [bind].
+  destruct rf as [uf|ef]; cbn beta iota; [|finish_post].
   destruct (slice_range_ok data p1 end1 (ltac:(lia)) (ltac:(rewrite <- slice_len_spec; lia)))
     as [body [Hbody _]].
   rewrite Hbody. cbn [bind].
-  destruct (validate_body_no_panic body env
+  destruct (validate_body_with_no_panic V inst vf body env
               {| opiter_Context_locals := locals;
-                 opiter_Context_results := res |}) as [rb Hrb].
+                 opiter_Context_results := res |} Hvt) as [rb Hrb].
   rewrite Hrb. cbn [bind].
-  destruct rb as [u|eb].
-  - eexists. split; [reflexivity|]. intros q' Hc. injection Hc as <-. lia.
-  - eexists. split; [reflexivity|]. intros ? Hc. discriminate.
+  destruct rb as [rb0 vb]. destruct rb0 as [u|eb].
+  - eexists. eexists. split; [reflexivity|]. intros q' Hc.
+    injection Hc as <-. lia.
+  - eexists. eexists. split; [reflexivity|]. intros ? Hc. discriminate.
 Qed.
 
-Lemma validate_code_entries_loop_ok : forall m data env q i,
+(** The same for the validating-only consumer, which is what [validate_code]
+    drives, and whose hooks are total by computation. *)
+Corollary validate_code_entry_ok : forall data pos env index,
+  env_small env pos ->
+  to_Z pos <= dlen data ->
+  dlen data <= module_bytes ->
+  exists r, module_validate_code_entry data pos env index = Ok r
+            /\ forall q', r = Core_result_Result_Ok q' ->
+                 to_Z pos < to_Z q' /\ to_Z q' <= dlen data.
+Proof.
+  intros data pos env index Henv Hpos Hlen.
+  destruct (validate_code_entry_with_ok _
+              visit_NopVisitor_Insts_VeriwasmVisitOpVisitor tt data pos env index
+              nop_hooks_total Henv Hpos Hlen) as [r [vis' [Hw Hq]]].
+  destruct vis'. exists r. split; [apply code_entry_nop; exact Hw | exact Hq].
+Qed.
+
+(** The framing step: reading a size prefix cannot fail on any bytes, and what
+    it reports moves the cursor forward and stays inside the input. Both halves
+    are what the walk's measure and its next read need. *)
+Lemma code_entry_extent_ok : forall data pos,
+  to_Z pos <= dlen data ->
+  dlen data <= module_bytes ->
+  exists r, module_code_entry_extent data pos = Ok r
+            /\ forall b e, r = Core_result_Result_Ok (b, e) ->
+                 to_Z pos < to_Z b /\ to_Z b <= to_Z e /\ to_Z e <= dlen data.
+Proof.
+  intros data pos Hpos Hlen. unfold module_code_entry_extent.
+  destruct (read_u32_leb_ok data pos) as [r Hr]. rewrite Hr. cbn [bind].
+  destruct r as [[size p]|e];
+    [|try_err_rw; solve [eexists; split; [reflexivity | intros ? ? Hc; discriminate]]].
+  rewrite branch_ok. cbn [bind].
+  pose proof (read_u32_leb_lt _ _ _ _ Hr) as Hlt.
+  pose proof (read_u32_leb_le_len _ _ _ _ Hr) as Hple.
+  destruct (scalar_cast_u32_usize size) as [n [Hcast Hn]].
+  rewrite Hcast. cbn [bind].
+  destruct (have_bytes_ok data p n Hple) as [rh [Hh Hcase]].
+  rewrite Hh. cbn [bind].
+  destruct Hcase as [-> | ->];
+    [|try_err_rw; solve [eexists; split; [reflexivity | intros ? ? Hc; discriminate]]].
+  rewrite branch_ok. cbn [bind].
+  pose proof (have_bytes_room data p n Hh) as Hroom.
+  pose proof (usize_nonneg n).
+  destruct (usize_add_ok p n (ltac:(fits))) as [q [Hadd Hq]].
+  rewrite Hadd. cbn [bind].
+  eexists. split; [reflexivity|]. intros b e Hc. injection Hc as <- <-. lia.
+Qed.
+
+(** Every code hook returns.
+    [on_need_bytes] is unconditional; [on_code_entry] is not, because its
+    default *is* [validate_code_entry], and that is total only where the
+    environment is small and the position is inside the input. So this is
+    indexed by the bytes and the environment rather than closed, and the walk
+    establishes the guards before it fires the hook. The one place the
+    [hooks_total] pattern does not copy verbatim from [OpIter_Visit]. *)
+Definition code_hooks_total {V : Type} (inst : module_CodeVisitor_t V)
+                            (data : slice u8) (env : env_Env_t) : Prop :=
+  (forall v e, exists r v',
+     inst.(module_CodeVisitor_t_on_need_bytes) v e = Ok (r, v'))
+  /\ (forall v index pos contents fin,
+        env_small env pos ->
+        to_Z pos <= dlen data ->
+        dlen data <= module_bytes ->
+        exists r v',
+          inst.(module_CodeVisitor_t_on_code_entry) v data env index pos contents fin
+            = Ok (r, v')).
+
+Lemma validating_code_hooks_total : forall data env,
+  code_hooks_total
+    module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor data env.
+Proof.
+  intros data env. unfold code_hooks_total,
+    module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor.
+  split.
+  - intros v e. cbn [module_CodeVisitor_t_on_need_bytes].
+    unfold module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor_on_need_bytes.
+    eexists. eexists. reflexivity.
+  - intros v index pos contents fin Henv Hpos Hlen.
+    cbn [module_CodeVisitor_t_on_code_entry].
+    unfold module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor_on_code_entry.
+    destruct (validate_code_entry_ok data pos env index Henv Hpos Hlen)
+      as [r [Hr _]].
+    rewrite Hr. cbn [bind].
+    destruct r as [q|e]; [|try_err_rw; eexists; eexists; reflexivity].
+    rewrite branch_ok. cbn [bind]. eexists. eexists. reflexivity.
+Qed.
+
+Lemma validate_code_entries_with_loop_ok :
+  forall V (inst : module_CodeVisitor_t V) m data env vis q i,
+  code_hooks_total inst data env ->
   Z.of_nat (List.length (vec_list env.(env_Env_func_type_indices))) - to_Z i
     <= Z.of_nat m ->
   env_small env q ->
   to_Z q <= dlen data ->
   dlen data <= module_bytes ->
-  exists r, module_validate_code_entries_loop data env q i = Ok r
-            /\ forall q', r = Core_result_Result_Ok q' ->
-                 to_Z q <= to_Z q' /\ to_Z q' <= dlen data.
+  exists r vis',
+    module_validate_code_entries_with_loop inst data env vis q i = Ok (r, vis')
+    /\ forall q', r = Core_result_Result_Ok q' ->
+         to_Z q <= to_Z q' /\ to_Z q' <= dlen data.
 Proof.
-  induction m as [|m IH]; intros data env q i Hmeas Henv Hq Hlen;
-    unfold module_validate_code_entries_loop; rewrite loop_unfold; cbn beta iota;
+  intros V inst m. induction m as [|m IH];
+    intros data env vis q i [Hneed Hentry] Hmeas Henv Hq Hlen;
+    unfold module_validate_code_entries_with_loop; rewrite loop_unfold;
+    cbn beta iota;
     destruct (i s>= alloc_vec_Vec_len env.(env_Env_func_type_indices)) eqn:Hge;
-    [ eexists; split; [reflexivity|]; intros ? Hc; injection Hc as <-;
+    [ eexists; eexists; split; [reflexivity|]; intros ? Hc; injection Hc as <-;
       split; lia
-    | | eexists; split; [reflexivity|]; intros ? Hc; injection Hc as <-;
+    | | eexists; eexists; split; [reflexivity|]; intros ? Hc; injection Hc as <-;
         split; lia
     | ].
   - exfalso. apply scalar_geb_false_lt in Hge. rewrite vec_len_spec in Hge.
     cbn in Hmeas. lia.
   - apply scalar_geb_false_lt in Hge. rewrite vec_len_spec in Hge.
-    destruct (validate_code_entry_ok data q env i Henv Hq Hlen) as [r [Hr Hpost]].
-    rewrite Hr. cbn [bind].
-    destruct r as [q1|e]; [|try_err_post].
+    (* the framing read's own bound: the cursor is inside a file no bigger than
+       the module cap, so asking for five more bytes cannot overflow *)
+    pose proof (usize_nonneg q).
+    assert (Hadd5 : to_Z q + to_Z limits_max_leb_bytes <= usize_max).
+    { unfold limits_max_leb_bytes. pose proof module_bytes_fits. cbn. lia. }
+    destruct (usize_add_ok q limits_max_leb_bytes Hadd5) as [qw [Hqw _]].
+    rewrite Hqw. cbn [bind].
+    destruct (Hneed vis qw) as [rn [vis1 Hn]]. rewrite Hn. cbn [bind].
+    destruct rn as [u|en]; [|try_err_post].
     rewrite branch_ok. cbn [bind].
-    destruct (Hpost _ (ltac:(reflexivity))) as [Hlt Hq1].
+    destruct (code_entry_extent_ok data q Hq Hlen) as [rx [Hx Hxpost]].
+    rewrite Hx. cbn [bind].
+    destruct rx as [[contents fin]|ex]; [|try_err_post].
+    rewrite branch_ok. cbn [bind].
+    destruct (Hxpost _ _ (ltac:(reflexivity))) as [Hlt [Hbe Hfd]].
+    destruct (Hneed vis1 fin) as [rn2 [vis2 Hn2]]. rewrite Hn2. cbn [bind].
+    destruct rn2 as [u2|en2]; [|try_err_post].
+    rewrite branch_ok. cbn [bind].
+    destruct (Hentry vis2 i q contents fin Henv Hq Hlen) as [re [vis3 He]].
+    rewrite He. cbn [bind].
+    destruct re as [u3|ee]; [|try_err_post].
+    rewrite branch_ok. cbn [bind].
     destruct (usize_add_1_ok i (ltac:(pose proof (usize_le_max
                 (alloc_vec_Vec_len env.(env_Env_func_type_indices)));
                 rewrite vec_len_spec in *; lia))) as [i2 [Hadd Hi2]].
     rewrite Hadd. cbn [bind].
-    destruct (IH data env q1 i2) as [r2 [Hr2 Hpost2]].
+    destruct (IH data env vis3 fin i2) as [r2 [vis4 [Hr2 Hpost2]]].
+    + split; [exact Hneed | exact Hentry].
     + rewrite Nat2Z.inj_succ in Hmeas. lia.
     + apply (env_small_mono _ q); [exact Henv | lia].
-    + exact Hq1.
+    + lia.
     + exact Hlen.
-    + exists r2. split; [exact Hr2|].
+    + exists r2. exists vis4. split; [exact Hr2|].
       intros q' Hc. destruct (Hpost2 _ Hc) as [A B]. split; lia.
 Qed.
 
-Lemma no_code_section_ok : forall env pos,
-  exists r, module_no_code_section env pos = Ok r
-            /\ forall q', r = Core_result_Result_Ok q' -> q' = pos.
+Lemma no_code_section_ok : forall env,
+  exists r, module_no_code_section env = Ok r
+            /\ forall cs, r = Core_result_Result_Ok cs -> cs = None.
 Proof.
-  intros env pos. unfold module_no_code_section.
+  intros env. unfold module_no_code_section.
   rewrite vec_is_empty_spec. cbn [bind].
   destruct (match vec_list env.(env_Env_func_type_indices) with
             | [] => true | _ => false end);
-    (eexists; split; [reflexivity|]; intros q' Hc);
+    (eexists; split; [reflexivity|]; intros cs Hc);
     [injection Hc as <-; reflexivity | discriminate].
 Qed.
 
-Lemma validate_code_ok : forall data pos env,
-  env_small env pos ->
+(** Reading the header cannot fail either, and what it reports frames the
+    entries: they start inside the file and the section ends inside it. Named on
+    its own because [validate_code] and a consumer driving the entries itself
+    both start here. *)
+Lemma code_section_ok : forall data pos env,
   to_Z pos <= dlen data ->
-  dlen data <= module_bytes ->
-  exists r, module_validate_code data pos env = Ok r
-            /\ forall q', r = Core_result_Result_Ok q' ->
-                 to_Z pos <= to_Z q' /\ to_Z q' <= dlen data.
+  exists r, module_code_section data pos env = Ok r
+            /\ forall cs, r = Core_result_Result_Ok (Some cs) ->
+                 to_Z pos <= to_Z cs.(module_CodeSection_entries)
+                 /\ to_Z cs.(module_CodeSection_entries) <= dlen data
+                 /\ to_Z pos <= to_Z cs.(module_CodeSection_end)
+                 /\ to_Z cs.(module_CodeSection_end) <= dlen data.
 Proof.
-  intros data pos env Henv Hpos Hlen. unfold module_validate_code.
+  intros data pos env Hpos. unfold module_code_section.
   destruct (pos s>= slice_len data) eqn:Hge.
-  { destruct (no_code_section_ok env pos) as [r [Hr Hpost]].
-    rewrite Hr. exists r. split; [reflexivity|].
-    intros q' Hc. rewrite (Hpost _ Hc). split; lia. }
-  apply scalar_geb_false_lt in Hge.
+  { destruct (no_code_section_ok env) as [r [Hr Hno]].
+    exists r. split; [exact Hr|]. intros cs Hc.
+    discriminate (Hno _ Hc). }
+  apply scalar_geb_false_lt in Hge. rewrite slice_len_spec in Hge.
   destruct (read_section_header_ok data pos (ltac:(lia))) as [r Hr].
   rewrite Hr. cbn [bind].
   destruct r as [[[id start] end1]|e]; [|try_err_post].
   rewrite branch_ok. cbn [bind].
   destruct (read_section_header_step _ _ _ _ _ Hr) as [Hlt [Hse Hend]].
   destruct (id s<> module_section_code).
-  { destruct (no_code_section_ok env pos) as [r1 [Hr1 Hpost]].
-    rewrite Hr1. exists r1. split; [reflexivity|].
-    intros q' Hc. rewrite (Hpost _ Hc). split; lia. }
+  { destruct (no_code_section_ok env) as [r1 [Hr1 Hno]].
+    exists r1. split; [exact Hr1|]. intros cs Hc.
+    discriminate (Hno _ Hc). }
   destruct (read_u32_leb_ok data start) as [r1 Hr1]. rewrite Hr1. cbn [bind].
   destruct r1 as [[count p]|e]; [|try_err_post].
   rewrite branch_ok. cbn [bind].
@@ -2493,22 +2725,90 @@ Proof.
   rewrite Hcast. cbn [bind].
   destruct (n s<> alloc_vec_Vec_len env.(env_Env_func_type_indices));
     [eexists; split; [reflexivity|]; intros ? Hc; discriminate|].
-  unfold module_validate_code_entries.
-  destruct (validate_code_entries_loop_ok
-              (List.length (vec_list env.(env_Env_func_type_indices)))
-              data env p 0%usize) as [r2 [Hr2 Hpost]].
-  - assert (Hz : to_Z 0%usize = 0) by reflexivity. lia.
-  - apply (env_small_mono _ pos); [exact Henv | lia].
-  - exact Hple.
-  - exact Hlen.
-  - rewrite Hr2. cbn [bind].
-    destruct r2 as [q1|e]; [|try_err_post].
-    rewrite branch_ok. cbn [bind].
-    destruct (Hpost _ (ltac:(reflexivity))) as [Hlt2 Hq1].
-    destruct (q1 s<> end1);
-      [eexists; split; [reflexivity|]; intros ? Hc; discriminate|].
-    eexists. split; [reflexivity|]. intros q' Hc. injection Hc as <-.
+  eexists. split; [reflexivity|]. intros cs Hc. injection Hc as <-.
+  cbn. lia.
+Qed.
+
+Lemma validate_code_with_ok :
+  forall V (inst : module_CodeVisitor_t V) data pos env vis,
+  code_hooks_total inst data env ->
+  env_small env pos ->
+  to_Z pos <= dlen data ->
+  dlen data <= module_bytes ->
+  exists r vis', module_validate_code_with inst data pos env vis = Ok (r, vis')
+            /\ forall q', r = Core_result_Result_Ok q' ->
+                 to_Z pos <= to_Z q' /\ to_Z q' <= dlen data.
+Proof.
+  intros V inst data pos env vis Hhooks Henv Hpos Hlen.
+  pose proof Hhooks as [Hneed _].
+  unfold module_validate_code_with.
+  (* the header's own read, waited for before it happens *)
+  pose proof (usize_nonneg pos).
+  assert (Hhdr : to_Z pos + to_Z limits_max_code_header_bytes <= usize_max).
+  { unfold limits_max_code_header_bytes, limits_max_code_header_bytes_body.
+    pose proof module_bytes_fits. cbn. lia. }
+  destruct (usize_add_ok pos limits_max_code_header_bytes Hhdr) as [pw [Hpw _]].
+  rewrite Hpw. cbn [bind].
+  destruct (Hneed vis pw) as [rn [vis1 Hn]]. rewrite Hn. cbn [bind].
+  destruct rn as [u|en]; [|try_err_post].
+  rewrite branch_ok. cbn [bind].
+  destruct (code_section_ok data pos env Hpos) as [r [Hr Hpost]].
+  rewrite Hr. cbn [bind].
+  destruct r as [oc|e]; [|try_err_post].
+  rewrite branch_ok. cbn [bind].
+  destruct oc as [cs|].
+  - (* the section is here, so the entries follow and have to fill it *)
+    destruct (Hpost cs (ltac:(reflexivity))) as [Hpe [Hple [Hpen Hend]]].
+    unfold module_validate_code_entries_with.
+    destruct (validate_code_entries_with_loop_ok V inst
+                (List.length (vec_list env.(env_Env_func_type_indices)))
+                data env vis1 cs.(module_CodeSection_entries) 0%usize)
+      as [r2 [vis2 [Hr2 Hpost2]]].
+    + exact Hhooks.
+    + assert (Hz : to_Z 0%usize = 0) by reflexivity. lia.
+    + apply (env_small_mono _ pos); [exact Henv | lia].
+    + exact Hple.
+    + exact Hlen.
+    + rewrite Hr2. cbn [bind].
+      destruct r2 as [q1|e]; [|try_err_post].
+      rewrite branch_ok. cbn [bind].
+      destruct (Hpost2 _ (ltac:(reflexivity))) as [Hlt2 Hq1].
+      destruct (q1 s<> cs.(module_CodeSection_end));
+        [eexists; eexists; split; [reflexivity|]; intros ? Hc; discriminate|].
+      eexists. eexists. split; [reflexivity|]. intros q' Hc. injection Hc as <-.
+      split; lia.
+  - (* no section, and the module declared no functions *)
+    eexists. eexists. split; [reflexivity|]. intros q' Hc. injection Hc as <-.
     split; lia.
+Qed.
+
+(** [validate_code] is the walk at the consumer that validates each entry where
+    it stands, so its own totality needs no hypothesis about hooks. *)
+Lemma validate_code_nop : forall data pos env r,
+  module_validate_code_with
+    module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor data pos env tt
+    = Ok (r, tt) ->
+  module_validate_code data pos env = Ok r.
+Proof.
+  intros data pos env r H. unfold module_validate_code. rewrite H. cbn [bind].
+  reflexivity.
+Qed.
+
+Corollary validate_code_ok : forall data pos env,
+  env_small env pos ->
+  to_Z pos <= dlen data ->
+  dlen data <= module_bytes ->
+  exists r, module_validate_code data pos env = Ok r
+            /\ forall q', r = Core_result_Result_Ok q' ->
+                 to_Z pos <= to_Z q' /\ to_Z q' <= dlen data.
+Proof.
+  intros data pos env Henv Hpos Hlen.
+  destruct (validate_code_with_ok _
+              module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor data
+              pos env tt (validating_code_hooks_total data env) Henv Hpos Hlen)
+    as [r [vis' [Hr Hpost]]].
+  exists r. split; [|exact Hpost].
+  apply validate_code_nop. destruct vis'. exact Hr.
 Qed.
 
 (* ================================================================== *)
@@ -2630,63 +2930,91 @@ Qed.
 
 (** Spec 5.5.16 from the code section on: the data section, and custom
     sections around it. Same measure as [decode_env_loop]. *)
-Lemma decode_tail_loop_ok : forall m data env segments q seen,
+Lemma decode_tail_with_loop_ok :
+  forall V (inst : module_ModuleVisitor_t V) m data env vis segments q seen,
+  module_hooks_total inst ->
   dlen data - to_Z q <= Z.of_nat m ->
   Z.of_nat (List.length (vec_list segments)) <= to_Z q ->
   to_Z q <= dlen data ->
   dlen data <= module_bytes ->
-  exists r, module_decode_tail_loop data env segments q seen = Ok r.
+  exists r vis',
+    module_decode_tail_with_loop inst data env vis segments q seen = Ok (r, vis').
 Proof.
-  induction m as [|m IH]; intros data env segments q seen Hmeas Hacc Hq Hlen;
-    unfold module_decode_tail_loop; rewrite loop_unfold; cbn beta iota;
+  intros V inst m. induction m as [|m IH];
+    intros data env vis segments q seen Hhooks Hmeas Hacc Hq Hlen;
+    unfold module_decode_tail_with_loop; rewrite loop_unfold; cbn beta iota;
     destruct (q s>= slice_len data) eqn:Hge;
-    [eexists; reflexivity| |eexists; reflexivity|].
+    [eexists; eexists; reflexivity| |eexists; eexists; reflexivity|].
   - exfalso. apply scalar_geb_false_lt in Hge. cbn in Hmeas. lia.
   - apply scalar_geb_false_lt in Hge.
     destruct (read_section_header_ok data q (ltac:(lia))) as [r Hr].
     rewrite Hr. cbn [bind].
-    destruct r as [[[id start] end1]|e]; [|try_err].
+    destruct r as [[[id start] end1]|e];
+      [|rewrite branch_err; cbn [bind]; rewrite from_residual_err;
+        cbn [bind]; eexists; eexists; reflexivity].
     rewrite branch_ok. cbn [bind].
     destruct (read_section_header_step _ _ _ _ _ Hr) as [Hlt [Hse Hend]].
     destruct (id s= module_section_custom).
     { destruct (decode_custom_section_ok data start end1 (ltac:(lia)) Hlen)
         as [r1 Hr1]. rewrite Hr1. cbn [bind].
-      destruct r1 as [u|e];
+      destruct r1 as [c|e];
         [|rewrite branch_err; cbn [bind]; rewrite from_residual_err;
-          cbn [bind]; eexists; reflexivity].
-      rewrite branch_ok. cbn [bind]. cbn beta iota.
-      apply (IH data env segments end1 seen);
-        [rewrite Nat2Z.inj_succ in Hmeas; lia | lia | lia | exact Hlen]. }
-    destruct (id s<> module_section_data); [eexists; reflexivity|].
-    destruct seen; [eexists; reflexivity|].
+          cbn [bind]; eexists; eexists; reflexivity].
+      rewrite branch_ok. cbn [bind].
+      destruct (Hhooks vis c) as [rh [vis1 Hh]]. rewrite Hh. cbn [bind].
+      destruct rh as [u|ev];
+        [|cbn beta iota; eexists; eexists; reflexivity].
+      cbn beta iota.
+      apply (IH data env vis1 segments end1 seen);
+        [exact Hhooks | rewrite Nat2Z.inj_succ in Hmeas; lia
+        | lia | lia | exact Hlen]. }
+    destruct (id s<> module_section_data); [eexists; eexists; reflexivity|].
+    destruct seen; [eexists; eexists; reflexivity|].
     destruct (decode_data_section_ok data start env (ltac:(lia)) Hlen)
       as [r1 [Hr1 Hpost]].
     rewrite Hr1. cbn [bind].
     destruct r1 as [[decoded p]|e];
       [|rewrite branch_err; cbn [bind]; rewrite from_residual_err;
-        cbn [bind]; eexists; reflexivity].
+        cbn [bind]; eexists; eexists; reflexivity].
     rewrite branch_ok. cbn [bind].
     destruct (Hpost _ _ (ltac:(reflexivity))) as [Hlt1 [Hp Hdl]].
-    destruct (p s<> end1) eqn:Hne; [eexists; reflexivity|].
+    destruct (p s<> end1) eqn:Hne; [eexists; eexists; reflexivity|].
     apply Bool.negb_false_iff in Hne. apply scalar_eqb_true in Hne.
     cbn beta iota.
-    apply (IH data env decoded end1 true);
-      [rewrite Nat2Z.inj_succ in Hmeas; lia | lia | lia | exact Hlen].
+    apply (IH data env vis decoded end1 true);
+      [exact Hhooks | rewrite Nat2Z.inj_succ in Hmeas; lia
+      | lia | lia | exact Hlen].
 Qed.
 
-Lemma decode_tail_ok : forall data pos env,
+Lemma decode_tail_with_ok :
+  forall V (inst : module_ModuleVisitor_t V) data pos env vis,
+  module_hooks_total inst ->
   to_Z pos <= dlen data ->
   dlen data <= module_bytes ->
-  exists r, module_decode_tail data pos env = Ok r.
+  exists r vis', module_decode_tail_with inst data pos env vis = Ok (r, vis').
 Proof.
-  intros data pos env Hpos Hlen. unfold module_decode_tail.
+  intros V inst data pos env vis Hhooks Hpos Hlen.
+  unfold module_decode_tail_with.
   pose proof (usize_nonneg pos).
-  apply (decode_tail_loop_ok (Z.to_nat (dlen data)) data env
+  apply (decode_tail_with_loop_ok V inst (Z.to_nat (dlen data)) data env vis
            (alloc_vec_Vec_new module_Data_t) pos false).
+  - exact Hhooks.
   - rewrite Z2Nat.id by (pose proof (usize_nonneg (slice_len data)); lia). lia.
   - cbn [vec_list alloc_vec_Vec_new proj1_sig List.length]. lia.
   - exact Hpos.
   - exact Hlen.
+Qed.
+
+Corollary decode_tail_ok : forall data pos env,
+  to_Z pos <= dlen data ->
+  dlen data <= module_bytes ->
+  exists r, module_decode_tail data pos env = Ok r.
+Proof.
+  intros data pos env Hpos Hlen.
+  destruct (decode_tail_with_ok _
+              module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor data pos
+              env tt nop_module_hooks_total Hpos Hlen) as [r [vis' Hr]].
+  exists r. apply decode_tail_nop. destruct vis'. exact Hr.
 Qed.
 
 (* ================================================================== *)

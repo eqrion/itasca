@@ -71,6 +71,11 @@ pub struct Element {
 }
 
 /// Everything the binary declares before the code section.
+///
+/// The accessor half of the interface: every field is what `decode_env` read
+/// out of the binary, and reading them is what a compiler builds its metadata
+/// from. They are writable too, which the type system cannot help with; an
+/// `Env` a caller altered is one no theorem is about.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone)]
 pub struct Env {
@@ -108,6 +113,14 @@ pub struct Env {
 }
 
 impl Env {
+    /// The empty environment `decode_env` starts from.
+    ///
+    /// Public because the crate's own tests build environments to drive
+    /// `opiter::validate_body` against, and for no other reason. An `Env` that
+    /// did not come out of `decode_env` satisfies none of the conditions the
+    /// code-section entry points carry: soundness is stated relative to the
+    /// environment handed over, and `env_small`, which their no-panic results
+    /// need, is `decode_env`'s postcondition. See the crate documentation.
     #[allow(clippy::new_without_default)]
     pub fn new() -> Env {
         Env {

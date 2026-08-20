@@ -4,7 +4,6 @@ use veriwasm::env::*;
 use veriwasm::error::OpError;
 use veriwasm::limits::*;
 use veriwasm::opiter::*;
-use veriwasm::reader::*;
 use veriwasm::types::*;
 
 fn empty_env() -> Env {
@@ -137,17 +136,6 @@ fn float_consts_push_their_type() {
 fn a_truncated_float_immediate_is_rejected() {
     assert!(!accepts(&[OP_F32_CONST, 0, 0, 0, OP_END], &[ValueType::F32]));
     assert!(!accepts(&[OP_F64_CONST, 0, 0, 0, 0, OP_END], &[ValueType::F64]));
-}
-
-#[test]
-fn float_immediates_are_little_endian_bit_patterns() {
-    assert_eq!(read_f32_bits(&[0x00, 0x00, 0x80, 0x3f], 0).unwrap(),
-               (0x3f800000, 4));
-    assert_eq!(read_f64_bits(&[0, 0, 0, 0, 0, 0, 0xf0, 0x3f], 0).unwrap(),
-               (0x3ff0000000000000, 8));
-    assert_eq!(read_f32_bits(&[0xff, 0xff, 0xff, 0xff], 0).unwrap(),
-               (u32::MAX, 4));
-    assert_eq!(read_f64_bits(&[0xff; 8], 0).unwrap(), (u64::MAX, 8));
 }
 
 #[test]
@@ -676,104 +664,6 @@ fn store_leaves_nothing_behind() {
     assert!(!accepts(&body, &[ValueType::I32]));
 }
 
-// ---- Cursor primitives ----
-
-#[test]
-fn leb128_single_byte() {
-    assert_eq!(read_u32_leb(&[0x00], 0).unwrap(), (0, 1));
-    assert_eq!(read_u32_leb(&[0x7f], 0).unwrap(), (127, 1));
-}
-
-#[test]
-fn leb128_multi_byte() {
-    assert_eq!(read_u32_leb(&[0x80, 0x01], 0).unwrap(), (128, 2));
-    assert_eq!(read_u32_leb(&[0xe5, 0x8e, 0x26], 0).unwrap(), (624485, 3));
-}
-
-#[test]
-fn leb128_u32_max() {
-    let bytes = [0xff, 0xff, 0xff, 0xff, 0x0f];
-    assert_eq!(read_u32_leb(&bytes, 0).unwrap(), (u32::MAX, 5));
-}
-
-#[test]
-fn leb128_rejects_more_than_five_bytes() {
-    let bytes = [0x80, 0x80, 0x80, 0x80, 0x80, 0x00];
-    assert!(read_u32_leb(&bytes, 0).is_err());
-}
-
-#[test]
-fn leb128_rejects_overflowing_fifth_byte() {
-    // The fifth byte may contribute only four bits to a u32.
-    let bytes = [0x80, 0x80, 0x80, 0x80, 0x10];
-    assert!(read_u32_leb(&bytes, 0).is_err());
-}
-
-#[test]
-fn leb128_rejects_truncated_input() {
-    assert!(read_u32_leb(&[0x80], 0).is_err());
-    assert!(read_u32_leb(&[], 0).is_err());
-}
-
-#[test]
-fn leb128_signed_roundtrip() {
-    assert_eq!(read_s32_leb(&[0x00], 0).unwrap(), (0, 1));
-    assert_eq!(read_s32_leb(&[0x01], 0).unwrap(), (1, 1));
-    assert_eq!(read_s32_leb(&[0x7f], 0).unwrap(), (-1, 1));
-    assert_eq!(read_s32_leb(&[0x3f], 0).unwrap(), (63, 1));
-    assert_eq!(read_s32_leb(&[0x40], 0).unwrap(), (-64, 1));
-    assert_eq!(read_s32_leb(&[0xc0, 0xbb, 0x78], 0).unwrap(), (-123456, 3));
-}
-
-#[test]
-fn leb128_signed_32_rejects_out_of_range() {
-    // Five bytes whose value is 2^31, one past i32::MAX.
-    assert!(read_s32_leb(&[0x80, 0x80, 0x80, 0x80, 0x08], 0).is_err());
-    assert!(read_s32_leb(&[0x80, 0x80, 0x80, 0x80, 0x80, 0x00], 0).is_err());
-}
-
-#[test]
-fn leb128_signed_64_roundtrip() {
-    assert_eq!(read_s64_leb(&[0x00], 0).unwrap(), (0, 1));
-    assert_eq!(read_s64_leb(&[0x7f], 0).unwrap(), (-1, 1));
-    assert_eq!(read_s64_leb(&[0xc0, 0xbb, 0x78], 0).unwrap(), (-123456, 3));
-    // i64::MIN and i64::MAX, ten bytes each, the tenth carrying one bit.
-    let min = [0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x7f];
-    assert_eq!(read_s64_leb(&min, 0).unwrap(), (i64::MIN, 10));
-    let max = [0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00];
-    assert_eq!(read_s64_leb(&max, 0).unwrap(), (i64::MAX, 10));
-}
-
-#[test]
-fn leb128_signed_64_rejects_out_of_range() {
-    // An eleventh byte is one too many.
-    let eleven = [0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x00];
-    assert!(read_s64_leb(&eleven, 0).is_err());
-    // Ten bytes, but the tenth carries more than the one bit left.
-    let wide = [0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x01];
-    assert!(read_s64_leb(&wide, 0).is_err());
-}
-
-// ---- Protocol ----
-
-#[test]
-fn a_reader_that_does_not_match_the_pending_opcode_fails() {
-    let data = [OP_BLOCK, 0x40, OP_END, OP_END];
-    let mut st = start_function(&[]);
-    let op = read_op(&mut st, &data).unwrap();
-    assert_eq!(op, OP_BLOCK);
-    // Dispatching to the wrong reader must be caught, not misparse.
-    assert!(read_nop(&mut st).is_err());
-    // The control stack is untouched, so the correct reader still works.
-    assert!(read_block(&mut st, &data).is_ok());
-}
-
-#[test]
-fn a_reader_without_a_pending_opcode_fails() {
-    let mut st = start_function(&[]);
-    assert!(read_nop(&mut st).is_err());
-}
-
 #[test]
 fn unrecognized_opcode_is_rejected() {
     assert!(!accepts(&[0xfe, OP_END], &[]));
@@ -899,32 +789,6 @@ fn unary_operators_are_polymorphic_after_unreachable() {
     ));
 }
 
-#[test]
-fn the_table_covers_every_numeric_opcode_in_its_ranges() {
-    // 0x45, 0x50, 0x67-0x69, 0x79-0x7b, 0x8b-0x91, 0x99-0x9f, 0xa7-0xbf.
-    let mut covered = 0;
-    for op in 0u8..=0xffu8 {
-        if convert_types(op).is_some() {
-            covered += 1;
-        }
-    }
-    assert_eq!(covered, 47);
-}
-
-#[test]
-fn the_table_has_no_row_outside_the_numeric_block() {
-    for op in 0u8..=0xffu8 {
-        let in_range = op == 0x45
-            || op == 0x50
-            || (0x67..=0x69).contains(&op)
-            || (0x79..=0x7b).contains(&op)
-            || (0x8b..=0x91).contains(&op)
-            || (0x99..=0x9f).contains(&op)
-            || (0xa7..=0xbf).contains(&op);
-        assert_eq!(convert_types(op).is_some(), in_range, "opcode {op:#x}");
-    }
-}
-
 // ---- The numeric table: binary operators and comparisons ----
 
 #[test]
@@ -1031,41 +895,6 @@ fn a_binary_operator_needs_two_operands() {
         &[OP_I32_CONST, 1, OP_I32_ADD, OP_END],
         &[ValueType::I32]
     ));
-}
-
-#[test]
-fn the_binary_table_covers_its_ranges_exactly() {
-    // 0x46-0x4f, 0x51-0x5a, 0x5b-0x60, 0x61-0x66 comparisons;
-    // 0x6a-0x78, 0x7c-0x8a, 0x92-0x98, 0xa0-0xa6 binary.
-    for op in 0u8..=0xffu8 {
-        let in_range = (0x46..=0x4f).contains(&op)
-            || (0x51..=0x66).contains(&op)
-            || (0x6a..=0x78).contains(&op)
-            || (0x7c..=0x8a).contains(&op)
-            || (0x92..=0x98).contains(&op)
-            || (0xa0..=0xa6).contains(&op);
-        assert_eq!(binary_types(op).is_some(), in_range, "opcode {op:#x}");
-    }
-}
-
-#[test]
-fn the_two_tables_do_not_overlap() {
-    for op in 0u8..=0xffu8 {
-        assert!(
-            !(convert_types(op).is_some() && binary_types(op).is_some()),
-            "opcode {op:#x} is in both tables"
-        );
-    }
-}
-
-#[test]
-fn every_opcode_from_0x45_to_0xbf_is_in_one_of_the_tables() {
-    for op in 0x45u8..=0xbfu8 {
-        assert!(
-            convert_types(op).is_some() || binary_types(op).is_some(),
-            "opcode {op:#x} is in neither table"
-        );
-    }
 }
 
 // ---- The local operators ----
