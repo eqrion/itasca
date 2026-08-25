@@ -5,7 +5,7 @@
 
 opam_prefix := `opam var prefix --switch=wasmcert 2>/dev/null`
 coqbin := opam_prefix / "bin"
-coqflags := "-R theories Veriwasm -R vendor/aeneas/backends/coq Veriwasm -R vendor/WasmCert-Coq/_build/default/theories Wasm"
+coqflags := "-R theories Itasca -R vendor/aeneas/backends/coq Itasca -R vendor/WasmCert-Coq/_build/default/theories Wasm"
 njobs := `nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4`
 
 # List available recipes.
@@ -37,9 +37,9 @@ assumptions module theorem:
     # Kernel bypasses show up as "assumed to be guarded" and "assumed to be
     # positive" lines. Example: just assumptions OpIter_Validate validate_body_sound
     set -eu
-    tmp=$(mktemp -d "${TMPDIR:-/tmp}/veriwasm.XXXXXX")
+    tmp=$(mktemp -d "${TMPDIR:-/tmp}/itasca.XXXXXX")
     trap 'rm -rf "$tmp"' EXIT
-    printf 'Require Import Veriwasm.%s.\nPrint Assumptions %s.\n' \
+    printf 'Require Import Itasca.%s.\nPrint Assumptions %s.\n' \
         '{{ module }}' '{{ theorem }}' > "$tmp/PrintAx.v"
     {{ coqbin }}/coqc {{ coqflags }} "$tmp/PrintAx.v"
 
@@ -49,7 +49,7 @@ profile file:
     # How a quadratic tactic chain that cost 116 of 119 seconds in one file
     # was found.
     set -eu
-    out=$(mktemp "${TMPDIR:-/tmp}/veriwasm.XXXXXX")
+    out=$(mktemp "${TMPDIR:-/tmp}/itasca.XXXXXX")
     trap 'rm -f "$out"' EXIT
     {{ coqbin }}/coqc -time {{ coqflags }} '{{ file }}' > "$out" 2>&1 || true
     echo "--- slowest sentences (secs, tactic) ---"
@@ -68,7 +68,7 @@ extract-check: extract
     # Held since the AST checker was deleted: nothing left in the Rust is
     # recursive over a Vec.
     set -eu
-    files="theories/Veriwasm_Types.v theories/Veriwasm_Funs.v"
+    files="theories/Itasca_Types.v theories/Itasca_Funs.v"
     if rg -q 'Unset (Guard|Positivity) Checking' $files; then
         echo "FAIL: extraction contains kernel bypasses:"
         rg -n 'Unset (Guard|Positivity) Checking' $files
@@ -79,22 +79,22 @@ extract-check: extract
 # Compare the hand-written externals against what Aeneas asks for.
 externals-check:
     #!/bin/sh
-    # Veriwasm_FunsExternal.v is hand-written; Aeneas only emits a template
+    # Itasca_FunsExternal.v is hand-written; Aeneas only emits a template
     # naming the axioms it needs. A missing one already fails the Coq build with
     # an unknown identifier, but a stale one just sits in the trust base
     # unnoticed, so compare both directions. A handful of extras are ours by
     # design (the loop combinator and friends); the point is to notice new ones.
     set -eu
-    template=theories/Veriwasm_FunsExternal_Template.v
+    template=theories/Itasca_FunsExternal_Template.v
     if [ ! -f "$template" ]; then
         echo "$template is missing; run 'just extract' first" >&2
         exit 1
     fi
-    tmp=$(mktemp -d "${TMPDIR:-/tmp}/veriwasm.XXXXXX")
+    tmp=$(mktemp -d "${TMPDIR:-/tmp}/itasca.XXXXXX")
     trap 'rm -rf "$tmp"' EXIT
     rg -U -o '^Axiom\s+([A-Za-z_0-9]+)' -r '$1' "$template" | sort > "$tmp/want"
     rg -U -o '^Axiom\s+([A-Za-z_0-9]+)' -r '$1' \
-        theories/Veriwasm_FunsExternal.v | sort > "$tmp/have"
+        theories/Itasca_FunsExternal.v | sort > "$tmp/have"
     missing=$(comm -23 "$tmp/want" "$tmp/have")
     extra=$(comm -13 "$tmp/want" "$tmp/have")
     if [ -n "$extra" ]; then

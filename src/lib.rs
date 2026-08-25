@@ -2,8 +2,8 @@
 //!
 //! ```
 //! # let wasm_bytes = b"\x00asm\x01\x00\x00\x00";
-//! let module = veriwasm::validate_module(wasm_bytes)?;
-//! # Ok::<(), veriwasm::error::Error>(())
+//! let module = itasca::validate_module(wasm_bytes)?;
+//! # Ok::<(), itasca::error::Error>(())
 //! ```
 //!
 //! Decoding and validation are one streaming pass, split into three parts:

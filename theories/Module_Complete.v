@@ -31,21 +31,21 @@ Require Import Coq.ZArith.ZArith.
 Require Import Coq.Lists.List.
 Import ListNotations.
 Local Open Scope Primitives_scope.
-Require Import Veriwasm.Aeneas_Specs.
-Require Import Veriwasm.Translate.
-Require Import Veriwasm.Spec_Binary.
-Require Import Veriwasm.Spec_Expr.
-Require Import Veriwasm.Spec_Module.
-Require Import Veriwasm.OpIter_State.
-Require Import Veriwasm.OpIter_Decode.
-Require Import Veriwasm.OpIter_Sim.
+Require Import Itasca.Aeneas_Specs.
+Require Import Itasca.Translate.
+Require Import Itasca.Spec_Binary.
+Require Import Itasca.Spec_Expr.
+Require Import Itasca.Spec_Module.
+Require Import Itasca.OpIter_State.
+Require Import Itasca.OpIter_Decode.
+Require Import Itasca.OpIter_Sim.
 (* for [op_spec_invert]: the opcode table read backwards, which is what the
    constant-expression reader's fallthrough needs *)
-Require Import Veriwasm.OpIter_Table.
-Require Import Veriwasm.OpIter_Visit.
-Require Import Veriwasm.OpIter_Complete.
-Require Import Veriwasm.Module_NoPanic.
-Require Import Veriwasm.Module_Sound.
+Require Import Itasca.OpIter_Table.
+Require Import Itasca.OpIter_Visit.
+Require Import Itasca.OpIter_Complete.
+Require Import Itasca.Module_NoPanic.
+Require Import Itasca.Module_Sound.
 
 (* [type_checker_reflects_typing] is only here for [context_reverseK]: the two
    contexts differ by one [context_reverse], and undoing it needs the involution *)
@@ -2625,7 +2625,7 @@ Qed.
     [exportdesc_wasm10]. *)
 Lemma export_desc_complete :
   forall env (kind : u8) (idx : scalar U32) r d x,
-  Veriwasm.Aeneas_Specs.module_export_desc env kind idx = Ok r ->
+  Itasca.Aeneas_Specs.module_export_desc env kind idx = Ok r ->
   exportdesc_wasm10 env d ->
   translate_idx idx = x ->
   ((to_Z kind = 0 /\ d = MED_func x) \/ (to_Z kind = 1 /\ d = MED_table x)
@@ -2634,7 +2634,7 @@ Lemma export_desc_complete :
 Proof.
   intros env kind idx r d x Hrun Hok Hidx Hcase.
   pose proof Hrun as Hw.
-  unfold Veriwasm.Aeneas_Specs.module_export_desc in Hw.
+  unfold Itasca.Aeneas_Specs.module_export_desc in Hw.
   destruct (scalar_cast U32 Usize idx) as [i|] eqn:Hcast; cbn [bind] in Hw;
     [|discriminate].
   assert (Hi : to_Z i = to_Z idx)
@@ -2767,7 +2767,7 @@ Proof.
       as [idx [q3 [Eleb [Hidx Hq3]]]].
     rewrite Eleb in Hw. cbn [bind] in Hw. rewrite branch_ok in Hw.
     cbn [bind] in Hw.
-    destruct (Veriwasm.Aeneas_Specs.module_export_desc env kind idx)
+    destruct (Itasca.Aeneas_Specs.module_export_desc env kind idx)
       as [r3|] eqn:E3; cbn [bind] in Hw; [|discriminate].
     assert (Hkc : (to_Z kind = 0 /\ d = MED_func x)
                   \/ (to_Z kind = 1 /\ d = MED_table x)
@@ -3440,12 +3440,12 @@ Definition module_hooks_accept {V : Type} (inst : module_ModuleVisitor_t V) : Pr
       = Ok (Core_result_Result_Ok tt, v').
 
 Lemma nop_module_hooks_accept :
-  module_hooks_accept module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor.
+  module_hooks_accept module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor.
 Proof.
   unfold module_hooks_accept,
-         module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor.
+         module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor.
   intros v c. cbn [module_ModuleVisitor_t_on_custom_section].
-  unfold module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor_on_custom_section.
+  unfold module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor_on_custom_section.
   eexists. reflexivity.
 Qed.
 
@@ -3565,7 +3565,7 @@ Proof.
   unfold module_decode_tail_with in Hw.
   pose proof (usize_nonneg pos).
   apply (decode_tail_with_loop_complete _
-           module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor
+           module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor
            (Z.to_nat (dlen data)) data env tt tt
            (alloc_vec_Vec_new module_Data_t) pos false r datas);
     [ exact nop_module_hooks_accept
@@ -4015,7 +4015,7 @@ Proof.
   intros elems datas refs data pos env index r c rest tidx Hmod Hpos Htw10
          Hfw10 Hnthi Hct Hcode Hlocs Hbody Hrun.
   apply (validate_code_entry_with_complete _
-           visit_NopVisitor_Insts_VeriwasmVisitOpVisitor tt tt
+           visit_NopVisitor_Insts_ItascaVisitOpVisitor tt tt
            elems datas refs data pos env index r c rest tidx nop_hooks_accept
            Hmod Hpos Htw10 Hfw10 Hnthi Hct Hcode Hlocs Hbody).
   apply code_entry_nop_inv. exact Hrun.
@@ -4112,7 +4112,7 @@ Definition code_hooks_accept {V : Type} (inst : module_CodeVisitor_t V)
 
 Lemma validating_code_hooks_accept : forall data env,
   code_hooks_accept
-    module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor data env.
+    module_ValidatingCodeVisitor_Insts_ItascaModuleCodeVisitor data env.
 Proof.
   intros data env. split.
   - intros v e. destruct v. exists tt. apply Module_Sound.validating_need_bytes.
@@ -6599,7 +6599,7 @@ Proof.
   rewrite branch_ok in Hw. cbn [bind] in Hw.
   assert (Hz : to_Z 0%u8 = 0) by reflexivity.
   apply (decode_env_with_loop_complete _
-           module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor
+           module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor
            (Z.to_nat (dlen data)) data es tt tt env0 p 0%u8 rest r);
     [ exact nop_module_hooks_accept
     | pose proof (usize_nonneg p);

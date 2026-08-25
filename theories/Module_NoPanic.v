@@ -29,11 +29,11 @@ Require Import Coq.ZArith.ZArith.
 Require Import Coq.Lists.List.
 Import ListNotations.
 Local Open Scope Primitives_scope.
-Require Import Veriwasm.Aeneas_Specs.
-Require Import Veriwasm.OpIter_State.
-Require Import Veriwasm.OpIter_Decode.
-Require Import Veriwasm.OpIter_Visit.
-Require Import Veriwasm.OpIter_NoPanic.
+Require Import Itasca.Aeneas_Specs.
+Require Import Itasca.OpIter_State.
+Require Import Itasca.OpIter_Decode.
+Require Import Itasca.OpIter_Visit.
+Require Import Itasca.OpIter_NoPanic.
 
 Open Scope Z_scope.
 
@@ -2261,12 +2261,12 @@ Definition module_hooks_total {V : Type} (inst : module_ModuleVisitor_t V) : Pro
     inst.(module_ModuleVisitor_t_on_custom_section) v c = Ok (r, v').
 
 Lemma nop_module_hooks_total :
-  module_hooks_total module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor.
+  module_hooks_total module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor.
 Proof.
   unfold module_hooks_total,
-         module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor.
+         module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor.
   intros v c. cbn [module_ModuleVisitor_t_on_custom_section].
-  unfold module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor_on_custom_section.
+  unfold module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor_on_custom_section.
   eexists. eexists. reflexivity.
 Qed.
 
@@ -2347,7 +2347,7 @@ Qed.
     level down. The projection is the only content: [decode_env] is
     [decode_env_with] at [tt] with the visitor state thrown away. *)
 Lemma decode_env_nop : forall data r,
-  module_decode_env_with module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor
+  module_decode_env_with module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor
     data tt = Ok (r, tt) ->
   module_decode_env data = Ok r.
 Proof.
@@ -2355,7 +2355,7 @@ Proof.
 Qed.
 
 Lemma decode_tail_nop : forall data pos env r,
-  module_decode_tail_with module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor
+  module_decode_tail_with module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor
     data pos env tt = Ok (r, tt) ->
   module_decode_tail data pos env = Ok r.
 Proof.
@@ -2395,7 +2395,7 @@ Corollary decode_env_ok : forall data,
 Proof.
   intros data Hlen.
   destruct (decode_env_with_ok _
-              module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor tt data
+              module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor tt data
               nop_module_hooks_total Hlen) as [r [vis' [Hr Hpost]]].
   exists r. split; [|exact Hpost].
   apply decode_env_nop. destruct vis'. exact Hr.
@@ -2424,7 +2424,7 @@ Proof.
 Qed.
 
 Lemma code_entry_nop : forall data pos env index r,
-  module_validate_code_entry_with visit_NopVisitor_Insts_VeriwasmVisitOpVisitor
+  module_validate_code_entry_with visit_NopVisitor_Insts_ItascaVisitOpVisitor
     data pos env index tt = Ok (r, tt) ->
   module_validate_code_entry data pos env index = Ok r.
 Proof.
@@ -2434,12 +2434,12 @@ Qed.
 
 Lemma code_entry_nop_inv : forall data pos env index r,
   module_validate_code_entry data pos env index = Ok r ->
-  module_validate_code_entry_with visit_NopVisitor_Insts_VeriwasmVisitOpVisitor
+  module_validate_code_entry_with visit_NopVisitor_Insts_ItascaVisitOpVisitor
     data pos env index tt = Ok (r, tt).
 Proof.
   intros data pos env index r H. unfold module_validate_code_entry in H.
   destruct (module_validate_code_entry_with
-              visit_NopVisitor_Insts_VeriwasmVisitOpVisitor data pos env index tt)
+              visit_NopVisitor_Insts_ItascaVisitOpVisitor data pos env index tt)
     as [[r0 v0]|] eqn:Hw; cbn [bind] in H; [|discriminate].
   injection H as <-. destruct v0. reflexivity.
 Qed.
@@ -2539,7 +2539,7 @@ Corollary validate_code_entry_ok : forall data pos env index,
 Proof.
   intros data pos env index Henv Hpos Hlen.
   destruct (validate_code_entry_with_ok _
-              visit_NopVisitor_Insts_VeriwasmVisitOpVisitor tt data pos env index
+              visit_NopVisitor_Insts_ItascaVisitOpVisitor tt data pos env index
               nop_hooks_total Henv Hpos Hlen) as [r [vis' [Hw Hq]]].
   destruct vis'. exists r. split; [apply code_entry_nop; exact Hw | exact Hq].
 Qed.
@@ -2596,17 +2596,17 @@ Definition code_hooks_total {V : Type} (inst : module_CodeVisitor_t V)
 
 Lemma validating_code_hooks_total : forall data env,
   code_hooks_total
-    module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor data env.
+    module_ValidatingCodeVisitor_Insts_ItascaModuleCodeVisitor data env.
 Proof.
   intros data env. unfold code_hooks_total,
-    module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor.
+    module_ValidatingCodeVisitor_Insts_ItascaModuleCodeVisitor.
   split.
   - intros v e. cbn [module_CodeVisitor_t_on_need_bytes].
-    unfold module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor_on_need_bytes.
+    unfold module_ValidatingCodeVisitor_Insts_ItascaModuleCodeVisitor_on_need_bytes.
     eexists. eexists. reflexivity.
   - intros v index pos contents fin Henv Hpos Hlen.
     cbn [module_CodeVisitor_t_on_code_entry].
-    unfold module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor_on_code_entry.
+    unfold module_ValidatingCodeVisitor_Insts_ItascaModuleCodeVisitor_on_code_entry.
     destruct (validate_code_entry_ok data pos env index Henv Hpos Hlen)
       as [r [Hr _]].
     rewrite Hr. cbn [bind].
@@ -2786,7 +2786,7 @@ Qed.
     it stands, so its own totality needs no hypothesis about hooks. *)
 Lemma validate_code_nop : forall data pos env r,
   module_validate_code_with
-    module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor data pos env tt
+    module_ValidatingCodeVisitor_Insts_ItascaModuleCodeVisitor data pos env tt
     = Ok (r, tt) ->
   module_validate_code data pos env = Ok r.
 Proof.
@@ -2804,7 +2804,7 @@ Corollary validate_code_ok : forall data pos env,
 Proof.
   intros data pos env Henv Hpos Hlen.
   destruct (validate_code_with_ok _
-              module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor data
+              module_ValidatingCodeVisitor_Insts_ItascaModuleCodeVisitor data
               pos env tt (validating_code_hooks_total data env) Henv Hpos Hlen)
     as [r [vis' [Hr Hpost]]].
   exists r. split; [|exact Hpost].
@@ -3012,7 +3012,7 @@ Corollary decode_tail_ok : forall data pos env,
 Proof.
   intros data pos env Hpos Hlen.
   destruct (decode_tail_with_ok _
-              module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor data pos
+              module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor data pos
               env tt nop_module_hooks_total Hpos Hlen) as [r [vis' Hr]].
   exists r. apply decode_tail_nop. destruct vis'. exact Hr.
 Qed.

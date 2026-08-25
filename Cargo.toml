@@ -1,5 +1,5 @@
 [package]
-name = "veriwasm"
+name = "itasca"
 version = "0.1.0"
 edition = "2021"
 description = "Formally verified WebAssembly 1.0 module validator"

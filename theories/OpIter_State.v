@@ -13,7 +13,7 @@ Require Import Coq.ZArith.ZArith.
 Require Import Coq.Lists.List.
 Import ListNotations.
 Local Open Scope Primitives_scope.
-Require Import Veriwasm.Aeneas_Specs.
+Require Import Itasca.Aeneas_Specs.
 
 Open Scope Z_scope.
 

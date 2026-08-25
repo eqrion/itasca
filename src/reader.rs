@@ -166,7 +166,7 @@ pub fn read_f64_bits(data: &[u8], pos: usize) -> Result<(u64, usize)> {
 }
 
 // Declared here at the bottom so that adding them moved no line above: the
-// extraction records a source line per definition and `Veriwasm_Funs.v` is
+// extraction records a source line per definition and `Itasca_Funs.v` is
 // generated and committed.
 #[cfg(test)]
 mod tests {

@@ -311,7 +311,7 @@ count behind each theorem; the headline results reach 52, in three groups.
 - 17 in `theories/Aeneas_Specs.v`, describing what Rust standard-library
   operations do (what `Vec::pop` returns, what indexing a slice gives you, what
   a sub-slice contains) and what two of our own derived `PartialEq` impls do.
-- 10 of the 13 in `theories/Veriwasm_FunsExternal.v`, which Aeneas emits for
+- 10 of the 13 in `theories/Itasca_FunsExternal.v`, which Aeneas emits for
   library functions it does not translate. The other three are defined and
   unreached.
 - 21 from Aeneas's own `Primitives.v`, which are the operations the first group

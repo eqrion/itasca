@@ -1,12 +1,12 @@
--R theories Veriwasm
--R vendor/aeneas/backends/coq Veriwasm
+-R theories Itasca
+-R vendor/aeneas/backends/coq Itasca
 -R vendor/WasmCert-Coq/_build/default/theories Wasm
 
 vendor/aeneas/backends/coq/Primitives.v
 
-theories/Veriwasm_Types.v
-theories/Veriwasm_FunsExternal.v
-theories/Veriwasm_Funs.v
+theories/Itasca_Types.v
+theories/Itasca_FunsExternal.v
+theories/Itasca_Funs.v
 theories/Aeneas_Specs.v
 theories/Translate.v
 

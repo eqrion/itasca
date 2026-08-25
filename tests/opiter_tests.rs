@@ -1,10 +1,10 @@
 //! Tests for the streaming decode+validate function-body validator.
 
-use veriwasm::env::*;
-use veriwasm::error::OpError;
-use veriwasm::limits::*;
-use veriwasm::opiter::*;
-use veriwasm::types::*;
+use itasca::env::*;
+use itasca::error::OpError;
+use itasca::limits::*;
+use itasca::opiter::*;
+use itasca::types::*;
 
 fn empty_env() -> Env {
     Env::new()

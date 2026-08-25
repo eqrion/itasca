@@ -22,15 +22,15 @@ Require Import Coq.ZArith.ZArith.
 Require Import Coq.Lists.List.
 Import ListNotations.
 Local Open Scope Primitives_scope.
-Require Import Veriwasm.Aeneas_Specs.
-Require Import Veriwasm.Translate.
-Require Import Veriwasm.Spec_Binary.
-Require Import Veriwasm.OpIter_Visit.
-Require Import Veriwasm.OpIter_State.
-Require Import Veriwasm.OpIter_Decode.
-Require Import Veriwasm.OpIter_Sim.
-Require Import Veriwasm.OpIter_Expr.
-Require Import Veriwasm.OpIter_Table.
+Require Import Itasca.Aeneas_Specs.
+Require Import Itasca.Translate.
+Require Import Itasca.Spec_Binary.
+Require Import Itasca.OpIter_Visit.
+Require Import Itasca.OpIter_State.
+Require Import Itasca.OpIter_Decode.
+Require Import Itasca.OpIter_Sim.
+Require Import Itasca.OpIter_Expr.
+Require Import Itasca.OpIter_Table.
 From Wasm Require Import datatypes numerics type_checker operations typing.
 From Wasm Require Import type_checker_reflects_typing.
 
@@ -1424,12 +1424,12 @@ Qed.
     unit, so a run of the one is a run of the other. *)
 Lemma validate_body_nop : forall data module ctx r,
   opiter_validate_body data module ctx = Ok r ->
-  opiter_validate_body_with visit_NopVisitor_Insts_VeriwasmVisitOpVisitor
+  opiter_validate_body_with visit_NopVisitor_Insts_ItascaVisitOpVisitor
     data module ctx tt = Ok (r, tt).
 Proof.
   intros data module ctx r H. unfold opiter_validate_body in H.
   destruct (opiter_validate_body_with
-              visit_NopVisitor_Insts_VeriwasmVisitOpVisitor data module ctx tt)
+              visit_NopVisitor_Insts_ItascaVisitOpVisitor data module ctx tt)
     as [[r0 v0]|] eqn:Hw; cbn [bind] in H; [|discriminate].
   injection H as <-. destruct v0. reflexivity.
 Qed.
@@ -1450,7 +1450,7 @@ Corollary validate_body_sound : forall C0 module ctx data,
 Proof.
   intros C0 module ctx data Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables
          Hlen1 H.
-  apply (validate_body_with_sound _ visit_NopVisitor_Insts_VeriwasmVisitOpVisitor
+  apply (validate_body_with_sound _ visit_NopVisitor_Insts_ItascaVisitOpVisitor
            tt tt C0 module ctx data Hmems Hlocals Hglobals Hret Hfuncs Htypes
            Htables Hlen1).
   apply validate_body_nop. exact H.
@@ -1472,7 +1472,7 @@ Proof.
   intros C0 module ctx data Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables
          Hlen1 H.
   apply (validate_body_with_checker _
-           visit_NopVisitor_Insts_VeriwasmVisitOpVisitor tt tt C0 module ctx data
+           visit_NopVisitor_Insts_ItascaVisitOpVisitor tt tt C0 module ctx data
            Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables Hlen1).
   apply validate_body_nop. exact H.
 Qed.
@@ -1493,7 +1493,7 @@ Corollary validate_body_typed : forall C0 module ctx data,
 Proof.
   intros C0 module ctx data Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables
          Hlen1 H.
-  apply (validate_body_with_typed _ visit_NopVisitor_Insts_VeriwasmVisitOpVisitor
+  apply (validate_body_with_typed _ visit_NopVisitor_Insts_ItascaVisitOpVisitor
            tt tt C0 module ctx data Hmems Hlocals Hglobals Hret Hfuncs Htypes
            Htables Hlen1).
   apply validate_body_nop. exact H.

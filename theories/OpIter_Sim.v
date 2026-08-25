@@ -19,13 +19,13 @@ Require Import Coq.ZArith.ZArith.
 Require Import Coq.Lists.List.
 Import ListNotations.
 Local Open Scope Primitives_scope.
-Require Import Veriwasm.Aeneas_Specs.
-Require Import Veriwasm.Translate.
+Require Import Itasca.Aeneas_Specs.
+Require Import Itasca.Translate.
 (* For [fconst_val], the bits-to-float function spec 4.2.3 calls [float_N]:
    the float [const] step lemmas name the value they push, and this is the
    one place it is written down. *)
-Require Import Veriwasm.Spec_Binary.
-Require Import Veriwasm.OpIter_State.
+Require Import Itasca.Spec_Binary.
+Require Import Itasca.OpIter_State.
 
 From Wasm Require Import datatypes type_checker operations typing.
 From mathcomp Require Import ssreflect ssrbool eqtype seq.
@@ -156,7 +156,7 @@ Definition translate_st (t : opiter_StackType_t) : value_type :=
   | Opiter_StackType_Bot => T_bot
   end.
 
-(** VeriWasm's operand stack grows rightward (last = top); WasmCert's grows
+(** Itasca's operand stack grows rightward (last = top); WasmCert's grows
     leftward, so every operand list is reversed on the way across. *)
 Definition translate_vals (l : list opiter_StackType_t) : list value_type :=
   List.rev (List.map translate_st l).

@@ -1,12 +1,12 @@
 //! Tests for the push interface: which hook fires, with what immediates, and
 //! what happens when a consumer declines.
 
-use veriwasm::env::*;
-use veriwasm::error::{OpError, VisitError};
-use veriwasm::limits::Limits;
-use veriwasm::opiter::*;
-use veriwasm::types::*;
-use veriwasm::visit::*;
+use itasca::env::*;
+use itasca::error::{OpError, VisitError};
+use itasca::limits::Limits;
+use itasca::opiter::*;
+use itasca::types::*;
+use itasca::visit::*;
 
 fn env_with_memory() -> Env {
     let mut env = Env::new();
@@ -570,10 +570,10 @@ impl OpVisitor for FrameRecorder {
 fn a_code_entry_hands_over_its_frame() {
     // (module (func (param i32) (local i64 i64) (result i32) local.get 0))
     let wasm = wat_module();
-    let (env, pos) = veriwasm::module::decode_env(&wasm).expect("env");
+    let (env, pos) = itasca::module::decode_env(&wasm).expect("env");
     // `pos` is the code section's id byte; one entry, so id + size + count = 3
     let mut r = FrameRecorder::default();
-    let end_pos = veriwasm::module::validate_code_entry_with(&wasm, pos + 3, &env, 0, &mut r);
+    let end_pos = itasca::module::validate_code_entry_with(&wasm, pos + 3, &env, 0, &mut r);
     assert!(end_pos.is_ok(), "entry rejected: {:?}", end_pos);
     // params come first, then the declared locals, in order
     assert_eq!(

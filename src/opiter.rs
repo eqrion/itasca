@@ -1611,7 +1611,7 @@ pub fn validate_body(data: &[u8], env: &Env, ctx: &Context) -> Result<()> {
 }
 
 // Declared here at the bottom so that adding them moved no line above: the
-// extraction records a source line per definition and `Veriwasm_Funs.v` is
+// extraction records a source line per definition and `Itasca_Funs.v` is
 // generated and committed.
 #[cfg(test)]
 mod tests {

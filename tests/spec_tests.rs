@@ -3,9 +3,9 @@
 //! `tests/spec/{valid,invalid}` are binaries extracted from
 //! `tests/third_party/wasm-spec` by `cargo run --example wast_extract` (see
 //! that example for how "valid"/"invalid" is decided from `.wast` directives).
-//! For each file, `veriwasm::validate_module` is checked against `wasmparser`
+//! For each file, `itasca::validate_module` is checked against `wasmparser`
 //! configured for exactly the Wasm 1.0 feature set, so a mismatch points at a
-//! real divergence rather than a proposal wasmparser accepts but veriwasm
+//! real divergence rather than a proposal wasmparser accepts but itasca
 //! never claimed to.
 
 use std::path::{Path, PathBuf};
@@ -37,7 +37,7 @@ fn wasmparser_accepts(bytes: &[u8]) -> bool {
 /// `br_table 0 1 1` inside unreachable code where labels 0 and 1 have
 /// different result types (f32 vs f64); Wasm 1.0 requires all of a
 /// `br_table`'s targets to agree regardless of reachability, but wasmparser
-/// accepts it anyway. veriwasm correctly rejects it, matching the suite.
+/// accepts it anyway. itasca correctly rejects it, matching the suite.
 const KNOWN_WASMPARSER_DIVERGENCES: &[&str] = &["unreached-invalid_87.wasm"];
 
 #[test]
@@ -54,19 +54,19 @@ fn spec_suite_agrees_with_wasmparser() {
     );
 
     let mut bucket_mismatches = Vec::new();
-    let mut veriwasm_mismatches = Vec::new();
+    let mut itasca_mismatches = Vec::new();
 
     for (files, expected_valid) in [(&valid_files, true), (&invalid_files, false)] {
         for path in files {
             let name = path.file_name().unwrap().to_string_lossy().to_string();
             let bytes = std::fs::read(path).unwrap();
-            let veriwasm_valid = veriwasm::validate_module(&bytes).is_ok();
+            let itasca_valid = itasca::validate_module(&bytes).is_ok();
 
             if KNOWN_WASMPARSER_DIVERGENCES.contains(&name.as_str()) {
-                if veriwasm_valid != expected_valid {
-                    veriwasm_mismatches.push(format!(
-                        "{name}: veriwasm says {}, but the spec suite says {}",
-                        if veriwasm_valid { "valid" } else { "invalid" },
+                if itasca_valid != expected_valid {
+                    itasca_mismatches.push(format!(
+                        "{name}: itasca says {}, but the spec suite says {}",
+                        if itasca_valid { "valid" } else { "invalid" },
                         if expected_valid { "valid" } else { "invalid" },
                     ));
                 }
@@ -83,10 +83,10 @@ fn spec_suite_agrees_with_wasmparser() {
                 continue;
             }
 
-            if veriwasm_valid != wasmparser_valid {
-                veriwasm_mismatches.push(format!(
-                    "{name}: veriwasm says {}, wasmparser says {}",
-                    if veriwasm_valid { "valid" } else { "invalid" },
+            if itasca_valid != wasmparser_valid {
+                itasca_mismatches.push(format!(
+                    "{name}: itasca says {}, wasmparser says {}",
+                    if itasca_valid { "valid" } else { "invalid" },
                     if wasmparser_valid { "valid" } else { "invalid" },
                 ));
             }
@@ -102,20 +102,20 @@ fn spec_suite_agrees_with_wasmparser() {
             eprintln!("  {m}");
         }
     }
-    if !veriwasm_mismatches.is_empty() {
+    if !itasca_mismatches.is_empty() {
         eprintln!(
-            "{} files where veriwasm disagrees with the expected result:",
-            veriwasm_mismatches.len()
+            "{} files where itasca disagrees with the expected result:",
+            itasca_mismatches.len()
         );
-        for m in &veriwasm_mismatches {
+        for m in &itasca_mismatches {
             eprintln!("  {m}");
         }
     }
     assert!(
-        bucket_mismatches.is_empty() && veriwasm_mismatches.is_empty(),
-        "{} bucket mismatches, {} veriwasm mismatches out of {} files",
+        bucket_mismatches.is_empty() && itasca_mismatches.is_empty(),
+        "{} bucket mismatches, {} itasca mismatches out of {} files",
         bucket_mismatches.len(),
-        veriwasm_mismatches.len(),
+        itasca_mismatches.len(),
         valid_files.len() + invalid_files.len(),
     );
 }
@@ -127,8 +127,8 @@ fn spec_suite_agrees_with_wasmparser() {
 // corpus. Both sides are projected to a small string form, so a mismatch reads
 // clearly and the comparison doesn't depend on either crate's type layout.
 
-fn valtype(t: veriwasm::types::ValueType) -> &'static str {
-    use veriwasm::types::ValueType;
+fn valtype(t: itasca::types::ValueType) -> &'static str {
+    use itasca::types::ValueType;
     match t {
         ValueType::I32 => "i32",
         ValueType::I64 => "i64",
@@ -144,9 +144,9 @@ fn limits(min: u64, max: Option<u64>) -> String {
     }
 }
 
-fn ours(t: &veriwasm::ExternType) -> String {
-    use veriwasm::types::Mut;
-    use veriwasm::ExternType;
+fn ours(t: &itasca::ExternType) -> String {
+    use itasca::types::Mut;
+    use itasca::ExternType;
     match t {
         ExternType::Func(ft) => {
             let ps: Vec<&str> = ft.params.iter().map(|t| valtype(*t)).collect();
@@ -265,19 +265,19 @@ fn extern_types_agree_with_wasmparser() {
     for path in &files {
         let name = path.file_name().unwrap().to_string_lossy().to_string();
         let bytes = std::fs::read(path).unwrap();
-        let Ok(module) = veriwasm::validate_module(&bytes) else {
+        let Ok(module) = itasca::validate_module(&bytes) else {
             continue;
         };
         let Some((their_imports, their_exports)) = wasmparser_extern_types(&bytes) else {
             continue;
         };
 
-        let our_imports: Vec<String> = veriwasm::import_types(&module.env)
+        let our_imports: Vec<String> = itasca::import_types(&module.env)
             .expect("a validated module resolves every import type")
             .iter()
             .map(ours)
             .collect();
-        let our_exports: Vec<String> = veriwasm::export_types(&module.env)
+        let our_exports: Vec<String> = itasca::export_types(&module.env)
             .expect("a validated module resolves every export type")
             .iter()
             .map(ours)

@@ -1,4 +1,4 @@
-# veriwasm
+# itasca
 
 A formally verified streaming WebAssembly 1.0 validator.
 

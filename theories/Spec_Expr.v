@@ -36,7 +36,7 @@ Require Import Coq.Lists.List.
 Require Import Lia.
 Import ListNotations.
 From Wasm Require Import datatypes numerics.
-Require Import Veriwasm.Spec_Binary.
+Require Import Itasca.Spec_Binary.
 
 Open Scope Z_scope.
 

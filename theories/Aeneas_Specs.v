@@ -17,12 +17,12 @@ Require Import Coq.Lists.List.
 Require Import Coq.Bool.Sumbool.
 Import ListNotations.
 Local Open Scope Primitives_scope.
-Require Import Veriwasm_Types.
-Include Veriwasm_Types.
-Require Import Veriwasm_FunsExternal.
-Include Veriwasm_FunsExternal.
-Require Import Veriwasm_Funs.
-Include Veriwasm_Funs.
+Require Import Itasca_Types.
+Include Itasca_Types.
+Require Import Itasca_FunsExternal.
+Include Itasca_FunsExternal.
+Require Import Itasca_Funs.
+Include Itasca_Funs.
 
 (** Vec is a bounded list; specs are stated over the underlying list. *)
 Definition vec_list {T} (v : alloc_vec_Vec T) : list T := proj1_sig v.

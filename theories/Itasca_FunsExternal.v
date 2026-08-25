@@ -1,7 +1,7 @@
-(** [veriwasm]: external functions.
+(** [itasca]: external functions.
 
-    Hand-written, unlike its Veriwasm_ siblings. Aeneas emits
-    Veriwasm_FunsExternal_Template.v naming the axioms it needs; this file
+    Hand-written, unlike its Itasca_ siblings. Aeneas emits
+    Itasca_FunsExternal_Template.v naming the axioms it needs; this file
     supplies them, plus the definitions Aeneas expects to already exist
     (the [loop] combinator, [core_convert_From], the primitive [PartialEq]
     instances). Run [just externals-check] after re-extracting to see whether
@@ -13,9 +13,9 @@ Require Import Coq.ZArith.ZArith.
 Require Import List.
 Import ListNotations.
 Local Open Scope Primitives_scope.
-Require Import Veriwasm_Types.
-Include Veriwasm_Types.
-Module Veriwasm_FunsExternal.
+Require Import Itasca_Types.
+Include Itasca_Types.
+Module Itasca_FunsExternal.
 
 (** Trait declaration: [core::convert::From] *)
 Record core_convert_From (Self T : Type) := mkcore_convert_From {
@@ -109,22 +109,22 @@ Axiom alloc_vec_Vec_is_empty :
   forall{T : Type} (A : Type), alloc_vec_Vec T -> result bool
 .
 
-(** [veriwasm::types::{core::cmp::PartialEq<veriwasm::types::ValueType> for veriwasm::types::ValueType}::ne]:
+(** [itasca::types::{core::cmp::PartialEq<itasca::types::ValueType> for itasca::types::ValueType}::ne]:
     Source: 'src/types.rs' *)
 Axiom types_ValueType_Insts_CoreCmpPartialEqValueType_ne
   : types_ValueType_t -> types_ValueType_t -> result bool
 .
 
-(** [veriwasm::opiter::{core::cmp::PartialEq<veriwasm::opiter::BlockType> for veriwasm::opiter::BlockType}::ne]:
+(** [itasca::opiter::{core::cmp::PartialEq<itasca::opiter::BlockType> for itasca::opiter::BlockType}::ne]:
     Source: 'src/opiter.rs' *)
 Axiom opiter_BlockType_Insts_CoreCmpPartialEqBlockType_ne
   : opiter_BlockType_t -> opiter_BlockType_t -> result bool
 .
 
-(** [veriwasm::types::{core::cmp::PartialEq<veriwasm::types::Mut> for veriwasm::types::Mut}::ne]:
+(** [itasca::types::{core::cmp::PartialEq<itasca::types::Mut> for itasca::types::Mut}::ne]:
     Source: 'src/types.rs' *)
 Axiom types_Mut_Insts_CoreCmpPartialEqMut_ne
   : types_Mut_t -> types_Mut_t -> result bool
 .
 
-End Veriwasm_FunsExternal.
+End Itasca_FunsExternal.

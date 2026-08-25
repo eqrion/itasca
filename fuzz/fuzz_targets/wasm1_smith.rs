@@ -9,7 +9,7 @@ use wasmparser::{Validator, WasmFeatures};
 mod mvp_binary;
 
 /// `wasm_smith::Config` restricted to exactly the Wasm 1.0 feature set, so
-/// every module generated is one veriwasm claims to support.
+/// every module generated is one itasca claims to support.
 fn wasm1_config() -> Config {
     Config {
         bulk_memory_enabled: false,
@@ -36,7 +36,7 @@ fn wasm1_config() -> Config {
 }
 
 // Completeness check: every module wasm-smith generates under a Wasm-1.0-only
-// config is well-typed Wasm 1.0, so veriwasm must accept it. `wasm-smith`
+// config is well-typed Wasm 1.0, so itasca must accept it. `wasm-smith`
 // serializes through `wasm-encoder`, which only emits the post-bulk-memory
 // element/data section encoding (see `mvp_binary`), so bytes are rewritten to
 // genuine Wasm 1.0 encoding before either validator sees them.
@@ -58,7 +58,7 @@ fuzz_target!(|data: &[u8]| {
         "wasm-smith (or the Wasm 1.0 re-encoding) produced a module wasmparser rejects"
     );
     assert!(
-        veriwasm::validate_module(&bytes).is_ok(),
-        "veriwasm rejected a module wasm-smith generated and wasmparser accepts"
+        itasca::validate_module(&bytes).is_ok(),
+        "itasca rejected a module wasm-smith generated and wasmparser accepts"
     );
 });

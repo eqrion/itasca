@@ -28,11 +28,11 @@ Require Import Coq.ZArith.ZArith.
 Require Import Coq.Lists.List.
 Import ListNotations.
 Local Open Scope Primitives_scope.
-Require Import Veriwasm.Aeneas_Specs.
-Require Import Veriwasm.OpIter_Visit.
-Require Import Veriwasm.OpIter_State.
-Require Import Veriwasm.OpIter_Decode.
-Require Import Veriwasm.OpIter_Validate.
+Require Import Itasca.Aeneas_Specs.
+Require Import Itasca.OpIter_Visit.
+Require Import Itasca.OpIter_State.
+Require Import Itasca.OpIter_Decode.
+Require Import Itasca.OpIter_Validate.
 
 Local Open Scope list_scope.
 Local Bind Scope list_scope with list.
@@ -394,7 +394,7 @@ Corollary validate_body_driven :
 Proof.
   intros V inst data env ctx v v' H.
   destruct (validate_body_with_transfer V visit_NopVisitor_t inst
-              visit_NopVisitor_Insts_VeriwasmVisitOpVisitor data env ctx v tt v'
+              visit_NopVisitor_Insts_ItascaVisitOpVisitor data env ctx v tt v'
               nop_hooks_accept H) as [w' Hw].
   unfold opiter_validate_body. rewrite Hw. cbn [bind]. reflexivity.
 Qed.
@@ -410,7 +410,7 @@ Corollary validate_body_accepts :
 Proof.
   intros V inst data env ctx v Hacc H.
   apply (validate_body_with_transfer visit_NopVisitor_t V
-           visit_NopVisitor_Insts_VeriwasmVisitOpVisitor inst data env ctx tt v
+           visit_NopVisitor_Insts_ItascaVisitOpVisitor inst data env ctx tt v
            tt Hacc).
   exact (validate_body_nop data env ctx _ H).
 Qed.

@@ -461,5 +461,5 @@ memory_table!(memory_fanout);
 //
 // Declared here at the bottom, rather than next to the tables, so that adding
 // it moved no line above it: the extraction records a source line per
-// definition, and `theories/Veriwasm_Funs.v` is generated and committed.
+// definition, and `theories/Itasca_Funs.v` is generated and committed.
 pub use {memory_table, numeric_table};

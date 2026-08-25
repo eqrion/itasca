@@ -19,11 +19,11 @@ Local Open Scope Primitives_scope.
 (* Aeneas_Specs already Requires and Includes the three extracted modules.
    Including them again here shadows Primitives constants such as u32_max with
    opaque copies, which blocks [unfold]. *)
-Require Import Veriwasm.Aeneas_Specs.
-Require Import Veriwasm.Translate.
-Require Import Veriwasm.Spec_Binary.
-Require Import Veriwasm.OpIter_Visit.
-Require Import Veriwasm.OpIter_State.
+Require Import Itasca.Aeneas_Specs.
+Require Import Itasca.Translate.
+Require Import Itasca.Spec_Binary.
+Require Import Itasca.OpIter_Visit.
+Require Import Itasca.OpIter_State.
 
 Open Scope Z_scope.
 

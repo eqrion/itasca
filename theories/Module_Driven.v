@@ -35,16 +35,16 @@ Require Import Coq.ZArith.ZArith.
 Require Import Coq.Lists.List.
 Import ListNotations.
 Local Open Scope Primitives_scope.
-Require Import Veriwasm.Aeneas_Specs.
-Require Import Veriwasm.Translate.
-Require Import Veriwasm.Spec_Module.
-Require Import Veriwasm.OpIter_Visit.
-Require Import Veriwasm.OpIter_Decode.
-Require Import Veriwasm.OpIter_Driven.
-Require Import Veriwasm.Module_NoPanic.
-Require Import Veriwasm.Module_Sound.
-Require Import Veriwasm.Module_Complete.
-Require Import Veriwasm.Module_Typing.
+Require Import Itasca.Aeneas_Specs.
+Require Import Itasca.Translate.
+Require Import Itasca.Spec_Module.
+Require Import Itasca.OpIter_Visit.
+Require Import Itasca.OpIter_Decode.
+Require Import Itasca.OpIter_Driven.
+Require Import Itasca.Module_NoPanic.
+Require Import Itasca.Module_Sound.
+Require Import Itasca.Module_Complete.
+Require Import Itasca.Module_Typing.
 
 From Wasm Require Import datatypes operations typing instantiation_spec.
 
@@ -143,7 +143,7 @@ Corollary validate_code_entry_driven :
 Proof.
   intros V inst data pos env index v q' v' H.
   destruct (validate_code_entry_transfer V visit_NopVisitor_t inst
-              visit_NopVisitor_Insts_VeriwasmVisitOpVisitor data pos env index
+              visit_NopVisitor_Insts_ItascaVisitOpVisitor data pos env index
               v tt q' v' nop_hooks_accept H) as [w' Hw].
   apply code_entry_nop. rewrite Hw. destruct w'. reflexivity.
 Qed.
@@ -161,7 +161,7 @@ Corollary validate_code_entry_accepts :
 Proof.
   intros V inst data pos env index v q' Hacc H.
   apply (validate_code_entry_transfer visit_NopVisitor_t V
-           visit_NopVisitor_Insts_VeriwasmVisitOpVisitor inst data pos env
+           visit_NopVisitor_Insts_ItascaVisitOpVisitor inst data pos env
            index tt v q' tt Hacc).
   exact (code_entry_nop_inv data pos env index _ H).
 Qed.
@@ -255,7 +255,7 @@ Corollary decode_env_with_accepts :
 Proof.
   intros V inst data v env qf Hacc H.
   apply (decode_env_with_transfer _ V
-           module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor inst data
+           module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor inst data
            tt v env qf tt Hacc).
   exact (decode_env_nop_inv data _ H).
 Qed.
@@ -334,7 +334,7 @@ Corollary decode_tail_with_accepts :
 Proof.
   intros V inst data pos env v tail Hacc H.
   apply (decode_tail_with_transfer _ V
-           module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor inst data
+           module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor inst data
            pos env tt v tail tt Hacc).
   exact (decode_tail_nop_inv data pos env _ H).
 Qed.
@@ -455,7 +455,7 @@ Corollary validate_code_with_accepts :
 Proof.
   intros V inst data pos env v q' Hacc H.
   apply (validate_code_with_transfer _ V
-           module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor inst
+           module_ValidatingCodeVisitor_Insts_ItascaModuleCodeVisitor inst
            data pos env tt v q' tt (validating_code_hooks_validate data env)
            Hacc).
   exact (validate_code_nop_inv data pos env _ H).

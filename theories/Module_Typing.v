@@ -25,18 +25,18 @@ Require Import Lia.
 Require Import Coq.Lists.List.
 Import ListNotations.
 Local Open Scope Primitives_scope.
-Require Import Veriwasm.Aeneas_Specs.
-Require Import Veriwasm.Translate.
-Require Import Veriwasm.OpIter_Decode.
-Require Import Veriwasm.Spec_Module.
-Require Import Veriwasm.Module_Sound.
-Require Import Veriwasm.Module_Externs.
+Require Import Itasca.Aeneas_Specs.
+Require Import Itasca.Translate.
+Require Import Itasca.OpIter_Decode.
+Require Import Itasca.Spec_Module.
+Require Import Itasca.Module_Sound.
+Require Import Itasca.Module_Externs.
 
 From Wasm Require Import datatypes datatypes_properties list_extra
                          operations typing type_checker
                          instantiation_spec instantiation_func
                          interp_instantiate_sound.
-Require Import Veriwasm.Wasm_Bridge.
+Require Import Itasca.Wasm_Bridge.
 
 Local Open Scope list_scope.
 

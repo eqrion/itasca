@@ -24,16 +24,16 @@ Require Import Coq.ZArith.ZArith.
 Require Import Coq.Lists.List.
 Import ListNotations.
 Local Open Scope Primitives_scope.
-Require Import Veriwasm.Aeneas_Specs.
-Require Import Veriwasm.Translate.
-Require Import Veriwasm.Spec_Binary.
-Require Import Veriwasm.Spec_Expr.
-Require Import Veriwasm.Spec_Module.
-Require Import Veriwasm.OpIter_Visit.
-Require Import Veriwasm.OpIter_Decode.
-Require Import Veriwasm.OpIter_Sim.
-Require Import Veriwasm.OpIter_Validate.
-Require Import Veriwasm.Module_NoPanic.
+Require Import Itasca.Aeneas_Specs.
+Require Import Itasca.Translate.
+Require Import Itasca.Spec_Binary.
+Require Import Itasca.Spec_Expr.
+Require Import Itasca.Spec_Module.
+Require Import Itasca.OpIter_Visit.
+Require Import Itasca.OpIter_Decode.
+Require Import Itasca.OpIter_Sim.
+Require Import Itasca.OpIter_Validate.
+Require Import Itasca.Module_NoPanic.
 
 From Wasm Require Import datatypes typing type_checker.
 
@@ -2204,11 +2204,11 @@ Proof. intros env v w. reflexivity. Qed.
     [repr_exportdesc] states. The Rust function needs qualifying: WasmCert's
     [datatypes] has a *type* of the same name, and it is imported last. *)
 Lemma export_desc_sound : forall env kind idx d bs rest,
-  Veriwasm.Aeneas_Specs.module_export_desc env kind idx = Ok (Core_result_Result_Ok d) ->
+  Itasca.Aeneas_Specs.module_export_desc env kind idx = Ok (Core_result_Result_Ok d) ->
   repr_u32 bs (to_Z idx) rest ->
   repr_exportdesc (to_Z kind :: bs) (translate_exportdesc d) rest.
 Proof.
-  intros env kind idx d bs rest H Hidx. unfold Veriwasm.Aeneas_Specs.module_export_desc in H.
+  intros env kind idx d bs rest H Hidx. unfold Itasca.Aeneas_Specs.module_export_desc in H.
   destruct (scalar_cast U32 Usize idx) as [i|]; cbn [bind] in H;
     [|discriminate].
   destruct (kind s= 0%u8) eqn:E0.
@@ -2273,7 +2273,7 @@ Proof.
 Qed.
 
 Lemma export_desc_range : forall env kind idx d,
-  Veriwasm.Aeneas_Specs.module_export_desc env kind idx
+  Itasca.Aeneas_Specs.module_export_desc env kind idx
     = Ok (Core_result_Result_Ok d) ->
   match d with
   | Env_ExportDesc_Func x =>
@@ -2287,7 +2287,7 @@ Lemma export_desc_range : forall env kind idx d,
   end.
 Proof.
   intros env kind idx d H.
-  unfold Veriwasm.Aeneas_Specs.module_export_desc in H.
+  unfold Itasca.Aeneas_Specs.module_export_desc in H.
   destruct (scalar_cast U32 Usize idx) as [i|] eqn:Hcast; cbn [bind] in H;
     [|discriminate].
   assert (Hi : to_Z i = to_Z idx)
@@ -2485,7 +2485,7 @@ Proof.
       [|discriminate].
     destruct r2 as [[idx q3]|e2]; [|try_err_rw_in H; discriminate].
     rewrite branch_ok in H. cbn [bind] in H.
-    destruct (Veriwasm.Aeneas_Specs.module_export_desc env kind idx) as [r3|] eqn:Hd;
+    destruct (Itasca.Aeneas_Specs.module_export_desc env kind idx) as [r3|] eqn:Hd;
       cbn [bind] in H; [|discriminate].
     destruct r3 as [d|e3]; [|try_err_rw_in H; discriminate].
     rewrite branch_ok in H. cbn [bind] in H.
@@ -4806,7 +4806,7 @@ Qed.
     the run of custom sections before the code section ended. *)
 (** The nop consumer's one hook, as an equation. *)
 Lemma nop_custom_section : forall c,
-  module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor.(module_ModuleVisitor_t_on_custom_section)
+  module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor.(module_ModuleVisitor_t_on_custom_section)
     tt c = Ok (Core_result_Result_Ok tt, tt).
 Proof. intros c. reflexivity. Qed.
 
@@ -4823,7 +4823,7 @@ Lemma decode_env_with_loop_driven :
   module_decode_env_with_loop inst data vis env q last_id
     = Ok (Core_result_Result_Ok (envf, qf), vis') ->
   module_decode_env_with_loop
-    module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor data tt env q
+    module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor data tt env q
     last_id = Ok (Core_result_Result_Ok (envf, qf), tt).
 Proof.
   intros V inst m. induction m as [|m IH];
@@ -4890,12 +4890,12 @@ Qed.
     accepting run of the other. The mirror of [code_entry_nop_inv]. *)
 Lemma decode_env_nop_inv : forall data r,
   module_decode_env data = Ok r ->
-  module_decode_env_with module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor
+  module_decode_env_with module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor
     data tt = Ok (r, tt).
 Proof.
   intros data r H. unfold module_decode_env in H.
   destruct (module_decode_env_with
-              module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor data tt)
+              module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor data tt)
     as [[r0 v0]|] eqn:Hw; cbn [bind] in H; [|discriminate].
   injection H as <-. destruct v0. reflexivity.
 Qed.
@@ -4907,7 +4907,7 @@ Lemma decode_tail_with_loop_driven :
   module_decode_tail_with_loop inst data env vis segments q seen
     = Ok (Core_result_Result_Ok tail, vis') ->
   module_decode_tail_with_loop
-    module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor data env tt
+    module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor data env tt
     segments q seen = Ok (Core_result_Result_Ok tail, tt).
 Proof.
   intros V inst m. induction m as [|m IH];
@@ -4964,12 +4964,12 @@ Qed.
 
 Lemma decode_tail_nop_inv : forall data pos env r,
   module_decode_tail data pos env = Ok r ->
-  module_decode_tail_with module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor
+  module_decode_tail_with module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor
     data pos env tt = Ok (r, tt).
 Proof.
   intros data pos env r H. unfold module_decode_tail in H.
   destruct (module_decode_tail_with
-              module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor data pos
+              module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor data pos
               env tt) as [[r0 v0]|] eqn:Hw; cbn [bind] in H; [|discriminate].
   injection H as <-. destruct v0. reflexivity.
 Qed.
@@ -4995,7 +4995,7 @@ Proof.
   assert (Hz : to_Z 0%u8 = 0) by reflexivity.
   rewrite <- Hz.
   apply (decode_env_with_loop_sound _
-           module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor
+           module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor
            (List.length (vec_list data)) data tt tt env0 p0 0%u8 env qf);
     [ pose proof (usize_nonneg p0); lia
     | rewrite Hz; lia
@@ -5312,7 +5312,7 @@ Proof.
   intros data pos env tail H0. pose proof (decode_tail_nop_inv _ _ _ _ H0) as H.
   clear H0. unfold module_decode_tail_with in H.
   destruct (decode_tail_with_loop_sound _
-              module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor
+              module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor
               (List.length (vec_list data)) data env tt tt
               (alloc_vec_Vec_new module_Data_t) pos false tail)
     as [Hf [_ Hok]]; [ pose proof (usize_nonneg pos); lia
@@ -5844,7 +5844,7 @@ Corollary validate_code_entry_sound : forall data pos env index end',
 Proof.
   intros data pos env index end' Hres H.
   destruct (validate_code_entry_with_sound _
-              visit_NopVisitor_Insts_VeriwasmVisitOpVisitor tt tt data pos env
+              visit_NopVisitor_Insts_ItascaVisitOpVisitor tt tt data pos env
               index end' Hres (ltac:(apply code_entry_nop_inv; exact H)))
     as [c [ops [Hc [_ [_ Hty]]]]].
   exists c. split; [exact Hc | exact Hty].
@@ -5985,12 +5985,12 @@ Definition code_hooks_validate {V : Type} (inst : module_CodeVisitor_t V)
 
 Lemma validating_code_hooks_validate : forall data env,
   code_hooks_validate
-    module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor data env.
+    module_ValidatingCodeVisitor_Insts_ItascaModuleCodeVisitor data env.
 Proof.
   intros data env v v' index pos contents fin H.
-  unfold module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor in H.
+  unfold module_ValidatingCodeVisitor_Insts_ItascaModuleCodeVisitor in H.
   cbn [module_CodeVisitor_t_on_code_entry] in H.
-  unfold module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor_on_code_entry
+  unfold module_ValidatingCodeVisitor_Insts_ItascaModuleCodeVisitor_on_code_entry
     in H.
   destruct (module_validate_code_entry data pos env index) as [r|] eqn:Hr;
     cbn [bind] in H; [|discriminate].
@@ -6324,12 +6324,12 @@ Qed.
 Lemma validate_code_nop_inv : forall data pos env r,
   module_validate_code data pos env = Ok r ->
   module_validate_code_with
-    module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor data pos env tt
+    module_ValidatingCodeVisitor_Insts_ItascaModuleCodeVisitor data pos env tt
     = Ok (r, tt).
 Proof.
   intros data pos env r H. unfold module_validate_code in H.
   destruct (module_validate_code_with
-              module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor data
+              module_ValidatingCodeVisitor_Insts_ItascaModuleCodeVisitor data
               pos env tt) as [[r0 v0]|] eqn:Hw; cbn [bind] in H; [|discriminate].
   injection H as <-. destruct v0. reflexivity.
 Qed.
@@ -6356,20 +6356,20 @@ Qed.
     steadier than unfolding the instance in place, and says what they are:
     it waits for nothing, and its answer on an entry is the validator's. *)
 Lemma validating_need_bytes : forall e,
-  module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor.(module_CodeVisitor_t_on_need_bytes)
+  module_ValidatingCodeVisitor_Insts_ItascaModuleCodeVisitor.(module_CodeVisitor_t_on_need_bytes)
     tt e = Ok (Core_result_Result_Ok tt, tt).
 Proof. intros e. reflexivity. Qed.
 
 Lemma validating_entry_ok : forall data env index pos contents fin q',
   module_validate_code_entry data pos env index
     = Ok (Core_result_Result_Ok q') ->
-  module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor.(module_CodeVisitor_t_on_code_entry)
+  module_ValidatingCodeVisitor_Insts_ItascaModuleCodeVisitor.(module_CodeVisitor_t_on_code_entry)
     tt data env index pos contents fin = Ok (Core_result_Result_Ok tt, tt).
 Proof.
   intros data env index pos contents fin q' H.
   cbn [module_CodeVisitor_t_on_code_entry
-       module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor].
-  unfold module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor_on_code_entry.
+       module_ValidatingCodeVisitor_Insts_ItascaModuleCodeVisitor].
+  unfold module_ValidatingCodeVisitor_Insts_ItascaModuleCodeVisitor_on_code_entry.
   rewrite H. cbn [bind]. rewrite branch_ok. cbn [bind]. reflexivity.
 Qed.
 
@@ -6392,7 +6392,7 @@ Lemma validate_code_entries_driven :
   module_validate_code_entries_with_loop inst data env vis q i
     = Ok (Core_result_Result_Ok q', vis') ->
   module_validate_code_entries_with_loop
-    module_ValidatingCodeVisitor_Insts_VeriwasmModuleCodeVisitor data env tt q i
+    module_ValidatingCodeVisitor_Insts_ItascaModuleCodeVisitor data env tt q i
     = Ok (Core_result_Result_Ok q', tt).
 Proof.
   intros V inst m. induction m as [|m IH];
@@ -6609,7 +6609,7 @@ Proof.
   destruct r as [p0|e]; [|try_err_rw_in H; discriminate].
   rewrite branch_ok in H. cbn [bind] in H.
   apply (decode_env_with_loop_preserves P Hstep _
-           module_NopModuleVisitor_Insts_VeriwasmModuleModuleVisitor
+           module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor
            (List.length (vec_list data)) data tt tt env0 p0 0%u8 env qf);
     [ pose proof (usize_nonneg p0); lia
     | apply Hinit; reflexivity

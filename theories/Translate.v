@@ -12,7 +12,7 @@ Require Import Coq.NArith.Nnat.
 Require Import Coq.Lists.List.
 Import ListNotations.
 Local Open Scope Primitives_scope.
-Require Import Veriwasm.Aeneas_Specs.
+Require Import Itasca.Aeneas_Specs.
 
 From Wasm Require Import datatypes type_checker operations typing.
 From mathcomp Require Import ssreflect ssrbool eqtype seq.
@@ -39,7 +39,7 @@ Definition translate_vt_v (vt : types_ValueType_t) : value_type :=
 Lemma translate_vt_v_not_bot : forall vt, translate_vt_v vt <> T_bot.
 Proof. intros vt. destruct vt; discriminate. Qed.
 
-(** VeriWasm stacks grow rightward (last = top), WasmCert leftward
+(** Itasca stacks grow rightward (last = top), WasmCert leftward
     (head = top), so every type list is reversed on the way across. *)
 Definition translate_typelist (l : list types_ValueType_t) : list value_type :=
   rev (map translate_vt_v l).

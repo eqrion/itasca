@@ -24,10 +24,10 @@ Require Import Coq.ZArith.ZArith.
 Require Import Coq.Lists.List.
 Import ListNotations.
 Local Open Scope Primitives_scope.
-Require Import Veriwasm.Aeneas_Specs.
-Require Import Veriwasm.OpIter_Visit.
-Require Import Veriwasm.OpIter_State.
-Require Import Veriwasm.OpIter_Decode.
+Require Import Itasca.Aeneas_Specs.
+Require Import Itasca.OpIter_Visit.
+Require Import Itasca.OpIter_State.
+Require Import Itasca.OpIter_Decode.
 
 Open Scope Z_scope.
 
@@ -179,7 +179,7 @@ Theorem validate_body_no_panic : forall data module ctx,
 Proof.
   intros data module ctx. unfold opiter_validate_body.
   destruct (validate_body_with_no_panic _
-              visit_NopVisitor_Insts_VeriwasmVisitOpVisitor tt data module ctx
+              visit_NopVisitor_Insts_ItascaVisitOpVisitor tt data module ctx
               nop_hooks_total) as [r Hr].
   rewrite Hr. cbn [bind]. destruct r as [r0 v0]. eexists. reflexivity.
 Qed.

@@ -16,14 +16,14 @@ Require Import Coq.ZArith.ZArith.
 Require Import Coq.Lists.List.
 Import ListNotations.
 Local Open Scope Primitives_scope.
-Require Import Veriwasm.Aeneas_Specs.
-Require Import Veriwasm.Translate.
-Require Import Veriwasm.Spec_Binary.
-Require Import Veriwasm.OpIter_Visit.
-Require Import Veriwasm.OpIter_State.
-Require Import Veriwasm.OpIter_Decode.
-Require Import Veriwasm.OpIter_Sim.
-Require Import Veriwasm.OpIter_Checker.
+Require Import Itasca.Aeneas_Specs.
+Require Import Itasca.Translate.
+Require Import Itasca.Spec_Binary.
+Require Import Itasca.OpIter_Visit.
+Require Import Itasca.OpIter_State.
+Require Import Itasca.OpIter_Decode.
+Require Import Itasca.OpIter_Sim.
+Require Import Itasca.OpIter_Checker.
 
 From Wasm Require Import datatypes numerics type_checker operations typing.
 

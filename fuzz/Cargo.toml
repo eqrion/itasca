@@ -1,5 +1,5 @@
 [package]
-name = "veriwasm-fuzz"
+name = "itasca-fuzz"
 version = "0.0.0"
 publish = false
 edition = "2021"
@@ -11,7 +11,7 @@ cargo-fuzz = true
 
 [dependencies]
 libfuzzer-sys = "0.4"
-veriwasm = { path = ".." }
+itasca = { path = ".." }
 wasmparser = "=0.252.0"
 wasm-smith = "=0.252.0"
 arbitrary = "1"

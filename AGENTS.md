@@ -1,6 +1,6 @@
 # Notes for coding agents
 
-veriwasm is a WebAssembly 1.0 validator in Rust whose function-body validator
+itasca is a WebAssembly 1.0 validator in Rust whose function-body validator
 carries a machine-checked Coq proof. That makes it unlike a normal Rust repo in
 ways that are easy to miss.
 
@@ -12,14 +12,14 @@ Read these first:
 ## The things that catch people out
 
 **`src/` and `theories/` are coupled.** The Coq model in
-`theories/Veriwasm_Types.v` and `theories/Veriwasm_Funs.v` is generated from the
+`theories/Itasca_Types.v` and `theories/Itasca_Funs.v` is generated from the
 Rust and committed. Any change to `src/` needs `just extract` to regenerate it
 and `just prove` to re-check the proofs. A Rust change that compiles and passes
 `cargo test` can still break the build.
 
-**Never hand-edit the generated theories.** `Veriwasm_Types.v` and
-`Veriwasm_Funs.v` are overwritten by `just extract`.
-`theories/Veriwasm_FunsExternal.v` *is* hand-written despite the name.
+**Never hand-edit the generated theories.** `Itasca_Types.v` and
+`Itasca_Funs.v` are overwritten by `just extract`.
+`theories/Itasca_FunsExternal.v` *is* hand-written despite the name.
 
 **All of `src/` is in a restricted subset**, so idiomatic Rust is often wrong
 here. No iterators, no closures, no `.clone()`, no bitwise operators, no range

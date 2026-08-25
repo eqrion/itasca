@@ -48,8 +48,8 @@ From compcert Require Import Integers.
 (* [instantiation_func] is only here for the embedding cross-checks at the end
    of the file; none of the rules depend on it. *)
 From Wasm Require Import datatypes numerics instantiation_spec instantiation_func.
-Require Import Veriwasm.Spec_Binary.
-Require Import Veriwasm.Spec_Expr.
+Require Import Itasca.Spec_Binary.
+Require Import Itasca.Spec_Expr.
 (* Last, so that an unqualified [Byte] is Coq's. WasmCert uses two byte types:
    a [name] is a list of Coq's [Byte.byte], while a data segment's contents are
    a list of CompCert's [Integers.byte]. They need separate correspondences. *)

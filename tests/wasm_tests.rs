@@ -1,5 +1,5 @@
-use veriwasm::error::*;
-use veriwasm::types::*;
+use itasca::error::*;
+use itasca::types::*;
 
 // ---- Module builder helper ----
 
@@ -315,7 +315,7 @@ fn module_with_i32_identity() -> Vec<u8> {
 
 #[test]
 fn test_decode_minimal_module() {
-    let m = veriwasm::validate_module(MINIMAL_MODULE).unwrap();
+    let m = itasca::validate_module(MINIMAL_MODULE).unwrap();
     assert!(m.env.types.is_empty());
     assert!(m.env.func_type_indices.is_empty());
     assert!(m.env.table_types.is_empty());
@@ -330,25 +330,25 @@ fn test_decode_minimal_module() {
 #[test]
 fn test_decode_invalid_magic() {
     let bytes = [0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00];
-    assert_eq!(veriwasm::validate_module(&bytes), Err(Error::InvalidMagic));
+    assert_eq!(itasca::validate_module(&bytes), Err(Error::InvalidMagic));
 }
 
 #[test]
 fn test_decode_invalid_version() {
     let bytes = [0x00, 0x61, 0x73, 0x6D, 0x02, 0x00, 0x00, 0x00];
-    assert_eq!(veriwasm::validate_module(&bytes), Err(Error::InvalidVersion));
+    assert_eq!(itasca::validate_module(&bytes), Err(Error::InvalidVersion));
 }
 
 #[test]
 fn test_decode_truncated() {
     let bytes = [0x00, 0x61, 0x73];
-    assert_eq!(veriwasm::validate_module(&bytes), Err(Error::Read(OpError::UnexpectedEof)));
+    assert_eq!(itasca::validate_module(&bytes), Err(Error::Read(OpError::UnexpectedEof)));
 }
 
 #[test]
 fn test_decode_empty_func() {
     let bytes = module_with_empty_func();
-    let m = veriwasm::validate_module(&bytes).unwrap();
+    let m = itasca::validate_module(&bytes).unwrap();
     assert_eq!(m.env.types.len(), 1);
     assert_eq!(m.env.func_type_indices, vec![0]);
     assert_eq!(m.env.func_types.len(), 1);
@@ -358,7 +358,7 @@ fn test_decode_empty_func() {
 #[test]
 fn test_decode_i32_identity() {
     let bytes = module_with_i32_identity();
-    let m = veriwasm::validate_module(&bytes).unwrap();
+    let m = itasca::validate_module(&bytes).unwrap();
     assert_eq!(m.env.types[0].params, vec![ValueType::I32]);
     assert_eq!(m.env.types[0].results, vec![ValueType::I32]);
 }
@@ -378,26 +378,26 @@ fn test_decode_section_out_of_order() {
     bytes.push(0x01);
     bytes.push(0x00);
 
-    assert_eq!(veriwasm::validate_module(&bytes), Err(Error::SectionOutOfOrder));
+    assert_eq!(itasca::validate_module(&bytes), Err(Error::SectionOutOfOrder));
 }
 
 // ---- Validate tests ----
 
 #[test]
 fn test_validate_minimal_module() {
-    veriwasm::validate_module(MINIMAL_MODULE).unwrap();
+    itasca::validate_module(MINIMAL_MODULE).unwrap();
 }
 
 #[test]
 fn test_validate_empty_func() {
     let bytes = module_with_empty_func();
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
 fn test_validate_i32_identity() {
     let bytes = module_with_i32_identity();
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
@@ -430,7 +430,7 @@ fn test_validate_type_mismatch() {
     bytes.push(0x00);
     bytes.push(0x0B);
 
-    assert!(veriwasm::validate_module(&bytes).is_err());
+    assert!(itasca::validate_module(&bytes).is_err());
 }
 
 #[test]
@@ -470,7 +470,7 @@ fn test_validate_i32_add() {
     bytes.push(0x6A); // i32.add
     bytes.push(0x0B); // end
 
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
@@ -508,7 +508,7 @@ fn test_validate_block() {
     bytes.push(0x0B); // end (block)
     bytes.push(0x0B); // end (func)
 
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
@@ -543,7 +543,7 @@ fn test_validate_unreachable_polymorphism() {
     bytes.push(0x00); // unreachable
     bytes.push(0x0B); // end
 
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
@@ -587,7 +587,7 @@ fn test_validate_if_else() {
     bytes.push(0x0B); // end (if)
     bytes.push(0x0B); // end (func)
 
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
@@ -633,7 +633,7 @@ fn test_validate_memory_operations() {
     bytes.push(0x00); // offset=0
     bytes.push(0x0B); // end
 
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
@@ -672,7 +672,7 @@ fn test_validate_no_memory_for_load() {
     bytes.push(0x00);
     bytes.push(0x0B);
 
-    assert!(veriwasm::validate_module(&bytes).is_err());
+    assert!(itasca::validate_module(&bytes).is_err());
 }
 
 #[test]
@@ -721,7 +721,7 @@ fn test_validate_duplicate_export_name() {
     bytes.push(0x00);
     bytes.push(0x0B);
 
-    assert_eq!(veriwasm::validate_module(&bytes), Err(Error::DuplicateExportName));
+    assert_eq!(itasca::validate_module(&bytes), Err(Error::DuplicateExportName));
 }
 
 #[test]
@@ -761,14 +761,14 @@ fn test_validate_br_in_block() {
     bytes.push(0x0B); // end block
     bytes.push(0x0B); // end func
 
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 // ---- Decode + validate round-trip ----
 
 #[test]
 fn test_decode_and_validate_minimal() {
-    veriwasm::validate_module(MINIMAL_MODULE).unwrap();
+    itasca::validate_module(MINIMAL_MODULE).unwrap();
 }
 
 #[test]
@@ -810,7 +810,7 @@ fn test_decode_and_validate_with_locals() {
     bytes.push(0x00); // index 0
     bytes.push(0x0B); // end
 
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
@@ -846,7 +846,7 @@ fn test_validate_loop() {
     bytes.push(0x0B); // end loop
     bytes.push(0x0B); // end func
 
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
@@ -886,7 +886,7 @@ fn test_validate_select() {
     bytes.push(0x1B); // select
     bytes.push(0x0B);
 
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
@@ -906,7 +906,7 @@ fn test_validate_global_const_expr() {
     bytes.push(0x2A); // 42
     bytes.push(0x0B); // end
 
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
@@ -927,7 +927,7 @@ fn test_validate_global_mutable_in_const_expr() {
     bytes.push(0x7F); bytes.push(0x00);
     bytes.push(0x23); bytes.push(0x00); bytes.push(0x0B);
 
-    assert!(veriwasm::validate_module(&bytes).is_err());
+    assert!(itasca::validate_module(&bytes).is_err());
 }
 
 // ---- Edge case tests using builder helpers ----
@@ -943,7 +943,7 @@ fn test_call_indirect() {
         0x41, 0x00,       // i32.const 0 (table index)
         0x11, 0x00, 0x00, // call_indirect type=0, table=0
     ])]));
-    veriwasm::validate_module(&b.build()).unwrap();
+    itasca::validate_module(&b.build()).unwrap();
 }
 
 #[test]
@@ -954,7 +954,7 @@ fn test_call_indirect_no_table() {
     b.section(10, &code_section(&[(&[], &[
         0x41, 0x00, 0x41, 0x00, 0x11, 0x00, 0x00,
     ])]));
-    assert!(veriwasm::validate_module(&b.build()).is_err());
+    assert!(itasca::validate_module(&b.build()).is_err());
 }
 
 #[test]
@@ -970,7 +970,7 @@ fn test_br_table() {
         0x0B,             //   end
         0x0B,             // end
     ]);
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
@@ -985,7 +985,7 @@ fn test_br_table_arity_mismatch() {
         0x0B,             //   end
         0x0B,             // end
     ]);
-    assert!(veriwasm::validate_module(&bytes).is_err());
+    assert!(itasca::validate_module(&bytes).is_err());
 }
 
 #[test]
@@ -993,7 +993,7 @@ fn test_return_from_function() {
     let bytes = one_func_module(&[], &[I32], &[], &[
         0x41, 0x2A, 0x0F, // i32.const 42, return
     ]);
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
@@ -1001,19 +1001,19 @@ fn test_return_wrong_type() {
     let bytes = one_func_module(&[], &[I32], &[], &[
         0x42, 0x2A, 0x0F, // i64.const 42, return -- wrong type
     ]);
-    assert!(veriwasm::validate_module(&bytes).is_err());
+    assert!(itasca::validate_module(&bytes).is_err());
 }
 
 #[test]
 fn test_drop_after_unreachable() {
     let bytes = one_func_module(&[], &[], &[], &[0x00, 0x1A]); // unreachable, drop
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
 fn test_select_after_unreachable() {
     let bytes = one_func_module(&[], &[I32], &[], &[0x00, 0x1B]); // unreachable, select
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
@@ -1026,7 +1026,7 @@ fn test_nested_blocks_deep() {
         0x0C, 0x02,  //       br 2 (outermost)
         0x0B, 0x0B, 0x0B,
     ]);
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
@@ -1034,7 +1034,7 @@ fn test_br_unknown_label() {
     let bytes = one_func_module(&[], &[], &[], &[
         0x02, 0x40, 0x0C, 0x05, 0x0B, // block, br 5, end
     ]);
-    assert!(veriwasm::validate_module(&bytes).is_err());
+    assert!(itasca::validate_module(&bytes).is_err());
 }
 
 #[test]
@@ -1042,13 +1042,13 @@ fn test_local_tee() {
     let bytes = one_func_module(&[I32], &[I32], &[], &[
         0x20, 0x00, 0x22, 0x00, // local.get 0, local.tee 0
     ]);
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
 fn test_unknown_local() {
     let bytes = one_func_module(&[], &[I32], &[], &[0x20, 0x63]); // local.get 99
-    assert_eq!(veriwasm::validate_module(&bytes), Err(Error::Body(OpError::UnknownLocal)));
+    assert_eq!(itasca::validate_module(&bytes), Err(Error::Body(OpError::UnknownLocal)));
 }
 
 #[test]
@@ -1058,7 +1058,7 @@ fn test_global_set_immutable() {
     b.section(3, &func_section(&[0]));
     b.section(6, &global_section(&[(I32, 0x00, &[0x41, 0x00])]));
     b.section(10, &code_section(&[(&[], &[0x41, 0x01, 0x24, 0x00])]));
-    assert!(veriwasm::validate_module(&b.build()).is_err());
+    assert!(itasca::validate_module(&b.build()).is_err());
 }
 
 #[test]
@@ -1068,7 +1068,7 @@ fn test_global_set_mutable() {
     b.section(3, &func_section(&[0]));
     b.section(6, &global_section(&[(I32, 0x01, &[0x41, 0x00])]));
     b.section(10, &code_section(&[(&[], &[0x41, 0x01, 0x24, 0x00])]));
-    veriwasm::validate_module(&b.build()).unwrap();
+    itasca::validate_module(&b.build()).unwrap();
 }
 
 #[test]
@@ -1080,7 +1080,7 @@ fn test_memory_store() {
     b.section(10, &code_section(&[(&[], &[
         0x20, 0x00, 0x20, 0x01, 0x36, 0x02, 0x00,
     ])]));
-    veriwasm::validate_module(&b.build()).unwrap();
+    itasca::validate_module(&b.build()).unwrap();
 }
 
 #[test]
@@ -1090,7 +1090,7 @@ fn test_memory_invalid_alignment() {
     b.section(3, &func_section(&[0]));
     b.section(5, &memory_section(1, None));
     b.section(10, &code_section(&[(&[], &[0x20, 0x00, 0x28, 0x03, 0x00])]));
-    assert_eq!(veriwasm::validate_module(&b.build()), Err(Error::Body(OpError::InvalidAlignment)));
+    assert_eq!(itasca::validate_module(&b.build()), Err(Error::Body(OpError::InvalidAlignment)));
 }
 
 #[test]
@@ -1100,13 +1100,13 @@ fn test_memory_size_grow() {
     b.section(3, &func_section(&[0]));
     b.section(5, &memory_section(1, None));
     b.section(10, &code_section(&[(&[], &[0x3F, 0x00, 0x40, 0x00])]));
-    veriwasm::validate_module(&b.build()).unwrap();
+    itasca::validate_module(&b.build()).unwrap();
 }
 
 #[test]
 fn test_multiple_locals() {
     let bytes = one_func_module(&[], &[I64], &[(3, I32), (2, I64)], &[0x20, 0x04]);
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
@@ -1118,13 +1118,13 @@ fn test_call_between_functions() {
         (&[], &[0x10, 0x01]),       // call func 1
         (&[], &[0x41, 0x2A]),       // i32.const 42
     ]));
-    veriwasm::validate_module(&b.build()).unwrap();
+    itasca::validate_module(&b.build()).unwrap();
 }
 
 #[test]
 fn test_call_unknown_function() {
     let bytes = one_func_module(&[], &[], &[], &[0x10, 0x05]);
-    assert!(veriwasm::validate_module(&bytes).is_err());
+    assert!(itasca::validate_module(&bytes).is_err());
 }
 
 #[test]
@@ -1134,7 +1134,7 @@ fn test_start_function_valid() {
     b.section(3, &func_section(&[0]));
     b.section(8, &start_section(0));
     b.section(10, &code_section(&[(&[], &[])]));
-    veriwasm::validate_module(&b.build()).unwrap();
+    itasca::validate_module(&b.build()).unwrap();
 }
 
 #[test]
@@ -1144,7 +1144,7 @@ fn test_start_function_wrong_type() {
     b.section(3, &func_section(&[0]));
     b.section(8, &start_section(0));
     b.section(10, &code_section(&[(&[], &[])]));
-    assert_eq!(veriwasm::validate_module(&b.build()), Err(Error::InvalidStartType));
+    assert_eq!(itasca::validate_module(&b.build()), Err(Error::InvalidStartType));
 }
 
 #[test]
@@ -1154,7 +1154,7 @@ fn test_start_function_unknown() {
     b.section(3, &func_section(&[0]));
     b.section(8, &start_section(99));
     b.section(10, &code_section(&[(&[], &[])]));
-    assert!(veriwasm::validate_module(&b.build()).is_err());
+    assert!(itasca::validate_module(&b.build()).is_err());
 }
 
 #[test]
@@ -1164,7 +1164,7 @@ fn test_export_function() {
     b.section(3, &func_section(&[0]));
     b.section(7, &export_section(&[("main", 0x00, 0)]));
     b.section(10, &code_section(&[(&[], &[])]));
-    veriwasm::validate_module(&b.build()).unwrap();
+    itasca::validate_module(&b.build()).unwrap();
 }
 
 #[test]
@@ -1172,14 +1172,14 @@ fn test_export_memory() {
     let mut b = ModuleBuilder::new();
     b.section(5, &memory_section(1, None));
     b.section(7, &export_section(&[("memory", 0x02, 0)]));
-    veriwasm::validate_module(&b.build()).unwrap();
+    itasca::validate_module(&b.build()).unwrap();
 }
 
 #[test]
 fn test_export_unknown_func_index() {
     let mut b = ModuleBuilder::new();
     b.section(7, &export_section(&[("f", 0x00, 5)]));
-    assert!(veriwasm::validate_module(&b.build()).is_err());
+    assert!(itasca::validate_module(&b.build()).is_err());
 }
 
 #[test]
@@ -1189,7 +1189,7 @@ fn test_import_function() {
     b.section(2, &import_section(&[("env", "foo", &[0x00, 0x00])]));
     b.section(3, &func_section(&[0]));
     b.section(10, &code_section(&[(&[], &[0x10, 0x00])])); // call imported func
-    veriwasm::validate_module(&b.build()).unwrap();
+    itasca::validate_module(&b.build()).unwrap();
 }
 
 #[test]
@@ -1197,7 +1197,7 @@ fn test_import_global_in_const_expr() {
     let mut b = ModuleBuilder::new();
     b.section(2, &import_section(&[("env", "g", &[0x03, I32, 0x00])]));
     b.section(6, &global_section(&[(I32, 0x00, &[0x23, 0x00])]));
-    veriwasm::validate_module(&b.build()).unwrap();
+    itasca::validate_module(&b.build()).unwrap();
 }
 
 #[test]
@@ -1205,7 +1205,7 @@ fn test_import_mutable_global_in_const_expr() {
     let mut b = ModuleBuilder::new();
     b.section(2, &import_section(&[("env", "g", &[0x03, I32, 0x01])]));
     b.section(6, &global_section(&[(I32, 0x00, &[0x23, 0x00])]));
-    assert_eq!(veriwasm::validate_module(&b.build()), Err(Error::MutableGlobalInConstExpr));
+    assert_eq!(itasca::validate_module(&b.build()), Err(Error::MutableGlobalInConstExpr));
 }
 
 #[test]
@@ -1216,7 +1216,7 @@ fn test_element_segment() {
     b.section(4, &table_section(10, None));
     b.section(9, &element_section(&[(0, &[0x41, 0x00], &[0])]));
     b.section(10, &code_section(&[(&[], &[])]));
-    veriwasm::validate_module(&b.build()).unwrap();
+    itasca::validate_module(&b.build()).unwrap();
 }
 
 #[test]
@@ -1227,7 +1227,7 @@ fn test_element_segment_invalid_func() {
     b.section(4, &table_section(10, None));
     b.section(9, &element_section(&[(0, &[0x41, 0x00], &[99])]));
     b.section(10, &code_section(&[(&[], &[])]));
-    assert!(veriwasm::validate_module(&b.build()).is_err());
+    assert!(itasca::validate_module(&b.build()).is_err());
 }
 
 #[test]
@@ -1237,7 +1237,7 @@ fn test_element_segment_no_table() {
     b.section(3, &func_section(&[0]));
     b.section(9, &element_section(&[(0, &[0x41, 0x00], &[0])]));
     b.section(10, &code_section(&[(&[], &[])]));
-    assert!(veriwasm::validate_module(&b.build()).is_err());
+    assert!(itasca::validate_module(&b.build()).is_err());
 }
 
 #[test]
@@ -1245,35 +1245,35 @@ fn test_data_segment() {
     let mut b = ModuleBuilder::new();
     b.section(5, &memory_section(1, None));
     b.section(11, &data_section(&[(0, &[0x41, 0x00], b"hello")]));
-    veriwasm::validate_module(&b.build()).unwrap();
+    itasca::validate_module(&b.build()).unwrap();
 }
 
 #[test]
 fn test_data_segment_no_memory() {
     let mut b = ModuleBuilder::new();
     b.section(11, &data_section(&[(0, &[0x41, 0x00], b"hello")]));
-    assert!(veriwasm::validate_module(&b.build()).is_err());
+    assert!(itasca::validate_module(&b.build()).is_err());
 }
 
 #[test]
 fn test_memory_limits_valid() {
     let mut b = ModuleBuilder::new();
     b.section(5, &memory_section(0, Some(65536)));
-    veriwasm::validate_module(&b.build()).unwrap();
+    itasca::validate_module(&b.build()).unwrap();
 }
 
 #[test]
 fn test_memory_limits_min_exceeds_max() {
     let mut b = ModuleBuilder::new();
     b.section(5, &memory_section(10, Some(5)));
-    assert_eq!(veriwasm::validate_module(&b.build()), Err(Error::LimitsOutOfRange));
+    assert_eq!(itasca::validate_module(&b.build()), Err(Error::LimitsOutOfRange));
 }
 
 #[test]
 fn test_memory_limits_exceeds_range() {
     let mut b = ModuleBuilder::new();
     b.section(5, &memory_section(65537, None));
-    assert_eq!(veriwasm::validate_module(&b.build()), Err(Error::LimitsOutOfRange));
+    assert_eq!(itasca::validate_module(&b.build()), Err(Error::LimitsOutOfRange));
 }
 
 #[test]
@@ -1288,7 +1288,7 @@ fn test_custom_section_ignored() {
     b.section(0, &custom); // custom sections can appear anywhere
     b.section(3, &func_section(&[0]));
     b.section(10, &code_section(&[(&[], &[])]));
-    veriwasm::validate_module(&b.build()).unwrap();
+    itasca::validate_module(&b.build()).unwrap();
 }
 
 /// Spec 5.5.3: the contents of a custom section start with a name, so the name
@@ -1298,7 +1298,7 @@ fn test_custom_section_without_a_name() {
     let mut b = ModuleBuilder::new();
     b.section(0, &[]);
     assert_eq!(
-        veriwasm::validate_module(&b.build()),
+        itasca::validate_module(&b.build()),
         Err(Error::Read(OpError::UnexpectedEof))
     );
 }
@@ -1307,7 +1307,7 @@ fn test_custom_section_without_a_name() {
 fn test_custom_section_with_invalid_utf8_name() {
     let mut b = ModuleBuilder::new();
     b.section(0, &[0x01, 0xff]);
-    assert_eq!(veriwasm::validate_module(&b.build()), Err(Error::InvalidUtf8));
+    assert_eq!(itasca::validate_module(&b.build()), Err(Error::InvalidUtf8));
 }
 
 #[test]
@@ -1316,7 +1316,7 @@ fn test_custom_section_name_runs_past_its_end() {
     b.section(0, &[0x04, b'a']); // claims a four-byte name, one byte left
     b.section(1, &type_section(&[(&[], &[])]));
     assert_eq!(
-        veriwasm::validate_module(&b.build()),
+        itasca::validate_module(&b.build()),
         Err(Error::SectionSizeMismatch)
     );
 }
@@ -1327,7 +1327,7 @@ fn test_custom_section_in_the_tail_is_checked_too() {
     b.section(5, &memory_section(1, None));
     b.section(11, &data_section(&[(0, &[0x41, 0x00], b"hi")]));
     b.section(0, &[0x01, 0xff]);
-    assert_eq!(veriwasm::validate_module(&b.build()), Err(Error::InvalidUtf8));
+    assert_eq!(itasca::validate_module(&b.build()), Err(Error::InvalidUtf8));
 }
 
 #[test]
@@ -1335,7 +1335,7 @@ fn test_if_without_else() {
     let bytes = one_func_module(&[I32], &[], &[], &[
         0x20, 0x00, 0x04, 0x40, 0x01, 0x0B,
     ]);
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
@@ -1344,7 +1344,7 @@ fn test_if_result_without_else_fails() {
     let bytes = one_func_module(&[I32], &[I32], &[], &[
         0x20, 0x00, 0x04, 0x7F, 0x41, 0x01, 0x0B,
     ]);
-    assert!(veriwasm::validate_module(&bytes).is_err());
+    assert!(itasca::validate_module(&bytes).is_err());
 }
 
 #[test]
@@ -1357,7 +1357,7 @@ fn test_unreachable_code_after_br() {
         0x1A,        // drop (dead)
         0x0B,        // end
     ]);
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
@@ -1369,7 +1369,7 @@ fn test_br_if_typing() {
         0x0D, 0x00,  // br_if 0
         0x0B,        // end
     ]);
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
@@ -1377,7 +1377,7 @@ fn test_loop_with_br() {
     let bytes = one_func_module(&[], &[], &[], &[
         0x03, 0x40, 0x0C, 0x00, 0x0B, // loop, br 0, end
     ]);
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
@@ -1385,7 +1385,7 @@ fn test_f64_add() {
     let bytes = one_func_module(&[F64, F64], &[F64], &[], &[
         0x20, 0x00, 0x20, 0x01, 0xA0,
     ]);
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
@@ -1393,37 +1393,37 @@ fn test_f32_mul() {
     let bytes = one_func_module(&[F32, F32], &[F32], &[], &[
         0x20, 0x00, 0x20, 0x01, 0x94,
     ]);
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
 fn test_i32_wrap_i64() {
     let bytes = one_func_module(&[I64], &[I32], &[], &[0x20, 0x00, 0xA7]);
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
 fn test_i64_extend_i32_s() {
     let bytes = one_func_module(&[I32], &[I64], &[], &[0x20, 0x00, 0xAC]);
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
 fn test_f64_promote_f32() {
     let bytes = one_func_module(&[F32], &[F64], &[], &[0x20, 0x00, 0xBB]);
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
 fn test_f32_reinterpret_i32() {
     let bytes = one_func_module(&[I32], &[F32], &[], &[0x20, 0x00, 0xBE]);
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
 fn test_i64_reinterpret_f64() {
     let bytes = one_func_module(&[F64], &[I64], &[], &[0x20, 0x00, 0xBD]);
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
@@ -1436,7 +1436,7 @@ fn test_i64_load_store() {
         0x20, 0x00, 0x20, 0x01, 0x37, 0x03, 0x00, // store
         0x20, 0x00, 0x29, 0x03, 0x00,              // load
     ])]));
-    veriwasm::validate_module(&b.build()).unwrap();
+    itasca::validate_module(&b.build()).unwrap();
 }
 
 #[test]
@@ -1449,7 +1449,7 @@ fn test_i32_load8_store8() {
         0x20, 0x00, 0x20, 0x01, 0x3A, 0x00, 0x00, // i32.store8
         0x20, 0x00, 0x2D, 0x00, 0x00,              // i32.load8_u
     ])]));
-    veriwasm::validate_module(&b.build()).unwrap();
+    itasca::validate_module(&b.build()).unwrap();
 }
 
 #[test]
@@ -1459,7 +1459,7 @@ fn test_multiple_exports_different_names() {
     b.section(3, &func_section(&[0, 0]));
     b.section(7, &export_section(&[("foo", 0x00, 0), ("bar", 0x00, 1)]));
     b.section(10, &code_section(&[(&[], &[]), (&[], &[])]));
-    veriwasm::validate_module(&b.build()).unwrap();
+    itasca::validate_module(&b.build()).unwrap();
 }
 
 #[test]
@@ -1469,7 +1469,7 @@ fn test_import_memory() {
     b.section(2, &import_section(&[("env", "mem", &[0x02, 0x00, 0x01])]));
     b.section(3, &func_section(&[0]));
     b.section(10, &code_section(&[(&[], &[0x20, 0x00, 0x28, 0x02, 0x00])]));
-    veriwasm::validate_module(&b.build()).unwrap();
+    itasca::validate_module(&b.build()).unwrap();
 }
 
 #[test]
@@ -1479,7 +1479,7 @@ fn test_import_table() {
     b.section(2, &import_section(&[("env", "tbl", &[0x01, 0x70, 0x00, 0x01])]));
     b.section(3, &func_section(&[0]));
     b.section(10, &code_section(&[(&[], &[])]));
-    veriwasm::validate_module(&b.build()).unwrap();
+    itasca::validate_module(&b.build()).unwrap();
 }
 
 #[test]
@@ -1489,7 +1489,7 @@ fn test_multiple_memories_rejected() {
     mem.push(0x02); // count=2
     mem.extend_from_slice(&[0x00, 0x01, 0x00, 0x01]);
     b.section(5, &mem);
-    assert_eq!(veriwasm::validate_module(&b.build()), Err(Error::MultipleMemories));
+    assert_eq!(itasca::validate_module(&b.build()), Err(Error::MultipleMemories));
 }
 
 #[test]
@@ -1497,7 +1497,7 @@ fn test_import_plus_defined_memory_rejected() {
     let mut b = ModuleBuilder::new();
     b.section(2, &import_section(&[("env", "mem", &[0x02, 0x00, 0x01])]));
     b.section(5, &memory_section(1, None));
-    assert_eq!(veriwasm::validate_module(&b.build()), Err(Error::MultipleMemories));
+    assert_eq!(itasca::validate_module(&b.build()), Err(Error::MultipleMemories));
 }
 
 #[test]
@@ -1516,7 +1516,7 @@ fn test_multiple_types() {
         (&[], &[0x20, 0x00, 0x20, 0x01, 0x6A]),
         (&[], &[0x20, 0x00]),
     ]));
-    veriwasm::validate_module(&b.build()).unwrap();
+    itasca::validate_module(&b.build()).unwrap();
 }
 
 #[test]
@@ -1525,7 +1525,7 @@ fn test_func_code_count_mismatch() {
     b.section(1, &type_section(&[(&[], &[])]));
     b.section(3, &func_section(&[0, 0]));
     b.section(10, &code_section(&[(&[], &[])]));
-    assert_eq!(veriwasm::validate_module(&b.build()), Err(Error::FuncCodeMismatch));
+    assert_eq!(itasca::validate_module(&b.build()), Err(Error::FuncCodeMismatch));
 }
 
 #[test]
@@ -1537,7 +1537,7 @@ fn test_unknown_type_index_in_func() {
     // Caught while decoding, not while validating: the function index space is
     // built by the decoder, and it cannot resolve type 99.
     assert_eq!(
-        veriwasm::validate_module(&b.build()),
+        itasca::validate_module(&b.build()),
         Err(Error::UnknownType(99))
     );
 }
@@ -1548,7 +1548,7 @@ fn test_unknown_type_index_in_import() {
     b.section(1, &type_section(&[(&[], &[])]));
     b.section(2, &import_section(&[("m", "f", &[0x00, 99])]));
     assert_eq!(
-        veriwasm::validate_module(&b.build()),
+        itasca::validate_module(&b.build()),
         Err(Error::UnknownType(99))
     );
 }
@@ -1556,13 +1556,13 @@ fn test_unknown_type_index_in_import() {
 #[test]
 fn test_stack_extra_values_rejected() {
     let bytes = one_func_module(&[], &[I32], &[], &[0x41, 0x01, 0x41, 0x02]);
-    assert!(veriwasm::validate_module(&bytes).is_err());
+    assert!(itasca::validate_module(&bytes).is_err());
 }
 
 #[test]
 fn test_drop_on_empty_stack() {
     let bytes = one_func_module(&[], &[], &[], &[0x1A]);
-    assert!(veriwasm::validate_module(&bytes).is_err());
+    assert!(itasca::validate_module(&bytes).is_err());
 }
 
 #[test]
@@ -1570,7 +1570,7 @@ fn test_decode_f32_const() {
     let bytes = one_func_module(&[], &[F32], &[], &[
         0x43, 0x00, 0x00, 0xC0, 0x3F,
     ]);
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
@@ -1579,7 +1579,7 @@ fn test_unreachable_with_dead_const_rejected() {
     // Dead code after unreachable leaves i32 on stack with unr=true.
     // This is invalid: stack must be empty after consuming results.
     let bytes = one_func_module(&[], &[], &[], &[0x00, 0x41, 0x00]); // unreachable, i32.const 0
-    assert!(veriwasm::validate_module(&bytes).is_err());
+    assert!(itasca::validate_module(&bytes).is_err());
 }
 
 #[test]
@@ -1587,7 +1587,7 @@ fn test_decode_f64_const() {
     let bytes = one_func_module(&[], &[F64], &[], &[
         0x44, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0x3F,
     ]);
-    veriwasm::validate_module(&bytes).unwrap();
+    itasca::validate_module(&bytes).unwrap();
 }
 
 // ---- The environment / code / tail split ----
@@ -1606,7 +1606,7 @@ fn test_code_section_without_function_section() {
     let mut b = ModuleBuilder::new();
     b.section(1, &type_section(&[(&[], &[])]));
     b.section(10, &code_section(&[(&[], &[])]));
-    assert_eq!(veriwasm::validate_module(&b.build()), Err(Error::FuncCodeMismatch));
+    assert_eq!(itasca::validate_module(&b.build()), Err(Error::FuncCodeMismatch));
 }
 
 /// Reported apart from a count mismatch, because a consumer reading a module as
@@ -1618,7 +1618,7 @@ fn test_function_section_without_code_section() {
     b.section(1, &type_section(&[(&[], &[])]));
     b.section(3, &func_section(&[0]));
     assert_eq!(
-        veriwasm::validate_module(&b.build()),
+        itasca::validate_module(&b.build()),
         Err(Error::MissingCodeSection)
     );
 }
@@ -1633,7 +1633,7 @@ fn test_data_section_before_code_section() {
     b.section(10, &code_section(&[(&[], &[])]));
     // The data section ends the environment, so the code section is missing and
     // then the tail meets a section id it will not take.
-    assert!(veriwasm::validate_module(&b.build()).is_err());
+    assert!(itasca::validate_module(&b.build()).is_err());
 }
 
 #[test]
@@ -1647,7 +1647,7 @@ fn test_custom_sections_around_the_code_section() {
     b.section(0, &custom_section("before.data", b"y"));
     b.section(11, &data_section(&[(0, &[0x41, 0x00], b"hi")]));
     b.section(0, &custom_section("after.data", b"z"));
-    let m = veriwasm::validate_module(&b.build()).unwrap();
+    let m = itasca::validate_module(&b.build()).unwrap();
     assert_eq!(m.tail.data.len(), 1);
 }
 
@@ -1657,7 +1657,7 @@ fn test_two_data_sections_are_rejected() {
     b.section(5, &memory_section(1, None));
     b.section(11, &data_section(&[(0, &[0x41, 0x00], b"a")]));
     b.section(11, &data_section(&[(0, &[0x41, 0x00], b"b")]));
-    assert_eq!(veriwasm::validate_module(&b.build()), Err(Error::SectionOutOfOrder));
+    assert_eq!(itasca::validate_module(&b.build()), Err(Error::SectionOutOfOrder));
 }
 
 #[test]
@@ -1671,7 +1671,7 @@ fn test_element_offset_reads_an_imported_global() {
     b.section(4, &table_section(1, None));
     b.section(9, &element_section(&[(0, &[0x23, 0x00], &[0])]));
     b.section(10, &code_section(&[(&[], &[])]));
-    let m = veriwasm::validate_module(&b.build()).unwrap();
+    let m = itasca::validate_module(&b.build()).unwrap();
     assert_eq!(m.env.num_imported_globals, 1);
     assert_eq!(m.env.elements[0].offset, ConstExpr::GlobalGet(0));
 }
@@ -1683,7 +1683,7 @@ fn test_element_offset_cannot_read_a_defined_global() {
     b.section(6, &global_section(&[(I32, 0x00, &[0x41, 0x00])]));
     b.section(9, &element_section(&[(0, &[0x23, 0x00], &[])]));
     assert_eq!(
-        veriwasm::validate_module(&b.build()),
+        itasca::validate_module(&b.build()),
         Err(Error::MutableGlobalInConstExpr)
     );
 }
@@ -1709,7 +1709,7 @@ fn test_import_name_must_be_utf8() {
     b.section(1, &type_section(&[(&[], &[])]));
     // 0xC0 0x80 is the overlong encoding of U+0000, which UTF-8 forbids.
     b.section(2, &import_section_raw(b"env", &[0xC0, 0x80], &[0x00, 0x00]));
-    assert_eq!(veriwasm::validate_module(&b.build()), Err(Error::InvalidUtf8));
+    assert_eq!(itasca::validate_module(&b.build()), Err(Error::InvalidUtf8));
 }
 
 #[test]
@@ -1726,7 +1726,7 @@ fn test_export_name_must_be_utf8() {
     contents.push(0x00);
     b.section(7, &contents);
     b.section(10, &code_section(&[(&[], &[])]));
-    assert_eq!(veriwasm::validate_module(&b.build()), Err(Error::InvalidUtf8));
+    assert_eq!(itasca::validate_module(&b.build()), Err(Error::InvalidUtf8));
 }
 
 #[test]
@@ -1736,7 +1736,7 @@ fn test_multibyte_names_are_accepted() {
     b.section(3, &func_section(&[0]));
     b.section(7, &export_section(&[("\u{e9}\u{4e2d}\u{1f600}", 0x00, 0)]));
     b.section(10, &code_section(&[(&[], &[])]));
-    veriwasm::validate_module(&b.build()).unwrap();
+    itasca::validate_module(&b.build()).unwrap();
 }
 
 // ---- Driving the code section one entry at a time ----
@@ -1752,7 +1752,7 @@ fn test_validate_code_entry_matches_validate_code() {
     ]));
     let bytes = b.build();
 
-    let (env, code_pos) = veriwasm::module::decode_env(&bytes).unwrap();
+    let (env, code_pos) = itasca::module::decode_env(&bytes).unwrap();
     assert_eq!(env.func_type_indices.len(), 2);
 
     // Skip the code section's header and entry count by hand, then drive the
@@ -1762,13 +1762,13 @@ fn test_validate_code_entry_matches_validate_code() {
     let mut pos = code_pos + header_len + count_len;
     let mut i = 0;
     while i < env.func_type_indices.len() {
-        pos = veriwasm::module::validate_code_entry(&bytes, pos, &env, i).unwrap();
+        pos = itasca::module::validate_code_entry(&bytes, pos, &env, i).unwrap();
         i += 1;
     }
 
     // The same position validate_code would have stopped at.
-    assert_eq!(pos, veriwasm::module::validate_code(&bytes, code_pos, &env).unwrap());
-    assert!(veriwasm::module::decode_tail(&bytes, pos, &env).unwrap().data.is_empty());
+    assert_eq!(pos, itasca::module::validate_code(&bytes, code_pos, &env).unwrap());
+    assert!(itasca::module::decode_tail(&bytes, pos, &env).unwrap().data.is_empty());
 }
 
 #[test]
@@ -1777,14 +1777,14 @@ fn test_too_many_locals_is_rejected() {
     b.section(1, &type_section(&[(&[], &[])]));
     b.section(3, &func_section(&[0]));
     b.section(10, &code_section(&[(&[(1_000_000, I32)], &[])]));
-    assert_eq!(veriwasm::validate_module(&b.build()), Err(Error::TooManyLocals));
+    assert_eq!(itasca::validate_module(&b.build()), Err(Error::TooManyLocals));
 }
 
 #[test]
 fn test_multi_result_type_is_rejected() {
     let mut b = ModuleBuilder::new();
     b.section(1, &type_section(&[(&[], &[I32, I32])]));
-    assert_eq!(veriwasm::validate_module(&b.build()), Err(Error::TooManyResults));
+    assert_eq!(itasca::validate_module(&b.build()), Err(Error::TooManyResults));
 }
 
 #[test]
@@ -1797,7 +1797,7 @@ fn test_section_size_must_match_its_contents() {
     bytes.extend_from_slice(&leb128_u32(contents.len() as u32 + 1));
     bytes.extend_from_slice(&contents);
     bytes.push(0x00);
-    assert_eq!(veriwasm::validate_module(&bytes), Err(Error::SectionSizeMismatch));
+    assert_eq!(itasca::validate_module(&bytes), Err(Error::SectionSizeMismatch));
 }
 
 /// `MAX_LOCALS` caps what a function *declares*, not its whole frame, so a
@@ -1824,27 +1824,27 @@ fn test_the_locals_cap_is_on_the_declaration_not_the_frame() {
     };
 
     // The declaration's own cap.
-    assert!(veriwasm::validate_module(&build(&[], 50_000)).is_ok());
+    assert!(itasca::validate_module(&build(&[], 50_000)).is_ok());
     assert_eq!(
-        veriwasm::validate_module(&build(&[], 50_001)),
+        itasca::validate_module(&build(&[], 50_001)),
         Err(Error::TooManyLocals)
     );
 
     // A parameter buys no less room, which is where SpiderMonkey would differ:
     // 1 + 50000 slots is over its MaxLocals and within our cap.
-    assert!(veriwasm::validate_module(&build(&[I32], 50_000)).is_ok());
+    assert!(itasca::validate_module(&build(&[I32], 50_000)).is_ok());
 }
 
 /// A visitor that records every custom section it is shown, which is what a
 /// consumer that wants them does.
 #[derive(Default)]
-struct Customs(Vec<veriwasm::types::CustomSection>);
+struct Customs(Vec<itasca::types::CustomSection>);
 
-impl veriwasm::module::ModuleVisitor for Customs {
+impl itasca::module::ModuleVisitor for Customs {
     fn on_custom_section(
         &mut self,
-        s: veriwasm::types::CustomSection,
-    ) -> veriwasm::VisitResult {
+        s: itasca::types::CustomSection,
+    ) -> itasca::VisitResult {
         self.0.push(s);
         Ok(())
     }
@@ -1852,7 +1852,7 @@ impl veriwasm::module::ModuleVisitor for Customs {
 
 /// The name a custom section reports, resolved in the bytes the decoder that
 /// reported it was handed.
-fn custom_name<'a>(bytes: &'a [u8], c: &veriwasm::types::CustomSection) -> &'a [u8] {
+fn custom_name<'a>(bytes: &'a [u8], c: &itasca::types::CustomSection) -> &'a [u8] {
     &bytes[c.payload_start - c.name_len..c.payload_start]
 }
 
@@ -1873,16 +1873,16 @@ fn test_custom_sections_are_reported_with_their_ranges() {
     b.section(0, &custom(b"last", &[9]));
     let bytes = b.build();
 
-    assert!(veriwasm::validate_module(&bytes).is_ok());
+    assert!(itasca::validate_module(&bytes).is_ok());
 
     // No code section, so the environment ran to the end and saw all three.
     let mut seen = Customs::default();
-    veriwasm::module::decode_env_with(&bytes, &mut seen).unwrap();
+    itasca::module::decode_env_with(&bytes, &mut seen).unwrap();
     let names: Vec<&[u8]> = seen.0.iter().map(|c| custom_name(&bytes, c)).collect();
     assert_eq!(names, vec![&b"first"[..], &b""[..], &b"last"[..]]);
 
     // The ranges are into the module, and hold what was put in them.
-    let payload = |c: &veriwasm::types::CustomSection| &bytes[c.payload_start..c.payload_end];
+    let payload = |c: &itasca::types::CustomSection| &bytes[c.payload_start..c.payload_end];
     assert_eq!(payload(&seen.0[0]), &[1, 2, 3]);
     assert_eq!(payload(&seen.0[1]), &[] as &[u8]);
     assert_eq!(payload(&seen.0[2]), &[9]);
@@ -1902,19 +1902,19 @@ fn test_custom_sections_are_split_across_the_code_section() {
     let bytes = b.build();
 
     let mut seen = Customs::default();
-    let (env, code_pos) = veriwasm::module::decode_env_with(&bytes, &mut seen).unwrap();
+    let (env, code_pos) = itasca::module::decode_env_with(&bytes, &mut seen).unwrap();
     assert_eq!(
         seen.0.iter().map(|c| custom_name(&bytes, c)).collect::<Vec<_>>(),
         vec![&b"before.code"[..]]
     );
 
-    let tail_pos = veriwasm::module::code_section(&bytes, code_pos, &env)
+    let tail_pos = itasca::module::code_section(&bytes, code_pos, &env)
         .unwrap()
         .unwrap()
         .end;
 
     // Carrying on with the same visitor gives the module's customs in order.
-    veriwasm::module::decode_tail_with(&bytes, tail_pos, &env, &mut seen).unwrap();
+    itasca::module::decode_tail_with(&bytes, tail_pos, &env, &mut seen).unwrap();
     assert_eq!(
         seen.0.iter().map(|c| custom_name(&bytes, c)).collect::<Vec<_>>(),
         vec![&b"before.code"[..], &b"after.code"[..]]
@@ -1926,7 +1926,7 @@ fn test_custom_sections_are_split_across_the_code_section() {
     // header and its positions are into the region.
     let region = &bytes[tail_pos..];
     let mut piece = Customs::default();
-    veriwasm::module::decode_tail_with(region, 0, &env, &mut piece).unwrap();
+    itasca::module::decode_tail_with(region, 0, &env, &mut piece).unwrap();
     assert_eq!(
         piece.0.iter().map(|c| custom_name(region, c)).collect::<Vec<_>>(),
         vec![&b"after.code"[..]]
@@ -1939,12 +1939,12 @@ fn test_custom_sections_are_split_across_the_code_section() {
 #[test]
 fn test_a_declining_module_consumer_stops_the_decode() {
     struct Refuser;
-    impl veriwasm::module::ModuleVisitor for Refuser {
+    impl itasca::module::ModuleVisitor for Refuser {
         fn on_custom_section(
             &mut self,
-            _s: veriwasm::types::CustomSection,
-        ) -> veriwasm::VisitResult {
-            Err(veriwasm::VisitError::OutOfMemory)
+            _s: itasca::types::CustomSection,
+        ) -> itasca::VisitResult {
+            Err(itasca::VisitError::OutOfMemory)
         }
     }
 
@@ -1954,10 +1954,10 @@ fn test_a_declining_module_consumer_stops_the_decode() {
     let bytes = b.build();
 
     // The module itself is fine.
-    assert!(veriwasm::validate_module(&bytes).is_ok());
+    assert!(itasca::validate_module(&bytes).is_ok());
     assert_eq!(
-        veriwasm::module::decode_env_with(&bytes, &mut Refuser).unwrap_err(),
-        Error::Visitor(veriwasm::VisitError::OutOfMemory)
+        itasca::module::decode_env_with(&bytes, &mut Refuser).unwrap_err(),
+        Error::Visitor(itasca::VisitError::OutOfMemory)
     );
 }
 
@@ -1967,7 +1967,7 @@ fn test_a_module_with_no_custom_sections_reports_none() {
     b.section(1, &type_section(&[(&[], &[])]));
     let bytes = b.build();
     let mut seen = Customs::default();
-    veriwasm::module::decode_env_with(&bytes, &mut seen).unwrap();
+    itasca::module::decode_env_with(&bytes, &mut seen).unwrap();
     assert!(seen.0.is_empty());
 }
 
@@ -1979,7 +1979,7 @@ struct Entries {
     waits: Vec<usize>,
 }
 
-impl veriwasm::module::CodeVisitor for Entries {
+impl itasca::module::CodeVisitor for Entries {
     fn on_need_bytes(&mut self, end: usize) -> Result<(), Error> {
         self.waits.push(end);
         Ok(())
@@ -1988,14 +1988,14 @@ impl veriwasm::module::CodeVisitor for Entries {
     fn on_code_entry(
         &mut self,
         data: &[u8],
-        env: &veriwasm::env::Env,
+        env: &itasca::env::Env,
         index: usize,
         entry_pos: usize,
         contents_start: usize,
         entry_end: usize,
     ) -> Result<(), Error> {
         self.seen.push((index, entry_pos, contents_start, entry_end));
-        veriwasm::module::validate_code_entry(data, entry_pos, env, index)?;
+        itasca::module::validate_code_entry(data, entry_pos, env, index)?;
         Ok(())
     }
 }
@@ -2017,15 +2017,15 @@ fn test_validate_code_with_agrees_with_validate_code() {
     );
     let bytes = b.build();
 
-    let (env, code_pos) = veriwasm::module::decode_env(&bytes).unwrap();
-    let cs = veriwasm::module::code_section(&bytes, code_pos, &env)
+    let (env, code_pos) = itasca::module::decode_env(&bytes).unwrap();
+    let cs = itasca::module::code_section(&bytes, code_pos, &env)
         .unwrap()
         .unwrap();
 
     let mut seen = Entries::default();
     let next =
-        veriwasm::module::validate_code_with(&bytes, code_pos, &env, &mut seen).unwrap();
-    assert_eq!(next, veriwasm::module::validate_code(&bytes, code_pos, &env).unwrap());
+        itasca::module::validate_code_with(&bytes, code_pos, &env, &mut seen).unwrap();
+    assert_eq!(next, itasca::module::validate_code(&bytes, code_pos, &env).unwrap());
     assert_eq!(next, cs.end);
 
     // Three entries, in order, and their extents tile the section exactly.
@@ -2049,17 +2049,17 @@ fn test_validate_code_with_agrees_with_validate_code() {
 #[test]
 fn test_a_declining_code_consumer_stops_the_walk() {
     struct Refuser;
-    impl veriwasm::module::CodeVisitor for Refuser {
+    impl itasca::module::CodeVisitor for Refuser {
         fn on_code_entry(
             &mut self,
             _data: &[u8],
-            _env: &veriwasm::env::Env,
+            _env: &itasca::env::Env,
             _index: usize,
             _entry_pos: usize,
             _contents_start: usize,
             _entry_end: usize,
         ) -> Result<(), Error> {
-            Err(Error::Visitor(veriwasm::VisitError::OutOfMemory))
+            Err(Error::Visitor(itasca::VisitError::OutOfMemory))
         }
     }
 
@@ -2069,12 +2069,12 @@ fn test_a_declining_code_consumer_stops_the_walk() {
     b.section(10, &code_section(&[(&[], &[])]));
     let bytes = b.build();
 
-    let (env, code_pos) = veriwasm::module::decode_env(&bytes).unwrap();
-    assert!(veriwasm::module::validate_code(&bytes, code_pos, &env).is_ok());
+    let (env, code_pos) = itasca::module::decode_env(&bytes).unwrap();
+    assert!(itasca::module::validate_code(&bytes, code_pos, &env).is_ok());
     assert_eq!(
-        veriwasm::module::validate_code_with(&bytes, code_pos, &env, &mut Refuser)
+        itasca::module::validate_code_with(&bytes, code_pos, &env, &mut Refuser)
             .unwrap_err(),
-        Error::Visitor(veriwasm::VisitError::OutOfMemory)
+        Error::Visitor(itasca::VisitError::OutOfMemory)
     );
 }
 
@@ -2083,32 +2083,32 @@ fn test_a_declining_code_consumer_stops_the_walk() {
 /// shape a compiler drives.
 #[derive(Default)]
 struct Driver {
-    customs: Vec<veriwasm::types::CustomSection>,
+    customs: Vec<itasca::types::CustomSection>,
     entries: Vec<(usize, usize)>,
 }
 
-impl veriwasm::module::ModuleVisitor for Driver {
+impl itasca::module::ModuleVisitor for Driver {
     fn on_custom_section(
         &mut self,
-        s: veriwasm::types::CustomSection,
-    ) -> veriwasm::VisitResult {
+        s: itasca::types::CustomSection,
+    ) -> itasca::VisitResult {
         self.customs.push(s);
         Ok(())
     }
 }
 
-impl veriwasm::module::CodeVisitor for Driver {
+impl itasca::module::CodeVisitor for Driver {
     fn on_code_entry(
         &mut self,
         data: &[u8],
-        env: &veriwasm::env::Env,
+        env: &itasca::env::Env,
         index: usize,
         entry_pos: usize,
         _contents_start: usize,
         entry_end: usize,
     ) -> Result<(), Error> {
         self.entries.push((entry_pos, entry_end));
-        veriwasm::module::validate_code_entry(data, entry_pos, env, index)?;
+        itasca::module::validate_code_entry(data, entry_pos, env, index)?;
         Ok(())
     }
 }
@@ -2126,8 +2126,8 @@ fn test_validate_module_with_agrees_with_validate_module() {
     let bytes = b.build();
 
     let mut d = Driver::default();
-    let driven = veriwasm::module::validate_module_with(&bytes, &mut d).unwrap();
-    let plain = veriwasm::validate_module(&bytes).unwrap();
+    let driven = itasca::module::validate_module_with(&bytes, &mut d).unwrap();
+    let plain = itasca::validate_module(&bytes).unwrap();
     assert_eq!(driven, plain);
 
     // Both sides of the code section, in module order.
@@ -2145,18 +2145,18 @@ fn test_validate_module_with_agrees_with_validate_module() {
 #[test]
 fn test_a_declining_driver_stops_the_module() {
     struct Refuser;
-    impl veriwasm::module::ModuleVisitor for Refuser {}
-    impl veriwasm::module::CodeVisitor for Refuser {
+    impl itasca::module::ModuleVisitor for Refuser {}
+    impl itasca::module::CodeVisitor for Refuser {
         fn on_code_entry(
             &mut self,
             _data: &[u8],
-            _env: &veriwasm::env::Env,
+            _env: &itasca::env::Env,
             _index: usize,
             _entry_pos: usize,
             _contents_start: usize,
             _entry_end: usize,
         ) -> Result<(), Error> {
-            Err(Error::Visitor(veriwasm::VisitError::OutOfMemory))
+            Err(Error::Visitor(itasca::VisitError::OutOfMemory))
         }
     }
 
@@ -2166,9 +2166,9 @@ fn test_a_declining_driver_stops_the_module() {
     b.section(10, &code_section(&[(&[], &[])]));
     let bytes = b.build();
 
-    assert!(veriwasm::validate_module(&bytes).is_ok());
+    assert!(itasca::validate_module(&bytes).is_ok());
     assert_eq!(
-        veriwasm::module::validate_module_with(&bytes, &mut Refuser).unwrap_err(),
-        Error::Visitor(veriwasm::VisitError::OutOfMemory)
+        itasca::module::validate_module_with(&bytes, &mut Refuser).unwrap_err(),
+        Error::Visitor(itasca::VisitError::OutOfMemory)
     );
 }

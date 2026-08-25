@@ -6,9 +6,9 @@
 //! segment encoding with a flags-prefixed one (passive segments, explicit
 //! table/memory indices, `elemkind`/`reftype` bytes). Every current
 //! `wasm-encoder`-based tool emits only the new encoding, even for content
-//! that is semantically Wasm 1.0 and uses none of what the flags add. veriwasm
+//! that is semantically Wasm 1.0 and uses none of what the flags add. itasca
 //! decodes the actual Wasm 1.0 grammar (no flags), matching the W3C REC, so
-//! bytes from `wasm-encoder` need translating before veriwasm can be tested
+//! bytes from `wasm-encoder` need translating before itasca can be tested
 //! against them.
 //!
 //! Wasm 1.0 has at most one table and one memory, so every segment it can

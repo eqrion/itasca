@@ -24,16 +24,16 @@ From Wasm Require Import datatypes numerics type_checker operations typing.
 (* [Aeneas_Specs] is what brings the extracted types into scope; never [Include]
    the extracted modules again, which would shadow Primitives constants with
    opaque copies. *)
-Require Import Veriwasm.Aeneas_Specs.
-Require Import Veriwasm.Spec_Binary.
+Require Import Itasca.Aeneas_Specs.
+Require Import Itasca.Spec_Binary.
 (* [Export], not [Import]: [flat_of], [else_sugar] and [repr_expr] used to be
    defined here and moved to [Spec_Expr.v] so that the module format spec could
    depend on them without dragging in the extraction. Consumers of this file
    should not have to care which half a name came from. *)
-Require Export Veriwasm.Spec_Expr.
-Require Import Veriwasm.Translate.
-Require Import Veriwasm.OpIter_State.
-Require Import Veriwasm.OpIter_Sim.
+Require Export Itasca.Spec_Expr.
+Require Import Itasca.Translate.
+Require Import Itasca.OpIter_State.
+Require Import Itasca.OpIter_Sim.
 
 (* Mathcomp is not imported here, so [++] is [List.app] and the ordinary
    [rewrite] applies, including [rewrite <-]. Binding the type keeps it that way

@@ -29,7 +29,7 @@ AENEAS ?= $(AENEAS_DIR)/src/_build/install/default/bin/aeneas
 
 WASMCERT_VO = vendor/WasmCert-Coq/_build/default/theories
 
-LLBC_FILE = veriwasm.llbc
+LLBC_FILE = itasca.llbc
 RUST_SOURCES = $(shell find src -name '*.rs')
 
 # COQBIN needs the trailing slash here: Makefile.coq would add one itself, but
@@ -68,7 +68,7 @@ $(LLBC_FILE): $(RUST_SOURCES) Cargo.toml Charon.toml
 # the recipe ignored the exit code to get past it. That also meant a genuine
 # translation error left a truncated .v behind and said nothing.
 
-AENEAS_GENERATED = theories/Veriwasm_Types.v theories/Veriwasm_Funs.v
+AENEAS_GENERATED = theories/Itasca_Types.v theories/Itasca_Funs.v
 AENEAS_PATCHES = patches/aeneas-coq-tuple-binder.patch \
 		 patches/aeneas-coq-slice-index-clash.patch
 
@@ -89,7 +89,7 @@ prove: Makefile.coq $(WASMCERT_VO)/type_checker.vo
 	$(MAKE_COQ)
 
 check-coq: Makefile.coq
-	$(MAKE_COQ) theories/Veriwasm_Funs.vo
+	$(MAKE_COQ) theories/Itasca_Funs.vo
 
 Makefile.coq: _CoqProject
 	$(OPAM_PREFIX)/bin/coq_makefile -f _CoqProject -o $@
