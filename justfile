@@ -166,8 +166,8 @@ trust:
         OpIter_Driven:validate_body_driven \
         OpIter_Driven:validate_body_accepts \
         Module_NoPanic:validate_module_no_panic \
-        Module_NoPanic:decode_env_ok \
-        Module_NoPanic:decode_tail_ok \
+        Module_NoPanic:validate_env_ok \
+        Module_NoPanic:validate_tail_ok \
         Module_Sound:validate_module_repr \
         Module_Sound:validate_code_entry_with_sound \
         Module_Sound:code_section_sound \
@@ -202,12 +202,12 @@ trust:
         Module_Complete:decode_start_section_complete \
         Module_Complete:decode_element_section_complete \
         Module_Complete:decode_data_section_complete \
-        Module_Complete:decode_tail_complete \
+        Module_Complete:validate_tail_complete \
         Module_Complete:decode_locals_complete \
         Module_Complete:validate_code_entry_complete \
         Module_Complete:validate_code_complete \
-        Module_Complete:decode_env_with_loop_complete \
-        Module_Complete:decode_env_complete \
+        Module_Complete:validate_env_with_loop_complete \
+        Module_Complete:validate_env_complete \
         Module_Complete:validate_code_entry_with_complete \
         Module_Complete:validate_module_complete \
         Module_Wasm10:const_exprs_one \
@@ -215,8 +215,8 @@ trust:
         Module_Wasm10:validate_module_typechecked \
         Module_Driven:validate_code_entry_driven \
         Module_Driven:validate_code_entry_accepts \
-        Module_Driven:decode_env_with_accepts \
-        Module_Driven:decode_tail_with_accepts \
+        Module_Driven:validate_env_with_accepts \
+        Module_Driven:validate_tail_with_accepts \
         Module_Driven:validate_code_with_accepts \
         Module_Driven:validate_module_of_parts \
         Module_Driven:validate_module_with_accepts \

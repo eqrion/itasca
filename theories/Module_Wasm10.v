@@ -25,7 +25,7 @@
     [[] -> [t]] has exactly one instruction in it, because every constant
     instruction pushes one value and consumes none. That is what lets
     [decode_const_expr] be a one-instruction reader rather than a mode of
-    [opiter]. *)
+    [code]. *)
 
 Require Import Primitives.
 Import Primitives.
@@ -1092,9 +1092,9 @@ Theorem validate_module_typechecked : forall data m t_imps t_exps,
   module_1_0 m ->
   exists vm imps exps,
     module_validate_module data = Ok (Core_result_Result_Ok vm)
-    /\ module_import_types vm.(module_ValidatedModule_env)
+    /\ module_import_types vm.(module_Module_env)
          = Ok (Core_result_Result_Ok imps)
-    /\ module_export_types vm.(module_ValidatedModule_env)
+    /\ module_export_types vm.(module_Module_env)
          = Ok (Core_result_Result_Ok exps)
     /\ translate_externtypes imps = t_imps
     /\ translate_externtypes exps = t_exps.

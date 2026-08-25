@@ -6,14 +6,15 @@
 src/
   lib.rs              Public API: validate_module()
   module.rs           Fused decode + validate, split into environment, code, tail.
-                      `validate_code_entry_with` is the per-function entry point
-  env.rs              Env: everything the binary declares before the code section
+                      `validate_code_entry_with` is the per-function entry point.
+                      Env: everything the binary declares before the code section
   types.rs            Value and external types, mirrors WasmCert-Coq datatypes.v
   limits.rs           Every numeric bound the validator enforces
   reader.rs           Byte-level reads over (data, pos): bounds, LEB128, floats.
                       Private: not a validation routine
-  opiter.rs           Streaming function-body decode + validate. The verified core
-  visit.rs            The push interface: one hook per opcode, and its tables
+  code.rs             Streaming function-body decode + validate, the verified
+                      core, and the push interface: one hook per opcode, and
+                      its tables
   error.rs            Error, OpError and VisitError
 
 theories/
@@ -39,7 +40,7 @@ theories/
 
 tests/
   wasm_tests.rs       Module decode + validate, end to end
-  opiter_tests.rs     The streaming validator, operator by operator. The unit
+  code_tests.rs       The streaming validator, operator by operator. The unit
                       tests for reader.rs and the two opcode tables live beside
                       the code, since neither is public any more
   visit_tests.rs      The push interface: which hook fires, with what
@@ -191,8 +192,8 @@ so all of `src/` has to stay inside it: safe Rust, no raw pointers, full stop.
 
 `Itasca_Funs.v` records a source line per definition, so inserting a line
 anywhere in `src/` rewrites every `Source:` comment below it. That is why
-`visit.rs` re-exports its two tables at the bottom of the file rather than next
-to them: the change had to add no line above anything. A diff to `theories/`
+`code.rs` re-exports its two opcode tables at the bottom of the file rather
+than next to them: the change had to add no line above anything. A diff to `theories/`
 that is only `Source:` comments is a diff to nothing, but it is still noise in a
 review, so avoid causing one.
 
@@ -225,7 +226,7 @@ nowhere to put one. This looks like a small gap and is not.
 
 A position cannot come from a `From` impl, and `impl From<OpError> for Error` is
 what every `?` in a decoder uses. So threading a position through would mean
-replacing all 312 `?`s in `module.rs`, `opiter.rs` and `reader.rs` with explicit
+replacing all 312 `?`s in `module.rs`, `code.rs` and `reader.rs` with explicit
 matches, and reshaping the 200-odd `try_err`-style steps in the proofs that walk
 their error arms. That is a great deal of churn for error strings, which both the
 core specification and the web embedding leave unspecified.
@@ -238,8 +239,8 @@ rejections are bracketed to the entry point's `pos` and no closer.
 
 ### Adding a module hook
 
-`ModuleVisitor` is the operator visitor one level up: it is what `decode_env`
-and `decode_tail` report to, and both take the same one, so a consumer hears
+`ModuleVisitor` is the operator visitor one level up: it is what `validate_env`
+and `validate_tail` report to, and both take the same one, so a consumer hears
 about a module's sections in module order without caring which side of the code
 section they came from. A new hook there costs three things here, plus
 whatever a C ABI built on top of this trait needs to grow to match --

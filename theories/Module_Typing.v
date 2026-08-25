@@ -14,7 +14,7 @@
     [module_type_checker] is thirteen obligations and each has a counterpart in
     [module.rs]. Almost every one of them needs a fact about the *environment*
     rather than about one decoder, which is what [Module_Sound]'s
-    [decode_env_preserves] invariants and [validate_module_parts]' field
+    [validate_env_preserves] invariants and [validate_module_parts]' field
     equations are for. [module_of_type_checker] discharges all thirteen;
     [validate_module_typed] at the end of the file is the theorem. *)
 
@@ -66,8 +66,8 @@ Qed.
     section did not write. *)
 Lemma module_of_tables_ok : forall env tabs c,
   env_limits_valid env ->
-  vec_list env.(env_Env_table_types)
-    = imported_tables (vec_list env.(env_Env_imports)) ++ tabs ->
+  vec_list env.(module_Env_table_types)
+    = imported_tables (vec_list env.(module_Env_imports)) ++ tabs ->
   seq.all (module_table_type_checker c)
     (List.map translate_table tabs) = true.
 Proof.
@@ -78,8 +78,8 @@ Qed.
 
 Lemma module_of_mems_ok : forall env mems c,
   env_limits_valid env ->
-  vec_list env.(env_Env_mem_types)
-    = imported_mems (vec_list env.(env_Env_imports)) ++ mems ->
+  vec_list env.(module_Env_mem_types)
+    = imported_mems (vec_list env.(module_Env_imports)) ++ mems ->
   seq.all (module_mem_type_checker c)
     (List.map translate_mem mems) = true.
 Proof.
@@ -137,7 +137,7 @@ Proof.
   (* [module_imports_typer] maps with mathcomp's [map], not [List.map] *)
   cbn [List.map seq.map those0 import_externs List.flat_map].
   unfold translate_import at 1. cbn [imp_desc]. unfold translate_importdesc.
-  destruct im.(env_Import_desc) as [idx|t|m|g] eqn:Hd.
+  destruct im.(module_Import_desc) as [idx|t|m|g] eqn:Hd.
   - (* a function: the index has to resolve *)
     cbn [List.app] in Hrange.
     inversion Hrange as [|y l Hy Hyl]; subst.
@@ -239,7 +239,7 @@ Proof.
   intros tys imps. induction imps as [|im imps IH]; [reflexivity|].
   rewrite import_externs_cons. rewrite ext_t_funcs_app. rewrite IH.
   destruct im as [md nm [idx|t|m|g]]; [|reflexivity|reflexivity|reflexivity].
-  unfold import_externs, resolved_types, imported_func_idxs. cbn [List.flat_map env_Import_desc app].
+  unfold import_externs, resolved_types, imported_func_idxs. cbn [List.flat_map module_Import_desc app].
   destruct (List.nth_error tys (Z.to_nat (to_Z idx))); reflexivity.
 Qed.
 
@@ -250,7 +250,7 @@ Proof.
   intros tys imps. induction imps as [|im imps IH]; [reflexivity|].
   rewrite import_externs_cons. rewrite ext_t_tables_app. rewrite IH.
   destruct im as [md nm [idx|t|m|g]]; [|reflexivity|reflexivity|reflexivity].
-  unfold import_externs, imported_tables. cbn [List.flat_map env_Import_desc app].
+  unfold import_externs, imported_tables. cbn [List.flat_map module_Import_desc app].
   destruct (List.nth_error tys (Z.to_nat (to_Z idx))); reflexivity.
 Qed.
 
@@ -261,7 +261,7 @@ Proof.
   intros tys imps. induction imps as [|im imps IH]; [reflexivity|].
   rewrite import_externs_cons. rewrite ext_t_mems_app. rewrite IH.
   destruct im as [md nm [idx|t|m|g]]; [|reflexivity|reflexivity|reflexivity].
-  unfold import_externs, imported_mems. cbn [List.flat_map env_Import_desc app].
+  unfold import_externs, imported_mems. cbn [List.flat_map module_Import_desc app].
   destruct (List.nth_error tys (Z.to_nat (to_Z idx))); reflexivity.
 Qed.
 
@@ -272,57 +272,57 @@ Proof.
   intros tys imps. induction imps as [|im imps IH]; [reflexivity|].
   rewrite import_externs_cons. rewrite ext_t_globals_app. rewrite IH.
   destruct im as [md nm [idx|t|m|g]]; [|reflexivity|reflexivity|reflexivity].
-  unfold import_externs, imported_globals. cbn [List.flat_map env_Import_desc app].
+  unfold import_externs, imported_globals. cbn [List.flat_map module_Import_desc app].
   destruct (List.nth_error tys (Z.to_nat (to_Z idx))); reflexivity.
 Qed.
 
 (** The three spaces, each the environment's own vector, given where the
     import section's entries end. *)
 Lemma checker_tc_funcs : forall env,
-  env_func_space env (imported_func_idxs (vec_list env.(env_Env_imports))
-                      ++ vec_list env.(env_Env_func_type_indices)) ->
-  ext_t_funcs (import_externs (vec_list env.(env_Env_types))
-                              (vec_list env.(env_Env_imports)))
-    ++ resolved_types (vec_list env.(env_Env_types))
-         (vec_list env.(env_Env_func_type_indices))
-    = List.map translate_functype (vec_list env.(env_Env_func_types)).
+  env_func_space env (imported_func_idxs (vec_list env.(module_Env_imports))
+                      ++ vec_list env.(module_Env_func_type_indices)) ->
+  ext_t_funcs (import_externs (vec_list env.(module_Env_types))
+                              (vec_list env.(module_Env_imports)))
+    ++ resolved_types (vec_list env.(module_Env_types))
+         (vec_list env.(module_Env_func_type_indices))
+    = List.map translate_functype (vec_list env.(module_Env_func_types)).
 Proof.
   intros env [Hmap _]. rewrite ext_t_funcs_imports.
   rewrite <- resolved_types_app. symmetry. exact Hmap.
 Qed.
 
 Lemma checker_tc_tables : forall env tabs,
-  vec_list env.(env_Env_table_types)
-    = imported_tables (vec_list env.(env_Env_imports)) ++ tabs ->
-  ext_t_tables (import_externs (vec_list env.(env_Env_types))
-                               (vec_list env.(env_Env_imports)))
+  vec_list env.(module_Env_table_types)
+    = imported_tables (vec_list env.(module_Env_imports)) ++ tabs ->
+  ext_t_tables (import_externs (vec_list env.(module_Env_types))
+                               (vec_list env.(module_Env_imports)))
     ++ List.map modtab_type (List.map translate_table tabs)
-    = List.map translate_tabletype (vec_list env.(env_Env_table_types)).
+    = List.map translate_tabletype (vec_list env.(module_Env_table_types)).
 Proof.
   intros env tabs Hsplit. rewrite ext_t_tables_imports. rewrite Hsplit.
   rewrite List.map_app. rewrite List.map_map. reflexivity.
 Qed.
 
 Lemma checker_tc_mems : forall env mems,
-  vec_list env.(env_Env_mem_types)
-    = imported_mems (vec_list env.(env_Env_imports)) ++ mems ->
-  ext_t_mems (import_externs (vec_list env.(env_Env_types))
-                             (vec_list env.(env_Env_imports)))
+  vec_list env.(module_Env_mem_types)
+    = imported_mems (vec_list env.(module_Env_imports)) ++ mems ->
+  ext_t_mems (import_externs (vec_list env.(module_Env_types))
+                             (vec_list env.(module_Env_imports)))
     ++ List.map modmem_type (List.map translate_mem mems)
-    = List.map translate_memtype (vec_list env.(env_Env_mem_types)).
+    = List.map translate_memtype (vec_list env.(module_Env_mem_types)).
 Proof.
   intros env mems Hsplit. rewrite ext_t_mems_imports. rewrite Hsplit.
   rewrite List.map_app. rewrite List.map_map. reflexivity.
 Qed.
 
 Lemma checker_tc_globals : forall env globs,
-  vec_list env.(env_Env_global_types)
-    = imported_globals (vec_list env.(env_Env_imports))
-      ++ List.map (fun g => g.(env_Global_gtype)) globs ->
-  ext_t_globals (import_externs (vec_list env.(env_Env_types))
-                                (vec_list env.(env_Env_imports)))
+  vec_list env.(module_Env_global_types)
+    = imported_globals (vec_list env.(module_Env_imports))
+      ++ List.map (fun g => g.(module_Global_gtype)) globs ->
+  ext_t_globals (import_externs (vec_list env.(module_Env_types))
+                                (vec_list env.(module_Env_imports)))
     ++ gather_m_g_types (List.map translate_global globs)
-    = List.map translate_globaltype (vec_list env.(env_Env_global_types)).
+    = List.map translate_globaltype (vec_list env.(module_Env_global_types)).
 Proof.
   intros env globs Hsplit. rewrite ext_t_globals_imports. rewrite Hsplit.
   rewrite List.map_app. unfold gather_m_g_types.
@@ -340,14 +340,14 @@ Qed.
     in that prefix. *)
 Lemma const_expr_typed : forall env c t e,
   tc_globals c = List.map translate_globaltype
-                   (imported_globals (vec_list env.(env_Env_imports))) ->
-  vec_list env.(env_Env_global_types)
-    = imported_globals (vec_list env.(env_Env_imports))
-      ++ List.map (fun g => g.(env_Global_gtype))
-           (vec_list env.(env_Env_globals)) ->
-  to_Z env.(env_Env_num_imported_globals)
+                   (imported_globals (vec_list env.(module_Env_imports))) ->
+  vec_list env.(module_Env_global_types)
+    = imported_globals (vec_list env.(module_Env_imports))
+      ++ List.map (fun g => g.(module_Global_gtype))
+           (vec_list env.(module_Env_globals)) ->
+  to_Z env.(module_Env_num_imported_globals)
     = Z.of_nat (List.length
-        (imported_globals (vec_list env.(env_Env_imports)))) ->
+        (imported_globals (vec_list env.(module_Env_imports)))) ->
   const_expr_ok env t e ->
   const_exprs c [translate_const_expr e] = true
   /\ b_e_type_checker c [translate_const_expr e]
@@ -363,7 +363,7 @@ Proof.
   (* [global.get]: the index is inside the imported prefix *)
   destruct H as [gt [Hnth [Hmut [Hty Hlt]]]].
   assert (Hpre : List.nth_error
-                   (imported_globals (vec_list env.(env_Env_imports)))
+                   (imported_globals (vec_list env.(module_Env_imports)))
                    (Z.to_nat (to_Z x)) = Some gt).
   { rewrite Hsplit in Hnth. rewrite List.nth_error_app1 in Hnth;
       [exact Hnth|].
@@ -527,7 +527,7 @@ Qed.
 Lemma gather_m_e_types_ok : forall env els,
   List.Forall (element_ok env) els ->
   gather_m_e_types
-    (List.map translate_tabletype (vec_list env.(env_Env_table_types)))
+    (List.map translate_tabletype (vec_list env.(module_Env_table_types)))
     (List.map translate_element els)
     = Some (List.map (fun _ => T_funcref) els).
 Proof.
@@ -535,8 +535,8 @@ Proof.
   induction els as [|el els IH]; intros Hall; [reflexivity|].
   inversion Hall as [|h t Hel Hels]; subst.
   destruct Hel as [Ht _].
-  destruct (nth_error_of_lt _ (vec_list env.(env_Env_table_types))
-              el.(env_Element_table_idx) Ht) as [tt0 Hnth].
+  destruct (nth_error_of_lt _ (vec_list env.(module_Env_table_types))
+              el.(module_Element_table_idx) Ht) as [tt0 Hnth].
   cbn [List.map seq.map those0 gather_m_e_type translate_element
        modelem_mode modelem_type].
   rewrite (lookup_N_map _ _ translate_tabletype _ _ _ Hnth).
@@ -548,7 +548,7 @@ Qed.
 Lemma gather_m_d_types_ok : forall env ds,
   List.Forall (data_ok env) ds ->
   gather_m_d_types
-    (List.map translate_memtype (vec_list env.(env_Env_mem_types)))
+    (List.map translate_memtype (vec_list env.(module_Env_mem_types)))
     (List.map translate_data ds)
     = Some (List.map (fun _ => tt) ds).
 Proof.
@@ -556,7 +556,7 @@ Proof.
   induction ds as [|d ds IH]; intros Hall; [reflexivity|].
   inversion Hall as [|h t Hd Hds]; subst.
   destruct Hd as [Hm _].
-  destruct (nth_error_of_lt _ (vec_list env.(env_Env_mem_types))
+  destruct (nth_error_of_lt _ (vec_list env.(module_Env_mem_types))
               d.(module_Data_memory_idx) Hm) as [mt0 Hnth].
   cbn [List.map seq.map those0 gather_m_d_type translate_data moddata_mode].
   rewrite (lookup_N_map _ _ translate_memtype _ _ _ Hnth).
@@ -603,14 +603,14 @@ Qed.
 
 Lemma module_global_type_checker_ok : forall env c' g,
   tc_globals c' = List.map translate_globaltype
-                    (imported_globals (vec_list env.(env_Env_imports))) ->
-  vec_list env.(env_Env_global_types)
-    = imported_globals (vec_list env.(env_Env_imports))
-      ++ List.map (fun x => x.(env_Global_gtype))
-           (vec_list env.(env_Env_globals)) ->
-  to_Z env.(env_Env_num_imported_globals)
+                    (imported_globals (vec_list env.(module_Env_imports))) ->
+  vec_list env.(module_Env_global_types)
+    = imported_globals (vec_list env.(module_Env_imports))
+      ++ List.map (fun x => x.(module_Global_gtype))
+           (vec_list env.(module_Env_globals)) ->
+  to_Z env.(module_Env_num_imported_globals)
     = Z.of_nat (List.length
-        (imported_globals (vec_list env.(env_Env_imports)))) ->
+        (imported_globals (vec_list env.(module_Env_imports)))) ->
   global_ok env g ->
   module_global_type_checker c' (translate_global g) = true.
 Proof.
@@ -630,22 +630,22 @@ Lemma module_data_type_checker_ok : forall c' d,
 Proof. intros c' d. reflexivity. Qed.
 
 Lemma module_data_type_checker_true : forall env c' d,
-  tc_mems c' = List.map translate_memtype (vec_list env.(env_Env_mem_types)) ->
+  tc_mems c' = List.map translate_memtype (vec_list env.(module_Env_mem_types)) ->
   tc_globals c' = List.map translate_globaltype
-                    (imported_globals (vec_list env.(env_Env_imports))) ->
-  vec_list env.(env_Env_global_types)
-    = imported_globals (vec_list env.(env_Env_imports))
-      ++ List.map (fun x => x.(env_Global_gtype))
-           (vec_list env.(env_Env_globals)) ->
-  to_Z env.(env_Env_num_imported_globals)
+                    (imported_globals (vec_list env.(module_Env_imports))) ->
+  vec_list env.(module_Env_global_types)
+    = imported_globals (vec_list env.(module_Env_imports))
+      ++ List.map (fun x => x.(module_Global_gtype))
+           (vec_list env.(module_Env_globals)) ->
+  to_Z env.(module_Env_num_imported_globals)
     = Z.of_nat (List.length
-        (imported_globals (vec_list env.(env_Env_imports)))) ->
+        (imported_globals (vec_list env.(module_Env_imports)))) ->
   data_ok env d ->
   module_data_type_checker c' (translate_data d) = true.
 Proof.
   intros env c' d Hm Hc Hsplit Hnig [Hidx Hoff].
   rewrite module_data_type_checker_ok.
-  destruct (nth_error_of_lt _ (vec_list env.(env_Env_mem_types))
+  destruct (nth_error_of_lt _ (vec_list env.(module_Env_mem_types))
               d.(module_Data_memory_idx) Hidx) as [mt Hnth].
   cbn [module_data_mode_checker].
   rewrite Hm. rewrite (lookup_N_map _ _ translate_memtype _ _ _ Hnth).
@@ -656,20 +656,20 @@ Qed.
 
 Lemma module_elem_type_checker_ok : forall env c' m el,
   tc_tables c' = List.map translate_tabletype
-                   (vec_list env.(env_Env_table_types)) ->
+                   (vec_list env.(module_Env_table_types)) ->
   tc_funcs c' = List.map translate_functype
-                  (vec_list env.(env_Env_func_types)) ->
+                  (vec_list env.(module_Env_func_types)) ->
   tc_globals c' = List.map translate_globaltype
-                    (imported_globals (vec_list env.(env_Env_imports))) ->
+                    (imported_globals (vec_list env.(module_Env_imports))) ->
   tc_refs c' = module_filter_funcidx m ->
   List.In (translate_element el) m.(mod_elems) ->
-  vec_list env.(env_Env_global_types)
-    = imported_globals (vec_list env.(env_Env_imports))
-      ++ List.map (fun x => x.(env_Global_gtype))
-           (vec_list env.(env_Env_globals)) ->
-  to_Z env.(env_Env_num_imported_globals)
+  vec_list env.(module_Env_global_types)
+    = imported_globals (vec_list env.(module_Env_imports))
+      ++ List.map (fun x => x.(module_Global_gtype))
+           (vec_list env.(module_Env_globals)) ->
+  to_Z env.(module_Env_num_imported_globals)
     = Z.of_nat (List.length
-        (imported_globals (vec_list env.(env_Env_imports)))) ->
+        (imported_globals (vec_list env.(module_Env_imports)))) ->
   element_ok env el ->
   module_elem_type_checker c' (translate_element el) = true.
 Proof.
@@ -679,7 +679,7 @@ Proof.
   (* every [ref.func] is constant, and types at [[] -> [funcref]] *)
   assert (Hall1 : seq.all (const_exprs c')
                     (List.map (fun y => [BI_ref_func (translate_idx y)])
-                       (vec_list el.(env_Element_init))) = true).
+                       (vec_list el.(module_Element_init))) = true).
   { apply all_of_Forall. apply List.Forall_forall. intros es Hes.
     apply List.in_map_iff in Hes. destruct Hes as [y [<- _]]. reflexivity. }
   rewrite Hall1. cbn [andb].
@@ -687,11 +687,11 @@ Proof.
                     (fun es => b_e_type_checker c' es
                                  (Tf [] [T_ref T_funcref]))
                     (List.map (fun y => [BI_ref_func (translate_idx y)])
-                       (vec_list el.(env_Element_init))) = true).
+                       (vec_list el.(module_Element_init))) = true).
   { apply all_of_Forall. apply List.Forall_forall. intros es Hes.
     apply List.in_map_iff in Hes. destruct Hes as [y [<- Hy]].
     rewrite List.Forall_forall in Hinit.
-    destruct (nth_error_of_lt _ (vec_list env.(env_Env_func_types)) y
+    destruct (nth_error_of_lt _ (vec_list env.(module_Env_func_types)) y
                 (Hinit y Hy)) as [ft Hnth].
     unfold b_e_type_checker.
     cbn [b_e_type_checker_aux List.fold_left seq.foldl check_single
@@ -718,8 +718,8 @@ Proof.
   rewrite Hall2. cbn [andb].
   (* the mode: the table index, the offset expression *)
   cbn [module_elem_mode_checker].
-  destruct (nth_error_of_lt _ (vec_list env.(env_Env_table_types))
-              el.(env_Element_table_idx) Htidx) as [tt0 Hnth].
+  destruct (nth_error_of_lt _ (vec_list env.(module_Env_table_types))
+              el.(module_Element_table_idx) Htidx) as [tt0 Hnth].
   rewrite Ht. rewrite (lookup_N_map _ _ translate_tabletype _ _ _ Hnth).
   cbn [tt_elem_type translate_tabletype]. rewrite eqb_refl_true.
   cbn [andb].
@@ -730,9 +730,9 @@ Qed.
 
 Lemma module_start_type_checker_ok : forall env c st,
   tc_funcs c = List.map translate_functype
-                 (vec_list env.(env_Env_func_types)) ->
+                 (vec_list env.(module_Env_func_types)) ->
   start_ok env ->
-  env.(env_Env_start) = st ->
+  env.(module_Env_start) = st ->
   pred_option (module_start_type_checker c) (translate_start st) = true.
 Proof.
   intros env c st Hf H Hst. unfold start_ok in H. rewrite Hst in H.
@@ -761,12 +761,12 @@ Qed.
     [module::export_types] return. *)
 Lemma module_exports_typer_ok : forall env c exps,
   tc_funcs c = List.map translate_functype
-                 (vec_list env.(env_Env_func_types)) ->
+                 (vec_list env.(module_Env_func_types)) ->
   tc_tables c = List.map translate_tabletype
-                  (vec_list env.(env_Env_table_types)) ->
-  tc_mems c = List.map translate_memtype (vec_list env.(env_Env_mem_types)) ->
+                  (vec_list env.(module_Env_table_types)) ->
+  tc_mems c = List.map translate_memtype (vec_list env.(module_Env_mem_types)) ->
   tc_globals c = List.map translate_globaltype
-                   (vec_list env.(env_Env_global_types)) ->
+                   (vec_list env.(module_Env_global_types)) ->
   List.Forall (export_desc_ok env) exps ->
   module_exports_typer c (List.map translate_export exps)
     = Some (export_externs env exps).
@@ -779,20 +779,20 @@ Proof.
   unfold translate_export at 1. cbn [modexp_desc].
   unfold export_desc_ok in He. unfold translate_exportdesc.
   rewrite (IH Hes). cbn [export_externs List.flat_map].
-  destruct e.(env_Export_desc) as [x|x|x|x]; cbn [module_export_typer].
-  - destruct (nth_error_of_lt _ (vec_list env.(env_Env_func_types)) x He)
+  destruct e.(module_Export_desc) as [x|x|x|x]; cbn [module_export_typer].
+  - destruct (nth_error_of_lt _ (vec_list env.(module_Env_func_types)) x He)
       as [v Hnth].
     rewrite Hf. rewrite (lookup_N_map _ _ translate_functype _ _ _ Hnth).
     rewrite Hnth. reflexivity.
-  - destruct (nth_error_of_lt _ (vec_list env.(env_Env_table_types)) x He)
+  - destruct (nth_error_of_lt _ (vec_list env.(module_Env_table_types)) x He)
       as [v Hnth].
     rewrite Ht. rewrite (lookup_N_map _ _ translate_tabletype _ _ _ Hnth).
     rewrite Hnth. reflexivity.
-  - destruct (nth_error_of_lt _ (vec_list env.(env_Env_mem_types)) x He)
+  - destruct (nth_error_of_lt _ (vec_list env.(module_Env_mem_types)) x He)
       as [v Hnth].
     rewrite Hm. rewrite (lookup_N_map _ _ translate_memtype _ _ _ Hnth).
     rewrite Hnth. reflexivity.
-  - destruct (nth_error_of_lt _ (vec_list env.(env_Env_global_types)) x He)
+  - destruct (nth_error_of_lt _ (vec_list env.(module_Env_global_types)) x He)
       as [v Hnth].
     rewrite Hg. rewrite (lookup_N_map _ _ translate_globaltype _ _ _ Hnth).
     rewrite Hnth. reflexivity.
@@ -807,14 +807,14 @@ Qed.
     builds; all that is left is that the checker's own [c'] is that context,
     which it is once the module's index spaces are the environment's. *)
 Lemma module_func_type_checker_ok : forall env c,
-  tc_types c = List.map translate_functype (vec_list env.(env_Env_types)) ->
+  tc_types c = List.map translate_functype (vec_list env.(module_Env_types)) ->
   tc_funcs c = List.map translate_functype
-                 (vec_list env.(env_Env_func_types)) ->
+                 (vec_list env.(module_Env_func_types)) ->
   tc_tables c = List.map translate_tabletype
-                  (vec_list env.(env_Env_table_types)) ->
-  tc_mems c = List.map translate_memtype (vec_list env.(env_Env_mem_types)) ->
+                  (vec_list env.(module_Env_table_types)) ->
+  tc_mems c = List.map translate_memtype (vec_list env.(module_Env_mem_types)) ->
   tc_globals c = List.map translate_globaltype
-                   (vec_list env.(env_Env_global_types)) ->
+                   (vec_list env.(module_Env_global_types)) ->
   tc_locals c = [] ->
   tc_labels c = [] ->
   forall tidxs codes fs,
@@ -860,35 +860,35 @@ Qed.
     back. *)
 Theorem module_of_type_checker : forall env fs tabs mems ds codes,
   env_limits_valid env ->
-  vec_list env.(env_Env_table_types)
-    = imported_tables (vec_list env.(env_Env_imports)) ++ tabs ->
-  vec_list env.(env_Env_mem_types)
-    = imported_mems (vec_list env.(env_Env_imports)) ++ mems ->
+  vec_list env.(module_Env_table_types)
+    = imported_tables (vec_list env.(module_Env_imports)) ++ tabs ->
+  vec_list env.(module_Env_mem_types)
+    = imported_mems (vec_list env.(module_Env_imports)) ++ mems ->
   env_func_space env
-    (imported_func_idxs (vec_list env.(env_Env_imports))
-     ++ vec_list env.(env_Env_func_type_indices)) ->
-  vec_list env.(env_Env_global_types)
-    = imported_globals (vec_list env.(env_Env_imports))
-      ++ List.map (fun g => g.(env_Global_gtype))
-           (vec_list env.(env_Env_globals)) ->
-  to_Z env.(env_Env_num_imported_globals)
+    (imported_func_idxs (vec_list env.(module_Env_imports))
+     ++ vec_list env.(module_Env_func_type_indices)) ->
+  vec_list env.(module_Env_global_types)
+    = imported_globals (vec_list env.(module_Env_imports))
+      ++ List.map (fun g => g.(module_Global_gtype))
+           (vec_list env.(module_Env_globals)) ->
+  to_Z env.(module_Env_num_imported_globals)
     = Z.of_nat (List.length
-        (imported_globals (vec_list env.(env_Env_imports)))) ->
-  List.Forall (element_ok env) (vec_list env.(env_Env_elements)) ->
+        (imported_globals (vec_list env.(module_Env_imports)))) ->
+  List.Forall (element_ok env) (vec_list env.(module_Env_elements)) ->
   start_ok env ->
   exports_distinct env ->
-  List.Forall (export_desc_ok env) (vec_list env.(env_Env_exports)) ->
+  List.Forall (export_desc_ok env) (vec_list env.(module_Env_exports)) ->
   List.Forall (data_ok env) ds ->
-  List.Forall (global_ok env) (vec_list env.(env_Env_globals)) ->
-  List.Forall2 (code_typed env) (vec_list env.(env_Env_func_type_indices))
+  List.Forall (global_ok env) (vec_list env.(module_Env_globals)) ->
+  List.Forall2 (code_typed env) (vec_list env.(module_Env_func_type_indices))
     codes ->
-  funcs_of (List.map translate_idx (vec_list env.(env_Env_func_type_indices)))
+  funcs_of (List.map translate_idx (vec_list env.(module_Env_func_type_indices)))
     codes fs ->
   module_type_checker
     (module_of env fs tabs mems (List.map translate_data ds))
-    = Some (import_externs (vec_list env.(env_Env_types))
-                           (vec_list env.(env_Env_imports)),
-            export_externs env (vec_list env.(env_Env_exports))).
+    = Some (import_externs (vec_list env.(module_Env_types))
+                           (vec_list env.(module_Env_imports)),
+            export_externs env (vec_list env.(module_Env_exports))).
 Proof.
   intros env fs tabs mems ds codes Hlim Htab Hmem Hfsp Hgsp Hnig Hels Hstart
          Hdist Hdesc Hdata Hglob Hcodes Hfuncs.
@@ -907,8 +907,8 @@ Proof.
   rewrite (gather_m_d_types_ok env _ Hdata). cbn iota.
   repeat rewrite seq_cat_eq.
   assert (Hfsp : env_func_space env
-                   (imported_func_idxs (vec_list env.(env_Env_imports))
-                    ++ vec_list env.(env_Env_func_type_indices)))
+                   (imported_func_idxs (vec_list env.(module_Env_imports))
+                    ++ vec_list env.(module_Env_func_type_indices)))
     by (split; [exact Hfmap | apply List.Forall_app; split; assumption]).
   rewrite (checker_tc_funcs env Hfsp).
   repeat rewrite seq_cat_eq.
@@ -929,7 +929,7 @@ Proof.
   rewrite (module_start_type_checker_ok env c _ eq_refl Hstart eq_refl).
   rewrite (export_name_unique_ok _ Hdist).
   assert (Hgl : seq.all (module_global_type_checker c')
-                  (List.map translate_global (vec_list env.(env_Env_globals)))
+                  (List.map translate_global (vec_list env.(module_Env_globals)))
                 = true).
   { apply forall_all_map. rewrite List.Forall_forall in Hglob.
     apply List.Forall_forall. intros g Hin.
@@ -945,7 +945,7 @@ Proof.
   rewrite Hdt.
   assert (Hel : seq.all (module_elem_type_checker c')
                   (List.map translate_element
-                     (vec_list env.(env_Env_elements))) = true).
+                     (vec_list env.(module_Env_elements))) = true).
   { apply forall_all_map. rewrite List.Forall_forall in Hels.
     apply List.Forall_forall. intros el Hin.
     apply (module_elem_type_checker_ok env c' _ el eq_refl eq_refl eq_refl
@@ -953,7 +953,7 @@ Proof.
              Hgsp Hnig).
     apply Hels. exact Hin. }
   rewrite Hel. cbn [andb].
-  rewrite (module_exports_typer_ok env c (vec_list env.(env_Env_exports))
+  rewrite (module_exports_typer_ok env c (vec_list env.(module_Env_exports))
              eq_refl eq_refl eq_refl eq_refl Hdesc).
   reflexivity.
 Qed.
@@ -972,7 +972,7 @@ Qed.
     [mod_imports]/[mod_exports] equations say the module WasmCert reads declares
     exactly what the run recorded, in order and with the names, and the pair the
     checker returns is [import_externs] and [export_externs] of the environment
-    in the returned [ValidatedModule] rather than a witness.
+    in the returned [Module] rather than a witness.
 
     [validate_module_typed] below turns the checker's verdict into
     [module_typing]. [Module_Wasm10.validate_module_typechecked] uses the
@@ -980,15 +980,15 @@ Qed.
     the run reports. *)
 Theorem validate_module_checked : forall data vm,
   module_validate_module data = Ok (Core_result_Result_Ok vm) ->
-  let env := vm.(module_ValidatedModule_env) in
+  let env := vm.(module_Module_env) in
   exists m imps exps,
     repr_module (byte_list data) m
     /\ module_import_types env = Ok (Core_result_Result_Ok imps)
     /\ module_export_types env = Ok (Core_result_Result_Ok exps)
     /\ mod_imports m
-         = List.map translate_import (vec_list env.(env_Env_imports))
+         = List.map translate_import (vec_list env.(module_Env_imports))
     /\ mod_exports m
-         = List.map translate_export (vec_list env.(env_Env_exports))
+         = List.map translate_export (vec_list env.(module_Env_exports))
     /\ module_type_checker m
          = Some (translate_externtypes imps, translate_externtypes exps).
 Proof.
@@ -1006,7 +1006,7 @@ Proof.
   destruct Hrest as [[codes [Hcodes Hfuncs]] Hm].
   pose proof (module_of_type_checker env fs tabs mems
                 (vec_list tl.(module_Tail_data)) codes
-                (decode_env_limits_valid _ _ _ Henv)
+                (validate_env_limits_valid _ _ _ Henv)
                 Htab Hmem Hfsp Hgsp Hnig Hels Hstart Hdist Hdesc Hdata Hglob
                 Hcodes Hfuncs) as Hchk.
   (* the two accessors succeed, and return the two lists the checker built *)
@@ -1014,7 +1014,7 @@ Proof.
   apply List.Forall_app in Hfall. destruct Hfall as [Hfimp _].
   destruct (import_types_externs env Hfimp) as [imps [Himps Hiv]].
   destruct (export_types_externs env Hdesc) as [exps [Hexps Hev]].
-  subst vm. cbn [module_ValidatedModule_env]. cbv zeta.
+  subst vm. cbn [module_Module_env]. cbv zeta.
   exists (module_of env fs tabs mems
             (List.map translate_data (vec_list tl.(module_Tail_data)))).
   exists imps. exists exps.
@@ -1036,15 +1036,15 @@ Context `{ho: host}.
 
 Theorem validate_module_typed : forall data vm,
   module_validate_module data = Ok (Core_result_Result_Ok vm) ->
-  let env := vm.(module_ValidatedModule_env) in
+  let env := vm.(module_Module_env) in
   exists m imps exps,
     repr_module (byte_list data) m
     /\ module_import_types env = Ok (Core_result_Result_Ok imps)
     /\ module_export_types env = Ok (Core_result_Result_Ok exps)
     /\ mod_imports m
-         = List.map translate_import (vec_list env.(env_Env_imports))
+         = List.map translate_import (vec_list env.(module_Env_imports))
     /\ mod_exports m
-         = List.map translate_export (vec_list env.(env_Env_exports))
+         = List.map translate_export (vec_list env.(module_Env_exports))
     /\ module_typing m (translate_externtypes imps)
                        (translate_externtypes exps).
 Proof.

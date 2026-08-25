@@ -440,18 +440,18 @@ Lemma vt_eq_spec : forall a b,
     Ok (types_ValueType_t_beq a b).
 Proof. intros a b. destruct a, b; reflexivity. Qed.
 
-Definition opiter_BlockType_t_beq (a b : opiter_BlockType_t) : bool :=
+Definition code_BlockType_t_beq (a b : code_BlockType_t) : bool :=
   match a, b with
-  | Opiter_BlockType_Empty, Opiter_BlockType_Empty => true
-  | Opiter_BlockType_Value x, Opiter_BlockType_Value y => types_ValueType_t_beq x y
+  | Code_BlockType_Empty, Code_BlockType_Empty => true
+  | Code_BlockType_Value x, Code_BlockType_Value y => types_ValueType_t_beq x y
   | _, _ => false
   end.
 
 (** BlockType PartialEq. A lemma rather than an axiom: the derived [ne] is what
     costs one, and [br_table] only ever compares. *)
 Lemma bt_eq_spec : forall a b,
-  opiter_BlockType_Insts_CoreCmpPartialEqBlockType_eq a b =
-    Ok (opiter_BlockType_t_beq a b).
+  code_BlockType_Insts_CoreCmpPartialEqBlockType_eq a b =
+    Ok (code_BlockType_t_beq a b).
 Proof.
   intros a b. destruct a as [|x]; destruct b as [|y];
     [reflexivity | reflexivity | reflexivity | apply vt_eq_spec].

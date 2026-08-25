@@ -1,7 +1,7 @@
 (** * The opcode table, on both sides
 
     The numeric operators all have the same handful of stack shapes, so the
-    reference consumer dispatches them through a table ([opiter_convert_types])
+    reference consumer dispatches them through a table ([code_convert_types])
     rather than through a branch each. This file relates that table to the
     specification's ([Spec_Binary.op_spec]): every row of the code's table names
     an operator the specification also has a row for, at matching types.
@@ -76,10 +76,10 @@ Local Ltac walk_rows H row :=
 (* ================================================================== *)
 
 Theorem convert_types_spec : forall (b : u8) from to,
-  opiter_convert_types b = Ok (Some (from, to)) ->
+  code_convert_types b = Ok (Some (from, to)) ->
   exists be, op_spec (to_Z b) = Some (Sh_nullary be) /\ convert_ok from to be.
 Proof.
-  intros b from to H. unfold opiter_convert_types in H.
+  intros b from to H. unfold code_convert_types in H.
   walk_rows H convert_row.
   discriminate H.
 Qed.
@@ -100,10 +100,10 @@ Local Ltac binary_row :=
     | reflexivity ] ].
 
 Theorem binary_types_spec : forall (b : u8) ty res,
-  opiter_binary_types b = Ok (Some (ty, res)) ->
+  code_binary_types b = Ok (Some (ty, res)) ->
   exists be, op_spec (to_Z b) = Some (Sh_nullary be) /\ binary_ok ty res be.
 Proof.
-  intros b ty res H. unfold opiter_binary_types in H.
+  intros b ty res H. unfold code_binary_types in H.
   walk_rows H binary_row.
   discriminate H.
 Qed.
@@ -126,69 +126,69 @@ Qed.
 (** ** The code recognises every opcode the specification has a row for *)
 (* ================================================================== *)
 
-(** One disjunct per dispatch guard in [opiter_step], plus the table. Stating
+(** One disjunct per dispatch guard in [code_step], plus the table. Stating
     coverage this way rather than as a list of byte values is what keeps the
     fallthrough branch of the completeness proof linear: "the code fell through
     every branch" becomes a single equation.
 
-    It has to be kept in step with [opiter_step] by hand. It cannot drift
+    It has to be kept in step with [code_step] by hand. It cannot drift
     silently: too few disjuncts and [op_spec_handled] stops holding, too many and
     the fallthrough stops closing. *)
 Definition handled (b : u8) : bool :=
-  (b s= opiter_op_nop)
-  || (b s= opiter_op_unreachable)
-  || (b s= opiter_op_i32_const)
-  || (b s= opiter_op_i64_const)
-  || (b s= opiter_op_f32_const)
-  || (b s= opiter_op_f64_const)
-  || (b s= opiter_op_drop)
-  || (b s= opiter_op_select)
-  || (b s= opiter_op_block)
-  || (b s= opiter_op_loop)
-  || (b s= opiter_op_if)
-  || (b s= opiter_op_else)
-  || (b s= opiter_op_end)
-  || (b s= opiter_op_br)
-  || (b s= opiter_op_br_if)
-  || (b s= opiter_op_br_table)
-  || (b s= opiter_op_return)
-  || (b s= opiter_op_call)
-  || (b s= opiter_op_call_indirect)
-  || (b s= opiter_op_local_get)
-  || (b s= opiter_op_local_set)
-  || (b s= opiter_op_local_tee)
-  || (b s= opiter_op_global_get)
-  || (b s= opiter_op_global_set)
-  || (b s= opiter_op_memory_size)
-  || (b s= opiter_op_memory_grow)
-  || (b s= opiter_op_i32_load)
-  || (b s= opiter_op_i64_load)
-  || (b s= opiter_op_f32_load)
-  || (b s= opiter_op_f64_load)
-  || (b s= opiter_op_i32_load8_s)
-  || (b s= opiter_op_i32_load8_u)
-  || (b s= opiter_op_i32_load16_s)
-  || (b s= opiter_op_i32_load16_u)
-  || (b s= opiter_op_i64_load8_s)
-  || (b s= opiter_op_i64_load8_u)
-  || (b s= opiter_op_i64_load16_s)
-  || (b s= opiter_op_i64_load16_u)
-  || (b s= opiter_op_i64_load32_s)
-  || (b s= opiter_op_i64_load32_u)
-  || (b s= opiter_op_i32_store)
-  || (b s= opiter_op_i64_store)
-  || (b s= opiter_op_f32_store)
-  || (b s= opiter_op_f64_store)
-  || (b s= opiter_op_i32_store8)
-  || (b s= opiter_op_i32_store16)
-  || (b s= opiter_op_i64_store8)
-  || (b s= opiter_op_i64_store16)
-  || (b s= opiter_op_i64_store32)
-  || (match opiter_convert_types b with
+  (b s= code_op_nop)
+  || (b s= code_op_unreachable)
+  || (b s= code_op_i32_const)
+  || (b s= code_op_i64_const)
+  || (b s= code_op_f32_const)
+  || (b s= code_op_f64_const)
+  || (b s= code_op_drop)
+  || (b s= code_op_select)
+  || (b s= code_op_block)
+  || (b s= code_op_loop)
+  || (b s= code_op_if)
+  || (b s= code_op_else)
+  || (b s= code_op_end)
+  || (b s= code_op_br)
+  || (b s= code_op_br_if)
+  || (b s= code_op_br_table)
+  || (b s= code_op_return)
+  || (b s= code_op_call)
+  || (b s= code_op_call_indirect)
+  || (b s= code_op_local_get)
+  || (b s= code_op_local_set)
+  || (b s= code_op_local_tee)
+  || (b s= code_op_global_get)
+  || (b s= code_op_global_set)
+  || (b s= code_op_memory_size)
+  || (b s= code_op_memory_grow)
+  || (b s= code_op_i32_load)
+  || (b s= code_op_i64_load)
+  || (b s= code_op_f32_load)
+  || (b s= code_op_f64_load)
+  || (b s= code_op_i32_load8_s)
+  || (b s= code_op_i32_load8_u)
+  || (b s= code_op_i32_load16_s)
+  || (b s= code_op_i32_load16_u)
+  || (b s= code_op_i64_load8_s)
+  || (b s= code_op_i64_load8_u)
+  || (b s= code_op_i64_load16_s)
+  || (b s= code_op_i64_load16_u)
+  || (b s= code_op_i64_load32_s)
+  || (b s= code_op_i64_load32_u)
+  || (b s= code_op_i32_store)
+  || (b s= code_op_i64_store)
+  || (b s= code_op_f32_store)
+  || (b s= code_op_f64_store)
+  || (b s= code_op_i32_store8)
+  || (b s= code_op_i32_store16)
+  || (b s= code_op_i64_store8)
+  || (b s= code_op_i64_store16)
+  || (b s= code_op_i64_store32)
+  || (match code_convert_types b with
       | Ok (Some _) => true
       | _ => false
       end)
-  || (match opiter_binary_types b with
+  || (match code_binary_types b with
       | Ok (Some _) => true
       | _ => false
       end).
@@ -197,7 +197,7 @@ Theorem op_spec_handled : forall (b : u8) sh,
   op_spec (to_Z b) = Some sh -> handled b = true.
 Proof.
   intros b sh H. unfold op_spec in H.
-  unfold handled, opiter_convert_types, opiter_binary_types, scalar_eqb.
+  unfold handled, code_convert_types, code_binary_types, scalar_eqb.
   repeat match type of H with
   | (if Z.eqb ?x ?k then _ else _) = _ =>
       let E := fresh "E" in
@@ -278,673 +278,673 @@ Qed.
     mnemonic -- and never off the opcode, or the theorems below would be
     checking the tables against themselves. *)
 Definition trace_visitor
-  : visit_OpVisitor_t (list flat_op * list Z) := {|
-  visit_OpVisitor_t_on_function_start :=
+  : code_OpVisitor_t (list flat_op * list Z) := {|
+  code_OpVisitor_t_on_function_start :=
     fun p ctx tidx bb ee => Ok (Core_result_Result_Ok tt, p);
-  visit_OpVisitor_t_on_unreachable :=
+  code_OpVisitor_t_on_unreachable :=
     fun p st =>
       Ok (Core_result_Result_Ok tt, (fst p ++ [FO_plain BI_unreachable], snd p));
-  visit_OpVisitor_t_on_nop :=
+  code_OpVisitor_t_on_nop :=
     fun p st =>
       Ok (Core_result_Result_Ok tt, (fst p ++ [FO_plain BI_nop], snd p));
-  visit_OpVisitor_t_on_block :=
+  code_OpVisitor_t_on_block :=
     fun p st bt =>
       Ok (Core_result_Result_Ok tt, (fst p ++ [FO_block (translate_bt bt)], snd p));
-  visit_OpVisitor_t_on_loop :=
+  code_OpVisitor_t_on_loop :=
     fun p st bt =>
       Ok (Core_result_Result_Ok tt, (fst p ++ [FO_loop (translate_bt bt)], snd p));
-  visit_OpVisitor_t_on_if :=
+  code_OpVisitor_t_on_if :=
     fun p st bt =>
       Ok (Core_result_Result_Ok tt, (fst p ++ [FO_if (translate_bt bt)], snd p));
-  visit_OpVisitor_t_on_else :=
+  code_OpVisitor_t_on_else :=
     fun p st bt =>
       Ok (Core_result_Result_Ok tt, (fst p ++ [FO_else], snd p));
-  visit_OpVisitor_t_on_end :=
+  code_OpVisitor_t_on_end :=
     fun p st kind bt =>
       Ok (Core_result_Result_Ok tt, (fst p ++ [FO_end], snd p));
-  visit_OpVisitor_t_on_br :=
+  code_OpVisitor_t_on_br :=
     fun p st d bt =>
       Ok (Core_result_Result_Ok tt, (fst p ++ [FO_plain (BI_br (Z.to_N (to_Z d)))], snd p));
-  visit_OpVisitor_t_on_br_if :=
+  code_OpVisitor_t_on_br_if :=
     fun p st d bt =>
       Ok (Core_result_Result_Ok tt, (fst p ++ [FO_plain (BI_br_if (Z.to_N (to_Z d)))], snd p));
-  visit_OpVisitor_t_on_br_table_label :=
+  code_OpVisitor_t_on_br_table_label :=
     fun p st d =>
       Ok (Core_result_Result_Ok tt, (fst p, snd p ++ [to_Z d]));
-  visit_OpVisitor_t_on_br_table :=
+  code_OpVisitor_t_on_br_table :=
     fun p st d common =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_br_table (List.map Z.to_N (snd p))
                                            (Z.to_N (to_Z d)))], []));
-  visit_OpVisitor_t_on_return :=
+  code_OpVisitor_t_on_return :=
     fun p st =>
       Ok (Core_result_Result_Ok tt, (fst p ++ [FO_plain BI_return], snd p));
-  visit_OpVisitor_t_on_call :=
+  code_OpVisitor_t_on_call :=
     fun p st idx =>
       Ok (Core_result_Result_Ok tt, (fst p ++ [FO_plain (BI_call (Z.to_N (to_Z idx)))], snd p));
-  visit_OpVisitor_t_on_call_indirect :=
+  code_OpVisitor_t_on_call_indirect :=
     fun p st idx =>
       Ok (Core_result_Result_Ok tt, (fst p ++ [FO_plain (BI_call_indirect 0%N (Z.to_N (to_Z idx)))], snd p));
-  visit_OpVisitor_t_on_drop :=
+  code_OpVisitor_t_on_drop :=
     fun p st t =>
       Ok (Core_result_Result_Ok tt, (fst p ++ [FO_plain BI_drop], snd p));
-  visit_OpVisitor_t_on_select :=
+  code_OpVisitor_t_on_select :=
     fun p st t =>
       Ok (Core_result_Result_Ok tt, (fst p ++ [FO_plain (BI_select None)], snd p));
-  visit_OpVisitor_t_on_local_get :=
+  code_OpVisitor_t_on_local_get :=
     fun p st idx =>
       Ok (Core_result_Result_Ok tt, (fst p ++ [FO_plain (BI_local_get (Z.to_N (to_Z idx)))], snd p));
-  visit_OpVisitor_t_on_local_set :=
+  code_OpVisitor_t_on_local_set :=
     fun p st idx =>
       Ok (Core_result_Result_Ok tt, (fst p ++ [FO_plain (BI_local_set (Z.to_N (to_Z idx)))], snd p));
-  visit_OpVisitor_t_on_local_tee :=
+  code_OpVisitor_t_on_local_tee :=
     fun p st idx =>
       Ok (Core_result_Result_Ok tt, (fst p ++ [FO_plain (BI_local_tee (Z.to_N (to_Z idx)))], snd p));
-  visit_OpVisitor_t_on_global_get :=
+  code_OpVisitor_t_on_global_get :=
     fun p st idx =>
       Ok (Core_result_Result_Ok tt, (fst p ++ [FO_plain (BI_global_get (Z.to_N (to_Z idx)))], snd p));
-  visit_OpVisitor_t_on_global_set :=
+  code_OpVisitor_t_on_global_set :=
     fun p st idx =>
       Ok (Core_result_Result_Ok tt, (fst p ++ [FO_plain (BI_global_set (Z.to_N (to_Z idx)))], snd p));
-  visit_OpVisitor_t_on_memory_size :=
+  code_OpVisitor_t_on_memory_size :=
     fun p st =>
       Ok (Core_result_Result_Ok tt, (fst p ++ [FO_plain BI_memory_size], snd p));
-  visit_OpVisitor_t_on_memory_grow :=
+  code_OpVisitor_t_on_memory_grow :=
     fun p st =>
       Ok (Core_result_Result_Ok tt, (fst p ++ [FO_plain BI_memory_grow], snd p));
-  visit_OpVisitor_t_on_i32_const :=
+  code_OpVisitor_t_on_i32_const :=
     fun p st x =>
       Ok (Core_result_Result_Ok tt, (fst p ++ [FO_plain (BI_const_num (VAL_int32 (Wasm_int.Int32.repr (to_Z x))))], snd p));
-  visit_OpVisitor_t_on_i64_const :=
+  code_OpVisitor_t_on_i64_const :=
     fun p st x =>
       Ok (Core_result_Result_Ok tt, (fst p ++ [FO_plain (BI_const_num (VAL_int64 (Wasm_int.Int64.repr (to_Z x))))], snd p));
-  visit_OpVisitor_t_on_f32_const :=
+  code_OpVisitor_t_on_f32_const :=
     fun p st x =>
       Ok (Core_result_Result_Ok tt, (fst p ++ [FO_plain (BI_const_num (fconst_val T_f32 (to_Z x)))], snd p));
-  visit_OpVisitor_t_on_f64_const :=
+  code_OpVisitor_t_on_f64_const :=
     fun p st x =>
       Ok (Core_result_Result_Ok tt, (fst p ++ [FO_plain (BI_const_num (fconst_val T_f64 (to_Z x)))], snd p));
-  visit_OpVisitor_t_on_i32_load :=
+  code_OpVisitor_t_on_i32_load :=
     fun p st m =>
       Ok (Core_result_Result_Ok tt,
-          (fst p ++ [FO_plain (BI_load T_i32 None (Z.to_N (to_Z m.(opiter_MemArg_align))) (Z.to_N (to_Z m.(opiter_MemArg_offset))))], snd p));
-  visit_OpVisitor_t_on_i64_load :=
+          (fst p ++ [FO_plain (BI_load T_i32 None (Z.to_N (to_Z m.(code_MemArg_align))) (Z.to_N (to_Z m.(code_MemArg_offset))))], snd p));
+  code_OpVisitor_t_on_i64_load :=
     fun p st m =>
       Ok (Core_result_Result_Ok tt,
-          (fst p ++ [FO_plain (BI_load T_i64 None (Z.to_N (to_Z m.(opiter_MemArg_align))) (Z.to_N (to_Z m.(opiter_MemArg_offset))))], snd p));
-  visit_OpVisitor_t_on_f32_load :=
+          (fst p ++ [FO_plain (BI_load T_i64 None (Z.to_N (to_Z m.(code_MemArg_align))) (Z.to_N (to_Z m.(code_MemArg_offset))))], snd p));
+  code_OpVisitor_t_on_f32_load :=
     fun p st m =>
       Ok (Core_result_Result_Ok tt,
-          (fst p ++ [FO_plain (BI_load T_f32 None (Z.to_N (to_Z m.(opiter_MemArg_align))) (Z.to_N (to_Z m.(opiter_MemArg_offset))))], snd p));
-  visit_OpVisitor_t_on_f64_load :=
+          (fst p ++ [FO_plain (BI_load T_f32 None (Z.to_N (to_Z m.(code_MemArg_align))) (Z.to_N (to_Z m.(code_MemArg_offset))))], snd p));
+  code_OpVisitor_t_on_f64_load :=
     fun p st m =>
       Ok (Core_result_Result_Ok tt,
-          (fst p ++ [FO_plain (BI_load T_f64 None (Z.to_N (to_Z m.(opiter_MemArg_align))) (Z.to_N (to_Z m.(opiter_MemArg_offset))))], snd p));
-  visit_OpVisitor_t_on_i32_load8_s :=
+          (fst p ++ [FO_plain (BI_load T_f64 None (Z.to_N (to_Z m.(code_MemArg_align))) (Z.to_N (to_Z m.(code_MemArg_offset))))], snd p));
+  code_OpVisitor_t_on_i32_load8_s :=
     fun p st m =>
       Ok (Core_result_Result_Ok tt,
-          (fst p ++ [FO_plain (BI_load T_i32 (Some (Tp_i8, SX_S)) (Z.to_N (to_Z m.(opiter_MemArg_align))) (Z.to_N (to_Z m.(opiter_MemArg_offset))))], snd p));
-  visit_OpVisitor_t_on_i32_load8_u :=
+          (fst p ++ [FO_plain (BI_load T_i32 (Some (Tp_i8, SX_S)) (Z.to_N (to_Z m.(code_MemArg_align))) (Z.to_N (to_Z m.(code_MemArg_offset))))], snd p));
+  code_OpVisitor_t_on_i32_load8_u :=
     fun p st m =>
       Ok (Core_result_Result_Ok tt,
-          (fst p ++ [FO_plain (BI_load T_i32 (Some (Tp_i8, SX_U)) (Z.to_N (to_Z m.(opiter_MemArg_align))) (Z.to_N (to_Z m.(opiter_MemArg_offset))))], snd p));
-  visit_OpVisitor_t_on_i32_load16_s :=
+          (fst p ++ [FO_plain (BI_load T_i32 (Some (Tp_i8, SX_U)) (Z.to_N (to_Z m.(code_MemArg_align))) (Z.to_N (to_Z m.(code_MemArg_offset))))], snd p));
+  code_OpVisitor_t_on_i32_load16_s :=
     fun p st m =>
       Ok (Core_result_Result_Ok tt,
-          (fst p ++ [FO_plain (BI_load T_i32 (Some (Tp_i16, SX_S)) (Z.to_N (to_Z m.(opiter_MemArg_align))) (Z.to_N (to_Z m.(opiter_MemArg_offset))))], snd p));
-  visit_OpVisitor_t_on_i32_load16_u :=
+          (fst p ++ [FO_plain (BI_load T_i32 (Some (Tp_i16, SX_S)) (Z.to_N (to_Z m.(code_MemArg_align))) (Z.to_N (to_Z m.(code_MemArg_offset))))], snd p));
+  code_OpVisitor_t_on_i32_load16_u :=
     fun p st m =>
       Ok (Core_result_Result_Ok tt,
-          (fst p ++ [FO_plain (BI_load T_i32 (Some (Tp_i16, SX_U)) (Z.to_N (to_Z m.(opiter_MemArg_align))) (Z.to_N (to_Z m.(opiter_MemArg_offset))))], snd p));
-  visit_OpVisitor_t_on_i64_load8_s :=
+          (fst p ++ [FO_plain (BI_load T_i32 (Some (Tp_i16, SX_U)) (Z.to_N (to_Z m.(code_MemArg_align))) (Z.to_N (to_Z m.(code_MemArg_offset))))], snd p));
+  code_OpVisitor_t_on_i64_load8_s :=
     fun p st m =>
       Ok (Core_result_Result_Ok tt,
-          (fst p ++ [FO_plain (BI_load T_i64 (Some (Tp_i8, SX_S)) (Z.to_N (to_Z m.(opiter_MemArg_align))) (Z.to_N (to_Z m.(opiter_MemArg_offset))))], snd p));
-  visit_OpVisitor_t_on_i64_load8_u :=
+          (fst p ++ [FO_plain (BI_load T_i64 (Some (Tp_i8, SX_S)) (Z.to_N (to_Z m.(code_MemArg_align))) (Z.to_N (to_Z m.(code_MemArg_offset))))], snd p));
+  code_OpVisitor_t_on_i64_load8_u :=
     fun p st m =>
       Ok (Core_result_Result_Ok tt,
-          (fst p ++ [FO_plain (BI_load T_i64 (Some (Tp_i8, SX_U)) (Z.to_N (to_Z m.(opiter_MemArg_align))) (Z.to_N (to_Z m.(opiter_MemArg_offset))))], snd p));
-  visit_OpVisitor_t_on_i64_load16_s :=
+          (fst p ++ [FO_plain (BI_load T_i64 (Some (Tp_i8, SX_U)) (Z.to_N (to_Z m.(code_MemArg_align))) (Z.to_N (to_Z m.(code_MemArg_offset))))], snd p));
+  code_OpVisitor_t_on_i64_load16_s :=
     fun p st m =>
       Ok (Core_result_Result_Ok tt,
-          (fst p ++ [FO_plain (BI_load T_i64 (Some (Tp_i16, SX_S)) (Z.to_N (to_Z m.(opiter_MemArg_align))) (Z.to_N (to_Z m.(opiter_MemArg_offset))))], snd p));
-  visit_OpVisitor_t_on_i64_load16_u :=
+          (fst p ++ [FO_plain (BI_load T_i64 (Some (Tp_i16, SX_S)) (Z.to_N (to_Z m.(code_MemArg_align))) (Z.to_N (to_Z m.(code_MemArg_offset))))], snd p));
+  code_OpVisitor_t_on_i64_load16_u :=
     fun p st m =>
       Ok (Core_result_Result_Ok tt,
-          (fst p ++ [FO_plain (BI_load T_i64 (Some (Tp_i16, SX_U)) (Z.to_N (to_Z m.(opiter_MemArg_align))) (Z.to_N (to_Z m.(opiter_MemArg_offset))))], snd p));
-  visit_OpVisitor_t_on_i64_load32_s :=
+          (fst p ++ [FO_plain (BI_load T_i64 (Some (Tp_i16, SX_U)) (Z.to_N (to_Z m.(code_MemArg_align))) (Z.to_N (to_Z m.(code_MemArg_offset))))], snd p));
+  code_OpVisitor_t_on_i64_load32_s :=
     fun p st m =>
       Ok (Core_result_Result_Ok tt,
-          (fst p ++ [FO_plain (BI_load T_i64 (Some (Tp_i32, SX_S)) (Z.to_N (to_Z m.(opiter_MemArg_align))) (Z.to_N (to_Z m.(opiter_MemArg_offset))))], snd p));
-  visit_OpVisitor_t_on_i64_load32_u :=
+          (fst p ++ [FO_plain (BI_load T_i64 (Some (Tp_i32, SX_S)) (Z.to_N (to_Z m.(code_MemArg_align))) (Z.to_N (to_Z m.(code_MemArg_offset))))], snd p));
+  code_OpVisitor_t_on_i64_load32_u :=
     fun p st m =>
       Ok (Core_result_Result_Ok tt,
-          (fst p ++ [FO_plain (BI_load T_i64 (Some (Tp_i32, SX_U)) (Z.to_N (to_Z m.(opiter_MemArg_align))) (Z.to_N (to_Z m.(opiter_MemArg_offset))))], snd p));
-  visit_OpVisitor_t_on_i32_store :=
+          (fst p ++ [FO_plain (BI_load T_i64 (Some (Tp_i32, SX_U)) (Z.to_N (to_Z m.(code_MemArg_align))) (Z.to_N (to_Z m.(code_MemArg_offset))))], snd p));
+  code_OpVisitor_t_on_i32_store :=
     fun p st m =>
       Ok (Core_result_Result_Ok tt,
-          (fst p ++ [FO_plain (BI_store T_i32 None (Z.to_N (to_Z m.(opiter_MemArg_align))) (Z.to_N (to_Z m.(opiter_MemArg_offset))))], snd p));
-  visit_OpVisitor_t_on_i64_store :=
+          (fst p ++ [FO_plain (BI_store T_i32 None (Z.to_N (to_Z m.(code_MemArg_align))) (Z.to_N (to_Z m.(code_MemArg_offset))))], snd p));
+  code_OpVisitor_t_on_i64_store :=
     fun p st m =>
       Ok (Core_result_Result_Ok tt,
-          (fst p ++ [FO_plain (BI_store T_i64 None (Z.to_N (to_Z m.(opiter_MemArg_align))) (Z.to_N (to_Z m.(opiter_MemArg_offset))))], snd p));
-  visit_OpVisitor_t_on_f32_store :=
+          (fst p ++ [FO_plain (BI_store T_i64 None (Z.to_N (to_Z m.(code_MemArg_align))) (Z.to_N (to_Z m.(code_MemArg_offset))))], snd p));
+  code_OpVisitor_t_on_f32_store :=
     fun p st m =>
       Ok (Core_result_Result_Ok tt,
-          (fst p ++ [FO_plain (BI_store T_f32 None (Z.to_N (to_Z m.(opiter_MemArg_align))) (Z.to_N (to_Z m.(opiter_MemArg_offset))))], snd p));
-  visit_OpVisitor_t_on_f64_store :=
+          (fst p ++ [FO_plain (BI_store T_f32 None (Z.to_N (to_Z m.(code_MemArg_align))) (Z.to_N (to_Z m.(code_MemArg_offset))))], snd p));
+  code_OpVisitor_t_on_f64_store :=
     fun p st m =>
       Ok (Core_result_Result_Ok tt,
-          (fst p ++ [FO_plain (BI_store T_f64 None (Z.to_N (to_Z m.(opiter_MemArg_align))) (Z.to_N (to_Z m.(opiter_MemArg_offset))))], snd p));
-  visit_OpVisitor_t_on_i32_store8 :=
+          (fst p ++ [FO_plain (BI_store T_f64 None (Z.to_N (to_Z m.(code_MemArg_align))) (Z.to_N (to_Z m.(code_MemArg_offset))))], snd p));
+  code_OpVisitor_t_on_i32_store8 :=
     fun p st m =>
       Ok (Core_result_Result_Ok tt,
-          (fst p ++ [FO_plain (BI_store T_i32 (Some Tp_i8) (Z.to_N (to_Z m.(opiter_MemArg_align))) (Z.to_N (to_Z m.(opiter_MemArg_offset))))], snd p));
-  visit_OpVisitor_t_on_i32_store16 :=
+          (fst p ++ [FO_plain (BI_store T_i32 (Some Tp_i8) (Z.to_N (to_Z m.(code_MemArg_align))) (Z.to_N (to_Z m.(code_MemArg_offset))))], snd p));
+  code_OpVisitor_t_on_i32_store16 :=
     fun p st m =>
       Ok (Core_result_Result_Ok tt,
-          (fst p ++ [FO_plain (BI_store T_i32 (Some Tp_i16) (Z.to_N (to_Z m.(opiter_MemArg_align))) (Z.to_N (to_Z m.(opiter_MemArg_offset))))], snd p));
-  visit_OpVisitor_t_on_i64_store8 :=
+          (fst p ++ [FO_plain (BI_store T_i32 (Some Tp_i16) (Z.to_N (to_Z m.(code_MemArg_align))) (Z.to_N (to_Z m.(code_MemArg_offset))))], snd p));
+  code_OpVisitor_t_on_i64_store8 :=
     fun p st m =>
       Ok (Core_result_Result_Ok tt,
-          (fst p ++ [FO_plain (BI_store T_i64 (Some Tp_i8) (Z.to_N (to_Z m.(opiter_MemArg_align))) (Z.to_N (to_Z m.(opiter_MemArg_offset))))], snd p));
-  visit_OpVisitor_t_on_i64_store16 :=
+          (fst p ++ [FO_plain (BI_store T_i64 (Some Tp_i8) (Z.to_N (to_Z m.(code_MemArg_align))) (Z.to_N (to_Z m.(code_MemArg_offset))))], snd p));
+  code_OpVisitor_t_on_i64_store16 :=
     fun p st m =>
       Ok (Core_result_Result_Ok tt,
-          (fst p ++ [FO_plain (BI_store T_i64 (Some Tp_i16) (Z.to_N (to_Z m.(opiter_MemArg_align))) (Z.to_N (to_Z m.(opiter_MemArg_offset))))], snd p));
-  visit_OpVisitor_t_on_i64_store32 :=
+          (fst p ++ [FO_plain (BI_store T_i64 (Some Tp_i16) (Z.to_N (to_Z m.(code_MemArg_align))) (Z.to_N (to_Z m.(code_MemArg_offset))))], snd p));
+  code_OpVisitor_t_on_i64_store32 :=
     fun p st m =>
       Ok (Core_result_Result_Ok tt,
-          (fst p ++ [FO_plain (BI_store T_i64 (Some Tp_i32) (Z.to_N (to_Z m.(opiter_MemArg_align))) (Z.to_N (to_Z m.(opiter_MemArg_offset))))], snd p));
-  visit_OpVisitor_t_on_i32_eqz :=
+          (fst p ++ [FO_plain (BI_store T_i64 (Some Tp_i32) (Z.to_N (to_Z m.(code_MemArg_align))) (Z.to_N (to_Z m.(code_MemArg_offset))))], snd p));
+  code_OpVisitor_t_on_i32_eqz :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_testop T_i32 TO_eqz)], snd p));
-  visit_OpVisitor_t_on_i32_eq :=
+  code_OpVisitor_t_on_i32_eq :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_i32 (Relop_i ROI_eq))], snd p));
-  visit_OpVisitor_t_on_i32_ne :=
+  code_OpVisitor_t_on_i32_ne :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_i32 (Relop_i ROI_ne))], snd p));
-  visit_OpVisitor_t_on_i32_lt_s :=
+  code_OpVisitor_t_on_i32_lt_s :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_i32 (Relop_i (ROI_lt SX_S)))], snd p));
-  visit_OpVisitor_t_on_i32_lt_u :=
+  code_OpVisitor_t_on_i32_lt_u :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_i32 (Relop_i (ROI_lt SX_U)))], snd p));
-  visit_OpVisitor_t_on_i32_gt_s :=
+  code_OpVisitor_t_on_i32_gt_s :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_i32 (Relop_i (ROI_gt SX_S)))], snd p));
-  visit_OpVisitor_t_on_i32_gt_u :=
+  code_OpVisitor_t_on_i32_gt_u :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_i32 (Relop_i (ROI_gt SX_U)))], snd p));
-  visit_OpVisitor_t_on_i32_le_s :=
+  code_OpVisitor_t_on_i32_le_s :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_i32 (Relop_i (ROI_le SX_S)))], snd p));
-  visit_OpVisitor_t_on_i32_le_u :=
+  code_OpVisitor_t_on_i32_le_u :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_i32 (Relop_i (ROI_le SX_U)))], snd p));
-  visit_OpVisitor_t_on_i32_ge_s :=
+  code_OpVisitor_t_on_i32_ge_s :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_i32 (Relop_i (ROI_ge SX_S)))], snd p));
-  visit_OpVisitor_t_on_i32_ge_u :=
+  code_OpVisitor_t_on_i32_ge_u :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_i32 (Relop_i (ROI_ge SX_U)))], snd p));
-  visit_OpVisitor_t_on_i64_eqz :=
+  code_OpVisitor_t_on_i64_eqz :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_testop T_i64 TO_eqz)], snd p));
-  visit_OpVisitor_t_on_i64_eq :=
+  code_OpVisitor_t_on_i64_eq :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_i64 (Relop_i ROI_eq))], snd p));
-  visit_OpVisitor_t_on_i64_ne :=
+  code_OpVisitor_t_on_i64_ne :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_i64 (Relop_i ROI_ne))], snd p));
-  visit_OpVisitor_t_on_i64_lt_s :=
+  code_OpVisitor_t_on_i64_lt_s :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_i64 (Relop_i (ROI_lt SX_S)))], snd p));
-  visit_OpVisitor_t_on_i64_lt_u :=
+  code_OpVisitor_t_on_i64_lt_u :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_i64 (Relop_i (ROI_lt SX_U)))], snd p));
-  visit_OpVisitor_t_on_i64_gt_s :=
+  code_OpVisitor_t_on_i64_gt_s :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_i64 (Relop_i (ROI_gt SX_S)))], snd p));
-  visit_OpVisitor_t_on_i64_gt_u :=
+  code_OpVisitor_t_on_i64_gt_u :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_i64 (Relop_i (ROI_gt SX_U)))], snd p));
-  visit_OpVisitor_t_on_i64_le_s :=
+  code_OpVisitor_t_on_i64_le_s :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_i64 (Relop_i (ROI_le SX_S)))], snd p));
-  visit_OpVisitor_t_on_i64_le_u :=
+  code_OpVisitor_t_on_i64_le_u :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_i64 (Relop_i (ROI_le SX_U)))], snd p));
-  visit_OpVisitor_t_on_i64_ge_s :=
+  code_OpVisitor_t_on_i64_ge_s :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_i64 (Relop_i (ROI_ge SX_S)))], snd p));
-  visit_OpVisitor_t_on_i64_ge_u :=
+  code_OpVisitor_t_on_i64_ge_u :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_i64 (Relop_i (ROI_ge SX_U)))], snd p));
-  visit_OpVisitor_t_on_f32_eq :=
+  code_OpVisitor_t_on_f32_eq :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_f32 (Relop_f ROF_eq))], snd p));
-  visit_OpVisitor_t_on_f32_ne :=
+  code_OpVisitor_t_on_f32_ne :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_f32 (Relop_f ROF_ne))], snd p));
-  visit_OpVisitor_t_on_f32_lt :=
+  code_OpVisitor_t_on_f32_lt :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_f32 (Relop_f ROF_lt))], snd p));
-  visit_OpVisitor_t_on_f32_gt :=
+  code_OpVisitor_t_on_f32_gt :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_f32 (Relop_f ROF_gt))], snd p));
-  visit_OpVisitor_t_on_f32_le :=
+  code_OpVisitor_t_on_f32_le :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_f32 (Relop_f ROF_le))], snd p));
-  visit_OpVisitor_t_on_f32_ge :=
+  code_OpVisitor_t_on_f32_ge :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_f32 (Relop_f ROF_ge))], snd p));
-  visit_OpVisitor_t_on_f64_eq :=
+  code_OpVisitor_t_on_f64_eq :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_f64 (Relop_f ROF_eq))], snd p));
-  visit_OpVisitor_t_on_f64_ne :=
+  code_OpVisitor_t_on_f64_ne :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_f64 (Relop_f ROF_ne))], snd p));
-  visit_OpVisitor_t_on_f64_lt :=
+  code_OpVisitor_t_on_f64_lt :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_f64 (Relop_f ROF_lt))], snd p));
-  visit_OpVisitor_t_on_f64_gt :=
+  code_OpVisitor_t_on_f64_gt :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_f64 (Relop_f ROF_gt))], snd p));
-  visit_OpVisitor_t_on_f64_le :=
+  code_OpVisitor_t_on_f64_le :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_f64 (Relop_f ROF_le))], snd p));
-  visit_OpVisitor_t_on_f64_ge :=
+  code_OpVisitor_t_on_f64_ge :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_relop T_f64 (Relop_f ROF_ge))], snd p));
-  visit_OpVisitor_t_on_i32_sub :=
+  code_OpVisitor_t_on_i32_sub :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i32 (Binop_i BOI_sub))], snd p));
-  visit_OpVisitor_t_on_i32_mul :=
+  code_OpVisitor_t_on_i32_mul :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i32 (Binop_i BOI_mul))], snd p));
-  visit_OpVisitor_t_on_i32_div_s :=
+  code_OpVisitor_t_on_i32_div_s :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i32 (Binop_i (BOI_div SX_S)))], snd p));
-  visit_OpVisitor_t_on_i32_div_u :=
+  code_OpVisitor_t_on_i32_div_u :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i32 (Binop_i (BOI_div SX_U)))], snd p));
-  visit_OpVisitor_t_on_i32_rem_s :=
+  code_OpVisitor_t_on_i32_rem_s :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i32 (Binop_i (BOI_rem SX_S)))], snd p));
-  visit_OpVisitor_t_on_i32_rem_u :=
+  code_OpVisitor_t_on_i32_rem_u :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i32 (Binop_i (BOI_rem SX_U)))], snd p));
-  visit_OpVisitor_t_on_i32_and :=
+  code_OpVisitor_t_on_i32_and :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i32 (Binop_i BOI_and))], snd p));
-  visit_OpVisitor_t_on_i32_or :=
+  code_OpVisitor_t_on_i32_or :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i32 (Binop_i BOI_or))], snd p));
-  visit_OpVisitor_t_on_i32_xor :=
+  code_OpVisitor_t_on_i32_xor :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i32 (Binop_i BOI_xor))], snd p));
-  visit_OpVisitor_t_on_i32_shl :=
+  code_OpVisitor_t_on_i32_shl :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i32 (Binop_i BOI_shl))], snd p));
-  visit_OpVisitor_t_on_i32_shr_s :=
+  code_OpVisitor_t_on_i32_shr_s :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i32 (Binop_i (BOI_shr SX_S)))], snd p));
-  visit_OpVisitor_t_on_i32_shr_u :=
+  code_OpVisitor_t_on_i32_shr_u :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i32 (Binop_i (BOI_shr SX_U)))], snd p));
-  visit_OpVisitor_t_on_i32_rotl :=
+  code_OpVisitor_t_on_i32_rotl :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i32 (Binop_i BOI_rotl))], snd p));
-  visit_OpVisitor_t_on_i32_rotr :=
+  code_OpVisitor_t_on_i32_rotr :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i32 (Binop_i BOI_rotr))], snd p));
-  visit_OpVisitor_t_on_i64_add :=
+  code_OpVisitor_t_on_i64_add :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i64 (Binop_i BOI_add))], snd p));
-  visit_OpVisitor_t_on_i64_sub :=
+  code_OpVisitor_t_on_i64_sub :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i64 (Binop_i BOI_sub))], snd p));
-  visit_OpVisitor_t_on_i64_mul :=
+  code_OpVisitor_t_on_i64_mul :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i64 (Binop_i BOI_mul))], snd p));
-  visit_OpVisitor_t_on_i64_div_s :=
+  code_OpVisitor_t_on_i64_div_s :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i64 (Binop_i (BOI_div SX_S)))], snd p));
-  visit_OpVisitor_t_on_i64_div_u :=
+  code_OpVisitor_t_on_i64_div_u :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i64 (Binop_i (BOI_div SX_U)))], snd p));
-  visit_OpVisitor_t_on_i64_rem_s :=
+  code_OpVisitor_t_on_i64_rem_s :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i64 (Binop_i (BOI_rem SX_S)))], snd p));
-  visit_OpVisitor_t_on_i64_rem_u :=
+  code_OpVisitor_t_on_i64_rem_u :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i64 (Binop_i (BOI_rem SX_U)))], snd p));
-  visit_OpVisitor_t_on_i64_and :=
+  code_OpVisitor_t_on_i64_and :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i64 (Binop_i BOI_and))], snd p));
-  visit_OpVisitor_t_on_i64_or :=
+  code_OpVisitor_t_on_i64_or :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i64 (Binop_i BOI_or))], snd p));
-  visit_OpVisitor_t_on_i64_xor :=
+  code_OpVisitor_t_on_i64_xor :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i64 (Binop_i BOI_xor))], snd p));
-  visit_OpVisitor_t_on_i64_shl :=
+  code_OpVisitor_t_on_i64_shl :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i64 (Binop_i BOI_shl))], snd p));
-  visit_OpVisitor_t_on_i64_shr_s :=
+  code_OpVisitor_t_on_i64_shr_s :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i64 (Binop_i (BOI_shr SX_S)))], snd p));
-  visit_OpVisitor_t_on_i64_shr_u :=
+  code_OpVisitor_t_on_i64_shr_u :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i64 (Binop_i (BOI_shr SX_U)))], snd p));
-  visit_OpVisitor_t_on_i64_rotl :=
+  code_OpVisitor_t_on_i64_rotl :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i64 (Binop_i BOI_rotl))], snd p));
-  visit_OpVisitor_t_on_i64_rotr :=
+  code_OpVisitor_t_on_i64_rotr :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i64 (Binop_i BOI_rotr))], snd p));
-  visit_OpVisitor_t_on_f32_add :=
+  code_OpVisitor_t_on_f32_add :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_f32 (Binop_f BOF_add))], snd p));
-  visit_OpVisitor_t_on_f32_sub :=
+  code_OpVisitor_t_on_f32_sub :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_f32 (Binop_f BOF_sub))], snd p));
-  visit_OpVisitor_t_on_f32_mul :=
+  code_OpVisitor_t_on_f32_mul :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_f32 (Binop_f BOF_mul))], snd p));
-  visit_OpVisitor_t_on_f32_div :=
+  code_OpVisitor_t_on_f32_div :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_f32 (Binop_f BOF_div))], snd p));
-  visit_OpVisitor_t_on_f32_min :=
+  code_OpVisitor_t_on_f32_min :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_f32 (Binop_f BOF_min))], snd p));
-  visit_OpVisitor_t_on_f32_max :=
+  code_OpVisitor_t_on_f32_max :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_f32 (Binop_f BOF_max))], snd p));
-  visit_OpVisitor_t_on_f32_copysign :=
+  code_OpVisitor_t_on_f32_copysign :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_f32 (Binop_f BOF_copysign))], snd p));
-  visit_OpVisitor_t_on_f64_add :=
+  code_OpVisitor_t_on_f64_add :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_f64 (Binop_f BOF_add))], snd p));
-  visit_OpVisitor_t_on_f64_sub :=
+  code_OpVisitor_t_on_f64_sub :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_f64 (Binop_f BOF_sub))], snd p));
-  visit_OpVisitor_t_on_f64_mul :=
+  code_OpVisitor_t_on_f64_mul :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_f64 (Binop_f BOF_mul))], snd p));
-  visit_OpVisitor_t_on_f64_div :=
+  code_OpVisitor_t_on_f64_div :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_f64 (Binop_f BOF_div))], snd p));
-  visit_OpVisitor_t_on_f64_min :=
+  code_OpVisitor_t_on_f64_min :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_f64 (Binop_f BOF_min))], snd p));
-  visit_OpVisitor_t_on_f64_max :=
+  code_OpVisitor_t_on_f64_max :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_f64 (Binop_f BOF_max))], snd p));
-  visit_OpVisitor_t_on_f64_copysign :=
+  code_OpVisitor_t_on_f64_copysign :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_f64 (Binop_f BOF_copysign))], snd p));
-  visit_OpVisitor_t_on_i32_clz :=
+  code_OpVisitor_t_on_i32_clz :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_unop T_i32 (Unop_i UOI_clz))], snd p));
-  visit_OpVisitor_t_on_i32_ctz :=
+  code_OpVisitor_t_on_i32_ctz :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_unop T_i32 (Unop_i UOI_ctz))], snd p));
-  visit_OpVisitor_t_on_i32_popcnt :=
+  code_OpVisitor_t_on_i32_popcnt :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_unop T_i32 (Unop_i UOI_popcnt))], snd p));
-  visit_OpVisitor_t_on_i32_add :=
+  code_OpVisitor_t_on_i32_add :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_binop T_i32 (Binop_i BOI_add))], snd p));
-  visit_OpVisitor_t_on_i64_clz :=
+  code_OpVisitor_t_on_i64_clz :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_unop T_i64 (Unop_i UOI_clz))], snd p));
-  visit_OpVisitor_t_on_i64_ctz :=
+  code_OpVisitor_t_on_i64_ctz :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_unop T_i64 (Unop_i UOI_ctz))], snd p));
-  visit_OpVisitor_t_on_i64_popcnt :=
+  code_OpVisitor_t_on_i64_popcnt :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_unop T_i64 (Unop_i UOI_popcnt))], snd p));
-  visit_OpVisitor_t_on_f32_abs :=
+  code_OpVisitor_t_on_f32_abs :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_unop T_f32 (Unop_f UOF_abs))], snd p));
-  visit_OpVisitor_t_on_f32_neg :=
+  code_OpVisitor_t_on_f32_neg :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_unop T_f32 (Unop_f UOF_neg))], snd p));
-  visit_OpVisitor_t_on_f32_ceil :=
+  code_OpVisitor_t_on_f32_ceil :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_unop T_f32 (Unop_f UOF_ceil))], snd p));
-  visit_OpVisitor_t_on_f32_floor :=
+  code_OpVisitor_t_on_f32_floor :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_unop T_f32 (Unop_f UOF_floor))], snd p));
-  visit_OpVisitor_t_on_f32_trunc :=
+  code_OpVisitor_t_on_f32_trunc :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_unop T_f32 (Unop_f UOF_trunc))], snd p));
-  visit_OpVisitor_t_on_f32_nearest :=
+  code_OpVisitor_t_on_f32_nearest :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_unop T_f32 (Unop_f UOF_nearest))], snd p));
-  visit_OpVisitor_t_on_f32_sqrt :=
+  code_OpVisitor_t_on_f32_sqrt :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_unop T_f32 (Unop_f UOF_sqrt))], snd p));
-  visit_OpVisitor_t_on_f64_abs :=
+  code_OpVisitor_t_on_f64_abs :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_unop T_f64 (Unop_f UOF_abs))], snd p));
-  visit_OpVisitor_t_on_f64_neg :=
+  code_OpVisitor_t_on_f64_neg :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_unop T_f64 (Unop_f UOF_neg))], snd p));
-  visit_OpVisitor_t_on_f64_ceil :=
+  code_OpVisitor_t_on_f64_ceil :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_unop T_f64 (Unop_f UOF_ceil))], snd p));
-  visit_OpVisitor_t_on_f64_floor :=
+  code_OpVisitor_t_on_f64_floor :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_unop T_f64 (Unop_f UOF_floor))], snd p));
-  visit_OpVisitor_t_on_f64_trunc :=
+  code_OpVisitor_t_on_f64_trunc :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_unop T_f64 (Unop_f UOF_trunc))], snd p));
-  visit_OpVisitor_t_on_f64_nearest :=
+  code_OpVisitor_t_on_f64_nearest :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_unop T_f64 (Unop_f UOF_nearest))], snd p));
-  visit_OpVisitor_t_on_f64_sqrt :=
+  code_OpVisitor_t_on_f64_sqrt :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_unop T_f64 (Unop_f UOF_sqrt))], snd p));
-  visit_OpVisitor_t_on_i32_wrap_i64 :=
+  code_OpVisitor_t_on_i32_wrap_i64 :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_cvtop T_i32 CVO_wrap T_i64 None)], snd p));
-  visit_OpVisitor_t_on_i32_trunc_f32_s :=
+  code_OpVisitor_t_on_i32_trunc_f32_s :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_cvtop T_i32 CVO_trunc T_f32 (Some SX_S))], snd p));
-  visit_OpVisitor_t_on_i32_trunc_f32_u :=
+  code_OpVisitor_t_on_i32_trunc_f32_u :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_cvtop T_i32 CVO_trunc T_f32 (Some SX_U))], snd p));
-  visit_OpVisitor_t_on_i32_trunc_f64_s :=
+  code_OpVisitor_t_on_i32_trunc_f64_s :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_cvtop T_i32 CVO_trunc T_f64 (Some SX_S))], snd p));
-  visit_OpVisitor_t_on_i32_trunc_f64_u :=
+  code_OpVisitor_t_on_i32_trunc_f64_u :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_cvtop T_i32 CVO_trunc T_f64 (Some SX_U))], snd p));
-  visit_OpVisitor_t_on_i64_extend_i32_s :=
+  code_OpVisitor_t_on_i64_extend_i32_s :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_cvtop T_i64 CVO_extend T_i32 (Some SX_S))], snd p));
-  visit_OpVisitor_t_on_i64_extend_i32_u :=
+  code_OpVisitor_t_on_i64_extend_i32_u :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_cvtop T_i64 CVO_extend T_i32 (Some SX_U))], snd p));
-  visit_OpVisitor_t_on_i64_trunc_f32_s :=
+  code_OpVisitor_t_on_i64_trunc_f32_s :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_cvtop T_i64 CVO_trunc T_f32 (Some SX_S))], snd p));
-  visit_OpVisitor_t_on_i64_trunc_f32_u :=
+  code_OpVisitor_t_on_i64_trunc_f32_u :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_cvtop T_i64 CVO_trunc T_f32 (Some SX_U))], snd p));
-  visit_OpVisitor_t_on_i64_trunc_f64_s :=
+  code_OpVisitor_t_on_i64_trunc_f64_s :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_cvtop T_i64 CVO_trunc T_f64 (Some SX_S))], snd p));
-  visit_OpVisitor_t_on_i64_trunc_f64_u :=
+  code_OpVisitor_t_on_i64_trunc_f64_u :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_cvtop T_i64 CVO_trunc T_f64 (Some SX_U))], snd p));
-  visit_OpVisitor_t_on_f32_convert_i32_s :=
+  code_OpVisitor_t_on_f32_convert_i32_s :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_cvtop T_f32 CVO_convert T_i32 (Some SX_S))], snd p));
-  visit_OpVisitor_t_on_f32_convert_i32_u :=
+  code_OpVisitor_t_on_f32_convert_i32_u :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_cvtop T_f32 CVO_convert T_i32 (Some SX_U))], snd p));
-  visit_OpVisitor_t_on_f32_convert_i64_s :=
+  code_OpVisitor_t_on_f32_convert_i64_s :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_cvtop T_f32 CVO_convert T_i64 (Some SX_S))], snd p));
-  visit_OpVisitor_t_on_f32_convert_i64_u :=
+  code_OpVisitor_t_on_f32_convert_i64_u :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_cvtop T_f32 CVO_convert T_i64 (Some SX_U))], snd p));
-  visit_OpVisitor_t_on_f32_demote_f64 :=
+  code_OpVisitor_t_on_f32_demote_f64 :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_cvtop T_f32 CVO_demote T_f64 None)], snd p));
-  visit_OpVisitor_t_on_f64_convert_i32_s :=
+  code_OpVisitor_t_on_f64_convert_i32_s :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_cvtop T_f64 CVO_convert T_i32 (Some SX_S))], snd p));
-  visit_OpVisitor_t_on_f64_convert_i32_u :=
+  code_OpVisitor_t_on_f64_convert_i32_u :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_cvtop T_f64 CVO_convert T_i32 (Some SX_U))], snd p));
-  visit_OpVisitor_t_on_f64_convert_i64_s :=
+  code_OpVisitor_t_on_f64_convert_i64_s :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_cvtop T_f64 CVO_convert T_i64 (Some SX_S))], snd p));
-  visit_OpVisitor_t_on_f64_convert_i64_u :=
+  code_OpVisitor_t_on_f64_convert_i64_u :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_cvtop T_f64 CVO_convert T_i64 (Some SX_U))], snd p));
-  visit_OpVisitor_t_on_f64_promote_f32 :=
+  code_OpVisitor_t_on_f64_promote_f32 :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_cvtop T_f64 CVO_promote T_f32 None)], snd p));
-  visit_OpVisitor_t_on_i32_reinterpret_f32 :=
+  code_OpVisitor_t_on_i32_reinterpret_f32 :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_cvtop T_i32 CVO_reinterpret T_f32 None)], snd p));
-  visit_OpVisitor_t_on_i64_reinterpret_f64 :=
+  code_OpVisitor_t_on_i64_reinterpret_f64 :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_cvtop T_i64 CVO_reinterpret T_f64 None)], snd p));
-  visit_OpVisitor_t_on_f32_reinterpret_i32 :=
+  code_OpVisitor_t_on_f32_reinterpret_i32 :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_cvtop T_f32 CVO_reinterpret T_i32 None)], snd p));
-  visit_OpVisitor_t_on_f64_reinterpret_i64 :=
+  code_OpVisitor_t_on_f64_reinterpret_i64 :=
     fun p st =>
       Ok (Core_result_Result_Ok tt,
           (fst p ++ [FO_plain (BI_cvtop T_f64 CVO_reinterpret T_i64 None)], snd p))
@@ -954,7 +954,7 @@ Definition trace_visitor
     and what is left is whether they agree. *)
 Local Ltac visit_row E Hspec :=
   rewrite E in Hspec; cbn in Hspec; injection Hspec as <-;
-  unfold visit_visit_numeric, visit_visit_memory, scalar_eqb;
+  unfold code_visit_numeric, code_visit_memory, scalar_eqb;
   rewrite E; cbn; reflexivity.
 
 Local Ltac walk_visit H Hspec :=
@@ -973,23 +973,23 @@ Local Ltac walk_visit H Hspec :=
     validator dispatches through, so the byte is never a variable and the
     fallthrough is [convert_types]'s own. *)
 Theorem visit_numeric_names_convert : forall (b : u8) from to be tr pend st,
-  opiter_convert_types b = Ok (Some (from, to)) ->
+  code_convert_types b = Ok (Some (from, to)) ->
   op_spec (to_Z b) = Some (Sh_nullary be) ->
-  visit_visit_numeric trace_visitor (tr, pend) st b
+  code_visit_numeric trace_visitor (tr, pend) st b
     = Ok (Core_result_Result_Ok tt, (tr ++ [FO_plain be], pend)).
 Proof.
-  intros b from to be tr pend st Hcv Hspec. unfold opiter_convert_types in Hcv.
+  intros b from to be tr pend st Hcv Hspec. unfold code_convert_types in Hcv.
   walk_visit Hcv Hspec.
   discriminate Hcv.
 Qed.
 
 Theorem visit_numeric_names_binary : forall (b : u8) ty res be tr pend st,
-  opiter_binary_types b = Ok (Some (ty, res)) ->
+  code_binary_types b = Ok (Some (ty, res)) ->
   op_spec (to_Z b) = Some (Sh_nullary be) ->
-  visit_visit_numeric trace_visitor (tr, pend) st b
+  code_visit_numeric trace_visitor (tr, pend) st b
     = Ok (Core_result_Result_Ok tt, (tr ++ [FO_plain be], pend)).
 Proof.
-  intros b ty res be tr pend st Hbt Hspec. unfold opiter_binary_types in Hbt.
+  intros b ty res be tr pend st Hbt Hspec. unfold code_binary_types in Hbt.
   walk_visit Hbt Hspec.
   discriminate Hbt.
 Qed.
@@ -1007,18 +1007,18 @@ Local Ltac walk_visit_mem Hspec :=
         first [ discriminate Hspec
               | apply Z.eqb_eq in E;
                 injection Hspec as <- <-;
-                unfold visit_visit_memory, scalar_eqb; rewrite E; cbn;
+                unfold code_visit_memory, scalar_eqb; rewrite E; cbn;
                 reflexivity ]
       | cbn beta iota in Hspec ]
   end.
 
 Theorem visit_memory_names_load : forall (b : u8) nt tp tr pend st m,
   op_spec (to_Z b) = Some (Sh_load nt tp) ->
-  visit_visit_memory trace_visitor (tr, pend) st b m
+  code_visit_memory trace_visitor (tr, pend) st b m
     = Ok (Core_result_Result_Ok tt,
           (tr ++ [FO_plain (BI_load nt tp
-                             (Z.to_N (to_Z m.(opiter_MemArg_align)))
-                             (Z.to_N (to_Z m.(opiter_MemArg_offset))))], pend)).
+                             (Z.to_N (to_Z m.(code_MemArg_align)))
+                             (Z.to_N (to_Z m.(code_MemArg_offset))))], pend)).
 Proof.
   intros b nt tp tr pend st m Hspec. unfold op_spec in Hspec.
   walk_visit_mem Hspec.
@@ -1027,11 +1027,11 @@ Qed.
 
 Theorem visit_memory_names_store : forall (b : u8) nt tp tr pend st m,
   op_spec (to_Z b) = Some (Sh_store nt tp) ->
-  visit_visit_memory trace_visitor (tr, pend) st b m
+  code_visit_memory trace_visitor (tr, pend) st b m
     = Ok (Core_result_Result_Ok tt,
           (tr ++ [FO_plain (BI_store nt tp
-                             (Z.to_N (to_Z m.(opiter_MemArg_align)))
-                             (Z.to_N (to_Z m.(opiter_MemArg_offset))))], pend)).
+                             (Z.to_N (to_Z m.(code_MemArg_align)))
+                             (Z.to_N (to_Z m.(code_MemArg_offset))))], pend)).
 Proof.
   intros b nt tp tr pend st m Hspec. unfold op_spec in Hspec.
   walk_visit_mem Hspec.
@@ -1049,83 +1049,83 @@ Proof.
   (* the four fan-outs: the theorems above, at a state split into its halves *)
   1-8: destruct v as [tr pend];
        match goal with
-       | Hc : opiter_convert_types _ = _, Hs : op_spec _ = _,
-         H : visit_visit_numeric _ _ _ _ = _ |- _ =>
+       | Hc : code_convert_types _ = _, Hs : op_spec _ = _,
+         H : code_visit_numeric _ _ _ _ = _ |- _ =>
            rewrite (visit_numeric_names_convert _ _ _ _ tr pend _ Hc Hs) in H;
            injection H as <-
-       | Hb : opiter_binary_types _ = _, Hs : op_spec _ = _,
-         H : visit_visit_numeric _ _ _ _ = _ |- _ =>
+       | Hb : code_binary_types _ = _, Hs : op_spec _ = _,
+         H : code_visit_numeric _ _ _ _ = _ |- _ =>
            rewrite (visit_numeric_names_binary _ _ _ _ tr pend _ Hb Hs) in H;
            injection H as <-
        | Hs : op_spec _ = Some (Sh_load _ _),
-         H : visit_visit_memory _ _ _ _ _ = _ |- _ =>
+         H : code_visit_memory _ _ _ _ _ = _ |- _ =>
            rewrite (visit_memory_names_load _ _ _ tr pend _ _ Hs) in H;
            injection H as <-
        | Hs : op_spec _ = Some (Sh_store _ _),
-         H : visit_visit_memory _ _ _ _ _ = _ |- _ =>
+         H : code_visit_memory _ _ _ _ _ = _ |- _ =>
            rewrite (visit_memory_names_store _ _ _ tr pend _ _ Hs) in H;
            injection H as <-
        end;
        reflexivity.
   (* every other row is its own hook, computed *)
-  all: cbn [visit_OpVisitor_t_on_function_start visit_OpVisitor_t_on_unreachable visit_OpVisitor_t_on_nop
-              visit_OpVisitor_t_on_block visit_OpVisitor_t_on_loop visit_OpVisitor_t_on_if
-              visit_OpVisitor_t_on_else visit_OpVisitor_t_on_end visit_OpVisitor_t_on_br
-              visit_OpVisitor_t_on_br_if visit_OpVisitor_t_on_br_table_label visit_OpVisitor_t_on_br_table
-              visit_OpVisitor_t_on_return visit_OpVisitor_t_on_call visit_OpVisitor_t_on_call_indirect
-              visit_OpVisitor_t_on_drop visit_OpVisitor_t_on_select visit_OpVisitor_t_on_local_get
-              visit_OpVisitor_t_on_local_set visit_OpVisitor_t_on_local_tee visit_OpVisitor_t_on_global_get
-              visit_OpVisitor_t_on_global_set visit_OpVisitor_t_on_memory_size visit_OpVisitor_t_on_memory_grow
-              visit_OpVisitor_t_on_i32_const visit_OpVisitor_t_on_i64_const visit_OpVisitor_t_on_f32_const
-              visit_OpVisitor_t_on_f64_const visit_OpVisitor_t_on_i32_load visit_OpVisitor_t_on_i64_load
-              visit_OpVisitor_t_on_f32_load visit_OpVisitor_t_on_f64_load visit_OpVisitor_t_on_i32_load8_s
-              visit_OpVisitor_t_on_i32_load8_u visit_OpVisitor_t_on_i32_load16_s visit_OpVisitor_t_on_i32_load16_u
-              visit_OpVisitor_t_on_i64_load8_s visit_OpVisitor_t_on_i64_load8_u visit_OpVisitor_t_on_i64_load16_s
-              visit_OpVisitor_t_on_i64_load16_u visit_OpVisitor_t_on_i64_load32_s visit_OpVisitor_t_on_i64_load32_u
-              visit_OpVisitor_t_on_i32_store visit_OpVisitor_t_on_i64_store visit_OpVisitor_t_on_f32_store
-              visit_OpVisitor_t_on_f64_store visit_OpVisitor_t_on_i32_store8 visit_OpVisitor_t_on_i32_store16
-              visit_OpVisitor_t_on_i64_store8 visit_OpVisitor_t_on_i64_store16 visit_OpVisitor_t_on_i64_store32
-              visit_OpVisitor_t_on_i32_eqz visit_OpVisitor_t_on_i32_eq visit_OpVisitor_t_on_i32_ne
-              visit_OpVisitor_t_on_i32_lt_s visit_OpVisitor_t_on_i32_lt_u visit_OpVisitor_t_on_i32_gt_s
-              visit_OpVisitor_t_on_i32_gt_u visit_OpVisitor_t_on_i32_le_s visit_OpVisitor_t_on_i32_le_u
-              visit_OpVisitor_t_on_i32_ge_s visit_OpVisitor_t_on_i32_ge_u visit_OpVisitor_t_on_i64_eqz
-              visit_OpVisitor_t_on_i64_eq visit_OpVisitor_t_on_i64_ne visit_OpVisitor_t_on_i64_lt_s
-              visit_OpVisitor_t_on_i64_lt_u visit_OpVisitor_t_on_i64_gt_s visit_OpVisitor_t_on_i64_gt_u
-              visit_OpVisitor_t_on_i64_le_s visit_OpVisitor_t_on_i64_le_u visit_OpVisitor_t_on_i64_ge_s
-              visit_OpVisitor_t_on_i64_ge_u visit_OpVisitor_t_on_f32_eq visit_OpVisitor_t_on_f32_ne
-              visit_OpVisitor_t_on_f32_lt visit_OpVisitor_t_on_f32_gt visit_OpVisitor_t_on_f32_le
-              visit_OpVisitor_t_on_f32_ge visit_OpVisitor_t_on_f64_eq visit_OpVisitor_t_on_f64_ne
-              visit_OpVisitor_t_on_f64_lt visit_OpVisitor_t_on_f64_gt visit_OpVisitor_t_on_f64_le
-              visit_OpVisitor_t_on_f64_ge visit_OpVisitor_t_on_i32_sub visit_OpVisitor_t_on_i32_mul
-              visit_OpVisitor_t_on_i32_div_s visit_OpVisitor_t_on_i32_div_u visit_OpVisitor_t_on_i32_rem_s
-              visit_OpVisitor_t_on_i32_rem_u visit_OpVisitor_t_on_i32_and visit_OpVisitor_t_on_i32_or
-              visit_OpVisitor_t_on_i32_xor visit_OpVisitor_t_on_i32_shl visit_OpVisitor_t_on_i32_shr_s
-              visit_OpVisitor_t_on_i32_shr_u visit_OpVisitor_t_on_i32_rotl visit_OpVisitor_t_on_i32_rotr
-              visit_OpVisitor_t_on_i64_add visit_OpVisitor_t_on_i64_sub visit_OpVisitor_t_on_i64_mul
-              visit_OpVisitor_t_on_i64_div_s visit_OpVisitor_t_on_i64_div_u visit_OpVisitor_t_on_i64_rem_s
-              visit_OpVisitor_t_on_i64_rem_u visit_OpVisitor_t_on_i64_and visit_OpVisitor_t_on_i64_or
-              visit_OpVisitor_t_on_i64_xor visit_OpVisitor_t_on_i64_shl visit_OpVisitor_t_on_i64_shr_s
-              visit_OpVisitor_t_on_i64_shr_u visit_OpVisitor_t_on_i64_rotl visit_OpVisitor_t_on_i64_rotr
-              visit_OpVisitor_t_on_f32_add visit_OpVisitor_t_on_f32_sub visit_OpVisitor_t_on_f32_mul
-              visit_OpVisitor_t_on_f32_div visit_OpVisitor_t_on_f32_min visit_OpVisitor_t_on_f32_max
-              visit_OpVisitor_t_on_f32_copysign visit_OpVisitor_t_on_f64_add visit_OpVisitor_t_on_f64_sub
-              visit_OpVisitor_t_on_f64_mul visit_OpVisitor_t_on_f64_div visit_OpVisitor_t_on_f64_min
-              visit_OpVisitor_t_on_f64_max visit_OpVisitor_t_on_f64_copysign visit_OpVisitor_t_on_i32_clz
-              visit_OpVisitor_t_on_i32_ctz visit_OpVisitor_t_on_i32_popcnt visit_OpVisitor_t_on_i32_add
-              visit_OpVisitor_t_on_i64_clz visit_OpVisitor_t_on_i64_ctz visit_OpVisitor_t_on_i64_popcnt
-              visit_OpVisitor_t_on_f32_abs visit_OpVisitor_t_on_f32_neg visit_OpVisitor_t_on_f32_ceil
-              visit_OpVisitor_t_on_f32_floor visit_OpVisitor_t_on_f32_trunc visit_OpVisitor_t_on_f32_nearest
-              visit_OpVisitor_t_on_f32_sqrt visit_OpVisitor_t_on_f64_abs visit_OpVisitor_t_on_f64_neg
-              visit_OpVisitor_t_on_f64_ceil visit_OpVisitor_t_on_f64_floor visit_OpVisitor_t_on_f64_trunc
-              visit_OpVisitor_t_on_f64_nearest visit_OpVisitor_t_on_f64_sqrt visit_OpVisitor_t_on_i32_wrap_i64
-              visit_OpVisitor_t_on_i32_trunc_f32_s visit_OpVisitor_t_on_i32_trunc_f32_u visit_OpVisitor_t_on_i32_trunc_f64_s
-              visit_OpVisitor_t_on_i32_trunc_f64_u visit_OpVisitor_t_on_i64_extend_i32_s visit_OpVisitor_t_on_i64_extend_i32_u
-              visit_OpVisitor_t_on_i64_trunc_f32_s visit_OpVisitor_t_on_i64_trunc_f32_u visit_OpVisitor_t_on_i64_trunc_f64_s
-              visit_OpVisitor_t_on_i64_trunc_f64_u visit_OpVisitor_t_on_f32_convert_i32_s visit_OpVisitor_t_on_f32_convert_i32_u
-              visit_OpVisitor_t_on_f32_convert_i64_s visit_OpVisitor_t_on_f32_convert_i64_u visit_OpVisitor_t_on_f32_demote_f64
-              visit_OpVisitor_t_on_f64_convert_i32_s visit_OpVisitor_t_on_f64_convert_i32_u visit_OpVisitor_t_on_f64_convert_i64_s
-              visit_OpVisitor_t_on_f64_convert_i64_u visit_OpVisitor_t_on_f64_promote_f32 visit_OpVisitor_t_on_i32_reinterpret_f32
-              visit_OpVisitor_t_on_i64_reinterpret_f64 visit_OpVisitor_t_on_f32_reinterpret_i32 visit_OpVisitor_t_on_f64_reinterpret_i64 trace_visitor] in *;
+  all: cbn [code_OpVisitor_t_on_function_start code_OpVisitor_t_on_unreachable code_OpVisitor_t_on_nop
+              code_OpVisitor_t_on_block code_OpVisitor_t_on_loop code_OpVisitor_t_on_if
+              code_OpVisitor_t_on_else code_OpVisitor_t_on_end code_OpVisitor_t_on_br
+              code_OpVisitor_t_on_br_if code_OpVisitor_t_on_br_table_label code_OpVisitor_t_on_br_table
+              code_OpVisitor_t_on_return code_OpVisitor_t_on_call code_OpVisitor_t_on_call_indirect
+              code_OpVisitor_t_on_drop code_OpVisitor_t_on_select code_OpVisitor_t_on_local_get
+              code_OpVisitor_t_on_local_set code_OpVisitor_t_on_local_tee code_OpVisitor_t_on_global_get
+              code_OpVisitor_t_on_global_set code_OpVisitor_t_on_memory_size code_OpVisitor_t_on_memory_grow
+              code_OpVisitor_t_on_i32_const code_OpVisitor_t_on_i64_const code_OpVisitor_t_on_f32_const
+              code_OpVisitor_t_on_f64_const code_OpVisitor_t_on_i32_load code_OpVisitor_t_on_i64_load
+              code_OpVisitor_t_on_f32_load code_OpVisitor_t_on_f64_load code_OpVisitor_t_on_i32_load8_s
+              code_OpVisitor_t_on_i32_load8_u code_OpVisitor_t_on_i32_load16_s code_OpVisitor_t_on_i32_load16_u
+              code_OpVisitor_t_on_i64_load8_s code_OpVisitor_t_on_i64_load8_u code_OpVisitor_t_on_i64_load16_s
+              code_OpVisitor_t_on_i64_load16_u code_OpVisitor_t_on_i64_load32_s code_OpVisitor_t_on_i64_load32_u
+              code_OpVisitor_t_on_i32_store code_OpVisitor_t_on_i64_store code_OpVisitor_t_on_f32_store
+              code_OpVisitor_t_on_f64_store code_OpVisitor_t_on_i32_store8 code_OpVisitor_t_on_i32_store16
+              code_OpVisitor_t_on_i64_store8 code_OpVisitor_t_on_i64_store16 code_OpVisitor_t_on_i64_store32
+              code_OpVisitor_t_on_i32_eqz code_OpVisitor_t_on_i32_eq code_OpVisitor_t_on_i32_ne
+              code_OpVisitor_t_on_i32_lt_s code_OpVisitor_t_on_i32_lt_u code_OpVisitor_t_on_i32_gt_s
+              code_OpVisitor_t_on_i32_gt_u code_OpVisitor_t_on_i32_le_s code_OpVisitor_t_on_i32_le_u
+              code_OpVisitor_t_on_i32_ge_s code_OpVisitor_t_on_i32_ge_u code_OpVisitor_t_on_i64_eqz
+              code_OpVisitor_t_on_i64_eq code_OpVisitor_t_on_i64_ne code_OpVisitor_t_on_i64_lt_s
+              code_OpVisitor_t_on_i64_lt_u code_OpVisitor_t_on_i64_gt_s code_OpVisitor_t_on_i64_gt_u
+              code_OpVisitor_t_on_i64_le_s code_OpVisitor_t_on_i64_le_u code_OpVisitor_t_on_i64_ge_s
+              code_OpVisitor_t_on_i64_ge_u code_OpVisitor_t_on_f32_eq code_OpVisitor_t_on_f32_ne
+              code_OpVisitor_t_on_f32_lt code_OpVisitor_t_on_f32_gt code_OpVisitor_t_on_f32_le
+              code_OpVisitor_t_on_f32_ge code_OpVisitor_t_on_f64_eq code_OpVisitor_t_on_f64_ne
+              code_OpVisitor_t_on_f64_lt code_OpVisitor_t_on_f64_gt code_OpVisitor_t_on_f64_le
+              code_OpVisitor_t_on_f64_ge code_OpVisitor_t_on_i32_sub code_OpVisitor_t_on_i32_mul
+              code_OpVisitor_t_on_i32_div_s code_OpVisitor_t_on_i32_div_u code_OpVisitor_t_on_i32_rem_s
+              code_OpVisitor_t_on_i32_rem_u code_OpVisitor_t_on_i32_and code_OpVisitor_t_on_i32_or
+              code_OpVisitor_t_on_i32_xor code_OpVisitor_t_on_i32_shl code_OpVisitor_t_on_i32_shr_s
+              code_OpVisitor_t_on_i32_shr_u code_OpVisitor_t_on_i32_rotl code_OpVisitor_t_on_i32_rotr
+              code_OpVisitor_t_on_i64_add code_OpVisitor_t_on_i64_sub code_OpVisitor_t_on_i64_mul
+              code_OpVisitor_t_on_i64_div_s code_OpVisitor_t_on_i64_div_u code_OpVisitor_t_on_i64_rem_s
+              code_OpVisitor_t_on_i64_rem_u code_OpVisitor_t_on_i64_and code_OpVisitor_t_on_i64_or
+              code_OpVisitor_t_on_i64_xor code_OpVisitor_t_on_i64_shl code_OpVisitor_t_on_i64_shr_s
+              code_OpVisitor_t_on_i64_shr_u code_OpVisitor_t_on_i64_rotl code_OpVisitor_t_on_i64_rotr
+              code_OpVisitor_t_on_f32_add code_OpVisitor_t_on_f32_sub code_OpVisitor_t_on_f32_mul
+              code_OpVisitor_t_on_f32_div code_OpVisitor_t_on_f32_min code_OpVisitor_t_on_f32_max
+              code_OpVisitor_t_on_f32_copysign code_OpVisitor_t_on_f64_add code_OpVisitor_t_on_f64_sub
+              code_OpVisitor_t_on_f64_mul code_OpVisitor_t_on_f64_div code_OpVisitor_t_on_f64_min
+              code_OpVisitor_t_on_f64_max code_OpVisitor_t_on_f64_copysign code_OpVisitor_t_on_i32_clz
+              code_OpVisitor_t_on_i32_ctz code_OpVisitor_t_on_i32_popcnt code_OpVisitor_t_on_i32_add
+              code_OpVisitor_t_on_i64_clz code_OpVisitor_t_on_i64_ctz code_OpVisitor_t_on_i64_popcnt
+              code_OpVisitor_t_on_f32_abs code_OpVisitor_t_on_f32_neg code_OpVisitor_t_on_f32_ceil
+              code_OpVisitor_t_on_f32_floor code_OpVisitor_t_on_f32_trunc code_OpVisitor_t_on_f32_nearest
+              code_OpVisitor_t_on_f32_sqrt code_OpVisitor_t_on_f64_abs code_OpVisitor_t_on_f64_neg
+              code_OpVisitor_t_on_f64_ceil code_OpVisitor_t_on_f64_floor code_OpVisitor_t_on_f64_trunc
+              code_OpVisitor_t_on_f64_nearest code_OpVisitor_t_on_f64_sqrt code_OpVisitor_t_on_i32_wrap_i64
+              code_OpVisitor_t_on_i32_trunc_f32_s code_OpVisitor_t_on_i32_trunc_f32_u code_OpVisitor_t_on_i32_trunc_f64_s
+              code_OpVisitor_t_on_i32_trunc_f64_u code_OpVisitor_t_on_i64_extend_i32_s code_OpVisitor_t_on_i64_extend_i32_u
+              code_OpVisitor_t_on_i64_trunc_f32_s code_OpVisitor_t_on_i64_trunc_f32_u code_OpVisitor_t_on_i64_trunc_f64_s
+              code_OpVisitor_t_on_i64_trunc_f64_u code_OpVisitor_t_on_f32_convert_i32_s code_OpVisitor_t_on_f32_convert_i32_u
+              code_OpVisitor_t_on_f32_convert_i64_s code_OpVisitor_t_on_f32_convert_i64_u code_OpVisitor_t_on_f32_demote_f64
+              code_OpVisitor_t_on_f64_convert_i32_s code_OpVisitor_t_on_f64_convert_i32_u code_OpVisitor_t_on_f64_convert_i64_s
+              code_OpVisitor_t_on_f64_convert_i64_u code_OpVisitor_t_on_f64_promote_f32 code_OpVisitor_t_on_i32_reinterpret_f32
+              code_OpVisitor_t_on_i64_reinterpret_f64 code_OpVisitor_t_on_f32_reinterpret_i32 code_OpVisitor_t_on_f64_reinterpret_i64 trace_visitor] in *;
        match goal with H : Ok _ = Ok _ |- _ => injection H as <- end;
        reflexivity.
 Qed.

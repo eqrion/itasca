@@ -1,19 +1,18 @@
 //! Byte-level reads over `(data, pos)`.
 //!
-//! There is no cursor object: Aeneas rejects a struct that holds a borrow, so
-//! the position is threaded explicitly and every reader returns the position it
-//! stopped at. Both the function-body validator and the module decoder read
-//! through these, which is why they live here rather than in either.
+//! There's no cursor type: each reader takes a position and returns the
+//! position it stopped at, and the caller threads it through. Both the
+//! function-body validator and the module decoder read through these
+//! functions rather than duplicating the decoding logic.
 //!
-//! No bitwise operators. `scalar_and`, `scalar_or` and `scalar_shl` are
-//! unspecified axioms in Aeneas's `Primitives.v`, so LEB128 decoding uses
-//! division and remainder, which have real definitions over `Z` and are
-//! therefore provable.
+//! LEB128 decoding uses multiplication, division, and remainder rather than
+//! bit shifts and masks.
 
 use crate::error::OpError;
 
 type Result<T> = core::result::Result<T, OpError>;
 
+/// Reads one byte at `pos`.
 pub fn read_byte(data: &[u8], pos: usize) -> Result<(u8, usize)> {
     if pos >= data.len() {
         return Err(OpError::UnexpectedEof);
@@ -24,10 +23,6 @@ pub fn read_byte(data: &[u8], pos: usize) -> Result<(u8, usize)> {
 
 /// LEB128 unsigned 32-bit, rejecting encodings longer than five bytes and
 /// fifth bytes carrying more than the four bits a `u32` has room for.
-///
-/// `mult` is multiplied at most four times, reaching 2^28, and the accumulator
-/// peaks at exactly `u32::MAX`, so neither can overflow. That matters because
-/// an overflow would extract as `Fail_`, which the no-panic obligation forbids.
 pub fn read_u32_leb(data: &[u8], pos: usize) -> Result<(u32, usize)> {
     let mut acc: u32 = 0;
     let mut mult: u32 = 1;
@@ -56,15 +51,13 @@ pub fn read_u32_leb(data: &[u8], pos: usize) -> Result<(u32, usize)> {
 }
 
 /// LEB128 signed, in at most `last + 1` bytes and within `[lo, hi]`. The
-/// specification's `sN` rules are parametric in exactly this way (spec 5.2.2),
-/// so one reader serves both widths and there is one correspondence proof.
+/// specification's `sN` rules are parametric in exactly this way (spec
+/// 5.2.2), so one reader serves both widths.
 ///
-/// The accumulator is `i128` rather than `i64` because `mult` reaches `128^9`,
-/// which is `2^63`: a 64-bit accumulator overflows on the tenth byte of an s64,
-/// and an overflow extracts as `Fail_`, which the no-panic obligation forbids.
-/// A consumer free to use shift and mask does not need the wider type; this one
-/// is not, since `scalar_shl` and `scalar_and` are unspecified axioms in
-/// Aeneas's `Primitives.v`.
+/// The accumulator is `i128` rather than `i64` because `mult` reaches
+/// `128^9`, which is `2^63`: a 64-bit accumulator would overflow on the
+/// tenth byte of an s64, before the final range check gets a chance to
+/// reject it.
 fn read_sn_leb(
     data: &[u8],
     pos: usize,
@@ -121,12 +114,9 @@ pub fn read_s64_leb(data: &[u8], pos: usize) -> Result<(i64, usize)> {
     Ok((v as i64, p))
 }
 
-/// Spec 5.2.3: `fN ::= b*:byte^(N/8)`, the IEEE 754 bit pattern in little-endian
-/// byte order. One loop for both widths, with the byte count as a parameter.
-///
-/// The accumulator is `u64` and never overflows: after `k < n <= 8` bytes it is
-/// below `256^k`, and the next byte contributes at most `255 * 256^k`, so the sum
-/// stays below `256^(k+1) <= 2^64`.
+/// Spec 5.2.3: `fN ::= b*:byte^(N/8)`, the IEEE 754 bit pattern in
+/// little-endian byte order. One loop for both widths, with the byte count
+/// as a parameter.
 fn read_fn_bits(data: &[u8], pos: usize, n: u32) -> Result<(u64, usize)> {
     let mut acc: u64 = 0;
     let mut mult: u64 = 1;
@@ -153,14 +143,15 @@ fn read_fn_bits(data: &[u8], pos: usize, n: u32) -> Result<(u64, usize)> {
     }
 }
 
-/// The bit pattern of an `f32` immediate. Bits rather than a float: the verified
-/// core has no floating-point arithmetic, and validation does not need the value.
-/// A compiler consumer reinterprets them as needed.
+/// The bit pattern of an `f32` immediate. Bits rather than a float:
+/// validation never inspects the value, and a consumer that wants it as a
+/// float converts with `f32::from_bits`.
 pub fn read_f32_bits(data: &[u8], pos: usize) -> Result<(u32, usize)> {
     let (v, p) = read_fn_bits(data, pos, 4)?;
     Ok((v as u32, p))
 }
 
+/// The bit pattern of an `f64` immediate. See [`read_f32_bits`].
 pub fn read_f64_bits(data: &[u8], pos: usize) -> Result<(u64, usize)> {
     read_fn_bits(data, pos, 8)
 }

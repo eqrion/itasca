@@ -43,47 +43,47 @@ Local Open Scope list_scope.
     give it up directly; the function arm is a type-index lookup, and
     [idx_in_range] is what makes it hit. *)
 Definition import_externs (tys : list types_FuncType_t)
-                          (imps : list env_Import_t) : list extern_type :=
+                          (imps : list module_Import_t) : list extern_type :=
   List.flat_map
-    (fun im => match im.(env_Import_desc) with
-               | Env_ImportDesc_Func idx =>
+    (fun im => match im.(module_Import_desc) with
+               | Module_ImportDesc_Func idx =>
                    match List.nth_error tys (Z.to_nat (to_Z idx)) with
                    | Some ft => [ET_func (translate_functype ft)]
                    | None => []
                    end
-               | Env_ImportDesc_Table t => [ET_table (translate_tabletype t)]
-               | Env_ImportDesc_Memory m => [ET_mem (translate_memtype m)]
-               | Env_ImportDesc_Global g => [ET_global (translate_globaltype g)]
+               | Module_ImportDesc_Table t => [ET_table (translate_tabletype t)]
+               | Module_ImportDesc_Memory m => [ET_mem (translate_memtype m)]
+               | Module_ImportDesc_Global g => [ET_global (translate_globaltype g)]
                end)
     imps.
 
 (** The same for the export section. An export names an index space entry, so
     unlike an import it carries no type of its own and all four arms are
     lookups; [export_desc_ok] is what makes them all hit. *)
-Definition export_externs (env : env_Env_t)
-                          (exps : list env_Export_t) : list extern_type :=
+Definition export_externs (env : module_Env_t)
+                          (exps : list module_Export_t) : list extern_type :=
   List.flat_map
-    (fun e => match e.(env_Export_desc) with
-              | Env_ExportDesc_Func x =>
-                  match List.nth_error (vec_list env.(env_Env_func_types))
+    (fun e => match e.(module_Export_desc) with
+              | Module_ExportDesc_Func x =>
+                  match List.nth_error (vec_list env.(module_Env_func_types))
                           (Z.to_nat (to_Z x)) with
                   | Some ft => [ET_func (translate_functype ft)]
                   | None => []
                   end
-              | Env_ExportDesc_Table x =>
-                  match List.nth_error (vec_list env.(env_Env_table_types))
+              | Module_ExportDesc_Table x =>
+                  match List.nth_error (vec_list env.(module_Env_table_types))
                           (Z.to_nat (to_Z x)) with
                   | Some t => [ET_table (translate_tabletype t)]
                   | None => []
                   end
-              | Env_ExportDesc_Memory x =>
-                  match List.nth_error (vec_list env.(env_Env_mem_types))
+              | Module_ExportDesc_Memory x =>
+                  match List.nth_error (vec_list env.(module_Env_mem_types))
                           (Z.to_nat (to_Z x)) with
                   | Some m => [ET_mem (translate_memtype m)]
                   | None => []
                   end
-              | Env_ExportDesc_Global x =>
-                  match List.nth_error (vec_list env.(env_Env_global_types))
+              | Module_ExportDesc_Global x =>
+                  match List.nth_error (vec_list env.(module_Env_global_types))
                           (Z.to_nat (to_Z x)) with
                   | Some g => [ET_global (translate_globaltype g)]
                   | None => []
@@ -117,7 +117,7 @@ Qed.
     loop is looking at. *)
 Lemma in_imported_func_idxs : forall imps im idx,
   List.In im imps ->
-  im.(env_Import_desc) = Env_ImportDesc_Func idx ->
+  im.(module_Import_desc) = Module_ImportDesc_Func idx ->
   List.In idx (imported_func_idxs imps).
 Proof.
   intros imps im idx Hin Hd. unfold imported_func_idxs.
@@ -139,7 +139,7 @@ Qed.
     is the converse; this is the direction that makes the [?] in [import_types]
     unreachable. *)
 Lemma lookup_type_in_range : forall env idx ft',
-  List.nth_error (vec_list env.(env_Env_types)) (Z.to_nat (to_Z idx))
+  List.nth_error (vec_list env.(module_Env_types)) (Z.to_nat (to_Z idx))
     = Some ft' ->
   exists ft,
     module_lookup_type env idx = Ok (Core_result_Result_Ok ft)
@@ -149,10 +149,10 @@ Proof.
   destruct (scalar_cast_u32_usize idx) as [i [Hcast Hi]].
   rewrite Hcast. cbn [bind].
   assert (Hn : (Z.to_nat (to_Z idx)
-                  < List.length (vec_list env.(env_Env_types)))%nat)
+                  < List.length (vec_list env.(module_Env_types)))%nat)
     by (apply List.nth_error_Some; rewrite Hnth; discriminate).
   assert (Hlt : to_Z i
-                  < Z.of_nat (List.length (vec_list env.(env_Env_types)))).
+                  < Z.of_nat (List.length (vec_list env.(module_Env_types)))).
   { rewrite Hi. apply Nat2Z.inj_lt in Hn.
     rewrite Z2Nat.id in Hn by (apply u32_nonneg). exact Hn. }
   rewrite (lt_len_geb_false _ _ Hlt).
@@ -180,25 +180,25 @@ Proof.
 Qed.
 
 Lemma import_types_loop_ok : forall m env out i,
-  List.Forall (idx_in_range (vec_list env.(env_Env_types)))
-    (imported_func_idxs (vec_list env.(env_Env_imports))) ->
-  Z.of_nat (List.length (vec_list env.(env_Env_imports))) - to_Z i
+  List.Forall (idx_in_range (vec_list env.(module_Env_types)))
+    (imported_func_idxs (vec_list env.(module_Env_imports))) ->
+  Z.of_nat (List.length (vec_list env.(module_Env_imports))) - to_Z i
     <= Z.of_nat m ->
   Z.of_nat (List.length (vec_list out))
-    + (Z.of_nat (List.length (vec_list env.(env_Env_imports))) - to_Z i)
+    + (Z.of_nat (List.length (vec_list env.(module_Env_imports))) - to_Z i)
     <= usize_max ->
   exists v,
     module_import_types_loop env out i = Ok (Core_result_Result_Ok v)
     /\ translate_externtypes v
        = translate_externtypes out
-         ++ import_externs (vec_list env.(env_Env_types))
+         ++ import_externs (vec_list env.(module_Env_types))
               (List.skipn (Z.to_nat (to_Z i))
-                 (vec_list env.(env_Env_imports))).
+                 (vec_list env.(module_Env_imports))).
 Proof.
   induction m as [|m IH]; intros env out i Hrange Hmeas Hroom;
     pose proof (usize_nonneg i) as Hi0;
     unfold module_import_types_loop; rewrite loop_unfold; cbn beta iota;
-    destruct (i s>= alloc_vec_Vec_len env.(env_Env_imports)) eqn:Hge.
+    destruct (i s>= alloc_vec_Vec_len env.(module_Env_imports)) eqn:Hge.
   1,3: pose proof (scalar_geb_true_ge _ _ Hge) as Hle;
        rewrite vec_len_spec in Hle;
        exists out; split; [reflexivity|];
@@ -209,9 +209,9 @@ Proof.
     rewrite vec_len_spec in Hlt. cbn in Hmeas. lia.
   - pose proof (scalar_geb_false_lt _ _ Hge) as Hlt.
     rewrite vec_len_spec in Hlt.
-    pose proof (vec_length_le_max env.(env_Env_imports)) as Hmax.
+    pose proof (vec_length_le_max env.(module_Env_imports)) as Hmax.
     rewrite vec_index_spec.
-    destruct (List.nth_error (vec_list env.(env_Env_imports))
+    destruct (List.nth_error (vec_list env.(module_Env_imports))
                 (Z.to_nat (to_Z i))) as [im|] eqn:Hnth.
     2: { exfalso. apply List.nth_error_None in Hnth.
          apply Nat2Z.inj_le in Hnth. rewrite Z2Nat.id in Hnth by lia. lia. }
@@ -221,17 +221,17 @@ Proof.
     assert (Hstep : forall x out2 i2,
               alloc_vec_Vec_push out x = Ok out2 ->
               usize_add i 1%usize = Ok i2 ->
-              import_externs (vec_list env.(env_Env_types)) [im]
+              import_externs (vec_list env.(module_Env_types)) [im]
                 = [translate_externtype x] ->
               exists v,
                 module_import_types_loop env out2 i2
                   = Ok (Core_result_Result_Ok v)
                 /\ translate_externtypes v
                    = translate_externtypes out
-                     ++ import_externs (vec_list env.(env_Env_types)) [im]
-                     ++ import_externs (vec_list env.(env_Env_types))
+                     ++ import_externs (vec_list env.(module_Env_types)) [im]
+                     ++ import_externs (vec_list env.(module_Env_types))
                           (List.skipn (S (Z.to_nat (to_Z i)))
-                             (vec_list env.(env_Env_imports)))).
+                             (vec_list env.(module_Env_imports)))).
     { intros x out2 i2 Hpush Hadd Hone.
       pose proof (scalar_add_val _ _ _ 1 Hadd eq_refl) as Hi2.
       destruct (IH env out2 i2 Hrange) as [v [Hv Hlv]].
@@ -242,13 +242,13 @@ Proof.
         rewrite Hlv. rewrite (translate_externtypes_push _ _ _ Hpush).
         rewrite Hi2. rewrite Z_to_nat_add1 by lia.
         rewrite <- List.app_assoc. rewrite Hone. reflexivity. }
-    destruct im.(env_Import_desc) as [idx|t|mm|g] eqn:Hd.
+    destruct im.(module_Import_desc) as [idx|t|mm|g] eqn:Hd.
     + (* a function: the type index resolves *)
-      assert (Hin : idx_in_range (vec_list env.(env_Env_types)) idx).
+      assert (Hin : idx_in_range (vec_list env.(module_Env_types)) idx).
       { rewrite List.Forall_forall in Hrange. apply Hrange.
         exact (in_imported_func_idxs _ _ _ (List.nth_error_In _ _ Hnth) Hd). }
       unfold idx_in_range in Hin.
-      destruct (List.nth_error (vec_list env.(env_Env_types))
+      destruct (List.nth_error (vec_list env.(module_Env_types))
                   (Z.to_nat (to_Z idx))) as [ft'|] eqn:Hnth';
         [|exfalso; apply Hin; reflexivity].
       destruct (lookup_type_in_range env idx ft' Hnth') as [ft [Hlk Hsame]].
@@ -285,19 +285,19 @@ Proof.
 Qed.
 
 Theorem import_types_externs : forall env,
-  List.Forall (idx_in_range (vec_list env.(env_Env_types)))
-    (imported_func_idxs (vec_list env.(env_Env_imports))) ->
+  List.Forall (idx_in_range (vec_list env.(module_Env_types)))
+    (imported_func_idxs (vec_list env.(module_Env_imports))) ->
   exists v,
     module_import_types env = Ok (Core_result_Result_Ok v)
     /\ translate_externtypes v
-       = import_externs (vec_list env.(env_Env_types))
-                        (vec_list env.(env_Env_imports)).
+       = import_externs (vec_list env.(module_Env_types))
+                        (vec_list env.(module_Env_imports)).
 Proof.
   intros env Hrange. unfold module_import_types.
-  pose proof (vec_length_le_max env.(env_Env_imports)).
+  pose proof (vec_length_le_max env.(module_Env_imports)).
   assert (Hz : to_Z 0%usize = 0) by reflexivity.
   destruct (import_types_loop_ok
-              (List.length (vec_list env.(env_Env_imports))) env
+              (List.length (vec_list env.(module_Env_imports))) env
               (alloc_vec_Vec_new types_ExternType_t) 0%usize Hrange)
     as [v [Hv Hlv]].
   - lia.
@@ -313,11 +313,11 @@ Qed.
     [lookup_type], so the four are spelled out; [export_desc_ok] is exactly the
     conjunction of what the four checks need. *)
 Lemma export_types_loop_ok : forall m env out i,
-  List.Forall (export_desc_ok env) (vec_list env.(env_Env_exports)) ->
-  Z.of_nat (List.length (vec_list env.(env_Env_exports))) - to_Z i
+  List.Forall (export_desc_ok env) (vec_list env.(module_Env_exports)) ->
+  Z.of_nat (List.length (vec_list env.(module_Env_exports))) - to_Z i
     <= Z.of_nat m ->
   Z.of_nat (List.length (vec_list out))
-    + (Z.of_nat (List.length (vec_list env.(env_Env_exports))) - to_Z i)
+    + (Z.of_nat (List.length (vec_list env.(module_Env_exports))) - to_Z i)
     <= usize_max ->
   exists v,
     module_export_types_loop env out i = Ok (Core_result_Result_Ok v)
@@ -325,12 +325,12 @@ Lemma export_types_loop_ok : forall m env out i,
        = translate_externtypes out
          ++ export_externs env
               (List.skipn (Z.to_nat (to_Z i))
-                 (vec_list env.(env_Env_exports))).
+                 (vec_list env.(module_Env_exports))).
 Proof.
   induction m as [|m IH]; intros env out i Hdesc Hmeas Hroom;
     pose proof (usize_nonneg i) as Hi0;
     unfold module_export_types_loop; rewrite loop_unfold; cbn beta iota;
-    destruct (i s>= alloc_vec_Vec_len env.(env_Env_exports)) eqn:Hge.
+    destruct (i s>= alloc_vec_Vec_len env.(module_Env_exports)) eqn:Hge.
   1,3: pose proof (scalar_geb_true_ge _ _ Hge) as Hle;
        rewrite vec_len_spec in Hle;
        exists out; split; [reflexivity|];
@@ -341,9 +341,9 @@ Proof.
     rewrite vec_len_spec in Hlt. cbn in Hmeas. lia.
   - pose proof (scalar_geb_false_lt _ _ Hge) as Hlt.
     rewrite vec_len_spec in Hlt.
-    pose proof (vec_length_le_max env.(env_Env_exports)) as Hmax.
+    pose proof (vec_length_le_max env.(module_Env_exports)) as Hmax.
     rewrite vec_index_spec.
-    destruct (List.nth_error (vec_list env.(env_Env_exports))
+    destruct (List.nth_error (vec_list env.(module_Env_exports))
                 (Z.to_nat (to_Z i))) as [e|] eqn:Hnth.
     2: { exfalso. apply List.nth_error_None in Hnth.
          apply Nat2Z.inj_le in Hnth. rewrite Z2Nat.id in Hnth by lia. lia. }
@@ -364,7 +364,7 @@ Proof.
                      ++ export_externs env [e]
                      ++ export_externs env
                           (List.skipn (S (Z.to_nat (to_Z i)))
-                             (vec_list env.(env_Env_exports)))).
+                             (vec_list env.(module_Env_exports)))).
     { intros x out2 i2 Hpush Hadd Hone.
       pose proof (scalar_add_val _ _ _ 1 Hadd eq_refl) as Hi2.
       destruct (IH env out2 i2 Hdesc) as [v [Hv Hlv]].
@@ -376,16 +376,16 @@ Proof.
         rewrite Hi2. rewrite Z_to_nat_add1 by lia.
         rewrite <- List.app_assoc. rewrite Hone. reflexivity. }
     unfold export_desc_ok in He.
-    destruct e.(env_Export_desc) as [x|x|x|x] eqn:Hd.
+    destruct e.(module_Export_desc) as [x|x|x|x] eqn:Hd.
     (* the four arms differ only in which index space they read *)
     + destruct (scalar_cast_u32_usize x) as [j [Hcast Hj]].
       rewrite Hcast. cbn [bind].
       assert (Hjlt : to_Z j < Z.of_nat
-                       (List.length (vec_list env.(env_Env_func_types))))
+                       (List.length (vec_list env.(module_Env_func_types))))
         by (rewrite Hj; exact He).
       rewrite (lt_len_geb_false _ _ Hjlt).
       rewrite vec_index_spec.
-      destruct (List.nth_error (vec_list env.(env_Env_func_types))
+      destruct (List.nth_error (vec_list env.(module_Env_func_types))
                   (Z.to_nat (to_Z j))) as [ft0|] eqn:Hnthf.
       2: { exfalso. apply List.nth_error_None in Hnthf.
            apply Nat2Z.inj_le in Hnthf.
@@ -405,11 +405,11 @@ Proof.
     + destruct (scalar_cast_u32_usize x) as [j [Hcast Hj]].
       rewrite Hcast. cbn [bind].
       assert (Hjlt : to_Z j < Z.of_nat
-                       (List.length (vec_list env.(env_Env_table_types))))
+                       (List.length (vec_list env.(module_Env_table_types))))
         by (rewrite Hj; exact He).
       rewrite (lt_len_geb_false _ _ Hjlt).
       rewrite vec_index_spec.
-      destruct (List.nth_error (vec_list env.(env_Env_table_types))
+      destruct (List.nth_error (vec_list env.(module_Env_table_types))
                   (Z.to_nat (to_Z j))) as [t0|] eqn:Hntht.
       2: { exfalso. apply List.nth_error_None in Hntht.
            apply Nat2Z.inj_le in Hntht.
@@ -426,11 +426,11 @@ Proof.
     + destruct (scalar_cast_u32_usize x) as [j [Hcast Hj]].
       rewrite Hcast. cbn [bind].
       assert (Hjlt : to_Z j < Z.of_nat
-                       (List.length (vec_list env.(env_Env_mem_types))))
+                       (List.length (vec_list env.(module_Env_mem_types))))
         by (rewrite Hj; exact He).
       rewrite (lt_len_geb_false _ _ Hjlt).
       rewrite vec_index_spec.
-      destruct (List.nth_error (vec_list env.(env_Env_mem_types))
+      destruct (List.nth_error (vec_list env.(module_Env_mem_types))
                   (Z.to_nat (to_Z j))) as [m0|] eqn:Hnthm.
       2: { exfalso. apply List.nth_error_None in Hnthm.
            apply Nat2Z.inj_le in Hnthm.
@@ -447,11 +447,11 @@ Proof.
     + destruct (scalar_cast_u32_usize x) as [j [Hcast Hj]].
       rewrite Hcast. cbn [bind].
       assert (Hjlt : to_Z j < Z.of_nat
-                       (List.length (vec_list env.(env_Env_global_types))))
+                       (List.length (vec_list env.(module_Env_global_types))))
         by (rewrite Hj; exact He).
       rewrite (lt_len_geb_false _ _ Hjlt).
       rewrite vec_index_spec.
-      destruct (List.nth_error (vec_list env.(env_Env_global_types))
+      destruct (List.nth_error (vec_list env.(module_Env_global_types))
                   (Z.to_nat (to_Z j))) as [g0|] eqn:Hnthg.
       2: { exfalso. apply List.nth_error_None in Hnthg.
            apply Nat2Z.inj_le in Hnthg.
@@ -468,17 +468,17 @@ Proof.
 Qed.
 
 Theorem export_types_externs : forall env,
-  List.Forall (export_desc_ok env) (vec_list env.(env_Env_exports)) ->
+  List.Forall (export_desc_ok env) (vec_list env.(module_Env_exports)) ->
   exists v,
     module_export_types env = Ok (Core_result_Result_Ok v)
     /\ translate_externtypes v
-       = export_externs env (vec_list env.(env_Env_exports)).
+       = export_externs env (vec_list env.(module_Env_exports)).
 Proof.
   intros env Hdesc. unfold module_export_types.
-  pose proof (vec_length_le_max env.(env_Env_exports)).
+  pose proof (vec_length_le_max env.(module_Env_exports)).
   assert (Hz : to_Z 0%usize = 0) by reflexivity.
   destruct (export_types_loop_ok
-              (List.length (vec_list env.(env_Env_exports))) env
+              (List.length (vec_list env.(module_Env_exports))) env
               (alloc_vec_Vec_new types_ExternType_t) 0%usize Hdesc)
     as [v [Hv Hlv]].
   - lia.

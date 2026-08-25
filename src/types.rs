@@ -2,12 +2,10 @@
 
 use alloc::vec::Vec;
 
-use crate::limits::Limits;
-
 /// A wasm value type.
 ///
 /// There's no variant for the bottom type of an unreachable stack value; that
-/// lives in `opiter::StackType::Bot` instead, so it can't leak into a
+/// lives in `code::StackType::Bot` instead, so it can't leak into a
 /// function signature.
 #[cfg_attr(not(charon), derive(Debug))]
 #[derive(Clone, Copy)]
@@ -60,6 +58,14 @@ pub struct FuncType {
     pub results: Vec<ValueType>,
 }
 
+/// A minimum and optional maximum size, for a table or a memory.
+#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
+#[derive(Clone, Copy)]
+pub struct Limits {
+    pub min: u32,
+    pub max: Option<u32>,
+}
+
 /// A memory type: the limits on its size, in pages.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
@@ -110,8 +116,8 @@ pub enum ExternType {
 pub enum ConstExpr {
     I32(i32),
     I64(i64),
-    /// The immediate's bit pattern, as `reader::read_f32_bits` returns it:
-    /// the verified core has no floating-point arithmetic.
+    /// The immediate's bit pattern, as `reader::read_f32_bits` returns it.
+    /// Validation never interprets it as a float.
     F32(u32),
     F64(u64),
     /// `global.get` of an imported immutable global, the only global in scope
@@ -121,22 +127,18 @@ pub enum ConstExpr {
 
 /// Where a custom section's name and contents are.
 ///
-/// Ranges rather than bytes: a custom section is padding as far as the module
-/// a binary denotes is concerned (`Spec_Module.v` reads it as such), so nothing
-/// here needs its contents, and a consumer that wants them has the bytes
-/// already. Positions index whatever was handed to the decoder that reported
-/// it, the same frame as every other position in this interface.
+/// Stored as byte ranges rather than the bytes themselves: a custom section
+/// is opaque payload as far as validation is concerned, and a consumer that
+/// wants the contents already has the original bytes. Positions index the
+/// same buffer as every other position in this crate's API.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
 pub struct CustomSection {
-    /// The name's length. It ends where the payload starts, so the name is
-    /// `[payload_start - name_len, payload_start)`. A length rather than a
-    /// start because that is what the decoder has without subtracting, and a
-    /// subtraction here would be a panic site in verified code for something
-    /// a consumer can do for itself. Checked for UTF-8 validity as it was
-    /// read (spec 5.2.4), and not copied out.
+    /// Length of the name, which is the `name_len` bytes ending at
+    /// `payload_start`. Checked for UTF-8 validity as it was read (spec 5.2.4).
     pub name_len: usize,
-    /// The bytes after the name: `[payload_start, payload_end)`.
+    /// Start of the section's contents, the bytes after the name.
     pub payload_start: usize,
+    /// End of the section's contents.
     pub payload_end: usize,
 }

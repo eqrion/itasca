@@ -233,33 +233,33 @@ Ltac op_cases Hd Hb :=
 (** The results a frame pushes onto its parent when it closes. Determined by the
     frame's block type alone, which is what lets an enclosing frame's obligation
     be stated without mentioning the child's body. *)
-Definition ctrl_results (c : opiter_Ctrl_t) : list value_type :=
-  translate_typelist (block_results_of c.(opiter_Ctrl_block_type)).
+Definition ctrl_results (c : code_Ctrl_t) : list value_type :=
+  translate_typelist (block_results_of c.(code_Ctrl_block_type)).
 
 (** A step that rewrites the innermost frame: a new operand segment and one more
     instruction, with the fields [ctrl_label], [ctrl_results] and [frame_open]
     read left alone. [unreachable] and [br] are covered because they change only
     the polymorphic flag. *)
-Definition adv_plain (C0 : t_context) (st2 : opiter_OpIterState_t)
+Definition adv_plain (C0 : t_context) (st2 : code_OpIterState_t)
                      (fs fs' : list fview) (be : basic_instruction) : Prop :=
   exists pre f f',
     fs = pre ++ [f] /\ fs' = pre ++ [f']
-    /\ (fv_ctrl f').(opiter_Ctrl_kind) = (fv_ctrl f).(opiter_Ctrl_kind)
-    /\ (fv_ctrl f').(opiter_Ctrl_block_type)
-       = (fv_ctrl f).(opiter_Ctrl_block_type)
+    /\ (fv_ctrl f').(code_Ctrl_kind) = (fv_ctrl f).(code_Ctrl_kind)
+    /\ (fv_ctrl f').(code_Ctrl_block_type)
+       = (fv_ctrl f).(code_Ctrl_block_type)
     /\ fv_done f' = fv_done f ++ [be]
     /\ flat_of_one be = [FO_plain be]
     /\ Inv C0 st2 fs'.
 
-Definition adv_push (C0 : t_context) (st2 : opiter_OpIterState_t)
-                    (fs fs' : list fview) (kind : opiter_LabelKind_t)
-                    (bt : opiter_BlockType_t) : Prop :=
+Definition adv_push (C0 : t_context) (st2 : code_OpIterState_t)
+                    (fs fs' : list fview) (kind : code_LabelKind_t)
+                    (bt : code_BlockType_t) : Prop :=
   exists g,
     fs' = fs ++ [g]
     /\ fv_seg g = [] /\ fv_done g = []
-    /\ (fv_ctrl g).(opiter_Ctrl_kind) = kind
-    /\ (fv_ctrl g).(opiter_Ctrl_block_type) = bt
-    /\ (fv_ctrl g).(opiter_Ctrl_polymorphic_base) = false
+    /\ (fv_ctrl g).(code_Ctrl_kind) = kind
+    /\ (fv_ctrl g).(code_Ctrl_block_type) = bt
+    /\ (fv_ctrl g).(code_Ctrl_polymorphic_base) = false
     /\ Inv C0 st2 fs'.
 
 (** [if] pushes a frame like [block] does, but the condition comes off the
@@ -267,56 +267,56 @@ Definition adv_push (C0 : t_context) (st2 : opiter_OpIterState_t)
     rewritten too. Its ghost list is untouched -- the [BI_if] only reaches it
     when the whole [if] closes -- which is what lets [todo_ok_push_if] read the
     pop off the two invariants. *)
-Definition adv_if (C0 : t_context) (st2 : opiter_OpIterState_t)
-                  (fs fs' : list fview) (bt : opiter_BlockType_t) : Prop :=
+Definition adv_if (C0 : t_context) (st2 : code_OpIterState_t)
+                  (fs fs' : list fview) (bt : code_BlockType_t) : Prop :=
   exists pre f f' g,
     fs = pre ++ [f] /\ fs' = (pre ++ [f']) ++ [g]
     /\ fv_ctrl f' = fv_ctrl f /\ fv_done f' = fv_done f
     /\ fv_seg g = [] /\ fv_done g = []
-    /\ (fv_ctrl g).(opiter_Ctrl_kind) = Opiter_LabelKind_Then
-    /\ (fv_ctrl g).(opiter_Ctrl_block_type) = bt
-    /\ (fv_ctrl g).(opiter_Ctrl_polymorphic_base) = false
+    /\ (fv_ctrl g).(code_Ctrl_kind) = Code_LabelKind_Then
+    /\ (fv_ctrl g).(code_Ctrl_block_type) = bt
+    /\ (fv_ctrl g).(code_Ctrl_polymorphic_base) = false
     /\ Inv C0 st2 fs'.
 
 (** [else] rewrites the innermost frame in place rather than pushing or popping
     one: same block type, kind [Else], and nothing owned yet. *)
-Definition adv_else (C0 : t_context) (st2 : opiter_OpIterState_t)
+Definition adv_else (C0 : t_context) (st2 : code_OpIterState_t)
                     (fs fs' : list fview) : Prop :=
   exists pre g g',
     fs = pre ++ [g] /\ fs' = pre ++ [g']
-    /\ (fv_ctrl g').(opiter_Ctrl_kind) = Opiter_LabelKind_Else
-    /\ (fv_ctrl g').(opiter_Ctrl_block_type)
-       = (fv_ctrl g).(opiter_Ctrl_block_type)
-    /\ (fv_ctrl g').(opiter_Ctrl_polymorphic_base) = false
+    /\ (fv_ctrl g').(code_Ctrl_kind) = Code_LabelKind_Else
+    /\ (fv_ctrl g').(code_Ctrl_block_type)
+       = (fv_ctrl g).(code_Ctrl_block_type)
+    /\ (fv_ctrl g').(code_Ctrl_polymorphic_base) = false
     /\ fv_seg g' = [] /\ fv_done g' = []
     /\ Inv C0 st2 fs'.
 
-Definition adv_end (C0 : t_context) (st2 : opiter_OpIterState_t)
+Definition adv_end (C0 : t_context) (st2 : code_OpIterState_t)
                    (fs fs' : list fview) : Prop :=
   exists pre f g f',
     fs = pre ++ [f] ++ [g] /\ fs' = pre ++ [f']
     /\ fv_ctrl f' = fv_ctrl f
     /\ fv_seg f' = fv_seg f
-                   ++ results_seg (fv_ctrl g).(opiter_Ctrl_block_type)
+                   ++ results_seg (fv_ctrl g).(code_Ctrl_block_type)
     /\ Inv C0 st2 fs'.
 
 (** The body's own [end]: nothing is left on the control stack, and the cursor
     has not moved since [read_op], which is what pins it to the end of the
     body. *)
-Definition adv_body_end (st1 st2 : opiter_OpIterState_t)
+Definition adv_body_end (st1 st2 : code_OpIterState_t)
                         (fs : list fview) : Prop :=
   exists f, fs = [f]
-    /\ vec_list st2.(opiter_OpIterState_ctrls) = []
-    /\ to_Z st2.(opiter_OpIterState_pos) = to_Z st1.(opiter_OpIterState_pos).
+    /\ vec_list st2.(code_OpIterState_ctrls) = []
+    /\ to_Z st2.(code_OpIterState_pos) = to_Z st1.(code_OpIterState_pos).
 
-Definition step_shape (C0 : t_context) (st1 st2 : opiter_OpIterState_t)
+Definition step_shape (C0 : t_context) (st1 st2 : code_OpIterState_t)
                       (fs : list fview) (op : flat_op) : Prop :=
   match op with
      | FO_plain be => exists fs', adv_plain C0 st2 fs fs' be
      | FO_block bt => exists fs' bt', translate_bt bt' = bt
-                        /\ adv_push C0 st2 fs fs' Opiter_LabelKind_Block bt'
+                        /\ adv_push C0 st2 fs fs' Code_LabelKind_Block bt'
      | FO_loop bt => exists fs' bt', translate_bt bt' = bt
-                        /\ adv_push C0 st2 fs fs' Opiter_LabelKind_Loop bt'
+                        /\ adv_push C0 st2 fs fs' Code_LabelKind_Loop bt'
      | FO_if bt => exists fs' bt', translate_bt bt' = bt
                         /\ adv_if C0 st2 fs fs' bt'
      | FO_else => exists fs', adv_else C0 st2 fs fs'
@@ -344,13 +344,13 @@ Definition op_typed (C0 : t_context) (labels : list (list value_type))
   (* [else] closes the then-branch, which is [end]'s obligation over the same
      frame. That the frame is an open then-branch is not a checker fact, but it
      is what the operator stream says: only an [if] puts an [FO_else] there. *)
-  | FO_else => (fv_ctrl f).(opiter_Ctrl_kind) = Opiter_LabelKind_Then
+  | FO_else => (fv_ctrl f).(code_Ctrl_kind) = Code_LabelKind_Then
                /\ c_types_agree (fv_ct f) (ctrl_results (fv_ctrl f)) = true
   (* the second clause is the bare [if]: an empty else-branch supplies no
      results, so the reader rejects a [Then] frame that declares any *)
   | FO_end => c_types_agree (fv_ct f) (ctrl_results (fv_ctrl f)) = true
-              /\ ((fv_ctrl f).(opiter_Ctrl_kind) = Opiter_LabelKind_Then ->
-                  block_results_of (fv_ctrl f).(opiter_Ctrl_block_type) = [])
+              /\ ((fv_ctrl f).(code_Ctrl_kind) = Code_LabelKind_Then ->
+                  block_results_of (fv_ctrl f).(code_Ctrl_block_type) = [])
   end.
 
 (* ================================================================== *)
@@ -575,15 +575,15 @@ Qed.
     control frame, at the index [read_br] reaches for. *)
 Lemma ctx_at_label_lookup_inv : forall C0 st n xx,
   List.nth_error (tc_labels (ctx_at C0 st)) n = Some xx ->
-  (n < List.length (vec_list st.(opiter_OpIterState_ctrls)))%nat
+  (n < List.length (vec_list st.(code_OpIterState_ctrls)))%nat
   /\ exists c,
-       List.nth_error (vec_list st.(opiter_OpIterState_ctrls))
-         (List.length (vec_list st.(opiter_OpIterState_ctrls)) - 1 - n) = Some c
+       List.nth_error (vec_list st.(code_OpIterState_ctrls))
+         (List.length (vec_list st.(code_OpIterState_ctrls)) - 1 - n) = Some c
        /\ ctrl_label c = xx.
 Proof.
   intros C0 st n xx H.
   apply (nth_error_rev_map_inv ctrl_label
-           (vec_list st.(opiter_OpIterState_ctrls)) n xx). exact H.
+           (vec_list st.(code_OpIterState_ctrls)) n xx). exact H.
 Qed.
 
 (** [check_single]'s [BI_if] case: *two* body obligations at once, which is the
@@ -649,12 +649,12 @@ Lemma load_branch : forall C0 module data st1 pre f ty natural nt tp a o mid ct,
   Nat.lt (align_limit (option_projl tp) nt)
          (Nat.pow 2 (S (Z.to_nat (to_Z natural)))) ->
   mems_agree module C0 ->
-  repr_memarg (bytes_from data st1.(opiter_OpIterState_pos)) (a, o) mid ->
+  repr_memarg (bytes_from data st1.(code_OpIterState_pos)) (a, o) mid ->
   check_single (with_labels C0 (ctrl_label (fv_ctrl f) :: labels_after [] pre))
               (Some (fv_ct f)) (BI_load nt tp (Z.to_N a) (Z.to_N o)) = Some ct ->
   room st1 ->
   exists m st2,
-    opiter_read_load st1 data module ty natural
+    code_read_load st1 data module ty natural
       = Ok (Core_result_Result_Ok m, st2)
     /\ exists fs', adv_plain C0 st2 (pre ++ [f]) fs'
                      (BI_load nt tp (Z.to_N a) (Z.to_N o)).
@@ -679,7 +679,7 @@ Proof.
   eexists. unfold adv_plain.
   exists pre, f,
     {| fv_ctrl := fv_ctrl f;
-       fv_seg := seg' ++ [Opiter_StackType_Val ty];
+       fv_seg := seg' ++ [Code_StackType_Val ty];
        fv_done := fv_done f ++ [BI_load nt tp (Z.to_N a) (Z.to_N o)];
        fv_then := fv_then f |}.
   split; [reflexivity|]. split; [reflexivity|].
@@ -693,12 +693,12 @@ Lemma store_branch : forall C0 module data st1 pre f ty natural nt tp a o mid ct
      load_store_t_bounds (Z.to_N x) tp nt = true) ->
   Nat.lt (align_limit tp nt) (Nat.pow 2 (S (Z.to_nat (to_Z natural)))) ->
   mems_agree module C0 ->
-  repr_memarg (bytes_from data st1.(opiter_OpIterState_pos)) (a, o) mid ->
+  repr_memarg (bytes_from data st1.(code_OpIterState_pos)) (a, o) mid ->
   check_single (with_labels C0 (ctrl_label (fv_ctrl f) :: labels_after [] pre))
               (Some (fv_ct f)) (BI_store nt tp (Z.to_N a) (Z.to_N o))
     = Some ct ->
   exists m st2,
-    opiter_read_store st1 data module ty natural
+    code_read_store st1 data module ty natural
       = Ok (Core_result_Result_Ok m, st2)
     /\ exists fs', adv_plain C0 st2 (pre ++ [f]) fs'
                      (BI_store nt tp (Z.to_N a) (Z.to_N o)).
@@ -769,7 +769,7 @@ Local Ltac align_lt := vm_compute; lia.
     chain decides the branch, and the two lookups of [op_spec] on the same byte
     then collapse, which is what rules out every rule but one. *)
 Theorem step_complete :
-  forall V (inst : visit_OpVisitor_t V) vis
+  forall V (inst : code_OpVisitor_t V) vis
          C0 bt0 module ctx data st fs pre f b st1 op mid,
   hooks_accept inst ->
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
@@ -778,11 +778,11 @@ Theorem step_complete :
   globals_agree module C0 -> return_agree ctx C0 ->
   funcs_agree module C0 -> types_agree module C0 -> tables_agree module C0 ->
   funcs_wasm10 module -> types_wasm10 module ->
-  opiter_read_op st data = Ok (Core_result_Result_Ok b, st1) ->
-  repr_op (bytes_from data st.(opiter_OpIterState_pos)) op mid ->
+  code_read_op st data = Ok (Core_result_Result_Ok b, st1) ->
+  repr_op (bytes_from data st.(code_OpIterState_pos)) op mid ->
   op_typed C0 (labels_after [] pre) f op ->
   exists st2,
-    (exists vis2, opiter_step inst st1 data module ctx b vis
+    (exists vis2, code_step inst st1 data module ctx b vis
                   = Ok (Core_result_Result_Ok tt, st2, vis2))
     /\ step_shape C0 st1 st2 fs op.
 Proof.
@@ -806,9 +806,9 @@ Proof.
   destruct (repr_op_inv _ _ _ Hrop) as [b0 [bs' [Hbs Hd]]].
   rewrite Hbytes in Hbs. injection Hbs as Hb0 Hbs'.
   rewrite <- Hb0 in Hd. rewrite <- Hbs' in Hd.
-  unfold opiter_step.
+  unfold code_step.
   (* nop *)
-  destruct (b s= opiter_op_nop) eqn:E1.
+  destruct (b s= code_op_nop) eqn:E1.
   { apply scalar_eqb_true in E1.
     assert (Hb : to_Z b = 1) by (rewrite E1; reflexivity).
     op_cases Hd Hb. injection Hsp as Hbe. subst cbe. subst op.
@@ -824,7 +824,7 @@ Proof.
     split; [reflexivity|]. split; [apply flat_of_one_nop|].
     apply (step_nop C0 st1 (pre ++ [f]) pre f Hinv1 (eq_refl _)). }
   (* unreachable *)
-  destruct (b s= opiter_op_unreachable) eqn:E2.
+  destruct (b s= code_op_unreachable) eqn:E2.
   { apply scalar_eqb_true in E2.
     assert (Hb : to_Z b = 0) by (rewrite E2; reflexivity).
     op_cases Hd Hb. injection Hsp as Hbe. subst cbe. subst op.
@@ -834,22 +834,22 @@ Proof.
     unfold step_shape.
     eexists. unfold adv_plain.
     exists pre, f,
-      {| fv_ctrl := {| opiter_Ctrl_kind := (fv_ctrl f).(opiter_Ctrl_kind);
-                       opiter_Ctrl_block_type :=
-                         (fv_ctrl f).(opiter_Ctrl_block_type);
-                       opiter_Ctrl_value_stack_base :=
-                         (fv_ctrl f).(opiter_Ctrl_value_stack_base);
-                       opiter_Ctrl_polymorphic_base := true |};
+      {| fv_ctrl := {| code_Ctrl_kind := (fv_ctrl f).(code_Ctrl_kind);
+                       code_Ctrl_block_type :=
+                         (fv_ctrl f).(code_Ctrl_block_type);
+                       code_Ctrl_value_stack_base :=
+                         (fv_ctrl f).(code_Ctrl_value_stack_base);
+                       code_Ctrl_polymorphic_base := true |};
          fv_seg := [];
          fv_done := fv_done f ++ [BI_unreachable];
          fv_then := fv_then f |}.
     split; [reflexivity|]. split; [reflexivity|].
-    cbn [fv_ctrl fv_seg fv_done opiter_Ctrl_kind opiter_Ctrl_block_type].
+    cbn [fv_ctrl fv_seg fv_done code_Ctrl_kind code_Ctrl_block_type].
     split; [reflexivity|]. split; [reflexivity|]. split; [reflexivity|].
     split; [apply flat_of_one_unreachable|].
     apply (step_unreachable C0 st1 (pre ++ [f]) pre f st2 Hinv1 (eq_refl _) Hrd). }
   (* the two integer const operators, one row of [op_spec] each *)
-  destruct (b s= opiter_op_i32_const) eqn:E3.
+  destruct (b s= code_op_i32_const) eqn:E3.
   { apply scalar_eqb_true in E3.
     assert (Hb : to_Z b = 65) by (rewrite E3; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt. subst cnt2.
@@ -865,14 +865,14 @@ Proof.
     eexists. unfold adv_plain.
     exists pre, f,
       {| fv_ctrl := fv_ctrl f;
-         fv_seg := fv_seg f ++ [Opiter_StackType_Val Types_ValueType_I32];
+         fv_seg := fv_seg f ++ [Code_StackType_Val Types_ValueType_I32];
          fv_done := fv_done f
                     ++ [BI_const_num (VAL_int32 (Wasm_int.Int32.repr cz))];
          fv_then := fv_then f |}.
     split; [reflexivity|]. split; [reflexivity|].
     cbn [fv_ctrl fv_seg fv_done]. split; [reflexivity|]. split; [reflexivity|].
     split; [reflexivity|]. split; [apply flat_of_one_const_num | exact Hinv2]. }
-  destruct (b s= opiter_op_i64_const) eqn:E3b.
+  destruct (b s= code_op_i64_const) eqn:E3b.
   { apply scalar_eqb_true in E3b.
     assert (Hb : to_Z b = 66) by (rewrite E3b; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt. subst cnt2.
@@ -888,14 +888,14 @@ Proof.
     eexists. unfold adv_plain.
     exists pre, f,
       {| fv_ctrl := fv_ctrl f;
-         fv_seg := fv_seg f ++ [Opiter_StackType_Val Types_ValueType_I64];
+         fv_seg := fv_seg f ++ [Code_StackType_Val Types_ValueType_I64];
          fv_done := fv_done f
                     ++ [BI_const_num (VAL_int64 (Wasm_int.Int64.repr cz))];
          fv_then := fv_then f |}.
     split; [reflexivity|]. split; [reflexivity|].
     cbn [fv_ctrl fv_seg fv_done]. split; [reflexivity|]. split; [reflexivity|].
     split; [reflexivity|]. split; [apply flat_of_one_const_num | exact Hinv2]. }
-  destruct (b s= opiter_op_f32_const) eqn:E3c.
+  destruct (b s= code_op_f32_const) eqn:E3c.
   { apply scalar_eqb_true in E3c.
     assert (Hb : to_Z b = 67) by (rewrite E3c; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt. subst cnt3.
@@ -911,13 +911,13 @@ Proof.
     eexists. unfold adv_plain.
     exists pre, f,
       {| fv_ctrl := fv_ctrl f;
-         fv_seg := fv_seg f ++ [Opiter_StackType_Val Types_ValueType_F32];
+         fv_seg := fv_seg f ++ [Code_StackType_Val Types_ValueType_F32];
          fv_done := fv_done f ++ [BI_const_num (fconst_val T_f32 cbits)];
          fv_then := fv_then f |}.
     split; [reflexivity|]. split; [reflexivity|].
     cbn [fv_ctrl fv_seg fv_done]. split; [reflexivity|]. split; [reflexivity|].
     split; [reflexivity|]. split; [apply flat_of_one_const_num | exact Hinv2]. }
-  destruct (b s= opiter_op_f64_const) eqn:E3d.
+  destruct (b s= code_op_f64_const) eqn:E3d.
   { apply scalar_eqb_true in E3d.
     assert (Hb : to_Z b = 68) by (rewrite E3d; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt. subst cnt3.
@@ -933,14 +933,14 @@ Proof.
     eexists. unfold adv_plain.
     exists pre, f,
       {| fv_ctrl := fv_ctrl f;
-         fv_seg := fv_seg f ++ [Opiter_StackType_Val Types_ValueType_F64];
+         fv_seg := fv_seg f ++ [Code_StackType_Val Types_ValueType_F64];
          fv_done := fv_done f ++ [BI_const_num (fconst_val T_f64 cbits)];
          fv_then := fv_then f |}.
     split; [reflexivity|]. split; [reflexivity|].
     cbn [fv_ctrl fv_seg fv_done]. split; [reflexivity|]. split; [reflexivity|].
     split; [reflexivity|]. split; [apply flat_of_one_const_num | exact Hinv2]. }
   (* drop *)
-  destruct (b s= opiter_op_drop) eqn:E5.
+  destruct (b s= code_op_drop) eqn:E5.
   { apply scalar_eqb_true in E5.
     assert (Hb : to_Z b = 26) by (rewrite E5; reflexivity).
     op_cases Hd Hb. injection Hsp as Hbe. subst cbe. subst op.
@@ -962,7 +962,7 @@ Proof.
     cbn [fv_ctrl fv_seg fv_done]. split; [reflexivity|]. split; [reflexivity|].
     split; [reflexivity|]. split; [apply flat_of_one_drop | exact Hinv2]. }
   (* select *)
-  destruct (b s= opiter_op_select) eqn:E5s.
+  destruct (b s= code_op_select) eqn:E5s.
   { apply scalar_eqb_true in E5s.
     assert (Hb : to_Z b = 27) by (rewrite E5s; reflexivity).
     op_cases Hd Hb. injection Hsp as Hbe. subst cbe. subst op.
@@ -983,7 +983,7 @@ Proof.
     cbn [fv_ctrl fv_seg fv_done]. split; [reflexivity|]. split; [reflexivity|].
     split; [reflexivity|]. split; [apply flat_of_one_select | exact Hinv2]. }
   (* block *)
-  destruct (b s= opiter_op_block) eqn:E6.
+  destruct (b s= code_op_block) eqn:E6.
   { apply scalar_eqb_true in E6.
     assert (Hb : to_Z b = 2) by (rewrite E6; reflexivity).
     op_cases Hd Hb. subst op.
@@ -994,19 +994,19 @@ Proof.
     destruct (step_block C0 st1 (pre ++ [f]) data bt' st2 Hinv1 Hrd)
       as [base Hinv2].
     eexists. exists bt'. split; [exact Htr|]. unfold adv_push.
-    exists {| fv_ctrl := {| opiter_Ctrl_kind := Opiter_LabelKind_Block;
-                          opiter_Ctrl_block_type := bt';
-                          opiter_Ctrl_value_stack_base := base;
-                          opiter_Ctrl_polymorphic_base := false |};
+    exists {| fv_ctrl := {| code_Ctrl_kind := Code_LabelKind_Block;
+                          code_Ctrl_block_type := bt';
+                          code_Ctrl_value_stack_base := base;
+                          code_Ctrl_polymorphic_base := false |};
              fv_seg := []; fv_done := [];
              fv_then := [] |}.
     split; [reflexivity|].
-    cbn [fv_ctrl fv_seg fv_done opiter_Ctrl_kind opiter_Ctrl_block_type
-         opiter_Ctrl_polymorphic_base].
+    cbn [fv_ctrl fv_seg fv_done code_Ctrl_kind code_Ctrl_block_type
+         code_Ctrl_polymorphic_base].
     split; [reflexivity|]. split; [reflexivity|]. split; [reflexivity|].
     split; [reflexivity|]. split; [reflexivity | exact Hinv2]. }
   (* loop *)
-  destruct (b s= opiter_op_loop) eqn:E7.
+  destruct (b s= code_op_loop) eqn:E7.
   { apply scalar_eqb_true in E7.
     assert (Hb : to_Z b = 3) by (rewrite E7; reflexivity).
     op_cases Hd Hb. subst op.
@@ -1017,26 +1017,26 @@ Proof.
     destruct (step_loop C0 st1 (pre ++ [f]) data bt' st2 Hinv1 Hrd)
       as [base Hinv2].
     eexists. exists bt'. split; [exact Htr|]. unfold adv_push.
-    exists {| fv_ctrl := {| opiter_Ctrl_kind := Opiter_LabelKind_Loop;
-                          opiter_Ctrl_block_type := bt';
-                          opiter_Ctrl_value_stack_base := base;
-                          opiter_Ctrl_polymorphic_base := false |};
+    exists {| fv_ctrl := {| code_Ctrl_kind := Code_LabelKind_Loop;
+                          code_Ctrl_block_type := bt';
+                          code_Ctrl_value_stack_base := base;
+                          code_Ctrl_polymorphic_base := false |};
              fv_seg := []; fv_done := [];
              fv_then := [] |}.
     split; [reflexivity|].
-    cbn [fv_ctrl fv_seg fv_done opiter_Ctrl_kind opiter_Ctrl_block_type
-         opiter_Ctrl_polymorphic_base].
+    cbn [fv_ctrl fv_seg fv_done code_Ctrl_kind code_Ctrl_block_type
+         code_Ctrl_polymorphic_base].
     split; [reflexivity|]. split; [reflexivity|]. split; [reflexivity|].
     split; [reflexivity|]. split; [reflexivity | exact Hinv2]. }
   (* if *)
-  destruct (b s= opiter_op_if) eqn:E7i.
+  destruct (b s= code_op_if) eqn:E7i.
   { apply scalar_eqb_true in E7i.
     assert (Hb : to_Z b = 4) by (rewrite E7i; reflexivity).
     op_cases Hd Hb. subst op. cbn [op_typed] in Hty0.
     destruct Hty0 as [es1 [es2 [ct Hct]]].
     (* the block type is one [blocktype_spec] admits, so it is a translated one,
        which is what makes WasmCert's [expand_t] compute *)
-    destruct (read_block_type_complete data st1.(opiter_OpIterState_pos) cbtb cbt
+    destruct (read_block_type_complete data st1.(code_OpIterState_pos) cbtb cbt
                 cr Hbs2 Hbtspec) as [btw [pw [_ [Htrw _]]]].
     rewrite <- Htrw in Hct.
     destruct (check_single_if_inv _ _ _ _ _ _ Hct) as [_ [_ [ct1 [Hcon _]]]].
@@ -1052,19 +1052,19 @@ Proof.
     exists pre, f,
       {| fv_ctrl := fv_ctrl f; fv_seg := seg'; fv_done := fv_done f;
          fv_then := fv_then f |},
-      {| fv_ctrl := {| opiter_Ctrl_kind := Opiter_LabelKind_Then;
-                       opiter_Ctrl_block_type := bt';
-                       opiter_Ctrl_value_stack_base := base;
-                       opiter_Ctrl_polymorphic_base := false |};
+      {| fv_ctrl := {| code_Ctrl_kind := Code_LabelKind_Then;
+                       code_Ctrl_block_type := bt';
+                       code_Ctrl_value_stack_base := base;
+                       code_Ctrl_polymorphic_base := false |};
          fv_seg := []; fv_done := []; fv_then := [] |}.
     split; [reflexivity|]. split; [reflexivity|].
-    cbn [fv_ctrl fv_seg fv_done opiter_Ctrl_kind opiter_Ctrl_block_type
-         opiter_Ctrl_polymorphic_base].
+    cbn [fv_ctrl fv_seg fv_done code_Ctrl_kind code_Ctrl_block_type
+         code_Ctrl_polymorphic_base].
     split; [reflexivity|]. split; [reflexivity|]. split; [reflexivity|].
     split; [reflexivity|]. split; [reflexivity|]. split; [reflexivity|].
     split; [reflexivity | exact Hinv2]. }
   (* else *)
-  destruct (b s= opiter_op_else) eqn:E7e.
+  destruct (b s= code_op_else) eqn:E7e.
   { apply scalar_eqb_true in E7e.
     assert (Hb : to_Z b = 5) by (rewrite E7e; reflexivity).
     op_cases Hd Hb. subst op. cbn [op_typed] in Hty0.
@@ -1078,19 +1078,19 @@ Proof.
                   (eq_refl _) Hkind Hrd) as Hinv2.
     eexists. unfold adv_else. exists pre, f,
       {| fv_ctrl :=
-           {| opiter_Ctrl_kind := Opiter_LabelKind_Else;
-              opiter_Ctrl_block_type := (fv_ctrl f).(opiter_Ctrl_block_type);
-              opiter_Ctrl_value_stack_base :=
-                (fv_ctrl f).(opiter_Ctrl_value_stack_base);
-              opiter_Ctrl_polymorphic_base := false |};
+           {| code_Ctrl_kind := Code_LabelKind_Else;
+              code_Ctrl_block_type := (fv_ctrl f).(code_Ctrl_block_type);
+              code_Ctrl_value_stack_base :=
+                (fv_ctrl f).(code_Ctrl_value_stack_base);
+              code_Ctrl_polymorphic_base := false |};
          fv_seg := []; fv_done := []; fv_then := fv_done f |}.
     split; [reflexivity|]. split; [reflexivity|].
-    cbn [fv_ctrl fv_seg fv_done opiter_Ctrl_kind opiter_Ctrl_block_type
-         opiter_Ctrl_polymorphic_base].
+    cbn [fv_ctrl fv_seg fv_done code_Ctrl_kind code_Ctrl_block_type
+         code_Ctrl_polymorphic_base].
     split; [reflexivity|]. split; [reflexivity|]. split; [reflexivity|].
     split; [reflexivity|]. split; [reflexivity | exact Hinv2]. }
   (* end: either a nested frame closes or the body's does *)
-  destruct (b s= opiter_op_end) eqn:E8.
+  destruct (b s= code_op_end) eqn:E8.
   { apply scalar_eqb_true in E8.
     assert (Hb : to_Z b = 11) by (rewrite E8; reflexivity).
     op_cases Hd Hb. subst op. cbn [op_typed] in Hty0.
@@ -1119,11 +1119,11 @@ Proof.
            exists {| fv_ctrl := fv_ctrl f2;
                      fv_seg := fv_seg f2
                                ++ results_seg
-                                    (fv_ctrl f).(opiter_Ctrl_block_type);
+                                    (fv_ctrl f).(code_Ctrl_block_type);
                      fv_done :=
                        fv_done f2
                        ++ [BI_if (translate_bt
-                                    (fv_ctrl f).(opiter_Ctrl_block_type))
+                                    (fv_ctrl f).(code_Ctrl_block_type))
                                  (fv_then f) (fv_done f)];
                      fv_then := fv_then f2 |}.
            split; [exact Hfs2|]. split; [reflexivity|].
@@ -1135,11 +1135,11 @@ Proof.
            exists {| fv_ctrl := fv_ctrl f2;
                      fv_seg := fv_seg f2
                                ++ results_seg
-                                    (fv_ctrl f).(opiter_Ctrl_block_type);
+                                    (fv_ctrl f).(code_Ctrl_block_type);
                      fv_done :=
                        fv_done f2
                        ++ [BI_if (translate_bt
-                                    (fv_ctrl f).(opiter_Ctrl_block_type))
+                                    (fv_ctrl f).(code_Ctrl_block_type))
                                  (fv_done f) []];
                      fv_then := fv_then f2 |}.
            split; [exact Hfs2|]. split; [reflexivity|].
@@ -1150,11 +1150,11 @@ Proof.
         eexists. unfold adv_end. exists pre2, f2, f.
         exists {| fv_ctrl := fv_ctrl f2;
                   fv_seg := fv_seg f2
-                            ++ results_seg (fv_ctrl f).(opiter_Ctrl_block_type);
+                            ++ results_seg (fv_ctrl f).(code_Ctrl_block_type);
                   fv_done :=
                     fv_done f2
                     ++ [BI_block (translate_bt
-                                    (fv_ctrl f).(opiter_Ctrl_block_type))
+                                    (fv_ctrl f).(code_Ctrl_block_type))
                                  (fv_done f)];
                   fv_then := fv_then f2 |}.
         split; [exact Hfs2|]. split; [reflexivity|].
@@ -1165,18 +1165,18 @@ Proof.
         eexists. unfold adv_end. exists pre2, f2, f.
         exists {| fv_ctrl := fv_ctrl f2;
                   fv_seg := fv_seg f2
-                            ++ results_seg (fv_ctrl f).(opiter_Ctrl_block_type);
+                            ++ results_seg (fv_ctrl f).(code_Ctrl_block_type);
                   fv_done :=
                     fv_done f2
                     ++ [BI_loop (translate_bt
-                                   (fv_ctrl f).(opiter_Ctrl_block_type))
+                                   (fv_ctrl f).(code_Ctrl_block_type))
                                 (fv_done f)];
                   fv_then := fv_then f2 |}.
         split; [exact Hfs2|]. split; [reflexivity|].
         cbn [fv_ctrl fv_seg]. split; [reflexivity|]. split; [reflexivity|].
         exact Hinv2. }
   (* br *)
-  destruct (b s= opiter_op_br) eqn:E9.
+  destruct (b s= code_op_br) eqn:E9.
   { apply scalar_eqb_true in E9.
     assert (Hb : to_Z b = 12) by (rewrite E9; reflexivity).
     op_cases Hd Hb. injection Hsp as Hio. subst cio. subst op.
@@ -1206,21 +1206,21 @@ Proof.
     rewrite Hdepth in Hinv2.
     eexists. unfold adv_plain.
     exists pre, f,
-      {| fv_ctrl := {| opiter_Ctrl_kind := (fv_ctrl f).(opiter_Ctrl_kind);
-                       opiter_Ctrl_block_type :=
-                         (fv_ctrl f).(opiter_Ctrl_block_type);
-                       opiter_Ctrl_value_stack_base :=
-                         (fv_ctrl f).(opiter_Ctrl_value_stack_base);
-                       opiter_Ctrl_polymorphic_base := true |};
+      {| fv_ctrl := {| code_Ctrl_kind := (fv_ctrl f).(code_Ctrl_kind);
+                       code_Ctrl_block_type :=
+                         (fv_ctrl f).(code_Ctrl_block_type);
+                       code_Ctrl_value_stack_base :=
+                         (fv_ctrl f).(code_Ctrl_value_stack_base);
+                       code_Ctrl_polymorphic_base := true |};
          fv_seg := [];
          fv_done := fv_done f ++ [BI_br (Z.to_N cx)];
          fv_then := fv_then f |}.
     split; [reflexivity|]. split; [reflexivity|].
-    cbn [fv_ctrl fv_seg fv_done opiter_Ctrl_kind opiter_Ctrl_block_type].
+    cbn [fv_ctrl fv_seg fv_done code_Ctrl_kind code_Ctrl_block_type].
     split; [reflexivity|]. split; [reflexivity|]. split; [reflexivity|].
     split; [apply flat_of_one_br | exact Hinv2]. }
   (* br_if: the same lookup, and the pops come from one [consume] *)
-  destruct (b s= opiter_op_br_if) eqn:E9b.
+  destruct (b s= code_op_br_if) eqn:E9b.
   { apply scalar_eqb_true in E9b.
     assert (Hb : to_Z b = 13) by (rewrite E9b; reflexivity).
     op_cases Hd Hb. injection Hsp as Hio. subst cio. subst op.
@@ -1259,7 +1259,7 @@ Proof.
     split; [reflexivity|]. split; [apply flat_of_one_br_if | exact Hinv2]. }
   (* br_table: every label looks up to the same list, so they all have the same
      branch target and the reader's running comparison never fails *)
-  destruct (b s= opiter_op_br_table) eqn:E9t.
+  destruct (b s= code_op_br_table) eqn:E9t.
   { apply scalar_eqb_true in E9t.
     assert (Hb : to_Z b = 14) by (rewrite E9t; reflexivity).
     op_cases Hd Hb. subst op.
@@ -1274,9 +1274,9 @@ Proof.
     assert (Hres : forall d, List.In d (cls ++ [cx2]) ->
               exists c,
                 (Z.to_nat d
-                 < List.length (vec_list st1.(opiter_OpIterState_ctrls)))%nat
-                /\ List.nth_error (vec_list st1.(opiter_OpIterState_ctrls))
-                     (List.length (vec_list st1.(opiter_OpIterState_ctrls))
+                 < List.length (vec_list st1.(code_OpIterState_ctrls)))%nat
+                /\ List.nth_error (vec_list st1.(code_OpIterState_ctrls))
+                     (List.length (vec_list st1.(code_OpIterState_ctrls))
                       - 1 - Z.to_nat d) = Some c
                 /\ ctrl_label c = tls).
     { intros d Hd.
@@ -1321,22 +1321,22 @@ Proof.
       as Hinv2.
     eexists. unfold adv_plain.
     exists pre, f,
-      {| fv_ctrl := {| opiter_Ctrl_kind := (fv_ctrl f).(opiter_Ctrl_kind);
-                       opiter_Ctrl_block_type :=
-                         (fv_ctrl f).(opiter_Ctrl_block_type);
-                       opiter_Ctrl_value_stack_base :=
-                         (fv_ctrl f).(opiter_Ctrl_value_stack_base);
-                       opiter_Ctrl_polymorphic_base := true |};
+      {| fv_ctrl := {| code_Ctrl_kind := (fv_ctrl f).(code_Ctrl_kind);
+                       code_Ctrl_block_type :=
+                         (fv_ctrl f).(code_Ctrl_block_type);
+                       code_Ctrl_value_stack_base :=
+                         (fv_ctrl f).(code_Ctrl_value_stack_base);
+                       code_Ctrl_polymorphic_base := true |};
          fv_seg := [];
          fv_done := fv_done f
                     ++ [BI_br_table (List.map Z.to_N cls) (Z.to_N cx2)];
          fv_then := fv_then f |}.
     split; [reflexivity|]. split; [reflexivity|].
-    cbn [fv_ctrl fv_seg fv_done opiter_Ctrl_kind opiter_Ctrl_block_type].
+    cbn [fv_ctrl fv_seg fv_done code_Ctrl_kind code_Ctrl_block_type].
     split; [reflexivity|]. split; [reflexivity|]. split; [reflexivity|].
     split; [apply flat_of_one_br_table | exact Hinv2]. }
   (* return: the result list is the context's, and the pops are its consume *)
-  destruct (b s= opiter_op_return) eqn:E9r.
+  destruct (b s= code_op_return) eqn:E9r.
   { apply scalar_eqb_true in E9r.
     assert (Hb : to_Z b = 15) by (rewrite E9r; reflexivity).
     op_cases Hd Hb. injection Hsp as Hbe. subst cbe. subst op.
@@ -1347,7 +1347,7 @@ Proof.
     unfold return_agree in Hret.
     assert (Htls : tls
                    = translate_typelist
-                       (vec_list ctx.(opiter_Context_results)))
+                       (vec_list ctx.(code_Context_results)))
       by (rewrite Hret in Hrc; injection Hrc as Hrc; symmetry; exact Hrc).
     rewrite Htls in Hcon.
     destruct (read_return_complete C0 ctx st1 pre f ct1 Hinv1 Hcon) as [st2 Hrd].
@@ -1358,23 +1358,23 @@ Proof.
                   (eq_refl _) Hret Hrd) as Hinv2.
     eexists. unfold adv_plain.
     exists pre, f,
-      {| fv_ctrl := {| opiter_Ctrl_kind := (fv_ctrl f).(opiter_Ctrl_kind);
-                       opiter_Ctrl_block_type :=
-                         (fv_ctrl f).(opiter_Ctrl_block_type);
-                       opiter_Ctrl_value_stack_base :=
-                         (fv_ctrl f).(opiter_Ctrl_value_stack_base);
-                       opiter_Ctrl_polymorphic_base := true |};
+      {| fv_ctrl := {| code_Ctrl_kind := (fv_ctrl f).(code_Ctrl_kind);
+                       code_Ctrl_block_type :=
+                         (fv_ctrl f).(code_Ctrl_block_type);
+                       code_Ctrl_value_stack_base :=
+                         (fv_ctrl f).(code_Ctrl_value_stack_base);
+                       code_Ctrl_polymorphic_base := true |};
          fv_seg := [];
          fv_done := fv_done f ++ [BI_return];
          fv_then := fv_then f |}.
     split; [reflexivity|]. split; [reflexivity|].
-    cbn [fv_ctrl fv_seg fv_done opiter_Ctrl_kind opiter_Ctrl_block_type].
+    cbn [fv_ctrl fv_seg fv_done code_Ctrl_kind code_Ctrl_block_type].
     split; [reflexivity|]. split; [reflexivity|]. split; [reflexivity|].
     split; [apply flat_of_one_return | exact Hinv2]. }
   (* the three local operators: the index is the immediate and the lookup is
      the one the checker performed *)
   (* the two call operators: the callee's signature comes from the context *)
-  destruct (b s= opiter_op_call) eqn:EC1.
+  destruct (b s= code_op_call) eqn:EC1.
   { apply scalar_eqb_true in EC1.
     assert (Hb : to_Z b = 16) by (rewrite EC1; reflexivity).
     op_cases Hd Hb. injection Hsp as Hio. subst cio. subst op.
@@ -1398,7 +1398,7 @@ Proof.
     split; [reflexivity|]. split; [reflexivity|].
     cbn [fv_ctrl fv_seg fv_done]. split; [reflexivity|]. split; [reflexivity|].
     split; [reflexivity|]. split; [reflexivity | exact Hinv2]. }
-  destruct (b s= opiter_op_call_indirect) eqn:EC2.
+  destruct (b s= code_op_call_indirect) eqn:EC2.
   { apply scalar_eqb_true in EC2.
     assert (Hb : to_Z b = 17) by (rewrite EC2; reflexivity).
     op_cases Hd Hb. subst op.
@@ -1422,7 +1422,7 @@ Proof.
     split; [reflexivity|]. split; [reflexivity|].
     cbn [fv_ctrl fv_seg fv_done]. split; [reflexivity|]. split; [reflexivity|].
     split; [reflexivity|]. split; [reflexivity | exact Hinv2]. }
-  destruct (b s= opiter_op_local_get) eqn:EL1.
+  destruct (b s= code_op_local_get) eqn:EL1.
   { apply scalar_eqb_true in EL1.
     assert (Hb : to_Z b = 32) by (rewrite EL1; reflexivity).
     op_cases Hd Hb. injection Hsp as Hio. subst cio. subst op.
@@ -1440,13 +1440,13 @@ Proof.
     eexists. unfold adv_plain.
     exists pre, f,
       {| fv_ctrl := fv_ctrl f;
-         fv_seg := fv_seg f ++ [Opiter_StackType_Val t];
+         fv_seg := fv_seg f ++ [Code_StackType_Val t];
          fv_done := fv_done f ++ [BI_local_get (Z.to_N cx)];
          fv_then := fv_then f |}.
     split; [reflexivity|]. split; [reflexivity|].
     cbn [fv_ctrl fv_seg fv_done]. split; [reflexivity|]. split; [reflexivity|].
     split; [reflexivity|]. split; [reflexivity | exact Hinv2]. }
-  destruct (b s= opiter_op_local_set) eqn:EL2.
+  destruct (b s= code_op_local_set) eqn:EL2.
   { apply scalar_eqb_true in EL2.
     assert (Hb : to_Z b = 33) by (rewrite EL2; reflexivity).
     op_cases Hd Hb. injection Hsp as Hio. subst cio. subst op.
@@ -1469,7 +1469,7 @@ Proof.
     split; [reflexivity|]. split; [reflexivity|].
     cbn [fv_ctrl fv_seg fv_done]. split; [reflexivity|]. split; [reflexivity|].
     split; [reflexivity|]. split; [reflexivity | exact Hinv2]. }
-  destruct (b s= opiter_op_local_tee) eqn:EL3.
+  destruct (b s= code_op_local_tee) eqn:EL3.
   { apply scalar_eqb_true in EL3.
     assert (Hb : to_Z b = 34) by (rewrite EL3; reflexivity).
     op_cases Hd Hb. injection Hsp as Hio. subst cio. subst op.
@@ -1487,14 +1487,14 @@ Proof.
     eexists. unfold adv_plain.
     exists pre, f,
       {| fv_ctrl := fv_ctrl f;
-         fv_seg := seg' ++ [Opiter_StackType_Val t];
+         fv_seg := seg' ++ [Code_StackType_Val t];
          fv_done := fv_done f ++ [BI_local_tee (Z.to_N cx)];
          fv_then := fv_then f |}.
     split; [reflexivity|]. split; [reflexivity|].
     cbn [fv_ctrl fv_seg fv_done]. split; [reflexivity|]. split; [reflexivity|].
     split; [reflexivity|]. split; [reflexivity | exact Hinv2]. }
   (* the two global operators, with the mutability guard on the set *)
-  destruct (b s= opiter_op_global_get) eqn:EG1.
+  destruct (b s= code_op_global_get) eqn:EG1.
   { apply scalar_eqb_true in EG1.
     assert (Hb : to_Z b = 35) by (rewrite EG1; reflexivity).
     op_cases Hd Hb. injection Hsp as Hio. subst cio. subst op.
@@ -1512,13 +1512,13 @@ Proof.
     eexists. unfold adv_plain.
     exists pre, f,
       {| fv_ctrl := fv_ctrl f;
-         fv_seg := fv_seg f ++ [Opiter_StackType_Val t];
+         fv_seg := fv_seg f ++ [Code_StackType_Val t];
          fv_done := fv_done f ++ [BI_global_get (Z.to_N cx)];
          fv_then := fv_then f |}.
     split; [reflexivity|]. split; [reflexivity|].
     cbn [fv_ctrl fv_seg fv_done]. split; [reflexivity|]. split; [reflexivity|].
     split; [reflexivity|]. split; [reflexivity | exact Hinv2]. }
-  destruct (b s= opiter_op_global_set) eqn:EG2.
+  destruct (b s= code_op_global_set) eqn:EG2.
   { apply scalar_eqb_true in EG2.
     assert (Hb : to_Z b = 36) by (rewrite EG2; reflexivity).
     op_cases Hd Hb. injection Hsp as Hio. subst cio. subst op.
@@ -1542,8 +1542,8 @@ Proof.
     split; [reflexivity|]. split; [reflexivity|].
     cbn [fv_ctrl fv_seg fv_done]. split; [reflexivity|]. split; [reflexivity|].
     split; [reflexivity|]. split; [reflexivity | exact Hinv2]. }
-  unfold opiter_step_memory.
-  destruct (b s= opiter_op_i32_load) eqn:E10.
+  unfold code_step_memory.
+  destruct (b s= code_op_i32_load) eqn:E10.
   { apply scalar_eqb_true in E10.
     assert (Hb : to_Z b = 40) by (rewrite E10; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
@@ -1555,7 +1555,7 @@ Proof.
     { eapply visit_wrap_accept;
         [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
-  destruct (b s= opiter_op_i64_load) eqn:E11.
+  destruct (b s= code_op_i64_load) eqn:E11.
   { apply scalar_eqb_true in E11.
     assert (Hb : to_Z b = 41) by (rewrite E11; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
@@ -1567,7 +1567,7 @@ Proof.
     { eapply visit_wrap_accept;
         [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
-  destruct (b s= opiter_op_f32_load) eqn:E12.
+  destruct (b s= code_op_f32_load) eqn:E12.
   { apply scalar_eqb_true in E12.
     assert (Hb : to_Z b = 42) by (rewrite E12; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
@@ -1579,7 +1579,7 @@ Proof.
     { eapply visit_wrap_accept;
         [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
-  destruct (b s= opiter_op_f64_load) eqn:E13.
+  destruct (b s= code_op_f64_load) eqn:E13.
   { apply scalar_eqb_true in E13.
     assert (Hb : to_Z b = 43) by (rewrite E13; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
@@ -1591,7 +1591,7 @@ Proof.
     { eapply visit_wrap_accept;
         [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
-  destruct (b s= opiter_op_i32_load8_s) eqn:E14.
+  destruct (b s= code_op_i32_load8_s) eqn:E14.
   { apply scalar_eqb_true in E14.
     assert (Hb : to_Z b = 44) by (rewrite E14; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
@@ -1604,7 +1604,7 @@ Proof.
     { eapply visit_wrap_accept;
         [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
-  destruct (b s= opiter_op_i32_load8_u) eqn:E15.
+  destruct (b s= code_op_i32_load8_u) eqn:E15.
   { apply scalar_eqb_true in E15.
     assert (Hb : to_Z b = 45) by (rewrite E15; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
@@ -1617,7 +1617,7 @@ Proof.
     { eapply visit_wrap_accept;
         [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
-  destruct (b s= opiter_op_i32_load16_s) eqn:E16.
+  destruct (b s= code_op_i32_load16_s) eqn:E16.
   { apply scalar_eqb_true in E16.
     assert (Hb : to_Z b = 46) by (rewrite E16; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
@@ -1630,7 +1630,7 @@ Proof.
     { eapply visit_wrap_accept;
         [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
-  destruct (b s= opiter_op_i32_load16_u) eqn:E17.
+  destruct (b s= code_op_i32_load16_u) eqn:E17.
   { apply scalar_eqb_true in E17.
     assert (Hb : to_Z b = 47) by (rewrite E17; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
@@ -1643,7 +1643,7 @@ Proof.
     { eapply visit_wrap_accept;
         [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
-  destruct (b s= opiter_op_i64_load8_s) eqn:E18.
+  destruct (b s= code_op_i64_load8_s) eqn:E18.
   { apply scalar_eqb_true in E18.
     assert (Hb : to_Z b = 48) by (rewrite E18; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
@@ -1656,7 +1656,7 @@ Proof.
     { eapply visit_wrap_accept;
         [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
-  destruct (b s= opiter_op_i64_load8_u) eqn:E19.
+  destruct (b s= code_op_i64_load8_u) eqn:E19.
   { apply scalar_eqb_true in E19.
     assert (Hb : to_Z b = 49) by (rewrite E19; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
@@ -1669,7 +1669,7 @@ Proof.
     { eapply visit_wrap_accept;
         [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
-  destruct (b s= opiter_op_i64_load16_s) eqn:E20.
+  destruct (b s= code_op_i64_load16_s) eqn:E20.
   { apply scalar_eqb_true in E20.
     assert (Hb : to_Z b = 50) by (rewrite E20; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
@@ -1682,7 +1682,7 @@ Proof.
     { eapply visit_wrap_accept;
         [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
-  destruct (b s= opiter_op_i64_load16_u) eqn:E21.
+  destruct (b s= code_op_i64_load16_u) eqn:E21.
   { apply scalar_eqb_true in E21.
     assert (Hb : to_Z b = 51) by (rewrite E21; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
@@ -1695,7 +1695,7 @@ Proof.
     { eapply visit_wrap_accept;
         [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
-  destruct (b s= opiter_op_i64_load32_s) eqn:E22.
+  destruct (b s= code_op_i64_load32_s) eqn:E22.
   { apply scalar_eqb_true in E22.
     assert (Hb : to_Z b = 52) by (rewrite E22; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
@@ -1708,7 +1708,7 @@ Proof.
     { eapply visit_wrap_accept;
         [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
-  destruct (b s= opiter_op_i64_load32_u) eqn:E23.
+  destruct (b s= code_op_i64_load32_u) eqn:E23.
   { apply scalar_eqb_true in E23.
     assert (Hb : to_Z b = 53) by (rewrite E23; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
@@ -1721,7 +1721,7 @@ Proof.
     { eapply visit_wrap_accept;
         [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
-  destruct (b s= opiter_op_i32_store) eqn:E24.
+  destruct (b s= code_op_i32_store) eqn:E24.
   { apply scalar_eqb_true in E24.
     assert (Hb : to_Z b = 54) by (rewrite E24; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
@@ -1733,7 +1733,7 @@ Proof.
     { eapply visit_wrap_accept;
         [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
-  destruct (b s= opiter_op_i64_store) eqn:E25.
+  destruct (b s= code_op_i64_store) eqn:E25.
   { apply scalar_eqb_true in E25.
     assert (Hb : to_Z b = 55) by (rewrite E25; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
@@ -1745,7 +1745,7 @@ Proof.
     { eapply visit_wrap_accept;
         [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
-  destruct (b s= opiter_op_f32_store) eqn:E26.
+  destruct (b s= code_op_f32_store) eqn:E26.
   { apply scalar_eqb_true in E26.
     assert (Hb : to_Z b = 56) by (rewrite E26; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
@@ -1757,7 +1757,7 @@ Proof.
     { eapply visit_wrap_accept;
         [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
-  destruct (b s= opiter_op_f64_store) eqn:E27.
+  destruct (b s= code_op_f64_store) eqn:E27.
   { apply scalar_eqb_true in E27.
     assert (Hb : to_Z b = 57) by (rewrite E27; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
@@ -1769,7 +1769,7 @@ Proof.
     { eapply visit_wrap_accept;
         [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
-  destruct (b s= opiter_op_i32_store8) eqn:E28.
+  destruct (b s= code_op_i32_store8) eqn:E28.
   { apply scalar_eqb_true in E28.
     assert (Hb : to_Z b = 58) by (rewrite E28; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
@@ -1782,7 +1782,7 @@ Proof.
     { eapply visit_wrap_accept;
         [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
-  destruct (b s= opiter_op_i32_store16) eqn:E29.
+  destruct (b s= code_op_i32_store16) eqn:E29.
   { apply scalar_eqb_true in E29.
     assert (Hb : to_Z b = 59) by (rewrite E29; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
@@ -1795,7 +1795,7 @@ Proof.
     { eapply visit_wrap_accept;
         [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
-  destruct (b s= opiter_op_i64_store8) eqn:E30.
+  destruct (b s= code_op_i64_store8) eqn:E30.
   { apply scalar_eqb_true in E30.
     assert (Hb : to_Z b = 60) by (rewrite E30; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
@@ -1808,7 +1808,7 @@ Proof.
     { eapply visit_wrap_accept;
         [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
-  destruct (b s= opiter_op_i64_store16) eqn:E31.
+  destruct (b s= code_op_i64_store16) eqn:E31.
   { apply scalar_eqb_true in E31.
     assert (Hb : to_Z b = 61) by (rewrite E31; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
@@ -1821,7 +1821,7 @@ Proof.
     { eapply visit_wrap_accept;
         [exact Hrd | intros; apply visit_memory_accept; exact Hacc]. }
     unfold step_shape. exact Hadv. }
-  destruct (b s= opiter_op_i64_store32) eqn:E32.
+  destruct (b s= code_op_i64_store32) eqn:E32.
   { apply scalar_eqb_true in E32.
     assert (Hb : to_Z b = 62) by (rewrite E32; reflexivity).
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
@@ -1836,7 +1836,7 @@ Proof.
     unfold step_shape. exact Hadv. }
   (* memory.size and memory.grow: the immediate is the reserved zero byte, and
      the memory the checker looked up is the one the context has *)
-  destruct (b s= opiter_op_memory_size) eqn:EM1.
+  destruct (b s= code_op_memory_size) eqn:EM1.
   { apply scalar_eqb_true in EM1.
     assert (Hb : to_Z b = 63) by (rewrite EM1; reflexivity).
     op_cases Hd Hb. injection Hsp as Hbe. subst crbe. subst op.
@@ -1852,13 +1852,13 @@ Proof.
     eexists. unfold adv_plain.
     exists pre, f,
       {| fv_ctrl := fv_ctrl f;
-         fv_seg := fv_seg f ++ [Opiter_StackType_Val Types_ValueType_I32];
+         fv_seg := fv_seg f ++ [Code_StackType_Val Types_ValueType_I32];
          fv_done := fv_done f ++ [BI_memory_size];
          fv_then := fv_then f |}.
     split; [reflexivity|]. split; [reflexivity|].
     cbn [fv_ctrl fv_seg fv_done]. split; [reflexivity|]. split; [reflexivity|].
     split; [reflexivity|]. split; [reflexivity | exact Hinv2]. }
-  destruct (b s= opiter_op_memory_grow) eqn:EM2.
+  destruct (b s= code_op_memory_grow) eqn:EM2.
   { apply scalar_eqb_true in EM2.
     assert (Hb : to_Z b = 64) by (rewrite EM2; reflexivity).
     op_cases Hd Hb. injection Hsp as Hbe. subst crbe. subst op.
@@ -1874,7 +1874,7 @@ Proof.
     eexists. unfold adv_plain.
     exists pre, f,
       {| fv_ctrl := fv_ctrl f;
-         fv_seg := seg' ++ [Opiter_StackType_Val Types_ValueType_I32];
+         fv_seg := seg' ++ [Code_StackType_Val Types_ValueType_I32];
          fv_done := fv_done f ++ [BI_memory_grow];
          fv_then := fv_then f |}.
     split; [reflexivity|]. split; [reflexivity|].
@@ -1882,7 +1882,7 @@ Proof.
     split; [reflexivity|]. split; [reflexivity | exact Hinv2]. }
   (* the numeric opcodes, through the table: the row names the instruction and
      supplies its typing effect, so one branch covers the whole block *)
-  unfold opiter_step_numeric.
+  unfold code_step_numeric.
   destruct (convert_types_ok b) as [o Hcv]. rewrite Hcv. cbn [bind].
   destruct o as [[from to]|].
   { destruct (convert_types_spec b from to Hcv)
@@ -2021,9 +2021,9 @@ Definition frame_todo_ok (C0 : t_context) (labels : list (list value_type))
      /\ c_types_agree ct (ctrl_results (fv_ctrl f)) = true)
   /\ (match snd td with
       | Some els =>
-          (fv_ctrl f).(opiter_Ctrl_kind) = Opiter_LabelKind_Then
+          (fv_ctrl f).(code_Ctrl_kind) = Code_LabelKind_Then
           /\ else_todo_ok C0 labels f els
-      | None => (fv_ctrl f).(opiter_Ctrl_kind) <> Opiter_LabelKind_Then
+      | None => (fv_ctrl f).(code_Ctrl_kind) <> Code_LabelKind_Then
       end).
 
 Definition child_results (fs : list fview) : list value_type :=
@@ -2144,8 +2144,8 @@ Qed.
 (* ================================================================== *)
 
 Lemma ctrl_label_eq : forall c c',
-  c'.(opiter_Ctrl_kind) = c.(opiter_Ctrl_kind) ->
-  c'.(opiter_Ctrl_block_type) = c.(opiter_Ctrl_block_type) ->
+  c'.(code_Ctrl_kind) = c.(code_Ctrl_kind) ->
+  c'.(code_Ctrl_block_type) = c.(code_Ctrl_block_type) ->
   ctrl_label c' = ctrl_label c.
 Proof.
   intros c c' Hk Hb. unfold ctrl_label, ctrl_target, branch_target_bt_of.
@@ -2153,21 +2153,21 @@ Proof.
 Qed.
 
 Lemma ctrl_results_eq : forall c c',
-  c'.(opiter_Ctrl_block_type) = c.(opiter_Ctrl_block_type) ->
+  c'.(code_Ctrl_block_type) = c.(code_Ctrl_block_type) ->
   ctrl_results c' = ctrl_results c.
 Proof. intros c c' Hb. unfold ctrl_results. rewrite Hb. reflexivity. Qed.
 
 Lemma ctrl_label_block : forall c,
-  c.(opiter_Ctrl_kind) = Opiter_LabelKind_Block ->
+  c.(code_Ctrl_kind) = Code_LabelKind_Block ->
   ctrl_label c = ctrl_results c.
 Proof.
   intros c Hk. unfold ctrl_label, ctrl_results, ctrl_target,
     branch_target_bt_of. rewrite Hk.
-  destruct (c.(opiter_Ctrl_block_type)); reflexivity.
+  destruct (c.(code_Ctrl_block_type)); reflexivity.
 Qed.
 
 Lemma ctrl_label_loop_nil : forall c,
-  c.(opiter_Ctrl_kind) = Opiter_LabelKind_Loop -> ctrl_label c = [].
+  c.(code_Ctrl_kind) = Code_LabelKind_Loop -> ctrl_label c = [].
 Proof.
   intros c Hk. unfold ctrl_label, ctrl_target, branch_target_bt_of. rewrite Hk.
   reflexivity.
@@ -2195,7 +2195,7 @@ Qed.
 
 Lemma fv_ct_after_end : forall f g f',
   fv_ctrl f' = fv_ctrl f ->
-  fv_seg f' = fv_seg f ++ results_seg (fv_ctrl g).(opiter_Ctrl_block_type) ->
+  fv_seg f' = fv_seg f ++ results_seg (fv_ctrl g).(code_Ctrl_block_type) ->
   fv_ct f' = produce (fv_ct f) (ctrl_results (fv_ctrl g)).
 Proof.
   intros f g f' Hc Hs. unfold fv_ct, produce, ctrl_results.
@@ -2232,7 +2232,7 @@ Qed.
 Lemma todo_ok_plain : forall pre C0 labels f f' tds be rest tdo,
   ctrl_label (fv_ctrl f') = ctrl_label (fv_ctrl f) ->
   ctrl_results (fv_ctrl f') = ctrl_results (fv_ctrl f) ->
-  (fv_ctrl f').(opiter_Ctrl_kind) = (fv_ctrl f).(opiter_Ctrl_kind) ->
+  (fv_ctrl f').(code_Ctrl_kind) = (fv_ctrl f).(code_Ctrl_kind) ->
   check_single (with_labels C0 (ctrl_label (fv_ctrl f)
                                :: labels_after labels pre))
               (Some (fv_ct f)) be = Some (fv_ct f') ->
@@ -2333,10 +2333,10 @@ Qed.
     now expects the block's results. *)
 Lemma todo_ok_push_block : forall pre C0 labels f g tds inner rest tdo,
   fv_seg g = [] ->
-  (fv_ctrl g).(opiter_Ctrl_polymorphic_base) = false ->
-  (fv_ctrl g).(opiter_Ctrl_kind) = Opiter_LabelKind_Block ->
+  (fv_ctrl g).(code_Ctrl_polymorphic_base) = false ->
+  (fv_ctrl g).(code_Ctrl_kind) = Code_LabelKind_Block ->
   todo_ok C0 labels (pre ++ [f])
-    (tds ++ [(BI_block (translate_bt (fv_ctrl g).(opiter_Ctrl_block_type)) inner
+    (tds ++ [(BI_block (translate_bt (fv_ctrl g).(code_Ctrl_block_type)) inner
               :: rest, tdo)]) ->
   todo_ok C0 labels ((pre ++ [f]) ++ [g])
     ((tds ++ [(rest, tdo)]) ++ [(inner, None)]).
@@ -2378,10 +2378,10 @@ Qed.
 
 Lemma todo_ok_push_loop : forall pre C0 labels f g tds inner rest tdo,
   fv_seg g = [] ->
-  (fv_ctrl g).(opiter_Ctrl_polymorphic_base) = false ->
-  (fv_ctrl g).(opiter_Ctrl_kind) = Opiter_LabelKind_Loop ->
+  (fv_ctrl g).(code_Ctrl_polymorphic_base) = false ->
+  (fv_ctrl g).(code_Ctrl_kind) = Code_LabelKind_Loop ->
   todo_ok C0 labels (pre ++ [f])
-    (tds ++ [(BI_loop (translate_bt (fv_ctrl g).(opiter_Ctrl_block_type)) inner
+    (tds ++ [(BI_loop (translate_bt (fv_ctrl g).(code_Ctrl_block_type)) inner
               :: rest, tdo)]) ->
   todo_ok C0 labels ((pre ++ [f]) ++ [g])
     ((tds ++ [(rest, tdo)]) ++ [(inner, None)]).
@@ -2422,21 +2422,21 @@ Proof.
 Qed.
 
 Lemma ctrl_label_then : forall c,
-  c.(opiter_Ctrl_kind) = Opiter_LabelKind_Then ->
+  c.(code_Ctrl_kind) = Code_LabelKind_Then ->
   ctrl_label c = ctrl_results c.
 Proof.
   intros c Hk. unfold ctrl_label, ctrl_results, ctrl_target,
     branch_target_bt_of. rewrite Hk.
-  destruct (c.(opiter_Ctrl_block_type)); reflexivity.
+  destruct (c.(code_Ctrl_block_type)); reflexivity.
 Qed.
 
 Lemma ctrl_label_else : forall c,
-  c.(opiter_Ctrl_kind) = Opiter_LabelKind_Else ->
+  c.(code_Ctrl_kind) = Code_LabelKind_Else ->
   ctrl_label c = ctrl_results c.
 Proof.
   intros c Hk. unfold ctrl_label, ctrl_results, ctrl_target,
     branch_target_bt_of. rewrite Hk.
-  destruct (c.(opiter_Ctrl_block_type)); reflexivity.
+  destruct (c.(code_Ctrl_block_type)); reflexivity.
 Qed.
 
 (** Entering an [if]: the then-branch becomes the new frame's remaining list and
@@ -2449,10 +2449,10 @@ Lemma todo_ok_push_if : forall pre C0 labels f f' g tds es1 es2 rest tdo,
   fv_ctrl f' = fv_ctrl f ->
   consume (fv_ct f) [T_num T_i32] = Some (fv_ct f') ->
   fv_seg g = [] ->
-  (fv_ctrl g).(opiter_Ctrl_polymorphic_base) = false ->
-  (fv_ctrl g).(opiter_Ctrl_kind) = Opiter_LabelKind_Then ->
+  (fv_ctrl g).(code_Ctrl_polymorphic_base) = false ->
+  (fv_ctrl g).(code_Ctrl_kind) = Code_LabelKind_Then ->
   todo_ok C0 labels (pre ++ [f])
-    (tds ++ [(BI_if (translate_bt (fv_ctrl g).(opiter_Ctrl_block_type)) es1 es2
+    (tds ++ [(BI_if (translate_bt (fv_ctrl g).(code_Ctrl_block_type)) es1 es2
               :: rest, tdo)]) ->
   todo_ok C0 labels ((pre ++ [f']) ++ [g])
     ((tds ++ [(rest, tdo)]) ++ [(es1, Some es2)]).
@@ -2518,12 +2518,12 @@ Qed.
     and its obligation -- which [frame_todo_ok] has been carrying since the
     [if] -- becomes the frame's own. *)
 Lemma todo_ok_switch_else : forall pre C0 labels g g' tds els,
-  (fv_ctrl g).(opiter_Ctrl_kind) = Opiter_LabelKind_Then ->
-  (fv_ctrl g').(opiter_Ctrl_kind) = Opiter_LabelKind_Else ->
-  (fv_ctrl g').(opiter_Ctrl_block_type)
-    = (fv_ctrl g).(opiter_Ctrl_block_type) ->
+  (fv_ctrl g).(code_Ctrl_kind) = Code_LabelKind_Then ->
+  (fv_ctrl g').(code_Ctrl_kind) = Code_LabelKind_Else ->
+  (fv_ctrl g').(code_Ctrl_block_type)
+    = (fv_ctrl g).(code_Ctrl_block_type) ->
   fv_seg g' = [] ->
-  (fv_ctrl g').(opiter_Ctrl_polymorphic_base) = false ->
+  (fv_ctrl g').(code_Ctrl_polymorphic_base) = false ->
   todo_ok C0 labels (pre ++ [g]) (tds ++ [([], Some els)]) ->
   todo_ok C0 labels (pre ++ [g']) (tds ++ [(els, None)]).
 Proof.
@@ -2572,7 +2572,7 @@ Qed.
     reaches is the one it was already expecting. *)
 Lemma todo_ok_end : forall pre C0 labels f g f' tds td tdg,
   fv_ctrl f' = fv_ctrl f ->
-  fv_seg f' = fv_seg f ++ results_seg (fv_ctrl g).(opiter_Ctrl_block_type) ->
+  fv_seg f' = fv_seg f ++ results_seg (fv_ctrl g).(code_Ctrl_block_type) ->
   todo_ok C0 labels (pre ++ [f] ++ [g]) (tds ++ [td] ++ [([], tdg)]) ->
   todo_ok C0 labels (pre ++ [f']) (tds ++ [td]).
 Proof.
@@ -2674,13 +2674,13 @@ Qed.
 (** The cursor never passes the end of the body, which is what pins the final
     position at [end] rather than merely bounding it below. *)
 Lemma read_op_pos_le : forall st data b st',
-  opiter_read_op st data = Ok (Core_result_Result_Ok b, st') ->
-  to_Z st'.(opiter_OpIterState_pos) <= to_Z (slice_len data).
+  code_read_op st data = Ok (Core_result_Result_Ok b, st') ->
+  to_Z st'.(code_OpIterState_pos) <= to_Z (slice_len data).
 Proof.
   intros st data b st' H.
   pose proof (read_op_sound st data b st' H) as Hbytes.
-  destruct (bytes_from_uncons data st.(opiter_OpIterState_pos) (to_Z b)
-              (bytes_from data st'.(opiter_OpIterState_pos)) Hbytes)
+  destruct (bytes_from_uncons data st.(code_OpIterState_pos) (to_Z b)
+              (bytes_from data st'.(code_OpIterState_pos)) Hbytes)
     as [b2 [p2 [_ [_ [_ [_ Hlt]]]]]].
   pose proof (read_op_advance st data b st' H) as Hadv. lia.
 Qed.
@@ -2691,17 +2691,17 @@ Proof. pose proof usize_max_bound as H. rewrite u32_max_val in H. lia. Qed.
 (** The bytes a step consumed, borrowed from the soundness direction: which
     operator they encode is settled there, and [repr_op_det] then identifies it
     with the one the stream named. *)
-Lemma step_bytes : forall V (inst : visit_OpVisitor_t V) vis vis2
+Lemma step_bytes : forall V (inst : code_OpVisitor_t V) vis vis2
                            C0 bt0 module ctx data st fs b st1 st2,
   Inv C0 st fs -> body_first bt0 fs ->
   mems_agree module C0 -> locals_agree ctx C0 -> globals_agree module C0 ->
   return_agree ctx C0 -> funcs_agree module C0 -> types_agree module C0 ->
   tables_agree module C0 ->
-  opiter_read_op st data = Ok (Core_result_Result_Ok b, st1) ->
-  opiter_step inst st1 data module ctx b vis
+  code_read_op st data = Ok (Core_result_Result_Ok b, st1) ->
+  code_step inst st1 data module ctx b vis
     = Ok (Core_result_Result_Ok tt, st2, vis2) ->
-  exists op, repr_op (bytes_from data st.(opiter_OpIterState_pos)) op
-                     (bytes_from data st2.(opiter_OpIterState_pos)).
+  exists op, repr_op (bytes_from data st.(code_OpIterState_pos)) op
+                     (bytes_from data st2.(code_OpIterState_pos)).
 Proof.
   intros V inst vis vis2 C0 bt0 module ctx data st fs b st1 st2 Hinv Hbfirst
          Hmems Hlocals
@@ -2733,14 +2733,14 @@ Qed.
     [read_end] insists on before it closes a then-branch. *)
 Lemma frame_todo_ok_bare_if : forall C0 labels f,
   frame_todo_ok C0 labels f ([], Some []) [] ->
-  block_results_of (fv_ctrl f).(opiter_Ctrl_block_type) = [].
+  block_results_of (fv_ctrl f).(code_Ctrl_block_type) = [].
 Proof.
   intros C0 labels f [_ [_ [ct [Hfold Hagree]]]].
   cbn [List.fold_left] in Hfold. injection Hfold as Hct.
   rewrite <- Hct in Hagree.
   pose proof (c_types_agree_nil_inv _ Hagree) as Hnil.
   unfold ctrl_results, translate_typelist in Hnil.
-  destruct ((fv_ctrl f).(opiter_Ctrl_block_type)); [reflexivity|].
+  destruct ((fv_ctrl f).(code_Ctrl_block_type)); [reflexivity|].
   cbn in Hnil. discriminate Hnil.
 Qed.
 
@@ -2835,7 +2835,7 @@ Qed.
     exactly the one the stream names. The body's [end] is where the stream runs
     out and the cursor is at the end of the body, which is the accepting branch's
     condition. *)
-Lemma validate_body_loop_complete : forall m V (inst : visit_OpVisitor_t V) vis
+Lemma validate_body_loop_complete : forall m V (inst : code_OpVisitor_t V) vis
                                            C0 bt0 module ctx data st fs tds,
   hooks_accept inst ->
   Inv C0 st fs -> body_first bt0 fs ->
@@ -2845,12 +2845,12 @@ Lemma validate_body_loop_complete : forall m V (inst : visit_OpVisitor_t V) vis
   funcs_wasm10 module -> types_wasm10 module ->
   todo_ok C0 [] fs tds ->
   (exists ops, else_sugar (todo_ops tds) ops
-               /\ repr_ops (bytes_from data st.(opiter_OpIterState_pos)) ops []) ->
-  to_Z (slice_len data) - to_Z st.(opiter_OpIterState_pos) <= Z.of_nat m ->
+               /\ repr_ops (bytes_from data st.(code_OpIterState_pos)) ops []) ->
+  to_Z (slice_len data) - to_Z st.(code_OpIterState_pos) <= Z.of_nat m ->
   Z.of_nat (stack_size st) + Z.of_nat m <= to_Z (slice_len data) + 1 ->
   to_Z (slice_len data) <= 7654321 ->
-  exists vis', opiter_validate_body_with_loop inst data module
-                 ctx.(opiter_Context_locals) ctx.(opiter_Context_results) vis st
+  exists vis', code_validate_body_with_loop inst data module
+                 ctx.(code_Context_locals) ctx.(code_Context_results) vis st
                = Ok (Core_result_Result_Ok tt, vis').
 Proof.
   induction m as [|m IH]; intros V inst vis C0 bt0 module ctx data st fs tds
@@ -2867,7 +2867,7 @@ Proof.
     subst fs; subst tds.
   - (* the byte budget is spent, so the operator that remains has no bytes *)
     exfalso.
-    assert (Hnil : bytes_from data st.(opiter_OpIterState_pos) = [])
+    assert (Hnil : bytes_from data st.(code_OpIterState_pos) = [])
       by (apply bytes_from_past_end; lia).
     rewrite Hnil in Hops.
     apply (todo_ops_nonnil tds0 td).
@@ -2876,17 +2876,17 @@ Proof.
     assert (Hroomst : room st).
     { unfold room. pose proof max_bytes_fits. lia. }
     assert (Hcons : exists c cs,
-              vec_list st.(opiter_OpIterState_ctrls) = c :: cs).
+              vec_list st.(code_OpIterState_ctrls) = c :: cs).
     { destruct Hinv as [K1 _]. rewrite K1.
       destruct pre as [|h t];
         [exists (fv_ctrl f), []; reflexivity
         | exists (fv_ctrl h), (List.map fv_ctrl (t ++ [f]));
           cbn [List.app List.map]; reflexivity]. }
     destruct Hcons as [c [cs Hcons]].
-    unfold opiter_validate_body_with_loop. rewrite loop_unfold. cbn beta iota.
-    unfold opiter_control_stack_empty. rewrite vec_is_empty_spec.
+    unfold code_validate_body_with_loop. rewrite loop_unfold. cbn beta iota.
+    unfold code_control_stack_empty. rewrite vec_is_empty_spec.
     rewrite Hcons. cbn [bind]. rewrite ctx_eta.
-    destruct (list_cons_or_nil (bytes_from data st.(opiter_OpIterState_pos)))
+    destruct (list_cons_or_nil (bytes_from data st.(code_OpIterState_pos)))
       as [Hnil | [z [rest0 Hbs]]].
     { exfalso. rewrite Hnil in Hops.
       apply (todo_ops_nonnil tds0 td).
@@ -2907,7 +2907,7 @@ Proof.
       * (* an open then-branch. Either the [0x05] is there, or the [if] was
            written in spec 5.4.1's sugared form and the [0x0B] closes the frame
            with the [FO_else] never encoded at all. *)
-        assert (Hkindf : (fv_ctrl f).(opiter_Ctrl_kind) = Opiter_LabelKind_Then)
+        assert (Hkindf : (fv_ctrl f).(code_Ctrl_kind) = Code_LabelKind_Then)
           by (destruct Hftd as [_ [Hk _]]; exact Hk).
         rewrite todo_ops_else in Hsug.
         destruct (else_sugar_else_inv _ _ Hsug)
@@ -3079,12 +3079,12 @@ Proof.
            subst tds0. cbn [todo_ops] in Hsug'.
            rewrite (else_sugar_nil_inv _ Hsug') in Hops'.
            pose proof (repr_ops_nil_rest _ _ Hops') as Hmid0.
-           assert (Hnil2 : bytes_from data st2.(opiter_OpIterState_pos) = []).
+           assert (Hnil2 : bytes_from data st2.(code_OpIterState_pos) = []).
            { rewrite <- Hmid. rewrite <- Hmid0. reflexivity. }
            rewrite loop_unfold. cbn beta iota.
-           unfold opiter_control_stack_empty. rewrite vec_is_empty_spec.
+           unfold code_control_stack_empty. rewrite vec_is_empty_spec.
            rewrite Hc2. cbn [bind].
-           assert (Heq : (st2.(opiter_OpIterState_pos) s= slice_len data) = true).
+           assert (Heq : (st2.(code_OpIterState_pos) s= slice_len data) = true).
            { apply scalar_eqb_of_eq.
              pose proof (bytes_from_nil_ge data _ Hnil2) as Hge.
              pose proof (read_op_pos_le st data b st1 Hro) as Hle. lia. }
@@ -3116,7 +3116,7 @@ Proof.
         destruct Hshape as [fs' [bt' [Htr Hae]]].
         destruct Hae as [g [Hfs' [Hseg [Hdone [Hkind [Hbt [Hpoly Hinv2]]]]]]].
         subst fs'.
-        assert (Hbteq : translate_bt (fv_ctrl g).(opiter_Ctrl_block_type) = bt)
+        assert (Hbteq : translate_bt (fv_ctrl g).(code_Ctrl_block_type) = bt)
           by (rewrite Hbt; exact Htr).
         rewrite <- Hbteq in Hok.
         pose proof (todo_ok_push_block pre C0 [] f g tds0 inner tdrest tdo
@@ -3150,7 +3150,7 @@ Proof.
         destruct Hshape as [fs' [bt' [Htr Hae]]].
         destruct Hae as [g [Hfs' [Hseg [Hdone [Hkind [Hbt [Hpoly Hinv2]]]]]]].
         subst fs'.
-        assert (Hbteq : translate_bt (fv_ctrl g).(opiter_Ctrl_block_type) = bt)
+        assert (Hbteq : translate_bt (fv_ctrl g).(code_Ctrl_block_type) = bt)
           by (rewrite Hbt; exact Htr).
         rewrite <- Hbteq in Hok.
         pose proof (todo_ok_push_loop pre C0 [] f g tds0 inner tdrest tdo
@@ -3191,7 +3191,7 @@ Proof.
                           [Hseg [Hdone [Hkind [Hbt [Hpoly Hinv2]]]]]]]]]]]]].
         destruct (List.app_inj_tail _ _ _ _ Hfs2) as [Hpe Hfe].
         subst pre. subst f. subst fs'.
-        assert (Hbteq : translate_bt (fv_ctrl g).(opiter_Ctrl_block_type) = bt)
+        assert (Hbteq : translate_bt (fv_ctrl g).(code_Ctrl_block_type) = bt)
           by (rewrite Hbt; exact Htr).
         rewrite <- Hbteq in Hok.
         (* the condition the enclosing frame lost, read off the two invariants *)
@@ -3274,33 +3274,33 @@ Qed.
     and the body is within the size limit. The second has to be stated, unlike
     in the soundness direction: the validator rejects a longer body for size, so
     the agreement is with WasmCert *on bodies within the limit*. *)
-Theorem validate_body_with_complete : forall V (inst : visit_OpVisitor_t V) vis
+Theorem validate_body_with_complete : forall V (inst : code_OpVisitor_t V) vis
                                              C0 module ctx data es,
   hooks_accept inst ->
   mems_agree module C0 -> locals_agree ctx C0 ->
   globals_agree module C0 -> return_agree ctx C0 ->
   funcs_agree module C0 -> types_agree module C0 -> tables_agree module C0 ->
   funcs_wasm10 module -> types_wasm10 module ->
-  (List.length (vec_list ctx.(opiter_Context_results)) <= 1)%nat ->
+  (List.length (vec_list ctx.(code_Context_results)) <= 1)%nat ->
   to_Z (slice_len data) <= 7654321 ->
   repr_expr (byte_list data) es [] ->
   b_e_type_checker_aux
-    (upd_label C0 [translate_typelist (vec_list ctx.(opiter_Context_results))]) es
-    (Tf [] (translate_typelist (vec_list ctx.(opiter_Context_results)))) = true ->
-  exists vis', opiter_validate_body_with inst data module ctx vis
+    (upd_label C0 [translate_typelist (vec_list ctx.(code_Context_results))]) es
+    (Tf [] (translate_typelist (vec_list ctx.(code_Context_results)))) = true ->
+  exists vis', code_validate_body_with inst data module ctx vis
                = Ok (Core_result_Result_Ok tt, vis').
 Proof.
   intros V inst vis C0 module ctx data es Hacc Hmems Hlocals Hglobals Hret
          Hfuncs Htypes Htables Hfw10 Htw10 Hlen1 Hlim Hexpr Hchk.
-  unfold opiter_validate_body_with.
+  unfold code_validate_body_with.
   assert (Hbig : (slice_len data s> limits_max_function_bytes) = false).
   { unfold scalar_gtb. rewrite Z.gtb_ltb. apply Z.ltb_ge.
     assert (Hm : to_Z limits_max_function_bytes = 7654321) by reflexivity.
     rewrite Hm. exact Hlim. }
   rewrite Hbig. rewrite vec_deref_spec.
-  destruct (start_function_total ctx.(opiter_Context_results)) as [st [Hsf [Hpos Hsz]]].
+  destruct (start_function_total ctx.(code_Context_results)) as [st [Hsf [Hpos Hsz]]].
   rewrite Hsf. cbn [bind].
-  destruct (Inv_start C0 st ctx.(opiter_Context_results) Hlen1 Hsf) as [bt [Hinv Hbt]].
+  destruct (Inv_start C0 st ctx.(code_Context_results) Hlen1 Hsf) as [bt [Hinv Hbt]].
   (* the loop invariant at the start: the whole body is still to check, and the
      body frame is not a then-branch, so nothing is stashed behind it *)
   assert (Hok : todo_ok C0 [] [body_fview bt] [(es, None)]).
@@ -3335,19 +3335,19 @@ Corollary validate_body_complete : forall C0 module ctx data es,
   globals_agree module C0 -> return_agree ctx C0 ->
   funcs_agree module C0 -> types_agree module C0 -> tables_agree module C0 ->
   funcs_wasm10 module -> types_wasm10 module ->
-  (List.length (vec_list ctx.(opiter_Context_results)) <= 1)%nat ->
+  (List.length (vec_list ctx.(code_Context_results)) <= 1)%nat ->
   to_Z (slice_len data) <= 7654321 ->
   repr_expr (byte_list data) es [] ->
   b_e_type_checker_aux
-    (upd_label C0 [translate_typelist (vec_list ctx.(opiter_Context_results))]) es
-    (Tf [] (translate_typelist (vec_list ctx.(opiter_Context_results)))) = true ->
-  opiter_validate_body data module ctx = Ok (Core_result_Result_Ok tt).
+    (upd_label C0 [translate_typelist (vec_list ctx.(code_Context_results))]) es
+    (Tf [] (translate_typelist (vec_list ctx.(code_Context_results)))) = true ->
+  code_validate_body data module ctx = Ok (Core_result_Result_Ok tt).
 Proof.
   intros C0 module ctx data es Hmems Hlocals Hglobals Hret
          Hfuncs Htypes Htables Hfw10 Htw10 Hlen1 Hlim Hexpr Hchk.
   destruct (validate_body_with_complete _
-              visit_NopVisitor_Insts_ItascaVisitOpVisitor tt C0 module ctx data
+              code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor tt C0 module ctx data
               es nop_hooks_accept Hmems Hlocals Hglobals Hret Hfuncs Htypes
               Htables Hfw10 Htw10 Hlen1 Hlim Hexpr Hchk) as [vis' Hw].
-  unfold opiter_validate_body. rewrite Hw. cbn [bind]. reflexivity.
+  unfold code_validate_body. rewrite Hw. cbn [bind]. reflexivity.
 Qed.

@@ -542,10 +542,10 @@ Lemma validate_limits_ok : forall lim range,
   exists r, limits_validate_limits lim range = Ok r.
 Proof.
   intros lim range. unfold limits_validate_limits.
-  destruct (limits_Limits_min lim s> range); [eexists; reflexivity|].
-  destruct (limits_Limits_max lim) as [mx|]; [|eexists; reflexivity].
+  destruct (types_Limits_min lim s> range); [eexists; reflexivity|].
+  destruct (types_Limits_max lim) as [mx|]; [|eexists; reflexivity].
   destruct (mx s> range); [eexists; reflexivity|].
-  destruct (limits_Limits_min lim s> mx); eexists; reflexivity.
+  destruct (types_Limits_min lim s> mx); eexists; reflexivity.
 Qed.
 
 (** Below this point a decoder is a chain of reads and comparisons, and both
@@ -1131,7 +1131,7 @@ Qed.
 (** ** The environment                                                *)
 (* ================================================================== *)
 
-(** What [decode_env] maintains about the environment it is building.
+(** What [validate_env] maintains about the environment it is building.
 
     Every vector in it holds at most one element per input byte read so far,
     which is the same accounting the local vectors use, carried across sections
@@ -1143,30 +1143,30 @@ Qed.
 Definition ft_small (ft : types_FuncType_t) : Prop :=
   Z.of_nat (List.length (vec_list ft.(types_FuncType_params))) <= module_bytes.
 
-Record env_small (env : env_Env_t) (q : usize) : Prop := {
+Record env_small (env : module_Env_t) (q : usize) : Prop := {
   es_types :
-    Z.of_nat (List.length (vec_list env.(env_Env_types))) <= to_Z q;
+    Z.of_nat (List.length (vec_list env.(module_Env_types))) <= to_Z q;
   es_imports :
-    Z.of_nat (List.length (vec_list env.(env_Env_imports))) <= to_Z q;
+    Z.of_nat (List.length (vec_list env.(module_Env_imports))) <= to_Z q;
   es_globals :
-    Z.of_nat (List.length (vec_list env.(env_Env_globals))) <= to_Z q;
+    Z.of_nat (List.length (vec_list env.(module_Env_globals))) <= to_Z q;
   es_exports :
-    Z.of_nat (List.length (vec_list env.(env_Env_exports))) <= to_Z q;
+    Z.of_nat (List.length (vec_list env.(module_Env_exports))) <= to_Z q;
   es_elements :
-    Z.of_nat (List.length (vec_list env.(env_Env_elements))) <= to_Z q;
+    Z.of_nat (List.length (vec_list env.(module_Env_elements))) <= to_Z q;
   es_findices :
-    Z.of_nat (List.length (vec_list env.(env_Env_func_type_indices))) <= to_Z q;
+    Z.of_nat (List.length (vec_list env.(module_Env_func_type_indices))) <= to_Z q;
   es_ftypes :
-    Z.of_nat (List.length (vec_list env.(env_Env_func_types))) <= to_Z q;
+    Z.of_nat (List.length (vec_list env.(module_Env_func_types))) <= to_Z q;
   es_tables :
-    Z.of_nat (List.length (vec_list env.(env_Env_table_types))) <= to_Z q;
+    Z.of_nat (List.length (vec_list env.(module_Env_table_types))) <= to_Z q;
   es_mems :
-    Z.of_nat (List.length (vec_list env.(env_Env_mem_types))) <= to_Z q;
+    Z.of_nat (List.length (vec_list env.(module_Env_mem_types))) <= to_Z q;
   es_gtypes :
-    Z.of_nat (List.length (vec_list env.(env_Env_global_types))) <= to_Z q;
-  es_nfuncs : to_Z env.(env_Env_num_imported_funcs) <= to_Z q;
-  es_nglobals : to_Z env.(env_Env_num_imported_globals) <= to_Z q;
-  es_params : List.Forall ft_small (vec_list env.(env_Env_types));
+    Z.of_nat (List.length (vec_list env.(module_Env_global_types))) <= to_Z q;
+  es_nfuncs : to_Z env.(module_Env_num_imported_funcs) <= to_Z q;
+  es_nglobals : to_Z env.(module_Env_num_imported_globals) <= to_Z q;
+  es_params : List.Forall ft_small (vec_list env.(module_Env_types));
 }.
 
 Arguments es_types {_ _}. Arguments es_imports {_ _}.
@@ -1184,9 +1184,9 @@ Proof.
 Qed.
 
 Lemma env_small_new : forall q env,
-  env_Env_new = Ok env -> env_small env q.
+  module_Env_new = Ok env -> env_small env q.
 Proof.
-  intros q env H. unfold env_Env_new in H. injection H as <-.
+  intros q env H. unfold module_Env_new in H. injection H as <-.
   pose proof (usize_nonneg q).
   constructor; cbn in *; try lia. apply List.Forall_nil.
 Qed.
@@ -1221,26 +1221,26 @@ Proof.
     rewrite branch_ok. cbn [bind].
     destruct (Hpost _ _ (ltac:(reflexivity))) as [Hlt [Hq1 Hft]].
     pose proof (es_types Henv) as Het.
-    destruct (vec_push_ok env.(env_Env_types) ft (ltac:(fits))) as [v Hpush].
+    destruct (vec_push_ok env.(module_Env_types) ft (ltac:(fits))) as [v Hpush].
     rewrite Hpush. cbn [bind].
     assert (Hu1 : to_Z 1%u32 = 1) by reflexivity.
     pose proof (u32_bounds count).
     destruct (u32_add_ok i 1%u32 (ltac:(lia))) as [i2 [Hadd Hi2]].
     rewrite Hadd. cbn [bind].
     destruct (IH data
-                {| env_Env_types := v;
-                   env_Env_imports := env.(env_Env_imports);
-                   env_Env_globals := env.(env_Env_globals);
-                   env_Env_exports := env.(env_Env_exports);
-                   env_Env_elements := env.(env_Env_elements);
-                   env_Env_start := env.(env_Env_start);
-                   env_Env_func_type_indices := env.(env_Env_func_type_indices);
-                   env_Env_func_types := env.(env_Env_func_types);
-                   env_Env_table_types := env.(env_Env_table_types);
-                   env_Env_mem_types := env.(env_Env_mem_types);
-                   env_Env_global_types := env.(env_Env_global_types);
-                   env_Env_num_imported_funcs := env.(env_Env_num_imported_funcs);
-                   env_Env_num_imported_globals := env.(env_Env_num_imported_globals) |}
+                {| module_Env_types := v;
+                   module_Env_imports := env.(module_Env_imports);
+                   module_Env_globals := env.(module_Env_globals);
+                   module_Env_exports := env.(module_Env_exports);
+                   module_Env_elements := env.(module_Env_elements);
+                   module_Env_start := env.(module_Env_start);
+                   module_Env_func_type_indices := env.(module_Env_func_type_indices);
+                   module_Env_func_types := env.(module_Env_func_types);
+                   module_Env_table_types := env.(module_Env_table_types);
+                   module_Env_mem_types := env.(module_Env_mem_types);
+                   module_Env_global_types := env.(module_Env_global_types);
+                   module_Env_num_imported_funcs := env.(module_Env_num_imported_funcs);
+                   module_Env_num_imported_globals := env.(module_Env_num_imported_globals) |}
                 count q1 i2) as [r2 [e2 [Hr2 Hpost2]]].
     + rewrite Nat2Z.inj_succ in Hmeas. lia.
     + destruct Henv. constructor; cbn; try lia.
@@ -1305,20 +1305,20 @@ Proof.
 Qed.
 
 Lemma lookup_type_ok : forall env idx,
-  List.Forall ft_small (vec_list env.(env_Env_types)) ->
+  List.Forall ft_small (vec_list env.(module_Env_types)) ->
   exists r, module_lookup_type env idx = Ok r
             /\ forall ft, r = Core_result_Result_Ok ft -> ft_small ft.
 Proof.
   intros env idx Hall. unfold module_lookup_type.
   destruct (scalar_cast_u32_usize idx) as [i [Hcast Hi]].
   rewrite Hcast. cbn [bind].
-  destruct (i s>= alloc_vec_Vec_len env.(env_Env_types)) eqn:Hge;
+  destruct (i s>= alloc_vec_Vec_len env.(module_Env_types)) eqn:Hge;
     [eexists; split; [reflexivity|]; intros ? Hc; discriminate|].
-  destruct (vec_index_ok env.(env_Env_types) i Hge) as [ft Hidx].
+  destruct (vec_index_ok env.(module_Env_types) i Hge) as [ft Hidx].
   rewrite Hidx. cbn [bind].
   assert (Hsmall : ft_small ft).
   { rewrite vec_index_spec in Hidx.
-    destruct (List.nth_error (vec_list env.(env_Env_types))
+    destruct (List.nth_error (vec_list env.(module_Env_types))
                 (Z.to_nat (to_Z i))) as [x|] eqn:Hnth; [|discriminate].
     injection Hidx as <-.
     rewrite List.Forall_forall in Hall. apply Hall.
@@ -1347,9 +1347,9 @@ Proof.
   pose proof (read_u32_leb_le_len _ _ _ _ Hr) as Hple.
   destruct (scalar_cast_u32_usize idx) as [i [Hcast Hi]].
   rewrite Hcast. cbn [bind].
-  destruct (i s>= alloc_vec_Vec_len env.(env_Env_func_types)) eqn:Hge;
+  destruct (i s>= alloc_vec_Vec_len env.(module_Env_func_types)) eqn:Hge;
     [eexists; eexists; split; [reflexivity|]; intros ? Hc; discriminate|].
-  destruct (vec_index_ok env.(env_Env_func_types) i Hge) as [ft Hidx].
+  destruct (vec_index_ok env.(module_Env_func_types) i Hge) as [ft Hidx].
   rewrite Hidx. cbn [bind].
   rewrite vec_is_empty_spec. cbn [bind].
   destruct (match vec_list ft.(types_FuncType_params) with [] => true | _ => false end);
@@ -1401,24 +1401,24 @@ Proof.
 Qed.
 
 Lemma export_name_taken_loop_ok : forall m env name i,
-  Z.of_nat (List.length (vec_list env.(env_Env_exports))) - to_Z i
+  Z.of_nat (List.length (vec_list env.(module_Env_exports))) - to_Z i
     <= Z.of_nat m ->
   exists v, module_export_name_taken_loop env name i = Ok v.
 Proof.
   induction m as [|m IH]; intros env name i Hmeas;
     unfold module_export_name_taken_loop; rewrite loop_unfold; cbn beta iota;
-    destruct (i s>= alloc_vec_Vec_len env.(env_Env_exports)) eqn:Hge;
+    destruct (i s>= alloc_vec_Vec_len env.(module_Env_exports)) eqn:Hge;
     [eexists; reflexivity| |eexists; reflexivity|].
   - exfalso. apply scalar_geb_false_lt in Hge. rewrite vec_len_spec in Hge.
     cbn in Hmeas. lia.
-  - destruct (vec_index_ok env.(env_Env_exports) i Hge) as [e He].
+  - destruct (vec_index_ok env.(module_Env_exports) i Hge) as [e He].
     rewrite He. cbn [bind].
-    destruct (names_equal_ok (alloc_vec_Vec_deref e.(env_Export_name)) name)
+    destruct (names_equal_ok (alloc_vec_Vec_deref e.(module_Export_name)) name)
       as [b Hb].
     rewrite Hb. cbn [bind].
     destruct b; [eexists; reflexivity|].
     apply scalar_geb_false_lt in Hge. rewrite vec_len_spec in Hge.
-    pose proof (usize_le_max (alloc_vec_Vec_len env.(env_Env_exports))).
+    pose proof (usize_le_max (alloc_vec_Vec_len env.(module_Env_exports))).
     rewrite vec_len_spec in *.
     destruct (usize_add_1_ok i (ltac:(lia))) as [i2 [Hadd Hi2]].
     rewrite Hadd. cbn [bind].
@@ -1431,7 +1431,7 @@ Proof.
   intros env name. unfold module_export_name_taken.
   assert (Hz : to_Z 0%usize = 0) by reflexivity.
   apply (export_name_taken_loop_ok
-           (List.length (vec_list env.(env_Env_exports))) env name 0%usize).
+           (List.length (vec_list env.(module_Env_exports))) env name 0%usize).
   lia.
 Qed.
 
@@ -1445,10 +1445,10 @@ Proof.
   intros env idx. unfold module_const_global.
   destruct (scalar_cast_u32_usize idx) as [i [Hcast Hi]].
   rewrite Hcast. cbn [bind].
-  destruct (i s>= alloc_vec_Vec_len env.(env_Env_global_types)) eqn:Hge;
+  destruct (i s>= alloc_vec_Vec_len env.(module_Env_global_types)) eqn:Hge;
     [eexists; reflexivity|].
-  destruct (i s>= env.(env_Env_num_imported_globals)); [eexists; reflexivity|].
-  destruct (vec_index_ok env.(env_Env_global_types) i Hge) as [gt Hidx].
+  destruct (i s>= env.(module_Env_num_imported_globals)); [eexists; reflexivity|].
+  destruct (vec_index_ok env.(module_Env_global_types) i Hge) as [gt Hidx].
   rewrite Hidx. cbn [bind]. rewrite mut_ne_spec. cbn [bind].
   destruct (negb _); eexists; reflexivity.
 Qed.
@@ -1464,7 +1464,7 @@ Proof.
   rewrite branch_ok. cbn [bind].
   pose proof (read_byte_le_len _ _ _ _ Hr).
   pose proof (proj2 (read_byte_ok _ _ _ _ Hr)).
-  destruct (b s<> opiter_op_end);
+  destruct (b s<> code_op_end);
     [eexists; split; [reflexivity|]; intros ? Hc; discriminate|].
   eexists. split; [reflexivity|]. intros p' Hc. injection Hc as <-. lia.
 Qed.
@@ -1477,7 +1477,7 @@ Proof.
 Qed.
 
 (** Spec 3.4.10 restricted to Wasm 1.0: five opcodes, each one immediate and a
-    closing [end]. A dedicated reader rather than a mode of [opiter], because
+    closing [end]. A dedicated reader rather than a mode of [code], because
     every constant instruction pushes exactly one value, so a sequence typed
     [[] -> [t]] has exactly one instruction in it. *)
 Lemma decode_const_expr_ok : forall data pos env expected,
@@ -1616,7 +1616,7 @@ Proof.
     rewrite branch_ok. cbn [bind].
     destruct (decode_table_type_step _ _ _ _ Hr) as [Hlt Hq1].
     pose proof (es_tables Henv) as Het.
-    destruct (vec_push_ok env.(env_Env_table_types) tt1 (ltac:(fits)))
+    destruct (vec_push_ok env.(module_Env_table_types) tt1 (ltac:(fits)))
       as [v Hpush].
     rewrite Hpush. cbn [bind].
     destruct (alloc_vec_Vec_len v s> limits_max_tables); [sec_done|].
@@ -1657,7 +1657,7 @@ Proof.
     rewrite branch_ok. cbn [bind].
     destruct (decode_mem_type_step _ _ _ _ Hr) as [Hlt Hq1].
     pose proof (es_mems Henv) as Hem.
-    destruct (vec_push_ok env.(env_Env_mem_types) mt (ltac:(fits)))
+    destruct (vec_push_ok env.(module_Env_mem_types) mt (ltac:(fits)))
       as [v Hpush].
     rewrite Hpush. cbn [bind].
     destruct (alloc_vec_Vec_len v s> limits_max_memories); [sec_done|].
@@ -1714,10 +1714,10 @@ Proof.
     rewrite branch_ok. cbn [bind].
     pose proof (Hft _ (ltac:(reflexivity))) as Hsmall.
     pose proof (es_ftypes Henv) as Hef. pose proof (es_findices Henv) as Hei.
-    destruct (vec_push_ok env.(env_Env_func_types) ft (ltac:(fits)))
+    destruct (vec_push_ok env.(module_Env_func_types) ft (ltac:(fits)))
       as [v Hpush].
     rewrite Hpush. cbn [bind].
-    destruct (vec_push_ok env.(env_Env_func_type_indices) idx (ltac:(fits)))
+    destruct (vec_push_ok env.(module_Env_func_type_indices) idx (ltac:(fits)))
       as [v1 Hpush1].
     rewrite Hpush1. cbn [bind].
     assert (Hu1 : to_Z 1%u32 = 1) by reflexivity.
@@ -1765,11 +1765,11 @@ Proof.
     rewrite branch_ok. cbn [bind].
     destruct (Hce _ _ (ltac:(reflexivity))) as [Hlt2 Hq2].
     pose proof (es_gtypes Henv) as Heg. pose proof (es_globals Henv) as Heb.
-    destruct (vec_push_ok env.(env_Env_global_types) gt (ltac:(fits)))
+    destruct (vec_push_ok env.(module_Env_global_types) gt (ltac:(fits)))
       as [v Hpush].
     rewrite Hpush. cbn [bind].
-    destruct (vec_push_ok env.(env_Env_globals)
-                {| env_Global_gtype := gt; env_Global_init := init |}
+    destruct (vec_push_ok env.(module_Env_globals)
+                {| module_Global_gtype := gt; module_Global_init := init |}
                 (ltac:(fits))) as [v1 Hpush1].
     rewrite Hpush1. cbn [bind].
     assert (Hu1 : to_Z 1%u32 = 1) by reflexivity.
@@ -1838,8 +1838,8 @@ Proof.
     destruct r3 as [desc|e]; [|sec_loop_err].
     rewrite branch_ok. cbn [bind].
     pose proof (es_exports Henv) as Hee.
-    destruct (vec_push_ok env.(env_Env_exports)
-                {| env_Export_name := name; env_Export_desc := desc |}
+    destruct (vec_push_ok env.(module_Env_exports)
+                {| module_Export_name := name; module_Export_desc := desc |}
                 (ltac:(fits))) as [v Hpush].
     rewrite Hpush. cbn [bind].
     assert (Hu1 : to_Z 1%u32 = 1) by reflexivity.
@@ -1887,7 +1887,7 @@ Proof.
     pose proof (read_u32_leb_le_len _ _ _ _ Hr) as Hq1.
     destruct (scalar_cast_u32_usize idx) as [j [Hcast Hj]].
     rewrite Hcast. cbn [bind].
-    destruct (j s>= alloc_vec_Vec_len env.(env_Env_func_types));
+    destruct (j s>= alloc_vec_Vec_len env.(module_Env_func_types));
       [eexists; split; [reflexivity|]; intros ? ? Hc; discriminate|].
     destruct (vec_push_ok out idx (ltac:(fits))) as [out2 Hpush].
     rewrite Hpush. cbn [bind].
@@ -1954,7 +1954,7 @@ Proof.
     pose proof (read_u32_leb_le_len _ _ _ _ Hr) as Hq1.
     destruct (scalar_cast_u32_usize table_idx) as [j [Hcast Hj]].
     rewrite Hcast. cbn [bind].
-    destruct (j s>= alloc_vec_Vec_len env.(env_Env_table_types)); [sec_done|].
+    destruct (j s>= alloc_vec_Vec_len env.(module_Env_table_types)); [sec_done|].
     destruct (decode_const_expr_ok data q1 env Types_ValueType_I32)
       as [r1 [Hr1 Hce]].
     rewrite Hr1. cbn [bind].
@@ -1967,10 +1967,10 @@ Proof.
     rewrite branch_ok. cbn [bind].
     destruct (Hfi _ _ (ltac:(reflexivity))) as [Hlt3 Hq3].
     pose proof (es_elements Henv) as Hel.
-    destruct (vec_push_ok env.(env_Env_elements)
-                {| env_Element_table_idx := table_idx;
-                   env_Element_offset := offset;
-                   env_Element_init := init |} (ltac:(fits))) as [v Hpush].
+    destruct (vec_push_ok env.(module_Env_elements)
+                {| module_Element_table_idx := table_idx;
+                   module_Element_offset := offset;
+                   module_Element_init := init |} (ltac:(fits))) as [v Hpush].
     rewrite Hpush. cbn [bind].
     assert (Hu1 : to_Z 1%u32 = 1) by reflexivity.
     pose proof (u32_bounds count).
@@ -2120,13 +2120,13 @@ Proof.
     destruct r4 as [ft|e]; [|sec_loop_err].
     rewrite branch_ok. cbn [bind].
     pose proof (Hft _ (ltac:(reflexivity))) as Hsmall.
-    destruct (vec_push_ok env.(env_Env_func_types) ft (ltac:(fits)))
+    destruct (vec_push_ok env.(module_Env_func_types) ft (ltac:(fits)))
       as [v Hpush]. rewrite Hpush. cbn [bind].
-    destruct (usize_add_ok env.(env_Env_num_imported_funcs) 1%usize
+    destruct (usize_add_ok env.(module_Env_num_imported_funcs) 1%usize
                 (ltac:(fits))) as [n [Hadd Hn]]. rewrite Hadd. cbn [bind].
-    destruct (vec_push_ok env.(env_Env_imports)
-                {| env_Import_module := modname; env_Import_name := name;
-                   env_Import_desc := Env_ImportDesc_Func idx |}
+    destruct (vec_push_ok env.(module_Env_imports)
+                {| module_Import_module := modname; module_Import_name := name;
+                   module_Import_desc := Module_ImportDesc_Func idx |}
                 (ltac:(fits))) as [v1 Hpush1]. rewrite Hpush1. cbn [bind].
     eexists. eexists. split; [reflexivity|]. intros q' Hc. injection Hc as <-.
     split; [lia|]. split; [lia|].
@@ -2136,12 +2136,12 @@ Proof.
     destruct r3 as [[tt1 p4]|e]; [|sec_loop_err].
     rewrite branch_ok. cbn [bind].
     destruct (decode_table_type_step _ _ _ _ Hr3) as [Hlt4 Hp4].
-    destruct (vec_push_ok env.(env_Env_table_types) tt1 (ltac:(fits)))
+    destruct (vec_push_ok env.(module_Env_table_types) tt1 (ltac:(fits)))
       as [v Hpush]. rewrite Hpush. cbn [bind].
     destruct (alloc_vec_Vec_len v s> limits_max_tables); [sec_done|].
-    destruct (vec_push_ok env.(env_Env_imports)
-                {| env_Import_module := modname; env_Import_name := name;
-                   env_Import_desc := Env_ImportDesc_Table tt1 |}
+    destruct (vec_push_ok env.(module_Env_imports)
+                {| module_Import_module := modname; module_Import_name := name;
+                   module_Import_desc := Module_ImportDesc_Table tt1 |}
                 (ltac:(fits))) as [v1 Hpush1]. rewrite Hpush1. cbn [bind].
     eexists. eexists. split; [reflexivity|]. intros q' Hc. injection Hc as <-.
     split; [lia|]. split; [lia|].
@@ -2151,12 +2151,12 @@ Proof.
     destruct r3 as [[mt p4]|e]; [|sec_loop_err].
     rewrite branch_ok. cbn [bind].
     destruct (decode_mem_type_step _ _ _ _ Hr3) as [Hlt4 Hp4].
-    destruct (vec_push_ok env.(env_Env_mem_types) mt (ltac:(fits)))
+    destruct (vec_push_ok env.(module_Env_mem_types) mt (ltac:(fits)))
       as [v Hpush]. rewrite Hpush. cbn [bind].
     destruct (alloc_vec_Vec_len v s> limits_max_memories); [sec_done|].
-    destruct (vec_push_ok env.(env_Env_imports)
-                {| env_Import_module := modname; env_Import_name := name;
-                   env_Import_desc := Env_ImportDesc_Memory mt |}
+    destruct (vec_push_ok env.(module_Env_imports)
+                {| module_Import_module := modname; module_Import_name := name;
+                   module_Import_desc := Module_ImportDesc_Memory mt |}
                 (ltac:(fits))) as [v1 Hpush1]. rewrite Hpush1. cbn [bind].
     eexists. eexists. split; [reflexivity|]. intros q' Hc. injection Hc as <-.
     split; [lia|]. split; [lia|].
@@ -2166,13 +2166,13 @@ Proof.
   destruct r3 as [[gt p4]|e]; [|sec_loop_err].
   rewrite branch_ok. cbn [bind].
   destruct (decode_global_type_step _ _ _ _ Hr3) as [Hlt4 Hp4].
-  destruct (vec_push_ok env.(env_Env_global_types) gt (ltac:(fits)))
+  destruct (vec_push_ok env.(module_Env_global_types) gt (ltac:(fits)))
     as [v Hpush]. rewrite Hpush. cbn [bind].
-  destruct (usize_add_ok env.(env_Env_num_imported_globals) 1%usize
+  destruct (usize_add_ok env.(module_Env_num_imported_globals) 1%usize
               (ltac:(fits))) as [n [Hadd Hn]]. rewrite Hadd. cbn [bind].
-  destruct (vec_push_ok env.(env_Env_imports)
-              {| env_Import_module := modname; env_Import_name := name;
-                 env_Import_desc := Env_ImportDesc_Global gt |}
+  destruct (vec_push_ok env.(module_Env_imports)
+              {| module_Import_module := modname; module_Import_name := name;
+                 module_Import_desc := Module_ImportDesc_Global gt |}
               (ltac:(fits))) as [v1 Hpush1]. rewrite Hpush1. cbn [bind].
   eexists. eexists. split; [reflexivity|]. intros q' Hc. injection Hc as <-.
   split; [lia|]. split; [lia|].
@@ -2261,19 +2261,19 @@ Definition module_hooks_total {V : Type} (inst : module_ModuleVisitor_t V) : Pro
     inst.(module_ModuleVisitor_t_on_custom_section) v c = Ok (r, v').
 
 Lemma nop_module_hooks_total :
-  module_hooks_total module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor.
+  module_hooks_total module_EmptyModuleVisitor_Insts_ItascaModuleModuleVisitor.
 Proof.
   unfold module_hooks_total,
-         module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor.
+         module_EmptyModuleVisitor_Insts_ItascaModuleModuleVisitor.
   intros v c. cbn [module_ModuleVisitor_t_on_custom_section].
-  unfold module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor_on_custom_section.
+  unfold module_EmptyModuleVisitor_Insts_ItascaModuleModuleVisitor_on_custom_section.
   eexists. eexists. reflexivity.
 Qed.
 
 (** Spec 5.5.16 up to the code section. The measure is the bytes left: a
     section header ends strictly after the position it was read at, so the
     cursor advances even for an empty section. *)
-Lemma decode_env_with_loop_ok :
+Lemma validate_env_with_loop_ok :
   forall V (inst : module_ModuleVisitor_t V) m data vis env q last_id,
   module_hooks_total inst ->
   dlen data - to_Z q <= Z.of_nat m ->
@@ -2281,13 +2281,13 @@ Lemma decode_env_with_loop_ok :
   to_Z q <= dlen data ->
   dlen data <= module_bytes ->
   exists r vis',
-    module_decode_env_with_loop inst data vis env q last_id = Ok (r, vis')
+    module_validate_env_with_loop inst data vis env q last_id = Ok (r, vis')
     /\ forall e q', r = Core_result_Result_Ok (e, q') ->
          to_Z q' <= dlen data /\ env_small e q'.
 Proof.
   intros V inst m. induction m as [|m IH];
     intros data vis env q last_id Hhooks Hmeas Henv Hq Hlen;
-    unfold module_decode_env_with_loop; rewrite loop_unfold; cbn beta iota;
+    unfold module_validate_env_with_loop; rewrite loop_unfold; cbn beta iota;
     destruct (q s>= slice_len data) eqn:Hge;
     [ eexists; eexists; split; [reflexivity|]; intros ? ? Hc;
       injection Hc as <- <-; split; [lia | exact Henv]
@@ -2344,40 +2344,40 @@ Qed.
 
 (** The bridges between a decoder and its `_with` form at the do-nothing
     consumer, the same pair [code_entry_nop] and [code_entry_nop_inv] are one
-    level down. The projection is the only content: [decode_env] is
-    [decode_env_with] at [tt] with the visitor state thrown away. *)
-Lemma decode_env_nop : forall data r,
-  module_decode_env_with module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor
+    level down. The projection is the only content: [validate_env] is
+    [validate_env_with] at [tt] with the visitor state thrown away. *)
+Lemma validate_env_nop : forall data r,
+  module_validate_env_with module_EmptyModuleVisitor_Insts_ItascaModuleModuleVisitor
     data tt = Ok (r, tt) ->
-  module_decode_env data = Ok r.
+  module_validate_env data = Ok r.
 Proof.
-  intros data r H. unfold module_decode_env. rewrite H. cbn [bind]. reflexivity.
+  intros data r H. unfold module_validate_env. rewrite H. cbn [bind]. reflexivity.
 Qed.
 
-Lemma decode_tail_nop : forall data pos env r,
-  module_decode_tail_with module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor
+Lemma validate_tail_nop : forall data pos env r,
+  module_validate_tail_with module_EmptyModuleVisitor_Insts_ItascaModuleModuleVisitor
     data pos env tt = Ok (r, tt) ->
-  module_decode_tail data pos env = Ok r.
+  module_validate_tail data pos env = Ok r.
 Proof.
-  intros data pos env r H. unfold module_decode_tail. rewrite H. cbn [bind].
+  intros data pos env r H. unfold module_validate_tail. rewrite H. cbn [bind].
   reflexivity.
 Qed.
 
-Lemma decode_env_with_ok : forall V (inst : module_ModuleVisitor_t V) vis data,
+Lemma validate_env_with_ok : forall V (inst : module_ModuleVisitor_t V) vis data,
   module_hooks_total inst ->
   dlen data <= module_bytes ->
-  exists r vis', module_decode_env_with inst data vis = Ok (r, vis')
+  exists r vis', module_validate_env_with inst data vis = Ok (r, vis')
             /\ forall e q', r = Core_result_Result_Ok (e, q') ->
                  to_Z q' <= dlen data /\ env_small e q'.
 Proof.
-  intros V inst vis data Hhooks Hlen. unfold module_decode_env_with.
-  destruct env_Env_new as [env0|] eqn:Hnew; cbn [bind]; [|discriminate Hnew].
+  intros V inst vis data Hhooks Hlen. unfold module_validate_env_with.
+  destruct module_Env_new as [env0|] eqn:Hnew; cbn [bind]; [|discriminate Hnew].
   destruct (read_header_ok data) as [r Hr]. rewrite Hr. cbn [bind].
   destruct r as [p|e]; [|try_err_post].
   rewrite branch_ok. cbn [bind].
   pose proof (read_header_step _ _ Hr) as Hp.
   pose proof (usize_nonneg p).
-  destruct (decode_env_with_loop_ok V inst (Z.to_nat (dlen data)) data vis env0
+  destruct (validate_env_with_loop_ok V inst (Z.to_nat (dlen data)) data vis env0
               p 0%u8) as [r2 [vis2 [Hr2 Hpost]]].
   - exact Hhooks.
   - rewrite Z2Nat.id by (pose proof (usize_nonneg (slice_len data)); lia). lia.
@@ -2387,18 +2387,18 @@ Proof.
   - exists r2. exists vis2. split; [exact Hr2|]. exact Hpost.
 Qed.
 
-Corollary decode_env_ok : forall data,
+Corollary validate_env_ok : forall data,
   dlen data <= module_bytes ->
-  exists r, module_decode_env data = Ok r
+  exists r, module_validate_env data = Ok r
             /\ forall e q', r = Core_result_Result_Ok (e, q') ->
                  to_Z q' <= dlen data /\ env_small e q'.
 Proof.
   intros data Hlen.
-  destruct (decode_env_with_ok _
-              module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor tt data
+  destruct (validate_env_with_ok _
+              module_EmptyModuleVisitor_Insts_ItascaModuleModuleVisitor tt data
               nop_module_hooks_total Hlen) as [r [vis' [Hr Hpost]]].
   exists r. split; [|exact Hpost].
-  apply decode_env_nop. destruct vis'. exact Hr.
+  apply validate_env_nop. destruct vis'. exact Hr.
 Qed.
 
 (* ================================================================== *)
@@ -2408,14 +2408,14 @@ Qed.
 (** One code entry. Everything before the body is the same accounting as the
     rest of the file; the body itself is the one sub-slice the decoder takes,
     and [validate_body_no_panic] carries it from there. *)
-(** [validate_code_entry] is [validate_code_entry_with] at [NopVisitor], whose
+(** [validate_code_entry] is [validate_code_entry_with] at [EmptyOpVisitor], whose
     state is the unit, so a run of the one is a run of the other. Every proof
     below is about the generic function; these two carry it across. *)
 (** The frame hook, named on its own so the entry's totality proof does not
     destructure the whole conjunction. *)
-Lemma frame_hook_total : forall V (inst : visit_OpVisitor_t V) v ctx tidx bb ee,
+Lemma frame_hook_total : forall V (inst : code_OpVisitor_t V) v ctx tidx bb ee,
   hooks_total inst ->
-  exists r v', inst.(visit_OpVisitor_t_on_function_start) v ctx tidx bb ee
+  exists r v', inst.(code_OpVisitor_t_on_function_start) v ctx tidx bb ee
                = Ok (r, v').
 Proof.
   intros V inst v ctx tidx bb ee H. unfold hooks_total in H.
@@ -2424,7 +2424,7 @@ Proof.
 Qed.
 
 Lemma code_entry_nop : forall data pos env index r,
-  module_validate_code_entry_with visit_NopVisitor_Insts_ItascaVisitOpVisitor
+  module_validate_code_entry_with code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor
     data pos env index tt = Ok (r, tt) ->
   module_validate_code_entry data pos env index = Ok r.
 Proof.
@@ -2434,17 +2434,17 @@ Qed.
 
 Lemma code_entry_nop_inv : forall data pos env index r,
   module_validate_code_entry data pos env index = Ok r ->
-  module_validate_code_entry_with visit_NopVisitor_Insts_ItascaVisitOpVisitor
+  module_validate_code_entry_with code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor
     data pos env index tt = Ok (r, tt).
 Proof.
   intros data pos env index r H. unfold module_validate_code_entry in H.
   destruct (module_validate_code_entry_with
-              visit_NopVisitor_Insts_ItascaVisitOpVisitor data pos env index tt)
+              code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor data pos env index tt)
     as [[r0 v0]|] eqn:Hw; cbn [bind] in H; [|discriminate].
   injection H as <-. destruct v0. reflexivity.
 Qed.
 
-Lemma validate_code_entry_with_ok : forall V (inst : visit_OpVisitor_t V) vis
+Lemma validate_code_entry_with_ok : forall V (inst : code_OpVisitor_t V) vis
                                           data pos env index,
   hooks_total inst ->
   env_small env pos ->
@@ -2457,7 +2457,7 @@ Lemma validate_code_entry_with_ok : forall V (inst : visit_OpVisitor_t V) vis
 Proof.
   intros V inst vis data pos env index Hvt Henv Hpos Hlen.
   unfold module_validate_code_entry_with.
-  destruct (index s>= alloc_vec_Vec_len env.(env_Env_func_type_indices)) eqn:Hix;
+  destruct (index s>= alloc_vec_Vec_len env.(module_Env_func_type_indices)) eqn:Hix;
     [finish_post|].
   destruct (read_u32_leb_ok data pos) as [r Hr]. rewrite Hr. cbn [bind].
   destruct r as [[size p]|e]; [|try_err_post].
@@ -2482,19 +2482,19 @@ Proof.
   destruct (p1 s> end1) eqn:Hover;
     [finish_post|].
   apply scalar_gtb_false in Hover.
-  destruct (vec_index_ok env.(env_Env_func_type_indices) index Hix)
+  destruct (vec_index_ok env.(module_Env_func_type_indices) index Hix)
     as [tidx Hidx].
   rewrite Hidx. cbn [bind].
   destruct (scalar_cast_u32_usize tidx) as [t [Hcast2 Ht]].
   rewrite Hcast2. cbn [bind].
-  destruct (t s>= alloc_vec_Vec_len env.(env_Env_types)) eqn:Hty;
+  destruct (t s>= alloc_vec_Vec_len env.(module_Env_types)) eqn:Hty;
     [finish_post|].
-  destruct (vec_index_ok env.(env_Env_types) t Hty) as [ft Hft].
+  destruct (vec_index_ok env.(module_Env_types) t Hty) as [ft Hft].
   rewrite Hft. cbn [bind].
   assert (Hsmall : ft_small ft).
   { pose proof (es_params Henv) as Hall.
     rewrite vec_index_spec in Hft.
-    destruct (List.nth_error (vec_list env.(env_Env_types))
+    destruct (List.nth_error (vec_list env.(module_Env_types))
                 (Z.to_nat (to_Z t))) as [x|] eqn:Hnth; [|discriminate].
     injection Hft as <-.
     rewrite List.Forall_forall in Hall. apply Hall.
@@ -2510,16 +2510,16 @@ Proof.
   rewrite Hres. cbn [bind].
   (* the frame hook returns, since the consumer's hooks do *)
   destruct (frame_hook_total V inst vis
-              {| opiter_Context_locals := locals;
-                 opiter_Context_results := res |} tidx p1 end1 Hvt) as [rf [vf Hhk]].
+              {| code_Context_locals := locals;
+                 code_Context_results := res |} tidx p1 end1 Hvt) as [rf [vf Hhk]].
   rewrite Hhk. cbn [bind].
   destruct rf as [uf|ef]; cbn beta iota; [|finish_post].
   destruct (slice_range_ok data p1 end1 (ltac:(lia)) (ltac:(rewrite <- slice_len_spec; lia)))
     as [body [Hbody _]].
   rewrite Hbody. cbn [bind].
   destruct (validate_body_with_no_panic V inst vf body env
-              {| opiter_Context_locals := locals;
-                 opiter_Context_results := res |} Hvt) as [rb Hrb].
+              {| code_Context_locals := locals;
+                 code_Context_results := res |} Hvt) as [rb Hrb].
   rewrite Hrb. cbn [bind].
   destruct rb as [rb0 vb]. destruct rb0 as [u|eb].
   - eexists. eexists. split; [reflexivity|]. intros q' Hc.
@@ -2539,7 +2539,7 @@ Corollary validate_code_entry_ok : forall data pos env index,
 Proof.
   intros data pos env index Henv Hpos Hlen.
   destruct (validate_code_entry_with_ok _
-              visit_NopVisitor_Insts_ItascaVisitOpVisitor tt data pos env index
+              code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor tt data pos env index
               nop_hooks_total Henv Hpos Hlen) as [r [vis' [Hw Hq]]].
   destruct vis'. exists r. split; [apply code_entry_nop; exact Hw | exact Hq].
 Qed.
@@ -2583,7 +2583,7 @@ Qed.
     establishes the guards before it fires the hook. The one place the
     [hooks_total] pattern does not copy verbatim from [OpIter_Visit]. *)
 Definition code_hooks_total {V : Type} (inst : module_CodeVisitor_t V)
-                            (data : slice u8) (env : env_Env_t) : Prop :=
+                            (data : slice u8) (env : module_Env_t) : Prop :=
   (forall v e, exists r v',
      inst.(module_CodeVisitor_t_on_need_bytes) v e = Ok (r, v'))
   /\ (forall v index pos contents fin,
@@ -2617,7 +2617,7 @@ Qed.
 Lemma validate_code_entries_with_loop_ok :
   forall V (inst : module_CodeVisitor_t V) m data env vis q i,
   code_hooks_total inst data env ->
-  Z.of_nat (List.length (vec_list env.(env_Env_func_type_indices))) - to_Z i
+  Z.of_nat (List.length (vec_list env.(module_Env_func_type_indices))) - to_Z i
     <= Z.of_nat m ->
   env_small env q ->
   to_Z q <= dlen data ->
@@ -2631,7 +2631,7 @@ Proof.
     intros data env vis q i [Hneed Hentry] Hmeas Henv Hq Hlen;
     unfold module_validate_code_entries_with_loop; rewrite loop_unfold;
     cbn beta iota;
-    destruct (i s>= alloc_vec_Vec_len env.(env_Env_func_type_indices)) eqn:Hge;
+    destruct (i s>= alloc_vec_Vec_len env.(module_Env_func_type_indices)) eqn:Hge;
     [ eexists; eexists; split; [reflexivity|]; intros ? Hc; injection Hc as <-;
       split; lia
     | | eexists; eexists; split; [reflexivity|]; intros ? Hc; injection Hc as <-;
@@ -2663,7 +2663,7 @@ Proof.
     destruct re as [u3|ee]; [|try_err_post].
     rewrite branch_ok. cbn [bind].
     destruct (usize_add_1_ok i (ltac:(pose proof (usize_le_max
-                (alloc_vec_Vec_len env.(env_Env_func_type_indices)));
+                (alloc_vec_Vec_len env.(module_Env_func_type_indices)));
                 rewrite vec_len_spec in *; lia))) as [i2 [Hadd Hi2]].
     rewrite Hadd. cbn [bind].
     destruct (IH data env vis3 fin i2) as [r2 [vis4 [Hr2 Hpost2]]].
@@ -2682,7 +2682,7 @@ Lemma no_code_section_ok : forall env,
 Proof.
   intros env. unfold module_no_code_section.
   rewrite vec_is_empty_spec. cbn [bind].
-  destruct (match vec_list env.(env_Env_func_type_indices) with
+  destruct (match vec_list env.(module_Env_func_type_indices) with
             | [] => true | _ => false end);
     (eexists; split; [reflexivity|]; intros cs Hc);
     [injection Hc as <-; reflexivity | discriminate].
@@ -2723,7 +2723,7 @@ Proof.
   pose proof (read_u32_leb_le_len _ _ _ _ Hr1) as Hple.
   destruct (scalar_cast_u32_usize count) as [n [Hcast Hn]].
   rewrite Hcast. cbn [bind].
-  destruct (n s<> alloc_vec_Vec_len env.(env_Env_func_type_indices));
+  destruct (n s<> alloc_vec_Vec_len env.(module_Env_func_type_indices));
     [eexists; split; [reflexivity|]; intros ? Hc; discriminate|].
   eexists. split; [reflexivity|]. intros cs Hc. injection Hc as <-.
   cbn. lia.
@@ -2761,7 +2761,7 @@ Proof.
     destruct (Hpost cs (ltac:(reflexivity))) as [Hpe [Hple [Hpen Hend]]].
     unfold module_validate_code_entries_with.
     destruct (validate_code_entries_with_loop_ok V inst
-                (List.length (vec_list env.(env_Env_func_type_indices)))
+                (List.length (vec_list env.(module_Env_func_type_indices)))
                 data env vis1 cs.(module_CodeSection_entries) 0%usize)
       as [r2 [vis2 [Hr2 Hpost2]]].
     + exact Hhooks.
@@ -2830,7 +2830,7 @@ Proof.
   pose proof (read_u32_leb_le_len _ _ _ _ Hr) as Hp1.
   destruct (scalar_cast_u32_usize midx) as [j [Hcast Hj]].
   rewrite Hcast. cbn [bind].
-  destruct (j s>= alloc_vec_Vec_len env.(env_Env_mem_types));
+  destruct (j s>= alloc_vec_Vec_len env.(module_Env_mem_types));
     [eexists; split; [reflexivity|]; intros ? ? Hc; discriminate|].
   destruct (decode_const_expr_ok data p1 env Types_ValueType_I32)
     as [r1 [Hr1 Hce]].
@@ -2929,8 +2929,8 @@ Proof.
 Qed.
 
 (** Spec 5.5.16 from the code section on: the data section, and custom
-    sections around it. Same measure as [decode_env_loop]. *)
-Lemma decode_tail_with_loop_ok :
+    sections around it. Same measure as [validate_env_loop]. *)
+Lemma validate_tail_with_loop_ok :
   forall V (inst : module_ModuleVisitor_t V) m data env vis segments q seen,
   module_hooks_total inst ->
   dlen data - to_Z q <= Z.of_nat m ->
@@ -2938,11 +2938,11 @@ Lemma decode_tail_with_loop_ok :
   to_Z q <= dlen data ->
   dlen data <= module_bytes ->
   exists r vis',
-    module_decode_tail_with_loop inst data env vis segments q seen = Ok (r, vis').
+    module_validate_tail_with_loop inst data env vis segments q seen = Ok (r, vis').
 Proof.
   intros V inst m. induction m as [|m IH];
     intros data env vis segments q seen Hhooks Hmeas Hacc Hq Hlen;
-    unfold module_decode_tail_with_loop; rewrite loop_unfold; cbn beta iota;
+    unfold module_validate_tail_with_loop; rewrite loop_unfold; cbn beta iota;
     destruct (q s>= slice_len data) eqn:Hge;
     [eexists; eexists; reflexivity| |eexists; eexists; reflexivity|].
   - exfalso. apply scalar_geb_false_lt in Hge. cbn in Hmeas. lia.
@@ -2986,17 +2986,17 @@ Proof.
       | lia | lia | exact Hlen].
 Qed.
 
-Lemma decode_tail_with_ok :
+Lemma validate_tail_with_ok :
   forall V (inst : module_ModuleVisitor_t V) data pos env vis,
   module_hooks_total inst ->
   to_Z pos <= dlen data ->
   dlen data <= module_bytes ->
-  exists r vis', module_decode_tail_with inst data pos env vis = Ok (r, vis').
+  exists r vis', module_validate_tail_with inst data pos env vis = Ok (r, vis').
 Proof.
   intros V inst data pos env vis Hhooks Hpos Hlen.
-  unfold module_decode_tail_with.
+  unfold module_validate_tail_with.
   pose proof (usize_nonneg pos).
-  apply (decode_tail_with_loop_ok V inst (Z.to_nat (dlen data)) data env vis
+  apply (validate_tail_with_loop_ok V inst (Z.to_nat (dlen data)) data env vis
            (alloc_vec_Vec_new module_Data_t) pos false).
   - exact Hhooks.
   - rewrite Z2Nat.id by (pose proof (usize_nonneg (slice_len data)); lia). lia.
@@ -3005,16 +3005,16 @@ Proof.
   - exact Hlen.
 Qed.
 
-Corollary decode_tail_ok : forall data pos env,
+Corollary validate_tail_ok : forall data pos env,
   to_Z pos <= dlen data ->
   dlen data <= module_bytes ->
-  exists r, module_decode_tail data pos env = Ok r.
+  exists r, module_validate_tail data pos env = Ok r.
 Proof.
   intros data pos env Hpos Hlen.
-  destruct (decode_tail_with_ok _
-              module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor data pos
+  destruct (validate_tail_with_ok _
+              module_EmptyModuleVisitor_Insts_ItascaModuleModuleVisitor data pos
               env tt nop_module_hooks_total Hpos Hlen) as [r [vis' Hr]].
-  exists r. apply decode_tail_nop. destruct vis'. exact Hr.
+  exists r. apply validate_tail_nop. destruct vis'. exact Hr.
 Qed.
 
 (* ================================================================== *)
@@ -3031,7 +3031,7 @@ Proof.
   destruct (slice_len data s> limits_max_module_bytes) eqn:Hbig;
     [eexists; reflexivity|].
   apply scalar_gtb_false in Hbig. rewrite max_module_bytes_val in Hbig.
-  destruct (decode_env_ok data Hbig) as [r [Hr Hpost]]. rewrite Hr. cbn [bind].
+  destruct (validate_env_ok data Hbig) as [r [Hr Hpost]]. rewrite Hr. cbn [bind].
   destruct r as [[env code_pos]|e]; [|try_err].
   rewrite branch_ok. cbn [bind].
   destruct (Hpost _ _ (ltac:(reflexivity))) as [Hcp Henv].
@@ -3040,7 +3040,7 @@ Proof.
   destruct r1 as [tail_pos|e]; [|try_err].
   rewrite branch_ok. cbn [bind].
   destruct (Hvc _ (ltac:(reflexivity))) as [_ Htp].
-  destruct (decode_tail_ok data tail_pos env Htp Hbig) as [r2 Hr2].
+  destruct (validate_tail_ok data tail_pos env Htp Hbig) as [r2 Hr2].
   rewrite Hr2. cbn [bind].
   destruct r2 as [tail|e]; [|try_err].
   rewrite branch_ok. cbn [bind]. eexists. reflexivity.

@@ -62,10 +62,10 @@ Proof.
 Qed.
 
 Lemma visit_wrap_transfer : forall T V W
-  (m : result (core_result_Result_t T error_OpError_t * opiter_OpIterState_t))
-  (k : opiter_OpIterState_t -> T ->
+  (m : result (core_result_Result_t T error_OpError_t * code_OpIterState_t))
+  (k : code_OpIterState_t -> T ->
        result ((core_result_Result_t unit error_VisitError_t) * V))
-  (k' : opiter_OpIterState_t -> T ->
+  (k' : code_OpIterState_t -> T ->
         result ((core_result_Result_t unit error_VisitError_t) * W))
   (v : V) (w : W) st' v',
   visit_wrap m k v = Ok (Core_result_Result_Ok tt, st', v') ->
@@ -79,10 +79,10 @@ Qed.
 
 Lemma visit_wrap2_transfer : forall T1 T2 V W
   (m : result (core_result_Result_t (T1 * T2) error_OpError_t
-               * opiter_OpIterState_t))
-  (k : opiter_OpIterState_t -> T1 -> T2 ->
+               * code_OpIterState_t))
+  (k : code_OpIterState_t -> T1 -> T2 ->
        result ((core_result_Result_t unit error_VisitError_t) * V))
-  (k' : opiter_OpIterState_t -> T1 -> T2 ->
+  (k' : code_OpIterState_t -> T1 -> T2 ->
         result ((core_result_Result_t unit error_VisitError_t) * W))
   (v : V) (w : W) st' v',
   visit_wrap2 m k v = Ok (Core_result_Result_Ok tt, st', v') ->
@@ -103,37 +103,37 @@ Qed.
     it. The loop's own decisions are the label reader's, which is hook-free, so
     the same induction works one level down. *)
 Lemma read_table_labels_loop_transfer :
-  forall n V W (inst : visit_OpVisitor_t V) (inst' : visit_OpVisitor_t W)
+  forall n V W (inst : code_OpVisitor_t V) (inst' : code_OpVisitor_t W)
          st data count v w expect i res st' v',
   hooks_accept inst' ->
   to_Z i + Z.of_nat n = to_Z count ->
-  opiter_read_table_labels_loop inst st data count v expect i
+  code_read_table_labels_loop inst st data count v expect i
     = Ok (Core_result_Result_Ok res, st', v') ->
-  exists w', opiter_read_table_labels_loop inst' st data count w expect i
+  exists w', code_read_table_labels_loop inst' st data count w expect i
              = Ok (Core_result_Result_Ok res, st', w').
 Proof.
   induction n as [|n IH];
     intros V W inst inst' st data count v w expect i res st' v' Hacc Hn H;
-    unfold opiter_read_table_labels_loop in H |- *;
+    unfold code_read_table_labels_loop in H |- *;
     rewrite loop_unfold in H; rewrite loop_unfold;
     cbn beta iota in H |- *; destruct (i s= count) eqn:Heq.
   - inversion H; subst. eauto.
   - exfalso. apply scalar_eqb_false in Heq. cbn in Hn. lia.
   - inversion H; subst. eauto.
-  - destruct (opiter_read_label st data) as [[r0 st1]|] eqn:Hrl;
+  - destruct (code_read_label st data) as [[r0 st1]|] eqn:Hrl;
       cbn [bind] in H |- *; [|discriminate].
     destruct r0 as [[d0 target]|e]; [|try_err_rw_in H; discriminate].
     rewrite branch_ok in H |- *. cbn [bind] in H |- *.
-    destruct (inst.(visit_OpVisitor_t_on_br_table_label) v st1 d0)
+    destruct (inst.(code_OpVisitor_t_on_br_table_label) v st1 d0)
       as [[rh vh]|] eqn:Hhk; cbn [bind] in H; [|discriminate].
-    destruct rh as [uh|eh]; cbn [opiter_visit bind] in H;
+    destruct rh as [uh|eh]; cbn [code_visit bind] in H;
       [|try_err_rw_in H; discriminate].
     rewrite branch_ok in H. cbn [bind] in H.
     destruct (label_hook_accept W inst' w st1 d0 Hacc) as [wh Hwh].
-    rewrite Hwh. cbn [bind opiter_visit]. rewrite branch_ok. cbn [bind].
-    destruct (opiter_branch_target_bt target) as [bt|] eqn:Hbt;
+    rewrite Hwh. cbn [bind code_visit]. rewrite branch_ok. cbn [bind].
+    destruct (code_branch_target_bt target) as [bt|] eqn:Hbt;
       cbn [bind] in H |- *; [|discriminate].
-    destruct (opiter_merge_target expect bt) as [r1|] eqn:Hmt;
+    destruct (code_merge_target expect bt) as [r1|] eqn:Hmt;
       cbn [bind] in H |- *; [|discriminate].
     destruct r1 as [bt1|e1]; [|try_err_rw_in H; discriminate].
     rewrite branch_ok in H |- *. cbn [bind] in H |- *.
@@ -147,16 +147,16 @@ Proof.
 Qed.
 
 Lemma read_table_labels_transfer :
-  forall V W (inst : visit_OpVisitor_t V) (inst' : visit_OpVisitor_t W)
+  forall V W (inst : code_OpVisitor_t V) (inst' : code_OpVisitor_t W)
          st data count v w res st' v',
   hooks_accept inst' ->
-  opiter_read_table_labels inst st data count v
+  code_read_table_labels inst st data count v
     = Ok (Core_result_Result_Ok res, st', v') ->
-  exists w', opiter_read_table_labels inst' st data count w
+  exists w', code_read_table_labels inst' st data count w
              = Ok (Core_result_Result_Ok res, st', w').
 Proof.
   intros V W inst inst' st data count v w res st' v' Hacc H.
-  unfold opiter_read_table_labels in H |- *.
+  unfold code_read_table_labels in H |- *.
   apply (read_table_labels_loop_transfer (Z.to_nat (to_Z count)) V W inst inst'
            st data count v w None 0%u32 res st' v' Hacc); [|exact H].
   assert (H0 : to_Z 0%u32 = 0) by reflexivity. rewrite H0.
@@ -164,48 +164,48 @@ Proof.
 Qed.
 
 Lemma read_br_table_transfer :
-  forall V W (inst : visit_OpVisitor_t V) (inst' : visit_OpVisitor_t W)
+  forall V W (inst : code_OpVisitor_t V) (inst' : code_OpVisitor_t W)
          st data v w res st' v',
   hooks_accept inst' ->
-  opiter_read_br_table inst st data v
+  code_read_br_table inst st data v
     = Ok (Core_result_Result_Ok res, st', v') ->
-  exists w', opiter_read_br_table inst' st data w
+  exists w', code_read_br_table inst' st data w
              = Ok (Core_result_Result_Ok res, st', w').
 Proof.
   intros V W inst inst' st data v w res st' v' Hacc H.
-  unfold opiter_read_br_table in H |- *.
-  destruct (reader_read_u32_leb data st.(opiter_OpIterState_pos)) as [r0|]
+  unfold code_read_br_table in H |- *.
+  destruct (reader_read_u32_leb data st.(code_OpIterState_pos)) as [r0|]
     eqn:Hleb; cbn [bind] in H |- *; [|discriminate].
   destruct r0 as [[count p1]|e0]; [|try_err_rw_in H; discriminate].
   rewrite branch_ok in H |- *. cbn [bind] in H |- *.
-  destruct (opiter_read_table_labels inst _ data count v) as [[[r1 st1] v1]|]
+  destruct (code_read_table_labels inst _ data count v) as [[[r1 st1] v1]|]
     eqn:Htl; cbn [bind] in H; [|discriminate].
   destruct r1 as [common|e1]; [|try_err_rw_in H; discriminate].
   rewrite branch_ok in H. cbn [bind] in H.
   destruct (read_table_labels_transfer V W inst inst' _ data count v w common
               st1 v1 Hacc Htl) as [w1 Hw1].
   rewrite Hw1. cbn [bind]. rewrite branch_ok. cbn [bind].
-  destruct (opiter_read_label st1 data) as [[r2 st2]|] eqn:Hrl;
+  destruct (code_read_label st1 data) as [[r2 st2]|] eqn:Hrl;
     cbn [bind] in H |- *; [|discriminate].
   destruct r2 as [[dflt target]|e2]; [|try_err_rw_in H; discriminate].
   rewrite branch_ok in H |- *. cbn [bind] in H |- *.
-  destruct (opiter_branch_target_bt target) as [bt|] eqn:Hbt;
+  destruct (code_branch_target_bt target) as [bt|] eqn:Hbt;
     cbn [bind] in H |- *; [|discriminate].
-  destruct (opiter_merge_target common bt) as [r3|] eqn:Hmt;
+  destruct (code_merge_target common bt) as [r3|] eqn:Hmt;
     cbn [bind] in H |- *; [|discriminate].
   destruct r3 as [bt1|e3]; [|try_err_rw_in H; discriminate].
   rewrite branch_ok in H |- *. cbn [bind] in H |- *.
-  destruct (opiter_pop_with_type st2 Types_ValueType_I32) as [[r4 st3]|]
+  destruct (code_pop_with_type st2 Types_ValueType_I32) as [[r4 st3]|]
     eqn:Hpop; cbn [bind] in H |- *; [|discriminate].
   destruct r4 as [u4|e4]; [|try_err_rw_in H; discriminate].
   rewrite branch_ok in H |- *. cbn [bind] in H |- *.
-  destruct (opiter_block_results bt1) as [types|] eqn:Hbr;
+  destruct (code_block_results bt1) as [types|] eqn:Hbr;
     cbn [bind] in H |- *; [|discriminate].
-  destruct (opiter_pop_types st3 (alloc_vec_Vec_deref types)) as [[r5 st4]|]
+  destruct (code_pop_types st3 (alloc_vec_Vec_deref types)) as [[r5 st4]|]
     eqn:Hpt; cbn [bind] in H |- *; [|discriminate].
   destruct r5 as [u5|e5]; [|try_err_rw_in H; discriminate].
   rewrite branch_ok in H |- *. cbn [bind] in H |- *.
-  destruct (opiter_mark_unreachable st4) as [st5|] eqn:Hmu;
+  destruct (code_mark_unreachable st4) as [st5|] eqn:Hmu;
     cbn [bind] in H |- *; [|discriminate].
   inversion H; subst. eauto.
 Qed.
@@ -218,22 +218,22 @@ Qed.
     already say a fan-out inherits acceptance from the table it dispatches
     through, so both are one branch shape each. *)
 Lemma step_numeric_transfer :
-  forall V W (inst : visit_OpVisitor_t V) (inst' : visit_OpVisitor_t W)
+  forall V W (inst : code_OpVisitor_t V) (inst' : code_OpVisitor_t W)
          st opcode v w st' v',
   hooks_accept inst' ->
-  opiter_step_numeric inst st opcode v
+  code_step_numeric inst st opcode v
     = Ok (Core_result_Result_Ok tt, st', v') ->
-  exists w', opiter_step_numeric inst' st opcode w
+  exists w', code_step_numeric inst' st opcode w
              = Ok (Core_result_Result_Ok tt, st', w').
 Proof.
   intros V W inst inst' st opcode v w st' v' Hacc H.
-  unfold opiter_step_numeric in H |- *.
-  destruct (opiter_convert_types opcode) as [o|] eqn:Hc;
+  unfold code_step_numeric in H |- *.
+  destruct (code_convert_types opcode) as [o|] eqn:Hc;
     cbn [bind] in H |- *; [|discriminate].
   destruct o as [[from to]|].
   { eapply (visit_wrap_transfer _ _ _ _ _ _ _ _ _ _ H).
     intros. apply visit_numeric_accept. exact Hacc. }
-  destruct (opiter_binary_types opcode) as [o1|] eqn:Hb;
+  destruct (code_binary_types opcode) as [o1|] eqn:Hb;
     cbn [bind] in H |- *; [|discriminate].
   destruct o1 as [[ty rty]|]; [|discriminate].
   eapply (visit_wrap_transfer _ _ _ _ _ _ _ _ _ _ H).
@@ -252,16 +252,16 @@ Local Ltac hook_ok Hacc :=
           eauto ].
 
 Lemma step_memory_transfer :
-  forall V W (inst : visit_OpVisitor_t V) (inst' : visit_OpVisitor_t W)
+  forall V W (inst : code_OpVisitor_t V) (inst' : code_OpVisitor_t W)
          st data env opcode v w st' v',
   hooks_accept inst' ->
-  opiter_step_memory inst st data env opcode v
+  code_step_memory inst st data env opcode v
     = Ok (Core_result_Result_Ok tt, st', v') ->
-  exists w', opiter_step_memory inst' st data env opcode w
+  exists w', code_step_memory inst' st data env opcode w
              = Ok (Core_result_Result_Ok tt, st', w').
 Proof.
   intros V W inst inst' st data env opcode v w st' v' Hacc H.
-  unfold opiter_step_memory in H |- *.
+  unfold code_step_memory in H |- *.
   repeat (match goal with
           | |- context [ if ?c then _ else _ ] => destruct c
           end;
@@ -277,16 +277,16 @@ Local Ltac xfer H Hacc :=
         | eapply (visit_wrap2_transfer _ _ _ _ _ _ _ _ _ _ _ H); hook_ok Hacc ].
 
 Lemma step_transfer :
-  forall V W (inst : visit_OpVisitor_t V) (inst' : visit_OpVisitor_t W)
+  forall V W (inst : code_OpVisitor_t V) (inst' : code_OpVisitor_t W)
          st data env ctx opcode v w st' v',
   hooks_accept inst' ->
-  opiter_step inst st data env ctx opcode v
+  code_step inst st data env ctx opcode v
     = Ok (Core_result_Result_Ok tt, st', v') ->
-  exists w', opiter_step inst' st data env ctx opcode w
+  exists w', code_step inst' st data env ctx opcode w
              = Ok (Core_result_Result_Ok tt, st', w').
 Proof.
   intros V W inst inst' st data env ctx opcode v w st' v' Hacc H.
-  unfold opiter_step in H |- *.
+  unfold code_step in H |- *.
   do 15 (match goal with
          | |- context [ if ?c then _ else _ ] => destruct c
          end; [ xfer H Hacc | ]).
@@ -313,47 +313,47 @@ Qed.
 (** The measure is the bytes left, as it is for no-panic: [read_op] shortens it
     by one and no reader lengthens it. *)
 Lemma validate_body_loop_transfer :
-  forall m V W (inst : visit_OpVisitor_t V) (inst' : visit_OpVisitor_t W)
+  forall m V W (inst : code_OpVisitor_t V) (inst' : code_OpVisitor_t W)
          v w data env locals results st v',
   hooks_accept inst' ->
-  to_Z (slice_len data) - to_Z st.(opiter_OpIterState_pos) <= Z.of_nat m ->
-  opiter_validate_body_with_loop inst data env locals results v st
+  to_Z (slice_len data) - to_Z st.(code_OpIterState_pos) <= Z.of_nat m ->
+  code_validate_body_with_loop inst data env locals results v st
     = Ok (Core_result_Result_Ok tt, v') ->
-  exists w', opiter_validate_body_with_loop inst' data env locals results w st
+  exists w', code_validate_body_with_loop inst' data env locals results w st
              = Ok (Core_result_Result_Ok tt, w').
 Proof.
   induction m as [|m IH];
     intros V W inst inst' v w data env locals results st v' Hacc Hmeas H;
-    unfold opiter_validate_body_with_loop in H |- *;
+    unfold code_validate_body_with_loop in H |- *;
     rewrite loop_unfold in H; rewrite loop_unfold;
     cbn beta iota in H |- *;
-    unfold opiter_control_stack_empty in H |- *;
+    unfold code_control_stack_empty in H |- *;
     rewrite vec_is_empty_spec in H |- *; cbn [bind] in H |- *;
-    destruct (vec_list st.(opiter_OpIterState_ctrls)) eqn:Hctrls.
-  1,3: destruct (st.(opiter_OpIterState_pos) s= slice_len data);
+    destruct (vec_list st.(code_OpIterState_ctrls)) eqn:Hctrls.
+  1,3: destruct (st.(code_OpIterState_pos) s= slice_len data);
        [inversion H; subst; eauto | discriminate].
   - (* the budget is spent, so [read_op] is past the end and the run rejected *)
     assert (Hend : Z.of_nat (List.length (vec_list data))
-                   <= to_Z st.(opiter_OpIterState_pos)).
+                   <= to_Z st.(code_OpIterState_pos)).
     { rewrite slice_len_spec in Hmeas. cbn in Hmeas. lia. }
     rewrite (read_op_err_at_end st data Hend) in H. cbn [bind] in H.
     try_err_rw_in H. discriminate.
-  - destruct (opiter_read_op st data) as [[r0 st2]|] eqn:Hro;
+  - destruct (code_read_op st data) as [[r0 st2]|] eqn:Hro;
       cbn [bind] in H |- *; [|discriminate].
     destruct r0 as [b|e]; [|try_err_rw_in H; discriminate].
     rewrite branch_ok in H |- *. cbn [bind] in H |- *.
-    destruct (opiter_step inst st2 data env
-                (mkopiter_Context_t locals results) b v) as [[[r1 st3] v4]|]
+    destruct (code_step inst st2 data env
+                (mkcode_Context_t locals results) b v) as [[[r1 st3] v4]|]
       eqn:Hstep; cbn [bind] in H; [|discriminate].
     destruct r1 as [u1|e1]; [|try_err_rw_in H; discriminate].
     destruct u1. rewrite branch_ok in H. cbn [bind] in H.
     destruct (step_transfer V W inst inst' st2 data env
-                (mkopiter_Context_t locals results) b v w st3 v4 Hacc Hstep)
+                (mkcode_Context_t locals results) b v w st3 v4 Hacc Hstep)
       as [w4 Hw4].
     rewrite Hw4. cbn [bind]. rewrite branch_ok. cbn [bind].
     pose proof (read_op_advance st data b st2 Hro) as Hadv.
     pose proof (step_mono V inst v st2 data env
-                  (mkopiter_Context_t locals results) b _ st3 v4 Hstep) as Hmono.
+                  (mkcode_Context_t locals results) b _ st3 v4 Hstep) as Hmono.
     exact (IH V W inst inst' v4 w4 data env locals results st3 v' Hacc
              (ltac:(cbn in Hmeas; lia)) H).
 Qed.
@@ -362,24 +362,24 @@ Qed.
     hooks accept. The two corollaries below are this at the do-nothing consumer,
     one on each side. *)
 Theorem validate_body_with_transfer :
-  forall V W (inst : visit_OpVisitor_t V) (inst' : visit_OpVisitor_t W)
+  forall V W (inst : code_OpVisitor_t V) (inst' : code_OpVisitor_t W)
          data env ctx v w v',
   hooks_accept inst' ->
-  opiter_validate_body_with inst data env ctx v
+  code_validate_body_with inst data env ctx v
     = Ok (Core_result_Result_Ok tt, v') ->
-  exists w', opiter_validate_body_with inst' data env ctx w
+  exists w', code_validate_body_with inst' data env ctx w
              = Ok (Core_result_Result_Ok tt, w').
 Proof.
   intros V W inst inst' data env ctx v w v' Hacc H.
-  unfold opiter_validate_body_with in H |- *.
+  unfold code_validate_body_with in H |- *.
   destruct (slice_len data s> limits_max_function_bytes); [discriminate|].
   rewrite vec_deref_spec in H |- *.
-  destruct (opiter_start_function ctx.(opiter_Context_results)) as [st|]
+  destruct (code_start_function ctx.(code_Context_results)) as [st|]
     eqn:Hsf; cbn [bind] in H |- *; [|discriminate].
   pose proof (start_function_pos _ st Hsf) as Hpos.
   apply (validate_body_loop_transfer (Z.to_nat (to_Z (slice_len data)))
-           V W inst inst' v w data env ctx.(opiter_Context_locals)
-           ctx.(opiter_Context_results) st v' Hacc); [|exact H].
+           V W inst inst' v w data env ctx.(code_Context_locals)
+           ctx.(code_Context_results) st v' Hacc); [|exact H].
   rewrite Hpos. rewrite Z2Nat.id by apply usize_nonneg. lia.
 Qed.
 
@@ -387,30 +387,30 @@ Qed.
     [validate_body] would have accepted the same bytes. This is what turns a
     compiler's own run into the verdict the module walk asks it for. *)
 Corollary validate_body_driven :
-  forall V (inst : visit_OpVisitor_t V) data env ctx v v',
-  opiter_validate_body_with inst data env ctx v
+  forall V (inst : code_OpVisitor_t V) data env ctx v v',
+  code_validate_body_with inst data env ctx v
     = Ok (Core_result_Result_Ok tt, v') ->
-  opiter_validate_body data env ctx = Ok (Core_result_Result_Ok tt).
+  code_validate_body data env ctx = Ok (Core_result_Result_Ok tt).
 Proof.
   intros V inst data env ctx v v' H.
-  destruct (validate_body_with_transfer V visit_NopVisitor_t inst
-              visit_NopVisitor_Insts_ItascaVisitOpVisitor data env ctx v tt v'
+  destruct (validate_body_with_transfer V code_EmptyOpVisitor_t inst
+              code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor data env ctx v tt v'
               nop_hooks_accept H) as [w' Hw].
-  unfold opiter_validate_body. rewrite Hw. cbn [bind]. reflexivity.
+  unfold code_validate_body. rewrite Hw. cbn [bind]. reflexivity.
 Qed.
 
 (** And the converse, which completeness needs: a body [validate_body] accepts
     is one the consumer's own run accepts too, provided its hooks do not decline. *)
 Corollary validate_body_accepts :
-  forall V (inst : visit_OpVisitor_t V) data env ctx v,
+  forall V (inst : code_OpVisitor_t V) data env ctx v,
   hooks_accept inst ->
-  opiter_validate_body data env ctx = Ok (Core_result_Result_Ok tt) ->
-  exists v', opiter_validate_body_with inst data env ctx v
+  code_validate_body data env ctx = Ok (Core_result_Result_Ok tt) ->
+  exists v', code_validate_body_with inst data env ctx v
              = Ok (Core_result_Result_Ok tt, v').
 Proof.
   intros V inst data env ctx v Hacc H.
-  apply (validate_body_with_transfer visit_NopVisitor_t V
-           visit_NopVisitor_Insts_ItascaVisitOpVisitor inst data env ctx tt v
+  apply (validate_body_with_transfer code_EmptyOpVisitor_t V
+           code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor inst data env ctx tt v
            tt Hacc).
   exact (validate_body_nop data env ctx _ H).
 Qed.

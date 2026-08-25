@@ -1752,7 +1752,7 @@ fn test_validate_code_entry_matches_validate_code() {
     ]));
     let bytes = b.build();
 
-    let (env, code_pos) = itasca::module::decode_env(&bytes).unwrap();
+    let (env, code_pos) = itasca::module::validate_env(&bytes).unwrap();
     assert_eq!(env.func_type_indices.len(), 2);
 
     // Skip the code section's header and entry count by hand, then drive the
@@ -1768,7 +1768,7 @@ fn test_validate_code_entry_matches_validate_code() {
 
     // The same position validate_code would have stopped at.
     assert_eq!(pos, itasca::module::validate_code(&bytes, code_pos, &env).unwrap());
-    assert!(itasca::module::decode_tail(&bytes, pos, &env).unwrap().data.is_empty());
+    assert!(itasca::module::validate_tail(&bytes, pos, &env).unwrap().data.is_empty());
 }
 
 #[test]
@@ -1877,7 +1877,7 @@ fn test_custom_sections_are_reported_with_their_ranges() {
 
     // No code section, so the environment ran to the end and saw all three.
     let mut seen = Customs::default();
-    itasca::module::decode_env_with(&bytes, &mut seen).unwrap();
+    itasca::module::validate_env_with(&bytes, &mut seen).unwrap();
     let names: Vec<&[u8]> = seen.0.iter().map(|c| custom_name(&bytes, c)).collect();
     assert_eq!(names, vec![&b"first"[..], &b""[..], &b"last"[..]]);
 
@@ -1902,7 +1902,7 @@ fn test_custom_sections_are_split_across_the_code_section() {
     let bytes = b.build();
 
     let mut seen = Customs::default();
-    let (env, code_pos) = itasca::module::decode_env_with(&bytes, &mut seen).unwrap();
+    let (env, code_pos) = itasca::module::validate_env_with(&bytes, &mut seen).unwrap();
     assert_eq!(
         seen.0.iter().map(|c| custom_name(&bytes, c)).collect::<Vec<_>>(),
         vec![&b"before.code"[..]]
@@ -1914,7 +1914,7 @@ fn test_custom_sections_are_split_across_the_code_section() {
         .end;
 
     // Carrying on with the same visitor gives the module's customs in order.
-    itasca::module::decode_tail_with(&bytes, tail_pos, &env, &mut seen).unwrap();
+    itasca::module::validate_tail_with(&bytes, tail_pos, &env, &mut seen).unwrap();
     assert_eq!(
         seen.0.iter().map(|c| custom_name(&bytes, c)).collect::<Vec<_>>(),
         vec![&b"before.code"[..], &b"after.code"[..]]
@@ -1926,7 +1926,7 @@ fn test_custom_sections_are_split_across_the_code_section() {
     // header and its positions are into the region.
     let region = &bytes[tail_pos..];
     let mut piece = Customs::default();
-    itasca::module::decode_tail_with(region, 0, &env, &mut piece).unwrap();
+    itasca::module::validate_tail_with(region, 0, &env, &mut piece).unwrap();
     assert_eq!(
         piece.0.iter().map(|c| custom_name(region, c)).collect::<Vec<_>>(),
         vec![&b"after.code"[..]]
@@ -1956,7 +1956,7 @@ fn test_a_declining_module_consumer_stops_the_decode() {
     // The module itself is fine.
     assert!(itasca::validate_module(&bytes).is_ok());
     assert_eq!(
-        itasca::module::decode_env_with(&bytes, &mut Refuser).unwrap_err(),
+        itasca::module::validate_env_with(&bytes, &mut Refuser).unwrap_err(),
         Error::Visitor(itasca::VisitError::OutOfMemory)
     );
 }
@@ -1967,7 +1967,7 @@ fn test_a_module_with_no_custom_sections_reports_none() {
     b.section(1, &type_section(&[(&[], &[])]));
     let bytes = b.build();
     let mut seen = Customs::default();
-    itasca::module::decode_env_with(&bytes, &mut seen).unwrap();
+    itasca::module::validate_env_with(&bytes, &mut seen).unwrap();
     assert!(seen.0.is_empty());
 }
 
@@ -1988,7 +1988,7 @@ impl itasca::module::CodeVisitor for Entries {
     fn on_code_entry(
         &mut self,
         data: &[u8],
-        env: &itasca::env::Env,
+        env: &itasca::module::Env,
         index: usize,
         entry_pos: usize,
         contents_start: usize,
@@ -2017,7 +2017,7 @@ fn test_validate_code_with_agrees_with_validate_code() {
     );
     let bytes = b.build();
 
-    let (env, code_pos) = itasca::module::decode_env(&bytes).unwrap();
+    let (env, code_pos) = itasca::module::validate_env(&bytes).unwrap();
     let cs = itasca::module::code_section(&bytes, code_pos, &env)
         .unwrap()
         .unwrap();
@@ -2053,7 +2053,7 @@ fn test_a_declining_code_consumer_stops_the_walk() {
         fn on_code_entry(
             &mut self,
             _data: &[u8],
-            _env: &itasca::env::Env,
+            _env: &itasca::module::Env,
             _index: usize,
             _entry_pos: usize,
             _contents_start: usize,
@@ -2069,7 +2069,7 @@ fn test_a_declining_code_consumer_stops_the_walk() {
     b.section(10, &code_section(&[(&[], &[])]));
     let bytes = b.build();
 
-    let (env, code_pos) = itasca::module::decode_env(&bytes).unwrap();
+    let (env, code_pos) = itasca::module::validate_env(&bytes).unwrap();
     assert!(itasca::module::validate_code(&bytes, code_pos, &env).is_ok());
     assert_eq!(
         itasca::module::validate_code_with(&bytes, code_pos, &env, &mut Refuser)
@@ -2101,7 +2101,7 @@ impl itasca::module::CodeVisitor for Driver {
     fn on_code_entry(
         &mut self,
         data: &[u8],
-        env: &itasca::env::Env,
+        env: &itasca::module::Env,
         index: usize,
         entry_pos: usize,
         _contents_start: usize,
@@ -2150,7 +2150,7 @@ fn test_a_declining_driver_stops_the_module() {
         fn on_code_entry(
             &mut self,
             _data: &[u8],
-            _env: &itasca::env::Env,
+            _env: &itasca::module::Env,
             _index: usize,
             _entry_pos: usize,
             _contents_start: usize,

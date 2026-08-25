@@ -1,37 +1,37 @@
 //! Decode and validate a Wasm 1.0 module in a single pass.
 //!
-//! Three parts: the environment (`decode_env`, everything before the code
+//! Three parts: the environment (`validate_env`, everything before the code
 //! section), the code section (`validate_code`, one entry at a time), and the
-//! tail (`decode_tail`, the data segments). The code and the tail both read
-//! the environment; neither can see the other. There is no decode pass that
-//! runs first: every check happens as its section is decoded, which works
-//! because no check ever needs a section that comes later. A function body is
-//! the exception, handed to `validate_body` as a sub-slice, because
-//! `validate_body` is what decides the last byte is the terminating `end`.
-//! Aeneas cannot translate a struct that holds a borrow, so sections are
-//! delimited by an `end` position threaded alongside `pos` instead of a
-//! sub-slice; reads are only checked against that end rather than bounded by
-//! it, since `pos` only ever grows and a read past a section's end leaves
-//! `pos > end`, which the equality check at the section's close rejects.
+//! tail (`validate_tail`, the data segments). The code section and the tail
+//! both read the environment; neither can see the other. There's no separate
+//! decode pass: each part is checked as it's decoded, which works because no
+//! check ever needs a section that comes later. A function body is the
+//! exception -- it's handed to `validate_body` as its own sub-slice, since
+//! deciding where a body ends is `validate_body`'s job.
+//!
+//! Sections are delimited by an `end` position threaded alongside `pos`
+//! rather than by a sub-slice. Reads are checked against `end` rather than
+//! bounded by it: `pos` only ever grows, so a read that runs past a
+//! section's end leaves `pos > end`, and the equality check at the section's
+//! close rejects that.
 
 use alloc::vec::Vec;
 
-use crate::env::{Element, Env, Export, ExportDesc, Global, Import, ImportDesc};
 use crate::error::{Error, OpError};
 use crate::limits::{
-    validate_limits, Limits, MAX_CODE_HEADER_BYTES, MAX_LEB_BYTES, MAX_LOCALS, MAX_MEMORIES,
+    validate_limits, MAX_CODE_HEADER_BYTES, MAX_LEB_BYTES, MAX_LOCALS, MAX_MEMORIES,
     MAX_MEMORY_PAGES, MAX_MODULE_BYTES, MAX_RESULTS, MAX_TABLES, MAX_TABLE_ELEMS,
 };
-use crate::opiter::{
-    self, Context, OP_END, OP_F32_CONST, OP_F64_CONST, OP_GLOBAL_GET, OP_I32_CONST, OP_I64_CONST,
+use crate::code::{
+    self, Context, EmptyOpVisitor, OpVisitor, VisitResult, OP_END, OP_F32_CONST, OP_F64_CONST,
+    OP_GLOBAL_GET, OP_I32_CONST, OP_I64_CONST,
 };
-use crate::visit::{NopVisitor, OpVisitor, VisitResult};
 use crate::reader::{
     read_byte, read_f32_bits, read_f64_bits, read_s32_leb, read_s64_leb, read_u32_leb,
 };
 use crate::types::{
-    ConstExpr, CustomSection, ElemType, ExternType, FuncType, GlobalType, MemType, Mut, TableType,
-    ValueType,
+    ConstExpr, CustomSection, ElemType, ExternType, FuncType, GlobalType, Limits, MemType, Mut,
+    TableType, ValueType,
 };
 
 type Result<T> = core::result::Result<T, Error>;
@@ -49,6 +49,134 @@ const SECTION_ELEMENT: u8 = 9;
 const SECTION_CODE: u8 = 10;
 const SECTION_DATA: u8 = 11;
 
+// --- The environment: everything before the code section ---
+
+/// A global this module defines, with its initialiser.
+#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
+#[derive(Clone, Copy)]
+pub struct Global {
+    pub gtype: GlobalType,
+    pub init: ConstExpr,
+}
+
+/// What an import asks for.
+#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
+#[derive(Clone, Copy)]
+pub enum ImportDesc {
+    Func(u32),
+    Table(TableType),
+    Memory(MemType),
+    Global(GlobalType),
+}
+
+/// An import entry. Names are raw bytes rather than `str`, even though they
+/// are checked for UTF-8 validity (spec 5.2.4) as they are decoded.
+#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
+#[derive(Clone)]
+pub struct Import {
+    pub module: Vec<u8>,
+    pub name: Vec<u8>,
+    pub desc: ImportDesc,
+}
+
+/// What an export names, as an index into the matching index space.
+#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
+#[derive(Clone, Copy)]
+pub enum ExportDesc {
+    Func(u32),
+    Table(u32),
+    Memory(u32),
+    Global(u32),
+}
+
+/// An export entry.
+#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
+#[derive(Clone)]
+pub struct Export {
+    pub name: Vec<u8>,
+    pub desc: ExportDesc,
+}
+
+/// An element segment: a table, an offset into it, and the functions to write.
+#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
+#[derive(Clone)]
+pub struct Element {
+    pub table_idx: u32,
+    pub offset: ConstExpr,
+    pub init: Vec<u32>,
+}
+
+/// Everything the binary declares before the code section.
+///
+/// The accessor half of the interface: every field is what `validate_env`
+/// read out of the binary, and reading them is what a compiler builds its
+/// metadata from. Fields are public and writable, but the code section's
+/// entry points are only validated against an `Env` that actually came from
+/// `validate_env` -- a hand-built or edited one isn't backed by the same
+/// guarantees.
+#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
+#[derive(Clone)]
+pub struct Env {
+    /// Section 1. Also the type index space.
+    pub types: Vec<FuncType>,
+    /// Section 2.
+    pub imports: Vec<Import>,
+    /// Section 6, the globals this module defines.
+    pub globals: Vec<Global>,
+    /// Section 7.
+    pub exports: Vec<Export>,
+    /// Section 9.
+    pub elements: Vec<Element>,
+    /// Section 8.
+    pub start: Option<u32>,
+    /// Section 3: one type index per code-section entry, in order. Redundant
+    /// with `func_types`, but a consumer wants the index and not just the
+    /// type.
+    pub func_type_indices: Vec<u32>,
+
+    /// The index spaces of spec 3.1.1: imported entries first, then the ones
+    /// this module defines. Body validation is a lookup in these rather than a
+    /// walk over the import list.
+    pub func_types: Vec<FuncType>,
+    pub table_types: Vec<TableType>,
+    pub mem_types: Vec<MemType>,
+    pub global_types: Vec<GlobalType>,
+
+    /// Where the imported entries end and the defined ones start. Only the
+    /// two index spaces something consults the boundary of are tracked:
+    /// initialisers may name an imported global and no other, and a consumer
+    /// needs to know which functions it has to supply.
+    pub num_imported_funcs: usize,
+    pub num_imported_globals: usize,
+}
+
+impl Env {
+    /// The empty environment `validate_env` starts from.
+    ///
+    /// Public only so the crate's own tests can build environments to drive
+    /// `code::validate_body` directly. An `Env` built this way, rather than
+    /// by `validate_env`, isn't backed by the guarantees the code-section
+    /// entry points normally carry.
+    #[allow(clippy::new_without_default)]
+    pub fn new() -> Env {
+        Env {
+            types: Vec::new(),
+            imports: Vec::new(),
+            globals: Vec::new(),
+            exports: Vec::new(),
+            elements: Vec::new(),
+            start: None,
+            func_type_indices: Vec::new(),
+            func_types: Vec::new(),
+            table_types: Vec::new(),
+            mem_types: Vec::new(),
+            global_types: Vec::new(),
+            num_imported_funcs: 0,
+            num_imported_globals: 0,
+        }
+    }
+}
+
 /// A data segment: a memory, an offset into it, and the bytes to write.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 pub struct Data {
@@ -65,60 +193,48 @@ pub struct Tail {
 
 /// A module that has been decoded and validated.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
-pub struct ValidatedModule {
+pub struct Module {
     pub env: Env,
     pub tail: Tail,
 }
 
 /// Decode and validate a Wasm 1.0 module, reporting what it passes to `v`.
 ///
-/// The three parts in the order a module has them, driven by one consumer:
-/// the custom sections before the code section, then the code section's
-/// entries, then the custom sections after it. That is the whole of the
-/// interface a compiler drives, in one call, for a caller that holds the
-/// module in one buffer. One that holds it in pieces calls the three parts
-/// itself with the same `v`, and `Module_Driven.validate_module_of_parts` says
-/// that is the same run.
+/// Runs the three parts in module order -- the sections before the code
+/// section, then the code section's entries, then the sections after it --
+/// for a caller that holds the whole module in one buffer and wants a single
+/// entry point. A caller that holds the module in pieces can instead call
+/// the three parts directly with the same `v`; the two give the same result.
 ///
-/// No precondition on `data`: the size check is here, as it is in
-/// `validate_module`. What `v` is trusted for is on [`ModuleVisitor`] and
-/// [`CodeVisitor`].
-///
-/// `Module_Driven.validate_module_with_no_panic` (given `module_hooks_total`
-/// and `code_hooks_total`), `Module_Sound.validate_module_driven` and
-/// `Module_Driven.validate_module_with_accepts` (given the two `_accept`
-/// obligations, and `code_hooks_validate` for the first). The driven run and
-/// the plain one accept the same modules and report the same
-/// `ValidatedModule`, so every `validate_module` result below holds of this
-/// one too.
+/// No precondition on `data`: the size check happens here, same as in
+/// [`validate_module`]. What `v` is trusted for is documented on
+/// [`ModuleVisitor`] and [`CodeVisitor`].
 pub fn validate_module_with<V: ModuleVisitor + CodeVisitor>(
     data: &[u8],
     v: &mut V,
-) -> Result<ValidatedModule> {
+) -> Result<Module> {
     if data.len() > MAX_MODULE_BYTES {
         return Err(Error::ModuleTooLarge);
     }
-    let (env, code_pos) = decode_env_with(data, v)?;
+    let (env, code_pos) = validate_env_with(data, v)?;
     let tail_pos = validate_code_with(data, code_pos, &env, v)?;
-    let tail = decode_tail_with(data, tail_pos, &env, v)?;
-    Ok(ValidatedModule { env, tail })
+    let tail = validate_tail_with(data, tail_pos, &env, v)?;
+    Ok(Module { env, tail })
 }
 
 /// Decode and validate a Wasm 1.0 module.
 ///
-/// No preconditions: any byte string at all is a legitimate argument, and the
-/// size check is inside. `validate_module_no_panic` says it always returns,
-/// `validate_module_repr` and `validate_module_typed` that an accepted input
-/// is a well-typed Wasm 1.0 module binary, and `validate_module_complete` and
-/// `validate_module_typechecked` that a valid one is not rejected.
-pub fn validate_module(data: &[u8]) -> Result<ValidatedModule> {
+/// No preconditions: any byte string is a valid argument, and the size
+/// check is done internally. Returns `Ok` with the decoded module for a
+/// well-typed Wasm 1.0 binary, and `Err` otherwise.
+pub fn validate_module(data: &[u8]) -> Result<Module> {
     if data.len() > MAX_MODULE_BYTES {
         return Err(Error::ModuleTooLarge);
     }
-    let (env, code_pos) = decode_env(data)?;
+    let (env, code_pos) = validate_env(data)?;
     let tail_pos = validate_code(data, code_pos, &env)?;
-    let tail = decode_tail(data, tail_pos, &env)?;
-    Ok(ValidatedModule { env, tail })
+    let tail = validate_tail(data, tail_pos, &env)?;
+    Ok(Module { env, tail })
 }
 
 // --- The module's external types ---
@@ -126,12 +242,11 @@ pub fn validate_module(data: &[u8]) -> Result<ValidatedModule> {
 /// The type of every import the module declares (spec 3.2.7), in declaration
 /// order. This is the list an embedder matches the values it supplies against.
 ///
-/// `env` must have come out of a whole module that validated, either
-/// `validate_module` or the three parts composed. `Err` cannot happen for one
-/// that did -- every import's type index was resolved as the import section
-/// was decoded -- and `Module_Typing.validate_module_typed` says the list is
-/// the one WebAssembly's type system assigns. For any other `Env` the result
-/// is a list about no module.
+/// `env` must come from a module that validated, either through
+/// [`validate_module`] or the three parts run in order. Given that, this
+/// never returns `Err`: every import's type index was already resolved while
+/// decoding the import section. Passing a hand-built or partial `Env` gives
+/// a result that isn't backed by that guarantee.
 pub fn import_types(env: &Env) -> Result<Vec<ExternType>> {
     let mut out: Vec<ExternType> = Vec::new();
     let mut i: usize = 0;
@@ -154,12 +269,12 @@ pub fn import_types(env: &Env) -> Result<Vec<ExternType>> {
 }
 
 /// The type of every export the module declares (spec 3.2.7), in declaration
-/// order. An export names an index space entry, so the type comes from the
+/// order. An export names an index-space entry, so its type comes from that
 /// index space rather than from the export itself.
 ///
-/// Same condition on `env` as [`import_types`]. `Err` cannot happen for one
-/// that came out of a module that validated: `export_desc` range-checked every
-/// index as the export section was decoded.
+/// Same expectation on `env` as [`import_types`]: for a module that
+/// validated, this never returns `Err`, since `export_desc` range-checked
+/// every index while decoding the export section.
 pub fn export_types(env: &Env) -> Result<Vec<ExternType>> {
     let mut out: Vec<ExternType> = Vec::new();
     let mut i: usize = 0;
@@ -397,8 +512,7 @@ fn utf8_cont(bytes: &[u8], i: usize, lo: u8, hi: u8) -> Result<()> {
 /// The length of the well-formed UTF-8 sequence starting at `i`, or an error.
 ///
 /// The ranges are Unicode's well-formed byte sequence table, which is what
-/// excludes overlong encodings and the surrogate range. Comparisons only: the
-/// Aeneas subset has no bitwise operators.
+/// excludes overlong encodings and the surrogate range.
 fn utf8_sequence_len(bytes: &[u8], i: usize) -> Result<usize> {
     let b = bytes[i];
     if b <= 0x7f {
@@ -467,12 +581,13 @@ fn decode_name(data: &[u8], pos: usize) -> Result<(Vec<u8>, usize)> {
 
 /// Spec 5.5.3: `custom ::= nm:name b*:byte*`.
 ///
-/// Nothing in the module a binary denotes reads the trailing bytes, but the
-/// name is still a name: it has to be there, it has to be valid UTF-8, and it
+/// The trailing bytes aren't read: a custom section's contents are opaque to
+/// validation. The name still has to be there, has to be valid UTF-8, and
 /// has to fit inside the section.
 ///
-/// What comes back is where the section is, not what its name says: the name
-/// is read and checked and then dropped, and its length is what locates it.
+/// Returns where the section's contents are, not what its name says: the
+/// name is read, checked, and dropped, and its length is what locates the
+/// contents.
 fn decode_custom_section(data: &[u8], pos: usize, end: usize) -> Result<CustomSection> {
     let (name, p) = decode_name(data, pos)?;
     if p > end {
@@ -918,33 +1033,24 @@ fn decode_env_section(data: &[u8], pos: usize, id: u8, env: &mut Env) -> Result<
     Err(Error::UnknownSection(id))
 }
 
-/// `decode_env_with` at the do-nothing consumer.
-///
-/// `decode_env_ok`, `decode_env_sound` and `decode_env_complete`, all under
-/// the same size condition as `decode_env_with`.
-pub fn decode_env(data: &[u8]) -> Result<(Env, usize)> {
-    let mut nop = NopModuleVisitor;
-    decode_env_with(data, &mut nop)
+/// [`validate_env_with`] with a visitor that does nothing.
+pub fn validate_env(data: &[u8]) -> Result<(Env, usize)> {
+    let mut nop = EmptyModuleVisitor;
+    validate_env_with(data, &mut nop)
 }
 
 /// Decode and validate everything before the code section, reporting each
-/// custom section it passes to `v`.
+/// custom section to `v`.
 ///
 /// Returns the environment and the position of the next section's header,
-/// which is where `validate_code` picks up. Both go on to the rest of the
-/// walk: nothing else produces an `Env` the code section's entry points can be
-/// trusted against.
+/// which is where [`validate_code`] picks up. Both are needed to trust the
+/// rest of the walk: nothing else produces an `Env` the code section's entry
+/// points are validated against.
 ///
-/// **Precondition.** `data.len()` must be at most [`MAX_MODULE_BYTES`]. This
-/// is where a decomposed caller owes it; `validate_module` and
-/// `validate_module_with` check it themselves. Without it `decode_env_with_ok`
-/// does not apply and nothing says this returns at all.
-///
-/// `decode_env_with_ok` (given `module_hooks_total`),
-/// `Module_Sound.decode_env_driven` and `Module_Driven.decode_env_with_accepts`
-/// (given `module_hooks_accept`), which carry `decode_env_sound` and
-/// `decode_env_complete` across to a hooked run.
-pub fn decode_env_with<V: ModuleVisitor>(data: &[u8], v: &mut V) -> Result<(Env, usize)> {
+/// **Precondition.** `data.len()` must be at most `limits::MAX_MODULE_BYTES`.
+/// [`validate_module`] and [`validate_module_with`] check this themselves
+/// before calling in; a caller driving this function directly owes the check.
+pub fn validate_env_with<V: ModuleVisitor>(data: &[u8], v: &mut V) -> Result<(Env, usize)> {
     let mut env = Env::new();
     let mut q = read_header(data)?;
     let mut last_id: u8 = 0;
@@ -1027,38 +1133,22 @@ fn build_func_locals(params: &[ValueType], declared: &[ValueType]) -> Vec<ValueT
 
 /// Validate one code-section entry, reporting each accepted operator to `v`.
 ///
-/// `pos` is at the entry's size prefix and `index` selects its signature from
-/// `env.func_type_indices`; the position just past the entry comes back. A
-/// consumer that wants to compile or validate entries on separate threads
-/// drives this rather than `validate_code`. It is a pure function of its four
-/// value arguments, so nothing here says when or on which thread it runs.
+/// `pos` is the entry's size prefix and `index` selects its signature from
+/// `env.func_type_indices`; returns the position just past the entry. A
+/// consumer that wants to validate or compile entries independently (for
+/// example on separate threads) calls this directly instead of going through
+/// [`validate_code`]. It only reads its four arguments, so nothing here
+/// depends on when or in what order entries are validated.
 ///
-/// **Preconditions.** All three are the caller's, and driving the section
-/// through [`validate_code_with`] establishes all three:
+/// **Preconditions**, all established automatically by driving the section
+/// through [`validate_code_with`]:
 ///
-/// - `env` came out of [`decode_env`] on this same `data`. Soundness is
-///   stated relative to the environment handed over, so a fabricated one earns
-///   a true theorem about no module; and `env_small`, which
-///   `validate_code_entry_with_ok` needs, is `decode_env`'s postcondition and
-///   nothing else's.
-/// - `pos` is an entry start the code section's own framing gives: either
-///   `CodeSection::entries` for the first, or the position a previous call
-///   returned, or the `entry_pos` [`CodeVisitor::on_code_entry`] was handed.
-///   `Module_Sound.code_entry_extent_frames` is what makes the last of those
-///   the same position, and without it soundness says only that the operators
-///   shown are the body of an entry at whatever offset was supplied.
-/// - `pos <= data.len()` and `data.len() <= MAX_MODULE_BYTES`.
-///
-/// `Module_NoPanic.validate_code_entry_with_ok` (given `hooks_total`),
-/// `Module_Sound.validate_code_entry_with_sound` -- which carries the trace, so
-/// the operators `v` was shown are the body of the code entry those bytes
-/// encode -- and `Module_Complete.validate_code_entry_with_complete` (given
-/// `hooks_accept`).
-///
-/// A consumer that runs this from inside `on_code_entry` discharges its own
-/// obligations with `Module_Driven.validate_code_entry_driven` for
-/// `code_hooks_validate` and `Module_Driven.validate_code_entry_accepts` for
-/// `code_hooks_accept`.
+/// - `env` came from [`validate_env`] run on this same `data`.
+/// - `pos` is an entry start produced by the code section's own framing:
+///   either [`CodeSection::entries`] for the first entry, the position a
+///   previous call to this function returned, or the `entry_pos` that
+///   [`CodeVisitor::on_code_entry`] was called with.
+/// - `pos <= data.len()` and `data.len() <= limits::MAX_MODULE_BYTES`.
 pub fn validate_code_entry_with<V: OpVisitor>(
     data: &[u8],
     pos: usize,
@@ -1098,7 +1188,7 @@ pub fn validate_code_entry_with<V: OpVisitor>(
 
     // `validate_body_with` takes the body's own bytes and nothing else: it is
     // what decides that the last byte is the terminating `end`.
-    match opiter::validate_body_with(&data[p1..end], env, &ctx, v) {
+    match code::validate_body_with(&data[p1..end], env, &ctx, v) {
         Ok(()) => Ok(end),
         Err(e) => Err(Error::Body(e)),
     }
@@ -1106,21 +1196,22 @@ pub fn validate_code_entry_with<V: OpVisitor>(
 
 /// Validate one code-section entry and nothing else.
 ///
-/// `validate_code_entry_with` at the do-nothing consumer, with the same three
-/// preconditions and the same three results without the hook hypotheses.
+/// [`validate_code_entry_with`] with a visitor that does nothing, and the
+/// same preconditions.
 pub fn validate_code_entry(
     data: &[u8],
     pos: usize,
     env: &Env,
     index: usize,
 ) -> Result<usize> {
-    let mut nop = NopVisitor;
+    let mut nop = EmptyOpVisitor;
     validate_code_entry_with(data, pos, env, index, &mut nop)
 }
 
-/// Frame each entry in turn and hand it to `v`, which validates it or takes on
-/// the obligation to. The cursor moves by the extent the entry's own size
-/// prefix gives, so where entry `k` starts does not wait on the `k` before it.
+/// Frame each entry in turn and hand it to `v`, which either validates it or
+/// is trusted to validate it itself. The cursor advances by each entry's own
+/// declared size, so entry `k`'s position doesn't wait on entry `k - 1`
+/// having actually been checked.
 fn validate_code_entries_with<V: CodeVisitor>(
     data: &[u8],
     pos: usize,
@@ -1161,24 +1252,22 @@ pub struct CodeSection {
 
 /// Read the code section's header, if there is one.
 ///
-/// `None` is a module with no code section, which is only allowed because it
-/// declared no functions; a module that declared some and has no code section
-/// is rejected here.
+/// `None` means the module has no code section, which is legal only if it
+/// declared no functions; a module that declared functions and has no code
+/// section is rejected here.
 ///
-/// A consumer that drives `validate_code_entry` per function needs this to know
-/// where the first one is, and cannot work it out without decoding the header
-/// itself. `validate_code` is this, then the entries, then the framing check, so
-/// the header has one reader rather than two.
+/// A consumer that wants to drive [`validate_code_entry`] per function needs
+/// this to find where the first entry starts, and can't work it out without
+/// decoding the header itself. [`validate_code`] is this function, then the
+/// entries, then a final framing check, so the header has one reader rather
+/// than two.
 ///
-/// **Precondition.** `pos` is [`decode_env`]'s returned position and `env` its
-/// returned environment, both on this same `data`; `pos <= data.len()`.
+/// **Precondition.** `pos` and `env` are [`validate_env`]'s two return
+/// values on this same `data`; `pos <= data.len()`.
 ///
-/// `Module_NoPanic.code_section_ok`, `Module_Sound.code_section_sound` and
-/// `Module_Complete.code_section_complete`. Reading the header is not
-/// validating the section: a consumer that frames the entries itself from
-/// `entries` owes the tiling check `validate_code_with` does at the end, and
-/// `Module_Sound.validate_code_with_sound` is stated about the walk that does
-/// it.
+/// Reading the header doesn't validate the section: a consumer that frames
+/// the entries itself from `entries` still owes the check that the entries'
+/// extents exactly tile the section, which [`validate_code_with`] performs.
 pub fn code_section(data: &[u8], pos: usize, env: &Env) -> Result<Option<CodeSection>> {
     if pos >= data.len() {
         return no_code_section(env);
@@ -1209,21 +1298,17 @@ fn no_code_section(env: &Env) -> Result<Option<CodeSection>> {
 
 /// Validate the code section, if there is one, reporting each entry to `v`.
 ///
-/// The tiling check at the end is what pins the walk: each extent came from
-/// that entry's own size prefix, and a chain of them that lands exactly on the
-/// section's end is the partition the section's contents describe. A consumer
-/// that framed the entries itself would owe this check; here it is inside.
+/// The final tiling check is what makes the walk sound: each entry's extent
+/// comes from its own size prefix, and a chain of them landing exactly on
+/// the section's end is the partition the section's contents describe. A
+/// consumer that framed the entries itself would owe this check itself;
+/// here it's included.
 ///
-/// **Preconditions.** `pos` and `env` are [`decode_env`]'s two return values
-/// on this same `data`, and `data.len()` is at most [`MAX_MODULE_BYTES`]. What
-/// `v` is trusted for is on [`CodeVisitor`], and there is more of it here than
-/// anywhere else in this interface: taking `on_code_entry` means taking on that
-/// entry's validation.
-///
-/// `Module_NoPanic.validate_code_with_ok` (given `code_hooks_total`),
-/// `Module_Sound.validate_code_with_sound` and
-/// `Module_Sound.validate_code_driven` (given `code_hooks_validate`), and
-/// `Module_Complete.validate_code_with_complete` (given `code_hooks_accept`).
+/// **Preconditions.** `pos` and `env` are [`validate_env`]'s two return
+/// values on this same `data`, and `data.len() <= limits::MAX_MODULE_BYTES`.
+/// What `v` is trusted for is documented on [`CodeVisitor`] -- more so than
+/// anywhere else in this interface: overriding `on_code_entry` means taking
+/// over that entry's validation.
 pub fn validate_code_with<V: CodeVisitor>(
     data: &[u8],
     pos: usize,
@@ -1245,10 +1330,8 @@ pub fn validate_code_with<V: CodeVisitor>(
     }
 }
 
-/// `validate_code_with` at the consumer that validates each entry itself.
-///
-/// Same two preconditions as `validate_code_with`, and `validate_code_ok`,
-/// `validate_code_sound` and `validate_code_complete` with no hook hypotheses.
+/// [`validate_code_with`] with a visitor that validates each entry itself.
+/// Same preconditions as `validate_code_with`.
 pub fn validate_code(data: &[u8], pos: usize, env: &Env) -> Result<usize> {
     let mut v = ValidatingCodeVisitor;
     validate_code_with(data, pos, env, &mut v)
@@ -1292,26 +1375,19 @@ fn decode_data_section(data: &[u8], pos: usize, env: &Env) -> Result<(Vec<Data>,
     }
 }
 
-/// `decode_tail_with` at the do-nothing consumer.
-///
-/// `decode_tail_ok`, `decode_tail_sound` and `decode_tail_complete`, under the
-/// same conditions as `decode_tail_with`.
-pub fn decode_tail(data: &[u8], pos: usize, env: &Env) -> Result<Tail> {
-    let mut nop = NopModuleVisitor;
-    decode_tail_with(data, pos, env, &mut nop)
+/// [`validate_tail_with`] with a visitor that does nothing.
+pub fn validate_tail(data: &[u8], pos: usize, env: &Env) -> Result<Tail> {
+    let mut nop = EmptyModuleVisitor;
+    validate_tail_with(data, pos, env, &mut nop)
 }
 
 /// Decode and validate everything after the code section: the data section,
 /// and any custom sections.
 ///
 /// **Preconditions.** `pos` is what [`validate_code`] or
-/// [`validate_code_with`] returned, `env` is [`decode_env`]'s, both on this
-/// same `data`, and `data.len()` is at most [`MAX_MODULE_BYTES`].
-///
-/// `decode_tail_with_ok` (given `module_hooks_total`),
-/// `Module_Sound.decode_tail_driven` and
-/// `Module_Driven.decode_tail_with_accepts` (given `module_hooks_accept`).
-pub fn decode_tail_with<V: ModuleVisitor>(
+/// [`validate_code_with`] returned, `env` is what [`validate_env`] returned,
+/// both on this same `data`, and `data.len() <= limits::MAX_MODULE_BYTES`.
+pub fn validate_tail_with<V: ModuleVisitor>(
     data: &[u8],
     pos: usize,
     env: &Env,
@@ -1346,16 +1422,15 @@ pub fn decode_tail_with<V: ModuleVisitor>(
     }
 }
 
-/// The extent of one code-section entry, without validating it: `pos` is at the
-/// entry's size prefix, and the first byte of its contents and the position
-/// just past it come back.
+/// The extent of one code-section entry, without validating it. `pos` is at
+/// the entry's size prefix; returns the first byte of its contents and the
+/// position just past it.
 ///
-/// This reads the size prefix and nothing else, and decides nothing about
-/// validity. It is how `validate_code_entries_with` frames an entry before
-/// handing it over, which is what lets a consumer be told where entry `k` is
-/// without the `k` before it having been validated. Private: an extent is only
-/// sound to act on as part of a walk that goes on to show the extents tile the
-/// section, and the walk is what does that.
+/// Reads the size prefix and nothing else -- it decides nothing about
+/// validity. This is how `validate_code_entries_with` locates entry `k`
+/// before entry `k - 1` has been validated, which is what lets a consumer
+/// dispatch entries to separate threads. Private: only sound to act on as
+/// part of a walk that goes on to check the extents tile the section.
 fn code_entry_extent(data: &[u8], pos: usize) -> Result<(usize, usize)> {
     let (size, p) = read_u32_leb(data, pos)?;
     let n = size as usize;
@@ -1366,115 +1441,92 @@ fn code_entry_extent(data: &[u8], pos: usize) -> Result<(usize, usize)> {
 
 /// What a consumer is told as a module is decoded around its code section.
 ///
-/// One hook so far, and one trait for both ends of the module rather than one
-/// each: a custom section is legal between any two others and the code section
-/// cannot hold one, so the same consumer hears about the ones before the code
-/// section from `decode_env_with` and the ones after it from
-/// `decode_tail_with`, in module order, without caring which side reported
-/// them.
+/// One hook, shared by both ends of the module rather than split into two
+/// traits: a custom section is legal between any two other sections and the
+/// code section can't hold one, so the same consumer hears about the ones
+/// before the code section from `validate_env_with` and the ones after it
+/// from `validate_tail_with`, in module order, regardless of which side
+/// reported them.
 ///
-/// Reported rather than carried on `Env` and `Tail`. A custom section is not
-/// part of the module a binary denotes -- `Spec_Module.v` reads the format's
-/// customs as padding -- and `chain_from` pins a decoded `Env` field for
-/// field, so a field the walk grows and no theorem mentions would have to be
-/// erased again before the chain could say anything. A hook keeps the decoded
-/// record describing only what the theorems talk about.
+/// Custom sections are reported through this hook rather than stored on
+/// `Env` or `Tail`, since they aren't part of the module a binary declares
+/// -- the format treats them as padding.
 ///
-/// Every hook has a default that does nothing, so a consumer fills in what it
-/// wants and the rest costs nothing.
+/// Every hook has a default that does nothing, so a consumer only pays for
+/// the ones it overrides.
 ///
 /// # What an implementation owes
 ///
-/// Two obligations, both about code this crate does not contain, and both
-/// written down in Coq:
-///
-/// - `Module_NoPanic.module_hooks_total`: every hook returns. It may not
-///   panic and it may not loop. Without it nothing says `decode_env_with` or
-///   `decode_tail_with` terminate.
-/// - `Module_Complete.module_hooks_accept`: every hook returns `Ok`. Without
-///   it a valid module may be rejected -- which is the interface working, and
-///   is reported as `Error::Visitor` rather than as a verdict.
-///
-/// Neither can turn a rejection into an acceptance. Reporting a custom section
-/// cannot change what is read next, so a `ModuleVisitor` has no obligation
-/// beyond these two; `CodeVisitor` does.
+/// A hook must always return: it may not panic and it may not loop forever,
+/// or `validate_env_with` and `validate_tail_with` have no guarantee of
+/// terminating either. And returning `Err` from a hook is the only way it
+/// can affect the outcome -- doing so rejects an otherwise-valid module
+/// (reported as `Error::Visitor`), but a hook can never turn a rejection
+/// into an acceptance.
 pub trait ModuleVisitor {
     /// One custom section, framed and its name checked, but not otherwise
     /// read. Positions are into the bytes the decoder was handed.
     ///
-    /// A report and not part of the verdict: a custom section is not part of
-    /// the module a binary denotes, so nothing says the ranges reported are
-    /// the custom sections the format says are there.
+    /// A report, not part of the verdict: a custom section isn't part of the
+    /// module a binary declares, so nothing guarantees the ranges reported
+    /// here are the only custom sections present.
     fn on_custom_section(&mut self, _section: CustomSection) -> VisitResult {
         Ok(())
     }
 }
 
-/// The consumer that hears nothing, which is what `decode_env` and
-/// `decode_tail` are: the `_with` entry points at a visitor that does nothing
-/// with what it is shown.
-pub struct NopModuleVisitor;
-impl ModuleVisitor for NopModuleVisitor {}
+/// A visitor that ignores everything it's shown. [`validate_env`] and
+/// [`validate_tail`] are their `_with` counterparts run against this.
+pub struct EmptyModuleVisitor;
+impl ModuleVisitor for EmptyModuleVisitor {}
 
 /// What a consumer is told as the code section is walked.
 ///
-/// Separate from `ModuleVisitor`, and its hooks return `Result<(), Error>`
-/// rather than `VisitResult`, because its defaults are not the same kind of
-/// thing. A `ModuleVisitor` hook reports something and does nothing by default;
-/// `on_code_entry`'s default *is* the work, so the error it has to be able to
-/// return is the validator's own.
+/// Separate from [`ModuleVisitor`], with hooks that return `Result<(),
+/// Error>` instead of [`VisitResult`]: a `ModuleVisitor` hook just reports
+/// something and does nothing by default, but `on_code_entry`'s default *is*
+/// the work of validating the entry, so it needs to return the validator's
+/// own errors.
 ///
-/// The walk frames each entry and hands it over without validating it, which is
-/// what a compiler that dispatches entries to other threads needs: entry `k`'s
-/// position has to be known before the `k` before it have been validated.
+/// The walk frames each entry and hands it over without validating it
+/// first, which is what lets a consumer dispatch entries to other threads:
+/// entry `k`'s position is known before entry `k - 1` has actually been
+/// checked.
 ///
 /// # What an implementation owes
 ///
-/// The two a `ModuleVisitor` owes, and a third that is the whole point of the
-/// trait:
+/// The same two obligations as [`ModuleVisitor`] -- both hooks must always
+/// return, and must return `Ok` at least for an entry [`validate_code_entry`]
+/// would accept -- plus a third that is the whole point of this trait: **if
+/// `on_code_entry` returns `Ok`, then
+/// `validate_code_entry(data, entry_pos, env, index)` must also return `Ok`.**
+/// The walk doesn't validate the entry it hands over, so overriding this
+/// hook means taking over that entry's validation yourself. Calling
+/// [`validate_code_entry_with`] on your own [`OpVisitor`] is the
+/// straightforward way to satisfy this.
 ///
-/// - `Module_NoPanic.code_hooks_total`: both hooks return.
-/// - `Module_Complete.code_hooks_accept`: both return `Ok`, `on_code_entry`
-///   at least for an entry `validate_code_entry` accepts.
-/// - `Module_Sound.code_hooks_validate`: **`on_code_entry` returning `Ok`
-///   means `validate_code_entry(data, entry_pos, env, index)` returns `Ok`.**
-///   The walk does not validate the entry it hands over, so overriding this
-///   hook is taking on that entry's validation. `validate_code_entry` is a
-///   pure function of those four arguments, so the obligation says nothing
-///   about when or on which thread the work happened.
-///
-/// A consumer that discharges the third by running
-/// [`validate_code_entry_with`] at its own [`OpVisitor`] gets there with
-/// `Module_Driven.validate_code_entry_driven`, and the second with
-/// `Module_Driven.validate_code_entry_accepts`.
-///
-/// [`ValidatingCodeVisitor`] discharges all three
-/// (`Module_Sound.validating_code_hooks_validate` and its two siblings), which
-/// is why [`validate_code`] carries no hypotheses.
+/// [`ValidatingCodeVisitor`] satisfies all three trivially, which is why
+/// [`validate_code`] has no preconditions beyond the two on `pos` and `env`.
 pub trait CodeVisitor {
-    /// Before the walk reads the bytes up to `end`, exclusive. `end` may be
-    /// past the input, which means "all of it": a consumer streaming the
-    /// section blocks here until the bytes have arrived, and declines if they
+    /// Called before the walk reads the bytes up to `end`, exclusive. `end`
+    /// may be past the input, meaning "all of it": a consumer streaming the
+    /// section in blocks here until those bytes arrive, and declines if they
     /// never will.
     ///
-    /// Blocking is allowed; not returning is not. This is the hook where
-    /// `code_hooks_total` is a real condition rather than a formality.
+    /// Blocking is fine; not returning is not.
     fn on_need_bytes(&mut self, _end: usize) -> Result<()> {
         Ok(())
     }
 
-    /// One entry, framed but not validated. `entry_pos` is at its size prefix,
-    /// which is what `validate_code_entry` takes; `contents_start` is the first
-    /// byte of the locals declarations, which is not where the body's code
-    /// begins -- `on_function_start` reports that, after the declarations.
+    /// One entry, framed but not validated. `entry_pos` is its size prefix,
+    /// which is the `pos` [`validate_code_entry`] expects; `contents_start`
+    /// is the first byte of the locals declarations, not where the body's
+    /// code begins -- [`OpVisitor`]'s `on_function_start` reports that,
+    /// after the declarations are decoded.
     ///
-    /// Overriding this takes on the entry's validation: see
-    /// `code_hooks_validate` above. `entry_pos` is a position the section's own
-    /// framing gives, which `Module_Sound.code_entry_extent_frames` is what
-    /// makes true, so it is the `pos` `validate_code_entry` wants.
-    ///
-    /// The default validates it in place, which is what a consumer that only
-    /// wants a verdict wants.
+    /// Overriding this takes over the entry's validation -- see the
+    /// trait-level docs. The default validates it in place, which is what a
+    /// consumer that only wants a verdict wants.
     fn on_code_entry(
         &mut self,
         data: &[u8],
@@ -1490,9 +1542,7 @@ pub trait CodeVisitor {
 }
 
 /// The consumer that takes every default: it waits for nothing and validates
-/// each entry where it stands. `validate_code` is the walk at this one, which
-/// is why that entry point owes nothing: `validating_code_hooks_total`,
-/// `validating_code_hooks_accept` and `validating_code_hooks_validate` are
-/// proved for this instance.
+/// each entry where it stands. [`validate_code`] is this walk run with this
+/// visitor, which is why that entry point has no extra preconditions.
 pub struct ValidatingCodeVisitor;
 impl CodeVisitor for ValidatingCodeVisitor {}

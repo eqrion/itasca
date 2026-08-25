@@ -57,50 +57,50 @@ Local Bind Scope list_scope with list.
     for. A [Then] frame's opener is just the [if], since its own [fv_done] is
     the then-branch in progress. *)
 Definition frame_open (f : fview) : list flat_op :=
-  match (fv_ctrl f).(opiter_Ctrl_kind) with
-  | Opiter_LabelKind_Block =>
-      [FO_block (translate_bt (fv_ctrl f).(opiter_Ctrl_block_type))]
-  | Opiter_LabelKind_Loop =>
-      [FO_loop (translate_bt (fv_ctrl f).(opiter_Ctrl_block_type))]
-  | Opiter_LabelKind_Then =>
-      [FO_if (translate_bt (fv_ctrl f).(opiter_Ctrl_block_type))]
-  | Opiter_LabelKind_Else =>
-      FO_if (translate_bt (fv_ctrl f).(opiter_Ctrl_block_type))
+  match (fv_ctrl f).(code_Ctrl_kind) with
+  | Code_LabelKind_Block =>
+      [FO_block (translate_bt (fv_ctrl f).(code_Ctrl_block_type))]
+  | Code_LabelKind_Loop =>
+      [FO_loop (translate_bt (fv_ctrl f).(code_Ctrl_block_type))]
+  | Code_LabelKind_Then =>
+      [FO_if (translate_bt (fv_ctrl f).(code_Ctrl_block_type))]
+  | Code_LabelKind_Else =>
+      FO_if (translate_bt (fv_ctrl f).(code_Ctrl_block_type))
         :: flat_of (fv_then f) ++ [FO_else]
   | _ => []
   end.
 
 Lemma frame_open_block : forall f bt,
-  (fv_ctrl f).(opiter_Ctrl_kind) = Opiter_LabelKind_Block ->
-  (fv_ctrl f).(opiter_Ctrl_block_type) = bt ->
+  (fv_ctrl f).(code_Ctrl_kind) = Code_LabelKind_Block ->
+  (fv_ctrl f).(code_Ctrl_block_type) = bt ->
   frame_open f = [FO_block (translate_bt bt)].
 Proof.
   intros f bt Hk Hb. unfold frame_open. rewrite Hk. rewrite Hb. reflexivity.
 Qed.
 
 Lemma frame_open_loop : forall f bt,
-  (fv_ctrl f).(opiter_Ctrl_kind) = Opiter_LabelKind_Loop ->
-  (fv_ctrl f).(opiter_Ctrl_block_type) = bt ->
+  (fv_ctrl f).(code_Ctrl_kind) = Code_LabelKind_Loop ->
+  (fv_ctrl f).(code_Ctrl_block_type) = bt ->
   frame_open f = [FO_loop (translate_bt bt)].
 Proof.
   intros f bt Hk Hb. unfold frame_open. rewrite Hk. rewrite Hb. reflexivity.
 Qed.
 
 Lemma frame_open_body : forall f,
-  (fv_ctrl f).(opiter_Ctrl_kind) = Opiter_LabelKind_Body -> frame_open f = [].
+  (fv_ctrl f).(code_Ctrl_kind) = Code_LabelKind_Body -> frame_open f = [].
 Proof. intros f Hk. unfold frame_open. rewrite Hk. reflexivity. Qed.
 
 Lemma frame_open_then : forall f bt,
-  (fv_ctrl f).(opiter_Ctrl_kind) = Opiter_LabelKind_Then ->
-  (fv_ctrl f).(opiter_Ctrl_block_type) = bt ->
+  (fv_ctrl f).(code_Ctrl_kind) = Code_LabelKind_Then ->
+  (fv_ctrl f).(code_Ctrl_block_type) = bt ->
   frame_open f = [FO_if (translate_bt bt)].
 Proof.
   intros f bt Hk Hb. unfold frame_open. rewrite Hk. rewrite Hb. reflexivity.
 Qed.
 
 Lemma frame_open_else : forall f bt,
-  (fv_ctrl f).(opiter_Ctrl_kind) = Opiter_LabelKind_Else ->
-  (fv_ctrl f).(opiter_Ctrl_block_type) = bt ->
+  (fv_ctrl f).(code_Ctrl_kind) = Code_LabelKind_Else ->
+  (fv_ctrl f).(code_Ctrl_block_type) = bt ->
   frame_open f = FO_if (translate_bt bt) :: flat_of (fv_then f) ++ [FO_else].
 Proof.
   intros f bt Hk Hb. unfold frame_open. rewrite Hk. rewrite Hb. reflexivity.
@@ -207,19 +207,19 @@ Proof. intros x y. reflexivity. Qed.
     consumed nothing yet. *)
 Lemma frames_flat_push : forall fs kind bt base,
   frames_flat (fs ++ [{| fv_ctrl :=
-                           {| opiter_Ctrl_kind := kind;
-                              opiter_Ctrl_block_type := bt;
-                              opiter_Ctrl_value_stack_base := base;
-                              opiter_Ctrl_polymorphic_base := false |};
+                           {| code_Ctrl_kind := kind;
+                              code_Ctrl_block_type := bt;
+                              code_Ctrl_value_stack_base := base;
+                              code_Ctrl_polymorphic_base := false |};
                          fv_seg := [];
                          fv_done := [];
                          fv_then := [] |}])
     = frames_flat fs
       ++ frame_open {| fv_ctrl :=
-                          {| opiter_Ctrl_kind := kind;
-                             opiter_Ctrl_block_type := bt;
-                             opiter_Ctrl_value_stack_base := base;
-                             opiter_Ctrl_polymorphic_base := false |};
+                          {| code_Ctrl_kind := kind;
+                             code_Ctrl_block_type := bt;
+                             code_Ctrl_value_stack_base := base;
+                             code_Ctrl_polymorphic_base := false |};
                         fv_seg := [];
                         fv_done := [];
                         fv_then := [] |}.
@@ -233,8 +233,8 @@ Qed.
     [BI_block], and the stream grows by the single [FO_end] that closed it. The
     nesting cancels exactly, which is what the ghost lists exist to deliver. *)
 Lemma frames_flat_end_block : forall pre f g seg' bt,
-  (fv_ctrl g).(opiter_Ctrl_kind) = Opiter_LabelKind_Block ->
-  (fv_ctrl g).(opiter_Ctrl_block_type) = bt ->
+  (fv_ctrl g).(code_Ctrl_kind) = Code_LabelKind_Block ->
+  (fv_ctrl g).(code_Ctrl_block_type) = bt ->
   frames_flat (pre ++ [{| fv_ctrl := fv_ctrl f;
                           fv_seg := seg';
                           fv_done := fv_done f
@@ -254,8 +254,8 @@ Proof.
 Qed.
 
 Lemma frames_flat_end_loop : forall pre f g seg' bt,
-  (fv_ctrl g).(opiter_Ctrl_kind) = Opiter_LabelKind_Loop ->
-  (fv_ctrl g).(opiter_Ctrl_block_type) = bt ->
+  (fv_ctrl g).(code_Ctrl_kind) = Code_LabelKind_Loop ->
+  (fv_ctrl g).(code_Ctrl_block_type) = bt ->
   frames_flat (pre ++ [{| fv_ctrl := fv_ctrl f;
                           fv_seg := seg';
                           fv_done := fv_done f
@@ -278,10 +278,10 @@ Qed.
     ghost list moves to [fv_then], which is where the [Else] frame's opener
     reads it, so the stream grows by the one [FO_else] the byte encoded. *)
 Lemma frames_flat_switch_else : forall pre g c' bt,
-  (fv_ctrl g).(opiter_Ctrl_kind) = Opiter_LabelKind_Then ->
-  (fv_ctrl g).(opiter_Ctrl_block_type) = bt ->
-  c'.(opiter_Ctrl_kind) = Opiter_LabelKind_Else ->
-  c'.(opiter_Ctrl_block_type) = bt ->
+  (fv_ctrl g).(code_Ctrl_kind) = Code_LabelKind_Then ->
+  (fv_ctrl g).(code_Ctrl_block_type) = bt ->
+  c'.(code_Ctrl_kind) = Code_LabelKind_Else ->
+  c'.(code_Ctrl_block_type) = bt ->
   frames_flat (pre ++ [{| fv_ctrl := c';
                           fv_seg := [];
                           fv_done := [];
@@ -304,8 +304,8 @@ Qed.
     opener already accounts for the [FO_else] between them. One operator, as
     for a block. *)
 Lemma frames_flat_end_else : forall pre f g seg' bt,
-  (fv_ctrl g).(opiter_Ctrl_kind) = Opiter_LabelKind_Else ->
-  (fv_ctrl g).(opiter_Ctrl_block_type) = bt ->
+  (fv_ctrl g).(code_Ctrl_kind) = Code_LabelKind_Else ->
+  (fv_ctrl g).(code_Ctrl_block_type) = bt ->
   frames_flat (pre ++ [{| fv_ctrl := fv_ctrl f;
                           fv_seg := seg';
                           fv_done := fv_done f
@@ -333,8 +333,8 @@ Qed.
     is immediately followed by the [FO_end], which is exactly the pair it
     permits eliding. *)
 Lemma frames_flat_end_then : forall pre f g seg' bt,
-  (fv_ctrl g).(opiter_Ctrl_kind) = Opiter_LabelKind_Then ->
-  (fv_ctrl g).(opiter_Ctrl_block_type) = bt ->
+  (fv_ctrl g).(code_Ctrl_kind) = Code_LabelKind_Then ->
+  (fv_ctrl g).(code_Ctrl_block_type) = bt ->
   frames_flat (pre ++ [{| fv_ctrl := fv_ctrl f;
                           fv_seg := seg';
                           fv_done := fv_done f
@@ -377,7 +377,7 @@ Proof. intros bt. reflexivity. Qed.
     consumed is the flattening of what that frame accumulated followed by the
     closing [end] -- which is exactly the operator stream [repr_expr] asks for. *)
 Lemma frames_flat_body : forall f,
-  (fv_ctrl f).(opiter_Ctrl_kind) = Opiter_LabelKind_Body ->
+  (fv_ctrl f).(code_Ctrl_kind) = Code_LabelKind_Body ->
   frames_flat [f] ++ [FO_end] = flat_of (fv_done f) ++ [FO_end].
 Proof.
   intros f Hkind. cbn [frames_flat]. rewrite (frame_open_body _ Hkind).
@@ -403,11 +403,11 @@ Qed.
     companion rather than a conjunct of [Inv], so no existing lemma changes: it is
     a property of the frame list alone, and every step lemma states its new frame
     list explicitly. *)
-Definition kind_ok (c : opiter_Ctrl_t) : Prop :=
-  c.(opiter_Ctrl_kind) = Opiter_LabelKind_Block
-  \/ c.(opiter_Ctrl_kind) = Opiter_LabelKind_Loop
-  \/ c.(opiter_Ctrl_kind) = Opiter_LabelKind_Then
-  \/ c.(opiter_Ctrl_kind) = Opiter_LabelKind_Else.
+Definition kind_ok (c : code_Ctrl_t) : Prop :=
+  c.(code_Ctrl_kind) = Code_LabelKind_Block
+  \/ c.(code_Ctrl_kind) = Code_LabelKind_Loop
+  \/ c.(code_Ctrl_kind) = Code_LabelKind_Then
+  \/ c.(code_Ctrl_kind) = Code_LabelKind_Else.
 
 Fixpoint inner_kinds (fs : list fview) : Prop :=
   match fs with
@@ -418,17 +418,17 @@ Fixpoint inner_kinds (fs : list fview) : Prop :=
 (** Parameterised by the body frame's block type as well as pinning its kind: the
     top-level theorem has to relate the finished instruction sequence to the
     function's declared results, and every step preserves both fields. *)
-Definition body_first (bt : opiter_BlockType_t) (fs : list fview) : Prop :=
+Definition body_first (bt : code_BlockType_t) (fs : list fview) : Prop :=
   match fs with
   | [] => False
   | f :: rest =>
-      (fv_ctrl f).(opiter_Ctrl_kind) = Opiter_LabelKind_Body
-      /\ (fv_ctrl f).(opiter_Ctrl_block_type) = bt
+      (fv_ctrl f).(code_Ctrl_kind) = Code_LabelKind_Body
+      /\ (fv_ctrl f).(code_Ctrl_block_type) = bt
       /\ inner_kinds rest
   end.
 
 Lemma inner_kinds_last : forall pre f g,
-  (fv_ctrl g).(opiter_Ctrl_kind) = (fv_ctrl f).(opiter_Ctrl_kind) ->
+  (fv_ctrl g).(code_Ctrl_kind) = (fv_ctrl f).(code_Ctrl_kind) ->
   inner_kinds (pre ++ [f]) -> inner_kinds (pre ++ [g]).
 Proof.
   intros pre f g Hk. induction pre as [|h pre IH]; cbn [app inner_kinds];
@@ -478,8 +478,8 @@ Proof. intros bt. split; [reflexivity|]. split; [reflexivity | exact I]. Qed.
 (** Rewriting the innermost frame keeps it, as long as the frame's kind survives.
     Every non-control step and [unreachable] and [br] are of this shape. *)
 Lemma body_first_last : forall bt pre f g,
-  (fv_ctrl g).(opiter_Ctrl_kind) = (fv_ctrl f).(opiter_Ctrl_kind) ->
-  (fv_ctrl g).(opiter_Ctrl_block_type) = (fv_ctrl f).(opiter_Ctrl_block_type) ->
+  (fv_ctrl g).(code_Ctrl_kind) = (fv_ctrl f).(code_Ctrl_kind) ->
+  (fv_ctrl g).(code_Ctrl_block_type) = (fv_ctrl f).(code_Ctrl_block_type) ->
   body_first bt (pre ++ [f]) -> body_first bt (pre ++ [g]).
 Proof.
   intros bt pre f g Hk Hb. destruct pre as [|h pre]; cbn [app body_first];
@@ -513,8 +513,8 @@ Qed.
 (** Closing a frame keeps it: either the head is some earlier frame, or the frame
     below the closed one *is* the head and its kind is carried over. *)
 Lemma body_first_end : forall bt pre f f' g,
-  (fv_ctrl f').(opiter_Ctrl_kind) = (fv_ctrl f).(opiter_Ctrl_kind) ->
-  (fv_ctrl f').(opiter_Ctrl_block_type) = (fv_ctrl f).(opiter_Ctrl_block_type) ->
+  (fv_ctrl f').(code_Ctrl_kind) = (fv_ctrl f).(code_Ctrl_kind) ->
+  (fv_ctrl f').(code_Ctrl_block_type) = (fv_ctrl f).(code_Ctrl_block_type) ->
   body_first bt (pre ++ [f] ++ [g]) -> body_first bt (pre ++ [f']).
 Proof.
   intros bt pre f f' g Hk Hb H.
@@ -540,8 +540,8 @@ Qed.
     is no fourth case, which is what [end]'s dispatch needs. *)
 Lemma body_first_innermost : forall bt fs pre f,
   body_first bt fs -> fs = pre ++ [f] ->
-  (pre = [] /\ (fv_ctrl f).(opiter_Ctrl_kind) = Opiter_LabelKind_Body
-   /\ (fv_ctrl f).(opiter_Ctrl_block_type) = bt)
+  (pre = [] /\ (fv_ctrl f).(code_Ctrl_kind) = Code_LabelKind_Body
+   /\ (fv_ctrl f).(code_Ctrl_block_type) = bt)
   \/ (exists pre2 f2, fs = pre2 ++ [f2] ++ [f] /\ kind_ok (fv_ctrl f)).
 Proof.
   intros bt fs pre f Hbf Hfs. destruct pre as [|h pre].
@@ -590,7 +590,7 @@ Qed.
 
 Corollary step_unreachable_op : forall C0 bt0 st fs pre f st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
-  opiter_read_unreachable st = Ok (Core_result_Result_Ok tt, st') ->
+  code_read_unreachable st = Ok (Core_result_Result_Ok tt, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs' = frames_flat fs ++ [FO_plain BI_unreachable].
 Proof.
@@ -599,18 +599,18 @@ Proof.
   subst fs. split.
   - apply (body_first_last bt0 pre f _); [reflexivity | reflexivity | exact Hbf].
   - apply (frames_flat_plain pre f
-             {| opiter_Ctrl_kind := (fv_ctrl f).(opiter_Ctrl_kind);
-                opiter_Ctrl_block_type := (fv_ctrl f).(opiter_Ctrl_block_type);
-                opiter_Ctrl_value_stack_base :=
-                  (fv_ctrl f).(opiter_Ctrl_value_stack_base);
-                opiter_Ctrl_polymorphic_base := true |}
+             {| code_Ctrl_kind := (fv_ctrl f).(code_Ctrl_kind);
+                code_Ctrl_block_type := (fv_ctrl f).(code_Ctrl_block_type);
+                code_Ctrl_value_stack_base :=
+                  (fv_ctrl f).(code_Ctrl_value_stack_base);
+                code_Ctrl_polymorphic_base := true |}
              [] BI_unreachable);
       [reflexivity | apply flat_of_one_unreachable].
 Qed.
 
 Corollary step_drop_op : forall C0 bt0 st fs pre f t st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
-  opiter_read_drop st = Ok (Core_result_Result_Ok t, st') ->
+  code_read_drop st = Ok (Core_result_Result_Ok t, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs' = frames_flat fs ++ [FO_plain BI_drop].
 Proof.
@@ -624,7 +624,7 @@ Qed.
 
 Corollary step_select_op : forall C0 bt0 st fs pre f t st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
-  opiter_read_select st = Ok (Core_result_Result_Ok t, st') ->
+  code_read_select st = Ok (Core_result_Result_Ok t, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs' = frames_flat fs ++ [FO_plain (BI_select None)].
 Proof.
@@ -638,7 +638,7 @@ Qed.
 
 Corollary step_i32_const_op : forall C0 bt0 st fs pre f data v st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
-  opiter_read_i32_const st data = Ok (Core_result_Result_Ok v, st') ->
+  code_read_i32_const st data = Ok (Core_result_Result_Ok v, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs'
                  = frames_flat fs
@@ -651,13 +651,13 @@ Proof.
   subst fs. split.
   - apply (body_first_last bt0 pre f _); [reflexivity | reflexivity | exact Hbf].
   - apply (frames_flat_plain pre f (fv_ctrl f)
-             (fv_seg f ++ [Opiter_StackType_Val Types_ValueType_I32]) _);
+             (fv_seg f ++ [Code_StackType_Val Types_ValueType_I32]) _);
       [reflexivity | apply flat_of_one_const_num].
 Qed.
 
 Corollary step_f32_const_op : forall C0 bt0 st fs pre f data v st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
-  opiter_read_f32_const st data = Ok (Core_result_Result_Ok v, st') ->
+  code_read_f32_const st data = Ok (Core_result_Result_Ok v, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs'
                  = frames_flat fs
@@ -669,13 +669,13 @@ Proof.
   subst fs. split.
   - apply (body_first_last bt0 pre f _); [reflexivity | reflexivity | exact Hbf].
   - apply (frames_flat_plain pre f (fv_ctrl f)
-             (fv_seg f ++ [Opiter_StackType_Val Types_ValueType_F32]) _);
+             (fv_seg f ++ [Code_StackType_Val Types_ValueType_F32]) _);
       [reflexivity | apply flat_of_one_const_num].
 Qed.
 
 Corollary step_f64_const_op : forall C0 bt0 st fs pre f data v st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
-  opiter_read_f64_const st data = Ok (Core_result_Result_Ok v, st') ->
+  code_read_f64_const st data = Ok (Core_result_Result_Ok v, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs'
                  = frames_flat fs
@@ -687,13 +687,13 @@ Proof.
   subst fs. split.
   - apply (body_first_last bt0 pre f _); [reflexivity | reflexivity | exact Hbf].
   - apply (frames_flat_plain pre f (fv_ctrl f)
-             (fv_seg f ++ [Opiter_StackType_Val Types_ValueType_F64]) _);
+             (fv_seg f ++ [Code_StackType_Val Types_ValueType_F64]) _);
       [reflexivity | apply flat_of_one_const_num].
 Qed.
 
 Corollary step_i64_const_op : forall C0 bt0 st fs pre f data v st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
-  opiter_read_i64_const st data = Ok (Core_result_Result_Ok v, st') ->
+  code_read_i64_const st data = Ok (Core_result_Result_Ok v, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs'
                  = frames_flat fs
@@ -706,7 +706,7 @@ Proof.
   subst fs. split.
   - apply (body_first_last bt0 pre f _); [reflexivity | reflexivity | exact Hbf].
   - apply (frames_flat_plain pre f (fv_ctrl f)
-             (fv_seg f ++ [Opiter_StackType_Val Types_ValueType_I64]) _);
+             (fv_seg f ++ [Code_StackType_Val Types_ValueType_I64]) _);
       [reflexivity | apply flat_of_one_const_num].
 Qed.
 
@@ -738,7 +738,7 @@ Corollary step_binary_op : forall C0 bt0 st fs pre f ty res be st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
   effect_in C0 be [translate_vt_v ty; translate_vt_v ty] [translate_vt_v res] ->
   flat_of_one be = [FO_plain be] ->
-  opiter_read_binary st ty res = Ok (Core_result_Result_Ok tt, st') ->
+  code_read_binary st ty res = Ok (Core_result_Result_Ok tt, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs' = frames_flat fs ++ [FO_plain be].
 Proof.
@@ -757,7 +757,7 @@ Corollary step_conversion_op :
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
   effect_in C0 be [translate_vt_v from] [translate_vt_v to] ->
   flat_of_one be = [FO_plain be] ->
-  opiter_read_conversion st from to
+  code_read_conversion st from to
     = Ok (Core_result_Result_Ok tt, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs' = frames_flat fs ++ [FO_plain be].
@@ -773,7 +773,7 @@ Qed.
 Corollary step_local_get_op : forall C0 bt0 ctx st fs pre f data idx st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
   locals_agree ctx C0 ->
-  opiter_read_local_get st data ctx = Ok (Core_result_Result_Ok idx, st') ->
+  code_read_local_get st data ctx = Ok (Core_result_Result_Ok idx, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs'
                  = frames_flat fs
@@ -788,7 +788,7 @@ Qed.
 Corollary step_local_set_op : forall C0 bt0 ctx st fs pre f data idx st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
   locals_agree ctx C0 ->
-  opiter_read_local_set st data ctx = Ok (Core_result_Result_Ok idx, st') ->
+  code_read_local_set st data ctx = Ok (Core_result_Result_Ok idx, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs'
                  = frames_flat fs
@@ -803,7 +803,7 @@ Qed.
 Corollary step_local_tee_op : forall C0 bt0 ctx st fs pre f data idx st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
   locals_agree ctx C0 ->
-  opiter_read_local_tee st data ctx = Ok (Core_result_Result_Ok idx, st') ->
+  code_read_local_tee st data ctx = Ok (Core_result_Result_Ok idx, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs'
                  = frames_flat fs
@@ -819,7 +819,7 @@ Qed.
 Corollary step_global_get_op : forall C0 bt0 module st fs pre f data idx st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
   globals_agree module C0 ->
-  opiter_read_global_get st data module = Ok (Core_result_Result_Ok idx, st') ->
+  code_read_global_get st data module = Ok (Core_result_Result_Ok idx, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs'
                  = frames_flat fs
@@ -834,7 +834,7 @@ Qed.
 Corollary step_global_set_op : forall C0 bt0 module st fs pre f data idx st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
   globals_agree module C0 ->
-  opiter_read_global_set st data module = Ok (Core_result_Result_Ok idx, st') ->
+  code_read_global_set st data module = Ok (Core_result_Result_Ok idx, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs'
                  = frames_flat fs
@@ -853,14 +853,14 @@ Corollary step_load_op :
   translate_vt_v ty = T_num nt ->
   (forall a, 0 <= a <= to_Z natural ->
      load_store_t_bounds (Z.to_N a) (option_projl tp_sx) nt = true) ->
-  opiter_read_load st data module ty natural
+  code_read_load st data module ty natural
     = Ok (Core_result_Result_Ok m, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs'
                  = frames_flat fs
                    ++ [FO_plain (BI_load nt tp_sx
-                                   (Z.to_N (to_Z m.(opiter_MemArg_align)))
-                                   (Z.to_N (to_Z m.(opiter_MemArg_offset))))].
+                                   (Z.to_N (to_Z m.(code_MemArg_align)))
+                                   (Z.to_N (to_Z m.(code_MemArg_offset))))].
 Proof.
   intros C0 bt0 st fs pre f data module ty natural nt tp_sx m st'
          Hinv Hbf Hfs Hmems Hty Hbounds H.
@@ -869,7 +869,7 @@ Proof.
   eexists. split; [exact Hinv'|]. subst fs. split.
   - apply (body_first_last bt0 pre f _); [reflexivity | reflexivity | exact Hbf].
   - apply (frames_flat_plain pre f (fv_ctrl f)
-             (seg' ++ [Opiter_StackType_Val ty]) _);
+             (seg' ++ [Code_StackType_Val ty]) _);
       [reflexivity | apply flat_of_one_load].
 Qed.
 
@@ -880,14 +880,14 @@ Corollary step_store_op :
   translate_vt_v ty = T_num nt ->
   (forall a, 0 <= a <= to_Z natural ->
      load_store_t_bounds (Z.to_N a) tp nt = true) ->
-  opiter_read_store st data module ty natural
+  code_read_store st data module ty natural
     = Ok (Core_result_Result_Ok m, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs'
                  = frames_flat fs
                    ++ [FO_plain (BI_store nt tp
-                                   (Z.to_N (to_Z m.(opiter_MemArg_align)))
-                                   (Z.to_N (to_Z m.(opiter_MemArg_offset))))].
+                                   (Z.to_N (to_Z m.(code_MemArg_align)))
+                                   (Z.to_N (to_Z m.(code_MemArg_offset))))].
 Proof.
   intros C0 bt0 st fs pre f data module ty natural nt tp m st'
          Hinv Hbf Hfs Hmems Hty Hbounds H.
@@ -901,7 +901,7 @@ Qed.
 
 Corollary step_br_op : forall C0 bt0 st fs pre f data depth bt st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
-  opiter_read_br st data = Ok (Core_result_Result_Ok (depth, bt), st') ->
+  code_read_br st data = Ok (Core_result_Result_Ok (depth, bt), st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs'
                  = frames_flat fs
@@ -913,11 +913,11 @@ Proof.
   subst fs. split.
   - apply (body_first_last bt0 pre f _); [reflexivity | reflexivity | exact Hbf].
   - apply (frames_flat_plain pre f
-             {| opiter_Ctrl_kind := (fv_ctrl f).(opiter_Ctrl_kind);
-                opiter_Ctrl_block_type := (fv_ctrl f).(opiter_Ctrl_block_type);
-                opiter_Ctrl_value_stack_base :=
-                  (fv_ctrl f).(opiter_Ctrl_value_stack_base);
-                opiter_Ctrl_polymorphic_base := true |}
+             {| code_Ctrl_kind := (fv_ctrl f).(code_Ctrl_kind);
+                code_Ctrl_block_type := (fv_ctrl f).(code_Ctrl_block_type);
+                code_Ctrl_value_stack_base :=
+                  (fv_ctrl f).(code_Ctrl_value_stack_base);
+                code_Ctrl_polymorphic_base := true |}
              [] _);
       [reflexivity | apply flat_of_one_br].
 Qed.
@@ -926,7 +926,7 @@ Qed.
     [step_plain_op] on top of [step_br_if]. *)
 Corollary step_br_if_op : forall C0 bt0 st fs pre f data depth bt st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
-  opiter_read_br_if st data = Ok (Core_result_Result_Ok (depth, bt), st') ->
+  code_read_br_if st data = Ok (Core_result_Result_Ok (depth, bt), st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs'
                  = frames_flat fs
@@ -941,11 +941,11 @@ Qed.
 
 (** [br_table] rewrites the frame's ctrl exactly as [br] does, so this is
     [step_br_op]'s shape with the label list threaded through. *)
-Corollary step_br_table_op : forall V (inst : visit_OpVisitor_t V) v v' dflt
+Corollary step_br_table_op : forall V (inst : code_OpVisitor_t V) v v' dflt
                                     C0 bt0 st fs pre f data ls x common st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
   List.Forall (fun d => depth_target st d common) (ls ++ [x]) ->
-  opiter_read_br_table inst st data v
+  code_read_br_table inst st data v
     = Ok (Core_result_Result_Ok (dflt, common), st', v') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs'
@@ -961,11 +961,11 @@ Proof.
   subst fs. split.
   - apply (body_first_last bt0 pre f _); [reflexivity | reflexivity | exact Hbf].
   - apply (frames_flat_plain pre f
-             {| opiter_Ctrl_kind := (fv_ctrl f).(opiter_Ctrl_kind);
-                opiter_Ctrl_block_type := (fv_ctrl f).(opiter_Ctrl_block_type);
-                opiter_Ctrl_value_stack_base :=
-                  (fv_ctrl f).(opiter_Ctrl_value_stack_base);
-                opiter_Ctrl_polymorphic_base := true |}
+             {| code_Ctrl_kind := (fv_ctrl f).(code_Ctrl_kind);
+                code_Ctrl_block_type := (fv_ctrl f).(code_Ctrl_block_type);
+                code_Ctrl_value_stack_base :=
+                  (fv_ctrl f).(code_Ctrl_value_stack_base);
+                code_Ctrl_polymorphic_base := true |}
              [] _);
       [reflexivity | apply flat_of_one_br_table].
 Qed.
@@ -975,7 +975,7 @@ Qed.
 Corollary step_return_op : forall C0 bt0 ctx st fs pre f st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
   return_agree ctx C0 ->
-  opiter_read_return st ctx = Ok (Core_result_Result_Ok tt, st') ->
+  code_read_return st ctx = Ok (Core_result_Result_Ok tt, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs' = frames_flat fs ++ [FO_plain BI_return].
 Proof.
@@ -985,11 +985,11 @@ Proof.
   subst fs. split.
   - apply (body_first_last bt0 pre f _); [reflexivity | reflexivity | exact Hbf].
   - apply (frames_flat_plain pre f
-             {| opiter_Ctrl_kind := (fv_ctrl f).(opiter_Ctrl_kind);
-                opiter_Ctrl_block_type := (fv_ctrl f).(opiter_Ctrl_block_type);
-                opiter_Ctrl_value_stack_base :=
-                  (fv_ctrl f).(opiter_Ctrl_value_stack_base);
-                opiter_Ctrl_polymorphic_base := true |}
+             {| code_Ctrl_kind := (fv_ctrl f).(code_Ctrl_kind);
+                code_Ctrl_block_type := (fv_ctrl f).(code_Ctrl_block_type);
+                code_Ctrl_value_stack_base :=
+                  (fv_ctrl f).(code_Ctrl_value_stack_base);
+                code_Ctrl_polymorphic_base := true |}
              [] _);
       [reflexivity | apply flat_of_one_return].
 Qed.
@@ -998,7 +998,7 @@ Qed.
 Corollary step_call_op : forall C0 bt0 module st fs pre f data idx st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
   funcs_agree module C0 ->
-  opiter_read_call st data module = Ok (Core_result_Result_Ok idx, st') ->
+  code_read_call st data module = Ok (Core_result_Result_Ok idx, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs'
                  = frames_flat fs ++ [FO_plain (BI_call (Z.to_N (to_Z idx)))].
@@ -1013,7 +1013,7 @@ Qed.
 Corollary step_call_indirect_op : forall C0 bt0 module st fs pre f data idx st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
   types_agree module C0 -> tables_agree module C0 ->
-  opiter_read_call_indirect st data module
+  code_read_call_indirect st data module
     = Ok (Core_result_Result_Ok idx, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs'
@@ -1032,7 +1032,7 @@ Qed.
 Corollary step_memory_size_op : forall C0 bt0 module st fs pre f data st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
   mems_agree module C0 ->
-  opiter_read_memory_size st data module = Ok (Core_result_Result_Ok tt, st') ->
+  code_read_memory_size st data module = Ok (Core_result_Result_Ok tt, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs' = frames_flat fs ++ [FO_plain BI_memory_size].
 Proof.
@@ -1045,7 +1045,7 @@ Qed.
 Corollary step_memory_grow_op : forall C0 bt0 module st fs pre f data st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
   mems_agree module C0 ->
-  opiter_read_memory_grow st data module = Ok (Core_result_Result_Ok tt, st') ->
+  code_read_memory_grow st data module = Ok (Core_result_Result_Ok tt, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs' = frames_flat fs ++ [FO_plain BI_memory_grow].
 Proof.
@@ -1057,7 +1057,7 @@ Qed.
 
 Corollary step_block_op : forall C0 bt0 st fs data bt st',
   Inv C0 st fs -> body_first bt0 fs ->
-  opiter_read_block st data = Ok (Core_result_Result_Ok bt, st') ->
+  code_read_block st data = Ok (Core_result_Result_Ok bt, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs'
                  = frames_flat fs ++ [FO_block (translate_bt bt)].
@@ -1068,10 +1068,10 @@ Proof.
   rewrite frames_flat_push.
   rewrite (frame_open_block
              {| fv_ctrl :=
-                  {| opiter_Ctrl_kind := Opiter_LabelKind_Block;
-                     opiter_Ctrl_block_type := bt;
-                     opiter_Ctrl_value_stack_base := base;
-                     opiter_Ctrl_polymorphic_base := false |};
+                  {| code_Ctrl_kind := Code_LabelKind_Block;
+                     code_Ctrl_block_type := bt;
+                     code_Ctrl_value_stack_base := base;
+                     code_Ctrl_polymorphic_base := false |};
                 fv_seg := []; fv_done := []; fv_then := [] |} bt
              (eq_refl _) (eq_refl _)).
   reflexivity.
@@ -1079,7 +1079,7 @@ Qed.
 
 Corollary step_loop_op : forall C0 bt0 st fs data bt st',
   Inv C0 st fs -> body_first bt0 fs ->
-  opiter_read_loop st data = Ok (Core_result_Result_Ok bt, st') ->
+  code_read_loop st data = Ok (Core_result_Result_Ok bt, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs'
                  = frames_flat fs ++ [FO_loop (translate_bt bt)].
@@ -1091,10 +1091,10 @@ Proof.
   rewrite frames_flat_push.
   rewrite (frame_open_loop
              {| fv_ctrl :=
-                  {| opiter_Ctrl_kind := Opiter_LabelKind_Loop;
-                     opiter_Ctrl_block_type := bt;
-                     opiter_Ctrl_value_stack_base := base;
-                     opiter_Ctrl_polymorphic_base := false |};
+                  {| code_Ctrl_kind := Code_LabelKind_Loop;
+                     code_Ctrl_block_type := bt;
+                     code_Ctrl_value_stack_base := base;
+                     code_Ctrl_polymorphic_base := false |};
                 fv_seg := []; fv_done := []; fv_then := [] |} bt
              (eq_refl _) (eq_refl _)).
   reflexivity.
@@ -1102,8 +1102,8 @@ Qed.
 
 Corollary step_end_block_op : forall C0 bt0 st fs pre f g r st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ++ [g] ->
-  (fv_ctrl g).(opiter_Ctrl_kind) = Opiter_LabelKind_Block ->
-  opiter_read_end st = Ok (Core_result_Result_Ok r, st') ->
+  (fv_ctrl g).(code_Ctrl_kind) = Code_LabelKind_Block ->
+  code_read_end st = Ok (Core_result_Result_Ok r, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs' = frames_flat fs ++ [FO_end].
 Proof.
@@ -1114,13 +1114,13 @@ Proof.
   - apply (body_first_end bt0 pre f _ g);
       [reflexivity | reflexivity | exact Hbf].
   - apply (frames_flat_end_block pre f g _
-             (fv_ctrl g).(opiter_Ctrl_block_type) Hkind (eq_refl _)).
+             (fv_ctrl g).(code_Ctrl_block_type) Hkind (eq_refl _)).
 Qed.
 
 Corollary step_end_loop_op : forall C0 bt0 st fs pre f g r st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ++ [g] ->
-  (fv_ctrl g).(opiter_Ctrl_kind) = Opiter_LabelKind_Loop ->
-  opiter_read_end st = Ok (Core_result_Result_Ok r, st') ->
+  (fv_ctrl g).(code_Ctrl_kind) = Code_LabelKind_Loop ->
+  code_read_end st = Ok (Core_result_Result_Ok r, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs' = frames_flat fs ++ [FO_end].
 Proof.
@@ -1131,7 +1131,7 @@ Proof.
   - apply (body_first_end bt0 pre f _ g);
       [reflexivity | reflexivity | exact Hbf].
   - apply (frames_flat_end_loop pre f g _
-             (fv_ctrl g).(opiter_Ctrl_block_type) Hkind (eq_refl _)).
+             (fv_ctrl g).(code_Ctrl_block_type) Hkind (eq_refl _)).
 Qed.
 
 (** [if] is the only push that also touches the frame below it, since the
@@ -1139,7 +1139,7 @@ Qed.
     what says that pop is invisible to the stream. *)
 Corollary step_if_op : forall C0 bt0 st fs pre f data bt st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ->
-  opiter_read_if st data = Ok (Core_result_Result_Ok bt, st') ->
+  code_read_if st data = Ok (Core_result_Result_Ok bt, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs' = frames_flat fs ++ [FO_if (translate_bt bt)].
 Proof.
@@ -1156,10 +1156,10 @@ Proof.
   - rewrite List.app_assoc. rewrite frames_flat_push.
     rewrite (frame_open_then
                {| fv_ctrl :=
-                    {| opiter_Ctrl_kind := Opiter_LabelKind_Then;
-                       opiter_Ctrl_block_type := bt;
-                       opiter_Ctrl_value_stack_base := base;
-                       opiter_Ctrl_polymorphic_base := false |};
+                    {| code_Ctrl_kind := Code_LabelKind_Then;
+                       code_Ctrl_block_type := bt;
+                       code_Ctrl_value_stack_base := base;
+                       code_Ctrl_polymorphic_base := false |};
                   fv_seg := []; fv_done := []; fv_then := [] |} bt
                (eq_refl _) (eq_refl _)).
     rewrite frames_flat_seg. reflexivity.
@@ -1167,8 +1167,8 @@ Qed.
 
 Corollary step_switch_else_op : forall C0 bt0 st fs pre g bt st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [g] ->
-  (fv_ctrl g).(opiter_Ctrl_kind) = Opiter_LabelKind_Then ->
-  opiter_read_else st = Ok (Core_result_Result_Ok bt, st') ->
+  (fv_ctrl g).(code_Ctrl_kind) = Code_LabelKind_Then ->
+  code_read_else st = Ok (Core_result_Result_Ok bt, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs' = frames_flat fs ++ [FO_else].
 Proof.
@@ -1183,12 +1183,12 @@ Proof.
   - apply (body_first_switch bt0 h pre' g);
       [right; right; right; reflexivity | exact Hbf].
   - apply (frames_flat_switch_else (h :: pre') g
-             {| opiter_Ctrl_kind := Opiter_LabelKind_Else;
-                opiter_Ctrl_block_type := (fv_ctrl g).(opiter_Ctrl_block_type);
-                opiter_Ctrl_value_stack_base :=
-                  (fv_ctrl g).(opiter_Ctrl_value_stack_base);
-                opiter_Ctrl_polymorphic_base := false |}
-             (fv_ctrl g).(opiter_Ctrl_block_type) Hkind (eq_refl _)
+             {| code_Ctrl_kind := Code_LabelKind_Else;
+                code_Ctrl_block_type := (fv_ctrl g).(code_Ctrl_block_type);
+                code_Ctrl_value_stack_base :=
+                  (fv_ctrl g).(code_Ctrl_value_stack_base);
+                code_Ctrl_polymorphic_base := false |}
+             (fv_ctrl g).(code_Ctrl_block_type) Hkind (eq_refl _)
              (eq_refl _) (eq_refl _)).
 Qed.
 
@@ -1196,8 +1196,8 @@ Qed.
     whole dispatch that appends two operators: see [frames_flat_end_then]. *)
 Corollary step_end_then_op : forall C0 bt0 st fs pre f g r st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ++ [g] ->
-  (fv_ctrl g).(opiter_Ctrl_kind) = Opiter_LabelKind_Then ->
-  opiter_read_end st = Ok (Core_result_Result_Ok r, st') ->
+  (fv_ctrl g).(code_Ctrl_kind) = Code_LabelKind_Then ->
+  code_read_end st = Ok (Core_result_Result_Ok r, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs' = frames_flat fs ++ [FO_else; FO_end].
 Proof.
@@ -1208,13 +1208,13 @@ Proof.
   - apply (body_first_end bt0 pre f _ g);
       [reflexivity | reflexivity | exact Hbf].
   - apply (frames_flat_end_then pre f g _
-             (fv_ctrl g).(opiter_Ctrl_block_type) Hkind (eq_refl _)).
+             (fv_ctrl g).(code_Ctrl_block_type) Hkind (eq_refl _)).
 Qed.
 
 Corollary step_end_else_op : forall C0 bt0 st fs pre f g r st',
   Inv C0 st fs -> body_first bt0 fs -> fs = pre ++ [f] ++ [g] ->
-  (fv_ctrl g).(opiter_Ctrl_kind) = Opiter_LabelKind_Else ->
-  opiter_read_end st = Ok (Core_result_Result_Ok r, st') ->
+  (fv_ctrl g).(code_Ctrl_kind) = Code_LabelKind_Else ->
+  code_read_end st = Ok (Core_result_Result_Ok r, st') ->
   exists fs', Inv C0 st' fs' /\ body_first bt0 fs'
               /\ frames_flat fs' = frames_flat fs ++ [FO_end].
 Proof.
@@ -1225,5 +1225,5 @@ Proof.
   - apply (body_first_end bt0 pre f _ g);
       [reflexivity | reflexivity | exact Hbf].
   - apply (frames_flat_end_else pre f g _
-             (fv_ctrl g).(opiter_Ctrl_block_type) Hkind (eq_refl _)).
+             (fv_ctrl g).(code_Ctrl_block_type) Hkind (eq_refl _)).
 Qed.

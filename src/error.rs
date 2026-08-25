@@ -1,19 +1,18 @@
 //! The crate's error types.
 //!
 //! Decoding and validation are one pass, so there is one `Error` covering
-//! both. `OpError` stays separate because `opiter` is a self-contained
+//! both. `OpError` stays separate because `code` is a self-contained
 //! component: a consumer can call `validate_body` on its own and get a
 //! rejection reason in its own vocabulary.
 
 #[cfg(not(charon))]
 use core::fmt;
 
-/// Why a byte read or a function body was rejected. The correspondence proof
-/// distinguishes only accept from reject, so no variant carries a proof
-/// obligation; they exist for debugging. Errors are unspecified in both the
-/// core spec and the web embedding.
+/// Why a byte read or a function body was rejected. These exist for
+/// debugging only: the spec and the web embedding leave error reporting
+/// unspecified, so no particular variant is guaranteed for a given input.
 ///
-/// Shared by `reader` and `opiter`, which is why it lives here.
+/// Shared by `reader` and `code`, which is why it lives here.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
 pub enum OpError {
@@ -101,7 +100,7 @@ pub enum Error {
     TooManyResults,
     TooManyLocals,
     ModuleTooLarge,
-    /// A function body was rejected by `opiter::validate_body`.
+    /// A function body was rejected by `code::validate_body`.
     Body(OpError),
     /// The consumer of a `_with` entry point declined what it was shown. Not a
     /// validity verdict, the same way `OpError::Visitor` is not: the module may

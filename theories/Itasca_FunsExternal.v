@@ -115,10 +115,10 @@ Axiom types_ValueType_Insts_CoreCmpPartialEqValueType_ne
   : types_ValueType_t -> types_ValueType_t -> result bool
 .
 
-(** [itasca::opiter::{core::cmp::PartialEq<itasca::opiter::BlockType> for itasca::opiter::BlockType}::ne]:
-    Source: 'src/opiter.rs' *)
-Axiom opiter_BlockType_Insts_CoreCmpPartialEqBlockType_ne
-  : opiter_BlockType_t -> opiter_BlockType_t -> result bool
+(** [itasca::code::{core::cmp::PartialEq<itasca::code::BlockType> for itasca::code::BlockType}::ne]:
+    Source: 'src/code.rs' *)
+Axiom code_BlockType_Insts_CoreCmpPartialEqBlockType_ne
+  : code_BlockType_t -> code_BlockType_t -> result bool
 .
 
 (** [itasca::types::{core::cmp::PartialEq<itasca::types::Mut> for itasca::types::Mut}::ne]:

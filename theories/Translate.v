@@ -1,7 +1,7 @@
 (** * Translating extracted types to WasmCert types
 
     The Aeneas extraction has its own copies of the Wasm types (types_ValueType_t,
-    opiter_BlockType_t, ...). These map them onto WasmCert-Coq's.
+    code_BlockType_t, ...). These map them onto WasmCert-Coq's.
 
     Definitions only; no proofs. *)
 
@@ -56,10 +56,10 @@ Definition translate_functype (ft : types_FuncType_t) : function_type :=
   Tf (List.map translate_vt_v (proj1_sig ft.(types_FuncType_params)))
      (List.map translate_vt_v (proj1_sig ft.(types_FuncType_results))).
 
-Definition translate_bt (bt : opiter_BlockType_t) : block_type :=
+Definition translate_bt (bt : code_BlockType_t) : block_type :=
   match bt with
-  | Opiter_BlockType_Empty => BT_valtype None
-  | Opiter_BlockType_Value vt => BT_valtype (Some (translate_vt_v vt))
+  | Code_BlockType_Empty => BT_valtype None
+  | Code_BlockType_Value vt => BT_valtype (Some (translate_vt_v vt))
   end.
 
 Definition translate_mut (m : types_Mut_t) : mutability :=
@@ -68,9 +68,9 @@ Definition translate_mut (m : types_Mut_t) : mutability :=
   | Types_Mut_Var => MUT_var
   end.
 
-Definition translate_limits (l : limits_Limits_t) : limits :=
-  {| lim_min := Z.to_N (to_Z l.(limits_Limits_min));
-     lim_max := option_map (fun x => Z.to_N (to_Z x)) l.(limits_Limits_max) |}.
+Definition translate_limits (l : types_Limits_t) : limits :=
+  {| lim_min := Z.to_N (to_Z l.(types_Limits_min));
+     lim_max := option_map (fun x => Z.to_N (to_Z x)) l.(types_Limits_max) |}.
 
 Definition translate_memtype (m : types_MemType_t) : memory_type :=
   translate_limits m.(types_MemType_limits).

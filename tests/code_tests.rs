@@ -1,9 +1,8 @@
 //! Tests for the streaming decode+validate function-body validator.
 
-use itasca::env::*;
+use itasca::module::*;
 use itasca::error::OpError;
-use itasca::limits::*;
-use itasca::opiter::*;
+use itasca::code::*;
 use itasca::types::*;
 
 fn empty_env() -> Env {
@@ -1274,39 +1273,5 @@ fn call_indirect_needs_a_zero_table_byte() {
             &ctx(&[], &[])
         ),
         Err(OpError::ReservedByteNotZero)
-    ));
-}
-
-// ---- Implementation limits ----
-
-#[test]
-fn a_body_at_the_size_limit_is_still_validated() {
-    // MAX_FUNCTION_BYTES nops followed by the closing end would be one byte
-    // over, so stop one short. This is the largest body the validator accepts,
-    // and it must be accepted on its merits rather than rejected for size.
-    let mut body = vec![OP_NOP; MAX_FUNCTION_BYTES - 1];
-    body.push(OP_END);
-    assert_eq!(body.len(), MAX_FUNCTION_BYTES);
-    assert!(accepts(&body, &[]));
-}
-
-#[test]
-fn a_body_over_the_size_limit_is_rejected_for_size() {
-    let mut body = vec![OP_NOP; MAX_FUNCTION_BYTES];
-    body.push(OP_END);
-    assert!(matches!(
-        validate_body(&body, &env_with_memory(), &ctx(&[], &[])),
-        Err(OpError::BodyTooLarge)
-    ));
-}
-
-#[test]
-fn the_size_limit_is_checked_before_anything_else() {
-    // An oversized body that is also ill-typed is rejected for size, so the
-    // check cannot be reached only on otherwise-valid input.
-    let body = vec![OP_I32_ADD; MAX_FUNCTION_BYTES + 1];
-    assert!(matches!(
-        validate_body(&body, &env_with_memory(), &ctx(&[], &[])),
-        Err(OpError::BodyTooLarge)
     ));
 }

@@ -123,7 +123,7 @@ Qed.
 (** ** Popping what the checker consumes                                *)
 (* ================================================================== *)
 
-Lemma seg_snoc : forall (l : list opiter_StackType_t),
+Lemma seg_snoc : forall (l : list code_StackType_t),
   l <> [] -> exists l0 x, l = l0 ++ [x].
 Proof.
   intros l Hne. destruct (List.exists_last Hne) as [l0 [x Hl]].
@@ -133,14 +133,14 @@ Qed.
 (** The raw pop succeeds whenever the frame owns an operand or is unreachable,
     which is exactly the case distinction [consume] makes. *)
 Lemma pop_stack_type_complete : forall st pre_seg f,
-  vec_list st.(opiter_OpIterState_vals) = pre_seg ++ fv_seg f ->
+  vec_list st.(code_OpIterState_vals) = pre_seg ++ fv_seg f ->
   cur_base_nat st = List.length pre_seg ->
-  cur_unr st = (fv_ctrl f).(opiter_Ctrl_polymorphic_base) ->
-  (fv_seg f <> [] \/ (fv_ctrl f).(opiter_Ctrl_polymorphic_base) = true) ->
-  exists t st', opiter_pop_stack_type st = Ok (Core_result_Result_Ok t, st').
+  cur_unr st = (fv_ctrl f).(code_Ctrl_polymorphic_base) ->
+  (fv_seg f <> [] \/ (fv_ctrl f).(code_Ctrl_polymorphic_base) = true) ->
+  exists t st', code_pop_stack_type st = Ok (Core_result_Result_Ok t, st').
 Proof.
   intros st pre_seg f Hsplit Hbase Hunr Hne.
-  unfold opiter_pop_stack_type.
+  unfold code_pop_stack_type.
   destruct (cur_base_total st) as [base Hcb]. rewrite Hcb. cbn [bind].
   pose proof (cur_base_agrees st base Hcb) as Hba.
   assert (Hbz : to_Z base = Z.of_nat (List.length pre_seg)).
@@ -149,14 +149,14 @@ Proof.
     apply (f_equal Z.of_nat) in Hn.
     pose proof (Z2Nat.id (to_Z base) (usize_nonneg base)) as Hid.
     rewrite Hid in Hn. exact Hn. }
-  assert (Hlen : Z.of_nat (List.length (vec_list st.(opiter_OpIterState_vals)))
+  assert (Hlen : Z.of_nat (List.length (vec_list st.(code_OpIterState_vals)))
                  = Z.of_nat (List.length pre_seg)
                    + Z.of_nat (List.length (fv_seg f))).
   { rewrite Hsplit. rewrite List.app_length. lia. }
   destruct (fv_seg f) as [|x xs] eqn:Hseg.
   - (* the frame owns nothing, so it has to be unreachable *)
     destruct Hne as [Hne|Hpoly]; [exfalso; apply Hne; reflexivity|].
-    assert (Hz : (alloc_vec_Vec_len st.(opiter_OpIterState_vals) s= base) = true).
+    assert (Hz : (alloc_vec_Vec_len st.(code_OpIterState_vals) s= base) = true).
     { unfold scalar_eqb. apply Z.eqb_eq. rewrite vec_len_spec. rewrite Hbz.
       cbn [List.length] in Hlen. lia. }
     rewrite Hz. cbn beta iota.
@@ -165,16 +165,16 @@ Proof.
     assert (Hpbt : pb = true) by (rewrite Hpb; rewrite Hunr; exact Hpoly).
     rewrite Hpbt. eexists. eexists. reflexivity.
   - (* a real pop, which cannot come up empty *)
-    assert (Hz : (alloc_vec_Vec_len st.(opiter_OpIterState_vals) s= base)
+    assert (Hz : (alloc_vec_Vec_len st.(code_OpIterState_vals) s= base)
                  = false).
     { unfold scalar_eqb. apply Z.eqb_neq. rewrite vec_len_spec. rewrite Hbz.
       cbn [List.length] in Hlen. lia. }
     rewrite Hz. cbn beta iota.
-    destruct (vec_pop_ok alloc_alloc_Global st.(opiter_OpIterState_vals))
+    destruct (vec_pop_ok alloc_alloc_Global st.(code_OpIterState_vals))
       as [o [v Hpop]].
     rewrite Hpop. cbn [bind].
     pose proof (vec_pop_last alloc_alloc_Global _ o v Hpop) as Hspec.
-    destruct (List.rev (vec_list st.(opiter_OpIterState_vals))) as [|y r]
+    destruct (List.rev (vec_list st.(code_OpIterState_vals))) as [|y r]
       eqn:Hrev.
     { exfalso. apply (f_equal (@List.length _)) in Hrev.
       rewrite List.rev_length in Hrev. cbn [List.length] in Hrev.
@@ -186,15 +186,15 @@ Qed.
     [read_select]'s three pops can be chained. A nonempty segment yields its last
     element; an empty unreachable one yields [Bot] and changes nothing. *)
 Lemma pop_stack_type_real : forall st pre_seg f seg0 x,
-  vec_list st.(opiter_OpIterState_vals) = pre_seg ++ fv_seg f ->
+  vec_list st.(code_OpIterState_vals) = pre_seg ++ fv_seg f ->
   cur_base_nat st = List.length pre_seg ->
-  cur_unr st = (fv_ctrl f).(opiter_Ctrl_polymorphic_base) ->
+  cur_unr st = (fv_ctrl f).(code_Ctrl_polymorphic_base) ->
   fv_seg f = seg0 ++ [x] ->
   exists st',
-    opiter_pop_stack_type st = Ok (Core_result_Result_Ok x, st')
-    /\ vec_list st'.(opiter_OpIterState_ctrls)
-       = vec_list st.(opiter_OpIterState_ctrls)
-    /\ vec_list st'.(opiter_OpIterState_vals) = pre_seg ++ seg0.
+    code_pop_stack_type st = Ok (Core_result_Result_Ok x, st')
+    /\ vec_list st'.(code_OpIterState_ctrls)
+       = vec_list st.(code_OpIterState_ctrls)
+    /\ vec_list st'.(code_OpIterState_vals) = pre_seg ++ seg0.
 Proof.
   intros st pre_seg f seg0 x Hsplit Hbase Hunr Hseg.
   assert (Hne : fv_seg f <> []).
@@ -210,19 +210,19 @@ Proof.
 Qed.
 
 Lemma pop_stack_type_empty : forall st pre_seg f,
-  vec_list st.(opiter_OpIterState_vals) = pre_seg ++ fv_seg f ->
+  vec_list st.(code_OpIterState_vals) = pre_seg ++ fv_seg f ->
   cur_base_nat st = List.length pre_seg ->
-  cur_unr st = (fv_ctrl f).(opiter_Ctrl_polymorphic_base) ->
+  cur_unr st = (fv_ctrl f).(code_Ctrl_polymorphic_base) ->
   fv_seg f = [] ->
-  (fv_ctrl f).(opiter_Ctrl_polymorphic_base) = true ->
-  opiter_pop_stack_type st
-    = Ok (Core_result_Result_Ok Opiter_StackType_Bot, st).
+  (fv_ctrl f).(code_Ctrl_polymorphic_base) = true ->
+  code_pop_stack_type st
+    = Ok (Core_result_Result_Ok Code_StackType_Bot, st).
 Proof.
   intros st pre_seg f Hsplit Hbase Hunr Hseg Hpoly.
-  unfold opiter_pop_stack_type.
+  unfold code_pop_stack_type.
   destruct (cur_base_total st) as [base Hcb]. rewrite Hcb. cbn [bind].
   pose proof (cur_base_agrees st base Hcb) as Hba.
-  assert (Hz : (alloc_vec_Vec_len st.(opiter_OpIterState_vals) s= base) = true).
+  assert (Hz : (alloc_vec_Vec_len st.(code_OpIterState_vals) s= base) = true).
   { unfold scalar_eqb. apply Z.eqb_eq. rewrite vec_len_spec.
     rewrite Hsplit. rewrite Hseg. rewrite List.app_nil_r.
     assert (Hn : Z.to_nat (to_Z base) = List.length pre_seg)
@@ -246,9 +246,9 @@ Qed.
     operand can translate to [T_bot], so the two agree on every case. *)
 Lemma join_stack_type_complete : forall a b tsup,
   value_type_select (translate_st a) (translate_st b) = Some tsup ->
-  exists t, opiter_join_stack_type a b = Ok (Core_result_Result_Ok t).
+  exists t, code_join_stack_type a b = Ok (Core_result_Result_Ok t).
 Proof.
-  intros a b tsup H. unfold opiter_join_stack_type.
+  intros a b tsup H. unfold code_join_stack_type.
   destruct a as [va|]; [|eexists; reflexivity].
   destruct b as [vb|]; [|eexists; reflexivity].
   cbn [translate_st] in H.
@@ -260,15 +260,15 @@ Qed.
 (** With a [Bot] on one side the join cannot fail, which is what the three
     exhausted-frame cases of [select] need. *)
 Lemma join_stack_type_bot_l_ok : forall b,
-  exists t, opiter_join_stack_type Opiter_StackType_Bot b
+  exists t, code_join_stack_type Code_StackType_Bot b
             = Ok (Core_result_Result_Ok t).
 Proof. intros b. exists b. reflexivity. Qed.
 
 Lemma join_stack_type_bot_r_ok : forall a,
-  exists t, opiter_join_stack_type a Opiter_StackType_Bot
+  exists t, code_join_stack_type a Code_StackType_Bot
             = Ok (Core_result_Result_Ok t).
-Proof. intros a. destruct a as [va|]; [exists (Opiter_StackType_Val va)
-       | exists Opiter_StackType_Bot]; reflexivity. Qed.
+Proof. intros a. destruct a as [va|]; [exists (Code_StackType_Val va)
+       | exists Code_StackType_Bot]; reflexivity. Qed.
 
 (* ================================================================== *)
 (** ** [type_update_select], taken apart                               *)
@@ -290,24 +290,24 @@ Lemma select_disj : forall f ct',
   type_update_select (fv_ct f) None = Some ct' ->
   (exists ct1, consume (fv_ct f) [T_num T_i32] = Some ct1)
   /\ ((exists s z y x, fv_seg f = s ++ [z; y; x]
-                       /\ exists t, opiter_join_stack_type y z
+                       /\ exists t, code_join_stack_type y z
                                     = Ok (Core_result_Result_Ok t))
       \/ ((exists y x, fv_seg f = [y; x])
-          /\ (fv_ctrl f).(opiter_Ctrl_polymorphic_base) = true)
+          /\ (fv_ctrl f).(code_Ctrl_polymorphic_base) = true)
       \/ ((fv_seg f = [] \/ exists x, fv_seg f = [x])
-          /\ (fv_ctrl f).(opiter_Ctrl_polymorphic_base) = true)).
+          /\ (fv_ctrl f).(code_Ctrl_polymorphic_base) = true)).
 Proof.
   intros f ct' H.
   destruct (@seg_cases _ (fv_seg f)) as
     [Hs | [[x Hs] | [[y [x Hs]] | [s [z [y [x Hs]]]]]]].
   - (* nothing visible *)
     assert (Hct : fv_ct f
-             = <<[], (fv_ctrl f).(opiter_Ctrl_polymorphic_base)>>).
+             = <<[], (fv_ctrl f).(code_Ctrl_polymorphic_base)>>).
     { unfold fv_ct. rewrite Hs. reflexivity. }
     rewrite Hct in H. unfold type_update_select in H.
     cbn [CT_type CT_unr] in H. cbn beta iota in H.
-    assert (Hu : (fv_ctrl f).(opiter_Ctrl_polymorphic_base) = true).
-    { destruct ((fv_ctrl f).(opiter_Ctrl_polymorphic_base));
+    assert (Hu : (fv_ctrl f).(code_Ctrl_polymorphic_base) = true).
+    { destruct ((fv_ctrl f).(code_Ctrl_polymorphic_base));
         [reflexivity | cbn in H; discriminate H]. }
     split.
     + rewrite Hct. rewrite Hu. exists <<[], true>>. reflexivity.
@@ -315,12 +315,12 @@ Proof.
   - (* only the condition *)
     assert (Hct : fv_ct f
              = <<[translate_st x],
-                 (fv_ctrl f).(opiter_Ctrl_polymorphic_base)>>).
+                 (fv_ctrl f).(code_Ctrl_polymorphic_base)>>).
     { unfold fv_ct. rewrite Hs. reflexivity. }
     rewrite Hct in H. unfold type_update_select in H.
     cbn [CT_type CT_unr] in H. cbn beta iota in H.
-    assert (Hu : (fv_ctrl f).(opiter_Ctrl_polymorphic_base) = true).
-    { destruct ((fv_ctrl f).(opiter_Ctrl_polymorphic_base));
+    assert (Hu : (fv_ctrl f).(code_Ctrl_polymorphic_base) = true).
+    { destruct ((fv_ctrl f).(code_Ctrl_polymorphic_base));
         [reflexivity | cbn in H; discriminate H]. }
     rewrite Hu in H. unfold type_update in H.
     destruct (consume <<[translate_st x], true>> [T_num T_i32]) as [ct1|]
@@ -331,13 +331,13 @@ Proof.
   - (* two operands, so the second value comes off Bot *)
     assert (Hct : fv_ct f
              = <<[translate_st x; translate_st y],
-                 (fv_ctrl f).(opiter_Ctrl_polymorphic_base)>>).
+                 (fv_ctrl f).(code_Ctrl_polymorphic_base)>>).
     { unfold fv_ct. rewrite Hs. reflexivity. }
     rewrite Hct in H. unfold type_update_select in H.
     cbn [CT_type CT_unr] in H. cbn beta iota in H.
     rewrite translate_st_numeric in H. cbn [andb] in H.
-    assert (Hu : (fv_ctrl f).(opiter_Ctrl_polymorphic_base) = true).
-    { destruct ((fv_ctrl f).(opiter_Ctrl_polymorphic_base));
+    assert (Hu : (fv_ctrl f).(code_Ctrl_polymorphic_base) = true).
+    { destruct ((fv_ctrl f).(code_Ctrl_polymorphic_base));
         [reflexivity | cbn in H; discriminate H]. }
     rewrite Hu in H. unfold type_update in H.
     destruct (consume <<[translate_st x; translate_st y], true>>
@@ -351,7 +351,7 @@ Proof.
     assert (Hct : fv_ct f
              = <<translate_st x :: translate_st y :: translate_st z
                  :: translate_vals s,
-                 (fv_ctrl f).(opiter_Ctrl_polymorphic_base)>>).
+                 (fv_ctrl f).(code_Ctrl_polymorphic_base)>>).
     { unfold fv_ct. rewrite Hs. rewrite translate_vals_snoc3. reflexivity. }
     rewrite Hct in H. unfold type_update_select in H.
     cbn [CT_type CT_unr] in H. cbn beta iota in H.
@@ -360,7 +360,7 @@ Proof.
     unfold type_update in H.
     destruct (consume <<translate_st x :: translate_st y :: translate_st z
                         :: translate_vals s,
-                        (fv_ctrl f).(opiter_Ctrl_polymorphic_base)>>
+                        (fv_ctrl f).(code_Ctrl_polymorphic_base)>>
                 [T_num T_i32; translate_st y; translate_st z]) as [ct1|] eqn:Hc;
       [|discriminate H].
     destruct (consume_cons_inv _ _ _ _ Hc) as [ct2 [Hc2 _]].
@@ -373,25 +373,25 @@ Qed.
 (** The typed pop succeeds whenever [consume] does. This is the primitive the
     per-reader completeness proofs are built from. *)
 Lemma pop_with_type_complete : forall st pre_seg f vt ct',
-  vec_list st.(opiter_OpIterState_vals) = pre_seg ++ fv_seg f ->
+  vec_list st.(code_OpIterState_vals) = pre_seg ++ fv_seg f ->
   cur_base_nat st = List.length pre_seg ->
-  cur_unr st = (fv_ctrl f).(opiter_Ctrl_polymorphic_base) ->
+  cur_unr st = (fv_ctrl f).(code_Ctrl_polymorphic_base) ->
   consume (fv_ct f) [translate_vt_v vt] = Some ct' ->
-  exists t st', opiter_pop_with_type st vt = Ok (Core_result_Result_Ok t, st').
+  exists t st', code_pop_with_type st vt = Ok (Core_result_Result_Ok t, st').
 Proof.
   intros st pre_seg f vt ct' Hsplit Hbase Hunr Hcon.
   assert (Hcase : fv_seg f = [] \/ fv_seg f <> []).
   { destruct (fv_seg f); [left; reflexivity | right; discriminate]. }
   assert (Hdisj : fv_seg f <> []
-                  \/ (fv_ctrl f).(opiter_Ctrl_polymorphic_base) = true).
+                  \/ (fv_ctrl f).(code_Ctrl_polymorphic_base) = true).
   { destruct Hcase as [Hnil|Hne]; [|left; exact Hne]. right.
     unfold fv_ct in Hcon. rewrite Hnil in Hcon.
     cbn [translate_vals List.map List.rev consume CT_type CT_unr] in Hcon.
-    destruct ((fv_ctrl f).(opiter_Ctrl_polymorphic_base));
+    destruct ((fv_ctrl f).(code_Ctrl_polymorphic_base));
       [reflexivity | discriminate]. }
   destruct (pop_stack_type_complete st pre_seg f Hsplit Hbase Hunr Hdisj)
     as [t [st0 Hps]].
-  unfold opiter_pop_with_type. rewrite Hps. cbn [bind]. rewrite branch_ok.
+  unfold code_pop_with_type. rewrite Hps. cbn [bind]. rewrite branch_ok.
   cbn [bind].
   destruct t as [v|]; [|eexists; eexists; reflexivity].
   (* a real value came off, so it is the segment's top, and the checker's guard
@@ -405,7 +405,7 @@ Proof.
     { intros Hz. apply Hne2. rewrite Hbase. rewrite Hsplit. rewrite Hz.
       rewrite List.app_nil_r. reflexivity. }
     destruct (seg_snoc (fv_seg f) Hsegne) as [seg0 [x Hseg]].
-    assert (Hx : x = Opiter_StackType_Val v).
+    assert (Hx : x = Code_StackType_Val v).
     { rewrite Hsplit in Hvals. rewrite Hseg in Hvals.
       rewrite List.app_assoc in Hvals.
       apply List.app_inj_tail in Hvals as [_ Hx]. exact Hx. }
@@ -422,17 +422,17 @@ Qed.
 (** What a typed pop leaves behind, recorded so that the pops chain: the
     [consume] step of [pop_with_type_sim] over the resulting segment. *)
 Lemma pop_with_type_step : forall st pre_seg f vt t st',
-  vec_list st.(opiter_OpIterState_vals) = pre_seg ++ fv_seg f ->
+  vec_list st.(code_OpIterState_vals) = pre_seg ++ fv_seg f ->
   cur_base_nat st = List.length pre_seg ->
-  cur_unr st = (fv_ctrl f).(opiter_Ctrl_polymorphic_base) ->
-  opiter_pop_with_type st vt = Ok (Core_result_Result_Ok t, st') ->
+  cur_unr st = (fv_ctrl f).(code_Ctrl_polymorphic_base) ->
+  code_pop_with_type st vt = Ok (Core_result_Result_Ok t, st') ->
   exists seg0,
-    vec_list st'.(opiter_OpIterState_ctrls)
-      = vec_list st.(opiter_OpIterState_ctrls)
-    /\ vec_list st'.(opiter_OpIterState_vals) = pre_seg ++ seg0
+    vec_list st'.(code_OpIterState_ctrls)
+      = vec_list st.(code_OpIterState_ctrls)
+    /\ vec_list st'.(code_OpIterState_vals) = pre_seg ++ seg0
     /\ consume (fv_ct f) [translate_vt_v vt]
        = Some <<translate_vals seg0,
-                (fv_ctrl f).(opiter_Ctrl_polymorphic_base)>>.
+                (fv_ctrl f).(code_Ctrl_polymorphic_base)>>.
 Proof.
   intros st pre_seg f vt t st' Hsplit Hbase Hunr H.
   destruct (pop_with_type_ok st vt t st' H) as [Hraw _].
@@ -453,16 +453,16 @@ Lemma pop_types_loop_complete : forall n st pre_seg f
                                        (i : usize) ct',
   Z.to_nat (to_Z i) = n ->
   (n <= List.length (vec_list s))%nat ->
-  vec_list st.(opiter_OpIterState_vals) = pre_seg ++ fv_seg f ->
+  vec_list st.(code_OpIterState_vals) = pre_seg ++ fv_seg f ->
   cur_base_nat st = List.length pre_seg ->
-  cur_unr st = (fv_ctrl f).(opiter_Ctrl_polymorphic_base) ->
+  cur_unr st = (fv_ctrl f).(code_Ctrl_polymorphic_base) ->
   consume (fv_ct f) (translate_typelist (List.firstn n (vec_list s)))
     = Some ct' ->
-  exists st', opiter_pop_types_loop st s i = Ok (Core_result_Result_Ok tt, st').
+  exists st', code_pop_types_loop st s i = Ok (Core_result_Result_Ok tt, st').
 Proof.
   induction n as [|n IH];
     intros st pre_seg f s i ct' Hi Hlen Hsplit Hbase Hunr Hcon;
-    unfold opiter_pop_types_loop; rewrite loop_unfold; cbn beta iota.
+    unfold code_pop_types_loop; rewrite loop_unfold; cbn beta iota.
   - assert (Hz : (i s= 0%usize) = true).
     { apply scalar_eqb_zero_true. pose proof (usize_nonneg i). lia. }
     rewrite Hz. cbn beta iota. exists st. reflexivity.
@@ -498,14 +498,14 @@ Proof.
 Qed.
 
 Lemma pop_types_complete : forall st pre_seg f (s : slice types_ValueType_t) ct',
-  vec_list st.(opiter_OpIterState_vals) = pre_seg ++ fv_seg f ->
+  vec_list st.(code_OpIterState_vals) = pre_seg ++ fv_seg f ->
   cur_base_nat st = List.length pre_seg ->
-  cur_unr st = (fv_ctrl f).(opiter_Ctrl_polymorphic_base) ->
+  cur_unr st = (fv_ctrl f).(code_Ctrl_polymorphic_base) ->
   consume (fv_ct f) (translate_typelist (vec_list s)) = Some ct' ->
-  exists st', opiter_pop_types st s = Ok (Core_result_Result_Ok tt, st').
+  exists st', code_pop_types st s = Ok (Core_result_Result_Ok tt, st').
 Proof.
   intros st pre_seg f s ct' Hsplit Hbase Hunr Hcon.
-  unfold opiter_pop_types.
+  unfold code_pop_types.
   assert (Hlen : Z.to_nat (to_Z (slice_len s)) = List.length (vec_list s)).
   { rewrite slice_len_spec. apply Z_to_nat_of_nat. }
   apply (pop_types_loop_complete (List.length (vec_list s)) st pre_seg f s
@@ -601,28 +601,28 @@ Qed.
 Lemma require_memory_complete : forall module C0 m,
   mems_agree module C0 ->
   lookup_N (tc_mems C0) 0%N = Some m ->
-  opiter_require_memory module = Ok (Core_result_Result_Ok tt).
+  code_require_memory module = Ok (Core_result_Result_Ok tt).
 Proof.
-  intros module C0 m Hag Hlk. unfold opiter_require_memory.
+  intros module C0 m Hag Hlk. unfold code_require_memory.
   rewrite vec_is_empty_spec. cbn [bind].
-  assert (Hne : vec_list module.(env_Env_mem_types) <> []).
+  assert (Hne : vec_list module.(module_Env_mem_types) <> []).
   { intros Hnil. unfold mems_agree in Hag. rewrite Hnil in Hag.
     cbn [List.map] in Hag. rewrite Hag in Hlk. discriminate. }
-  destruct (vec_list module.(env_Env_mem_types)) as [|m0 ms];
+  destruct (vec_list module.(module_Env_mem_types)) as [|m0 ms];
     [exfalso; apply Hne; reflexivity | reflexivity].
 Qed.
 
 Lemma check_memory_and_alignment_complete : forall module C0 memarg natural m,
   mems_agree module C0 ->
   lookup_N (tc_mems C0) 0%N = Some m ->
-  to_Z memarg.(opiter_MemArg_align) <= to_Z natural ->
-  opiter_check_memory_and_alignment module memarg natural
+  to_Z memarg.(code_MemArg_align) <= to_Z natural ->
+  code_check_memory_and_alignment module memarg natural
     = Ok (Core_result_Result_Ok tt).
 Proof.
   intros module C0 memarg natural m Hag Hlk Hle.
-  unfold opiter_check_memory_and_alignment.
+  unfold code_check_memory_and_alignment.
   rewrite (require_memory_complete module C0 m Hag Hlk). cbn [bind].
   rewrite branch_ok. cbn [bind].
-  destruct (memarg.(opiter_MemArg_align) s> natural) eqn:Hgt; [|reflexivity].
+  destruct (memarg.(code_MemArg_align) s> natural) eqn:Hgt; [|reflexivity].
   exfalso. apply scalar_gtb_true in Hgt. lia.
 Qed.

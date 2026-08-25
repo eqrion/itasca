@@ -662,7 +662,7 @@ Proof.
     rewrite branch_ok in H. cbn [bind] in H.
     injection H as <- <-.
     rewrite (scalar_eqb_true _ _ E0). unfold translate_limits.
-    cbn [limits_Limits_min limits_Limits_max option_map].
+    cbn [types_Limits_min types_Limits_max option_map].
     apply repr_limits_open. apply (read_u32_leb_sound _ _ _ _ Hmin).
   - destruct (flag s= 1%u8) eqn:E1; [|discriminate].
     destruct (reader_read_u32_leb data p) as [r1|] eqn:Hmin; cbn [bind] in H;
@@ -675,7 +675,7 @@ Proof.
     rewrite branch_ok in H. cbn [bind] in H.
     injection H as <- <-.
     rewrite (scalar_eqb_true _ _ E1). unfold translate_limits.
-    cbn [limits_Limits_min limits_Limits_max option_map].
+    cbn [types_Limits_min types_Limits_max option_map].
     apply repr_limits_closed with (p1 := bytes_from data p1).
     + apply (read_u32_leb_sound _ _ _ _ Hmin).
     + apply (read_u32_leb_sound _ _ _ _ Hmax).
@@ -740,20 +740,20 @@ Lemma validate_limits_valid : forall lim bound k,
   limit_valid_range (translate_limits lim) k = true.
 Proof.
   intros lim bound k Hk H. unfold limits_validate_limits in H.
-  pose proof (u32_nonneg lim.(limits_Limits_min)) as Hmin0.
-  destruct (lim.(limits_Limits_min) s> bound) eqn:Hgt; [discriminate|].
+  pose proof (u32_nonneg lim.(types_Limits_min)) as Hmin0.
+  destruct (lim.(types_Limits_min) s> bound) eqn:Hgt; [discriminate|].
   apply scalar_gtb_false in Hgt.
   unfold limit_valid_range, translate_limits.
   cbn [lim_min lim_max].
-  assert (Hlow : (Z.to_N (to_Z lim.(limits_Limits_min)) <=? k)%N = true)
+  assert (Hlow : (Z.to_N (to_Z lim.(types_Limits_min)) <=? k)%N = true)
     by (apply N.leb_le; apply N2Z.inj_le; rewrite Z2N.id by lia; lia).
   rewrite Hlow. cbn [andb].
-  destruct lim.(limits_Limits_max) as [max|] eqn:Hmax;
+  destruct lim.(types_Limits_max) as [max|] eqn:Hmax;
     cbn [option_map]; [|reflexivity].
   pose proof (u32_nonneg max) as Hmax0.
   destruct (max s> bound) eqn:Hgt2; [discriminate|].
   apply scalar_gtb_false in Hgt2.
-  destruct (lim.(limits_Limits_min) s> max) eqn:Hgt3; [discriminate|].
+  destruct (lim.(types_Limits_min) s> max) eqn:Hgt3; [discriminate|].
   apply scalar_gtb_false in Hgt3.
   apply Bool.andb_true_iff. split; apply N.leb_le; apply N2Z.inj_le;
     repeat rewrite Z2N.id by lia; lia.
@@ -812,25 +812,25 @@ Qed.
     Three sections write these fields -- the import section writes all three,
     the table and memory sections one each -- and each hands the invariant on
     in the same shape. *)
-Definition import_valid (im : env_Import_t) : Prop :=
-  match im.(env_Import_desc) with
-  | Env_ImportDesc_Table t => tabletype_valid (translate_tabletype t) = true
-  | Env_ImportDesc_Memory m => memtype_valid (translate_memtype m) = true
+Definition import_valid (im : module_Import_t) : Prop :=
+  match im.(module_Import_desc) with
+  | Module_ImportDesc_Table t => tabletype_valid (translate_tabletype t) = true
+  | Module_ImportDesc_Memory m => memtype_valid (translate_memtype m) = true
   | _ => True
   end.
 
-Definition env_limits_valid (env : env_Env_t) : Prop :=
-  List.Forall import_valid (vec_list env.(env_Env_imports))
+Definition env_limits_valid (env : module_Env_t) : Prop :=
+  List.Forall import_valid (vec_list env.(module_Env_imports))
   /\ List.Forall (fun t => tabletype_valid (translate_tabletype t) = true)
-       (vec_list env.(env_Env_table_types))
+       (vec_list env.(module_Env_table_types))
   /\ List.Forall (fun m => memtype_valid (translate_memtype m) = true)
-       (vec_list env.(env_Env_mem_types)).
+       (vec_list env.(module_Env_mem_types)).
 
 (** A section that leaves all three fields where it found them keeps it. *)
 Lemma env_limits_valid_keep : forall env env',
-  vec_list env'.(env_Env_imports) = vec_list env.(env_Env_imports) ->
-  vec_list env'.(env_Env_table_types) = vec_list env.(env_Env_table_types) ->
-  vec_list env'.(env_Env_mem_types) = vec_list env.(env_Env_mem_types) ->
+  vec_list env'.(module_Env_imports) = vec_list env.(module_Env_imports) ->
+  vec_list env'.(module_Env_table_types) = vec_list env.(module_Env_table_types) ->
+  vec_list env'.(module_Env_mem_types) = vec_list env.(module_Env_mem_types) ->
   env_limits_valid env -> env_limits_valid env'.
 Proof.
   intros env env' Hi Ht Hm [Hvi [Hvt Hvm]].
@@ -883,7 +883,7 @@ Qed.
 (* ================================================================== *)
 
 (** A constant expression is decoded by a reader of its own rather than by
-    giving [opiter] an init-expression mode, which is where the shape of this
+    giving [code] an init-expression mode, which is where the shape of this
     section comes from: the result is a [ConstExpr] naming one instruction, and
     the expression it stands for is that instruction and the terminating [end].
 
@@ -910,7 +910,7 @@ Proof.
     [|discriminate].
   destruct r as [[b p]|e]; [|try_err_rw_in H; discriminate].
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (b s<> opiter_op_end) eqn:Eend; [discriminate|].
+  destruct (b s<> code_op_end) eqn:Eend; [discriminate|].
   injection H as <-.
   rewrite (proj1 (read_byte_ok _ _ _ _ Hb)).
   apply repr_op_end.
@@ -946,7 +946,7 @@ Qed.
 
     The four literal arms say only that the declared type is the literal's,
     which is [expect_const_type]. *)
-Definition const_expr_ok (env : env_Env_t) (expected : types_ValueType_t)
+Definition const_expr_ok (env : module_Env_t) (expected : types_ValueType_t)
                          (e : types_ConstExpr_t) : Prop :=
   match e with
   | Types_ConstExpr_I32 _ => expected = Types_ValueType_I32
@@ -955,11 +955,11 @@ Definition const_expr_ok (env : env_Env_t) (expected : types_ValueType_t)
   | Types_ConstExpr_F64 _ => expected = Types_ValueType_F64
   | Types_ConstExpr_GlobalGet x =>
       exists gt,
-        List.nth_error (vec_list env.(env_Env_global_types))
+        List.nth_error (vec_list env.(module_Env_global_types))
                        (Z.to_nat (to_Z x)) = Some gt
         /\ gt.(types_GlobalType_mutability) = Types_Mut_Const
         /\ gt.(types_GlobalType_valtype) = expected
-        /\ to_Z x < to_Z env.(env_Env_num_imported_globals)
+        /\ to_Z x < to_Z env.(module_Env_num_imported_globals)
   end.
 
 Lemma expect_const_type_eq : forall a b,
@@ -973,10 +973,10 @@ Qed.
 
 Lemma const_global_ok : forall env idx gt,
   module_const_global env idx = Ok (Core_result_Result_Ok gt) ->
-  List.nth_error (vec_list env.(env_Env_global_types))
+  List.nth_error (vec_list env.(module_Env_global_types))
                  (Z.to_nat (to_Z idx)) = Some gt
   /\ gt.(types_GlobalType_mutability) = Types_Mut_Const
-  /\ to_Z idx < to_Z env.(env_Env_num_imported_globals).
+  /\ to_Z idx < to_Z env.(module_Env_num_imported_globals).
 Proof.
   intros env idx gt H. unfold module_const_global in H.
   destruct (scalar_cast U32 Usize idx) as [i|] eqn:Hcast; cbn [bind] in H;
@@ -984,17 +984,17 @@ Proof.
   assert (Hi : to_Z i = to_Z idx)
     by (unfold scalar_cast in Hcast; apply mk_scalar_ok_to_Z in Hcast;
         exact Hcast).
-  destruct (i s>= alloc_vec_Vec_len env.(env_Env_global_types));
+  destruct (i s>= alloc_vec_Vec_len env.(module_Env_global_types));
     [discriminate|].
-  destruct (i s>= env.(env_Env_num_imported_globals)) eqn:Hnig;
+  destruct (i s>= env.(module_Env_num_imported_globals)) eqn:Hnig;
     [discriminate|].
   apply scalar_geb_false_lt in Hnig.
   destruct (alloc_vec_Vec_index
               (core_slice_index_SliceIndexUsizeSliceInst types_GlobalType_t)
-              env.(env_Env_global_types) i) as [gt0|] eqn:Hgt;
+              env.(module_Env_global_types) i) as [gt0|] eqn:Hgt;
     cbn [bind] in H; [|discriminate].
   rewrite vec_index_spec in Hgt.
-  destruct (List.nth_error (vec_list env.(env_Env_global_types))
+  destruct (List.nth_error (vec_list env.(module_Env_global_types))
               (Z.to_nat (to_Z i))) as [gt1|] eqn:Hnth; [|discriminate].
   injection Hgt as <-.
   rewrite mut_ne_spec in H. cbn [bind] in H.
@@ -1018,7 +1018,7 @@ Proof.
   destruct r as [[op p]|e0]; [|try_err_rw_in H; discriminate].
   rewrite branch_ok in H. cbn [bind] in H.
   (* the four literal arms differ only in which type they expect *)
-  destruct (op s= opiter_op_i32_const).
+  destruct (op s= code_op_i32_const).
   { destruct (reader_read_s32_leb data p) as [r1|]; cbn [bind] in H;
       [|discriminate].
     destruct r1 as [[v p1]|e1]; [|try_err_rw_in H; discriminate].
@@ -1033,7 +1033,7 @@ Proof.
     rewrite branch_ok in H. cbn [bind] in H.
     injection H as <- _. cbn [const_expr_ok].
     symmetry. apply (expect_const_type_eq _ _ Hty). }
-  destruct (op s= opiter_op_i64_const).
+  destruct (op s= code_op_i64_const).
   { destruct (reader_read_s64_leb data p) as [r1|]; cbn [bind] in H;
       [|discriminate].
     destruct r1 as [[v p1]|e1]; [|try_err_rw_in H; discriminate].
@@ -1048,7 +1048,7 @@ Proof.
     rewrite branch_ok in H. cbn [bind] in H.
     injection H as <- _. cbn [const_expr_ok].
     symmetry. apply (expect_const_type_eq _ _ Hty). }
-  destruct (op s= opiter_op_f32_const).
+  destruct (op s= code_op_f32_const).
   { destruct (reader_read_f32_bits data p) as [r1|]; cbn [bind] in H;
       [|discriminate].
     destruct r1 as [[v p1]|e1]; [|try_err_rw_in H; discriminate].
@@ -1063,7 +1063,7 @@ Proof.
     rewrite branch_ok in H. cbn [bind] in H.
     injection H as <- _. cbn [const_expr_ok].
     symmetry. apply (expect_const_type_eq _ _ Hty). }
-  destruct (op s= opiter_op_f64_const).
+  destruct (op s= code_op_f64_const).
   { destruct (reader_read_f64_bits data p) as [r1|]; cbn [bind] in H;
       [|discriminate].
     destruct r1 as [[v p1]|e1]; [|try_err_rw_in H; discriminate].
@@ -1079,7 +1079,7 @@ Proof.
     injection H as <- _. cbn [const_expr_ok].
     symmetry. apply (expect_const_type_eq _ _ Hty). }
   (* [global.get]: an imported immutable global of the declared type *)
-  destruct (op s= opiter_op_global_get); [|discriminate].
+  destruct (op s= code_op_global_get); [|discriminate].
   destruct (reader_read_u32_leb data p) as [r1|]; cbn [bind] in H;
     [|discriminate].
   destruct r1 as [[idx p1]|e1]; [|try_err_rw_in H; discriminate].
@@ -1114,7 +1114,7 @@ Proof.
   rewrite branch_ok in H. cbn [bind] in H.
   pose proof (proj1 (read_byte_ok _ _ _ _ Hb)) as Hop.
   (* every arm reads its immediate, checks the type, then reads the [end] *)
-  destruct (op s= opiter_op_i32_const) eqn:A32.
+  destruct (op s= code_op_i32_const) eqn:A32.
   { destruct (reader_read_s32_leb data p) as [r1|] eqn:Hv; cbn [bind] in H;
       [|discriminate].
     destruct r1 as [[v p1]|e1]; [|try_err_rw_in H; discriminate].
@@ -1134,7 +1134,7 @@ Proof.
       + rewrite (scalar_eqb_val _ _ 65 A32 eq_refl). reflexivity.
       + apply (read_s32_leb_sound _ _ _ _ Hv).
     - apply (read_expr_end_sound _ _ _ Hend). }
-  destruct (op s= opiter_op_i64_const) eqn:A64.
+  destruct (op s= code_op_i64_const) eqn:A64.
   { destruct (reader_read_s64_leb data p) as [r1|] eqn:Hv; cbn [bind] in H;
       [|discriminate].
     destruct r1 as [[v p1]|e1]; [|try_err_rw_in H; discriminate].
@@ -1154,7 +1154,7 @@ Proof.
       + rewrite (scalar_eqb_val _ _ 66 A64 eq_refl). reflexivity.
       + apply (read_s64_leb_sound _ _ _ _ Hv).
     - apply (read_expr_end_sound _ _ _ Hend). }
-  destruct (op s= opiter_op_f32_const) eqn:Af32.
+  destruct (op s= code_op_f32_const) eqn:Af32.
   { destruct (reader_read_f32_bits data p) as [r1|] eqn:Hv; cbn [bind] in H;
       [|discriminate].
     destruct r1 as [[v p1]|e1]; [|try_err_rw_in H; discriminate].
@@ -1174,7 +1174,7 @@ Proof.
       + rewrite (scalar_eqb_val _ _ 67 Af32 eq_refl). reflexivity.
       + apply (read_f32_bits_sound _ _ _ _ Hv).
     - apply (read_expr_end_sound _ _ _ Hend). }
-  destruct (op s= opiter_op_f64_const) eqn:Af64.
+  destruct (op s= code_op_f64_const) eqn:Af64.
   { destruct (reader_read_f64_bits data p) as [r1|] eqn:Hv; cbn [bind] in H;
       [|discriminate].
     destruct r1 as [[v p1]|e1]; [|try_err_rw_in H; discriminate].
@@ -1194,7 +1194,7 @@ Proof.
       + rewrite (scalar_eqb_val _ _ 68 Af64 eq_refl). reflexivity.
       + apply (read_f64_bits_sound _ _ _ _ Hv).
     - apply (read_expr_end_sound _ _ _ Hend). }
-  destruct (op s= opiter_op_global_get) eqn:Agg; [|discriminate].
+  destruct (op s= code_op_global_get) eqn:Agg; [|discriminate].
   destruct (reader_read_u32_leb data p) as [r1|] eqn:Hv; cbn [bind] in H;
     [|discriminate].
   destruct r1 as [[idx p1]|e1]; [|try_err_rw_in H; discriminate].
@@ -1345,23 +1345,23 @@ Qed.
     record from the environment it was handed and the one field it wrote: the
     loop puts the record back together exactly that way, so the equation is
     what the code does, spelt out. *)
-Definition env_with_types (env : env_Env_t)
-                          (v : alloc_vec_Vec types_FuncType_t) : env_Env_t :=
-  {| env_Env_types := v;
-     env_Env_imports := env.(env_Env_imports);
-     env_Env_globals := env.(env_Env_globals);
-     env_Env_exports := env.(env_Env_exports);
-     env_Env_elements := env.(env_Env_elements);
-     env_Env_start := env.(env_Env_start);
-     env_Env_func_type_indices := env.(env_Env_func_type_indices);
-     env_Env_func_types := env.(env_Env_func_types);
-     env_Env_table_types := env.(env_Env_table_types);
-     env_Env_mem_types := env.(env_Env_mem_types);
-     env_Env_global_types := env.(env_Env_global_types);
-     env_Env_num_imported_funcs := env.(env_Env_num_imported_funcs);
-     env_Env_num_imported_globals := env.(env_Env_num_imported_globals) |}.
+Definition env_with_types (env : module_Env_t)
+                          (v : alloc_vec_Vec types_FuncType_t) : module_Env_t :=
+  {| module_Env_types := v;
+     module_Env_imports := env.(module_Env_imports);
+     module_Env_globals := env.(module_Env_globals);
+     module_Env_exports := env.(module_Env_exports);
+     module_Env_elements := env.(module_Env_elements);
+     module_Env_start := env.(module_Env_start);
+     module_Env_func_type_indices := env.(module_Env_func_type_indices);
+     module_Env_func_types := env.(module_Env_func_types);
+     module_Env_table_types := env.(module_Env_table_types);
+     module_Env_mem_types := env.(module_Env_mem_types);
+     module_Env_global_types := env.(module_Env_global_types);
+     module_Env_num_imported_funcs := env.(module_Env_num_imported_funcs);
+     module_Env_num_imported_globals := env.(module_Env_num_imported_globals) |}.
 
-Lemma env_with_types_refl : forall env, env = env_with_types env env.(env_Env_types).
+Lemma env_with_types_refl : forall env, env = env_with_types env env.(module_Env_types).
 Proof. intros env. destruct env. reflexivity. Qed.
 
 Lemma env_with_types_idem : forall env v w,
@@ -1406,8 +1406,8 @@ Lemma decode_type_section_loop_sound : forall m data env count q i q' env',
   module_decode_type_section_loop data env count q i
     = Ok (Core_result_Result_Ok q', env') ->
   exists tfs,
-    vec_list env'.(env_Env_types) = vec_list env.(env_Env_types) ++ tfs
-    /\ env' = env_with_types env env'.(env_Env_types)
+    vec_list env'.(module_Env_types) = vec_list env.(module_Env_types) ++ tfs
+    /\ env' = env_with_types env env'.(module_Env_types)
     /\ List.Forall ft_wasm10 tfs
     /\ repr_rep repr_functype (Z.to_nat (to_Z count - to_Z i))
          (bytes_from data q) (List.map translate_functype tfs)
@@ -1427,7 +1427,7 @@ Proof.
       cbn [bind] in H; [|discriminate].
     destruct r as [[ft q1]|e]; [|try_err_rw_in H; discriminate].
     rewrite branch_ok in H. cbn [bind] in H.
-    destruct (alloc_vec_Vec_push env.(env_Env_types) ft) as [v|] eqn:Hpush;
+    destruct (alloc_vec_Vec_push env.(module_Env_types) ft) as [v|] eqn:Hpush;
       cbn [bind] in H; [|discriminate].
     destruct (u32_add i 1%u32) as [i2|] eqn:Hadd; cbn [bind] in H;
       [|discriminate].
@@ -1436,7 +1436,7 @@ Proof.
                 (ltac:(cbn in Hmeas; lia)) H)
       as [tfs [Hlist [Henv [Hall Hrep]]]].
     exists (ft :: tfs). split; [|split; [|split]].
-    + rewrite Hlist. cbn [env_with_types env_Env_types].
+    + rewrite Hlist. cbn [env_with_types module_Env_types].
       rewrite (vec_push_spec _ _ _ Hpush). rewrite <- app_assoc. reflexivity.
     + rewrite Henv at 1. apply env_with_types_idem.
     + apply List.Forall_cons;
@@ -1451,8 +1451,8 @@ Lemma decode_type_section_sound : forall data pos env q' env',
   module_decode_type_section data pos env
     = Ok (Core_result_Result_Ok q', env') ->
   exists tfs,
-    vec_list env'.(env_Env_types) = vec_list env.(env_Env_types) ++ tfs
-    /\ env' = env_with_types env env'.(env_Env_types)
+    vec_list env'.(module_Env_types) = vec_list env.(module_Env_types) ++ tfs
+    /\ env' = env_with_types env env'.(module_Env_types)
     /\ List.Forall ft_wasm10 tfs
     /\ repr_vec repr_functype (bytes_from data pos)
          (List.map translate_functype tfs) (bytes_from data q').
@@ -1484,48 +1484,48 @@ Definition translate_table (t : types_TableType_t) : module_table :=
 Definition translate_mem (m : types_MemType_t) : module_mem :=
   {| modmem_type := translate_memtype m |}.
 
-Definition env_with_table (env : env_Env_t)
-                          (v : alloc_vec_Vec types_TableType_t) : env_Env_t :=
-  {| env_Env_types := env.(env_Env_types);
-     env_Env_imports := env.(env_Env_imports);
-     env_Env_globals := env.(env_Env_globals);
-     env_Env_exports := env.(env_Env_exports);
-     env_Env_elements := env.(env_Env_elements);
-     env_Env_start := env.(env_Env_start);
-     env_Env_func_type_indices := env.(env_Env_func_type_indices);
-     env_Env_func_types := env.(env_Env_func_types);
-     env_Env_table_types := v;
-     env_Env_mem_types := env.(env_Env_mem_types);
-     env_Env_global_types := env.(env_Env_global_types);
-     env_Env_num_imported_funcs := env.(env_Env_num_imported_funcs);
-     env_Env_num_imported_globals := env.(env_Env_num_imported_globals) |}.
+Definition env_with_table (env : module_Env_t)
+                          (v : alloc_vec_Vec types_TableType_t) : module_Env_t :=
+  {| module_Env_types := env.(module_Env_types);
+     module_Env_imports := env.(module_Env_imports);
+     module_Env_globals := env.(module_Env_globals);
+     module_Env_exports := env.(module_Env_exports);
+     module_Env_elements := env.(module_Env_elements);
+     module_Env_start := env.(module_Env_start);
+     module_Env_func_type_indices := env.(module_Env_func_type_indices);
+     module_Env_func_types := env.(module_Env_func_types);
+     module_Env_table_types := v;
+     module_Env_mem_types := env.(module_Env_mem_types);
+     module_Env_global_types := env.(module_Env_global_types);
+     module_Env_num_imported_funcs := env.(module_Env_num_imported_funcs);
+     module_Env_num_imported_globals := env.(module_Env_num_imported_globals) |}.
 
 Lemma env_with_table_refl : forall env,
-  env = env_with_table env env.(env_Env_table_types).
+  env = env_with_table env env.(module_Env_table_types).
 Proof. intros env. destruct env. reflexivity. Qed.
 
 Lemma env_with_table_idem : forall env v w,
   env_with_table (env_with_table env v) w = env_with_table env w.
 Proof. intros env v w. reflexivity. Qed.
 
-Definition env_with_mem (env : env_Env_t)
-                        (v : alloc_vec_Vec types_MemType_t) : env_Env_t :=
-  {| env_Env_types := env.(env_Env_types);
-     env_Env_imports := env.(env_Env_imports);
-     env_Env_globals := env.(env_Env_globals);
-     env_Env_exports := env.(env_Env_exports);
-     env_Env_elements := env.(env_Env_elements);
-     env_Env_start := env.(env_Env_start);
-     env_Env_func_type_indices := env.(env_Env_func_type_indices);
-     env_Env_func_types := env.(env_Env_func_types);
-     env_Env_table_types := env.(env_Env_table_types);
-     env_Env_mem_types := v;
-     env_Env_global_types := env.(env_Env_global_types);
-     env_Env_num_imported_funcs := env.(env_Env_num_imported_funcs);
-     env_Env_num_imported_globals := env.(env_Env_num_imported_globals) |}.
+Definition env_with_mem (env : module_Env_t)
+                        (v : alloc_vec_Vec types_MemType_t) : module_Env_t :=
+  {| module_Env_types := env.(module_Env_types);
+     module_Env_imports := env.(module_Env_imports);
+     module_Env_globals := env.(module_Env_globals);
+     module_Env_exports := env.(module_Env_exports);
+     module_Env_elements := env.(module_Env_elements);
+     module_Env_start := env.(module_Env_start);
+     module_Env_func_type_indices := env.(module_Env_func_type_indices);
+     module_Env_func_types := env.(module_Env_func_types);
+     module_Env_table_types := env.(module_Env_table_types);
+     module_Env_mem_types := v;
+     module_Env_global_types := env.(module_Env_global_types);
+     module_Env_num_imported_funcs := env.(module_Env_num_imported_funcs);
+     module_Env_num_imported_globals := env.(module_Env_num_imported_globals) |}.
 
 Lemma env_with_mem_refl : forall env,
-  env = env_with_mem env env.(env_Env_mem_types).
+  env = env_with_mem env env.(module_Env_mem_types).
 Proof. intros env. destruct env. reflexivity. Qed.
 
 Lemma env_with_mem_idem : forall env v w,
@@ -1537,9 +1537,9 @@ Lemma decode_table_section_loop_sound : forall m data env count q i q' env',
   module_decode_table_section_loop data env count q i
     = Ok (Core_result_Result_Ok q', env') ->
   exists tts,
-    vec_list env'.(env_Env_table_types)
-      = vec_list env.(env_Env_table_types) ++ tts
-    /\ env' = env_with_table env env'.(env_Env_table_types)
+    vec_list env'.(module_Env_table_types)
+      = vec_list env.(module_Env_table_types) ++ tts
+    /\ env' = env_with_table env env'.(module_Env_table_types)
     /\ repr_rep repr_table (Z.to_nat (to_Z count - to_Z i))
          (bytes_from data q) (List.map translate_table tts)
          (bytes_from data q')
@@ -1559,7 +1559,7 @@ Proof.
       cbn [bind] in H; [|discriminate].
     destruct r as [[tt1 q1]|e]; [|try_err_rw_in H; discriminate].
     rewrite branch_ok in H. cbn [bind] in H.
-    destruct (alloc_vec_Vec_push env.(env_Env_table_types) tt1) as [v|] eqn:Hpush;
+    destruct (alloc_vec_Vec_push env.(module_Env_table_types) tt1) as [v|] eqn:Hpush;
       cbn [bind] in H; [|discriminate].
     destruct (alloc_vec_Vec_len v s> limits_max_tables); [discriminate|].
     destruct (u32_add i 1%u32) as [i2|] eqn:Hadd; cbn [bind] in H;
@@ -1568,7 +1568,7 @@ Proof.
     destruct (IH data (env_with_table env v) count q1 i2 q' env'
                 (ltac:(cbn in Hmeas; lia)) H) as [tts [Hlist [Henv [Hrep Hval]]]].
     exists (tt1 :: tts). split; [|split; [|split]].
-    + rewrite Hlist. cbn [env_with_table env_Env_table_types].
+    + rewrite Hlist. cbn [env_with_table module_Env_table_types].
       rewrite (vec_push_spec _ _ _ Hpush). rewrite <- app_assoc. reflexivity.
     + rewrite Henv at 1. apply env_with_table_idem.
     + assert (Hcnt : to_Z count - to_Z i = (to_Z count - to_Z i2) + 1) by lia.
@@ -1577,7 +1577,7 @@ Proof.
       apply repr_table_intro. apply (decode_table_type_sound _ _ _ _ Htt).
     + intros [Hvi [Hvt Hvm]]. apply Hval.
       split; [exact Hvi|]. split; [| exact Hvm].
-      cbn [env_with_table env_Env_table_types].
+      cbn [env_with_table module_Env_table_types].
       apply (forall_push _ _ _ _ _ Hpush Hvt).
       apply (decode_table_type_valid _ _ _ _ Htt).
 Qed.
@@ -1586,9 +1586,9 @@ Lemma decode_table_section_sound : forall data pos env q' env',
   module_decode_table_section data pos env
     = Ok (Core_result_Result_Ok q', env') ->
   exists tts,
-    vec_list env'.(env_Env_table_types)
-      = vec_list env.(env_Env_table_types) ++ tts
-    /\ env' = env_with_table env env'.(env_Env_table_types)
+    vec_list env'.(module_Env_table_types)
+      = vec_list env.(module_Env_table_types) ++ tts
+    /\ env' = env_with_table env env'.(module_Env_table_types)
     /\ repr_vec repr_table (bytes_from data pos)
          (List.map translate_table tts) (bytes_from data q')
     /\ (env_limits_valid env -> env_limits_valid env').
@@ -1616,8 +1616,8 @@ Lemma decode_memory_section_loop_sound : forall m data env count q i q' env',
   module_decode_memory_section_loop data env count q i
     = Ok (Core_result_Result_Ok q', env') ->
   exists mts,
-    vec_list env'.(env_Env_mem_types) = vec_list env.(env_Env_mem_types) ++ mts
-    /\ env' = env_with_mem env env'.(env_Env_mem_types)
+    vec_list env'.(module_Env_mem_types) = vec_list env.(module_Env_mem_types) ++ mts
+    /\ env' = env_with_mem env env'.(module_Env_mem_types)
     /\ repr_rep repr_mem (Z.to_nat (to_Z count - to_Z i))
          (bytes_from data q) (List.map translate_mem mts)
          (bytes_from data q')
@@ -1637,7 +1637,7 @@ Proof.
       cbn [bind] in H; [|discriminate].
     destruct r as [[mt q1]|e]; [|try_err_rw_in H; discriminate].
     rewrite branch_ok in H. cbn [bind] in H.
-    destruct (alloc_vec_Vec_push env.(env_Env_mem_types) mt) as [v|] eqn:Hpush;
+    destruct (alloc_vec_Vec_push env.(module_Env_mem_types) mt) as [v|] eqn:Hpush;
       cbn [bind] in H; [|discriminate].
     destruct (alloc_vec_Vec_len v s> limits_max_memories); [discriminate|].
     destruct (u32_add i 1%u32) as [i2|] eqn:Hadd; cbn [bind] in H;
@@ -1646,7 +1646,7 @@ Proof.
     destruct (IH data (env_with_mem env v) count q1 i2 q' env'
                 (ltac:(cbn in Hmeas; lia)) H) as [mts [Hlist [Henv [Hrep Hval]]]].
     exists (mt :: mts). split; [|split; [|split]].
-    + rewrite Hlist. cbn [env_with_mem env_Env_mem_types].
+    + rewrite Hlist. cbn [env_with_mem module_Env_mem_types].
       rewrite (vec_push_spec _ _ _ Hpush). rewrite <- app_assoc. reflexivity.
     + rewrite Henv at 1. apply env_with_mem_idem.
     + assert (Hcnt : to_Z count - to_Z i = (to_Z count - to_Z i2) + 1) by lia.
@@ -1655,7 +1655,7 @@ Proof.
       apply repr_mem_intro. apply (decode_mem_type_sound _ _ _ _ Hmt).
     + intros [Hvi [Hvt Hvm]]. apply Hval.
       split; [exact Hvi|]. split; [exact Hvt|].
-      cbn [env_with_mem env_Env_mem_types].
+      cbn [env_with_mem module_Env_mem_types].
       apply (forall_push _ _ _ _ _ Hpush Hvm).
       apply (decode_mem_type_valid _ _ _ _ Hmt).
 Qed.
@@ -1664,8 +1664,8 @@ Lemma decode_memory_section_sound : forall data pos env q' env',
   module_decode_memory_section data pos env
     = Ok (Core_result_Result_Ok q', env') ->
   exists mts,
-    vec_list env'.(env_Env_mem_types) = vec_list env.(env_Env_mem_types) ++ mts
-    /\ env' = env_with_mem env env'.(env_Env_mem_types)
+    vec_list env'.(module_Env_mem_types) = vec_list env.(module_Env_mem_types) ++ mts
+    /\ env' = env_with_mem env env'.(module_Env_mem_types)
     /\ repr_vec repr_mem (bytes_from data pos)
          (List.map translate_mem mts) (bytes_from data q')
     /\ (env_limits_valid env -> env_limits_valid env').
@@ -1691,26 +1691,26 @@ Qed.
 (** Spec 5.5.6: [funcsec ::= x*:vec(typeidx)]. The type each index names is
     resolved and pushed onto the function index space here as well, which is
     why the section writes two fields. *)
-Definition env_with_func (env : env_Env_t)
+Definition env_with_func (env : module_Env_t)
                          (fts : alloc_vec_Vec types_FuncType_t)
-                         (fidx : alloc_vec_Vec (scalar U32)) : env_Env_t :=
-  {| env_Env_types := env.(env_Env_types);
-     env_Env_imports := env.(env_Env_imports);
-     env_Env_globals := env.(env_Env_globals);
-     env_Env_exports := env.(env_Env_exports);
-     env_Env_elements := env.(env_Env_elements);
-     env_Env_start := env.(env_Env_start);
-     env_Env_func_type_indices := fidx;
-     env_Env_func_types := fts;
-     env_Env_table_types := env.(env_Env_table_types);
-     env_Env_mem_types := env.(env_Env_mem_types);
-     env_Env_global_types := env.(env_Env_global_types);
-     env_Env_num_imported_funcs := env.(env_Env_num_imported_funcs);
-     env_Env_num_imported_globals := env.(env_Env_num_imported_globals) |}.
+                         (fidx : alloc_vec_Vec (scalar U32)) : module_Env_t :=
+  {| module_Env_types := env.(module_Env_types);
+     module_Env_imports := env.(module_Env_imports);
+     module_Env_globals := env.(module_Env_globals);
+     module_Env_exports := env.(module_Env_exports);
+     module_Env_elements := env.(module_Env_elements);
+     module_Env_start := env.(module_Env_start);
+     module_Env_func_type_indices := fidx;
+     module_Env_func_types := fts;
+     module_Env_table_types := env.(module_Env_table_types);
+     module_Env_mem_types := env.(module_Env_mem_types);
+     module_Env_global_types := env.(module_Env_global_types);
+     module_Env_num_imported_funcs := env.(module_Env_num_imported_funcs);
+     module_Env_num_imported_globals := env.(module_Env_num_imported_globals) |}.
 
 Lemma env_with_func_refl : forall env,
-  env = env_with_func env env.(env_Env_func_types)
-                          env.(env_Env_func_type_indices).
+  env = env_with_func env env.(module_Env_func_types)
+                          env.(module_Env_func_type_indices).
 Proof. intros env. destruct env. reflexivity. Qed.
 
 Lemma env_with_func_idem : forall env a b c d,
@@ -1822,8 +1822,8 @@ Qed.
 
 Lemma lookup_type_sound : forall env idx ft,
   module_lookup_type env idx = Ok (Core_result_Result_Ok ft) ->
-  idx_in_range (vec_list env.(env_Env_types)) idx
-  /\ resolved_types (vec_list env.(env_Env_types)) [idx] = [translate_functype ft].
+  idx_in_range (vec_list env.(module_Env_types)) idx
+  /\ resolved_types (vec_list env.(module_Env_types)) [idx] = [translate_functype ft].
 Proof.
   intros env idx ft H. unfold module_lookup_type in H.
   destruct (scalar_cast U32 Usize idx) as [i|] eqn:Hcast; cbn [bind] in H;
@@ -1831,13 +1831,13 @@ Proof.
   assert (Hi : to_Z i = to_Z idx)
     by (unfold scalar_cast in Hcast; apply mk_scalar_ok_to_Z in Hcast;
         exact Hcast).
-  destruct (i s>= alloc_vec_Vec_len env.(env_Env_types)); [discriminate|].
+  destruct (i s>= alloc_vec_Vec_len env.(module_Env_types)); [discriminate|].
   destruct (alloc_vec_Vec_index
               (core_slice_index_SliceIndexUsizeSliceInst types_FuncType_t)
-              env.(env_Env_types) i) as [ft0|] eqn:Hft; cbn [bind] in H;
+              env.(module_Env_types) i) as [ft0|] eqn:Hft; cbn [bind] in H;
     [|discriminate].
   rewrite vec_index_spec in Hft.
-  destruct (List.nth_error (vec_list env.(env_Env_types)) (Z.to_nat (to_Z i)))
+  destruct (List.nth_error (vec_list env.(module_Env_types)) (Z.to_nat (to_Z i)))
     as [ft1|] eqn:Hnth; [|discriminate].
   injection Hft as <-.
   rewrite Hi in Hnth.
@@ -1855,14 +1855,14 @@ Qed.
     type that is there. Both writers of the space -- the import section and
     the function section -- report this, and it composes along a run because
     neither of them touches the type section's own vector. *)
-Definition func_space (env env' : env_Env_t) (xs : list (scalar U32)) : Prop :=
-  List.map translate_functype (vec_list env'.(env_Env_func_types))
-    = List.map translate_functype (vec_list env.(env_Env_func_types))
-      ++ resolved_types (vec_list env.(env_Env_types)) xs
-  /\ List.Forall (idx_in_range (vec_list env.(env_Env_types))) xs.
+Definition func_space (env env' : module_Env_t) (xs : list (scalar U32)) : Prop :=
+  List.map translate_functype (vec_list env'.(module_Env_func_types))
+    = List.map translate_functype (vec_list env.(module_Env_func_types))
+      ++ resolved_types (vec_list env.(module_Env_types)) xs
+  /\ List.Forall (idx_in_range (vec_list env.(module_Env_types))) xs.
 
 Lemma func_space_keep : forall env env',
-  vec_list env'.(env_Env_func_types) = vec_list env.(env_Env_func_types) ->
+  vec_list env'.(module_Env_func_types) = vec_list env.(module_Env_func_types) ->
   func_space env env' [].
 Proof.
   intros env env' Hf. split; [|apply List.Forall_nil].
@@ -1877,13 +1877,13 @@ Proof. intros env. apply func_space_keep. reflexivity. Qed.
     the imported functions name, then the types the function section's indices
     name. WasmCert builds [tc_funcs] as [ifts ++ fts] out of exactly those two
     lists. *)
-Definition env_func_space (env : env_Env_t) (xs : list (scalar U32)) : Prop :=
-  List.map translate_functype (vec_list env.(env_Env_func_types))
-    = resolved_types (vec_list env.(env_Env_types)) xs
-  /\ List.Forall (idx_in_range (vec_list env.(env_Env_types))) xs.
+Definition env_func_space (env : module_Env_t) (xs : list (scalar U32)) : Prop :=
+  List.map translate_functype (vec_list env.(module_Env_func_types))
+    = resolved_types (vec_list env.(module_Env_types)) xs
+  /\ List.Forall (idx_in_range (vec_list env.(module_Env_types))) xs.
 
 Lemma func_space_trans : forall env mid env' xs ys,
-  vec_list mid.(env_Env_types) = vec_list env.(env_Env_types) ->
+  vec_list mid.(module_Env_types) = vec_list env.(module_Env_types) ->
   func_space env mid xs -> func_space mid env' ys ->
   func_space env env' (xs ++ ys).
 Proof.
@@ -1898,10 +1898,10 @@ Lemma decode_function_section_loop_sound : forall m data env count q i q' env',
   module_decode_function_section_loop data env count q i
     = Ok (Core_result_Result_Ok q', env') ->
   exists xs,
-    vec_list env'.(env_Env_func_type_indices)
-      = vec_list env.(env_Env_func_type_indices) ++ xs
-    /\ env' = env_with_func env env'.(env_Env_func_types)
-                                env'.(env_Env_func_type_indices)
+    vec_list env'.(module_Env_func_type_indices)
+      = vec_list env.(module_Env_func_type_indices) ++ xs
+    /\ env' = env_with_func env env'.(module_Env_func_types)
+                                env'.(module_Env_func_type_indices)
     /\ repr_rep repr_idx (Z.to_nat (to_Z count - to_Z i))
          (bytes_from data q) (List.map translate_idx xs)
          (bytes_from data q')
@@ -1926,9 +1926,9 @@ Proof.
     destruct r1 as [ft|e1]; [|try_err_rw_in H; discriminate].
     rewrite branch_ok in H. cbn [bind] in H.
     destruct (lookup_type_sound _ _ _ Hlk) as [Hrange Hres].
-    destruct (alloc_vec_Vec_push env.(env_Env_func_types) ft) as [v|] eqn:Hpv;
+    destruct (alloc_vec_Vec_push env.(module_Env_func_types) ft) as [v|] eqn:Hpv;
       cbn [bind] in H; [|discriminate].
-    destruct (alloc_vec_Vec_push env.(env_Env_func_type_indices) idx)
+    destruct (alloc_vec_Vec_push env.(module_Env_func_type_indices) idx)
       as [v1|] eqn:Hpv1; cbn [bind] in H; [|discriminate].
     destruct (u32_add i 1%u32) as [i2|] eqn:Hadd; cbn [bind] in H;
       [|discriminate].
@@ -1937,7 +1937,7 @@ Proof.
                 (ltac:(cbn in Hmeas; lia)) H)
       as [xs [Hlist [Henv [Hrep Hfs]]]].
     exists (idx :: xs). split; [|split; [|split]].
-    + rewrite Hlist. cbn [env_with_func env_Env_func_type_indices].
+    + rewrite Hlist. cbn [env_with_func module_Env_func_type_indices].
       rewrite (vec_push_spec _ _ _ Hpv1). rewrite <- app_assoc. reflexivity.
     + rewrite Henv at 1. apply env_with_func_idem.
     + assert (Hcnt : to_Z count - to_Z i = (to_Z count - to_Z i2) + 1) by lia.
@@ -1948,7 +1948,7 @@ Proof.
       apply (func_space_trans env (env_with_func env v v1) env');
         [reflexivity | | exact Hfs].
       split; [| apply List.Forall_cons; [exact Hrange | apply List.Forall_nil]].
-      cbn [env_with_func env_Env_func_types].
+      cbn [env_with_func module_Env_func_types].
       rewrite (vec_push_spec _ _ _ Hpv). rewrite List.map_app.
       rewrite Hres. reflexivity.
 Qed.
@@ -1957,10 +1957,10 @@ Lemma decode_function_section_sound : forall data pos env q' env',
   module_decode_function_section data pos env
     = Ok (Core_result_Result_Ok q', env') ->
   exists xs,
-    vec_list env'.(env_Env_func_type_indices)
-      = vec_list env.(env_Env_func_type_indices) ++ xs
-    /\ env' = env_with_func env env'.(env_Env_func_types)
-                                env'.(env_Env_func_type_indices)
+    vec_list env'.(module_Env_func_type_indices)
+      = vec_list env.(module_Env_func_type_indices) ++ xs
+    /\ env' = env_with_func env env'.(module_Env_func_types)
+                                env'.(module_Env_func_type_indices)
     /\ repr_vec repr_idx (bytes_from data pos)
          (List.map translate_idx xs) (bytes_from data q')
     /\ func_space env env' xs.
@@ -1986,30 +1986,30 @@ Qed.
 (** Spec 5.5.9: [globalsec ::= glob*:vec(global)], [global ::= gt:globaltype
     e:expr]. The initialiser is decoded against the global's own type, which
     is spec 3.4.4 and does not appear in the format rule. *)
-Definition translate_global (g : env_Global_t) : module_global :=
-  {| modglob_type := translate_globaltype g.(env_Global_gtype);
-     modglob_init := [translate_const_expr g.(env_Global_init)] |}.
+Definition translate_global (g : module_Global_t) : module_global :=
+  {| modglob_type := translate_globaltype g.(module_Global_gtype);
+     modglob_init := [translate_const_expr g.(module_Global_init)] |}.
 
-Definition env_with_global (env : env_Env_t)
-                           (gls : alloc_vec_Vec env_Global_t)
+Definition env_with_global (env : module_Env_t)
+                           (gls : alloc_vec_Vec module_Global_t)
                            (gts : alloc_vec_Vec types_GlobalType_t)
-  : env_Env_t :=
-  {| env_Env_types := env.(env_Env_types);
-     env_Env_imports := env.(env_Env_imports);
-     env_Env_globals := gls;
-     env_Env_exports := env.(env_Env_exports);
-     env_Env_elements := env.(env_Env_elements);
-     env_Env_start := env.(env_Env_start);
-     env_Env_func_type_indices := env.(env_Env_func_type_indices);
-     env_Env_func_types := env.(env_Env_func_types);
-     env_Env_table_types := env.(env_Env_table_types);
-     env_Env_mem_types := env.(env_Env_mem_types);
-     env_Env_global_types := gts;
-     env_Env_num_imported_funcs := env.(env_Env_num_imported_funcs);
-     env_Env_num_imported_globals := env.(env_Env_num_imported_globals) |}.
+  : module_Env_t :=
+  {| module_Env_types := env.(module_Env_types);
+     module_Env_imports := env.(module_Env_imports);
+     module_Env_globals := gls;
+     module_Env_exports := env.(module_Env_exports);
+     module_Env_elements := env.(module_Env_elements);
+     module_Env_start := env.(module_Env_start);
+     module_Env_func_type_indices := env.(module_Env_func_type_indices);
+     module_Env_func_types := env.(module_Env_func_types);
+     module_Env_table_types := env.(module_Env_table_types);
+     module_Env_mem_types := env.(module_Env_mem_types);
+     module_Env_global_types := gts;
+     module_Env_num_imported_funcs := env.(module_Env_num_imported_funcs);
+     module_Env_num_imported_globals := env.(module_Env_num_imported_globals) |}.
 
 Lemma env_with_global_refl : forall env,
-  env = env_with_global env env.(env_Env_globals) env.(env_Env_global_types).
+  env = env_with_global env env.(module_Env_globals) env.(module_Env_global_types).
 Proof. intros env. destruct env. reflexivity. Qed.
 
 Lemma env_with_global_idem : forall env a b c d,
@@ -2022,15 +2022,15 @@ Proof. intros. reflexivity. Qed.
     the check against the environment the initialiser was decoded in, and
     [const_expr_ok] survives the later appends because the imported prefix it
     names does not move. *)
-Definition global_ok (env : env_Env_t) (g : env_Global_t) : Prop :=
-  const_expr_ok env g.(env_Global_gtype).(types_GlobalType_valtype)
-                g.(env_Global_init).
+Definition global_ok (env : module_Env_t) (g : module_Global_t) : Prop :=
+  const_expr_ok env g.(module_Global_gtype).(types_GlobalType_valtype)
+                g.(module_Global_init).
 
 Lemma const_expr_ok_grow : forall env env' t e more,
-  vec_list env'.(env_Env_global_types)
-    = vec_list env.(env_Env_global_types) ++ more ->
-  to_Z env'.(env_Env_num_imported_globals)
-    = to_Z env.(env_Env_num_imported_globals) ->
+  vec_list env'.(module_Env_global_types)
+    = vec_list env.(module_Env_global_types) ++ more ->
+  to_Z env'.(module_Env_num_imported_globals)
+    = to_Z env.(module_Env_num_imported_globals) ->
   const_expr_ok env t e -> const_expr_ok env' t e.
 Proof.
   intros env env' t e more Hg Hn H. destruct e; try exact H.
@@ -2042,10 +2042,10 @@ Proof.
 Qed.
 
 Lemma global_ok_grow : forall env env' g more,
-  vec_list env'.(env_Env_global_types)
-    = vec_list env.(env_Env_global_types) ++ more ->
-  to_Z env'.(env_Env_num_imported_globals)
-    = to_Z env.(env_Env_num_imported_globals) ->
+  vec_list env'.(module_Env_global_types)
+    = vec_list env.(module_Env_global_types) ++ more ->
+  to_Z env'.(module_Env_num_imported_globals)
+    = to_Z env.(module_Env_num_imported_globals) ->
   global_ok env g -> global_ok env' g.
 Proof.
   intros env env' g more Hg Hn H.
@@ -2057,15 +2057,15 @@ Lemma decode_global_section_loop_sound : forall m data env count q i q' env',
   module_decode_global_section_loop data env count q i
     = Ok (Core_result_Result_Ok q', env') ->
   exists gls,
-    vec_list env'.(env_Env_globals) = vec_list env.(env_Env_globals) ++ gls
-    /\ env' = env_with_global env env'.(env_Env_globals)
-                                  env'.(env_Env_global_types)
+    vec_list env'.(module_Env_globals) = vec_list env.(module_Env_globals) ++ gls
+    /\ env' = env_with_global env env'.(module_Env_globals)
+                                  env'.(module_Env_global_types)
     /\ repr_rep repr_global (Z.to_nat (to_Z count - to_Z i))
          (bytes_from data q) (List.map translate_global gls)
          (bytes_from data q')
-    /\ vec_list env'.(env_Env_global_types)
-         = vec_list env.(env_Env_global_types)
-           ++ List.map (fun g => g.(env_Global_gtype)) gls
+    /\ vec_list env'.(module_Env_global_types)
+         = vec_list env.(module_Env_global_types)
+           ++ List.map (fun g => g.(module_Global_gtype)) gls
     /\ List.Forall (global_ok env') gls.
 Proof.
   induction m as [|m IH]; intros data env count q i q' env' Hmeas H;
@@ -2087,10 +2087,10 @@ Proof.
       cbn [bind] in H; [|discriminate].
     destruct r1 as [[init q2]|e1]; [|try_err_rw_in H; discriminate].
     rewrite branch_ok in H. cbn [bind] in H.
-    destruct (alloc_vec_Vec_push env.(env_Env_global_types) gtype)
+    destruct (alloc_vec_Vec_push env.(module_Env_global_types) gtype)
       as [v|] eqn:Hpv; cbn [bind] in H; [|discriminate].
-    destruct (alloc_vec_Vec_push env.(env_Env_globals)
-                {| env_Global_gtype := gtype; env_Global_init := init |})
+    destruct (alloc_vec_Vec_push env.(module_Env_globals)
+                {| module_Global_gtype := gtype; module_Global_init := init |})
       as [v1|] eqn:Hpv1; cbn [bind] in H; [|discriminate].
     destruct (u32_add i 1%u32) as [i2|] eqn:Hadd; cbn [bind] in H;
       [|discriminate].
@@ -2098,34 +2098,34 @@ Proof.
     destruct (IH data (env_with_global env v1 v) count q2 i2 q' env'
                 (ltac:(cbn in Hmeas; lia)) H)
       as [gls [Hlist [Henv [Hrep [Hgts Hoks]]]]].
-    assert (Hgtsout : vec_list env'.(env_Env_global_types)
-                      = vec_list env.(env_Env_global_types)
-                        ++ List.map (fun g => g.(env_Global_gtype))
-                             ({| env_Global_gtype := gtype;
-                                 env_Global_init := init |} :: gls)).
-    { rewrite Hgts. cbn [env_with_global env_Env_global_types].
+    assert (Hgtsout : vec_list env'.(module_Env_global_types)
+                      = vec_list env.(module_Env_global_types)
+                        ++ List.map (fun g => g.(module_Global_gtype))
+                             ({| module_Global_gtype := gtype;
+                                 module_Global_init := init |} :: gls)).
+    { rewrite Hgts. cbn [env_with_global module_Env_global_types].
       rewrite (vec_push_spec _ _ _ Hpv). rewrite <- app_assoc.
-      cbn [List.map List.app env_Global_gtype]. reflexivity. }
-    assert (Hnigout : to_Z env'.(env_Env_num_imported_globals)
-                      = to_Z env.(env_Env_num_imported_globals))
+      cbn [List.map List.app module_Global_gtype]. reflexivity. }
+    assert (Hnigout : to_Z env'.(module_Env_num_imported_globals)
+                      = to_Z env.(module_Env_num_imported_globals))
       by (rewrite Henv;
-          cbn [env_with_global env_Env_num_imported_globals]; reflexivity).
-    exists ({| env_Global_gtype := gtype; env_Global_init := init |} :: gls).
+          cbn [env_with_global module_Env_num_imported_globals]; reflexivity).
+    exists ({| module_Global_gtype := gtype; module_Global_init := init |} :: gls).
     split; [|split; [|split; [|split]]].
-    + rewrite Hlist. cbn [env_with_global env_Env_globals].
+    + rewrite Hlist. cbn [env_with_global module_Env_globals].
       rewrite (vec_push_spec _ _ _ Hpv1). rewrite <- app_assoc. reflexivity.
     + rewrite Henv at 1. apply env_with_global_idem.
     + assert (Hcnt : to_Z count - to_Z i = (to_Z count - to_Z i2) + 1) by lia.
       rewrite Hcnt. rewrite Z_to_nat_add1 by lia.
       cbn [List.map]. eapply repr_rep_cons; [|exact Hrep].
-      unfold translate_global. cbn [env_Global_gtype env_Global_init].
+      unfold translate_global. cbn [module_Global_gtype module_Global_init].
       apply repr_global_intro with (p1 := bytes_from data q1).
       * apply (decode_global_type_sound _ _ _ _ Hgt).
       * apply (decode_const_expr_sound _ _ _ _ _ _ Hinit).
     + exact Hgtsout.
     + apply List.Forall_cons; [| exact Hoks].
       apply (global_ok_grow env env' _ _ Hgtsout Hnigout).
-      unfold global_ok. cbn [env_Global_gtype env_Global_init].
+      unfold global_ok. cbn [module_Global_gtype module_Global_init].
       exact (decode_const_expr_typed _ _ _ _ _ _ Hinit).
 Qed.
 
@@ -2133,14 +2133,14 @@ Lemma decode_global_section_sound : forall data pos env q' env',
   module_decode_global_section data pos env
     = Ok (Core_result_Result_Ok q', env') ->
   exists gls,
-    vec_list env'.(env_Env_globals) = vec_list env.(env_Env_globals) ++ gls
-    /\ env' = env_with_global env env'.(env_Env_globals)
-                                  env'.(env_Env_global_types)
+    vec_list env'.(module_Env_globals) = vec_list env.(module_Env_globals) ++ gls
+    /\ env' = env_with_global env env'.(module_Env_globals)
+                                  env'.(module_Env_global_types)
     /\ repr_vec repr_global (bytes_from data pos)
          (List.map translate_global gls) (bytes_from data q')
-    /\ vec_list env'.(env_Env_global_types)
-         = vec_list env.(env_Env_global_types)
-           ++ List.map (fun g => g.(env_Global_gtype)) gls
+    /\ vec_list env'.(module_Env_global_types)
+         = vec_list env.(module_Env_global_types)
+           ++ List.map (fun g => g.(module_Global_gtype)) gls
     /\ List.Forall (global_ok env') gls.
 Proof.
   intros data pos env q' env' H. unfold module_decode_global_section in H.
@@ -2164,36 +2164,36 @@ Qed.
 
 (** Spec 5.5.10: [exportsec ::= ex*:vec(export)]. That the index is in range
     and the name unused are spec 3.4.11, and do not appear in the format. *)
-Definition translate_exportdesc (d : env_ExportDesc_t) : module_export_desc :=
+Definition translate_exportdesc (d : module_ExportDesc_t) : module_export_desc :=
   match d with
-  | Env_ExportDesc_Func x => MED_func (translate_idx x)
-  | Env_ExportDesc_Table x => MED_table (translate_idx x)
-  | Env_ExportDesc_Memory x => MED_mem (translate_idx x)
-  | Env_ExportDesc_Global x => MED_global (translate_idx x)
+  | Module_ExportDesc_Func x => MED_func (translate_idx x)
+  | Module_ExportDesc_Table x => MED_table (translate_idx x)
+  | Module_ExportDesc_Memory x => MED_mem (translate_idx x)
+  | Module_ExportDesc_Global x => MED_global (translate_idx x)
   end.
 
-Definition translate_export (e : env_Export_t) : module_export :=
-  {| modexp_name := translate_name e.(env_Export_name);
-     modexp_desc := translate_exportdesc e.(env_Export_desc) |}.
+Definition translate_export (e : module_Export_t) : module_export :=
+  {| modexp_name := translate_name e.(module_Export_name);
+     modexp_desc := translate_exportdesc e.(module_Export_desc) |}.
 
-Definition env_with_exports (env : env_Env_t)
-                            (v : alloc_vec_Vec env_Export_t) : env_Env_t :=
-  {| env_Env_types := env.(env_Env_types);
-     env_Env_imports := env.(env_Env_imports);
-     env_Env_globals := env.(env_Env_globals);
-     env_Env_exports := v;
-     env_Env_elements := env.(env_Env_elements);
-     env_Env_start := env.(env_Env_start);
-     env_Env_func_type_indices := env.(env_Env_func_type_indices);
-     env_Env_func_types := env.(env_Env_func_types);
-     env_Env_table_types := env.(env_Env_table_types);
-     env_Env_mem_types := env.(env_Env_mem_types);
-     env_Env_global_types := env.(env_Env_global_types);
-     env_Env_num_imported_funcs := env.(env_Env_num_imported_funcs);
-     env_Env_num_imported_globals := env.(env_Env_num_imported_globals) |}.
+Definition env_with_exports (env : module_Env_t)
+                            (v : alloc_vec_Vec module_Export_t) : module_Env_t :=
+  {| module_Env_types := env.(module_Env_types);
+     module_Env_imports := env.(module_Env_imports);
+     module_Env_globals := env.(module_Env_globals);
+     module_Env_exports := v;
+     module_Env_elements := env.(module_Env_elements);
+     module_Env_start := env.(module_Env_start);
+     module_Env_func_type_indices := env.(module_Env_func_type_indices);
+     module_Env_func_types := env.(module_Env_func_types);
+     module_Env_table_types := env.(module_Env_table_types);
+     module_Env_mem_types := env.(module_Env_mem_types);
+     module_Env_global_types := env.(module_Env_global_types);
+     module_Env_num_imported_funcs := env.(module_Env_num_imported_funcs);
+     module_Env_num_imported_globals := env.(module_Env_num_imported_globals) |}.
 
 Lemma env_with_exports_refl : forall env,
-  env = env_with_exports env env.(env_Env_exports).
+  env = env_with_exports env env.(module_Env_exports).
 Proof. intros env. destruct env. reflexivity. Qed.
 
 Lemma env_with_exports_idem : forall env v w,
@@ -2212,22 +2212,22 @@ Proof.
   destruct (scalar_cast U32 Usize idx) as [i|]; cbn [bind] in H;
     [|discriminate].
   destruct (kind s= 0%u8) eqn:E0.
-  { destruct (i s>= alloc_vec_Vec_len env.(env_Env_func_types));
+  { destruct (i s>= alloc_vec_Vec_len env.(module_Env_func_types));
       [discriminate|].
     injection H as <-. rewrite (scalar_eqb_val _ _ 0 E0 eq_refl).
     apply repr_exportdesc_func. apply repr_idx_intro. exact Hidx. }
   destruct (kind s= 1%u8) eqn:E1.
-  { destruct (i s>= alloc_vec_Vec_len env.(env_Env_table_types));
+  { destruct (i s>= alloc_vec_Vec_len env.(module_Env_table_types));
       [discriminate|].
     injection H as <-. rewrite (scalar_eqb_val _ _ 1 E1 eq_refl).
     apply repr_exportdesc_table. apply repr_idx_intro. exact Hidx. }
   destruct (kind s= 2%u8) eqn:E2.
-  { destruct (i s>= alloc_vec_Vec_len env.(env_Env_mem_types));
+  { destruct (i s>= alloc_vec_Vec_len env.(module_Env_mem_types));
       [discriminate|].
     injection H as <-. rewrite (scalar_eqb_val _ _ 2 E2 eq_refl).
     apply repr_exportdesc_mem. apply repr_idx_intro. exact Hidx. }
   destruct (kind s= 3%u8) eqn:E3; [|discriminate].
-  destruct (i s>= alloc_vec_Vec_len env.(env_Env_global_types));
+  destruct (i s>= alloc_vec_Vec_len env.(module_Env_global_types));
     [discriminate|].
   injection H as <-. rewrite (scalar_eqb_val _ _ 3 E3 eq_refl).
   apply repr_exportdesc_global. apply repr_idx_intro. exact Hidx.
@@ -2238,22 +2238,22 @@ Qed.
     name. [export_name_taken] is a linear scan, so what an accepting run gives
     is that the new name differs from every name already there, which is
     exactly the step of [NoDup]. *)
-Definition export_name (e : env_Export_t) : list Z :=
-  byte_list e.(env_Export_name).
+Definition export_name (e : module_Export_t) : list Z :=
+  byte_list e.(module_Export_name).
 
-Definition exports_distinct (env : env_Env_t) : Prop :=
-  List.NoDup (List.map export_name (vec_list env.(env_Env_exports))).
+Definition exports_distinct (env : module_Env_t) : Prop :=
+  List.NoDup (List.map export_name (vec_list env.(module_Env_exports))).
 
-Definition export_desc_ok (env : env_Env_t) (e : env_Export_t) : Prop :=
-  match e.(env_Export_desc) with
-  | Env_ExportDesc_Func x =>
-      to_Z x < Z.of_nat (List.length (vec_list env.(env_Env_func_types)))
-  | Env_ExportDesc_Table x =>
-      to_Z x < Z.of_nat (List.length (vec_list env.(env_Env_table_types)))
-  | Env_ExportDesc_Memory x =>
-      to_Z x < Z.of_nat (List.length (vec_list env.(env_Env_mem_types)))
-  | Env_ExportDesc_Global x =>
-      to_Z x < Z.of_nat (List.length (vec_list env.(env_Env_global_types)))
+Definition export_desc_ok (env : module_Env_t) (e : module_Export_t) : Prop :=
+  match e.(module_Export_desc) with
+  | Module_ExportDesc_Func x =>
+      to_Z x < Z.of_nat (List.length (vec_list env.(module_Env_func_types)))
+  | Module_ExportDesc_Table x =>
+      to_Z x < Z.of_nat (List.length (vec_list env.(module_Env_table_types)))
+  | Module_ExportDesc_Memory x =>
+      to_Z x < Z.of_nat (List.length (vec_list env.(module_Env_mem_types)))
+  | Module_ExportDesc_Global x =>
+      to_Z x < Z.of_nat (List.length (vec_list env.(module_Env_global_types)))
   end.
 
 (** Equal byte strings compare equal, so a scan that reported "not taken"
@@ -2276,14 +2276,14 @@ Lemma export_desc_range : forall env kind idx d,
   Itasca.Aeneas_Specs.module_export_desc env kind idx
     = Ok (Core_result_Result_Ok d) ->
   match d with
-  | Env_ExportDesc_Func x =>
-      to_Z x < Z.of_nat (List.length (vec_list env.(env_Env_func_types)))
-  | Env_ExportDesc_Table x =>
-      to_Z x < Z.of_nat (List.length (vec_list env.(env_Env_table_types)))
-  | Env_ExportDesc_Memory x =>
-      to_Z x < Z.of_nat (List.length (vec_list env.(env_Env_mem_types)))
-  | Env_ExportDesc_Global x =>
-      to_Z x < Z.of_nat (List.length (vec_list env.(env_Env_global_types)))
+  | Module_ExportDesc_Func x =>
+      to_Z x < Z.of_nat (List.length (vec_list env.(module_Env_func_types)))
+  | Module_ExportDesc_Table x =>
+      to_Z x < Z.of_nat (List.length (vec_list env.(module_Env_table_types)))
+  | Module_ExportDesc_Memory x =>
+      to_Z x < Z.of_nat (List.length (vec_list env.(module_Env_mem_types)))
+  | Module_ExportDesc_Global x =>
+      to_Z x < Z.of_nat (List.length (vec_list env.(module_Env_global_types)))
   end.
 Proof.
   intros env kind idx d H.
@@ -2294,22 +2294,22 @@ Proof.
     by (unfold scalar_cast in Hcast; apply mk_scalar_ok_to_Z in Hcast;
         exact Hcast).
   destruct (kind s= 0%u8).
-  { destruct (i s>= alloc_vec_Vec_len env.(env_Env_func_types)) eqn:Hr;
+  { destruct (i s>= alloc_vec_Vec_len env.(module_Env_func_types)) eqn:Hr;
       [discriminate|].
     injection H as <-. apply scalar_geb_false_lt in Hr.
     rewrite vec_len_spec in Hr. lia. }
   destruct (kind s= 1%u8).
-  { destruct (i s>= alloc_vec_Vec_len env.(env_Env_table_types)) eqn:Hr;
+  { destruct (i s>= alloc_vec_Vec_len env.(module_Env_table_types)) eqn:Hr;
       [discriminate|].
     injection H as <-. apply scalar_geb_false_lt in Hr.
     rewrite vec_len_spec in Hr. lia. }
   destruct (kind s= 2%u8).
-  { destruct (i s>= alloc_vec_Vec_len env.(env_Env_mem_types)) eqn:Hr;
+  { destruct (i s>= alloc_vec_Vec_len env.(module_Env_mem_types)) eqn:Hr;
       [discriminate|].
     injection H as <-. apply scalar_geb_false_lt in Hr.
     rewrite vec_len_spec in Hr. lia. }
   destruct (kind s= 3%u8); [|discriminate].
-  destruct (i s>= alloc_vec_Vec_len env.(env_Env_global_types)) eqn:Hr;
+  destruct (i s>= alloc_vec_Vec_len env.(module_Env_global_types)) eqn:Hr;
     [discriminate|].
   injection H as <-. apply scalar_geb_false_lt in Hr.
   rewrite vec_len_spec in Hr. lia.
@@ -2386,41 +2386,41 @@ Proof.
 Qed.
 
 Lemma export_name_taken_loop_false : forall m env nm i,
-  Z.of_nat (List.length (vec_list env.(env_Env_exports))) - to_Z i
+  Z.of_nat (List.length (vec_list env.(module_Env_exports))) - to_Z i
     <= Z.of_nat m ->
   0 <= to_Z i ->
   module_export_name_taken_loop env nm i = Ok false ->
   forall k e, (Z.to_nat (to_Z i) <= k)%nat ->
-    List.nth_error (vec_list env.(env_Env_exports)) k = Some e ->
-    byte_list e.(env_Export_name) <> byte_list nm.
+    List.nth_error (vec_list env.(module_Env_exports)) k = Some e ->
+    byte_list e.(module_Export_name) <> byte_list nm.
 Proof.
   induction m as [|m IH]; intros env nm i Hmeas Hi H k e Hk Hnth;
     unfold module_export_name_taken_loop in H; rewrite loop_unfold in H;
     cbn beta iota in H;
-    destruct (i s>= alloc_vec_Vec_len env.(env_Env_exports)) eqn:Hge.
+    destruct (i s>= alloc_vec_Vec_len env.(module_Env_exports)) eqn:Hge.
   1,3: exfalso; apply scalar_geb_true_ge in Hge;
        rewrite vec_len_spec in Hge;
        assert (Hlen := proj1 (List.nth_error_Some
-                                (vec_list env.(env_Env_exports)) k)
+                                (vec_list env.(module_Env_exports)) k)
                          (ltac:(rewrite Hnth; discriminate)));
        lia.
   1: { exfalso. apply scalar_geb_false_lt in Hge.
        rewrite vec_len_spec in Hge. cbn in Hmeas. lia. }
   apply scalar_geb_false_lt in Hge. rewrite vec_len_spec in Hge.
   destruct (alloc_vec_Vec_index
-              (core_slice_index_SliceIndexUsizeSliceInst env_Export_t)
-              env.(env_Env_exports) i) as [e0|] eqn:He0; cbn [bind] in H;
+              (core_slice_index_SliceIndexUsizeSliceInst module_Export_t)
+              env.(module_Env_exports) i) as [e0|] eqn:He0; cbn [bind] in H;
     [|discriminate].
   rewrite vec_index_spec in He0.
-  destruct (List.nth_error (vec_list env.(env_Env_exports))
+  destruct (List.nth_error (vec_list env.(module_Env_exports))
               (Z.to_nat (to_Z i))) as [e1|] eqn:Hnth1; [|discriminate].
   injection He0 as <-.
   rewrite vec_deref_spec in H.
-  destruct (module_names_equal e1.(env_Export_name) nm) as [taken|] eqn:Hnm;
+  destruct (module_names_equal e1.(module_Export_name) nm) as [taken|] eqn:Hnm;
     cbn [bind] in H; [|discriminate].
   destruct taken; [discriminate|].
   destruct (usize_add_1_ok i (ltac:(pose proof (usize_le_max
-              (alloc_vec_Vec_len env.(env_Env_exports)));
+              (alloc_vec_Vec_len env.(module_Env_exports)));
               rewrite vec_len_spec in *; lia)))
     as [i2 [Hadd Hi2]].
   rewrite Hadd in H. cbn [bind] in H.
@@ -2433,13 +2433,13 @@ Qed.
 
 Lemma export_name_taken_false : forall env nm,
   module_export_name_taken env nm = Ok false ->
-  forall e, List.In e (vec_list env.(env_Env_exports)) ->
-    byte_list e.(env_Export_name) <> byte_list nm.
+  forall e, List.In e (vec_list env.(module_Env_exports)) ->
+    byte_list e.(module_Export_name) <> byte_list nm.
 Proof.
   intros env nm H e Hin. unfold module_export_name_taken in H.
   apply List.In_nth_error in Hin. destruct Hin as [k Hnth].
   apply (export_name_taken_loop_false
-           (List.length (vec_list env.(env_Env_exports))) env nm 0%usize
+           (List.length (vec_list env.(module_Env_exports))) env nm 0%usize
            (ltac:(assert (H0 : to_Z 0%usize = 0) by reflexivity; lia))
            (ltac:(assert (H0 : to_Z 0%usize = 0) by reflexivity; lia))
            H k e (ltac:(assert (H0 : to_Z 0%usize = 0) by reflexivity;
@@ -2451,8 +2451,8 @@ Lemma decode_export_section_loop_sound : forall m data env count q i q' env',
   module_decode_export_section_loop data env count q i
     = Ok (Core_result_Result_Ok q', env') ->
   exists exs,
-    vec_list env'.(env_Env_exports) = vec_list env.(env_Env_exports) ++ exs
-    /\ env' = env_with_exports env env'.(env_Env_exports)
+    vec_list env'.(module_Env_exports) = vec_list env.(module_Env_exports) ++ exs
+    /\ env' = env_with_exports env env'.(module_Env_exports)
     /\ repr_rep repr_export (Z.to_nat (to_Z count - to_Z i))
          (bytes_from data q) (List.map translate_export exs)
          (bytes_from data q')
@@ -2489,8 +2489,8 @@ Proof.
       cbn [bind] in H; [|discriminate].
     destruct r3 as [d|e3]; [|try_err_rw_in H; discriminate].
     rewrite branch_ok in H. cbn [bind] in H.
-    destruct (alloc_vec_Vec_push env.(env_Env_exports)
-                {| env_Export_name := name; env_Export_desc := d |})
+    destruct (alloc_vec_Vec_push env.(module_Env_exports)
+                {| module_Export_name := name; module_Export_desc := d |})
       as [v|] eqn:Hpv; cbn [bind] in H; [|discriminate].
     destruct (u32_add i 1%u32) as [i2|] eqn:Hadd; cbn [bind] in H;
       [|discriminate].
@@ -2498,15 +2498,15 @@ Proof.
     destruct (IH data (env_with_exports env v) count q3 i2 q' env'
                 (ltac:(cbn in Hmeas; lia)) H)
       as [exs [Hlist [Henv [Hrep [Hdist Hall]]]]].
-    exists ({| env_Export_name := name; env_Export_desc := d |} :: exs).
+    exists ({| module_Export_name := name; module_Export_desc := d |} :: exs).
     split; [|split; [|split; [|split]]].
-    + rewrite Hlist. cbn [env_with_exports env_Env_exports].
+    + rewrite Hlist. cbn [env_with_exports module_Env_exports].
       rewrite (vec_push_spec _ _ _ Hpv). rewrite <- app_assoc. reflexivity.
     + rewrite Henv at 1. apply env_with_exports_idem.
     + assert (Hcnt : to_Z count - to_Z i = (to_Z count - to_Z i2) + 1) by lia.
       rewrite Hcnt. rewrite Z_to_nat_add1 by lia.
       cbn [List.map]. eapply repr_rep_cons; [|exact Hrep].
-      unfold translate_export. cbn [env_Export_name env_Export_desc].
+      unfold translate_export. cbn [module_Export_name module_Export_desc].
       apply repr_export_intro with (p1 := bytes_from data q1).
       * apply (decode_name_sound _ _ _ _ Hnm).
       * rewrite (proj1 (read_byte_ok _ _ _ _ Hk)).
@@ -2515,19 +2515,19 @@ Proof.
     + (* the new name is not one of those already there *)
       intros Hd0. apply Hdist.
       unfold exports_distinct.
-      cbn [env_with_exports env_Env_exports].
+      cbn [env_with_exports module_Env_exports].
       rewrite (vec_push_spec _ _ _ Hpv). rewrite List.map_app.
       apply nodup_app_one; [exact Hd0|].
       intros Hin. apply List.in_map_iff in Hin.
       destruct Hin as [e [Hname Hine]].
       apply (export_name_taken_false env name Htaken e Hine).
-      unfold export_name in Hname. cbn [env_Export_name] in Hname.
+      unfold export_name in Hname. cbn [module_Export_name] in Hname.
       exact Hname.
     + apply List.Forall_cons.
-      * unfold export_desc_ok. cbn [env_Export_desc].
+      * unfold export_desc_ok. cbn [module_Export_desc].
         exact (export_desc_range _ _ _ _ Hd).
-      * cbn [env_with_exports env_Env_func_types env_Env_table_types
-             env_Env_mem_types env_Env_global_types] in Hall.
+      * cbn [env_with_exports module_Env_func_types module_Env_table_types
+             module_Env_mem_types module_Env_global_types] in Hall.
         exact Hall.
 Qed.
 
@@ -2535,8 +2535,8 @@ Lemma decode_export_section_sound : forall data pos env q' env',
   module_decode_export_section data pos env
     = Ok (Core_result_Result_Ok q', env') ->
   exists exs,
-    vec_list env'.(env_Env_exports) = vec_list env.(env_Env_exports) ++ exs
-    /\ env' = env_with_exports env env'.(env_Env_exports)
+    vec_list env'.(module_Env_exports) = vec_list env.(module_Env_exports) ++ exs
+    /\ env' = env_with_exports env env'.(module_Env_exports)
     /\ repr_vec repr_export (bytes_from data pos)
          (List.map translate_export exs) (bytes_from data q')
     /\ (exports_distinct env -> exports_distinct env')
@@ -2563,24 +2563,24 @@ Qed.
 
 (** Spec 5.5.11: [startsec ::= section_8(start)], [start ::= x:funcidx]. That
     the function exists and takes and returns nothing is spec 3.4.13. *)
-Definition env_with_start (env : env_Env_t)
-                          (s : option (scalar U32)) : env_Env_t :=
-  {| env_Env_types := env.(env_Env_types);
-     env_Env_imports := env.(env_Env_imports);
-     env_Env_globals := env.(env_Env_globals);
-     env_Env_exports := env.(env_Env_exports);
-     env_Env_elements := env.(env_Env_elements);
-     env_Env_start := s;
-     env_Env_func_type_indices := env.(env_Env_func_type_indices);
-     env_Env_func_types := env.(env_Env_func_types);
-     env_Env_table_types := env.(env_Env_table_types);
-     env_Env_mem_types := env.(env_Env_mem_types);
-     env_Env_global_types := env.(env_Env_global_types);
-     env_Env_num_imported_funcs := env.(env_Env_num_imported_funcs);
-     env_Env_num_imported_globals := env.(env_Env_num_imported_globals) |}.
+Definition env_with_start (env : module_Env_t)
+                          (s : option (scalar U32)) : module_Env_t :=
+  {| module_Env_types := env.(module_Env_types);
+     module_Env_imports := env.(module_Env_imports);
+     module_Env_globals := env.(module_Env_globals);
+     module_Env_exports := env.(module_Env_exports);
+     module_Env_elements := env.(module_Env_elements);
+     module_Env_start := s;
+     module_Env_func_type_indices := env.(module_Env_func_type_indices);
+     module_Env_func_types := env.(module_Env_func_types);
+     module_Env_table_types := env.(module_Env_table_types);
+     module_Env_mem_types := env.(module_Env_mem_types);
+     module_Env_global_types := env.(module_Env_global_types);
+     module_Env_num_imported_funcs := env.(module_Env_num_imported_funcs);
+     module_Env_num_imported_globals := env.(module_Env_num_imported_globals) |}.
 
 Lemma env_with_start_refl : forall env,
-  env = env_with_start env env.(env_Env_start).
+  env = env_with_start env env.(module_Env_start).
 Proof. intros env. destruct env. reflexivity. Qed.
 
 Definition translate_start (s : option (scalar U32)) : option module_start :=
@@ -2588,12 +2588,12 @@ Definition translate_start (s : option (scalar U32)) : option module_start :=
 
 (** Spec 3.4.13: the start function is in the function space and takes and
     returns nothing. *)
-Definition start_ok (env : env_Env_t) : Prop :=
-  match env.(env_Env_start) with
+Definition start_ok (env : module_Env_t) : Prop :=
+  match env.(module_Env_start) with
   | None => True
   | Some x =>
       exists ft,
-        List.nth_error (vec_list env.(env_Env_func_types))
+        List.nth_error (vec_list env.(module_Env_func_types))
                        (Z.to_nat (to_Z x)) = Some ft
         /\ vec_list ft.(types_FuncType_params) = []
         /\ vec_list ft.(types_FuncType_results) = []
@@ -2602,8 +2602,8 @@ Definition start_ok (env : env_Env_t) : Prop :=
 Lemma decode_start_section_sound : forall data pos env q' env',
   module_decode_start_section data pos env
     = Ok (Core_result_Result_Ok q', env') ->
-  env' = env_with_start env env'.(env_Env_start)
-  /\ repr_start (bytes_from data pos) (translate_start env'.(env_Env_start))
+  env' = env_with_start env env'.(module_Env_start)
+  /\ repr_start (bytes_from data pos) (translate_start env'.(module_Env_start))
        (bytes_from data q')
   /\ start_ok env'.
 Proof.
@@ -2617,26 +2617,26 @@ Proof.
   assert (Hi : to_Z i = to_Z idx)
     by (unfold scalar_cast in Hcast; apply mk_scalar_ok_to_Z in Hcast;
         exact Hcast).
-  destruct (i s>= alloc_vec_Vec_len env.(env_Env_func_types)); [discriminate|].
+  destruct (i s>= alloc_vec_Vec_len env.(module_Env_func_types)); [discriminate|].
   destruct (alloc_vec_Vec_index
               (core_slice_index_SliceIndexUsizeSliceInst types_FuncType_t)
-              env.(env_Env_func_types) i) as [ft|] eqn:Hft;
+              env.(module_Env_func_types) i) as [ft|] eqn:Hft;
     cbn [bind] in H; [|discriminate].
   rewrite vec_index_spec in Hft.
-  destruct (List.nth_error (vec_list env.(env_Env_func_types))
+  destruct (List.nth_error (vec_list env.(module_Env_func_types))
               (Z.to_nat (to_Z i))) as [ft0|] eqn:Hnth; [|discriminate].
   injection Hft as <-.
   rewrite vec_is_empty_spec in H. cbn [bind] in H.
   destruct (vec_list ft0.(types_FuncType_params)) eqn:Hps; [|discriminate].
   rewrite vec_is_empty_spec in H. cbn [bind] in H.
   destruct (vec_list ft0.(types_FuncType_results)) eqn:Hrs; [|discriminate].
-  injection H as <- <-. cbn [env_with_start env_Env_start]. split.
+  injection H as <- <-. cbn [env_with_start module_Env_start]. split.
   - destruct env. reflexivity.
   - split.
     + unfold repr_start, translate_start. cbn [option_map].
       exists (translate_idx idx). split; [|reflexivity].
       apply repr_idx_intro. apply (read_u32_leb_sound _ _ _ _ Hidx).
-    + unfold start_ok. cbn [env_with_start env_Env_start env_Env_func_types].
+    + unfold start_ok. cbn [env_with_start module_Env_start module_Env_func_types].
       exists ft0. rewrite Hi in Hnth.
       split; [exact Hnth | split; [exact Hps | exact Hrs]].
 Qed.
@@ -2644,33 +2644,33 @@ Qed.
 (** Spec 5.5.12: [elemsec ::= seg*:vec(elem)], and Wasm 1.0's single form
     [elem ::= x:tableidx e:expr y*:vec(funcidx)]. The header of
     [Spec_Module.v] describes how that lands in the 2.0 [module_element]. *)
-Definition translate_element (el : env_Element_t) : module_element :=
+Definition translate_element (el : module_Element_t) : module_element :=
   {| modelem_type := T_funcref;
      modelem_init :=
        List.map (fun y => [BI_ref_func (translate_idx y)])
-         (vec_list el.(env_Element_init));
+         (vec_list el.(module_Element_init));
      modelem_mode :=
-       ME_active (translate_idx el.(env_Element_table_idx))
-         [translate_const_expr el.(env_Element_offset)] |}.
+       ME_active (translate_idx el.(module_Element_table_idx))
+         [translate_const_expr el.(module_Element_offset)] |}.
 
-Definition env_with_elements (env : env_Env_t)
-                             (v : alloc_vec_Vec env_Element_t) : env_Env_t :=
-  {| env_Env_types := env.(env_Env_types);
-     env_Env_imports := env.(env_Env_imports);
-     env_Env_globals := env.(env_Env_globals);
-     env_Env_exports := env.(env_Env_exports);
-     env_Env_elements := v;
-     env_Env_start := env.(env_Env_start);
-     env_Env_func_type_indices := env.(env_Env_func_type_indices);
-     env_Env_func_types := env.(env_Env_func_types);
-     env_Env_table_types := env.(env_Env_table_types);
-     env_Env_mem_types := env.(env_Env_mem_types);
-     env_Env_global_types := env.(env_Env_global_types);
-     env_Env_num_imported_funcs := env.(env_Env_num_imported_funcs);
-     env_Env_num_imported_globals := env.(env_Env_num_imported_globals) |}.
+Definition env_with_elements (env : module_Env_t)
+                             (v : alloc_vec_Vec module_Element_t) : module_Env_t :=
+  {| module_Env_types := env.(module_Env_types);
+     module_Env_imports := env.(module_Env_imports);
+     module_Env_globals := env.(module_Env_globals);
+     module_Env_exports := env.(module_Env_exports);
+     module_Env_elements := v;
+     module_Env_start := env.(module_Env_start);
+     module_Env_func_type_indices := env.(module_Env_func_type_indices);
+     module_Env_func_types := env.(module_Env_func_types);
+     module_Env_table_types := env.(module_Env_table_types);
+     module_Env_mem_types := env.(module_Env_mem_types);
+     module_Env_global_types := env.(module_Env_global_types);
+     module_Env_num_imported_funcs := env.(module_Env_num_imported_funcs);
+     module_Env_num_imported_globals := env.(module_Env_num_imported_globals) |}.
 
 Lemma env_with_elements_refl : forall env,
-  env = env_with_elements env env.(env_Env_elements).
+  env = env_with_elements env env.(module_Env_elements).
 Proof. intros env. destruct env. reflexivity. Qed.
 
 Lemma env_with_elements_idem : forall env v w,
@@ -2689,7 +2689,7 @@ Lemma decode_func_indices_loop_sound :
          (bytes_from data q) (List.map translate_idx xs)
          (bytes_from data q')
     /\ List.Forall (fun x => to_Z x
-           < Z.of_nat (List.length (vec_list env.(env_Env_func_types)))) xs.
+           < Z.of_nat (List.length (vec_list env.(module_Env_func_types)))) xs.
 Proof.
   induction m as [|m IH]; intros data env count out q i out' q' Hmeas H;
     unfold module_decode_func_indices_loop in H; rewrite loop_unfold in H;
@@ -2709,7 +2709,7 @@ Proof.
     assert (Hj : to_Z j = to_Z idx)
       by (unfold scalar_cast in Hcast; apply mk_scalar_ok_to_Z in Hcast;
           exact Hcast).
-    destruct (j s>= alloc_vec_Vec_len env.(env_Env_func_types)) eqn:Hrange;
+    destruct (j s>= alloc_vec_Vec_len env.(module_Env_func_types)) eqn:Hrange;
       [discriminate|].
     apply scalar_geb_false_lt in Hrange. rewrite vec_len_spec in Hrange.
     destruct (alloc_vec_Vec_push out idx) as [out2|] eqn:Hpush;
@@ -2735,7 +2735,7 @@ Lemma decode_func_indices_sound : forall data pos env out q',
   repr_vec repr_idx (bytes_from data pos)
     (List.map translate_idx (vec_list out)) (bytes_from data q')
   /\ List.Forall (fun x => to_Z x
-         < Z.of_nat (List.length (vec_list env.(env_Env_func_types))))
+         < Z.of_nat (List.length (vec_list env.(module_Env_func_types))))
        (vec_list out).
 Proof.
   intros data pos env out q' H. unfold module_decode_func_indices in H.
@@ -2765,21 +2765,21 @@ Qed.
     not need the code section. The table index is in the table space, the
     offset is a constant expression of type [i32], and every function the
     segment writes is in the function space. *)
-Definition element_ok (env : env_Env_t) (el : env_Element_t) : Prop :=
-  to_Z el.(env_Element_table_idx)
-    < Z.of_nat (List.length (vec_list env.(env_Env_table_types)))
-  /\ const_expr_ok env Types_ValueType_I32 el.(env_Element_offset)
+Definition element_ok (env : module_Env_t) (el : module_Element_t) : Prop :=
+  to_Z el.(module_Element_table_idx)
+    < Z.of_nat (List.length (vec_list env.(module_Env_table_types)))
+  /\ const_expr_ok env Types_ValueType_I32 el.(module_Element_offset)
   /\ List.Forall (fun x => to_Z x
-         < Z.of_nat (List.length (vec_list env.(env_Env_func_types))))
-       (vec_list el.(env_Element_init)).
+         < Z.of_nat (List.length (vec_list env.(module_Env_func_types))))
+       (vec_list el.(module_Element_init)).
 
 Lemma decode_element_section_loop_sound : forall m data env count q i q' env',
   to_Z count - to_Z i <= Z.of_nat m ->
   module_decode_element_section_loop data env count q i
     = Ok (Core_result_Result_Ok q', env') ->
   exists els,
-    vec_list env'.(env_Env_elements) = vec_list env.(env_Env_elements) ++ els
-    /\ env' = env_with_elements env env'.(env_Env_elements)
+    vec_list env'.(module_Env_elements) = vec_list env.(module_Env_elements) ++ els
+    /\ env' = env_with_elements env env'.(module_Env_elements)
     /\ repr_rep repr_elem (Z.to_nat (to_Z count - to_Z i))
          (bytes_from data q) (List.map translate_element els)
          (bytes_from data q')
@@ -2804,7 +2804,7 @@ Proof.
     assert (Hj : to_Z j = to_Z table_idx)
       by (unfold scalar_cast in Hcast; apply mk_scalar_ok_to_Z in Hcast;
           exact Hcast).
-    destruct (j s>= alloc_vec_Vec_len env.(env_Env_table_types)) eqn:Htr;
+    destruct (j s>= alloc_vec_Vec_len env.(module_Env_table_types)) eqn:Htr;
       [discriminate|].
     apply scalar_geb_false_lt in Htr. rewrite vec_len_spec in Htr.
     destruct (module_decode_const_expr data q1 env Types_ValueType_I32)
@@ -2815,28 +2815,28 @@ Proof.
       cbn [bind] in H; [|discriminate].
     destruct r2 as [[init q3]|e2]; [|try_err_rw_in H; discriminate].
     rewrite branch_ok in H. cbn [bind] in H.
-    destruct (alloc_vec_Vec_push env.(env_Env_elements)
-                {| env_Element_table_idx := table_idx;
-                   env_Element_offset := offset;
-                   env_Element_init := init |}) as [v|] eqn:Hpv;
+    destruct (alloc_vec_Vec_push env.(module_Env_elements)
+                {| module_Element_table_idx := table_idx;
+                   module_Element_offset := offset;
+                   module_Element_init := init |}) as [v|] eqn:Hpv;
       cbn [bind] in H; [|discriminate].
     destruct (u32_add i 1%u32) as [i2|] eqn:Hadd; cbn [bind] in H;
       [|discriminate].
     pose proof (scalar_add_val _ _ _ 1 Hadd eq_refl) as Hi2.
     destruct (IH data (env_with_elements env v) count q3 i2 q' env'
                 (ltac:(cbn in Hmeas; lia)) H) as [els [Hlist [Henv [Hrep Hall]]]].
-    exists ({| env_Element_table_idx := table_idx;
-               env_Element_offset := offset;
-               env_Element_init := init |} :: els).
+    exists ({| module_Element_table_idx := table_idx;
+               module_Element_offset := offset;
+               module_Element_init := init |} :: els).
     split; [|split; [|split]].
-    + rewrite Hlist. cbn [env_with_elements env_Env_elements].
+    + rewrite Hlist. cbn [env_with_elements module_Env_elements].
       rewrite (vec_push_spec _ _ _ Hpv). rewrite <- app_assoc. reflexivity.
     + rewrite Henv at 1. apply env_with_elements_idem.
     + assert (Hcnt : to_Z count - to_Z i = (to_Z count - to_Z i2) + 1) by lia.
       rewrite Hcnt. rewrite Z_to_nat_add1 by lia.
       cbn [List.map]. eapply repr_rep_cons; [|exact Hrep].
       unfold translate_element.
-      cbn [env_Element_table_idx env_Element_offset env_Element_init].
+      cbn [module_Element_table_idx module_Element_offset module_Element_init].
       (* [repr_elem] wraps each index the format read; the translation wraps
          each index the decoder kept, which is the same map composed *)
       rewrite <- (List.map_map translate_idx (fun y : funcidx => [BI_ref_func y])).
@@ -2846,14 +2846,14 @@ Proof.
       * apply (decode_const_expr_sound _ _ _ _ _ _ Hoff).
       * apply (proj1 (decode_func_indices_sound _ _ _ _ _ Hinit)).
     + apply List.Forall_cons.
-      * split; [cbn [env_Element_table_idx]; lia|].
-        split; [cbn [env_Element_offset];
+      * split; [cbn [module_Element_table_idx]; lia|].
+        split; [cbn [module_Element_offset];
                   exact (decode_const_expr_typed _ _ _ _ _ _ Hoff)|].
-        cbn [env_Element_init].
+        cbn [module_Element_init].
         exact (proj2 (decode_func_indices_sound _ _ _ _ _ Hinit)).
       * (* the loop only appended to [elements] *)
-        cbn [env_with_elements env_Env_table_types env_Env_func_types
-             env_Env_global_types env_Env_num_imported_globals] in Hall.
+        cbn [env_with_elements module_Env_table_types module_Env_func_types
+             module_Env_global_types module_Env_num_imported_globals] in Hall.
         exact Hall.
 Qed.
 
@@ -2861,8 +2861,8 @@ Lemma decode_element_section_sound : forall data pos env q' env',
   module_decode_element_section data pos env
     = Ok (Core_result_Result_Ok q', env') ->
   exists els,
-    vec_list env'.(env_Env_elements) = vec_list env.(env_Env_elements) ++ els
-    /\ env' = env_with_elements env env'.(env_Env_elements)
+    vec_list env'.(module_Env_elements) = vec_list env.(module_Env_elements) ++ els
+    /\ env' = env_with_elements env env'.(module_Env_elements)
     /\ repr_vec repr_elem (bytes_from data pos)
          (List.map translate_element els) (bytes_from data q')
     /\ List.Forall (element_ok env) els.
@@ -2890,48 +2890,48 @@ Qed.
     writes more than two fields: an import goes on the import list and into
     whichever index space its descriptor names, and the two counters that
     record where the imported entries end move with it. *)
-Definition translate_importdesc (d : env_ImportDesc_t) : module_import_desc :=
+Definition translate_importdesc (d : module_ImportDesc_t) : module_import_desc :=
   match d with
-  | Env_ImportDesc_Func x => MID_func (translate_idx x)
-  | Env_ImportDesc_Table t => MID_table (translate_tabletype t)
-  | Env_ImportDesc_Memory m => MID_mem (translate_memtype m)
-  | Env_ImportDesc_Global g => MID_global (translate_globaltype g)
+  | Module_ImportDesc_Func x => MID_func (translate_idx x)
+  | Module_ImportDesc_Table t => MID_table (translate_tabletype t)
+  | Module_ImportDesc_Memory m => MID_mem (translate_memtype m)
+  | Module_ImportDesc_Global g => MID_global (translate_globaltype g)
   end.
 
-Definition translate_import (im : env_Import_t) : module_import :=
-  {| imp_module := translate_name im.(env_Import_module);
-     imp_name := translate_name im.(env_Import_name);
-     imp_desc := translate_importdesc im.(env_Import_desc) |}.
+Definition translate_import (im : module_Import_t) : module_import :=
+  {| imp_module := translate_name im.(module_Import_module);
+     imp_name := translate_name im.(module_Import_name);
+     imp_desc := translate_importdesc im.(module_Import_desc) |}.
 
-Definition env_with_import (env : env_Env_t)
-                           (imps : alloc_vec_Vec env_Import_t)
+Definition env_with_import (env : module_Env_t)
+                           (imps : alloc_vec_Vec module_Import_t)
                            (fts : alloc_vec_Vec types_FuncType_t)
                            (tts : alloc_vec_Vec types_TableType_t)
                            (mts : alloc_vec_Vec types_MemType_t)
                            (gts : alloc_vec_Vec types_GlobalType_t)
-                           (nif nig : usize) : env_Env_t :=
-  {| env_Env_types := env.(env_Env_types);
-     env_Env_imports := imps;
-     env_Env_globals := env.(env_Env_globals);
-     env_Env_exports := env.(env_Env_exports);
-     env_Env_elements := env.(env_Env_elements);
-     env_Env_start := env.(env_Env_start);
-     env_Env_func_type_indices := env.(env_Env_func_type_indices);
-     env_Env_func_types := fts;
-     env_Env_table_types := tts;
-     env_Env_mem_types := mts;
-     env_Env_global_types := gts;
-     env_Env_num_imported_funcs := nif;
-     env_Env_num_imported_globals := nig |}.
+                           (nif nig : usize) : module_Env_t :=
+  {| module_Env_types := env.(module_Env_types);
+     module_Env_imports := imps;
+     module_Env_globals := env.(module_Env_globals);
+     module_Env_exports := env.(module_Env_exports);
+     module_Env_elements := env.(module_Env_elements);
+     module_Env_start := env.(module_Env_start);
+     module_Env_func_type_indices := env.(module_Env_func_type_indices);
+     module_Env_func_types := fts;
+     module_Env_table_types := tts;
+     module_Env_mem_types := mts;
+     module_Env_global_types := gts;
+     module_Env_num_imported_funcs := nif;
+     module_Env_num_imported_globals := nig |}.
 
 (** The shape of an environment an import section produced, said once so that
     the loop and the section share it. *)
-Definition env_imported (env env' : env_Env_t) : Prop :=
+Definition env_imported (env env' : module_Env_t) : Prop :=
   env' = env_with_import env
-           env'.(env_Env_imports) env'.(env_Env_func_types)
-           env'.(env_Env_table_types) env'.(env_Env_mem_types)
-           env'.(env_Env_global_types) env'.(env_Env_num_imported_funcs)
-           env'.(env_Env_num_imported_globals).
+           env'.(module_Env_imports) env'.(module_Env_func_types)
+           env'.(module_Env_table_types) env'.(module_Env_mem_types)
+           env'.(module_Env_global_types) env'.(module_Env_num_imported_funcs)
+           env'.(module_Env_num_imported_globals).
 
 Lemma env_imported_refl : forall env, env_imported env env.
 Proof. intros env. unfold env_imported. destruct env. reflexivity. Qed.
@@ -2947,41 +2947,41 @@ Proof. intros env. unfold env_imported. destruct env. reflexivity. Qed.
     carries a type *index*, so its entry is the resolved type rather than
     something read off the descriptor, and saying what was appended means
     saying what [lookup_type] returned. *)
-Definition imported_tables (imps : list env_Import_t)
+Definition imported_tables (imps : list module_Import_t)
                            : list types_TableType_t :=
-  List.flat_map (fun im => match im.(env_Import_desc) with
-                           | Env_ImportDesc_Table t => [t]
+  List.flat_map (fun im => match im.(module_Import_desc) with
+                           | Module_ImportDesc_Table t => [t]
                            | _ => [] end) imps.
 
-Definition imported_mems (imps : list env_Import_t) : list types_MemType_t :=
-  List.flat_map (fun im => match im.(env_Import_desc) with
-                           | Env_ImportDesc_Memory m => [m]
+Definition imported_mems (imps : list module_Import_t) : list types_MemType_t :=
+  List.flat_map (fun im => match im.(module_Import_desc) with
+                           | Module_ImportDesc_Memory m => [m]
                            | _ => [] end) imps.
 
-Definition imported_globals (imps : list env_Import_t)
+Definition imported_globals (imps : list module_Import_t)
                             : list types_GlobalType_t :=
-  List.flat_map (fun im => match im.(env_Import_desc) with
-                           | Env_ImportDesc_Global g => [g]
+  List.flat_map (fun im => match im.(module_Import_desc) with
+                           | Module_ImportDesc_Global g => [g]
                            | _ => [] end) imps.
 
-Definition imported_func_idxs (imps : list env_Import_t)
+Definition imported_func_idxs (imps : list module_Import_t)
                               : list (scalar U32) :=
-  List.flat_map (fun im => match im.(env_Import_desc) with
-                           | Env_ImportDesc_Func idx => [idx]
+  List.flat_map (fun im => match im.(module_Import_desc) with
+                           | Module_ImportDesc_Func idx => [idx]
                            | _ => [] end) imps.
 
-Definition import_spaces (env env' : env_Env_t)
-                         (imps : list env_Import_t) : Prop :=
-  vec_list env'.(env_Env_table_types)
-    = vec_list env.(env_Env_table_types) ++ imported_tables imps
-  /\ vec_list env'.(env_Env_mem_types)
-    = vec_list env.(env_Env_mem_types) ++ imported_mems imps
-  /\ vec_list env'.(env_Env_global_types)
-    = vec_list env.(env_Env_global_types) ++ imported_globals imps
-  /\ vec_list env'.(env_Env_types) = vec_list env.(env_Env_types)
+Definition import_spaces (env env' : module_Env_t)
+                         (imps : list module_Import_t) : Prop :=
+  vec_list env'.(module_Env_table_types)
+    = vec_list env.(module_Env_table_types) ++ imported_tables imps
+  /\ vec_list env'.(module_Env_mem_types)
+    = vec_list env.(module_Env_mem_types) ++ imported_mems imps
+  /\ vec_list env'.(module_Env_global_types)
+    = vec_list env.(module_Env_global_types) ++ imported_globals imps
+  /\ vec_list env'.(module_Env_types) = vec_list env.(module_Env_types)
   /\ func_space env env' (imported_func_idxs imps)
-  /\ to_Z env'.(env_Env_num_imported_globals)
-       = to_Z env.(env_Env_num_imported_globals)
+  /\ to_Z env'.(module_Env_num_imported_globals)
+       = to_Z env.(module_Env_num_imported_globals)
          + Z.of_nat (List.length (imported_globals imps)).
 
 Lemma import_spaces_refl : forall env, import_spaces env env [].
@@ -3038,7 +3038,7 @@ Qed.
 Lemma decode_import_sound : forall data pos env p' env',
   module_decode_import data pos env = Ok (Core_result_Result_Ok p', env') ->
   exists im,
-    vec_list env'.(env_Env_imports) = vec_list env.(env_Env_imports) ++ [im]
+    vec_list env'.(module_Env_imports) = vec_list env.(module_Env_imports) ++ [im]
     /\ env_imported env env'
     /\ repr_import (bytes_from data pos) (translate_import im)
          (bytes_from data p')
@@ -3081,17 +3081,17 @@ Proof.
     destruct r4 as [ft|e4]; [|try_err_rw_in H; discriminate].
     rewrite branch_ok in H. cbn [bind] in H.
     destruct (lookup_type_sound _ _ _ Hlk) as [Hrange Hres].
-    destruct (alloc_vec_Vec_push env.(env_Env_func_types) ft) as [v|] eqn:Hpv;
+    destruct (alloc_vec_Vec_push env.(module_Env_func_types) ft) as [v|] eqn:Hpv;
       cbn [bind] in H; [|discriminate].
-    destruct (usize_add env.(env_Env_num_imported_funcs) 1%usize) as [i|];
+    destruct (usize_add env.(module_Env_num_imported_funcs) 1%usize) as [i|];
       cbn [bind] in H; [|discriminate].
-    destruct (alloc_vec_Vec_push env.(env_Env_imports)
-                {| env_Import_module := md; env_Import_name := nm;
-                   env_Import_desc := Env_ImportDesc_Func idx |})
+    destruct (alloc_vec_Vec_push env.(module_Env_imports)
+                {| module_Import_module := md; module_Import_name := nm;
+                   module_Import_desc := Module_ImportDesc_Func idx |})
       as [v1|] eqn:Hpv1; cbn [bind] in H; [|discriminate].
     injection H as <- <-.
-    exists {| env_Import_module := md; env_Import_name := nm;
-              env_Import_desc := Env_ImportDesc_Func idx |}.
+    exists {| module_Import_module := md; module_Import_name := nm;
+              module_Import_desc := Module_ImportDesc_Func idx |}.
     split; [exact (vec_push_spec _ _ _ Hpv1)|].
     split; [unfold env_imported; destruct env; reflexivity|].
     split; [| split].
@@ -3102,12 +3102,12 @@ Proof.
            try exact (eq_sym (app_nil_r _)); [reflexivity| |cbn; lia].
          split; [| apply List.Forall_cons;
                      [exact Hrange | apply List.Forall_nil]].
-         cbn [env_Env_func_types env_Env_types].
+         cbn [module_Env_func_types module_Env_types].
          rewrite (vec_push_spec _ _ _ Hpv). rewrite List.map_app.
-         cbn [List.map imported_func_idxs List.flat_map env_Import_desc app].
+         cbn [List.map imported_func_idxs List.flat_map module_Import_desc app].
          rewrite Hres. reflexivity. }
     unfold translate_import, translate_importdesc.
-    cbn [env_Import_module env_Import_name env_Import_desc].
+    cbn [module_Import_module module_Import_name module_Import_desc].
     apply Hnames. rewrite (scalar_eqb_val _ _ 0 K0 eq_refl).
     apply repr_importdesc_func. apply repr_idx_intro.
     apply (read_u32_leb_sound _ _ _ _ Hidx). }
@@ -3116,16 +3116,16 @@ Proof.
       cbn [bind] in H; [|discriminate].
     destruct r3 as [[tt1 p4]|e3]; [|try_err_rw_in H; discriminate].
     rewrite branch_ok in H. cbn [bind] in H.
-    destruct (alloc_vec_Vec_push env.(env_Env_table_types) tt1) as [v|] eqn:Hpv;
+    destruct (alloc_vec_Vec_push env.(module_Env_table_types) tt1) as [v|] eqn:Hpv;
       cbn [bind] in H; [|discriminate].
     destruct (alloc_vec_Vec_len v s> limits_max_tables); [discriminate|].
-    destruct (alloc_vec_Vec_push env.(env_Env_imports)
-                {| env_Import_module := md; env_Import_name := nm;
-                   env_Import_desc := Env_ImportDesc_Table tt1 |})
+    destruct (alloc_vec_Vec_push env.(module_Env_imports)
+                {| module_Import_module := md; module_Import_name := nm;
+                   module_Import_desc := Module_ImportDesc_Table tt1 |})
       as [v1|] eqn:Hpv1; cbn [bind] in H; [|discriminate].
     injection H as <- <-.
-    exists {| env_Import_module := md; env_Import_name := nm;
-              env_Import_desc := Env_ImportDesc_Table tt1 |}.
+    exists {| module_Import_module := md; module_Import_name := nm;
+              module_Import_desc := Module_ImportDesc_Table tt1 |}.
     split; [exact (vec_push_spec _ _ _ Hpv1)|].
     split; [unfold env_imported; destruct env; reflexivity|].
     split; [| split].
@@ -3139,7 +3139,7 @@ Proof.
          split; [reflexivity|].
          split; [apply func_space_keep; reflexivity | cbn; lia]. }
     unfold translate_import, translate_importdesc.
-    cbn [env_Import_module env_Import_name env_Import_desc].
+    cbn [module_Import_module module_Import_name module_Import_desc].
     apply Hnames. rewrite (scalar_eqb_val _ _ 1 K1 eq_refl).
     apply repr_importdesc_table. apply (decode_table_type_sound _ _ _ _ Htt). }
   destruct (kind s= 2%u8) eqn:K2.
@@ -3147,16 +3147,16 @@ Proof.
       cbn [bind] in H; [|discriminate].
     destruct r3 as [[mt p4]|e3]; [|try_err_rw_in H; discriminate].
     rewrite branch_ok in H. cbn [bind] in H.
-    destruct (alloc_vec_Vec_push env.(env_Env_mem_types) mt) as [v|] eqn:Hpv;
+    destruct (alloc_vec_Vec_push env.(module_Env_mem_types) mt) as [v|] eqn:Hpv;
       cbn [bind] in H; [|discriminate].
     destruct (alloc_vec_Vec_len v s> limits_max_memories); [discriminate|].
-    destruct (alloc_vec_Vec_push env.(env_Env_imports)
-                {| env_Import_module := md; env_Import_name := nm;
-                   env_Import_desc := Env_ImportDesc_Memory mt |})
+    destruct (alloc_vec_Vec_push env.(module_Env_imports)
+                {| module_Import_module := md; module_Import_name := nm;
+                   module_Import_desc := Module_ImportDesc_Memory mt |})
       as [v1|] eqn:Hpv1; cbn [bind] in H; [|discriminate].
     injection H as <- <-.
-    exists {| env_Import_module := md; env_Import_name := nm;
-              env_Import_desc := Env_ImportDesc_Memory mt |}.
+    exists {| module_Import_module := md; module_Import_name := nm;
+              module_Import_desc := Module_ImportDesc_Memory mt |}.
     split; [exact (vec_push_spec _ _ _ Hpv1)|].
     split; [unfold env_imported; destruct env; reflexivity|].
     split; [| split].
@@ -3170,7 +3170,7 @@ Proof.
          split; [reflexivity|].
          split; [apply func_space_keep; reflexivity | cbn; lia]. }
     unfold translate_import, translate_importdesc.
-    cbn [env_Import_module env_Import_name env_Import_desc].
+    cbn [module_Import_module module_Import_name module_Import_desc].
     apply Hnames. rewrite (scalar_eqb_val _ _ 2 K2 eq_refl).
     apply repr_importdesc_mem. apply (decode_mem_type_sound _ _ _ _ Hmt). }
   destruct (kind s= 3%u8) eqn:K3; [|discriminate].
@@ -3178,17 +3178,17 @@ Proof.
     cbn [bind] in H; [|discriminate].
   destruct r3 as [[gt p4]|e3]; [|try_err_rw_in H; discriminate].
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (alloc_vec_Vec_push env.(env_Env_global_types) gt) as [v|] eqn:Hpv;
+  destruct (alloc_vec_Vec_push env.(module_Env_global_types) gt) as [v|] eqn:Hpv;
     cbn [bind] in H; [|discriminate].
-  destruct (usize_add env.(env_Env_num_imported_globals) 1%usize) as [i|]
+  destruct (usize_add env.(module_Env_num_imported_globals) 1%usize) as [i|]
     eqn:Hnig; cbn [bind] in H; [|discriminate].
-  destruct (alloc_vec_Vec_push env.(env_Env_imports)
-              {| env_Import_module := md; env_Import_name := nm;
-                 env_Import_desc := Env_ImportDesc_Global gt |})
+  destruct (alloc_vec_Vec_push env.(module_Env_imports)
+              {| module_Import_module := md; module_Import_name := nm;
+                 module_Import_desc := Module_ImportDesc_Global gt |})
     as [v1|] eqn:Hpv1; cbn [bind] in H; [|discriminate].
   injection H as <- <-.
-  exists {| env_Import_module := md; env_Import_name := nm;
-            env_Import_desc := Env_ImportDesc_Global gt |}.
+  exists {| module_Import_module := md; module_Import_name := nm;
+            module_Import_desc := Module_ImportDesc_Global gt |}.
   split; [exact (vec_push_spec _ _ _ Hpv1)|].
   split; [unfold env_imported; destruct env; reflexivity|].
   split; [| split].
@@ -3200,12 +3200,12 @@ Proof.
        split; [exact (vec_push_spec _ _ _ Hpv)|].
        split; [reflexivity|].
        split; [apply func_space_keep; reflexivity|].
-       cbn [env_Env_num_imported_globals imported_globals List.flat_map
-            env_Import_desc List.length].
+       cbn [module_Env_num_imported_globals imported_globals List.flat_map
+            module_Import_desc List.length].
        rewrite (scalar_add_val _ _ _ 1 Hnig eq_refl).
        cbn [List.app List.length Z.of_nat]. lia. }
   unfold translate_import, translate_importdesc.
-  cbn [env_Import_module env_Import_name env_Import_desc].
+  cbn [module_Import_module module_Import_name module_Import_desc].
   apply Hnames. rewrite (scalar_eqb_val _ _ 3 K3 eq_refl).
   apply repr_importdesc_global. apply (decode_global_type_sound _ _ _ _ Hgt).
 Qed.
@@ -3215,7 +3215,7 @@ Lemma decode_import_section_loop_sound : forall m data env count q i q' env',
   module_decode_import_section_loop data env count q i
     = Ok (Core_result_Result_Ok q', env') ->
   exists imps,
-    vec_list env'.(env_Env_imports) = vec_list env.(env_Env_imports) ++ imps
+    vec_list env'.(module_Env_imports) = vec_list env.(module_Env_imports) ++ imps
     /\ env_imported env env'
     /\ repr_rep repr_import (Z.to_nat (to_Z count - to_Z i))
          (bytes_from data q) (List.map translate_import imps)
@@ -3258,7 +3258,7 @@ Lemma decode_import_section_sound : forall data pos env q' env',
   module_decode_import_section data pos env
     = Ok (Core_result_Result_Ok q', env') ->
   exists imps,
-    vec_list env'.(env_Env_imports) = vec_list env.(env_Env_imports) ++ imps
+    vec_list env'.(module_Env_imports) = vec_list env.(module_Env_imports) ++ imps
     /\ env_imported env env'
     /\ repr_vec repr_import (bytes_from data pos)
          (List.map translate_import imps) (bytes_from data q')
@@ -3511,7 +3511,7 @@ Qed.
 (* ================================================================== *)
 
 (** Spec 5.5.16 is a fixed chain of [customs* Xsec] lines, one per section id.
-    [decode_env] is one loop with a [last_id] ordering check. Relating the two
+    [validate_env] is one loop with a [last_id] ordering check. Relating the two
     is the one part of this file that is not a per-decoder argument, and the
     argument is:
 
@@ -3530,111 +3530,111 @@ Qed.
     [chain_from] dispatching on [L] so that the loop needs one induction.
 
     The chain ends with the run of custom sections before the code section
-    rather than at the element section, because that is where [decode_env]
+    rather than at the element section, because that is where [validate_env]
     stops: [validate_code] supplies the [repr_optsec 10] those customs pad. *)
 
-Definition chain_tail (data : slice u8) (p : usize) (env : env_Env_t)
-                      (q : usize) (envf : env_Env_t) : Prop :=
+Definition chain_tail (data : slice u8) (p : usize) (env : module_Env_t)
+                      (q : usize) (envf : module_Env_t) : Prop :=
   repr_customs (bytes_from data p) (bytes_from data q) /\ env = envf.
 
-Definition env_chain_9 (data : slice u8) (p : usize) (env : env_Env_t)
-                          (q : usize) (envf : env_Env_t) : Prop :=
-  exists p' env' (vs : list env_Element_t),
+Definition env_chain_9 (data : slice u8) (p : usize) (env : module_Env_t)
+                          (q : usize) (envf : module_Env_t) : Prop :=
+  exists p' env' (vs : list module_Element_t),
     repr_padded 9 (repr_vec repr_elem) (@nil module_element) (bytes_from data p)
       (List.map translate_element vs) (bytes_from data p')
-    /\ vec_list env'.(env_Env_elements) = vec_list env.(env_Env_elements) ++ vs
-    /\ env' = env_with_elements env env'.(env_Env_elements)
+    /\ vec_list env'.(module_Env_elements) = vec_list env.(module_Env_elements) ++ vs
+    /\ env' = env_with_elements env env'.(module_Env_elements)
     /\ List.Forall (element_ok env) vs
     /\ chain_tail data p' env' q envf.
 
-Definition env_chain_8 (data : slice u8) (p : usize) (env : env_Env_t)
-                          (q : usize) (envf : env_Env_t) : Prop :=
+Definition env_chain_8 (data : slice u8) (p : usize) (env : module_Env_t)
+                          (q : usize) (envf : module_Env_t) : Prop :=
   exists p' env',
     repr_padded 8 repr_start None (bytes_from data p)
-      (translate_start env'.(env_Env_start)) (bytes_from data p')
-    /\ env' = env_with_start env env'.(env_Env_start)
+      (translate_start env'.(module_Env_start)) (bytes_from data p')
+    /\ env' = env_with_start env env'.(module_Env_start)
     /\ start_ok env'
     /\ env_chain_9 data p' env' q envf.
 
-Definition env_chain_7 (data : slice u8) (p : usize) (env : env_Env_t)
-                          (q : usize) (envf : env_Env_t) : Prop :=
-  exists p' env' (vs : list env_Export_t),
+Definition env_chain_7 (data : slice u8) (p : usize) (env : module_Env_t)
+                          (q : usize) (envf : module_Env_t) : Prop :=
+  exists p' env' (vs : list module_Export_t),
     repr_padded 7 (repr_vec repr_export) (@nil module_export) (bytes_from data p)
       (List.map translate_export vs) (bytes_from data p')
-    /\ vec_list env'.(env_Env_exports) = vec_list env.(env_Env_exports) ++ vs
-    /\ env' = env_with_exports env env'.(env_Env_exports)
+    /\ vec_list env'.(module_Env_exports) = vec_list env.(module_Env_exports) ++ vs
+    /\ env' = env_with_exports env env'.(module_Env_exports)
     /\ (exports_distinct env -> exports_distinct env')
     /\ List.Forall (export_desc_ok env) vs
     /\ env_chain_8 data p' env' q envf.
 
-Definition env_chain_6 (data : slice u8) (p : usize) (env : env_Env_t)
-                          (q : usize) (envf : env_Env_t) : Prop :=
-  exists p' env' (vs : list env_Global_t),
+Definition env_chain_6 (data : slice u8) (p : usize) (env : module_Env_t)
+                          (q : usize) (envf : module_Env_t) : Prop :=
+  exists p' env' (vs : list module_Global_t),
     repr_padded 6 (repr_vec repr_global) (@nil module_global) (bytes_from data p)
       (List.map translate_global vs) (bytes_from data p')
-    /\ vec_list env'.(env_Env_globals) = vec_list env.(env_Env_globals) ++ vs
-    /\ env' = env_with_global env env'.(env_Env_globals)
-                           env'.(env_Env_global_types)
-    /\ vec_list env'.(env_Env_global_types)
-         = vec_list env.(env_Env_global_types)
-           ++ List.map (fun g => g.(env_Global_gtype)) vs
+    /\ vec_list env'.(module_Env_globals) = vec_list env.(module_Env_globals) ++ vs
+    /\ env' = env_with_global env env'.(module_Env_globals)
+                           env'.(module_Env_global_types)
+    /\ vec_list env'.(module_Env_global_types)
+         = vec_list env.(module_Env_global_types)
+           ++ List.map (fun g => g.(module_Global_gtype)) vs
     /\ List.Forall (global_ok env') vs
     /\ env_chain_7 data p' env' q envf.
 
-Definition env_chain_5 (data : slice u8) (p : usize) (env : env_Env_t)
-                          (q : usize) (envf : env_Env_t) : Prop :=
+Definition env_chain_5 (data : slice u8) (p : usize) (env : module_Env_t)
+                          (q : usize) (envf : module_Env_t) : Prop :=
   exists p' env' (vs : list types_MemType_t),
     repr_padded 5 (repr_vec repr_mem) (@nil module_mem) (bytes_from data p)
       (List.map translate_mem vs) (bytes_from data p')
-    /\ vec_list env'.(env_Env_mem_types)
-         = vec_list env.(env_Env_mem_types) ++ vs
-    /\ env' = env_with_mem env env'.(env_Env_mem_types)
+    /\ vec_list env'.(module_Env_mem_types)
+         = vec_list env.(module_Env_mem_types) ++ vs
+    /\ env' = env_with_mem env env'.(module_Env_mem_types)
     /\ env_chain_6 data p' env' q envf.
 
-Definition env_chain_4 (data : slice u8) (p : usize) (env : env_Env_t)
-                          (q : usize) (envf : env_Env_t) : Prop :=
+Definition env_chain_4 (data : slice u8) (p : usize) (env : module_Env_t)
+                          (q : usize) (envf : module_Env_t) : Prop :=
   exists p' env' (vs : list types_TableType_t),
     repr_padded 4 (repr_vec repr_table) (@nil module_table) (bytes_from data p)
       (List.map translate_table vs) (bytes_from data p')
-    /\ vec_list env'.(env_Env_table_types)
-         = vec_list env.(env_Env_table_types) ++ vs
-    /\ env' = env_with_table env env'.(env_Env_table_types)
+    /\ vec_list env'.(module_Env_table_types)
+         = vec_list env.(module_Env_table_types) ++ vs
+    /\ env' = env_with_table env env'.(module_Env_table_types)
     /\ env_chain_5 data p' env' q envf.
 
-Definition env_chain_3 (data : slice u8) (p : usize) (env : env_Env_t)
-                          (q : usize) (envf : env_Env_t) : Prop :=
+Definition env_chain_3 (data : slice u8) (p : usize) (env : module_Env_t)
+                          (q : usize) (envf : module_Env_t) : Prop :=
   exists p' env' (vs : list (scalar U32)),
     repr_padded 3 (repr_vec repr_idx) (@nil funcidx) (bytes_from data p)
       (List.map translate_idx vs) (bytes_from data p')
-    /\ vec_list env'.(env_Env_func_type_indices)
-         = vec_list env.(env_Env_func_type_indices) ++ vs
-    /\ env' = env_with_func env env'.(env_Env_func_types)
-                         env'.(env_Env_func_type_indices)
+    /\ vec_list env'.(module_Env_func_type_indices)
+         = vec_list env.(module_Env_func_type_indices) ++ vs
+    /\ env' = env_with_func env env'.(module_Env_func_types)
+                         env'.(module_Env_func_type_indices)
     /\ func_space env env' vs
     /\ env_chain_4 data p' env' q envf.
 
-Definition env_chain_2 (data : slice u8) (p : usize) (env : env_Env_t)
-                          (q : usize) (envf : env_Env_t) : Prop :=
-  exists p' env' (vs : list env_Import_t),
+Definition env_chain_2 (data : slice u8) (p : usize) (env : module_Env_t)
+                          (q : usize) (envf : module_Env_t) : Prop :=
+  exists p' env' (vs : list module_Import_t),
     repr_padded 2 (repr_vec repr_import) (@nil module_import) (bytes_from data p)
       (List.map translate_import vs) (bytes_from data p')
-    /\ vec_list env'.(env_Env_imports) = vec_list env.(env_Env_imports) ++ vs
+    /\ vec_list env'.(module_Env_imports) = vec_list env.(module_Env_imports) ++ vs
     /\ env_imported env env'
     /\ import_spaces env env' vs
     /\ env_chain_3 data p' env' q envf.
 
-Definition env_chain_1 (data : slice u8) (p : usize) (env : env_Env_t)
-                          (q : usize) (envf : env_Env_t) : Prop :=
+Definition env_chain_1 (data : slice u8) (p : usize) (env : module_Env_t)
+                          (q : usize) (envf : module_Env_t) : Prop :=
   exists p' env' (vs : list types_FuncType_t),
     repr_padded 1 (repr_vec repr_functype) (@nil function_type) (bytes_from data p)
       (List.map translate_functype vs) (bytes_from data p')
-    /\ vec_list env'.(env_Env_types) = vec_list env.(env_Env_types) ++ vs
-    /\ env' = env_with_types env env'.(env_Env_types)
+    /\ vec_list env'.(module_Env_types) = vec_list env.(module_Env_types) ++ vs
+    /\ env' = env_with_types env env'.(module_Env_types)
     /\ env_chain_2 data p' env' q envf.
 
 (** The chain that remains once sections up to [L] have been read. *)
-Definition chain_from (L : Z) (data : slice u8) (p : usize) (env : env_Env_t)
-                      (q : usize) (envf : env_Env_t) : Prop :=
+Definition chain_from (L : Z) (data : slice u8) (p : usize) (env : module_Env_t)
+                      (q : usize) (envf : module_Env_t) : Prop :=
   if Z.eqb L 0 then env_chain_1 data p env q envf
   else if Z.eqb L 1 then env_chain_2 data p env q envf
   else if Z.eqb L 2 then env_chain_3 data p env q envf
@@ -3656,28 +3656,28 @@ Definition chain_from (L : Z) (data : slice u8) (p : usize) (env : env_Env_t)
     by field is what keeps the assembly to one line per field: [keeps_k] lists
     the writers from line [k] on, and every one of its clauses is closed by
     [reflexivity] because the writer is a record literal. *)
-Definition keeps_9 {A} (g : env_Env_t -> A) : Prop :=
+Definition keeps_9 {A} (g : module_Env_t -> A) : Prop :=
   forall e v, g (env_with_elements e v) = g e.
 
-Definition keeps_8 {A} (g : env_Env_t -> A) : Prop :=
+Definition keeps_8 {A} (g : module_Env_t -> A) : Prop :=
   (forall e s, g (env_with_start e s) = g e) /\ keeps_9 g.
 
-Definition keeps_7 {A} (g : env_Env_t -> A) : Prop :=
+Definition keeps_7 {A} (g : module_Env_t -> A) : Prop :=
   (forall e v, g (env_with_exports e v) = g e) /\ keeps_8 g.
 
-Definition keeps_6 {A} (g : env_Env_t -> A) : Prop :=
+Definition keeps_6 {A} (g : module_Env_t -> A) : Prop :=
   (forall e v w, g (env_with_global e v w) = g e) /\ keeps_7 g.
 
-Definition keeps_5 {A} (g : env_Env_t -> A) : Prop :=
+Definition keeps_5 {A} (g : module_Env_t -> A) : Prop :=
   (forall e v, g (env_with_mem e v) = g e) /\ keeps_6 g.
 
-Definition keeps_4 {A} (g : env_Env_t -> A) : Prop :=
+Definition keeps_4 {A} (g : module_Env_t -> A) : Prop :=
   (forall e v, g (env_with_table e v) = g e) /\ keeps_5 g.
 
-Definition keeps_3 {A} (g : env_Env_t -> A) : Prop :=
+Definition keeps_3 {A} (g : module_Env_t -> A) : Prop :=
   (forall e v w, g (env_with_func e v w) = g e) /\ keeps_4 g.
 
-Definition keeps_2 {A} (g : env_Env_t -> A) : Prop :=
+Definition keeps_2 {A} (g : module_Env_t -> A) : Prop :=
   (forall e a b c d f x y, g (env_with_import e a b c d f x y) = g e)
   /\ keeps_3 g.
 
@@ -3689,17 +3689,17 @@ Ltac keeps_refl := repeat (first [ solve [intros; reflexivity] | split ]).
 Ltac env_proj :=
   cbn [env_with_types env_with_import env_with_func env_with_table env_with_mem
        env_with_global env_with_exports env_with_start env_with_elements
-       env_Env_types env_Env_imports env_Env_globals env_Env_exports
-       env_Env_elements env_Env_start env_Env_func_type_indices
-       env_Env_func_types env_Env_table_types env_Env_mem_types
-       env_Env_global_types env_Env_num_imported_funcs
-       env_Env_num_imported_globals].
+       module_Env_types module_Env_imports module_Env_globals module_Env_exports
+       module_Env_elements module_Env_start module_Env_func_type_indices
+       module_Env_func_types module_Env_table_types module_Env_mem_types
+       module_Env_global_types module_Env_num_imported_funcs
+       module_Env_num_imported_globals].
 
-Lemma chain_tail_keeps : forall A (g : env_Env_t -> A) data p env q envf,
+Lemma chain_tail_keeps : forall A (g : module_Env_t -> A) data p env q envf,
   chain_tail data p env q envf -> g envf = g env.
 Proof. intros A g data p env q envf [_ <-]. reflexivity. Qed.
 
-Lemma env_chain_9_keeps : forall A (g : env_Env_t -> A) data p env q envf,
+Lemma env_chain_9_keeps : forall A (g : module_Env_t -> A) data p env q envf,
   keeps_9 g -> env_chain_9 data p env q envf -> g envf = g env.
 Proof.
   intros A g data p env q envf Hk
@@ -3708,7 +3708,7 @@ Proof.
   rewrite Heq at 1. apply Hk.
 Qed.
 
-Lemma env_chain_8_keeps : forall A (g : env_Env_t -> A) data p env q envf,
+Lemma env_chain_8_keeps : forall A (g : module_Env_t -> A) data p env q envf,
   keeps_8 g -> env_chain_8 data p env q envf -> g envf = g env.
 Proof.
   intros A g data p env q envf [Hk Hk9] [p' [env' [Hr [Heq [_ Hrest]]]]].
@@ -3716,7 +3716,7 @@ Proof.
   rewrite Heq at 1. apply Hk.
 Qed.
 
-Lemma env_chain_7_keeps : forall A (g : env_Env_t -> A) data p env q envf,
+Lemma env_chain_7_keeps : forall A (g : module_Env_t -> A) data p env q envf,
   keeps_7 g -> env_chain_7 data p env q envf -> g envf = g env.
 Proof.
   intros A g data p env q envf [Hk Hk8]
@@ -3725,7 +3725,7 @@ Proof.
   rewrite Heq at 1. apply Hk.
 Qed.
 
-Lemma env_chain_6_keeps : forall A (g : env_Env_t -> A) data p env q envf,
+Lemma env_chain_6_keeps : forall A (g : module_Env_t -> A) data p env q envf,
   keeps_6 g -> env_chain_6 data p env q envf -> g envf = g env.
 Proof.
   intros A g data p env q envf [Hk Hk7]
@@ -3734,7 +3734,7 @@ Proof.
   rewrite Heq at 1. apply Hk.
 Qed.
 
-Lemma env_chain_5_keeps : forall A (g : env_Env_t -> A) data p env q envf,
+Lemma env_chain_5_keeps : forall A (g : module_Env_t -> A) data p env q envf,
   keeps_5 g -> env_chain_5 data p env q envf -> g envf = g env.
 Proof.
   intros A g data p env q envf [Hk Hk6] [p' [env' [vs [Hr [Hl [Heq Hrest]]]]]].
@@ -3742,7 +3742,7 @@ Proof.
   rewrite Heq at 1. apply Hk.
 Qed.
 
-Lemma env_chain_4_keeps : forall A (g : env_Env_t -> A) data p env q envf,
+Lemma env_chain_4_keeps : forall A (g : module_Env_t -> A) data p env q envf,
   keeps_4 g -> env_chain_4 data p env q envf -> g envf = g env.
 Proof.
   intros A g data p env q envf [Hk Hk5] [p' [env' [vs [Hr [Hl [Heq Hrest]]]]]].
@@ -3750,7 +3750,7 @@ Proof.
   rewrite Heq at 1. apply Hk.
 Qed.
 
-Lemma env_chain_3_keeps : forall A (g : env_Env_t -> A) data p env q envf,
+Lemma env_chain_3_keeps : forall A (g : module_Env_t -> A) data p env q envf,
   keeps_3 g -> env_chain_3 data p env q envf -> g envf = g env.
 Proof.
   intros A g data p env q envf [Hk Hk4]
@@ -3759,7 +3759,7 @@ Proof.
   rewrite Heq at 1. apply Hk.
 Qed.
 
-Lemma env_chain_2_keeps : forall A (g : env_Env_t -> A) data p env q envf,
+Lemma env_chain_2_keeps : forall A (g : module_Env_t -> A) data p env q envf,
   keeps_2 g -> env_chain_2 data p env q envf -> g envf = g env.
 Proof.
   intros A g data p env q envf [Hk Hk3]
@@ -3825,7 +3825,7 @@ Qed.
     vector: it says there is no start function, and the environment has to
     agree. That is why the loop carries "start is still unset". *)
 Lemma env_chain_8_absent : forall data q env,
-  env.(env_Env_start) = None ->
+  env.(module_Env_start) = None ->
   no_env_id (bytes_from data q) -> env_chain_8 data q env q env.
 Proof.
   intros data q env Hst Hno. exists q. exists env.
@@ -3840,7 +3840,7 @@ Proof.
 Qed.
 
 Lemma env_chain_7_absent : forall data q env,
-  env.(env_Env_start) = None ->
+  env.(module_Env_start) = None ->
   no_env_id (bytes_from data q) -> env_chain_7 data q env q env.
 Proof.
   intros data q env Hst Hno. exists q. exists env. exists [].
@@ -3856,7 +3856,7 @@ Proof.
 Qed.
 
 Lemma env_chain_6_absent : forall data q env,
-  env.(env_Env_start) = None ->
+  env.(module_Env_start) = None ->
   no_env_id (bytes_from data q) -> env_chain_6 data q env q env.
 Proof.
   intros data q env Hst Hno. exists q. exists env. exists [].
@@ -3872,7 +3872,7 @@ Proof.
 Qed.
 
 Lemma env_chain_5_absent : forall data q env,
-  env.(env_Env_start) = None ->
+  env.(module_Env_start) = None ->
   no_env_id (bytes_from data q) -> env_chain_5 data q env q env.
 Proof.
   intros data q env Hst Hno. exists q. exists env. exists [].
@@ -3886,7 +3886,7 @@ Proof.
 Qed.
 
 Lemma env_chain_4_absent : forall data q env,
-  env.(env_Env_start) = None ->
+  env.(module_Env_start) = None ->
   no_env_id (bytes_from data q) -> env_chain_4 data q env q env.
 Proof.
   intros data q env Hst Hno. exists q. exists env. exists [].
@@ -3900,7 +3900,7 @@ Proof.
 Qed.
 
 Lemma env_chain_3_absent : forall data q env,
-  env.(env_Env_start) = None ->
+  env.(module_Env_start) = None ->
   no_env_id (bytes_from data q) -> env_chain_3 data q env q env.
 Proof.
   intros data q env Hst Hno. exists q. exists env. exists [].
@@ -3915,7 +3915,7 @@ Proof.
 Qed.
 
 Lemma env_chain_2_absent : forall data q env,
-  env.(env_Env_start) = None ->
+  env.(module_Env_start) = None ->
   no_env_id (bytes_from data q) -> env_chain_2 data q env q env.
 Proof.
   intros data q env Hst Hno. exists q. exists env. exists [].
@@ -3930,7 +3930,7 @@ Proof.
 Qed.
 
 Lemma env_chain_1_absent : forall data q env,
-  env.(env_Env_start) = None ->
+  env.(module_Env_start) = None ->
   no_env_id (bytes_from data q) -> env_chain_1 data q env q env.
 Proof.
   intros data q env Hst Hno. exists q. exists env. exists [].
@@ -3944,7 +3944,7 @@ Proof.
 Qed.
 
 Lemma chain_done : forall L data q env,
-  (L < 8 -> env.(env_Env_start) = None) ->
+  (L < 8 -> env.(module_Env_start) = None) ->
   no_env_id (bytes_from data q) ->
   chain_from L data q env q env.
 Proof.
@@ -4198,7 +4198,7 @@ Proof.
 Qed.
 
 Lemma env_chain_8_skip : forall data p env q envf,
-  env.(env_Env_start) = None ->
+  env.(module_Env_start) = None ->
   ~ begins_with 0 (bytes_from data p) ->
   ~ begins_with 8 (bytes_from data p) ->
   env_chain_9 data p env q envf ->
@@ -4234,7 +4234,7 @@ Qed.
 
 Lemma chain_skip : forall L data p env q envf,
   0 <= L -> L < 9 ->
-  (L + 1 = 8 -> env.(env_Env_start) = None) ->
+  (L + 1 = 8 -> env.(module_Env_start) = None) ->
   ~ begins_with 0 (bytes_from data p) ->
   ~ begins_with (L + 1) (bytes_from data p) ->
   chain_from (L + 1) data p env q envf ->
@@ -4262,7 +4262,7 @@ Qed.
     [last_id = L] declares the [k - 1 - L] lines between them absent. *)
 Lemma chain_skip_many : forall n L data p env q envf,
   0 <= L -> L + Z.of_nat n <= 9 ->
-  (L < 8 -> env.(env_Env_start) = None) ->
+  (L < 8 -> env.(module_Env_start) = None) ->
   ~ begins_with 0 (bytes_from data p) ->
   (forall j, L < j <= L + Z.of_nat n -> ~ begins_with j (bytes_from data p)) ->
   chain_from (L + Z.of_nat n) data p env q envf ->
@@ -4289,8 +4289,8 @@ Lemma env_chain_1_present : forall data p fin env env' q envf (vs : list types_F
   ~ begins_with 0 (bytes_from data p) ->
   repr_section 1 (repr_vec repr_functype) (bytes_from data p)
     (List.map translate_functype vs) (bytes_from data fin) ->
-  vec_list env'.(env_Env_types) = vec_list env.(env_Env_types) ++ vs ->
-  env' = env_with_types env env'.(env_Env_types) ->
+  vec_list env'.(module_Env_types) = vec_list env.(module_Env_types) ++ vs ->
+  env' = env_with_types env env'.(module_Env_types) ->
   env_chain_2 data fin env' q envf ->
   env_chain_1 data p env q envf.
 Proof.
@@ -4304,11 +4304,11 @@ Proof.
   - exact Hnext.
 Qed.
 
-Lemma env_chain_2_present : forall data p fin env env' q envf (vs : list env_Import_t),
+Lemma env_chain_2_present : forall data p fin env env' q envf (vs : list module_Import_t),
   ~ begins_with 0 (bytes_from data p) ->
   repr_section 2 (repr_vec repr_import) (bytes_from data p)
     (List.map translate_import vs) (bytes_from data fin) ->
-  vec_list env'.(env_Env_imports) = vec_list env.(env_Env_imports) ++ vs ->
+  vec_list env'.(module_Env_imports) = vec_list env.(module_Env_imports) ++ vs ->
   env_imported env env' ->
   import_spaces env env' vs ->
   env_chain_3 data fin env' q envf ->
@@ -4329,10 +4329,10 @@ Lemma env_chain_3_present : forall data p fin env env' q envf (vs : list (scalar
   ~ begins_with 0 (bytes_from data p) ->
   repr_section 3 (repr_vec repr_idx) (bytes_from data p)
     (List.map translate_idx vs) (bytes_from data fin) ->
-  vec_list env'.(env_Env_func_type_indices)
-    = vec_list env.(env_Env_func_type_indices) ++ vs ->
-  env' = env_with_func env env'.(env_Env_func_types)
-                       env'.(env_Env_func_type_indices) ->
+  vec_list env'.(module_Env_func_type_indices)
+    = vec_list env.(module_Env_func_type_indices) ++ vs ->
+  env' = env_with_func env env'.(module_Env_func_types)
+                       env'.(module_Env_func_type_indices) ->
   func_space env env' vs ->
   env_chain_4 data fin env' q envf ->
   env_chain_3 data p env q envf.
@@ -4352,9 +4352,9 @@ Lemma env_chain_4_present : forall data p fin env env' q envf (vs : list types_T
   ~ begins_with 0 (bytes_from data p) ->
   repr_section 4 (repr_vec repr_table) (bytes_from data p)
     (List.map translate_table vs) (bytes_from data fin) ->
-  vec_list env'.(env_Env_table_types)
-    = vec_list env.(env_Env_table_types) ++ vs ->
-  env' = env_with_table env env'.(env_Env_table_types) ->
+  vec_list env'.(module_Env_table_types)
+    = vec_list env.(module_Env_table_types) ++ vs ->
+  env' = env_with_table env env'.(module_Env_table_types) ->
   env_chain_5 data fin env' q envf ->
   env_chain_4 data p env q envf.
 Proof.
@@ -4372,9 +4372,9 @@ Lemma env_chain_5_present : forall data p fin env env' q envf (vs : list types_M
   ~ begins_with 0 (bytes_from data p) ->
   repr_section 5 (repr_vec repr_mem) (bytes_from data p)
     (List.map translate_mem vs) (bytes_from data fin) ->
-  vec_list env'.(env_Env_mem_types)
-    = vec_list env.(env_Env_mem_types) ++ vs ->
-  env' = env_with_mem env env'.(env_Env_mem_types) ->
+  vec_list env'.(module_Env_mem_types)
+    = vec_list env.(module_Env_mem_types) ++ vs ->
+  env' = env_with_mem env env'.(module_Env_mem_types) ->
   env_chain_6 data fin env' q envf ->
   env_chain_5 data p env q envf.
 Proof.
@@ -4388,16 +4388,16 @@ Proof.
   - exact Hnext.
 Qed.
 
-Lemma env_chain_6_present : forall data p fin env env' q envf (vs : list env_Global_t),
+Lemma env_chain_6_present : forall data p fin env env' q envf (vs : list module_Global_t),
   ~ begins_with 0 (bytes_from data p) ->
   repr_section 6 (repr_vec repr_global) (bytes_from data p)
     (List.map translate_global vs) (bytes_from data fin) ->
-  vec_list env'.(env_Env_globals) = vec_list env.(env_Env_globals) ++ vs ->
-  env' = env_with_global env env'.(env_Env_globals)
-                         env'.(env_Env_global_types) ->
-  vec_list env'.(env_Env_global_types)
-    = vec_list env.(env_Env_global_types)
-      ++ List.map (fun g => g.(env_Global_gtype)) vs ->
+  vec_list env'.(module_Env_globals) = vec_list env.(module_Env_globals) ++ vs ->
+  env' = env_with_global env env'.(module_Env_globals)
+                         env'.(module_Env_global_types) ->
+  vec_list env'.(module_Env_global_types)
+    = vec_list env.(module_Env_global_types)
+      ++ List.map (fun g => g.(module_Global_gtype)) vs ->
   List.Forall (global_ok env') vs ->
   env_chain_7 data fin env' q envf ->
   env_chain_6 data p env q envf.
@@ -4415,12 +4415,12 @@ Proof.
   - exact Hnext.
 Qed.
 
-Lemma env_chain_7_present : forall data p fin env env' q envf (vs : list env_Export_t),
+Lemma env_chain_7_present : forall data p fin env env' q envf (vs : list module_Export_t),
   ~ begins_with 0 (bytes_from data p) ->
   repr_section 7 (repr_vec repr_export) (bytes_from data p)
     (List.map translate_export vs) (bytes_from data fin) ->
-  vec_list env'.(env_Env_exports) = vec_list env.(env_Env_exports) ++ vs ->
-  env' = env_with_exports env env'.(env_Env_exports) ->
+  vec_list env'.(module_Env_exports) = vec_list env.(module_Env_exports) ++ vs ->
+  env' = env_with_exports env env'.(module_Env_exports) ->
   (exports_distinct env -> exports_distinct env') ->
   List.Forall (export_desc_ok env) vs ->
   env_chain_8 data fin env' q envf ->
@@ -4439,12 +4439,12 @@ Proof.
   - exact Hnext.
 Qed.
 
-Lemma env_chain_9_present : forall data p fin env env' q envf (vs : list env_Element_t),
+Lemma env_chain_9_present : forall data p fin env env' q envf (vs : list module_Element_t),
   ~ begins_with 0 (bytes_from data p) ->
   repr_section 9 (repr_vec repr_elem) (bytes_from data p)
     (List.map translate_element vs) (bytes_from data fin) ->
-  vec_list env'.(env_Env_elements) = vec_list env.(env_Env_elements) ++ vs ->
-  env' = env_with_elements env env'.(env_Env_elements) ->
+  vec_list env'.(module_Env_elements) = vec_list env.(module_Env_elements) ++ vs ->
+  env' = env_with_elements env env'.(module_Env_elements) ->
   List.Forall (element_ok env) vs ->
   chain_tail data fin env' q envf ->
   env_chain_9 data p env q envf.
@@ -4463,8 +4463,8 @@ Qed.
 Lemma env_chain_8_present : forall data p fin env env' q envf,
   ~ begins_with 0 (bytes_from data p) ->
   repr_section 8 repr_start (bytes_from data p)
-    (translate_start env'.(env_Env_start)) (bytes_from data fin) ->
-  env' = env_with_start env env'.(env_Env_start) ->
+    (translate_start env'.(module_Env_start)) (bytes_from data fin) ->
+  env' = env_with_start env env'.(module_Env_start) ->
   start_ok env' ->
   env_chain_9 data fin env' q envf ->
   env_chain_8 data p env q envf.
@@ -4482,7 +4482,7 @@ Qed.
 (** The [k - 1 - L] lines between the last id read and this one. *)
 Lemma chain_skip_to : forall L k data p env q envf,
   0 <= L -> L < k -> k <= 9 ->
-  (L < 8 -> env.(env_Env_start) = None) ->
+  (L < 8 -> env.(module_Env_start) = None) ->
   (forall j, 0 <= j < k -> ~ begins_with j (bytes_from data p)) ->
   chain_from (k - 1) data p env q envf ->
   chain_from L data p env q envf.
@@ -4549,18 +4549,18 @@ Qed.
     happened, so whatever the consumer did it returned, and soundness of the
     bytes it accepted does not depend on what it did with them. Same reason
     [validate_code_entry_with_sound] carries no hypothesis. *)
-Lemma decode_env_with_loop_sound :
+Lemma validate_env_with_loop_sound :
   forall V (inst : module_ModuleVisitor_t V) m data vis vis' env q last_id envf qf,
   Z.of_nat (List.length (vec_list data)) - to_Z q <= Z.of_nat m ->
   0 <= to_Z last_id <= 9 ->
-  (to_Z last_id < 8 -> env.(env_Env_start) = None) ->
-  module_decode_env_with_loop inst data vis env q last_id
+  (to_Z last_id < 8 -> env.(module_Env_start) = None) ->
+  module_validate_env_with_loop inst data vis env q last_id
     = Ok (Core_result_Result_Ok (envf, qf), vis') ->
   chain_from (to_Z last_id) data q env qf envf.
 Proof.
   intros V inst m. induction m as [|m IH];
     intros data vis vis' env q last_id envf qf Hmeas Hlid Hst H;
-    unfold module_decode_env_with_loop in H; rewrite loop_unfold in H;
+    unfold module_validate_env_with_loop in H; rewrite loop_unfold in H;
     cbn beta iota in H; destruct (q s>= slice_len data) eqn:Hge.
   1,3: injection H as <- <- <-; apply chain_done; [exact Hst|];
        apply no_env_id_nil; rewrite bytes_from_at; apply bytes_at_end;
@@ -4637,8 +4637,8 @@ Proof.
       - exact Hlist.
       - exact Henv.
       - assert (Hb : 0 <= to_Z id <= 9) by lia.
-        assert (Hs : to_Z id < 8 -> env2.(env_Env_start) = None)
-          by (intros _; rewrite Henv; cbn [env_with_types env_Env_start];
+        assert (Hs : to_Z id < 8 -> env2.(module_Env_start) = None)
+          by (intros _; rewrite Henv; cbn [env_with_types module_Env_start];
                 apply Hst; lia).
         pose proof (IH data vis vis' env2 fin id envf qf Hmeas' Hb Hs H) as Hrec.
         rewrite Hk in Hrec. exact Hrec. }
@@ -4657,8 +4657,8 @@ Proof.
       - exact Henv.
       - exact Hsp.
       - assert (Hb : 0 <= to_Z id <= 9) by lia.
-        assert (Hs : to_Z id < 8 -> env2.(env_Env_start) = None)
-          by (intros _; rewrite Henv; cbn [env_with_import env_Env_start];
+        assert (Hs : to_Z id < 8 -> env2.(module_Env_start) = None)
+          by (intros _; rewrite Henv; cbn [env_with_import module_Env_start];
                 apply Hst; lia).
         pose proof (IH data vis vis' env2 fin id envf qf Hmeas' Hb Hs H) as Hrec.
         rewrite Hk in Hrec. exact Hrec. }
@@ -4677,8 +4677,8 @@ Proof.
       - exact Henv.
       - exact Hfs.
       - assert (Hb : 0 <= to_Z id <= 9) by lia.
-        assert (Hs : to_Z id < 8 -> env2.(env_Env_start) = None)
-          by (intros _; rewrite Henv; cbn [env_with_func env_Env_start];
+        assert (Hs : to_Z id < 8 -> env2.(module_Env_start) = None)
+          by (intros _; rewrite Henv; cbn [env_with_func module_Env_start];
                 apply Hst; lia).
         pose proof (IH data vis vis' env2 fin id envf qf Hmeas' Hb Hs H) as Hrec.
         rewrite Hk in Hrec. exact Hrec. }
@@ -4696,8 +4696,8 @@ Proof.
       - exact Hlist.
       - exact Henv.
       - assert (Hb : 0 <= to_Z id <= 9) by lia.
-        assert (Hs : to_Z id < 8 -> env2.(env_Env_start) = None)
-          by (intros _; rewrite Henv; cbn [env_with_table env_Env_start];
+        assert (Hs : to_Z id < 8 -> env2.(module_Env_start) = None)
+          by (intros _; rewrite Henv; cbn [env_with_table module_Env_start];
                 apply Hst; lia).
         pose proof (IH data vis vis' env2 fin id envf qf Hmeas' Hb Hs H) as Hrec.
         rewrite Hk in Hrec. exact Hrec. }
@@ -4715,8 +4715,8 @@ Proof.
       - exact Hlist.
       - exact Henv.
       - assert (Hb : 0 <= to_Z id <= 9) by lia.
-        assert (Hs : to_Z id < 8 -> env2.(env_Env_start) = None)
-          by (intros _; rewrite Henv; cbn [env_with_mem env_Env_start];
+        assert (Hs : to_Z id < 8 -> env2.(module_Env_start) = None)
+          by (intros _; rewrite Henv; cbn [env_with_mem module_Env_start];
                 apply Hst; lia).
         pose proof (IH data vis vis' env2 fin id envf qf Hmeas' Hb Hs H) as Hrec.
         rewrite Hk in Hrec. exact Hrec. }
@@ -4736,8 +4736,8 @@ Proof.
       - exact Hgts.
       - exact Hoks.
       - assert (Hb : 0 <= to_Z id <= 9) by lia.
-        assert (Hs : to_Z id < 8 -> env2.(env_Env_start) = None)
-          by (intros _; rewrite Henv; cbn [env_with_global env_Env_start];
+        assert (Hs : to_Z id < 8 -> env2.(module_Env_start) = None)
+          by (intros _; rewrite Henv; cbn [env_with_global module_Env_start];
                 apply Hst; lia).
         pose proof (IH data vis vis' env2 fin id envf qf Hmeas' Hb Hs H) as Hrec.
         rewrite Hk in Hrec. exact Hrec. }
@@ -4757,8 +4757,8 @@ Proof.
       - exact Hdist.
       - exact Hdesc.
       - assert (Hb : 0 <= to_Z id <= 9) by lia.
-        assert (Hs : to_Z id < 8 -> env2.(env_Env_start) = None)
-          by (intros _; rewrite Henv; cbn [env_with_exports env_Env_start];
+        assert (Hs : to_Z id < 8 -> env2.(module_Env_start) = None)
+          by (intros _; rewrite Henv; cbn [env_with_exports module_Env_start];
                 apply Hst; lia).
         pose proof (IH data vis vis' env2 fin id envf qf Hmeas' Hb Hs H) as Hrec.
         rewrite Hk in Hrec. exact Hrec. }
@@ -4776,7 +4776,7 @@ Proof.
       - exact Henv.
       - exact Hstart.
       - assert (Hb : 0 <= to_Z id <= 9) by lia.
-        assert (Hs : to_Z id < 8 -> env2.(env_Env_start) = None)
+        assert (Hs : to_Z id < 8 -> env2.(module_Env_start) = None)
           by (intros Hlt; exfalso; lia).
         pose proof (IH data vis vis' env2 fin id envf qf Hmeas' Hb Hs H) as Hrec.
         rewrite Hk in Hrec. exact Hrec. }
@@ -4795,18 +4795,18 @@ Proof.
       - exact Henv.
       - exact Hels.
       - assert (Hb : 0 <= to_Z id <= 9) by lia.
-        assert (Hs : to_Z id < 8 -> env2.(env_Env_start) = None)
+        assert (Hs : to_Z id < 8 -> env2.(module_Env_start) = None)
           by (intros Hlt; exfalso; lia).
         pose proof (IH data vis vis' env2 fin id envf qf Hmeas' Hb Hs H) as Hrec.
         rewrite Hk in Hrec. exact Hrec. }
 Qed.
 
 (** Spec 5.5.16's magic number and version, then the nine lines of the section
-    chain. [decode_env] hands back the cursor it stopped at, which is where
+    chain. [validate_env] hands back the cursor it stopped at, which is where
     the run of custom sections before the code section ended. *)
 (** The nop consumer's one hook, as an equation. *)
 Lemma nop_custom_section : forall c,
-  module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor.(module_ModuleVisitor_t_on_custom_section)
+  module_EmptyModuleVisitor_Insts_ItascaModuleModuleVisitor.(module_ModuleVisitor_t_on_custom_section)
     tt c = Ok (Core_result_Result_Ok tt, tt).
 Proof. intros c. reflexivity. Qed.
 
@@ -4817,20 +4817,20 @@ Proof. intros c. reflexivity. Qed.
     what the walk reads next, so a run that got to the end got there by the
     same path the nop consumer takes. The only thing a hook can do is stop the
     walk, and this is about a walk that did not stop. *)
-Lemma decode_env_with_loop_driven :
+Lemma validate_env_with_loop_driven :
   forall V (inst : module_ModuleVisitor_t V) m data vis vis' env q last_id envf qf,
   Z.of_nat (List.length (vec_list data)) - to_Z q <= Z.of_nat m ->
-  module_decode_env_with_loop inst data vis env q last_id
+  module_validate_env_with_loop inst data vis env q last_id
     = Ok (Core_result_Result_Ok (envf, qf), vis') ->
-  module_decode_env_with_loop
-    module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor data tt env q
+  module_validate_env_with_loop
+    module_EmptyModuleVisitor_Insts_ItascaModuleModuleVisitor data tt env q
     last_id = Ok (Core_result_Result_Ok (envf, qf), tt).
 Proof.
   intros V inst m. induction m as [|m IH];
     intros data vis vis' env q last_id envf qf Hmeas H;
-    unfold module_decode_env_with_loop in H; rewrite loop_unfold in H;
+    unfold module_validate_env_with_loop in H; rewrite loop_unfold in H;
     cbn beta iota in H;
-    unfold module_decode_env_with_loop; rewrite loop_unfold; cbn beta iota;
+    unfold module_validate_env_with_loop; rewrite loop_unfold; cbn beta iota;
     destruct (q s>= slice_len data) eqn:Hge.
   1,3: injection H as <- <- <-; reflexivity.
   - exfalso. apply scalar_geb_false_lt in Hge.
@@ -4865,56 +4865,56 @@ Proof.
     exact (IH data vis vis' env2 fin id envf qf (ltac:(lia)) H).
 Qed.
 
-Lemma decode_env_driven :
+Lemma validate_env_driven :
   forall V (inst : module_ModuleVisitor_t V) data vis vis' env qf,
-  module_decode_env_with inst data vis
+  module_validate_env_with inst data vis
     = Ok (Core_result_Result_Ok (env, qf), vis') ->
-  module_decode_env data = Ok (Core_result_Result_Ok (env, qf)).
+  module_validate_env data = Ok (Core_result_Result_Ok (env, qf)).
 Proof.
   intros V inst data vis vis' env qf H.
-  apply decode_env_nop.
-  unfold module_decode_env_with in H |- *.
-  destruct env_Env_new as [env0|] eqn:Hnew; cbn [bind] in H |- *;
+  apply validate_env_nop.
+  unfold module_validate_env_with in H |- *.
+  destruct module_Env_new as [env0|] eqn:Hnew; cbn [bind] in H |- *;
     [|discriminate].
   destruct (module_read_header data) as [r|] eqn:Hhdr;
     cbn [bind] in H |- *; [|discriminate].
   destruct r as [p0|e]; [|try_err_rw_in H; discriminate].
   rewrite branch_ok in H |- *. cbn [bind] in H |- *.
-  exact (decode_env_with_loop_driven V inst (List.length (vec_list data)) data
+  exact (validate_env_with_loop_driven V inst (List.length (vec_list data)) data
            vis vis' env0 p0 0%u8 env qf
            (ltac:(pose proof (usize_nonneg p0); lia)) H).
 Qed.
 
-(** [decode_env] is [decode_env_with] at the do-nothing consumer with the
+(** [validate_env] is [validate_env_with] at the do-nothing consumer with the
     visitor state projected away, so an accepting run of the one is an
     accepting run of the other. The mirror of [code_entry_nop_inv]. *)
-Lemma decode_env_nop_inv : forall data r,
-  module_decode_env data = Ok r ->
-  module_decode_env_with module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor
+Lemma validate_env_nop_inv : forall data r,
+  module_validate_env data = Ok r ->
+  module_validate_env_with module_EmptyModuleVisitor_Insts_ItascaModuleModuleVisitor
     data tt = Ok (r, tt).
 Proof.
-  intros data r H. unfold module_decode_env in H.
-  destruct (module_decode_env_with
-              module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor data tt)
+  intros data r H. unfold module_validate_env in H.
+  destruct (module_validate_env_with
+              module_EmptyModuleVisitor_Insts_ItascaModuleModuleVisitor data tt)
     as [[r0 v0]|] eqn:Hw; cbn [bind] in H; [|discriminate].
   injection H as <-. destruct v0. reflexivity.
 Qed.
 
 (** The same for the tail, and for the same reason. *)
-Lemma decode_tail_with_loop_driven :
+Lemma validate_tail_with_loop_driven :
   forall V (inst : module_ModuleVisitor_t V) m data env vis vis' segments q seen tail,
   Z.of_nat (List.length (vec_list data)) - to_Z q <= Z.of_nat m ->
-  module_decode_tail_with_loop inst data env vis segments q seen
+  module_validate_tail_with_loop inst data env vis segments q seen
     = Ok (Core_result_Result_Ok tail, vis') ->
-  module_decode_tail_with_loop
-    module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor data env tt
+  module_validate_tail_with_loop
+    module_EmptyModuleVisitor_Insts_ItascaModuleModuleVisitor data env tt
     segments q seen = Ok (Core_result_Result_Ok tail, tt).
 Proof.
   intros V inst m. induction m as [|m IH];
     intros data env vis vis' segments q seen tail Hmeas H;
-    unfold module_decode_tail_with_loop in H; rewrite loop_unfold in H;
+    unfold module_validate_tail_with_loop in H; rewrite loop_unfold in H;
     cbn beta iota in H;
-    unfold module_decode_tail_with_loop; rewrite loop_unfold; cbn beta iota;
+    unfold module_validate_tail_with_loop; rewrite loop_unfold; cbn beta iota;
     destruct (q s>= slice_len data) eqn:Hge.
   1,3: injection H as <- <-; reflexivity.
   - exfalso. apply scalar_geb_false_lt in Hge.
@@ -4948,42 +4948,42 @@ Proof.
     exact (IH data env vis vis' decoded fin true tail (ltac:(lia)) H).
 Qed.
 
-Lemma decode_tail_driven :
+Lemma validate_tail_driven :
   forall V (inst : module_ModuleVisitor_t V) data pos env vis vis' tail,
-  module_decode_tail_with inst data pos env vis
+  module_validate_tail_with inst data pos env vis
     = Ok (Core_result_Result_Ok tail, vis') ->
-  module_decode_tail data pos env = Ok (Core_result_Result_Ok tail).
+  module_validate_tail data pos env = Ok (Core_result_Result_Ok tail).
 Proof.
   intros V inst data pos env vis vis' tail H.
-  apply decode_tail_nop.
-  unfold module_decode_tail_with in H |- *.
-  exact (decode_tail_with_loop_driven V inst (List.length (vec_list data)) data
+  apply validate_tail_nop.
+  unfold module_validate_tail_with in H |- *.
+  exact (validate_tail_with_loop_driven V inst (List.length (vec_list data)) data
            env vis vis' (alloc_vec_Vec_new module_Data_t) pos false tail
            (ltac:(pose proof (usize_nonneg pos); lia)) H).
 Qed.
 
-Lemma decode_tail_nop_inv : forall data pos env r,
-  module_decode_tail data pos env = Ok r ->
-  module_decode_tail_with module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor
+Lemma validate_tail_nop_inv : forall data pos env r,
+  module_validate_tail data pos env = Ok r ->
+  module_validate_tail_with module_EmptyModuleVisitor_Insts_ItascaModuleModuleVisitor
     data pos env tt = Ok (r, tt).
 Proof.
-  intros data pos env r H. unfold module_decode_tail in H.
-  destruct (module_decode_tail_with
-              module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor data pos
+  intros data pos env r H. unfold module_validate_tail in H.
+  destruct (module_validate_tail_with
+              module_EmptyModuleVisitor_Insts_ItascaModuleModuleVisitor data pos
               env tt) as [[r0 v0]|] eqn:Hw; cbn [bind] in H; [|discriminate].
   injection H as <-. destruct v0. reflexivity.
 Qed.
 
-Lemma decode_env_sound : forall data env qf,
-  module_decode_env data = Ok (Core_result_Result_Ok (env, qf)) ->
+Lemma validate_env_sound : forall data env qf,
+  module_validate_env data = Ok (Core_result_Result_Ok (env, qf)) ->
   exists p0 env0,
     repr_magic_version (byte_list data) (bytes_from data p0)
-    /\ env_Env_new = Ok env0
+    /\ module_Env_new = Ok env0
     /\ chain_from 0 data p0 env0 qf env.
 Proof.
-  intros data env qf H0. pose proof (decode_env_nop_inv _ _ H0) as H.
-  clear H0. unfold module_decode_env_with in H.
-  destruct env_Env_new as [env0|] eqn:Hnew; cbn [bind] in H; [|discriminate].
+  intros data env qf H0. pose proof (validate_env_nop_inv _ _ H0) as H.
+  clear H0. unfold module_validate_env_with in H.
+  destruct module_Env_new as [env0|] eqn:Hnew; cbn [bind] in H; [|discriminate].
   destruct (module_read_header data) as [r|] eqn:Hhdr; cbn [bind] in H;
     [|discriminate].
   destruct r as [p0|e]; [|try_err_rw_in H; discriminate].
@@ -4994,12 +4994,12 @@ Proof.
   split; [reflexivity|].
   assert (Hz : to_Z 0%u8 = 0) by reflexivity.
   rewrite <- Hz.
-  apply (decode_env_with_loop_sound _
-           module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor
+  apply (validate_env_with_loop_sound _
+           module_EmptyModuleVisitor_Insts_ItascaModuleModuleVisitor
            (List.length (vec_list data)) data tt tt env0 p0 0%u8 env qf);
     [ pose proof (usize_nonneg p0); lia
     | rewrite Hz; lia
-    | intros _; unfold env_Env_new in Hnew; injection Hnew as <-; reflexivity
+    | intros _; unfold module_Env_new in Hnew; injection Hnew as <-; reflexivity
     | exact H ].
 Qed.
 
@@ -5035,9 +5035,9 @@ Qed.
     constant expression of type [i32]. The tail decodes against the finished
     environment, so this is already about the environment the module's type
     checker will use. *)
-Definition data_ok (env : env_Env_t) (d : module_Data_t) : Prop :=
+Definition data_ok (env : module_Env_t) (d : module_Data_t) : Prop :=
   to_Z d.(module_Data_memory_idx)
-    < Z.of_nat (List.length (vec_list env.(env_Env_mem_types)))
+    < Z.of_nat (List.length (vec_list env.(module_Env_mem_types)))
   /\ const_expr_ok env Types_ValueType_I32 d.(module_Data_offset).
 
 Lemma decode_data_segment_sound : forall data pos env d p',
@@ -5056,7 +5056,7 @@ Proof.
   assert (Hi : to_Z i = to_Z memory_idx)
     by (unfold scalar_cast in Hcast0; apply mk_scalar_ok_to_Z in Hcast0;
         exact Hcast0).
-  destruct (i s>= alloc_vec_Vec_len env.(env_Env_mem_types)) eqn:Hmr;
+  destruct (i s>= alloc_vec_Vec_len env.(module_Env_mem_types)) eqn:Hmr;
     [discriminate|].
   apply scalar_geb_false_lt in Hmr. rewrite vec_len_spec in Hmr.
   destruct (module_decode_const_expr data p1 env Types_ValueType_I32)
@@ -5201,11 +5201,11 @@ Proof.
   apply repr_customs_more with (mid := bytes_from data fin); assumption.
 Qed.
 
-Lemma decode_tail_with_loop_sound :
+Lemma validate_tail_with_loop_sound :
   forall V (inst : module_ModuleVisitor_t V) m data env vis vis' segments q seen tail,
   Z.of_nat (List.length (vec_list data)) - to_Z q <= Z.of_nat m ->
   (seen = false -> vec_list segments = []) ->
-  module_decode_tail_with_loop inst data env vis segments q seen
+  module_validate_tail_with_loop inst data env vis segments q seen
     = Ok (Core_result_Result_Ok tail, vis') ->
   (seen = false ->
      tail_chain data q (List.map translate_data
@@ -5217,7 +5217,7 @@ Lemma decode_tail_with_loop_sound :
 Proof.
   intros V inst m. induction m as [|m IH];
     intros data env vis vis' segments q seen tail Hmeas Hseg H;
-    unfold module_decode_tail_with_loop in H; rewrite loop_unfold in H;
+    unfold module_validate_tail_with_loop in H; rewrite loop_unfold in H;
     cbn beta iota in H; destruct (q s>= slice_len data) eqn:Hge.
   1,3: injection H as <-;
        apply scalar_geb_true_ge in Hge; rewrite slice_len_spec in Hge;
@@ -5303,16 +5303,16 @@ Proof.
       apply (proj1 (decode_data_section_sound _ _ _ _ _ Hds)).
 Qed.
 
-Lemma decode_tail_sound : forall data pos env tail,
-  module_decode_tail data pos env = Ok (Core_result_Result_Ok tail) ->
+Lemma validate_tail_sound : forall data pos env tail,
+  module_validate_tail data pos env = Ok (Core_result_Result_Ok tail) ->
   tail_chain data pos
     (List.map translate_data (vec_list tail.(module_Tail_data)))
   /\ List.Forall (data_ok env) (vec_list tail.(module_Tail_data)).
 Proof.
-  intros data pos env tail H0. pose proof (decode_tail_nop_inv _ _ _ _ H0) as H.
-  clear H0. unfold module_decode_tail_with in H.
-  destruct (decode_tail_with_loop_sound _
-              module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor
+  intros data pos env tail H0. pose proof (validate_tail_nop_inv _ _ _ _ H0) as H.
+  clear H0. unfold module_validate_tail_with in H.
+  destruct (validate_tail_with_loop_sound _
+              module_EmptyModuleVisitor_Insts_ItascaModuleModuleVisitor
               (List.length (vec_list data)) data env tt tt
               (alloc_vec_Vec_new module_Data_t) pos false tail)
     as [Hf [_ Hok]]; [ pose proof (usize_nonneg pos); lia
@@ -5464,22 +5464,22 @@ Qed.
     two are matched up. *)
 Definition body_context (elems : list reference_type) (datas : list ok)
                         (refs : list funcidx)
-                        (env : env_Env_t) (ctx : opiter_Context_t)
+                        (env : module_Env_t) (ctx : code_Context_t)
   : t_context :=
-  {| tc_types := List.map translate_ft (vec_list env.(env_Env_types));
-     tc_funcs := List.map translate_ft (vec_list env.(env_Env_func_types));
+  {| tc_types := List.map translate_ft (vec_list env.(module_Env_types));
+     tc_funcs := List.map translate_ft (vec_list env.(module_Env_func_types));
      tc_tables :=
-       List.map translate_tabletype (vec_list env.(env_Env_table_types));
-     tc_mems := List.map translate_memtype (vec_list env.(env_Env_mem_types));
+       List.map translate_tabletype (vec_list env.(module_Env_table_types));
+     tc_mems := List.map translate_memtype (vec_list env.(module_Env_mem_types));
      tc_globals :=
-       List.map translate_globaltype (vec_list env.(env_Env_global_types));
+       List.map translate_globaltype (vec_list env.(module_Env_global_types));
      tc_elems := elems;
      tc_datas := datas;
      tc_locals :=
-       List.map translate_vt_v (vec_list ctx.(opiter_Context_locals));
+       List.map translate_vt_v (vec_list ctx.(code_Context_locals));
      tc_labels := [];
      tc_return :=
-       Some (translate_typelist (vec_list ctx.(opiter_Context_results)));
+       Some (translate_typelist (vec_list ctx.(code_Context_results)));
      tc_refs := refs |}.
 
 (** All seven agreement clauses, by construction. This is the join between the
@@ -5589,17 +5589,17 @@ Qed.
     one label, and the result type as the return. This is
     [module_func_type_checker]'s [c'] written out. *)
 Definition func_body_context (elems : list reference_type) (datas : list ok)
-                             (refs : list funcidx) (env : env_Env_t)
+                             (refs : list funcidx) (env : module_Env_t)
                              (ft : types_FuncType_t)
                              (t_locs : list value_type) : t_context :=
-  {| tc_types := List.map translate_functype (vec_list env.(env_Env_types));
+  {| tc_types := List.map translate_functype (vec_list env.(module_Env_types));
      tc_funcs :=
-       List.map translate_functype (vec_list env.(env_Env_func_types));
+       List.map translate_functype (vec_list env.(module_Env_func_types));
      tc_tables :=
-       List.map translate_tabletype (vec_list env.(env_Env_table_types));
-     tc_mems := List.map translate_memtype (vec_list env.(env_Env_mem_types));
+       List.map translate_tabletype (vec_list env.(module_Env_table_types));
+     tc_mems := List.map translate_memtype (vec_list env.(module_Env_mem_types));
      tc_globals :=
-       List.map translate_globaltype (vec_list env.(env_Env_global_types));
+       List.map translate_globaltype (vec_list env.(module_Env_global_types));
      tc_elems := elems;
      tc_datas := datas;
      tc_locals :=
@@ -5621,10 +5621,10 @@ Qed.
 (** A code entry is well typed when the type its index names is the one its
     body checks against. This is [module_func_type_checker]'s content, in the
     extraction's terms. *)
-Definition code_typed (env : env_Env_t) (tidx : scalar U32)
+Definition code_typed (env : module_Env_t) (tidx : scalar U32)
                       (c : list value_type * expr) : Prop :=
   exists ft,
-    List.nth_error (vec_list env.(env_Env_types))
+    List.nth_error (vec_list env.(module_Env_types))
                    (Z.to_nat (to_Z tidx)) = Some ft
     /\ (exists ds, fst c = List.map translate_vt_v ds)
     /\ forall elems datas refs,
@@ -5633,9 +5633,9 @@ Definition code_typed (env : env_Env_t) (tidx : scalar U32)
            (Tf [] (List.map translate_vt_v
                      (vec_list ft.(types_FuncType_results)))) = true.
 
-Lemma validate_code_entry_with_sound : forall V (inst : visit_OpVisitor_t V)
+Lemma validate_code_entry_with_sound : forall V (inst : code_OpVisitor_t V)
                                              vis vis' data pos env index end',
-  (forall ft, List.In ft (vec_list env.(env_Env_types)) ->
+  (forall ft, List.In ft (vec_list env.(module_Env_types)) ->
      (List.length (vec_list ft.(types_FuncType_results)) <= 1)%nat) ->
   module_validate_code_entry_with inst data pos env index vis
     = Ok (Core_result_Result_Ok end', vis') ->
@@ -5646,13 +5646,13 @@ Lemma validate_code_entry_with_sound : forall V (inst : visit_OpVisitor_t V)
     /\ else_sugar (flat_of (snd c) ++ [FO_end]) ops
     /\ traced inst vis vis' ops
     /\ exists tidx,
-         List.nth_error (vec_list env.(env_Env_func_type_indices))
+         List.nth_error (vec_list env.(module_Env_func_type_indices))
                         (Z.to_nat (to_Z index)) = Some tidx
          /\ code_typed env tidx c.
 Proof.
   intros V inst vis vis' data pos env index end' Hres H.
   unfold module_validate_code_entry_with in H.
-  destruct (index s>= alloc_vec_Vec_len env.(env_Env_func_type_indices));
+  destruct (index s>= alloc_vec_Vec_len env.(module_Env_func_type_indices));
     [discriminate|].
   destruct (reader_read_u32_leb data pos) as [r|] eqn:Hsz; cbn [bind] in H;
     [|discriminate].
@@ -5688,10 +5688,10 @@ Proof.
   (* the entry's signature *)
   destruct (alloc_vec_Vec_index
               (core_slice_index_SliceIndexUsizeSliceInst Primitives.u32)
-              env.(env_Env_func_type_indices) index) as [type_idx|] eqn:Htyi;
+              env.(module_Env_func_type_indices) index) as [type_idx|] eqn:Htyi;
     cbn [bind] in H; [|discriminate].
   rewrite vec_index_spec in Htyi.
-  destruct (List.nth_error (vec_list env.(env_Env_func_type_indices))
+  destruct (List.nth_error (vec_list env.(module_Env_func_type_indices))
               (Z.to_nat (to_Z index))) as [tidx|] eqn:Hnthi; [|discriminate].
   injection Htyi as <-.
   destruct (scalar_cast U32 Usize tidx) as [t|] eqn:Hcast2;
@@ -5699,10 +5699,10 @@ Proof.
   assert (Ht : to_Z t = to_Z tidx)
     by (unfold scalar_cast in Hcast2; apply mk_scalar_ok_to_Z in Hcast2;
         exact Hcast2).
-  destruct (t s>= alloc_vec_Vec_len env.(env_Env_types)); [discriminate|].
+  destruct (t s>= alloc_vec_Vec_len env.(module_Env_types)); [discriminate|].
   destruct (alloc_vec_Vec_index
               (core_slice_index_SliceIndexUsizeSliceInst types_FuncType_t)
-              env.(env_Env_types) t) as [ft|] eqn:Hft; cbn [bind] in H;
+              env.(module_Env_types) t) as [ft|] eqn:Hft; cbn [bind] in H;
     [|discriminate].
   rewrite vec_deref_spec in H. rewrite vec_deref_spec in H.
   destruct (module_build_func_locals ft.(types_FuncType_params) declared)
@@ -5712,9 +5712,9 @@ Proof.
     as [results|] eqn:Hcopy; cbn [bind] in H; [|discriminate].
   (* the frame hook comes first, and the run got past it, so the consumer
      accepted the frame *)
-  destruct (inst.(visit_OpVisitor_t_on_function_start) vis
-              {| opiter_Context_locals := locals;
-                 opiter_Context_results := results |} tidx)
+  destruct (inst.(code_OpVisitor_t_on_function_start) vis
+              {| code_Context_locals := locals;
+                 code_Context_results := results |} tidx)
     as [[rh vh]|] eqn:Hhk; cbn [bind] in H; [|discriminate].
   destruct rh as [uh|eh]; cbn beta iota in H; [|discriminate].
   destruct uh.
@@ -5723,9 +5723,9 @@ Proof.
               {| core_ops_range_Range_start := p1;
                  core_ops_range_Range_end_ := end1 |}) as [sub|] eqn:Hsub;
     cbn [bind] in H; [|discriminate].
-  destruct (opiter_validate_body_with inst sub env
-              {| opiter_Context_locals := locals;
-                 opiter_Context_results := results |} vh) as [[r3 v3]|] eqn:Hvb;
+  destruct (code_validate_body_with inst sub env
+              {| code_Context_locals := locals;
+                 code_Context_results := results |} vh) as [[r3 v3]|] eqn:Hvb;
     cbn [bind] in H; [|discriminate].
   destruct r3 as [u|e3]; [|discriminate]. destruct u.
   injection H as <- <-.
@@ -5733,12 +5733,12 @@ Proof.
   assert (Hlen1 : (List.length (vec_list results) <= 1)%nat).
   { rewrite (copy_value_types_sound _ _ Hcopy). apply Hres.
     rewrite vec_index_spec in Hft.
-    destruct (List.nth_error (vec_list env.(env_Env_types))
+    destruct (List.nth_error (vec_list env.(module_Env_types))
                 (Z.to_nat (to_Z t))) as [x|] eqn:Hnth; [|discriminate].
     injection Hft as <-. apply (List.nth_error_In _ _ Hnth). }
   destruct (body_context_agrees [] [] [] env
-              {| opiter_Context_locals := locals;
-                 opiter_Context_results := results |})
+              {| code_Context_locals := locals;
+                 code_Context_results := results |})
     as [Hm [Hl [Hg [Hr [Hf [Htt Htb]]]]]].
   destruct (validate_body_with_checker V inst vh v3
               _ env _ sub Hm Hl Hg Hr Hf Htt Htb Hlen1 Hvb)
@@ -5777,7 +5777,7 @@ Proof.
   - split; [cbn [snd]; exact Hsug0|]. split; [exact Htrall|].
     (* the entry's signature, and the body checked against it *)
     rewrite vec_index_spec in Hft.
-    destruct (List.nth_error (vec_list env.(env_Env_types))
+    destruct (List.nth_error (vec_list env.(module_Env_types))
                 (Z.to_nat (to_Z t))) as [ft0|] eqn:Hnthf; [|discriminate].
     injection Hft as <-.
     exists tidx. split; [reflexivity|]. exists ft0.
@@ -5785,8 +5785,8 @@ Proof.
     split; [cbn [fst]; exists (vec_list declared); symmetry; exact Hflat|].
     intros elems datas refs.
     destruct (body_context_agrees elems datas refs env
-                {| opiter_Context_locals := locals;
-                   opiter_Context_results := results |})
+                {| code_Context_locals := locals;
+                   code_Context_results := results |})
       as [Hm' [Hl' [Hg' [Hr' [Hf' [Htt' Htb']]]]]].
     destruct (validate_body_with_checker V inst vh v3
                 _ env _ sub Hm' Hl' Hg' Hr' Hf' Htt' Htb'
@@ -5805,14 +5805,14 @@ Proof.
                    = context_reverse
                        (upd_label
                           (body_context elems datas refs env
-                             {| opiter_Context_locals := locals;
-                                opiter_Context_results := results |})
+                             {| code_Context_locals := locals;
+                                code_Context_results := results |})
                           [translate_typelist (vec_list results)])).
     { unfold func_body_context, context_reverse, upd_label,
              upd_local_label_return, body_context.
       cbn [tc_types tc_funcs tc_tables tc_mems tc_globals tc_elems tc_datas
            tc_locals tc_labels tc_return tc_refs
-           opiter_Context_locals opiter_Context_results].
+           code_Context_locals code_Context_results].
       assert (Hrv : forall l, seq.map rev_tf (List.map translate_ft l)
                               = List.map translate_functype l).
       { intros l. induction l as [|x l IH]; [reflexivity|].
@@ -5831,20 +5831,20 @@ Qed.
 (** The same for the validating-only consumer, which is what [validate_code]
     drives. *)
 Corollary validate_code_entry_sound : forall data pos env index end',
-  (forall ft, List.In ft (vec_list env.(env_Env_types)) ->
+  (forall ft, List.In ft (vec_list env.(module_Env_types)) ->
      (List.length (vec_list ft.(types_FuncType_results)) <= 1)%nat) ->
   module_validate_code_entry data pos env index
     = Ok (Core_result_Result_Ok end') ->
   exists c,
     repr_code (bytes_from data pos) c (bytes_from data end')
     /\ exists tidx,
-         List.nth_error (vec_list env.(env_Env_func_type_indices))
+         List.nth_error (vec_list env.(module_Env_func_type_indices))
                         (Z.to_nat (to_Z index)) = Some tidx
          /\ code_typed env tidx c.
 Proof.
   intros data pos env index end' Hres H.
   destruct (validate_code_entry_with_sound _
-              visit_NopVisitor_Insts_ItascaVisitOpVisitor tt tt data pos env
+              code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor tt tt data pos env
               index end' Hres (ltac:(apply code_entry_nop_inv; exact H)))
     as [c [ops [Hc [_ [_ Hty]]]]].
   exists c. split; [exact Hc | exact Hty].
@@ -5892,7 +5892,7 @@ Proof.
   apply code_entry_nop_inv in Hv.
   unfold module_code_entry_extent in Hx.
   unfold module_validate_code_entry_with in Hv.
-  destruct (index s>= alloc_vec_Vec_len env.(env_Env_func_type_indices));
+  destruct (index s>= alloc_vec_Vec_len env.(module_Env_func_type_indices));
     [discriminate|].
   destruct (reader_read_u32_leb data pos) as [r|] eqn:Hr;
     cbn [bind] in Hx, Hv; [|discriminate].
@@ -5941,7 +5941,7 @@ Proof.
   apply code_entry_nop_inv in Hv.
   unfold module_validate_code_entry_with in Hv.
   unfold module_code_entry_extent.
-  destruct (index s>= alloc_vec_Vec_len env.(env_Env_func_type_indices));
+  destruct (index s>= alloc_vec_Vec_len env.(module_Env_func_type_indices));
     [discriminate|].
   destruct (reader_read_u32_leb data pos) as [r|] eqn:Hr;
     cbn [bind] in Hv |- *; [|discriminate].
@@ -5976,7 +5976,7 @@ Qed.
     That function is pure in those, so this says nothing about when or on which
     thread the consumer did it. *)
 Definition code_hooks_validate {V : Type} (inst : module_CodeVisitor_t V)
-                               (data : slice u8) (env : env_Env_t) : Prop :=
+                               (data : slice u8) (env : module_Env_t) : Prop :=
   forall v v' index pos contents fin,
     inst.(module_CodeVisitor_t_on_code_entry) v data env index pos contents fin
       = Ok (Core_result_Result_Ok tt, v') ->
@@ -6008,34 +6008,34 @@ Proof. intros data p q H. unfold bytes_from. rewrite H. reflexivity. Qed.
 Lemma validate_code_entries_with_loop_sound :
   forall V (inst : module_CodeVisitor_t V) m data env vis vis' q i q',
   code_hooks_validate inst data env ->
-  Z.of_nat (List.length (vec_list env.(env_Env_func_type_indices)))
+  Z.of_nat (List.length (vec_list env.(module_Env_func_type_indices)))
     - to_Z i <= Z.of_nat m ->
   0 <= to_Z i ->
-  (forall ft, List.In ft (vec_list env.(env_Env_types)) ->
+  (forall ft, List.In ft (vec_list env.(module_Env_types)) ->
      (List.length (vec_list ft.(types_FuncType_results)) <= 1)%nat) ->
   module_validate_code_entries_with_loop inst data env vis q i
     = Ok (Core_result_Result_Ok q', vis') ->
   exists codes,
     repr_rep repr_code
-      (List.length (vec_list env.(env_Env_func_type_indices))
+      (List.length (vec_list env.(module_Env_func_type_indices))
          - Z.to_nat (to_Z i))%nat
       (bytes_from data q) codes (bytes_from data q')
     /\ List.Forall2 (code_typed env)
          (List.skipn (Z.to_nat (to_Z i))
-            (vec_list env.(env_Env_func_type_indices))) codes.
+            (vec_list env.(module_Env_func_type_indices))) codes.
 Proof.
   intros V inst m. induction m as [|m IH];
     intros data env vis vis' q i q' Hvalid Hmeas Hi Hres H;
     unfold module_validate_code_entries_with_loop in H;
     rewrite loop_unfold in H; cbn beta iota in H;
-    destruct (i s>= alloc_vec_Vec_len env.(env_Env_func_type_indices)) eqn:Hge.
+    destruct (i s>= alloc_vec_Vec_len env.(module_Env_func_type_indices)) eqn:Hge.
   1,3: injection H as <- <-; exists [];
        apply scalar_geb_true_ge in Hge; rewrite vec_len_spec in Hge;
-       assert (Hoff : (List.length (vec_list env.(env_Env_func_type_indices))
+       assert (Hoff : (List.length (vec_list env.(module_Env_func_type_indices))
                        <= Z.to_nat (to_Z i))%nat)
          by (apply Nat2Z.inj_le; rewrite Z2Nat.id by lia; lia);
        split;
-       [ replace (List.length (vec_list env.(env_Env_func_type_indices))
+       [ replace (List.length (vec_list env.(module_Env_func_type_indices))
                     - Z.to_nat (to_Z i))%nat with 0%nat
            by (symmetry; apply Nat.sub_0_le; exact Hoff);
          apply repr_rep_nil
@@ -6079,11 +6079,11 @@ Proof.
     destruct (IH data env v3 vis' fin i2 q' Hvalid (ltac:(cbn in Hmeas; lia))
                 (ltac:(lia)) Hres H) as [codes [Hrep Hall]].
     assert (Hlt : (Z.to_nat (to_Z i)
-                   < List.length (vec_list env.(env_Env_func_type_indices)))%nat)
+                   < List.length (vec_list env.(module_Env_func_type_indices)))%nat)
       by (apply Nat2Z.inj_lt; rewrite Z2Nat.id by lia; lia).
-    assert (Hstep : (List.length (vec_list env.(env_Env_func_type_indices))
+    assert (Hstep : (List.length (vec_list env.(module_Env_func_type_indices))
                        - Z.to_nat (to_Z i))%nat
-                    = S (List.length (vec_list env.(env_Env_func_type_indices))
+                    = S (List.length (vec_list env.(module_Env_func_type_indices))
                            - Z.to_nat (to_Z i2)))
       by (rewrite Hi2; rewrite Z_to_nat_add1 by lia; lia).
     exists (c :: codes). split.
@@ -6097,22 +6097,22 @@ Qed.
 Lemma validate_code_entries_with_sound :
   forall V (inst : module_CodeVisitor_t V) data env vis vis' pos q',
   code_hooks_validate inst data env ->
-  (forall ft, List.In ft (vec_list env.(env_Env_types)) ->
+  (forall ft, List.In ft (vec_list env.(module_Env_types)) ->
      (List.length (vec_list ft.(types_FuncType_results)) <= 1)%nat) ->
   module_validate_code_entries_with inst data pos env vis
     = Ok (Core_result_Result_Ok q', vis') ->
   exists codes,
     repr_rep repr_code
-      (List.length (vec_list env.(env_Env_func_type_indices)))
+      (List.length (vec_list env.(module_Env_func_type_indices)))
       (bytes_from data pos) codes (bytes_from data q')
     /\ List.Forall2 (code_typed env)
-         (vec_list env.(env_Env_func_type_indices)) codes.
+         (vec_list env.(module_Env_func_type_indices)) codes.
 Proof.
   intros V inst data env vis vis' pos q' Hvalid Hres H.
   unfold module_validate_code_entries_with in H.
   assert (H0 : to_Z 0%usize = 0) by reflexivity.
   destruct (validate_code_entries_with_loop_sound V inst
-              (List.length (vec_list env.(env_Env_func_type_indices)))
+              (List.length (vec_list env.(module_Env_func_type_indices)))
               data env vis vis' pos 0%usize q' Hvalid (ltac:(lia))
               (ltac:(lia)) Hres H)
     as [codes [Hrep Hall]].
@@ -6128,11 +6128,11 @@ Qed.
     as [funcs_of] pairing the two empty vectors. *)
 Lemma no_code_section_sound : forall env oc,
   module_no_code_section env = Ok (Core_result_Result_Ok oc) ->
-  oc = None /\ vec_list env.(env_Env_func_type_indices) = [].
+  oc = None /\ vec_list env.(module_Env_func_type_indices) = [].
 Proof.
   intros env oc H. unfold module_no_code_section in H.
   rewrite vec_is_empty_spec in H. cbn [bind] in H.
-  destruct (vec_list env.(env_Env_func_type_indices)) eqn:Hl;
+  destruct (vec_list env.(module_Env_func_type_indices)) eqn:Hl;
     [|discriminate].
   injection H as <-. split; reflexivity.
 Qed.
@@ -6147,7 +6147,7 @@ Lemma code_section_sound : forall data pos env oc,
   module_code_section data pos env = Ok (Core_result_Result_Ok oc) ->
   match oc with
   | None => ~ begins_with 10 (bytes_from data pos)
-            /\ vec_list env.(env_Env_func_type_indices) = []
+            /\ vec_list env.(module_Env_func_type_indices) = []
   | Some cs =>
       exists id start,
         to_Z id = 10
@@ -6158,7 +6158,7 @@ Lemma code_section_sound : forall data pos env oc,
            = Ok (Core_result_Result_Ok
                    (cs.(module_CodeSection_count),
                     cs.(module_CodeSection_entries)))
-        /\ Z.of_nat (List.length (vec_list env.(env_Env_func_type_indices)))
+        /\ Z.of_nat (List.length (vec_list env.(module_Env_func_type_indices)))
            = to_Z cs.(module_CodeSection_count)
   end.
 Proof.
@@ -6170,7 +6170,7 @@ Proof.
             ~ begins_with 10 (bytes_from data pos) ->
             match oc' with
             | None => ~ begins_with 10 (bytes_from data pos)
-                      /\ vec_list env.(env_Env_func_type_indices) = []
+                      /\ vec_list env.(module_Env_func_type_indices) = []
             | Some _ => True
             end).
   { intros oc' Hno Hnb. destruct (no_code_section_sound _ _ Hno) as [-> Hnil].
@@ -6202,7 +6202,7 @@ Proof.
   rewrite branch_ok in H. cbn [bind] in H.
   destruct (scalar_cast U32 Usize count) as [n|] eqn:Hcast; cbn [bind] in H;
     [|discriminate].
-  destruct (n s<> alloc_vec_Vec_len env.(env_Env_func_type_indices)) eqn:Hlen;
+  destruct (n s<> alloc_vec_Vec_len env.(module_Env_func_type_indices)) eqn:Hlen;
     [discriminate|].
   apply scalar_neqb_false in Hlen. rewrite vec_len_spec in Hlen.
   injection H as <-. cbn.
@@ -6221,7 +6221,7 @@ Qed.
 Lemma validate_code_with_sound :
   forall V (inst : module_CodeVisitor_t V) data pos env vis vis' q',
   code_hooks_validate inst data env ->
-  (forall ft, List.In ft (vec_list env.(env_Env_types)) ->
+  (forall ft, List.In ft (vec_list env.(module_Env_types)) ->
      (List.length (vec_list ft.(types_FuncType_results)) <= 1)%nat) ->
   module_validate_code_with inst data pos env vis
     = Ok (Core_result_Result_Ok q', vis') ->
@@ -6229,9 +6229,9 @@ Lemma validate_code_with_sound :
     repr_optsec 10 (repr_vec repr_code) [] (bytes_from data pos) codes
       (bytes_from data q')
     /\ List.length codes
-       = List.length (vec_list env.(env_Env_func_type_indices))
+       = List.length (vec_list env.(module_Env_func_type_indices))
     /\ List.Forall2 (code_typed env)
-         (vec_list env.(env_Env_func_type_indices)) codes.
+         (vec_list env.(module_Env_func_type_indices)) codes.
 Proof.
   intros V inst data pos env vis vis' q' Hvalid Hres H.
   unfold module_validate_code_with in H.
@@ -6277,7 +6277,7 @@ Proof.
       * apply (read_u32_leb_sound _ _ _ _ Hcnt).
       * rewrite <- Hqf.
         replace (Z.to_nat (to_Z cs.(module_CodeSection_count)))
-          with (List.length (vec_list env.(env_Env_func_type_indices)))
+          with (List.length (vec_list env.(module_Env_func_type_indices)))
           by (apply Nat2Z.inj; rewrite Z2Nat.id by
                 (pose proof (u32_nonneg cs.(module_CodeSection_count)); lia);
               lia).
@@ -6335,16 +6335,16 @@ Proof.
 Qed.
 
 Corollary validate_code_sound : forall data pos env q',
-  (forall ft, List.In ft (vec_list env.(env_Env_types)) ->
+  (forall ft, List.In ft (vec_list env.(module_Env_types)) ->
      (List.length (vec_list ft.(types_FuncType_results)) <= 1)%nat) ->
   module_validate_code data pos env = Ok (Core_result_Result_Ok q') ->
   exists codes,
     repr_optsec 10 (repr_vec repr_code) [] (bytes_from data pos) codes
       (bytes_from data q')
     /\ List.length codes
-       = List.length (vec_list env.(env_Env_func_type_indices))
+       = List.length (vec_list env.(module_Env_func_type_indices))
     /\ List.Forall2 (code_typed env)
-         (vec_list env.(env_Env_func_type_indices)) codes.
+         (vec_list env.(module_Env_func_type_indices)) codes.
 Proof.
   intros data pos env q' Hres H.
   apply validate_code_nop_inv in H.
@@ -6387,7 +6387,7 @@ Qed.
 Lemma validate_code_entries_driven :
   forall V (inst : module_CodeVisitor_t V) m data env vis vis' q i q',
   code_hooks_validate inst data env ->
-  Z.of_nat (List.length (vec_list env.(env_Env_func_type_indices)))
+  Z.of_nat (List.length (vec_list env.(module_Env_func_type_indices)))
     - to_Z i <= Z.of_nat m ->
   module_validate_code_entries_with_loop inst data env vis q i
     = Ok (Core_result_Result_Ok q', vis') ->
@@ -6401,7 +6401,7 @@ Proof.
     rewrite loop_unfold in H; cbn beta iota in H;
     unfold module_validate_code_entries_with_loop;
     rewrite loop_unfold; cbn beta iota;
-    destruct (i s>= alloc_vec_Vec_len env.(env_Env_func_type_indices)) eqn:Hge.
+    destruct (i s>= alloc_vec_Vec_len env.(module_Env_func_type_indices)) eqn:Hge.
   1,3: injection H as <- <-; reflexivity.
   - exfalso. apply scalar_geb_false_lt in Hge. rewrite vec_len_spec in Hge.
     cbn in Hmeas. lia.
@@ -6472,7 +6472,7 @@ Proof.
       [|try_err_rw_in H; cbn beta iota in H; discriminate].
     rewrite branch_ok in H. cbn [bind] in H.
     rewrite (validate_code_entries_driven V inst
-               (List.length (vec_list env.(env_Env_func_type_indices)))
+               (List.length (vec_list env.(module_Env_func_type_indices)))
                data env v1 v2 cs.(module_CodeSection_entries) 0%usize q
                Hvalid (ltac:(assert (to_Z 0%usize = 0) by reflexivity; lia))
                Hents).
@@ -6490,8 +6490,8 @@ Qed.
     rule says. It is an invariant of the loop rather than a line of the chain:
     only the type section writes [types], and everything it writes was checked
     as it was decoded. *)
-Definition types_wasm10 (env : env_Env_t) : Prop :=
-  forall ft, List.In ft (vec_list env.(env_Env_types)) -> ft_wasm10 ft.
+Definition types_wasm10 (env : module_Env_t) : Prop :=
+  forall ft, List.In ft (vec_list env.(module_Env_types)) -> ft_wasm10 ft.
 
 Lemma decode_env_section_wasm10 : forall data start id env q env2,
   module_decode_env_section data start id env
@@ -6504,7 +6504,7 @@ Proof.
      shape: either [types] grew and each entry was checked, or it did not
      move at all *)
   assert (Hkeep : forall envB,
-            vec_list envB.(env_Env_types) = vec_list env.(env_Env_types) ->
+            vec_list envB.(module_Env_types) = vec_list env.(module_Env_types) ->
             types_wasm10 envB)
     by (intros envB Ht ft Hin; apply Hw; rewrite <- Ht; exact Hin).
   repeat (match type of H with
@@ -6543,20 +6543,20 @@ Qed.
     leaves the field alone or appends something it checked as it decoded.
     Abstracting the loop over the property means a new one costs only its nine
     section cases. *)
-Lemma decode_env_with_loop_preserves : forall (P : env_Env_t -> Prop),
+Lemma validate_env_with_loop_preserves : forall (P : module_Env_t -> Prop),
   (forall data start id env q env2,
      module_decode_env_section data start id env
        = Ok (Core_result_Result_Ok q, env2) -> P env -> P env2) ->
   forall V (inst : module_ModuleVisitor_t V) m data vis vis' env q last_id envf qf,
   Z.of_nat (List.length (vec_list data)) - to_Z q <= Z.of_nat m ->
   P env ->
-  module_decode_env_with_loop inst data vis env q last_id
+  module_validate_env_with_loop inst data vis env q last_id
     = Ok (Core_result_Result_Ok (envf, qf), vis') ->
   P envf.
 Proof.
   intros P Hstep V inst m. induction m as [|m IH];
     intros data vis vis' env q last_id envf qf Hmeas Hw H;
-    unfold module_decode_env_with_loop in H; rewrite loop_unfold in H;
+    unfold module_validate_env_with_loop in H; rewrite loop_unfold in H;
     cbn beta iota in H; destruct (q s>= slice_len data) eqn:Hge.
   1,3: injection H as <- <- <-; exact Hw.
   - exfalso. apply scalar_geb_false_lt in Hge.
@@ -6591,37 +6591,37 @@ Proof.
              (Hstep _ _ _ _ _ _ Hsec Hw) H).
 Qed.
 
-Lemma decode_env_preserves : forall (P : env_Env_t -> Prop),
+Lemma validate_env_preserves : forall (P : module_Env_t -> Prop),
   (forall data start id env q env2,
      module_decode_env_section data start id env
        = Ok (Core_result_Result_Ok q, env2) -> P env -> P env2) ->
-  (forall env0, env_Env_new = Ok env0 -> P env0) ->
+  (forall env0, module_Env_new = Ok env0 -> P env0) ->
   forall data env qf,
-  module_decode_env data = Ok (Core_result_Result_Ok (env, qf)) ->
+  module_validate_env data = Ok (Core_result_Result_Ok (env, qf)) ->
   P env.
 Proof.
   intros P Hstep Hinit data env qf H0.
-  pose proof (decode_env_nop_inv _ _ H0) as H. clear H0.
-  unfold module_decode_env_with in H.
-  destruct env_Env_new as [env0|] eqn:Hnew; cbn [bind] in H; [|discriminate].
+  pose proof (validate_env_nop_inv _ _ H0) as H. clear H0.
+  unfold module_validate_env_with in H.
+  destruct module_Env_new as [env0|] eqn:Hnew; cbn [bind] in H; [|discriminate].
   destruct (module_read_header data) as [r|]; cbn [bind] in H;
     [|discriminate].
   destruct r as [p0|e]; [|try_err_rw_in H; discriminate].
   rewrite branch_ok in H. cbn [bind] in H.
-  apply (decode_env_with_loop_preserves P Hstep _
-           module_NopModuleVisitor_Insts_ItascaModuleModuleVisitor
+  apply (validate_env_with_loop_preserves P Hstep _
+           module_EmptyModuleVisitor_Insts_ItascaModuleModuleVisitor
            (List.length (vec_list data)) data tt tt env0 p0 0%u8 env qf);
     [ pose proof (usize_nonneg p0); lia
     | apply Hinit; reflexivity
     | exact H ].
 Qed.
 
-Lemma decode_env_wasm10 : forall data env qf,
-  module_decode_env data = Ok (Core_result_Result_Ok (env, qf)) ->
+Lemma validate_env_wasm10 : forall data env qf,
+  module_validate_env data = Ok (Core_result_Result_Ok (env, qf)) ->
   types_wasm10 env.
 Proof.
-  apply (decode_env_preserves types_wasm10 decode_env_section_wasm10).
-  intros env0 Hnew. unfold env_Env_new in Hnew. injection Hnew as <-.
+  apply (validate_env_preserves types_wasm10 decode_env_section_wasm10).
+  intros env0 Hnew. unfold module_Env_new in Hnew. injection Hnew as <-.
   intros ft Hin. cbn [vec_list alloc_vec_Vec_new proj1_sig] in Hin.
   destruct Hin.
 Qed.
@@ -6669,12 +6669,12 @@ Proof.
          try reflexivity; exact Hv. }
 Qed.
 
-Lemma decode_env_limits_valid : forall data env qf,
-  module_decode_env data = Ok (Core_result_Result_Ok (env, qf)) ->
+Lemma validate_env_limits_valid : forall data env qf,
+  module_validate_env data = Ok (Core_result_Result_Ok (env, qf)) ->
   env_limits_valid env.
 Proof.
-  apply (decode_env_preserves env_limits_valid decode_env_section_limits_valid).
-  intros env0 Hnew. unfold env_Env_new in Hnew. injection Hnew as <-.
+  apply (validate_env_preserves env_limits_valid decode_env_section_limits_valid).
+  intros env0 Hnew. unfold module_Env_new in Hnew. injection Hnew as <-.
   cbn [vec_list alloc_vec_Vec_new proj1_sig].
   split; [apply List.Forall_nil|].
   split; apply List.Forall_nil.
@@ -6689,9 +6689,9 @@ Qed.
     to the one the run ended with, which is what the chain's [_keeps] lemmas
     supply. *)
 Lemma const_expr_ok_congr : forall env env' t e,
-  vec_list env'.(env_Env_global_types) = vec_list env.(env_Env_global_types) ->
-  to_Z env'.(env_Env_num_imported_globals)
-    = to_Z env.(env_Env_num_imported_globals) ->
+  vec_list env'.(module_Env_global_types) = vec_list env.(module_Env_global_types) ->
+  to_Z env'.(module_Env_num_imported_globals)
+    = to_Z env.(module_Env_num_imported_globals) ->
   const_expr_ok env t e -> const_expr_ok env' t e.
 Proof.
   intros env env' t e Hg Hn H. destruct e; try exact H.
@@ -6701,11 +6701,11 @@ Proof.
 Qed.
 
 Lemma element_ok_congr : forall env env' el,
-  vec_list env'.(env_Env_table_types) = vec_list env.(env_Env_table_types) ->
-  vec_list env'.(env_Env_func_types) = vec_list env.(env_Env_func_types) ->
-  vec_list env'.(env_Env_global_types) = vec_list env.(env_Env_global_types) ->
-  to_Z env'.(env_Env_num_imported_globals)
-    = to_Z env.(env_Env_num_imported_globals) ->
+  vec_list env'.(module_Env_table_types) = vec_list env.(module_Env_table_types) ->
+  vec_list env'.(module_Env_func_types) = vec_list env.(module_Env_func_types) ->
+  vec_list env'.(module_Env_global_types) = vec_list env.(module_Env_global_types) ->
+  to_Z env'.(module_Env_num_imported_globals)
+    = to_Z env.(module_Env_num_imported_globals) ->
   element_ok env el -> element_ok env' el.
 Proof.
   intros env env' el Ht Hf Hg Hn [H1 [H2 H3]].
@@ -6715,20 +6715,20 @@ Proof.
 Qed.
 
 Lemma export_desc_ok_congr : forall env env' e,
-  vec_list env'.(env_Env_func_types) = vec_list env.(env_Env_func_types) ->
-  vec_list env'.(env_Env_table_types) = vec_list env.(env_Env_table_types) ->
-  vec_list env'.(env_Env_mem_types) = vec_list env.(env_Env_mem_types) ->
-  vec_list env'.(env_Env_global_types) = vec_list env.(env_Env_global_types) ->
+  vec_list env'.(module_Env_func_types) = vec_list env.(module_Env_func_types) ->
+  vec_list env'.(module_Env_table_types) = vec_list env.(module_Env_table_types) ->
+  vec_list env'.(module_Env_mem_types) = vec_list env.(module_Env_mem_types) ->
+  vec_list env'.(module_Env_global_types) = vec_list env.(module_Env_global_types) ->
   export_desc_ok env e -> export_desc_ok env' e.
 Proof.
   intros env env' e Hf Ht Hm Hg H. unfold export_desc_ok in *.
-  destruct e.(env_Export_desc);
+  destruct e.(module_Export_desc);
     [rewrite Hf | rewrite Ht | rewrite Hm | rewrite Hg]; exact H.
 Qed.
 
 Lemma start_ok_congr : forall env env',
-  env'.(env_Env_start) = env.(env_Env_start) ->
-  vec_list env'.(env_Env_func_types) = vec_list env.(env_Env_func_types) ->
+  env'.(module_Env_start) = env.(module_Env_start) ->
+  vec_list env'.(module_Env_func_types) = vec_list env.(module_Env_func_types) ->
   start_ok env -> start_ok env'.
 Proof.
   intros env env' Hs Hf H. unfold start_ok in *. rewrite Hs. rewrite Hf.
@@ -6742,30 +6742,30 @@ Qed.
     functions, which pair the function section's type indices with the code
     section's bodies and so are not recoverable from [Env] at all -- the
     validator does not keep function bodies. *)
-Definition module_of (env : env_Env_t) (fs : list module_func)
+Definition module_of (env : module_Env_t) (fs : list module_func)
                      (tabs : list types_TableType_t)
                      (mems : list types_MemType_t)
                      (datas : list module_data) : module :=
-  {| mod_types   := List.map translate_functype (vec_list env.(env_Env_types));
+  {| mod_types   := List.map translate_functype (vec_list env.(module_Env_types));
      mod_funcs   := fs;
      mod_tables  := List.map translate_table tabs;
      mod_mems    := List.map translate_mem mems;
-     mod_globals := List.map translate_global (vec_list env.(env_Env_globals));
-     mod_elems   := List.map translate_element (vec_list env.(env_Env_elements));
+     mod_globals := List.map translate_global (vec_list env.(module_Env_globals));
+     mod_elems   := List.map translate_element (vec_list env.(module_Env_elements));
      mod_datas   := datas;
-     mod_start   := translate_start env.(env_Env_start);
-     mod_imports := List.map translate_import (vec_list env.(env_Env_imports));
-     mod_exports := List.map translate_export (vec_list env.(env_Env_exports)) |}.
+     mod_start   := translate_start env.(module_Env_start);
+     mod_imports := List.map translate_import (vec_list env.(module_Env_imports));
+     mod_exports := List.map translate_export (vec_list env.(module_Env_exports)) |}.
 
 (** An accepting run means the input is a Wasm 1.0 module binary: spec
     5.5.16's production holds of it, from the magic number to the last custom
     section, and the module it decoded to is the one the environment says.
 
-    The three parts meet here. [decode_env] supplies the magic number, the
+    The three parts meet here. [validate_env] supplies the magic number, the
     nine environment lines and the run of custom sections that pads the code
     line; [validate_code] supplies that line's section, and the count check is
     what pairs the function section's type indices with the code entries;
-    [decode_tail] supplies the data line and the run that closes the module.
+    [validate_tail] supplies the data line and the run that closes the module.
 
     Each of the module's fields is read off the final environment in one line:
     the chain's [_keeps] lemmas carry the field forward from the section that
@@ -6776,7 +6776,7 @@ Definition module_of (env : env_Env_t) (fs : list module_func)
     [Spec_Module.repr_module_det] makes the module unique, so this is the
     module the bytes encode, not merely one of them. *)
 (** A whole module driven through the hooks is the module [validate_module]
-    validates: the same verdict, and the same [ValidatedModule].
+    validates: the same verdict, and the same [Module].
     
     This is what makes the interface worth having. Every result about
     [validate_module] -- [validate_module_repr], [validate_module_typed],
@@ -6802,11 +6802,11 @@ Proof.
   intros V minst cinst data vis vis' vm Hvalid H.
   unfold module_validate_module_with in H. unfold module_validate_module.
   destruct (slice_len data s> limits_max_module_bytes); [discriminate|].
-  destruct (module_decode_env_with minst data vis) as [[re v1]|] eqn:He;
+  destruct (module_validate_env_with minst data vis) as [[re v1]|] eqn:He;
     cbn [bind] in H; [|discriminate].
   destruct re as [[env code_pos]|e];
     [|try_err_rw_in H; cbn beta iota in H; discriminate].
-  rewrite (decode_env_driven V minst data vis v1 env code_pos He).
+  rewrite (validate_env_driven V minst data vis v1 env code_pos He).
   cbn [bind]. rewrite branch_ok. cbn [bind].
   rewrite branch_ok in H. cbn [bind] in H.
   destruct (module_validate_code_with cinst data code_pos env v1) as [[rc v2]|]
@@ -6817,11 +6817,11 @@ Proof.
              (Hvalid env) Hc).
   cbn [bind]. rewrite branch_ok. cbn [bind].
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (module_decode_tail_with minst data tail_pos env v2) as [[rt v3]|]
+  destruct (module_validate_tail_with minst data tail_pos env v2) as [[rt v3]|]
     eqn:Ht; cbn [bind] in H; [|discriminate].
   destruct rt as [tail|e];
     [|try_err_rw_in H; cbn beta iota in H; discriminate].
-  rewrite (decode_tail_driven V minst data tail_pos env v2 v3 tail Ht).
+  rewrite (validate_tail_driven V minst data tail_pos env v2 v3 tail Ht).
   cbn [bind]. rewrite branch_ok. cbn [bind].
   rewrite branch_ok in H. cbn [bind] in H.
   injection H as <- _. reflexivity.
@@ -6830,44 +6830,44 @@ Qed.
 Theorem validate_module_parts : forall data vm,
   module_validate_module data = Ok (Core_result_Result_Ok vm) ->
   exists env code_pos tail_pos tl fs tabs mems,
-    vm = {| module_ValidatedModule_env := env;
-            module_ValidatedModule_tail := tl |}
-    /\ module_decode_env data = Ok (Core_result_Result_Ok (env, code_pos))
+    vm = {| module_Module_env := env;
+            module_Module_tail := tl |}
+    /\ module_validate_env data = Ok (Core_result_Result_Ok (env, code_pos))
     /\ module_validate_code data code_pos env
          = Ok (Core_result_Result_Ok tail_pos)
-    /\ module_decode_tail data tail_pos env = Ok (Core_result_Result_Ok tl)
-    /\ vec_list env.(env_Env_table_types)
-         = imported_tables (vec_list env.(env_Env_imports)) ++ tabs
-    /\ vec_list env.(env_Env_mem_types)
-         = imported_mems (vec_list env.(env_Env_imports)) ++ mems
+    /\ module_validate_tail data tail_pos env = Ok (Core_result_Result_Ok tl)
+    /\ vec_list env.(module_Env_table_types)
+         = imported_tables (vec_list env.(module_Env_imports)) ++ tabs
+    /\ vec_list env.(module_Env_mem_types)
+         = imported_mems (vec_list env.(module_Env_imports)) ++ mems
     /\ env_func_space env
-         (imported_func_idxs (vec_list env.(env_Env_imports))
-          ++ vec_list env.(env_Env_func_type_indices))
-    /\ vec_list env.(env_Env_global_types)
-         = imported_globals (vec_list env.(env_Env_imports))
-           ++ List.map (fun g => g.(env_Global_gtype))
-                (vec_list env.(env_Env_globals))
-    /\ to_Z env.(env_Env_num_imported_globals)
+         (imported_func_idxs (vec_list env.(module_Env_imports))
+          ++ vec_list env.(module_Env_func_type_indices))
+    /\ vec_list env.(module_Env_global_types)
+         = imported_globals (vec_list env.(module_Env_imports))
+           ++ List.map (fun g => g.(module_Global_gtype))
+                (vec_list env.(module_Env_globals))
+    /\ to_Z env.(module_Env_num_imported_globals)
          = Z.of_nat (List.length
-             (imported_globals (vec_list env.(env_Env_imports))))
-    /\ List.Forall (element_ok env) (vec_list env.(env_Env_elements))
+             (imported_globals (vec_list env.(module_Env_imports))))
+    /\ List.Forall (element_ok env) (vec_list env.(module_Env_elements))
     /\ start_ok env
     /\ exports_distinct env
-    /\ List.Forall (export_desc_ok env) (vec_list env.(env_Env_exports))
+    /\ List.Forall (export_desc_ok env) (vec_list env.(module_Env_exports))
     /\ List.Forall (data_ok env) (vec_list tl.(module_Tail_data))
-    /\ List.Forall (global_ok env) (vec_list env.(env_Env_globals))
+    /\ List.Forall (global_ok env) (vec_list env.(module_Env_globals))
     /\ (exists codes,
           List.Forall2 (code_typed env)
-            (vec_list env.(env_Env_func_type_indices)) codes
+            (vec_list env.(module_Env_func_type_indices)) codes
           /\ funcs_of (List.map translate_idx
-                        (vec_list env.(env_Env_func_type_indices))) codes fs)
+                        (vec_list env.(module_Env_func_type_indices))) codes fs)
     /\ repr_module (byte_list data)
          (module_of env fs tabs mems
             (List.map translate_data (vec_list tl.(module_Tail_data)))).
 Proof.
   intros data vm H. unfold module_validate_module in H.
   destruct (slice_len data s> limits_max_module_bytes); [discriminate|].
-  destruct (module_decode_env data) as [r|] eqn:Henv; cbn [bind] in H;
+  destruct (module_validate_env data) as [r|] eqn:Henv; cbn [bind] in H;
     [|discriminate].
   destruct r as [[env code_pos]|e]; [|try_err_rw_in H; discriminate].
   rewrite branch_ok in H. cbn [bind] in H.
@@ -6875,21 +6875,21 @@ Proof.
     cbn [bind] in H; [|discriminate].
   destruct r1 as [tail_pos|e1]; [|try_err_rw_in H; discriminate].
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (module_decode_tail data tail_pos env) as [r2|] eqn:Htail;
+  destruct (module_validate_tail data tail_pos env) as [r2|] eqn:Htail;
     cbn [bind] in H; [|discriminate].
   destruct r2 as [tl|e2]; [|try_err_rw_in H; discriminate].
   (* the value the run returned is built from these two parts, which is what
      lets the theorems downstream talk about [vm] rather than about [env] *)
-  assert (Hvm : vm = {| module_ValidatedModule_env := env;
-                        module_ValidatedModule_tail := tl |}).
+  assert (Hvm : vm = {| module_Module_env := env;
+                        module_Module_tail := tl |}).
   { rewrite branch_ok in H. cbn [bind] in H. injection H as H.
     symmetry. exact H. }
   clear H.
-  destruct (decode_env_sound _ _ _ Henv) as [p0 [env0 [Hmagic [Hnew Hchain]]]].
-  destruct (validate_code_sound _ _ _ _ (decode_env_wasm10 _ _ _ Henv) Hcode)
+  destruct (validate_env_sound _ _ _ Henv) as [p0 [env0 [Hmagic [Hnew Hchain]]]].
+  destruct (validate_code_sound _ _ _ _ (validate_env_wasm10 _ _ _ Henv) Hcode)
     as [codes [Hcodesec [Hcodelen Hcodety]]].
-  destruct (decode_tail_sound _ _ _ _ Htail) as [Htailchain Hdataok].
-  unfold env_Env_new in Hnew. injection Hnew as <-.
+  destruct (validate_tail_sound _ _ _ _ Htail) as [Htailchain Hdataok].
+  unfold module_Env_new in Hnew. injection Hnew as <-.
   (* peel the nine environment lines and the run of customs that follows,
      keeping the tail of the chain at each line: that is what carries a field
      the line wrote through to the environment the run ends with *)
@@ -6914,108 +6914,108 @@ Proof.
   destruct Htailchain as [mid11 [Hp11 Hend]].
   unfold env_imported in Hv2.
   destruct Hsp2 as [Hsp2t [Hsp2m [Hsp2g [Hsp2ty [Hfs2 Hnig2]]]]].
-  (* the code section's line, padded by the run [decode_env] stopped in *)
+  (* the code section's line, padded by the run [validate_env] stopped in *)
   assert (Hp10 : repr_padded 10 (repr_vec repr_code) [] (bytes_from data p9)
                    codes (bytes_from data tail_pos))
     by (exists (bytes_from data code_pos); split;
         [exact Hcustoms | exact Hcodesec]).
   (* the ten fields, each carried from the line that wrote it *)
-  assert (Ktypes1 : vec_list env.(env_Env_types) = vec_list e1'.(env_Env_types))
-    by (apply (env_chain_2_keeps _ (fun e => vec_list e.(env_Env_types))
+  assert (Ktypes1 : vec_list env.(module_Env_types) = vec_list e1'.(module_Env_types))
+    by (apply (env_chain_2_keeps _ (fun e => vec_list e.(module_Env_types))
                  _ _ _ _ _ ltac:(keeps_refl) Hchain2)).
-  assert (Ktypes : vec_list env.(env_Env_types) = tfs)
+  assert (Ktypes : vec_list env.(module_Env_types) = tfs)
     by (rewrite Ktypes1; rewrite Hl1; reflexivity).
-  assert (Kimports : vec_list env.(env_Env_imports) = imps).
-  { rewrite (env_chain_3_keeps _ (fun e => vec_list e.(env_Env_imports))
+  assert (Kimports : vec_list env.(module_Env_imports) = imps).
+  { rewrite (env_chain_3_keeps _ (fun e => vec_list e.(module_Env_imports))
                _ _ _ _ _ ltac:(keeps_refl) Hchain3).
     rewrite Hl2. rewrite Hv1. reflexivity. }
-  assert (Kfti : vec_list env.(env_Env_func_type_indices) = tidxs).
+  assert (Kfti : vec_list env.(module_Env_func_type_indices) = tidxs).
   { rewrite (env_chain_4_keeps _
-               (fun e => vec_list e.(env_Env_func_type_indices))
+               (fun e => vec_list e.(module_Env_func_type_indices))
                _ _ _ _ _ ltac:(keeps_refl) Hchain4).
     rewrite Hl3. rewrite Hv2. rewrite Hv1. reflexivity. }
-  assert (Ktables : vec_list env.(env_Env_table_types)
+  assert (Ktables : vec_list env.(module_Env_table_types)
                     = imported_tables imps ++ tabs).
-  { rewrite (env_chain_5_keeps _ (fun e => vec_list e.(env_Env_table_types))
+  { rewrite (env_chain_5_keeps _ (fun e => vec_list e.(module_Env_table_types))
                _ _ _ _ _ ltac:(keeps_refl) Hchain5).
     rewrite Hl4. rewrite Hv3. env_proj. rewrite Hsp2t. rewrite Hv1.
     reflexivity. }
-  assert (Kmems : vec_list env.(env_Env_mem_types)
+  assert (Kmems : vec_list env.(module_Env_mem_types)
                   = imported_mems imps ++ mems).
-  { rewrite (env_chain_6_keeps _ (fun e => vec_list e.(env_Env_mem_types))
+  { rewrite (env_chain_6_keeps _ (fun e => vec_list e.(module_Env_mem_types))
                _ _ _ _ _ ltac:(keeps_refl) Hchain6).
     rewrite Hl5. rewrite Hv4. rewrite Hv3. env_proj. rewrite Hsp2m.
     rewrite Hv1. reflexivity. }
-  assert (Kglobals : vec_list env.(env_Env_globals) = globs).
-  { rewrite (env_chain_7_keeps _ (fun e => vec_list e.(env_Env_globals))
+  assert (Kglobals : vec_list env.(module_Env_globals) = globs).
+  { rewrite (env_chain_7_keeps _ (fun e => vec_list e.(module_Env_globals))
                _ _ _ _ _ ltac:(keeps_refl) Hchain7).
     rewrite Hl6. rewrite Hv5. rewrite Hv4. rewrite Hv3. rewrite Hv2.
     rewrite Hv1. reflexivity. }
-  assert (Kexports : vec_list env.(env_Env_exports) = exps).
-  { rewrite (env_chain_8_keeps _ (fun e => vec_list e.(env_Env_exports))
+  assert (Kexports : vec_list env.(module_Env_exports) = exps).
+  { rewrite (env_chain_8_keeps _ (fun e => vec_list e.(module_Env_exports))
                _ _ _ _ _ ltac:(keeps_refl) Hchain8).
     rewrite Hl7. rewrite Hv6. rewrite Hv5. rewrite Hv4. rewrite Hv3.
     rewrite Hv2. rewrite Hv1. reflexivity. }
-  assert (Kstart : env.(env_Env_start) = e8'.(env_Env_start))
-    by (apply (env_chain_9_keeps _ (fun e => e.(env_Env_start))
+  assert (Kstart : env.(module_Env_start) = e8'.(module_Env_start))
+    by (apply (env_chain_9_keeps _ (fun e => e.(module_Env_start))
                  _ _ _ _ _ ltac:(keeps_refl) Hchain9)).
-  assert (Kelems : vec_list env.(env_Env_elements) = els).
-  { rewrite (chain_tail_keeps _ (fun e => vec_list e.(env_Env_elements))
+  assert (Kelems : vec_list env.(module_Env_elements) = els).
+  { rewrite (chain_tail_keeps _ (fun e => vec_list e.(module_Env_elements))
                _ _ _ _ _ (conj Hcustoms Henvf)).
     rewrite Hl9. rewrite Hv8. rewrite Hv7. rewrite Hv6. rewrite Hv5.
     rewrite Hv4. rewrite Hv3. rewrite Hv2. rewrite Hv1. reflexivity. }
-  assert (Kgts : vec_list env.(env_Env_global_types)
-                 = imported_globals (vec_list env.(env_Env_imports))
-                   ++ List.map (fun g => g.(env_Global_gtype))
-                        (vec_list env.(env_Env_globals))).
+  assert (Kgts : vec_list env.(module_Env_global_types)
+                 = imported_globals (vec_list env.(module_Env_imports))
+                   ++ List.map (fun g => g.(module_Global_gtype))
+                        (vec_list env.(module_Env_globals))).
   { rewrite Kimports. rewrite Kglobals.
     rewrite (env_chain_7_keeps _
-               (fun e => vec_list e.(env_Env_global_types))
+               (fun e => vec_list e.(module_Env_global_types))
                _ _ _ _ _ ltac:(keeps_refl) Hchain7).
     rewrite Hgts6. rewrite Hv5. rewrite Hv4. rewrite Hv3. env_proj.
     rewrite Hsp2g. rewrite Hv1. reflexivity. }
-  assert (Knig : to_Z env.(env_Env_num_imported_globals)
+  assert (Knig : to_Z env.(module_Env_num_imported_globals)
                  = Z.of_nat (List.length
-                     (imported_globals (vec_list env.(env_Env_imports))))).
+                     (imported_globals (vec_list env.(module_Env_imports))))).
   { rewrite Kimports.
     rewrite (env_chain_3_keeps _
-               (fun e => to_Z e.(env_Env_num_imported_globals))
+               (fun e => to_Z e.(module_Env_num_imported_globals))
                _ _ _ _ _ ltac:(keeps_refl) Hchain3).
     rewrite Hnig2. rewrite Hv1. env_proj. cbn. lia. }
   assert (Kfuncs : env_func_space env
-                     (imported_func_idxs (vec_list env.(env_Env_imports))
-                      ++ vec_list env.(env_Env_func_type_indices))).
+                     (imported_func_idxs (vec_list env.(module_Env_imports))
+                      ++ vec_list env.(module_Env_func_type_indices))).
   { rewrite Kimports. rewrite Kfti.
     destruct (func_space_trans e1' e2' e3' _ _ Hsp2ty Hfs2 Hfs3)
       as [Hmap Hall].
     split; [| rewrite Ktypes1; exact Hall].
     rewrite (env_chain_4_keeps _
                (fun e => List.map translate_functype
-                           (vec_list e.(env_Env_func_types)))
+                           (vec_list e.(module_Env_func_types)))
                _ _ _ _ _ ltac:(keeps_refl) Hchain4).
     rewrite Hmap. rewrite Ktypes1. rewrite Hv1. env_proj.
     cbn [vec_list alloc_vec_Vec_new proj1_sig List.map List.app].
     reflexivity. }
   (* the four spaces are the same at line 7, 8 and 9 as they are at the end *)
-  assert (K9t : vec_list env.(env_Env_table_types)
-                = vec_list e8'.(env_Env_table_types))
-    by (apply (env_chain_9_keeps _ (fun e => vec_list e.(env_Env_table_types))
+  assert (K9t : vec_list env.(module_Env_table_types)
+                = vec_list e8'.(module_Env_table_types))
+    by (apply (env_chain_9_keeps _ (fun e => vec_list e.(module_Env_table_types))
                  _ _ _ _ _ ltac:(keeps_refl) Hchain9)).
-  assert (K9f : vec_list env.(env_Env_func_types)
-                = vec_list e8'.(env_Env_func_types))
-    by (apply (env_chain_9_keeps _ (fun e => vec_list e.(env_Env_func_types))
+  assert (K9f : vec_list env.(module_Env_func_types)
+                = vec_list e8'.(module_Env_func_types))
+    by (apply (env_chain_9_keeps _ (fun e => vec_list e.(module_Env_func_types))
                  _ _ _ _ _ ltac:(keeps_refl) Hchain9)).
-  assert (K9g : vec_list env.(env_Env_global_types)
-                = vec_list e8'.(env_Env_global_types))
-    by (apply (env_chain_9_keeps _ (fun e => vec_list e.(env_Env_global_types))
+  assert (K9g : vec_list env.(module_Env_global_types)
+                = vec_list e8'.(module_Env_global_types))
+    by (apply (env_chain_9_keeps _ (fun e => vec_list e.(module_Env_global_types))
                  _ _ _ _ _ ltac:(keeps_refl) Hchain9)).
-  assert (K9n : to_Z env.(env_Env_num_imported_globals)
-                = to_Z e8'.(env_Env_num_imported_globals))
+  assert (K9n : to_Z env.(module_Env_num_imported_globals)
+                = to_Z e8'.(module_Env_num_imported_globals))
     by (apply (env_chain_9_keeps _
-                 (fun e => to_Z e.(env_Env_num_imported_globals))
+                 (fun e => to_Z e.(module_Env_num_imported_globals))
                  _ _ _ _ _ ltac:(keeps_refl) Hchain9)).
   assert (Kelems_ok : List.Forall (element_ok env)
-                        (vec_list env.(env_Env_elements))).
+                        (vec_list env.(module_Env_elements))).
   { rewrite Kelems. rewrite List.Forall_forall in Hels9.
     apply List.Forall_forall. intros el Hin.
     apply (element_ok_congr e8' env el K9t K9f K9g K9n).
@@ -7023,29 +7023,29 @@ Proof.
   assert (Kstart_ok : start_ok env)
     by (apply (start_ok_congr e8' env Kstart K9f); exact Hstart8).
   (* the export section's env is [e6'], and lines 7 to 9 leave the spaces *)
-  assert (K7e : vec_list env.(env_Env_exports)
-                = vec_list e7'.(env_Env_exports))
-    by (apply (env_chain_8_keeps _ (fun e => vec_list e.(env_Env_exports))
+  assert (K7e : vec_list env.(module_Env_exports)
+                = vec_list e7'.(module_Env_exports))
+    by (apply (env_chain_8_keeps _ (fun e => vec_list e.(module_Env_exports))
                  _ _ _ _ _ ltac:(keeps_refl) Hchain8)).
-  assert (K7f : vec_list env.(env_Env_func_types)
-                = vec_list e6'.(env_Env_func_types))
+  assert (K7f : vec_list env.(module_Env_func_types)
+                = vec_list e6'.(module_Env_func_types))
     by (rewrite K9f; rewrite Hv8; env_proj; rewrite Hv7; env_proj;
         reflexivity).
-  assert (K7t : vec_list env.(env_Env_table_types)
-                = vec_list e6'.(env_Env_table_types))
+  assert (K7t : vec_list env.(module_Env_table_types)
+                = vec_list e6'.(module_Env_table_types))
     by (rewrite K9t; rewrite Hv8; env_proj; rewrite Hv7; env_proj;
         reflexivity).
-  assert (K7m : vec_list env.(env_Env_mem_types)
-                = vec_list e6'.(env_Env_mem_types))
-    by (rewrite (env_chain_9_keeps _ (fun e => vec_list e.(env_Env_mem_types))
+  assert (K7m : vec_list env.(module_Env_mem_types)
+                = vec_list e6'.(module_Env_mem_types))
+    by (rewrite (env_chain_9_keeps _ (fun e => vec_list e.(module_Env_mem_types))
                    _ _ _ _ _ ltac:(keeps_refl) Hchain9);
         rewrite Hv8; env_proj; rewrite Hv7; env_proj; reflexivity).
-  assert (K7g : vec_list env.(env_Env_global_types)
-                = vec_list e6'.(env_Env_global_types))
+  assert (K7g : vec_list env.(module_Env_global_types)
+                = vec_list e6'.(module_Env_global_types))
     by (rewrite K9g; rewrite Hv8; env_proj; rewrite Hv7; env_proj;
         reflexivity).
   assert (Kglob_ok : List.Forall (global_ok env)
-                       (vec_list env.(env_Env_globals))).
+                       (vec_list env.(module_Env_globals))).
   { rewrite Kglobals. rewrite List.Forall_forall in Hoks6.
     apply List.Forall_forall. intros g Hin.
     apply (global_ok_grow e6' env g []
@@ -7054,7 +7054,7 @@ Proof.
                     reflexivity))).
     apply Hoks6. exact Hin. }
   assert (Kdesc_ok : List.Forall (export_desc_ok env)
-                       (vec_list env.(env_Env_exports))).
+                       (vec_list env.(module_Env_exports))).
   { rewrite K7e. rewrite Hl7. rewrite List.Forall_forall in Hdesc7.
     apply List.Forall_app. split.
     - (* nothing was there before the export section *)
