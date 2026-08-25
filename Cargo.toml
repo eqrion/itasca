@@ -3,6 +3,15 @@ name = "itasca"
 version = "0.1.0"
 edition = "2021"
 description = "Formally verified WebAssembly 1.0 module validator"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/eqrion/itasca"
+include = [
+    "src/**/*",
+    "/Cargo.toml",
+    "/README.md",
+    "/LICENSE-MIT",
+    "/LICENSE-APACHE",
+]
 
 [features]
 default = ["std"]
