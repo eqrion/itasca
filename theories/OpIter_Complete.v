@@ -306,7 +306,7 @@ Definition adv_end (C0 : t_context) (st2 : code_OpIterState_t)
 Definition adv_body_end (st1 st2 : code_OpIterState_t)
                         (fs : list fview) : Prop :=
   exists f, fs = [f]
-    /\ vec_list st2.(code_OpIterState_ctrls) = []
+    /\ ctrls_list st2.(code_OpIterState_ctrls) = []
     /\ to_Z st2.(code_OpIterState_pos) = to_Z st1.(code_OpIterState_pos).
 
 Definition step_shape (C0 : t_context) (st1 st2 : code_OpIterState_t)
@@ -575,15 +575,15 @@ Qed.
     control frame, at the index [read_br] reaches for. *)
 Lemma ctx_at_label_lookup_inv : forall C0 st n xx,
   List.nth_error (tc_labels (ctx_at C0 st)) n = Some xx ->
-  (n < List.length (vec_list st.(code_OpIterState_ctrls)))%nat
+  (n < List.length (ctrls_list st.(code_OpIterState_ctrls)))%nat
   /\ exists c,
-       List.nth_error (vec_list st.(code_OpIterState_ctrls))
-         (List.length (vec_list st.(code_OpIterState_ctrls)) - 1 - n) = Some c
+       List.nth_error (ctrls_list st.(code_OpIterState_ctrls))
+         (List.length (ctrls_list st.(code_OpIterState_ctrls)) - 1 - n) = Some c
        /\ ctrl_label c = xx.
 Proof.
   intros C0 st n xx H.
   apply (nth_error_rev_map_inv ctrl_label
-           (vec_list st.(code_OpIterState_ctrls)) n xx). exact H.
+           (ctrls_list st.(code_OpIterState_ctrls)) n xx). exact H.
 Qed.
 
 (** [check_single]'s [BI_if] case: *two* body obligations at once, which is the
@@ -697,6 +697,7 @@ Lemma store_branch : forall C0 module data st1 pre f ty natural nt tp a o mid ct
   check_single (with_labels C0 (ctrl_label (fv_ctrl f) :: labels_after [] pre))
               (Some (fv_ct f)) (BI_store nt tp (Z.to_N a) (Z.to_N o))
     = Some ct ->
+  room st1 ->
   exists m st2,
     code_read_store st1 data module ty natural
       = Ok (Core_result_Result_Ok m, st2)
@@ -704,7 +705,7 @@ Lemma store_branch : forall C0 module data st1 pre f ty natural nt tp a o mid ct
                      (BI_store nt tp (Z.to_N a) (Z.to_N o)).
 Proof.
   intros C0 module data st1 pre f ty natural nt tp a o mid ct
-         Hinv Hnt Hbounds Halim Hmems Hrep Hct.
+         Hinv Hnt Hbounds Halim Hmems Hrep Hct Hroom.
   destruct (check_single_store_inv _ _ _ _ _ _ _ Hct)
     as [[m0 Hlk] [Hbnd [ct1 Hcon]]].
   assert (Hlk' : lookup_N (tc_mems C0) 0%N = Some m0) by exact Hlk.
@@ -717,7 +718,7 @@ Proof.
   assert (Hcon' : consume (fv_ct f)
                     [translate_vt_v ty; translate_vt_v Types_ValueType_I32]
                   = Some ct1) by (rewrite Hnt; exact Hcon).
-  destruct (read_store_complete C0 st1 pre f data module ty natural a o mid m0 ct1 Hinv Hrep Hmems Hlk' Hale Hcon')
+  destruct (read_store_complete C0 st1 pre f data module ty natural a o mid m0 ct1 Hinv Hrep Hmems Hlk' Hale Hcon' Hroom)
     as [m [st2 [Hrd [Hmal Hmof]]]].
   exists m, st2. split; [exact Hrd|].
   destruct (step_store C0 st1 (pre ++ [f]) pre f data module ty natural nt tp m
@@ -828,7 +829,7 @@ Proof.
   { apply scalar_eqb_true in E2.
     assert (Hb : to_Z b = 0) by (rewrite E2; reflexivity).
     op_cases Hd Hb. injection Hsp as Hbe. subst cbe. subst op.
-    destruct (read_unreachable_complete st1)
+    destruct (read_unreachable_complete st1 Hroom1)
       as [st2 Hrd].
     exists st2. split; [eapply visit_wrap_accept; [exact Hrd | eauto]|].
     unfold step_shape.
@@ -946,7 +947,7 @@ Proof.
     op_cases Hd Hb. injection Hsp as Hbe. subst cbe. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
     pose proof (check_single_drop_inv _ _ _ Hct) as Hdrop.
-    destruct (read_drop_complete C0 st1 pre f ct Hinv1 Hdrop)
+    destruct (read_drop_complete C0 st1 pre f ct Hinv1 Hdrop Hroom1)
       as [t [st2 Hrd]].
     exists st2. split.
     { eapply visit_wrap_accept; [exact Hrd | eauto]. }
@@ -1069,7 +1070,7 @@ Proof.
     assert (Hb : to_Z b = 5) by (rewrite E7e; reflexivity).
     op_cases Hd Hb. subst op. cbn [op_typed] in Hty0.
     destruct Hty0 as [Hkind Hagree]. unfold ctrl_results in Hagree.
-    destruct (read_else_complete C0 st1 pre f Hinv1 Hkind Hagree
+    destruct (read_else_complete C0 st1 pre f Hinv1 Hkind Hagree Hroom1
                ) as [bt [st2 Hrd]].
     exists st2. split.
     { eapply visit_wrap_accept; [exact Hrd | eauto]. }
@@ -1196,7 +1197,7 @@ Proof.
     assert (Hcon' : consume (fv_ct f) (translate_typelist (ctrl_target c))
                     = Some ct1).
     { unfold ctrl_label in Hcl. rewrite Hcl. exact Hcon. }
-    destruct (read_br_complete C0 st1 pre f data cx mid c ct1 Hinv1 Himm Hlt Hnth Hcon')
+    destruct (read_br_complete C0 st1 pre f data cx mid c ct1 Hinv1 Himm Hlt Hnth Hcon' Hroom1)
       as [depth [bt' [st2 [Hrd Hdepth]]]].
     exists st2. split.
     { eapply visit_wrap2_accept; [exact Hrd | eauto]. }
@@ -1274,9 +1275,9 @@ Proof.
     assert (Hres : forall d, List.In d (cls ++ [cx2]) ->
               exists c,
                 (Z.to_nat d
-                 < List.length (vec_list st1.(code_OpIterState_ctrls)))%nat
-                /\ List.nth_error (vec_list st1.(code_OpIterState_ctrls))
-                     (List.length (vec_list st1.(code_OpIterState_ctrls))
+                 < List.length (ctrls_list st1.(code_OpIterState_ctrls)))%nat
+                /\ List.nth_error (ctrls_list st1.(code_OpIterState_ctrls))
+                     (List.length (ctrls_list st1.(code_OpIterState_ctrls))
                       - 1 - Z.to_nat d) = Some c
                 /\ ctrl_label c = tls).
     { intros d Hd.
@@ -1311,7 +1312,7 @@ Proof.
       by (unfold ctrl_label, ctrl_target in Hcld; rewrite Hcld; exact Hcon).
     destruct (read_br_table_complete V inst vis C0 st1 pre f data cls cx2 cmid
                 mid (branch_target_bt_of cdef) ct1 Hacc Hinv1 Hvec Himm Hall
-                Hcon') as [dflt [st2 [vis1 Hrd]]].
+                Hcon' Hroom1) as [dflt [st2 [vis1 Hrd]]].
     exists st2. split.
     { eapply visit_wrapv_accept; [exact Hrd | eauto]. }
     unfold step_shape.
@@ -1347,10 +1348,14 @@ Proof.
     unfold return_agree in Hret.
     assert (Htls : tls
                    = translate_typelist
-                       (vec_list ctx.(code_Context_results)))
+                       (context_results_of ctx.(code_Context_results)))
       by (rewrite Hret in Hrc; injection Hrc as Hrc; symmetry; exact Hrc).
     rewrite Htls in Hcon.
-    destruct (read_return_complete C0 ctx st1 pre f ct1 Hinv1 Hcon) as [st2 Hrd].
+    destruct (read_return_complete C0 ctx st1 pre f ct1 Hinv1
+                ltac:(destruct ctx.(code_Context_results);
+                      cbn [context_results_of translate_typelist] in Hcon |- *;
+                      exact Hcon) Hroom1)
+      as [st2 Hrd].
     exists st2. split.
     { eapply visit_wrap_accept; [exact Hrd | eauto]. }
     unfold step_shape.
@@ -1453,7 +1458,7 @@ Proof.
     cbn [op_typed idx_instr] in Hty0. destruct Hty0 as [ct Hct].
     destruct (check_single_local_set_inv _ _ _ _ Hct) as [xx [ct1 [Hlk Hcon]]].
     cbn [with_labels tc_locals] in Hlk.
-    destruct (read_local_set_complete C0 ctx st1 pre f data cx mid xx ct1 Hinv1 Hlocals Himm Hlk Hcon)
+    destruct (read_local_set_complete C0 ctx st1 pre f data cx mid xx ct1 Hinv1 Hlocals Himm Hlk Hcon Hroom1)
       as [idx [st2 [Hrd Hidx]]].
     exists st2. split.
     { eapply visit_wrap_accept; [exact Hrd | eauto]. }
@@ -1526,7 +1531,7 @@ Proof.
     destruct (check_single_global_set_inv _ _ _ _ Hct)
       as [xx [ct1 [Hlk [Hmut Hcon]]]].
     cbn [with_labels tc_globals] in Hlk.
-    destruct (read_global_set_complete C0 module st1 pre f data cx mid xx ct1 Hinv1 Hglobals Himm Hlk Hmut Hcon)
+    destruct (read_global_set_complete C0 module st1 pre f data cx mid xx ct1 Hinv1 Hglobals Himm Hlk Hmut Hcon Hroom1)
       as [idx [st2 [Hrd Hidx]]].
     exists st2. split.
     { eapply visit_wrap_accept; [exact Hrd | eauto]. }
@@ -1727,7 +1732,7 @@ Proof.
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
     destruct (store_branch C0 module data st1 pre f Types_ValueType_I32 2%u32 T_i32 None ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
-                (ltac:(align_lt)) Hmems Himm Hct)
+                (ltac:(align_lt)) Hmems Himm Hct Hroom1)
       as [m [st2 [Hrd Hadv]]].
     exists st2. split.
     { eapply visit_wrap_accept;
@@ -1739,7 +1744,7 @@ Proof.
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
     destruct (store_branch C0 module data st1 pre f Types_ValueType_I64 3%u32 T_i64 None ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
-                (ltac:(align_lt)) Hmems Himm Hct)
+                (ltac:(align_lt)) Hmems Himm Hct Hroom1)
       as [m [st2 [Hrd Hadv]]].
     exists st2. split.
     { eapply visit_wrap_accept;
@@ -1751,7 +1756,7 @@ Proof.
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
     destruct (store_branch C0 module data st1 pre f Types_ValueType_F32 2%u32 T_f32 None ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
-                (ltac:(align_lt)) Hmems Himm Hct)
+                (ltac:(align_lt)) Hmems Himm Hct Hroom1)
       as [m [st2 [Hrd Hadv]]].
     exists st2. split.
     { eapply visit_wrap_accept;
@@ -1763,7 +1768,7 @@ Proof.
     op_cases Hd Hb. injection Hsp as Hnt0 Htp0. subst cnt. subst ctp. subst op.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
     destruct (store_branch C0 module data st1 pre f Types_ValueType_F64 3%u32 T_f64 None ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
-                (ltac:(align_lt)) Hmems Himm Hct)
+                (ltac:(align_lt)) Hmems Himm Hct Hroom1)
       as [m [st2 [Hrd Hadv]]].
     exists st2. split.
     { eapply visit_wrap_accept;
@@ -1776,7 +1781,7 @@ Proof.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
     destruct (store_branch C0 module data st1 pre f Types_ValueType_I32 0%u32 T_i32 (Some Tp_i8)
                 ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
-                (ltac:(align_lt)) Hmems Himm Hct)
+                (ltac:(align_lt)) Hmems Himm Hct Hroom1)
       as [m [st2 [Hrd Hadv]]].
     exists st2. split.
     { eapply visit_wrap_accept;
@@ -1789,7 +1794,7 @@ Proof.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
     destruct (store_branch C0 module data st1 pre f Types_ValueType_I32 1%u32 T_i32 (Some Tp_i16)
                 ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
-                (ltac:(align_lt)) Hmems Himm Hct)
+                (ltac:(align_lt)) Hmems Himm Hct Hroom1)
       as [m [st2 [Hrd Hadv]]].
     exists st2. split.
     { eapply visit_wrap_accept;
@@ -1802,7 +1807,7 @@ Proof.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
     destruct (store_branch C0 module data st1 pre f Types_ValueType_I64 0%u32 T_i64 (Some Tp_i8)
                 ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
-                (ltac:(align_lt)) Hmems Himm Hct)
+                (ltac:(align_lt)) Hmems Himm Hct Hroom1)
       as [m [st2 [Hrd Hadv]]].
     exists st2. split.
     { eapply visit_wrap_accept;
@@ -1815,7 +1820,7 @@ Proof.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
     destruct (store_branch C0 module data st1 pre f Types_ValueType_I64 1%u32 T_i64 (Some Tp_i16)
                 ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
-                (ltac:(align_lt)) Hmems Himm Hct)
+                (ltac:(align_lt)) Hmems Himm Hct Hroom1)
       as [m [st2 [Hrd Hadv]]].
     exists st2. split.
     { eapply visit_wrap_accept;
@@ -1828,7 +1833,7 @@ Proof.
     cbn [op_typed] in Hty0. destruct Hty0 as [ct Hct].
     destruct (store_branch C0 module data st1 pre f Types_ValueType_I64 2%u32 T_i64 (Some Tp_i32)
                 ca co mid ct Hinv1 (eq_refl _) (ltac:(ls_bounds))
-                (ltac:(align_lt)) Hmems Himm Hct)
+                (ltac:(align_lt)) Hmems Himm Hct Hroom1)
       as [m [st2 [Hrd Hadv]]].
     exists st2. split.
     { eapply visit_wrap_accept;
@@ -2876,7 +2881,7 @@ Proof.
     assert (Hroomst : room st).
     { unfold room. pose proof max_bytes_fits. lia. }
     assert (Hcons : exists c cs,
-              vec_list st.(code_OpIterState_ctrls) = c :: cs).
+              ctrls_list st.(code_OpIterState_ctrls) = c :: cs).
     { destruct Hinv as [K1 _]. rewrite K1.
       destruct pre as [|h t];
         [exists (fv_ctrl f), []; reflexivity
@@ -2884,8 +2889,14 @@ Proof.
           cbn [List.app List.map]; reflexivity]. }
     destruct Hcons as [c [cs Hcons]].
     unfold code_validate_body_with_loop. rewrite loop_unfold. cbn beta iota.
-    unfold code_control_stack_empty. rewrite vec_is_empty_spec.
-    rewrite Hcons. cbn [bind]. rewrite ctx_eta.
+    unfold code_control_stack_empty.
+    destruct (ctrls_stack_len_total st.(code_OpIterState_ctrls)
+                ltac:(pose proof (room_ctrls st Hroomst); lia)) as [n Hctrl_len].
+    rewrite Hctrl_len. cbn [bind].
+    assert (Hctrl_nonzero : (n s= 0%usize) = false).
+    { apply scalar_eqb_zero_false.
+      rewrite (ctrls_stack_len_spec _ _ Hctrl_len), Hcons. cbn. lia. }
+    rewrite Hctrl_nonzero. rewrite ctx_eta.
     destruct (list_cons_or_nil (bytes_from data st.(code_OpIterState_pos)))
       as [Hnil | [z [rest0 Hbs]]].
     { exfalso. rewrite Hnil in Hops.
@@ -3082,8 +3093,15 @@ Proof.
            assert (Hnil2 : bytes_from data st2.(code_OpIterState_pos) = []).
            { rewrite <- Hmid. rewrite <- Hmid0. reflexivity. }
            rewrite loop_unfold. cbn beta iota.
-           unfold code_control_stack_empty. rewrite vec_is_empty_spec.
-           rewrite Hc2. cbn [bind].
+           unfold code_control_stack_empty.
+           destruct (ctrls_stack_len_total st2.(code_OpIterState_ctrls)
+             ltac:(rewrite Hsz1 in Hsz2; unfold room, stack_size in *; lia))
+             as [n2 Hctrl_len2].
+           rewrite Hctrl_len2. cbn [bind].
+           assert (Hctrl_zero : (n2 s= 0%usize) = true).
+           { apply scalar_eqb_zero_true.
+             rewrite (ctrls_stack_len_spec _ _ Hctrl_len2), Hc2. reflexivity. }
+           rewrite Hctrl_zero.
            assert (Heq : (st2.(code_OpIterState_pos) s= slice_len data) = true).
            { apply scalar_eqb_of_eq.
              pose proof (bytes_from_nil_ge data _ Hnil2) as Hge.
@@ -3281,12 +3299,12 @@ Theorem validate_body_with_complete : forall V (inst : code_OpVisitor_t V) vis
   globals_agree module C0 -> return_agree ctx C0 ->
   funcs_agree module C0 -> types_agree module C0 -> tables_agree module C0 ->
   funcs_wasm10 module -> types_wasm10 module ->
-  (List.length (vec_list ctx.(code_Context_results)) <= 1)%nat ->
+  (List.length (context_results_of ctx.(code_Context_results)) <= 1)%nat ->
   to_Z (slice_len data) <= 7654321 ->
   repr_expr (byte_list data) es [] ->
   b_e_type_checker_aux
-    (upd_label C0 [translate_typelist (vec_list ctx.(code_Context_results))]) es
-    (Tf [] (translate_typelist (vec_list ctx.(code_Context_results)))) = true ->
+    (upd_label C0 [translate_typelist (context_results_of ctx.(code_Context_results))]) es
+    (Tf [] (translate_typelist (context_results_of ctx.(code_Context_results)))) = true ->
   exists vis', code_validate_body_with inst data module ctx vis
                = Ok (Core_result_Result_Ok tt, vis').
 Proof.
@@ -3297,10 +3315,10 @@ Proof.
   { unfold scalar_gtb. rewrite Z.gtb_ltb. apply Z.ltb_ge.
     assert (Hm : to_Z limits_max_function_bytes = 7654321) by reflexivity.
     rewrite Hm. exact Hlim. }
-  rewrite Hbig. rewrite vec_deref_spec.
+  rewrite Hbig.
   destruct (start_function_total ctx.(code_Context_results)) as [st [Hsf [Hpos Hsz]]].
   rewrite Hsf. cbn [bind].
-  destruct (Inv_start C0 st ctx.(code_Context_results) Hlen1 Hsf) as [bt [Hinv Hbt]].
+  destruct (Inv_start C0 st ctx.(code_Context_results) Hsf) as [bt [Hinv Hbt]].
   (* the loop invariant at the start: the whole body is still to check, and the
      body frame is not a then-branch, so nothing is stashed behind it *)
   assert (Hok : todo_ok C0 [] [body_fview bt] [(es, None)]).
@@ -3335,12 +3353,12 @@ Corollary validate_body_complete : forall C0 module ctx data es,
   globals_agree module C0 -> return_agree ctx C0 ->
   funcs_agree module C0 -> types_agree module C0 -> tables_agree module C0 ->
   funcs_wasm10 module -> types_wasm10 module ->
-  (List.length (vec_list ctx.(code_Context_results)) <= 1)%nat ->
+  (List.length (context_results_of ctx.(code_Context_results)) <= 1)%nat ->
   to_Z (slice_len data) <= 7654321 ->
   repr_expr (byte_list data) es [] ->
   b_e_type_checker_aux
-    (upd_label C0 [translate_typelist (vec_list ctx.(code_Context_results))]) es
-    (Tf [] (translate_typelist (vec_list ctx.(code_Context_results)))) = true ->
+    (upd_label C0 [translate_typelist (context_results_of ctx.(code_Context_results))]) es
+    (Tf [] (translate_typelist (context_results_of ctx.(code_Context_results)))) = true ->
   code_validate_body data module ctx = Ok (Core_result_Result_Ok tt).
 Proof.
   intros C0 module ctx data es Hmems Hlocals Hglobals Hret

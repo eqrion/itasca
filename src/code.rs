@@ -21,14 +21,14 @@
 //! immediates of their own and are written out. Every hook has a default
 //! that does nothing, so a consumer only writes the ones it wants.
 
-use alloc::vec::Vec;
-use crate::module::Env;
 use crate::error::{OpError, VisitError};
 use crate::limits::{MAX_FUNCTION_BYTES, MAX_RESULTS};
+use crate::module::Env;
 use crate::reader::{
     read_byte, read_f32_bits, read_f64_bits, read_s32_leb, read_s64_leb, read_u32_leb,
 };
 use crate::types::{GlobalType, Mut, ValueType};
+use alloc::vec::Vec;
 
 /// Mirrors `block_type` (Wasm 1.0: single optional result).
 ///
@@ -71,9 +71,13 @@ pub struct MemArg {
 /// argument to `validate_body_with`, whose preconditions say what it has to
 /// hold.
 pub struct Context {
-    pub locals: Vec<ValueType>,
-    /// The function's result types, which `return` branches to.
-    pub results: Vec<ValueType>,
+    pub locals: LocalsStack,
+    /// The function's result type, which `return` branches to. Wasm 1.0 has
+    /// at most one, so this is `pop_types`/`push_types` at 0 or 1 elements
+    /// without their allocation, same reasoning as `BlockType`/
+    /// `pop_block_results`: `decode_func_type` already rejects more than
+    /// `MAX_RESULTS`, so every `Context` a consumer sees already fits here.
+    pub results: Option<ValueType>,
 }
 
 type Result<T> = core::result::Result<T, OpError>;
@@ -123,12 +127,262 @@ pub struct Ctrl {
     pub polymorphic_base: bool,
 }
 
+/// Most function bodies never need more than a few dozen operands or a
+/// handful of nested blocks, so a heap `Vec` starting from empty pays for a
+/// reallocation on nearly every body decoded -- the dominant cost the
+/// allocator sees across a module's worth of parallel compiles. `ValsStack`
+/// and `CtrlsStack` below hold the common case inline, in the state itself,
+/// falling back to a `Vec` only past that; SpiderMonkey's own `Vector<T, N>`
+/// is the same idea. Two concrete types rather than one generic over a const
+/// `N`, matching this crate's rule of writing the shape out rather than
+/// reaching for a combinator Aeneas may not follow.
+const VALS_INLINE_CAPACITY: usize = 32;
+
+/// The operand stack. Written to and read back only through `push`/`pop`/
+/// `get`/`len`, never indexed directly, so the inline-then-overflow split is
+/// invisible to every reader in this file.
+
+pub struct ValsStack {
+    inline: [StackType; VALS_INLINE_CAPACITY],
+    overflow: Vec<StackType>,
+    /// Number of live inline entries. Values at or above the capacity denote
+    /// a full inline array; operations normalize them back to the capacity.
+    inline_len: usize,
+}
+
+impl ValsStack {
+    #[inline(always)]
+    fn new() -> ValsStack {
+        ValsStack {
+            inline: [StackType::Bot; VALS_INLINE_CAPACITY],
+            overflow: Vec::new(),
+            inline_len: 0,
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        if self.inline_len >= VALS_INLINE_CAPACITY {
+            VALS_INLINE_CAPACITY + self.overflow.len()
+        } else {
+            self.inline_len
+        }
+    }
+
+    /// The value at `i`. Only ever called with `i < len`; same precondition
+    /// as indexing the `Vec` this replaces.
+    pub fn get(&self, i: usize) -> StackType {
+        if i < VALS_INLINE_CAPACITY {
+            self.inline[i]
+        } else {
+            self.overflow[i - VALS_INLINE_CAPACITY]
+        }
+    }
+
+    #[inline(always)]
+    fn push(&mut self, v: StackType) {
+        if self.inline_len >= VALS_INLINE_CAPACITY {
+            self.overflow.push(v);
+        } else {
+            self.inline[self.inline_len] = v;
+            if self.inline_len == VALS_INLINE_CAPACITY - 1 {
+                self.overflow = Vec::new();
+                self.inline_len = VALS_INLINE_CAPACITY;
+            } else {
+                self.inline_len += 1;
+            }
+        }
+    }
+
+    /// `None` on an empty stack; same as `Vec::pop`.
+    #[inline(always)]
+    fn pop(&mut self) -> Option<StackType> {
+        if self.inline_len >= VALS_INLINE_CAPACITY {
+            if self.overflow.len() != 0 {
+                self.overflow.pop()
+            } else {
+                self.inline_len = VALS_INLINE_CAPACITY - 1;
+                Some(self.inline[31])
+            }
+        } else {
+            if self.inline_len == 0 {
+                None
+            } else {
+                self.inline_len -= 1;
+                Some(self.inline[self.inline_len])
+            }
+        }
+    }
+}
+
+const CTRLS_INLINE_CAPACITY: usize = 16;
+
+const EMPTY_CTRL: Ctrl = Ctrl {
+    kind: LabelKind::Body,
+    block_type: BlockType::Empty,
+    value_stack_base: 0,
+    polymorphic_base: false,
+};
+
+/// The control stack. Same shape as `ValsStack`, and the same rule: only
+/// `push`/`pop`/`get`/`set`/`len`, never a direct index.
+
+pub struct CtrlsStack {
+    inline: [Ctrl; CTRLS_INLINE_CAPACITY],
+    overflow: Vec<Ctrl>,
+    inline_len: usize,
+}
+
+impl CtrlsStack {
+    #[inline(always)]
+    fn new() -> CtrlsStack {
+        CtrlsStack {
+            inline: [EMPTY_CTRL; CTRLS_INLINE_CAPACITY],
+            overflow: Vec::new(),
+            inline_len: 0,
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        if self.inline_len >= CTRLS_INLINE_CAPACITY {
+            CTRLS_INLINE_CAPACITY + self.overflow.len()
+        } else {
+            self.inline_len
+        }
+    }
+
+    pub fn get(&self, i: usize) -> Ctrl {
+        if i < CTRLS_INLINE_CAPACITY {
+            self.inline[i]
+        } else {
+            self.overflow[i - CTRLS_INLINE_CAPACITY]
+        }
+    }
+
+    /// Overwrite the frame at `i` in place. `read_else` and `mark_unreachable`
+    /// flip one field of the top frame; since `Ctrl` is `Copy`, that is a
+    /// get, a field write, and a `set` rather than a mutable borrow through
+    /// the inline/overflow split.
+    fn set(&mut self, i: usize, c: Ctrl) {
+        if i < CTRLS_INLINE_CAPACITY {
+            self.inline[i] = c;
+        } else {
+            self.overflow[i - CTRLS_INLINE_CAPACITY] = c;
+        }
+    }
+
+    #[inline(always)]
+    fn push(&mut self, c: Ctrl) {
+        if self.inline_len >= CTRLS_INLINE_CAPACITY {
+            self.overflow.push(c);
+        } else {
+            self.inline[self.inline_len] = c;
+            if self.inline_len == CTRLS_INLINE_CAPACITY - 1 {
+                self.overflow = Vec::new();
+                self.inline_len = CTRLS_INLINE_CAPACITY;
+            } else {
+                self.inline_len += 1;
+            }
+        }
+    }
+
+    #[inline(always)]
+    fn pop(&mut self) -> Option<Ctrl> {
+        if self.inline_len >= CTRLS_INLINE_CAPACITY {
+            if self.overflow.len() != 0 {
+                self.overflow.pop()
+            } else {
+                self.inline_len = CTRLS_INLINE_CAPACITY - 1;
+                Some(self.inline[15])
+            }
+        } else {
+            if self.inline_len == 0 {
+                None
+            } else {
+                self.inline_len -= 1;
+                Some(self.inline[self.inline_len])
+            }
+        }
+    }
+}
+
+const LOCALS_INLINE_CAPACITY: usize = 32;
+
+/// A function's parameters followed by its declared locals. The common case
+/// stays inline and shares the same finite length representation as the value
+/// stack; only the element type and absence of pop differ.
+pub struct LocalsStack {
+    inline: [ValueType; LOCALS_INLINE_CAPACITY],
+    overflow: Vec<ValueType>,
+    inline_len: usize,
+}
+
+impl LocalsStack {
+    pub fn new() -> LocalsStack {
+        LocalsStack {
+            inline: [ValueType::I32; LOCALS_INLINE_CAPACITY],
+            overflow: Vec::new(),
+            inline_len: 0,
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        if self.inline_len >= LOCALS_INLINE_CAPACITY {
+            LOCALS_INLINE_CAPACITY + self.overflow.len()
+        } else {
+            self.inline_len
+        }
+    }
+
+    pub fn get(&self, i: usize) -> ValueType {
+        if i < LOCALS_INLINE_CAPACITY {
+            self.inline[i]
+        } else {
+            self.overflow[i - LOCALS_INLINE_CAPACITY]
+        }
+    }
+
+    fn get_checked(&self, i: usize) -> Option<ValueType> {
+        if self.inline_len >= LOCALS_INLINE_CAPACITY {
+            if i < LOCALS_INLINE_CAPACITY {
+                Some(self.inline[i])
+            } else {
+                let j = i - LOCALS_INLINE_CAPACITY;
+                if j >= self.overflow.len() {
+                    None
+                } else {
+                    Some(self.overflow[j])
+                }
+            }
+        } else {
+            if i >= self.inline_len {
+                None
+            } else {
+                Some(self.inline[i])
+            }
+        }
+    }
+
+    pub fn push(&mut self, v: ValueType) {
+        if self.inline_len >= LOCALS_INLINE_CAPACITY {
+            self.overflow.push(v);
+        } else {
+            self.inline[self.inline_len] = v;
+            if self.inline_len == LOCALS_INLINE_CAPACITY - 1 {
+                self.overflow = Vec::new();
+                self.inline_len = LOCALS_INLINE_CAPACITY;
+            } else {
+                self.inline_len += 1;
+            }
+        }
+    }
+}
+
 /// The running state of a streaming operator validator: the operand stack,
 /// the control stack, and the byte cursor. The cursor is a plain index
 /// rather than a borrowed slice, so it can be threaded through calls freely.
 pub struct OpIterState {
-    pub vals: Vec<StackType>,
-    pub ctrls: Vec<Ctrl>,
+    pub vals: ValsStack,
+    pub ctrls: CtrlsStack,
     pub pos: usize,
 }
 
@@ -352,7 +606,7 @@ fn cur_base(st: &OpIterState) -> usize {
     if n == 0 {
         return 0;
     }
-    st.ctrls[n - 1].value_stack_base
+    st.ctrls.get(n - 1).value_stack_base
 }
 
 fn cur_polymorphic(st: &OpIterState) -> bool {
@@ -360,7 +614,7 @@ fn cur_polymorphic(st: &OpIterState) -> bool {
     if n == 0 {
         return false;
     }
-    st.ctrls[n - 1].polymorphic_base
+    st.ctrls.get(n - 1).polymorphic_base
 }
 
 fn push_val(st: &mut OpIterState, t: StackType) {
@@ -422,15 +676,24 @@ fn push_types(st: &mut OpIterState, types: &[ValueType]) {
     }
 }
 
-/// Result types of a block type. Wasm 1.0 allows at most one.
-fn block_results(bt: &BlockType) -> Vec<ValueType> {
+/// Result types of a block type. Wasm 1.0 allows at most one, so this is
+/// `pop_types`/`push_types` at 0 or 1 elements, without their `Vec` detour:
+/// the single case is only ever `Copy`-pushed or `Copy`-popped, never
+/// collected, so no allocation is needed to shuttle it between them.
+fn pop_block_results(st: &mut OpIterState, bt: &BlockType) -> Result<()> {
     match bt {
-        BlockType::Empty => Vec::new(),
+        BlockType::Empty => Ok(()),
         BlockType::Value(vt) => {
-            let mut v = Vec::new();
-            v.push(*vt);
-            v
+            pop_with_type(st, *vt)?;
+            Ok(())
         }
+    }
+}
+
+fn push_block_results(st: &mut OpIterState, bt: &BlockType) {
+    match bt {
+        BlockType::Empty => {}
+        BlockType::Value(vt) => push_val(st, StackType::Val(*vt)),
     }
 }
 
@@ -446,10 +709,6 @@ fn branch_target_bt(c: &Ctrl) -> BlockType {
         LabelKind::Loop => BlockType::Empty,
         _ => c.block_type,
     }
-}
-
-fn branch_target_types(c: &Ctrl) -> Vec<ValueType> {
-    block_results(&branch_target_bt(c))
 }
 
 fn push_ctrl(st: &mut OpIterState, kind: LabelKind, bt: BlockType) {
@@ -475,27 +734,29 @@ fn mark_unreachable(st: &mut OpIterState) {
     if n == 0 {
         return;
     }
-    st.ctrls[n - 1].polymorphic_base = true;
+    let mut top = st.ctrls.get(n - 1);
+    top.polymorphic_base = true;
+    st.ctrls.set(n - 1, top);
 }
 
 // --- Driving one body ---
 
-fn start_function(results: &[ValueType]) -> OpIterState {
+fn start_function(results: Option<ValueType>) -> OpIterState {
     let mut st = OpIterState {
-        vals: Vec::new(),
-        ctrls: Vec::new(),
+        vals: ValsStack::new(),
+        ctrls: CtrlsStack::new(),
         pos: 0,
     };
-    let mut bt = BlockType::Empty;
-    if results.len() == 1 {
-        bt = BlockType::Value(results[0]);
-    }
+    let bt = match results {
+        None => BlockType::Empty,
+        Some(vt) => BlockType::Value(vt),
+    };
     push_ctrl(&mut st, LabelKind::Body, bt);
     st
 }
 
 fn control_stack_empty(st: &OpIterState) -> bool {
-    st.ctrls.is_empty()
+    st.ctrls.len() == 0
 }
 
 /// Read the next opcode and advance past it.
@@ -608,10 +869,10 @@ fn read_select(st: &mut OpIterState) -> Result<StackType> {
 /// The declared type of local `idx`.
 fn local_type(ctx: &Context, idx: u32) -> Result<ValueType> {
     let i = idx as usize;
-    if i >= ctx.locals.len() {
-        return Err(OpError::UnknownLocal);
+    match ctx.locals.get_checked(i) {
+        Some(vt) => Ok(vt),
+        None => Err(OpError::UnknownLocal),
     }
-    Ok(ctx.locals[i])
 }
 
 /// The prologue the three local operators share: read the index and look its
@@ -758,17 +1019,18 @@ fn read_else(st: &mut OpIterState) -> Result<BlockType> {
     if n == 0 {
         return Err(OpError::StackMismatch);
     }
-    let frame = st.ctrls[n - 1];
+    let frame = st.ctrls.get(n - 1);
     if !is_then(frame.kind) {
         return Err(OpError::StackMismatch);
     }
-    let results = block_results(&frame.block_type);
-    pop_types(st, &results)?;
+    pop_block_results(st, &frame.block_type)?;
     if st.vals.len() != frame.value_stack_base {
         return Err(OpError::StackMismatch);
     }
-    st.ctrls[n - 1].kind = LabelKind::Else;
-    st.ctrls[n - 1].polymorphic_base = false;
+    let mut top = frame;
+    top.kind = LabelKind::Else;
+    top.polymorphic_base = false;
+    st.ctrls.set(n - 1, top);
     Ok(frame.block_type)
 }
 
@@ -784,17 +1046,20 @@ fn read_end(st: &mut OpIterState) -> Result<(LabelKind, BlockType)> {
     if n == 0 {
         return Err(OpError::StackMismatch);
     }
-    let frame = st.ctrls[n - 1];
-    let results = block_results(&frame.block_type);
-    if is_then(frame.kind) && !results.is_empty() {
+    let frame = st.ctrls.get(n - 1);
+    let is_empty_bt = match frame.block_type {
+        BlockType::Empty => true,
+        BlockType::Value(_) => false,
+    };
+    if is_then(frame.kind) && !is_empty_bt {
         return Err(OpError::StackMismatch);
     }
-    pop_types(st, &results)?;
+    pop_block_results(st, &frame.block_type)?;
     if st.vals.len() != frame.value_stack_base {
         return Err(OpError::StackMismatch);
     }
     let _ = st.ctrls.pop();
-    push_types(st, &results);
+    push_block_results(st, &frame.block_type);
     Ok((frame.kind, frame.block_type))
 }
 
@@ -812,15 +1077,15 @@ fn read_label(st: &mut OpIterState, data: &[u8]) -> Result<(u32, Ctrl)> {
     if d >= n {
         return Err(OpError::UnknownLabel);
     }
-    Ok((depth, st.ctrls[n - 1 - d]))
+    Ok((depth, st.ctrls.get(n - 1 - d)))
 }
 
 /// Unconditional branch: the target's types must be available, and the rest
 /// of the frame becomes unreachable.
 fn read_br(st: &mut OpIterState, data: &[u8]) -> Result<(u32, BlockType)> {
     let (depth, target) = read_label(st, data)?;
-    let types = branch_target_types(&target);
-    pop_types(st, &types)?;
+    let bt = branch_target_bt(&target);
+    pop_block_results(st, &bt)?;
     mark_unreachable(st);
     Ok((depth, target.block_type))
 }
@@ -829,7 +1094,11 @@ fn read_br(st: &mut OpIterState, data: &[u8]) -> Result<(u32, BlockType)> {
 /// frame becomes unreachable, as for `br`. The result list comes from the
 /// context rather than from a control frame, which is the only difference.
 fn read_return(st: &mut OpIterState, ctx: &Context) -> Result<()> {
-    pop_types(st, &ctx.results)?;
+    let bt = match ctx.results {
+        None => BlockType::Empty,
+        Some(vt) => BlockType::Value(vt),
+    };
+    pop_block_results(st, &bt)?;
     mark_unreachable(st);
     Ok(())
 }
@@ -839,10 +1108,10 @@ fn read_return(st: &mut OpIterState, ctx: &Context) -> Result<()> {
 /// continues with them.
 fn read_br_if(st: &mut OpIterState, data: &[u8]) -> Result<(u32, BlockType)> {
     let (depth, target) = read_label(st, data)?;
-    let types = branch_target_types(&target);
+    let bt = branch_target_bt(&target);
     pop_with_type(st, ValueType::I32)?;
-    pop_types(st, &types)?;
-    push_types(st, &types);
+    pop_block_results(st, &bt)?;
+    push_block_results(st, &bt);
     Ok((depth, target.block_type))
 }
 
@@ -909,8 +1178,7 @@ fn read_br_table<V: OpVisitor>(
     let (default, target) = read_label(st, data)?;
     let common = merge_target(expect, branch_target_bt(&target))?;
     pop_with_type(st, ValueType::I32)?;
-    let types = block_results(&common);
-    pop_types(st, &types)?;
+    pop_block_results(st, &common)?;
     mark_unreachable(st);
     Ok((default, common))
 }
@@ -961,11 +1229,7 @@ fn read_call(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
 /// table is table 0, so the table index is the reserved zero byte. The table
 /// still has to exist, and its element type is `funcref`, which is the only
 /// one Wasm 1.0 has.
-fn read_call_indirect(
-    st: &mut OpIterState,
-    data: &[u8],
-    env: &Env,
-) -> Result<u32> {
+fn read_call_indirect(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
     let idx = take_index(st, data)?;
     read_reserved_zero(st, data)?;
     if env.table_types.is_empty() {
@@ -1517,11 +1781,7 @@ fn step_memory<V: OpVisitor>(
 /// The numeric operators, dispatched through the opcode table rather than
 /// through a branch each. `visit_numeric` is the one place that turns an opcode
 /// into a hook, so it is where a wrong row would show up.
-fn step_numeric<V: OpVisitor>(
-    st: &mut OpIterState,
-    opcode: u8,
-    v: &mut V,
-) -> Result<()> {
+fn step_numeric<V: OpVisitor>(st: &mut OpIterState, opcode: u8, v: &mut V) -> Result<()> {
     match convert_types(opcode) {
         Some((from, to)) => {
             read_conversion(st, from, to)?;
@@ -1573,7 +1833,7 @@ pub fn validate_body_with<V: OpVisitor>(
     if data.len() > MAX_FUNCTION_BYTES {
         return Err(OpError::BodyTooLarge);
     }
-    let mut st = start_function(&ctx.results);
+    let mut st = start_function(ctx.results);
     loop {
         if control_stack_empty(&st) {
             // The body's `end` closed the outermost frame. Nothing may follow.
@@ -1856,12 +2116,7 @@ pub trait OpVisitor {
     /// `_kind` says what closed: the body, a block, a loop, or one side of an
     /// `if`. A bare `if` closes as `Then`, so a consumer that needs the elided
     /// empty `else` knows to supply it.
-    fn on_end(
-        &mut self,
-        _st: &OpIterState,
-        _kind: LabelKind,
-        _bt: BlockType,
-    ) -> VisitResult {
+    fn on_end(&mut self, _st: &OpIterState, _kind: LabelKind, _bt: BlockType) -> VisitResult {
         Ok(())
     }
 
@@ -1884,12 +2139,7 @@ pub trait OpVisitor {
 
     /// The end of a `br_table`: its default label, and the target type every
     /// label in it agrees on.
-    fn on_br_table(
-        &mut self,
-        _st: &OpIterState,
-        _default: u32,
-        _common: BlockType,
-    ) -> VisitResult {
+    fn on_br_table(&mut self, _st: &OpIterState, _default: u32, _common: BlockType) -> VisitResult {
         Ok(())
     }
 
@@ -2115,8 +2365,8 @@ mod tests {
         body.push(OP_END);
         assert_eq!(body.len(), MAX_FUNCTION_BYTES);
         let ctx = Context {
-            locals: Vec::new(),
-            results: Vec::new(),
+            locals: LocalsStack::new(),
+            results: None,
         };
         assert!(validate_body(&body, &Env::new(), &ctx).is_ok());
     }
@@ -2126,8 +2376,8 @@ mod tests {
         let mut body = vec![OP_NOP; MAX_FUNCTION_BYTES];
         body.push(OP_END);
         let ctx = Context {
-            locals: Vec::new(),
-            results: Vec::new(),
+            locals: LocalsStack::new(),
+            results: None,
         };
         assert!(matches!(
             validate_body(&body, &Env::new(), &ctx),
@@ -2141,8 +2391,8 @@ mod tests {
         // the check cannot be reached only on otherwise-valid input.
         let body = vec![OP_I32_ADD; MAX_FUNCTION_BYTES + 1];
         let ctx = Context {
-            locals: Vec::new(),
-            results: Vec::new(),
+            locals: LocalsStack::new(),
+            results: None,
         };
         assert!(matches!(
             validate_body(&body, &Env::new(), &ctx),

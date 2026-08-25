@@ -53,31 +53,41 @@ Lemma start_function_total : forall results,
              /\ stack_size st = 1%nat.
 Proof.
   intros results. unfold code_start_function.
-  assert (Hbt : exists bt,
-            (if slice_len results s= 1%usize
-             then (vt <- slice_index_usize results 0%usize;
-                   Ok (Code_BlockType_Value vt))
-             else Ok Code_BlockType_Empty) = Ok bt).
-  { destruct (slice_len results s= 1%usize) eqn:H1; [|eexists; reflexivity].
-    apply scalar_eqb_true in H1. rewrite slice_len_spec in H1.
-    assert (H1' : to_Z 1%usize = 1) by reflexivity.
-    destruct (slice_index_usize_ok results 0%usize) as [vt Hidx].
-    { assert (H0 : to_Z 0%usize = 0) by reflexivity. lia. }
-    rewrite Hidx. cbn [bind]. eexists. reflexivity. }
-  destruct Hbt as [bt Hbt]. rewrite Hbt. cbn [bind].
-  destruct (push_ctrl_total
-              {| code_OpIterState_vals := alloc_vec_Vec_new code_StackType_t;
-                 code_OpIterState_ctrls := alloc_vec_Vec_new code_Ctrl_t;
-                 code_OpIterState_pos := 0%usize |}
-              Code_LabelKind_Body bt) as [st Hpc].
-  { cbn [code_OpIterState_ctrls]. pose proof max_function_bytes_fits. cbn. lia. }
-  exists st. split; [exact Hpc|].
-  destruct (push_ctrl_spec _ _ _ st Hpc) as [Hv Hc].
-  cbn [code_OpIterState_vals code_OpIterState_ctrls] in Hv, Hc.
-  split.
-  - pose proof (push_ctrl_pos _ _ _ st Hpc) as Hp. unfold pos_of in Hp.
-    cbn [code_OpIterState_pos] in Hp. rewrite Hp. reflexivity.
-  - unfold stack_size. rewrite Hv. rewrite Hc. reflexivity.
+  destruct code_ValsStack_new as [vs|e] eqn:Hvs;
+    cbn [bind]; [|discriminate].
+  destruct code_CtrlsStack_new as [cs|e] eqn:Hcs;
+    cbn [bind]; [|discriminate].
+  pose proof (vals_stack_new_spec vs Hvs) as Hvs_empty.
+  pose proof (ctrls_stack_new_spec cs Hcs) as Hcs_empty.
+  destruct results as [vt|]; cbn [bind].
+  all:
+    let bt := match goal with
+              | |- context [Code_BlockType_Value ?vt] =>
+                  constr:(Code_BlockType_Value vt)
+              | _ => constr:(Code_BlockType_Empty)
+              end in
+    assert (Hvmax :
+      Z.of_nat (List.length (vals_list vs)) <= usize_max)
+      by (rewrite Hvs_empty; cbn; pose proof max_function_bytes_fits; lia);
+    assert (Hcmax :
+      Z.of_nat (List.length (ctrls_list cs)) + 1 <= usize_max)
+      by (rewrite Hcs_empty; cbn; pose proof max_function_bytes_fits; lia);
+    destruct (push_ctrl_total
+                {| code_OpIterState_vals := vs;
+                   code_OpIterState_ctrls := cs;
+                   code_OpIterState_pos := 0%usize |}
+                Code_LabelKind_Body bt Hvmax Hcmax) as [st Hpc];
+    exists st; split; [exact Hpc|].
+  all:
+    destruct (push_ctrl_spec _ _ _ st Hpc) as [base [Hbase [Hv Hc]]];
+    cbn [code_OpIterState_vals code_OpIterState_ctrls] in Hv, Hc;
+    split.
+  all: try (pose proof (push_ctrl_pos _ _ _ st Hpc) as Hp;
+            unfold pos_of in Hp;
+            cbn [code_OpIterState_pos] in Hp;
+            rewrite Hp; reflexivity).
+  all: unfold stack_size; rewrite Hv; rewrite Hc;
+       rewrite Hvs_empty; rewrite Hcs_empty; reflexivity.
 Qed.
 
 (* ================================================================== *)
@@ -99,15 +109,30 @@ Lemma validate_body_loop_total : forall m V (inst : code_OpVisitor_t V) v
             = Ok r.
 Proof.
   induction m as [|m IH];
-    intros V inst v data module locals results st Hvt Hmeas Hbudget Hlim;
+    intros V inst v data module locals results st Hvt Hmeas Hbudget Hlim.
+  all:
+    assert (Hfit : Z.of_nat (stack_size st) <= usize_max)
+      by (pose proof max_function_bytes_fits; lia);
+    assert (Hcfit :
+      Z.of_nat (List.length (ctrls_list st.(code_OpIterState_ctrls)))
+        <= usize_max)
+      by (unfold stack_size in Hfit; rewrite Nat2Z.inj_add in Hfit; lia);
+    destruct (ctrls_stack_len_total st.(code_OpIterState_ctrls) Hcfit)
+      as [n Hlen];
+    pose proof (ctrls_stack_len_spec _ _ Hlen) as Hn;
     unfold code_validate_body_with_loop; rewrite loop_unfold; cbn beta iota;
-    unfold code_control_stack_empty; rewrite vec_is_empty_spec; cbn [bind];
-    destruct (vec_list st.(code_OpIterState_ctrls)) eqn:Hctrls;
-    [ destruct (st.(code_OpIterState_pos) s= slice_len data);
-      eexists; reflexivity
-    | | destruct (st.(code_OpIterState_pos) s= slice_len data);
-        eexists; reflexivity
-    | ].
+    unfold code_control_stack_empty; rewrite Hlen; cbn [bind];
+    destruct (ctrls_list st.(code_OpIterState_ctrls)) eqn:Hctrls.
+  all: try (
+    assert (Hz : (n s= 0%usize) = true)
+      by (apply scalar_eqb_zero_true; rewrite Hn; try rewrite Hctrls; reflexivity);
+    rewrite Hz;
+    destruct (st.(code_OpIterState_pos) s= slice_len data);
+    eexists; reflexivity).
+  all:
+    assert (Hz : (n s= 0%usize) = false)
+      by (apply scalar_eqb_zero_false; rewrite Hn; try rewrite Hctrls; cbn; lia);
+    rewrite Hz.
   - (* the budget is spent, so the cursor is at or past the end *)
     assert (Hend : Z.of_nat (List.length (vec_list data))
                    <= to_Z st.(code_OpIterState_pos)).
@@ -160,7 +185,6 @@ Proof.
   destruct (slice_len data s> limits_max_function_bytes) eqn:Hbig;
     [eexists; reflexivity|].
   apply scalar_gtb_false in Hbig. rewrite max_function_bytes_val in Hbig.
-  rewrite vec_deref_spec.
   destruct (start_function_total ctx.(code_Context_results))
     as [st [Hsf [Hpos Hsz]]].
   rewrite Hsf. cbn [bind].

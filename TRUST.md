@@ -658,25 +658,39 @@ extraction is committed, so it can drift from `src/`; `just extract` regenerates
 it and the result should differ only in `Source:` line-number comments.
 
 **Aeneas's `loop`, and its model of the Rust standard library.** `just trust`
-prints the axiom count per theorem. The strongest results reach 52, in four
+prints the axiom count per theorem. The strongest results reach 60. The rise
+from 52 is the cost of using fixed Rust arrays for the three inline stacks:
+Aeneas represents an array as a length-indexed list, but leaves construction,
+indexing and update as primitive operations whose intended list semantics the
+project states explicitly. This is the same trust pattern already used for
+`Vec` and slices, rather than a new kind of kernel bypass.
+
+For the strongest completeness results, the 60 assumptions fall into four
 groups:
 
-- **17** in `theories/Aeneas_Specs.v`. These describe what Rust operations do:
+- **20** in `theories/Aeneas_Specs.v`. These describe what Rust operations do:
   what `Vec::pop` returns, what indexing a slice gives you, what a sub-slice
-  contains, what two of our derived `PartialEq` impls do, and `loop_unfold`.
+  contains, what array indexing and update do, what two of our derived
+  `PartialEq` impls do, and `loop_unfold`. Some soundness results reach 19
+  rather than all 20.
 - **10** of the 13 in `theories/Itasca_FunsExternal.v`, which is hand-written
   despite the name: what Aeneas emits for library functions it does not
   translate, plus `loop` itself. The other three are defined and unreached.
-- **21** from Aeneas's own `Primitives.v`. These are the operations the first
+- **25** from Aeneas's own `Primitives.v`. These are the operations the first
   group constrains rather than descriptions of them: `slice_index_usize`,
-  `slice_len`, `alloc_vec_Vec_index`, the `core_slice_index_*` family, and the
+  `slice_len`, `array_repeat`, `array_index_usize`, the two array update
+  operations, `alloc_vec_Vec_index`, the `core_slice_index_*` family, and the
   six `usize`/`isize` bound constants. Trusting these is trusting that Aeneas's
-  encoding of Rust's scalar and slice primitives is the right one, which is a
-  distinct assumption from trusting that it translated our functions faithfully.
-- **4** classical axioms (`classic`, two `ClassicalDedekindReals` decidability
-  axioms, `functional_extensionality_dep`), inherited from WasmCert's use of the
-  CompCert floating-point library. They appear only in results that reach
-  WasmCert: `validate_module_no_panic` reaches 48 and none of the four.
+  encoding of Rust's scalar, collection and slice primitives is the right one,
+  which is a distinct assumption from trusting that it translated our functions
+  faithfully.
+- **5** logical/classical axioms: `classic`, two
+  `ClassicalDedekindReals` decidability axioms,
+  `functional_extensionality_dep`, and `proof_irrelevance`. The first four are
+  inherited from WasmCert's use of the CompCert floating-point library;
+  `proof_irrelevance` lets the proofs identify two arrays with equal element
+  lists despite their length proofs. `validate_module_no_panic` reaches 56 and
+  uses only `proof_irrelevance` from this group.
 
 `loop` and `loop_unfold` are the load-bearing pair. Every claim of termination
 is relative to them.

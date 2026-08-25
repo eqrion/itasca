@@ -136,15 +136,17 @@ Lemma pop_stack_type_pos : forall st r st',
   code_pop_stack_type st = Ok (r, st') -> pos_of st' = pos_of st.
 Proof.
   intros st r st' H. unfold code_pop_stack_type in H.
-  destruct (code_cur_base st) as [base|] eqn:Hcb; cbn [bind] in H;
-    [|discriminate].
-  destruct (alloc_vec_Vec_len st.(code_OpIterState_vals) s= base) eqn:Hb.
-  - destruct (code_cur_polymorphic st) as [pb|] eqn:Hcp; cbn [bind] in H;
-      [|discriminate].
+  destruct (code_ValsStack_len st.(code_OpIterState_vals)) as [n|e] eqn:Hlen
+    in H; cbn [bind] in H; [|inversion H].
+  destruct (code_cur_base st) as [base|e] eqn:Hcb in H;
+    cbn [bind] in H; [|inversion H].
+  destruct (n s= base) eqn:Hb.
+  - destruct (code_cur_polymorphic st) as [pb|e] eqn:Hcp in H;
+      cbn [bind] in H; [|inversion H].
     destruct pb; injection H as _ <-; reflexivity.
-  - destruct (alloc_vec_Vec_pop alloc_alloc_Global
-                st.(code_OpIterState_vals)) as [[o v]|] eqn:Hpop;
-      cbn [bind] in H; [|discriminate].
+  - destruct (code_ValsStack_pop
+                st.(code_OpIterState_vals)) as [[o v]|e] eqn:Hpop in H;
+      cbn [bind] in H; [|inversion H].
     destruct o; injection H as _ <-; reflexivity.
 Qed.
 
@@ -168,20 +170,49 @@ Proof.
     injection H as _ <-. exact Hp0.
 Qed.
 
+Lemma pop_block_results_pos : forall st bt r st',
+  code_pop_block_results st bt = Ok (r, st') -> pos_of st' = pos_of st.
+Proof.
+  intros st bt r st' H. destruct bt as [|vt].
+  - cbn [code_pop_block_results] in H. injection H as _ <-. reflexivity.
+  - unfold code_pop_block_results in H.
+    unfold bind in H.
+    destruct (code_pop_with_type st vt) as [[r0 st0]|e] eqn:Hpop.
+    2: { change (Fail_ e = Ok (r, st')) in H. congruence. }
+    cbn in H.
+    pose proof (pop_with_type_pos st vt r0 st0 Hpop) as Hp.
+    destruct r0 as [u|e0].
+    + rewrite branch_ok in H. cbn [bind] in H. destruct u.
+      all: unfold pos_of in *; congruence.
+    + rewrite branch_err in H. cbn [bind] in H.
+      rewrite from_residual_err in H. cbn [bind] in H.
+      unfold pos_of in *. congruence.
+Qed.
+
 Lemma push_val_pos : forall st t st',
   code_push_val st t = Ok st' -> pos_of st' = pos_of st.
 Proof.
   intros st t st' H. unfold code_push_val in H.
-  destruct (alloc_vec_Vec_push st.(code_OpIterState_vals) t) as [v|] eqn:Hpush;
+  destruct (code_ValsStack_push st.(code_OpIterState_vals) t) as [v|] eqn:Hpush;
     cbn [bind] in H; [|discriminate].
   injection H as <-. reflexivity.
+Qed.
+
+Lemma push_block_results_pos : forall st bt st',
+  code_push_block_results st bt = Ok st' -> pos_of st' = pos_of st.
+Proof.
+  intros st bt st' H. destruct bt as [|vt].
+  - injection H as <-. reflexivity.
+  - apply (push_val_pos st (Code_StackType_Val vt) st' H).
 Qed.
 
 Lemma push_ctrl_pos : forall st kind bt st',
   code_push_ctrl st kind bt = Ok st' -> pos_of st' = pos_of st.
 Proof.
   intros st kind bt st' H. unfold code_push_ctrl in H.
-  destruct (alloc_vec_Vec_push st.(code_OpIterState_ctrls) _) as [v|] eqn:Hpush;
+  destruct (code_ValsStack_len st.(code_OpIterState_vals)) as [base|] eqn:Hlen;
+    cbn [bind] in H; [|discriminate].
+  destruct (code_CtrlsStack_push st.(code_OpIterState_ctrls) _) as [v|] eqn:Hpush;
     cbn [bind] in H; [|discriminate].
   injection H as <-. reflexivity.
 Qed.
@@ -194,36 +225,40 @@ Qed.
     stack's length; [pos] is copied verbatim in the [Cont] branch and read from
     the state in the [Done] branch. *)
 Lemma mark_unreachable_loop_pos : forall n st base vals ctrls pos,
-  (List.length (vec_list st.(code_OpIterState_vals)) <= n)%nat ->
+  (List.length (vals_list st.(code_OpIterState_vals)) <= n)%nat ->
   code_mark_unreachable_loop st base = Ok (vals, ctrls, pos) ->
   pos = pos_of st.
 Proof.
   induction n as [|n IH]; intros st base vals ctrls pos Hlen H;
     unfold code_mark_unreachable_loop in H; rewrite loop_unfold in H;
-    cbn beta iota in H;
-    destruct (alloc_vec_Vec_len st.(code_OpIterState_vals) s<= base) eqn:Hle.
+    cbn beta iota in H.
+  all: destruct (code_ValsStack_len st.(code_OpIterState_vals)) as [size|e]
+      eqn:Hslen in H; cbn [bind] in H.
+  2,4: inversion H.
+  all: destruct (size s<= base) eqn:Hle in H.
   - injection H as _ _ <-. reflexivity.
   - (* n = 0 forces an empty operand stack, so the pop branch is unreachable *)
     apply scalar_leb_false in Hle.
-    destruct (alloc_vec_Vec_pop alloc_alloc_Global
-                st.(code_OpIterState_vals)) as [[o v]|] eqn:Hpop;
-      cbn [bind] in H; [|discriminate].
+    destruct (code_ValsStack_pop st.(code_OpIterState_vals)) as [[o v]|e]
+      eqn:Hpop in H; cbn [bind] in H; [|inversion H].
     exfalso.
-    assert (Hnil : vec_list st.(code_OpIterState_vals) = []).
-    { destruct (vec_list st.(code_OpIterState_vals)); [reflexivity|].
+    assert (Hnil : vals_list st.(code_OpIterState_vals) = []).
+    { destruct (vals_list st.(code_OpIterState_vals)); [reflexivity|].
       simpl in Hlen. lia. }
-    rewrite vec_len_spec, Hnil in Hle. simpl in Hle.
+    pose proof (vals_stack_len_spec _ size Hslen) as Hsize.
+    rewrite Hnil in Hsize. cbn in Hsize. rewrite Hsize in Hle.
     pose proof (usize_nonneg base). lia.
   - injection H as _ _ <-. reflexivity.
-  - destruct (alloc_vec_Vec_pop alloc_alloc_Global
-                st.(code_OpIterState_vals)) as [[o v]|] eqn:Hpop;
-      cbn [bind] in H; [|discriminate].
+  - destruct (code_ValsStack_pop st.(code_OpIterState_vals)) as [[o v]|e]
+      eqn:Hpop in H; cbn [bind] in H; [|inversion H].
     (* The recursive call is on a state whose operand stack is one shorter. *)
     apply scalar_leb_false in Hle.
-    assert (Hne : vec_list st.(code_OpIterState_vals) <> []).
-    { intros Hnil. rewrite vec_len_spec, Hnil in Hle. simpl in Hle.
+    assert (Hne : vals_list st.(code_OpIterState_vals) <> []).
+    { intros Hnil.
+      pose proof (vals_stack_len_spec _ size Hslen) as Hsize.
+      rewrite Hnil in Hsize. cbn in Hsize. rewrite Hsize in Hle.
       pose proof (usize_nonneg base). lia. }
-    pose proof (vec_pop_len _ o v Hpop Hne) as Hlt.
+    pose proof (vals_stack_pop_len _ o v Hpop Hne) as Hlt.
     (* Name the shortened state: its [pos] is [st]'s by construction, so the IH
        transports through. Unification cannot guess it from the goal. *)
     set (st' := {| code_OpIterState_vals := v;
@@ -239,22 +274,25 @@ Lemma mark_unreachable_pos : forall st st',
   code_mark_unreachable st = Ok st' -> pos_of st' = pos_of st.
 Proof.
   intros st st' H. unfold code_mark_unreachable in H.
-  destruct (code_cur_base st) as [base|] eqn:Hcb; cbn [bind] in H;
-    [|discriminate].
-  destruct (code_mark_unreachable_loop st base) as [[[v v1] i]|] eqn:Hloop;
-    cbn [bind] in H; [|discriminate].
+  destruct (code_cur_base st) as [base|e] eqn:Hcb in H; cbn [bind] in H;
+    [|inversion H].
+  destruct (code_mark_unreachable_loop st base) as [[[v v1] i]|e]
+    eqn:Hloop in H; cbn [bind] in H; [|inversion H].
   pose proof (mark_unreachable_loop_pos
-                (List.length (vec_list st.(code_OpIterState_vals)))
+                (List.length (vals_list st.(code_OpIterState_vals)))
                 st base v v1 i (Nat.le_refl _) Hloop) as Hi.
-  destruct (alloc_vec_Vec_len v1 s= 0%usize);
+  destruct (code_CtrlsStack_len v1) as [n|e] eqn:Hlen in H;
+    cbn [bind] in H; [|inversion H].
+  destruct (n s= 0%usize) eqn:Hempty in H;
     [injection H as <-; exact Hi | ].
   (* The else branch flips the top frame's polymorphic flag in place, via
      index_mut, and rebuilds the record with pos := i. *)
-  destruct (usize_sub (alloc_vec_Vec_len v1) 1%usize) as [i1|] eqn:Hsub;
-    cbn [bind] in H; [|discriminate].
-  destruct (alloc_vec_Vec_index_mut
-              (core_slice_index_SliceIndexUsizeSliceInst code_Ctrl_t) v1 i1)
-    as [[c back]|] eqn:Hidx; cbn [bind] in H; [|discriminate].
+  destruct (usize_sub n 1%usize) as [i1|e] eqn:Hsub in H;
+    cbn [bind] in H; [|inversion H].
+  destruct (code_CtrlsStack_get v1 i1) as [c|e] eqn:Hget in H;
+    cbn [bind] in H; [|inversion H].
+  destruct (code_CtrlsStack_set v1 i1 _) as [cs|e] eqn:Hset in H;
+    cbn [bind] in H; [|inversion H].
   injection H as <-. exact Hi.
 Qed.
 
@@ -275,6 +313,7 @@ Proof.
   - injection H as _ <-. reflexivity.
   - apply scalar_eqb_false in Hz.
     assert (H0 : to_Z 0%usize = 0) by reflexivity.
+    rewrite H0 in Hz.
     destruct (usize_sub_1_ok i) as [i2 [Hsub Hi2]];
       [pose proof (usize_nonneg i); lia|].
     rewrite Hsub in H. cbn [bind] in H.
@@ -305,26 +344,27 @@ Qed.
     index, in the state [pop_types] hands back. *)
 Lemma pop_stack_type_ctrls : forall st r st',
   code_pop_stack_type st = Ok (r, st') ->
-  vec_list st'.(code_OpIterState_ctrls)
-    = vec_list st.(code_OpIterState_ctrls).
+  ctrls_list st'.(code_OpIterState_ctrls)
+    = ctrls_list st.(code_OpIterState_ctrls).
 Proof.
   intros st r st' H. unfold code_pop_stack_type in H.
-  destruct (code_cur_base st) as [base|] eqn:Hcb; cbn [bind] in H;
-    [|discriminate].
-  destruct (alloc_vec_Vec_len st.(code_OpIterState_vals) s= base) eqn:Hb.
-  - destruct (code_cur_polymorphic st) as [pb|] eqn:Hcp; cbn [bind] in H;
-      [|discriminate].
+  destruct (code_ValsStack_len st.(code_OpIterState_vals)) as [n|e] eqn:Hlen
+    in H; cbn [bind] in H; [|inversion H].
+  destruct (code_cur_base st) as [base|e] eqn:Hcb in H;
+    cbn [bind] in H; [|inversion H].
+  destruct (n s= base) eqn:Hb.
+  - destruct (code_cur_polymorphic st) as [pb|e] eqn:Hcp in H;
+      cbn [bind] in H; [|inversion H].
     destruct pb; injection H as _ <-; reflexivity.
-  - destruct (alloc_vec_Vec_pop alloc_alloc_Global
-                st.(code_OpIterState_vals)) as [[o v]|] eqn:Hpop;
-      cbn [bind] in H; [|discriminate].
+  - destruct (code_ValsStack_pop st.(code_OpIterState_vals)) as [[o v]|e]
+      eqn:Hpop in H; cbn [bind] in H; [|inversion H].
     destruct o; injection H as _ <-; reflexivity.
 Qed.
 
 Lemma pop_with_type_ctrls : forall st vt r st',
   code_pop_with_type st vt = Ok (r, st') ->
-  vec_list st'.(code_OpIterState_ctrls)
-    = vec_list st.(code_OpIterState_ctrls).
+  ctrls_list st'.(code_OpIterState_ctrls)
+    = ctrls_list st.(code_OpIterState_ctrls).
 Proof.
   intros st vt r st' H. unfold code_pop_with_type in H.
   destruct (code_pop_stack_type st) as [[r0 st0]|] eqn:Hps; cbn [bind] in H;
@@ -345,8 +385,8 @@ Qed.
 Lemma pop_types_loop_ctrls : forall n st types i r st',
   to_Z i <= Z.of_nat n ->
   code_pop_types_loop st types i = Ok (r, st') ->
-  vec_list st'.(code_OpIterState_ctrls)
-    = vec_list st.(code_OpIterState_ctrls).
+  ctrls_list st'.(code_OpIterState_ctrls)
+    = ctrls_list st.(code_OpIterState_ctrls).
 Proof.
   induction n as [|n IH]; intros st types i r st' Hn H;
     unfold code_pop_types_loop in H; rewrite loop_unfold in H;
@@ -358,6 +398,7 @@ Proof.
   - injection H as _ <-. reflexivity.
   - apply scalar_eqb_false in Hz.
     assert (H0 : to_Z 0%usize = 0) by reflexivity.
+    rewrite H0 in Hz.
     destruct (usize_sub_1_ok i) as [i2 [Hsub Hi2]];
       [pose proof (usize_nonneg i); lia|].
     rewrite Hsub in H. cbn [bind] in H.
@@ -376,8 +417,8 @@ Qed.
 
 Lemma pop_types_ctrls : forall st types r st',
   code_pop_types st types = Ok (r, st') ->
-  vec_list st'.(code_OpIterState_ctrls)
-    = vec_list st.(code_OpIterState_ctrls).
+  ctrls_list st'.(code_OpIterState_ctrls)
+    = ctrls_list st.(code_OpIterState_ctrls).
 Proof.
   intros st types r st' H. unfold code_pop_types in H.
   eapply pop_types_loop_ctrls with (n := Z.to_nat (to_Z (slice_len types)));
@@ -444,18 +485,23 @@ Lemma read_return_pos : forall st ctx r st',
   code_read_return st ctx = Ok (r, st') -> pos_of st' = pos_of st.
 Proof.
   intros st ctx r st' H. unfold code_read_return in H.
-  destruct (code_pop_types st (alloc_vec_Vec_deref ctx.(code_Context_results))) as [[r1 st1]|]
-    eqn:Hpt; cbn [bind] in H; [|discriminate].
-  pose proof (pop_types_pos st _ r1 st1 Hpt) as Hp1.
-  destruct r1 as [u1|e1].
-  2: { rewrite branch_err in H. cbn [bind] in H.
-       rewrite from_residual_err in H. cbn [bind] in H.
-       injection H as _ <-. rewrite Hp1. reflexivity. }
-  destruct u1. rewrite branch_ok in H. cbn [bind] in H.
-  destruct (code_mark_unreachable st1) as [st2|] eqn:Hmu; cbn [bind] in H;
-    [|discriminate].
-  injection H as _ <-.
-  rewrite (mark_unreachable_pos st1 st2 Hmu). rewrite Hp1. reflexivity.
+  destruct ctx.(code_Context_results) as [vt|] eqn:Hresults;
+    cbn [bind] in H.
+  all: match type of H with
+       | context [code_pop_block_results ?s ?bt] =>
+           destruct (code_pop_block_results s bt) as [[r1 st1]|e]
+             eqn:Hpt in H; cbn [bind] in H; [|inversion H];
+           pose proof (pop_block_results_pos s bt r1 st1 Hpt) as Hp1
+       end.
+  all: destruct r1 as [u1|e1].
+  all: try (rewrite branch_err in H; cbn [bind] in H;
+    rewrite from_residual_err in H; cbn [bind] in H;
+    injection H as _ <-; rewrite Hp1; reflexivity).
+  all: destruct u1; rewrite branch_ok in H; cbn [bind] in H.
+  all: destruct (code_mark_unreachable st1) as [st2|e] eqn:Hmu in H;
+    cbn [bind] in H; [|inversion H].
+  all: injection H as _ <-;
+    rewrite (mark_unreachable_pos st1 st2 Hmu); rewrite Hp1; reflexivity.
 Qed.
 
 Lemma read_drop_pos : forall st r st',
@@ -613,43 +659,31 @@ Lemma read_else_pos : forall st r st',
   code_read_else st = Ok (r, st') -> pos_of st' = pos_of st.
 Proof.
   intros st r st' H. unfold code_read_else in H.
-  destruct (alloc_vec_Vec_len st.(code_OpIterState_ctrls) s= 0%usize) eqn:Hn.
+  destruct (code_CtrlsStack_len st.(code_OpIterState_ctrls)) as [n|e]
+    eqn:Hlen in H; cbn [bind] in H; [|inversion H].
+  destruct (n s= 0%usize) eqn:Hn in H.
   { injection H as _ <-. reflexivity. }
-  destruct (usize_sub (alloc_vec_Vec_len st.(code_OpIterState_ctrls))
-              1%usize) as [i|] eqn:Hsub; cbn [bind] in H; [|discriminate].
-  destruct (alloc_vec_Vec_index
-              (core_slice_index_SliceIndexUsizeSliceInst code_Ctrl_t)
-              st.(code_OpIterState_ctrls) i) as [frame|] eqn:Hidx;
-    cbn [bind] in H; [|discriminate].
-  destruct (code_is_then frame.(code_Ctrl_kind)) as [b|] eqn:Hit;
-    cbn [bind] in H; [|discriminate].
+  destruct (usize_sub n 1%usize) as [i|e] eqn:Hsub in H;
+    cbn [bind] in H; [|inversion H].
+  destruct (code_CtrlsStack_get st.(code_OpIterState_ctrls) i) as [frame|e]
+    eqn:Hidx in H; cbn [bind] in H; [|inversion H].
+  destruct (code_is_then frame.(code_Ctrl_kind)) as [b|e] eqn:Hit in H;
+    cbn [bind] in H; [|inversion H].
   destruct b; [|injection H as _ <-; reflexivity].
-  destruct (code_block_results frame.(code_Ctrl_block_type))
-    as [results|] eqn:Hbr; cbn [bind] in H; [|discriminate].
-  destruct (code_pop_types st (alloc_vec_Vec_deref results))
-    as [[r1 st1]|] eqn:Hpt; cbn [bind] in H; [|discriminate].
-  pose proof (pop_types_pos st _ r1 st1 Hpt) as Hp1.
+  destruct (code_pop_block_results st frame.(code_Ctrl_block_type))
+    as [[r1 st1]|e] eqn:Hpt in H; cbn [bind] in H; [|inversion H].
+  pose proof (pop_block_results_pos st _ r1 st1 Hpt) as Hp1.
   destruct r1 as [u1|e1].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H.
        injection H as _ <-. rewrite Hp1. reflexivity. }
   destruct u1. rewrite branch_ok in H. cbn [bind] in H.
-  destruct (alloc_vec_Vec_len st1.(code_OpIterState_vals)
-            s<> frame.(code_Ctrl_value_stack_base)) eqn:Hg.
+  destruct (code_ValsStack_len st1.(code_OpIterState_vals)) as [nv|e]
+    eqn:Hvlen in H; cbn [bind] in H; [|inversion H].
+  destruct (nv s<> frame.(code_Ctrl_value_stack_base)) eqn:Hg in H.
   { injection H as _ <-. rewrite Hp1. reflexivity. }
-  destruct (alloc_vec_Vec_index_mut
-              (core_slice_index_SliceIndexUsizeSliceInst code_Ctrl_t)
-              st1.(code_OpIterState_ctrls) i) as [[c back]|] eqn:Hidx2;
-    cbn [bind] in H; [|discriminate].
-  destruct (alloc_vec_Vec_index_mut
-              (core_slice_index_SliceIndexUsizeSliceInst code_Ctrl_t)
-              (back {| code_Ctrl_kind := Code_LabelKind_Else;
-                       code_Ctrl_block_type := c.(code_Ctrl_block_type);
-                       code_Ctrl_value_stack_base :=
-                         c.(code_Ctrl_value_stack_base);
-                       code_Ctrl_polymorphic_base :=
-                         c.(code_Ctrl_polymorphic_base) |}) i)
-    as [[c1 back1]|] eqn:Hidx3; cbn [bind] in H; [|discriminate].
+  destruct (code_CtrlsStack_set st1.(code_OpIterState_ctrls) i _)
+    as [cs|e] eqn:Hset in H; cbn [bind] in H; [|inversion H].
   injection H as _ <-.
   exact Hp1.
 Qed.
@@ -662,80 +696,62 @@ Lemma read_end_pos : forall st r st',
   code_read_end st = Ok (r, st') -> pos_of st' = pos_of st.
 Proof.
   intros st r st' H. unfold code_read_end in H.
-  destruct (alloc_vec_Vec_len st.(code_OpIterState_ctrls) s= 0%usize) eqn:Hn.
+  destruct (code_CtrlsStack_len st.(code_OpIterState_ctrls)) as [n|e]
+    eqn:Hlen in H; cbn [bind] in H; [|inversion H].
+  destruct (n s= 0%usize) eqn:Hn in H.
   { injection H as _ <-. reflexivity. }
-  destruct (usize_sub (alloc_vec_Vec_len st.(code_OpIterState_ctrls))
-              1%usize) as [i|] eqn:Hsub; cbn [bind] in H; [|discriminate].
-  destruct (alloc_vec_Vec_index
-              (core_slice_index_SliceIndexUsizeSliceInst code_Ctrl_t)
-              st.(code_OpIterState_ctrls) i) as [frame|] eqn:Hidx;
-    cbn [bind] in H; [|discriminate].
-  destruct (code_block_results frame.(code_Ctrl_block_type))
-    as [results|] eqn:Hbr; cbn [bind] in H; [|discriminate].
-  destruct (code_is_then frame.(code_Ctrl_kind)) as [b|] eqn:Hit;
-    cbn [bind] in H; [|discriminate].
-  destruct b.
-  - destruct (alloc_vec_Vec_is_empty alloc_alloc_Global results) as [b1|]
-      eqn:Hemp; cbn [bind] in H; [|discriminate].
-    destruct b1; cbn [bind] in H; [|injection H as _ <-; reflexivity].
-    destruct (code_pop_types st (alloc_vec_Vec_deref results))
-      as [[r1 st1]|] eqn:Hpt; cbn [bind] in H; [|discriminate].
-    pose proof (pop_types_pos st _ r1 st1 Hpt) as Hp1.
-    destruct r1 as [u1|e1].
-    2: { rewrite branch_err in H. cbn [bind] in H.
-         rewrite from_residual_err in H. cbn [bind] in H.
-         injection H as _ <-. rewrite Hp1. reflexivity. }
-    destruct u1. rewrite branch_ok in H. cbn [bind] in H.
-    destruct (alloc_vec_Vec_len st1.(code_OpIterState_vals)
-              s<> frame.(code_Ctrl_value_stack_base)) eqn:Hg.
-    { injection H as _ <-. rewrite Hp1. reflexivity. }
-    destruct (alloc_vec_Vec_pop alloc_alloc_Global st1.(code_OpIterState_ctrls))
-      as [[o v]|] eqn:Hpop; cbn [bind] in H; [|discriminate].
-    destruct (code_push_types
-                {| code_OpIterState_vals := st1.(code_OpIterState_vals);
-                   code_OpIterState_ctrls := v;
-                   code_OpIterState_pos := st1.(code_OpIterState_pos)
-                |} (alloc_vec_Vec_deref results)) as [st2|] eqn:Hpush;
-      cbn [bind] in H; [|discriminate].
-    injection H as _ <-.
-    rewrite (push_types_pos _ _ st2 Hpush).
-    exact Hp1.
-  - destruct (code_pop_types st (alloc_vec_Vec_deref results))
-      as [[r1 st1]|] eqn:Hpt; cbn [bind] in H; [|discriminate].
-    pose proof (pop_types_pos st _ r1 st1 Hpt) as Hp1.
-    destruct r1 as [u1|e1].
-    2: { rewrite branch_err in H. cbn [bind] in H.
-         rewrite from_residual_err in H. cbn [bind] in H.
-         injection H as _ <-. rewrite Hp1. reflexivity. }
-    destruct u1. rewrite branch_ok in H. cbn [bind] in H.
-    destruct (alloc_vec_Vec_len st1.(code_OpIterState_vals)
-              s<> frame.(code_Ctrl_value_stack_base)) eqn:Hg.
-    { injection H as _ <-. rewrite Hp1. reflexivity. }
-    destruct (alloc_vec_Vec_pop alloc_alloc_Global st1.(code_OpIterState_ctrls))
-      as [[o v]|] eqn:Hpop; cbn [bind] in H; [|discriminate].
-    destruct (code_push_types
-                {| code_OpIterState_vals := st1.(code_OpIterState_vals);
-                   code_OpIterState_ctrls := v;
-                   code_OpIterState_pos := st1.(code_OpIterState_pos)
-                |} (alloc_vec_Vec_deref results)) as [st2|] eqn:Hpush;
-      cbn [bind] in H; [|discriminate].
-    injection H as _ <-.
-    rewrite (push_types_pos _ _ st2 Hpush).
-    exact Hp1.
+  destruct (usize_sub n 1%usize) as [i|e] eqn:Hsub in H;
+    cbn [bind] in H; [|inversion H].
+  destruct (code_CtrlsStack_get st.(code_OpIterState_ctrls) i) as [frame|e]
+    eqn:Hidx in H; cbn [bind] in H; [|inversion H].
+  destruct frame.(code_Ctrl_block_type) as [|vt] eqn:Hbt;
+    cbn [bind] in H.
+  all: destruct (code_is_then frame.(code_Ctrl_kind)) as [b|e]
+    eqn:Hit in H; cbn [bind] in H; [|inversion H].
+  all: destruct b; cbn [bind] in H.
+  3: { injection H as _ <-. reflexivity. }
+  all: match type of H with
+       | context [code_pop_block_results ?s ?bt] =>
+           destruct (code_pop_block_results s bt) as [[r1 st1]|e]
+             eqn:Hpt in H; cbn [bind] in H; [|inversion H];
+           pose proof (pop_block_results_pos s bt r1 st1 Hpt) as Hp1
+       end.
+  all: destruct r1 as [u1|e1].
+  all: try (rewrite branch_err in H; cbn [bind] in H;
+    rewrite from_residual_err in H; cbn [bind] in H;
+    unfold pos_of in *; congruence).
+  all: destruct u1; rewrite branch_ok in H; cbn [bind] in H.
+  all: destruct (code_ValsStack_len st1.(code_OpIterState_vals)) as [nv|e]
+    eqn:Hvlen in H; cbn [bind] in H; [|inversion H].
+  all: destruct (nv s<> frame.(code_Ctrl_value_stack_base)) eqn:Hg in H.
+  all: try (unfold pos_of in *; congruence).
+  all: destruct (code_CtrlsStack_pop st1.(code_OpIterState_ctrls))
+    as [[o cs]|e] eqn:Hpop in H; cbn [bind] in H; [|inversion H].
+  all: match type of H with
+       | context [code_push_block_results ?s ?bt] =>
+           destruct (code_push_block_results s bt) as [st2|e]
+             eqn:Hpush in H; cbn [bind] in H; [|inversion H];
+           pose proof (push_block_results_pos s bt st2 Hpush) as Hp2
+       end.
+  all: unfold pos_of in *;
+    cbn [code_OpIterState_pos] in Hp2;
+    assert (Hst : st2 = st') by congruence;
+    rewrite <- Hst;
+    transitivity st1.(code_OpIterState_pos); assumption.
 Qed.
 
 (** Full characterisation of a push, so callers need not unfold it. *)
 Lemma push_val_spec : forall st t st',
   code_push_val st t = Ok st' ->
-  vec_list st'.(code_OpIterState_vals)
-    = vec_list st.(code_OpIterState_vals) ++ [t]
+  vals_list st'.(code_OpIterState_vals)
+    = vals_list st.(code_OpIterState_vals) ++ [t]
   /\ st'.(code_OpIterState_ctrls) = st.(code_OpIterState_ctrls)
   /\ pos_of st' = pos_of st.
 Proof.
   intros st t st' H. unfold code_push_val in H.
-  destruct (alloc_vec_Vec_push st.(code_OpIterState_vals) t) as [v|] eqn:Hpush;
-    cbn [bind] in H; [|discriminate].
-  injection H as <-. apply vec_push_spec in Hpush.
+  destruct (code_ValsStack_push st.(code_OpIterState_vals) t) as [v|e]
+    eqn:Hpush in H; cbn [bind] in H; [|inversion H].
+  injection H as <-. apply vals_stack_push_spec in Hpush.
   cbn [code_OpIterState_vals code_OpIterState_ctrls].
   repeat split.
   all: try reflexivity.
@@ -750,7 +766,7 @@ Qed.
     the invariant can be stated without threading [result] through it. *)
 
 Definition cur_ctrl (st : code_OpIterState_t) : option code_Ctrl_t :=
-  List.last (List.map Some (vec_list st.(code_OpIterState_ctrls))) None.
+  List.last (List.map Some (ctrls_list st.(code_OpIterState_ctrls))) None.
 
 Definition cur_base_nat (st : code_OpIterState_t) : nat :=
   match cur_ctrl st with
@@ -765,11 +781,11 @@ Definition cur_unr (st : code_OpIterState_t) : bool :=
   end.
 
 Lemma cur_ctrl_nil : forall st,
-  vec_list st.(code_OpIterState_ctrls) = [] -> cur_ctrl st = None.
+  ctrls_list st.(code_OpIterState_ctrls) = [] -> cur_ctrl st = None.
 Proof. intros st H. unfold cur_ctrl. rewrite H. reflexivity. Qed.
 
 Lemma cur_ctrl_snoc : forall st cs c,
-  vec_list st.(code_OpIterState_ctrls) = cs ++ [c] -> cur_ctrl st = Some c.
+  ctrls_list st.(code_OpIterState_ctrls) = cs ++ [c] -> cur_ctrl st = Some c.
 Proof.
   intros st cs c H. unfold cur_ctrl. rewrite H.
   rewrite List.map_app. cbn [List.map]. rewrite List.last_last. reflexivity.
@@ -778,11 +794,11 @@ Qed.
 (** A non-empty control stack is a snoc, which is the shape both accessors and
     the [end] case need. *)
 Lemma ctrls_snoc : forall st,
-  vec_list st.(code_OpIterState_ctrls) <> [] ->
-  exists cs c, vec_list st.(code_OpIterState_ctrls) = cs ++ [c].
+  ctrls_list st.(code_OpIterState_ctrls) <> [] ->
+  exists cs c, ctrls_list st.(code_OpIterState_ctrls) = cs ++ [c].
 Proof.
   intros st H.
-  destruct (List.rev (vec_list st.(code_OpIterState_ctrls))) as [|c rcs] eqn:Hrev.
+  destruct (List.rev (ctrls_list st.(code_OpIterState_ctrls))) as [|c rcs] eqn:Hrev.
   - exfalso. apply H.
     apply (f_equal (@List.rev _)) in Hrev.
     rewrite List.rev_involutive in Hrev. simpl in Hrev. exact Hrev.
@@ -796,77 +812,75 @@ Qed.
 (** The index [read_end]/[read_else] compute for the last frame, in plain
     [nat] terms: what [index_mut]-based rewrites need, since they update by
     position rather than by popping. *)
-Lemma ctrls_last_index_len : forall st cs c i,
-  vec_list st.(code_OpIterState_ctrls) = cs ++ [c] ->
-  usize_sub (alloc_vec_Vec_len st.(code_OpIterState_ctrls)) 1%usize = Ok i ->
+Lemma ctrls_last_index_len : forall st cs c n i,
+  ctrls_list st.(code_OpIterState_ctrls) = cs ++ [c] ->
+  code_CtrlsStack_len st.(code_OpIterState_ctrls) = Ok n ->
+  usize_sub n 1%usize = Ok i ->
   Z.to_nat (to_Z i) = List.length cs.
 Proof.
-  intros st cs c i Hsnoc Hsub.
-  assert (Hival : to_Z i = to_Z (alloc_vec_Vec_len
-                                  st.(code_OpIterState_ctrls)) - 1).
+  intros st cs c n i Hsnoc Hlen Hsub.
+  assert (Hival : to_Z i = to_Z n - 1).
   { unfold usize_sub, scalar_sub in Hsub.
     apply mk_scalar_ok_to_Z in Hsub. rewrite Hsub.
     assert (to_Z 1%usize = 1). { reflexivity. } lia. }
-  rewrite Hival. rewrite vec_len_spec. rewrite Hsnoc.
+  rewrite Hival. rewrite (ctrls_stack_len_spec _ _ Hlen). rewrite Hsnoc.
   rewrite List.app_length. simpl. lia.
 Qed.
 
-Lemma ctrls_last_index : forall st cs c i,
-  vec_list st.(code_OpIterState_ctrls) = cs ++ [c] ->
-  usize_sub (alloc_vec_Vec_len st.(code_OpIterState_ctrls)) 1%usize = Ok i ->
-  List.nth_error (vec_list st.(code_OpIterState_ctrls)) (Z.to_nat (to_Z i))
+Lemma ctrls_last_index : forall st cs c n i,
+  ctrls_list st.(code_OpIterState_ctrls) = cs ++ [c] ->
+  code_CtrlsStack_len st.(code_OpIterState_ctrls) = Ok n ->
+  usize_sub n 1%usize = Ok i ->
+  List.nth_error (ctrls_list st.(code_OpIterState_ctrls)) (Z.to_nat (to_Z i))
     = Some c.
 Proof.
-  intros st cs c i Hsnoc Hsub.
-  rewrite Hsnoc. rewrite (ctrls_last_index_len st cs c i Hsnoc Hsub).
+  intros st cs c n i Hsnoc Hlen Hsub.
+  rewrite Hsnoc. rewrite (ctrls_last_index_len st cs c n i Hsnoc Hlen Hsub).
   apply nth_error_snoc.
 Qed.
 
 (** The control stack is non-empty exactly when the extracted accessors take
     their indexing branch. *)
-Lemma ctrls_len_nonzero : forall st,
-  (alloc_vec_Vec_len st.(code_OpIterState_ctrls) s= 0%usize) = false ->
-  vec_list st.(code_OpIterState_ctrls) <> [].
+Lemma ctrls_len_nonzero : forall st n,
+  code_CtrlsStack_len st.(code_OpIterState_ctrls) = Ok n ->
+  (n s= 0%usize) = false ->
+  ctrls_list st.(code_OpIterState_ctrls) <> [].
 Proof.
-  intros st Hz Hnil. apply scalar_eqb_false in Hz.
-  rewrite vec_len_spec in Hz. rewrite Hnil in Hz. simpl in Hz.
+  intros st n Hlen Hz Hnil. apply scalar_eqb_false in Hz.
+  rewrite (ctrls_stack_len_spec _ _ Hlen) in Hz. rewrite Hnil in Hz. simpl in Hz.
   assert (to_Z 0%usize = 0). { reflexivity. } lia.
 Qed.
 
-Lemma ctrls_len_zero : forall st,
-  (alloc_vec_Vec_len st.(code_OpIterState_ctrls) s= 0%usize) = true ->
-  vec_list st.(code_OpIterState_ctrls) = [].
+Lemma ctrls_len_zero : forall st n,
+  code_CtrlsStack_len st.(code_OpIterState_ctrls) = Ok n ->
+  (n s= 0%usize) = true ->
+  ctrls_list st.(code_OpIterState_ctrls) = [].
 Proof.
-  intros st Hz. apply scalar_eqb_true in Hz. rewrite vec_len_spec in Hz.
-  destruct (vec_list st.(code_OpIterState_ctrls)); [reflexivity|].
+  intros st n Hlen Hz. apply scalar_eqb_true in Hz.
+  rewrite (ctrls_stack_len_spec _ _ Hlen) in Hz.
+  destruct (ctrls_list st.(code_OpIterState_ctrls)); [reflexivity|].
   simpl in Hz. assert (to_Z 0%usize = 0). { reflexivity. } lia.
-Qed.
-
-Lemma ctrls_sub_ok : forall st cs c,
-  vec_list st.(code_OpIterState_ctrls) = cs ++ [c] ->
-  exists i, usize_sub (alloc_vec_Vec_len st.(code_OpIterState_ctrls))
-                      1%usize = Ok i.
-Proof.
-  intros st cs c Hsnoc.
-  destruct (usize_sub_1_ok (alloc_vec_Vec_len st.(code_OpIterState_ctrls)))
-    as [i [Hsub _]].
-  { rewrite vec_len_spec. rewrite Hsnoc. rewrite List.app_length. simpl. lia. }
-  exists i. exact Hsub.
 Qed.
 
 Lemma cur_base_agrees : forall st b,
   code_cur_base st = Ok b -> Z.to_nat (to_Z b) = cur_base_nat st.
 Proof.
   intros st b H. unfold code_cur_base in H.
-  destruct (alloc_vec_Vec_len st.(code_OpIterState_ctrls) s= 0%usize) eqn:Hz.
+  destruct (code_CtrlsStack_len st.(code_OpIterState_ctrls)) as [n|e]
+    eqn:Hlen in H; cbn [bind] in H; [|inversion H].
+  destruct (n s= 0%usize) eqn:Hz.
   - injection H as <-. unfold cur_base_nat.
-    rewrite (cur_ctrl_nil st (ctrls_len_zero st Hz)). reflexivity.
-  - destruct (ctrls_snoc st (ctrls_len_nonzero st Hz)) as [cs [c Hsnoc]].
-    destruct (ctrls_sub_ok st cs c Hsnoc) as [i Hsub].
-    rewrite Hsub in H. cbn [bind] in H.
-    rewrite vec_index_spec in H.
-    rewrite (ctrls_last_index st cs c i Hsnoc Hsub) in H.
-    cbn [bind] in H. injection H as <-.
+    rewrite (cur_ctrl_nil st (ctrls_len_zero st n Hlen Hz)). reflexivity.
+  - destruct (ctrls_snoc st (ctrls_len_nonzero st n Hlen Hz)) as [cs [c Hsnoc]].
+    destruct (usize_sub n 1%usize) as [i|e] eqn:Hsub in H;
+      cbn [bind] in H; [|inversion H].
+    destruct (code_CtrlsStack_get st.(code_OpIterState_ctrls) i)
+      as [c'|e] eqn:Hget in H; cbn [bind] in H; [|inversion H].
+    pose proof (ctrls_stack_get_spec _ _ _
+      ltac:(rewrite (ctrls_last_index_len st cs c n i Hsnoc Hlen Hsub);
+             rewrite Hsnoc, List.app_length; cbn; lia) Hget) as Hnth.
+    rewrite (ctrls_last_index st cs c n i Hsnoc Hlen Hsub) in Hnth.
+    injection Hnth as <-. injection H as <-.
     unfold cur_base_nat. rewrite (cur_ctrl_snoc st cs c Hsnoc). reflexivity.
 Qed.
 
@@ -874,15 +888,21 @@ Lemma cur_unr_agrees : forall st u,
   code_cur_polymorphic st = Ok u -> u = cur_unr st.
 Proof.
   intros st u H. unfold code_cur_polymorphic in H.
-  destruct (alloc_vec_Vec_len st.(code_OpIterState_ctrls) s= 0%usize) eqn:Hz.
+  destruct (code_CtrlsStack_len st.(code_OpIterState_ctrls)) as [n|e]
+    eqn:Hlen in H; cbn [bind] in H; [|inversion H].
+  destruct (n s= 0%usize) eqn:Hz.
   - injection H as <-. unfold cur_unr.
-    rewrite (cur_ctrl_nil st (ctrls_len_zero st Hz)). reflexivity.
-  - destruct (ctrls_snoc st (ctrls_len_nonzero st Hz)) as [cs [c Hsnoc]].
-    destruct (ctrls_sub_ok st cs c Hsnoc) as [i Hsub].
-    rewrite Hsub in H. cbn [bind] in H.
-    rewrite vec_index_spec in H.
-    rewrite (ctrls_last_index st cs c i Hsnoc Hsub) in H.
-    cbn [bind] in H. injection H as <-.
+    rewrite (cur_ctrl_nil st (ctrls_len_zero st n Hlen Hz)). reflexivity.
+  - destruct (ctrls_snoc st (ctrls_len_nonzero st n Hlen Hz)) as [cs [c Hsnoc]].
+    destruct (usize_sub n 1%usize) as [i|e] eqn:Hsub in H;
+      cbn [bind] in H; [|inversion H].
+    destruct (code_CtrlsStack_get st.(code_OpIterState_ctrls) i)
+      as [c'|e] eqn:Hget in H; cbn [bind] in H; [|inversion H].
+    pose proof (ctrls_stack_get_spec _ _ _
+      ltac:(rewrite (ctrls_last_index_len st cs c n i Hsnoc Hlen Hsub);
+             rewrite Hsnoc, List.app_length; cbn; lia) Hget) as Hnth.
+    rewrite (ctrls_last_index st cs c n i Hsnoc Hlen Hsub) in Hnth.
+    injection Hnth as <-. injection H as <-.
     unfold cur_unr. rewrite (cur_ctrl_snoc st cs c Hsnoc). reflexivity.
 Qed.
 
@@ -894,52 +914,55 @@ Lemma pop_stack_type_ok : forall st t st',
   code_pop_stack_type st = Ok (Core_result_Result_Ok t, st') ->
   st'.(code_OpIterState_ctrls) = st.(code_OpIterState_ctrls)
   /\ ((exists pre,
-         vec_list st.(code_OpIterState_vals) = pre ++ [t]
-         /\ vec_list st'.(code_OpIterState_vals) = pre
+         vals_list st.(code_OpIterState_vals) = pre ++ [t]
+         /\ vals_list st'.(code_OpIterState_vals) = pre
          /\ cur_base_nat st
-            <> List.length (vec_list st.(code_OpIterState_vals)))
+            <> List.length (vals_list st.(code_OpIterState_vals)))
       \/ (t = Code_StackType_Bot
-          /\ vec_list st'.(code_OpIterState_vals)
-             = vec_list st.(code_OpIterState_vals)
+          /\ vals_list st'.(code_OpIterState_vals)
+             = vals_list st.(code_OpIterState_vals)
           /\ cur_unr st = true
-          /\ List.length (vec_list st.(code_OpIterState_vals))
+          /\ List.length (vals_list st.(code_OpIterState_vals))
              = cur_base_nat st)).
 Proof.
   intros st t st' H. unfold code_pop_stack_type in H.
-  destruct (code_cur_base st) as [base|] eqn:Hcb; cbn [bind] in H;
-    [|discriminate].
+  destruct (code_ValsStack_len st.(code_OpIterState_vals)) as [n|e]
+    eqn:Hlen in H; cbn [bind] in H.
+  2: inversion H.
+  destruct (code_cur_base st) as [base|e] eqn:Hcb in H; cbn [bind] in H.
+  2: inversion H.
   pose proof (cur_base_agrees st base Hcb) as Hbase.
-  destruct (alloc_vec_Vec_len st.(code_OpIterState_vals) s= base) eqn:Hz.
+  destruct (n s= base) eqn:Hz.
   - (* frame exhausted *)
-    destruct (code_cur_polymorphic st) as [pb|] eqn:Hcp; cbn [bind] in H;
-      [|discriminate].
+    destruct (code_cur_polymorphic st) as [pb|e] eqn:Hcp in H; cbn [bind] in H.
+    2: inversion H.
     pose proof (cur_unr_agrees st pb Hcp) as Hunr.
     destruct pb; [|discriminate].
     injection H as <- <-. cbn [code_OpIterState_ctrls code_OpIterState_vals].
     split; [reflexivity|]. right.
-    apply scalar_eqb_true in Hz. rewrite vec_len_spec in Hz.
+    apply scalar_eqb_true in Hz. rewrite (vals_stack_len_spec _ _ Hlen) in Hz.
     repeat split.
     all: try reflexivity.
     all: try (symmetry; exact Hunr).
     all: try (rewrite <- Hbase; lia).
   - (* a real pop *)
-    destruct (alloc_vec_Vec_pop alloc_alloc_Global
-                st.(code_OpIterState_vals)) as [[o v]|] eqn:Hpop;
-      cbn [bind] in H; [|discriminate].
-    pose proof (vec_pop_last alloc_alloc_Global _ o v Hpop) as Hspec.
+    destruct (code_ValsStack_pop st.(code_OpIterState_vals))
+      as [[o v]|e] eqn:Hpop in H; cbn [bind] in H.
+    2: inversion H.
+    pose proof (vals_stack_pop_spec _ o v Hpop) as Hspec.
     destruct o as [t0|]; [|discriminate].
     injection H as <- <-. cbn [code_OpIterState_ctrls code_OpIterState_vals].
     split; [reflexivity|]. left.
-    apply scalar_eqb_false in Hz. rewrite vec_len_spec in Hz.
-    destruct (List.rev (vec_list st.(code_OpIterState_vals))) as [|x rest]
+    apply scalar_eqb_false in Hz. rewrite (vals_stack_len_spec _ _ Hlen) in Hz.
+    destruct (List.rev (vals_list st.(code_OpIterState_vals))) as [|x rest]
       eqn:Hrev.
     { (* the pop yielded Some, so the vector was not empty *)
       destruct Hspec as [Ho _]. discriminate Ho. }
-    destruct Hspec as [Ho Hv]. injection Ho as <-.
+    destruct Hspec as [Ho Hview]. injection Ho as <-.
     exists (List.rev rest). repeat split.
     + apply (f_equal (@List.rev _)) in Hrev.
       rewrite List.rev_involutive in Hrev. rewrite Hrev. reflexivity.
-    + exact Hv.
+    + exact Hview.
     + (* the raw base check; turning it into "the current frame owns an operand"
          needs base <= length, which is an invariant fact, not a local one *)
       rewrite <- Hbase. pose proof (usize_nonneg base). lia.
@@ -987,51 +1010,60 @@ Qed.
 (** [mark_unreachable]'s loop pops down to the frame base, so its result is the
     operand array truncated there. The measure is the array's length. *)
 Lemma mark_unreachable_loop_spec : forall n st base vals ctrls pos,
-  (List.length (vec_list st.(code_OpIterState_vals)) <= n)%nat ->
+  (List.length (vals_list st.(code_OpIterState_vals)) <= n)%nat ->
   (Z.to_nat (to_Z base)
-     <= List.length (vec_list st.(code_OpIterState_vals)))%nat ->
+     <= List.length (vals_list st.(code_OpIterState_vals)))%nat ->
   code_mark_unreachable_loop st base = Ok (vals, ctrls, pos) ->
-  vec_list vals
-    = List.firstn (Z.to_nat (to_Z base)) (vec_list st.(code_OpIterState_vals))
+  vals_list vals
+    = List.firstn (Z.to_nat (to_Z base)) (vals_list st.(code_OpIterState_vals))
   /\ ctrls = st.(code_OpIterState_ctrls).
 Proof.
   induction n as [|n IH];
     intros st base vals ctrls pos Hn Hle H;
     unfold code_mark_unreachable_loop in H; rewrite loop_unfold in H;
-    cbn beta iota in H;
-    destruct (alloc_vec_Vec_len st.(code_OpIterState_vals) s<= base) eqn:Hb.
+    cbn beta iota in H.
+  all: destruct (code_ValsStack_len st.(code_OpIterState_vals))
+    as [len|e] eqn:Hlen in H; cbn [bind] in H; [|inversion H].
+  all: destruct (len s<= base) eqn:Hb.
   - (* already at or below the base, so the truncation is the whole array *)
     injection H as <- <- _. apply scalar_leb_true in Hb.
-    rewrite vec_len_spec in Hb.
+    rewrite (vals_stack_len_spec _ _ Hlen) in Hb.
     split; [|reflexivity].
     rewrite List.firstn_all2; [reflexivity | lia].
   - (* n = 0 forces an empty array, so this branch cannot pop *)
-    exfalso. apply scalar_leb_false in Hb. rewrite vec_len_spec in Hb.
+    exfalso. apply scalar_leb_false in Hb.
+    rewrite (vals_stack_len_spec _ _ Hlen) in Hb.
     pose proof (usize_nonneg base). lia.
   - injection H as <- <- _. apply scalar_leb_true in Hb.
-    rewrite vec_len_spec in Hb.
+    rewrite (vals_stack_len_spec _ _ Hlen) in Hb.
     split; [|reflexivity].
     rewrite List.firstn_all2; [reflexivity | lia].
-  - apply scalar_leb_false in Hb. rewrite vec_len_spec in Hb.
-    destruct (alloc_vec_Vec_pop alloc_alloc_Global
-                st.(code_OpIterState_vals)) as [[o v]|] eqn:Hpop;
-      cbn [bind] in H; [|discriminate].
+  - apply scalar_leb_false in Hb.
+    rewrite (vals_stack_len_spec _ _ Hlen) in Hb.
+    destruct (code_ValsStack_pop st.(code_OpIterState_vals))
+      as [[o v]|e] eqn:Hpop in H; cbn [bind] in H; [|inversion H].
+    pose proof (vals_stack_pop_spec _ o v Hpop) as Hspec.
     destruct o as [x|].
     2: { (* pop yielded nothing, so the array was empty, contradicting the base *)
          exfalso.
-         pose proof (vec_pop_last alloc_alloc_Global _ None v Hpop) as Hspec.
-         destruct (List.rev (vec_list st.(code_OpIterState_vals)))
+         destruct (List.rev (vals_list st.(code_OpIterState_vals)))
            as [|y r] eqn:Hrev; [|destruct Hspec as [Ho _]; discriminate Ho].
          apply (f_equal (@List.rev _)) in Hrev.
          rewrite List.rev_involutive in Hrev. cbn [List.rev] in Hrev.
          rewrite Hrev in Hb. cbn [List.length] in Hb.
          pose proof (usize_nonneg base). lia. }
-    pose proof (vec_pop_snoc _ x v Hpop) as Hsnoc.
-    assert (Hlen1 : (List.length (vec_list v) + 1
-                     = List.length (vec_list st.(code_OpIterState_vals)))%nat).
+    destruct (List.rev (vals_list st.(code_OpIterState_vals)))
+      as [|y r] eqn:Hrev; [destruct Hspec as [Ho _]; discriminate Ho|].
+    destruct Hspec as [Ho Hview]. injection Ho as <-.
+    assert (Hsnoc : vals_list st.(code_OpIterState_vals)
+                     = vals_list v ++ [x]).
+    { apply (f_equal (@List.rev _)) in Hrev.
+      rewrite List.rev_involutive in Hrev. rewrite Hrev, Hview. reflexivity. }
+    assert (Hlen1 : (List.length (vals_list v) + 1
+                     = List.length (vals_list st.(code_OpIterState_vals)))%nat).
     { rewrite Hsnoc. rewrite List.app_length. reflexivity. }
-    assert (Hp1 : (List.length (vec_list v) <= n)%nat). { lia. }
-    assert (Hp2 : (Z.to_nat (to_Z base) <= List.length (vec_list v))%nat).
+    assert (Hp1 : (List.length (vals_list v) <= n)%nat). { lia. }
+    assert (Hp2 : (Z.to_nat (to_Z base) <= List.length (vals_list v))%nat).
     { pose proof (usize_nonneg base). lia. }
     destruct (IH {| code_OpIterState_vals := v;
                     code_OpIterState_ctrls := st.(code_OpIterState_ctrls);
@@ -1041,7 +1073,7 @@ Proof.
     cbn [code_OpIterState_vals] in Hv. rewrite Hv.
     (* truncating below the last element is the same before and after the pop *)
     rewrite Hsnoc. rewrite List.firstn_app.
-    replace (Z.to_nat (to_Z base) - List.length (vec_list v))%nat with 0%nat
+    replace (Z.to_nat (to_Z base) - List.length (vals_list v))%nat with 0%nat
       by lia.
     cbn [List.firstn]. rewrite List.app_nil_r. reflexivity.
 Qed.
@@ -1050,14 +1082,14 @@ Qed.
     and sets that frame's polymorphic flag. The base itself is untouched, which
     is what lets the invariant's [bases_ok_from] survive. *)
 Lemma mark_unreachable_spec : forall st st' cs c,
-  vec_list st.(code_OpIterState_ctrls) = cs ++ [c] ->
+  ctrls_list st.(code_OpIterState_ctrls) = cs ++ [c] ->
   (Z.to_nat (to_Z c.(code_Ctrl_value_stack_base))
-     <= List.length (vec_list st.(code_OpIterState_vals)))%nat ->
+     <= List.length (vals_list st.(code_OpIterState_vals)))%nat ->
   code_mark_unreachable st = Ok st' ->
-  vec_list st'.(code_OpIterState_vals)
+  vals_list st'.(code_OpIterState_vals)
     = List.firstn (Z.to_nat (to_Z c.(code_Ctrl_value_stack_base)))
-                  (vec_list st.(code_OpIterState_vals))
-  /\ vec_list st'.(code_OpIterState_ctrls)
+                  (vals_list st.(code_OpIterState_vals))
+  /\ ctrls_list st'.(code_OpIterState_ctrls)
      = cs ++ [{| code_Ctrl_kind := c.(code_Ctrl_kind);
                  code_Ctrl_block_type := c.(code_Ctrl_block_type);
                  code_Ctrl_value_stack_base :=
@@ -1073,31 +1105,41 @@ Proof.
   destruct (code_mark_unreachable_loop st base)
     as [[[v v1] i]|] eqn:Hloop; cbn [bind] in H; [|discriminate].
   destruct (mark_unreachable_loop_spec
-              (List.length (vec_list st.(code_OpIterState_vals)))
+              (List.length (vals_list st.(code_OpIterState_vals)))
               st base v v1 i (Nat.le_refl _)
               (ltac:(rewrite Hbase; exact Hle)) Hloop) as [Hv Hc].
   (* the control stack is non-empty, so the flag-setting branch is taken *)
-  assert (Hnz : (alloc_vec_Vec_len v1 s= 0%usize) = false).
-  { apply Bool.not_true_is_false. intros Hz.
-    apply scalar_eqb_true in Hz. rewrite vec_len_spec in Hz.
-    rewrite Hc in Hz. rewrite Hsnoc in Hz. rewrite List.app_length in Hz.
-    cbn [List.length] in Hz.
-    assert (to_Z 0%usize = 0). { reflexivity. } lia. }
-  rewrite Hnz in H. cbn [bind] in H.
-  destruct (usize_sub_1_ok (alloc_vec_Vec_len v1)) as [i1 [Hsub Hi1]].
-  { rewrite vec_len_spec. rewrite Hc. rewrite Hsnoc.
-    rewrite List.app_length. cbn [List.length]. lia. }
-  rewrite Hsub in H. cbn [bind] in H.
-  rewrite vec_index_mut_spec in H.
+  assert (Hsnoc1 : ctrls_list v1 = cs ++ [c]) by (rewrite Hc; exact Hsnoc).
+  destruct (code_CtrlsStack_len v1) as [n|e] eqn:Hlen in H;
+    cbn [bind] in H; [|inversion H].
+  destruct (n s= 0%usize) eqn:Hnz in H.
+  { exfalso. apply scalar_eqb_true in Hnz.
+    rewrite (ctrls_stack_len_spec _ _ Hlen), Hsnoc1,
+      List.app_length in Hnz. cbn [List.length] in Hnz.
+    assert (to_Z 0%usize = 0) by reflexivity. lia. }
+  cbn [bind] in H.
+  destruct (usize_sub n 1%usize) as [i1|e] eqn:Hsub in H;
+    cbn [bind] in H; [|inversion H].
   assert (Hidx : Z.to_nat (to_Z i1) = List.length cs).
-  { rewrite Hi1. rewrite vec_len_spec. rewrite Hc. rewrite Hsnoc.
-    rewrite List.app_length. cbn [List.length]. lia. }
-  assert (Hnth : List.nth_error (vec_list v1) (Z.to_nat (to_Z i1)) = Some c).
-  { rewrite Hc. rewrite Hsnoc. rewrite Hidx. apply nth_error_snoc. }
-  rewrite Hnth in H. cbn [bind] in H. injection H as <-.
+  { assert (Hlen' : code_CtrlsStack_len st.(code_OpIterState_ctrls) = Ok n)
+      by (rewrite <- Hc; exact Hlen).
+    exact (ctrls_last_index_len st cs c n i1 Hsnoc Hlen' Hsub). }
+  destruct (code_CtrlsStack_get v1 i1) as [top|e] eqn:Hget in H;
+    cbn [bind] in H; [|inversion H].
+  assert (Htop : top = c).
+  { pose proof (ctrls_stack_get_spec v1 i1 top
+      ltac:(rewrite Hidx, Hsnoc1, List.app_length; cbn; lia) Hget) as Hnth.
+    rewrite Hsnoc1, Hidx, nth_error_snoc in Hnth. injection Hnth as <-.
+    reflexivity. }
+  subst top.
+  destruct (code_CtrlsStack_set v1 i1 _) as [v2|e] eqn:Hset in H;
+    cbn [bind] in H; [|inversion H].
+  injection H as <-.
   cbn [code_OpIterState_vals code_OpIterState_ctrls].
   split; [rewrite Hv; rewrite Hbase; reflexivity|].
-  rewrite vec_update_spec. rewrite Hidx. rewrite Hc. rewrite Hsnoc.
+  rewrite (ctrls_stack_set_spec _ _ _ _
+    ltac:(rewrite Hidx, Hsnoc1, List.app_length; cbn; lia) Hset).
+  rewrite Hidx, Hsnoc1.
   apply list_update_snoc.
 Qed.
 
@@ -1128,22 +1170,27 @@ Qed.
     the new frame records the array's current length as its base. *)
 Lemma push_ctrl_spec : forall st kind bt st',
   code_push_ctrl st kind bt = Ok st' ->
-  vec_list st'.(code_OpIterState_vals)
-    = vec_list st.(code_OpIterState_vals)
-  /\ vec_list st'.(code_OpIterState_ctrls)
-     = vec_list st.(code_OpIterState_ctrls)
-       ++ [{| code_Ctrl_kind := kind;
-              code_Ctrl_block_type := bt;
-              code_Ctrl_value_stack_base :=
-                alloc_vec_Vec_len st.(code_OpIterState_vals);
-              code_Ctrl_polymorphic_base := false |}].
+  exists base,
+    to_Z base = Z.of_nat (List.length (vals_list st.(code_OpIterState_vals)))
+    /\ vals_list st'.(code_OpIterState_vals)
+       = vals_list st.(code_OpIterState_vals)
+    /\ ctrls_list st'.(code_OpIterState_ctrls)
+       = ctrls_list st.(code_OpIterState_ctrls)
+         ++ [{| code_Ctrl_kind := kind;
+                code_Ctrl_block_type := bt;
+                code_Ctrl_value_stack_base := base;
+                code_Ctrl_polymorphic_base := false |}].
 Proof.
   intros st kind bt st' H. unfold code_push_ctrl in H.
-  destruct (alloc_vec_Vec_push st.(code_OpIterState_ctrls) _) as [v|] eqn:Hpush;
-    cbn [bind] in H; [|discriminate].
-  injection H as <-. apply vec_push_spec in Hpush.
+  destruct (code_ValsStack_len st.(code_OpIterState_vals)) as [base|e]
+    eqn:Hlen in H; cbn [bind] in H; [|inversion H].
+  destruct (code_CtrlsStack_push st.(code_OpIterState_ctrls) _) as [v|e]
+    eqn:Hpush in H; cbn [bind] in H; [|inversion H].
+  injection H as <-. apply ctrls_stack_push_spec in Hpush.
   cbn [code_OpIterState_vals code_OpIterState_ctrls].
-  split; [reflexivity | exact Hpush].
+  exists base. repeat split; try reflexivity.
+  - exact (vals_stack_len_spec _ _ Hlen).
+  - exact Hpush.
 Qed.
 
 (* ================================================================== *)
@@ -1160,8 +1207,8 @@ Qed.
     exhausted unreachable frame [i32.add]'s two pops yield [Bot] without changing
     anything, so its push is a net gain of one. *)
 Definition stack_size (st : code_OpIterState_t) : nat :=
-  (List.length (vec_list st.(code_OpIterState_vals))
-   + List.length (vec_list st.(code_OpIterState_ctrls)))%nat.
+  (List.length (vals_list st.(code_OpIterState_vals))
+   + List.length (ctrls_list st.(code_OpIterState_ctrls)))%nat.
 
 Lemma read_op_size : forall st data r st',
   code_read_op st data = Ok (r, st') -> stack_size st' = stack_size st.
@@ -1182,22 +1229,23 @@ Lemma start_function_pos : forall results st,
   to_Z st.(code_OpIterState_pos) = 0.
 Proof.
   intros results st H. unfold code_start_function in H.
-  destruct (if slice_len results s= 1%usize
-            then (vt <- slice_index_usize results 0%usize;
-                  Ok (Code_BlockType_Value vt))
-            else Ok Code_BlockType_Empty) as [bt|] eqn:Hbt;
-    cbn [bind] in H; [|discriminate].
-  pose proof (push_ctrl_pos _ _ _ st H) as Hp. unfold pos_of in Hp.
-  cbn [code_OpIterState_pos] in Hp. rewrite Hp. reflexivity.
+  destruct code_ValsStack_new as [vs|e] eqn:Hvs in H;
+    cbn [bind] in H; [|inversion H].
+  destruct code_CtrlsStack_new as [cs|e] eqn:Hcs in H;
+    cbn [bind] in H; [|inversion H].
+  destruct results; cbn [bind] in H.
+  all: pose proof (push_ctrl_pos _ _ _ st H) as Hp;
+       unfold pos_of in Hp; cbn [code_OpIterState_pos] in Hp;
+       rewrite Hp; reflexivity.
 Qed.
 
 (** [read_op] touches only the cursor, so the invariant
     transports through it. *)
 Lemma read_op_state : forall st data r st',
   code_read_op st data = Ok (r, st') ->
-  vec_list st'.(code_OpIterState_vals) = vec_list st.(code_OpIterState_vals)
-  /\ vec_list st'.(code_OpIterState_ctrls)
-     = vec_list st.(code_OpIterState_ctrls).
+  vals_list st'.(code_OpIterState_vals) = vals_list st.(code_OpIterState_vals)
+  /\ ctrls_list st'.(code_OpIterState_ctrls)
+     = ctrls_list st.(code_OpIterState_ctrls).
 Proof.
   intros st data r st' H. unfold code_read_op in H.
   destruct (reader_read_byte data st.(code_OpIterState_pos)) as [r0|] eqn:Hrb;
@@ -1222,7 +1270,8 @@ Lemma push_ctrl_size : forall st kind bt st',
   code_push_ctrl st kind bt = Ok st'
   -> stack_size st' = (stack_size st + 1)%nat.
 Proof.
-  intros st kind bt st' H. destruct (push_ctrl_spec st kind bt st' H) as [Hv Hc].
+  intros st kind bt st' H.
+  destruct (push_ctrl_spec st kind bt st' H) as [base [_ [Hv Hc]]].
   unfold stack_size. rewrite Hv. rewrite Hc.
   rewrite List.app_length. cbn [List.length]. lia.
 Qed.
@@ -1232,16 +1281,17 @@ Lemma pop_stack_type_size : forall st r st',
   (stack_size st' <= stack_size st)%nat.
 Proof.
   intros st r st' H. unfold code_pop_stack_type in H.
-  destruct (code_cur_base st) as [base|] eqn:Hcb; cbn [bind] in H;
-    [|discriminate].
-  destruct (alloc_vec_Vec_len st.(code_OpIterState_vals) s= base) eqn:Hb.
-  - destruct (code_cur_polymorphic st) as [pb|] eqn:Hcp; cbn [bind] in H;
-      [|discriminate].
+  destruct (code_ValsStack_len st.(code_OpIterState_vals)) as [n|e]
+    eqn:Hlen in H; cbn [bind] in H; [|inversion H].
+  destruct (code_cur_base st) as [base|e] eqn:Hcb in H;
+    cbn [bind] in H; [|inversion H].
+  destruct (n s= base) eqn:Hb.
+  - destruct (code_cur_polymorphic st) as [pb|e] eqn:Hcp in H;
+      cbn [bind] in H; [|inversion H].
     destruct pb; injection H as _ <-; apply Nat.le_refl.
-  - destruct (alloc_vec_Vec_pop alloc_alloc_Global
-                st.(code_OpIterState_vals)) as [[o v]|] eqn:Hpop;
-      cbn [bind] in H; [|discriminate].
-    pose proof (vec_pop_size _ o v Hpop) as Hlen.
+  - destruct (code_ValsStack_pop st.(code_OpIterState_vals))
+      as [[o v]|e] eqn:Hpop in H; cbn [bind] in H; [|inversion H].
+    pose proof (vals_stack_pop_size _ o v Hpop) as Hsize.
     destruct o; injection H as _ <-; unfold stack_size;
       cbn [code_OpIterState_vals code_OpIterState_ctrls]; lia.
 Qed.
@@ -1346,47 +1396,39 @@ Proof.
   assert (to_Z 0%usize = 0) by reflexivity. lia.
 Qed.
 
-(** A Wasm 1.0 block type contributes at most one result, which is what caps
-    [end]'s push. *)
-Lemma block_results_len : forall bt v,
-  code_block_results bt = Ok v -> (List.length (vec_list v) <= 1)%nat.
-Proof.
-  intros bt v H. unfold code_block_results in H.
-  destruct bt as [|vt].
-  - injection H as <-. cbn. apply Nat.le_0_l.
-  - apply vec_push_spec in H. rewrite H. cbn. apply Nat.le_refl.
-Qed.
-
 (** [mark_unreachable] truncates the operand stack and rewrites one control frame
     in place, so it can only shrink. *)
 Lemma mark_unreachable_loop_size : forall n st base vals ctrls pos,
-  (List.length (vec_list st.(code_OpIterState_vals)) <= n)%nat ->
+  (List.length (vals_list st.(code_OpIterState_vals)) <= n)%nat ->
   code_mark_unreachable_loop st base = Ok (vals, ctrls, pos) ->
-  (List.length (vec_list vals)
-     <= List.length (vec_list st.(code_OpIterState_vals)))%nat
-  /\ vec_list ctrls = vec_list st.(code_OpIterState_ctrls).
+  (List.length (vals_list vals)
+     <= List.length (vals_list st.(code_OpIterState_vals)))%nat
+  /\ ctrls_list ctrls = ctrls_list st.(code_OpIterState_ctrls).
 Proof.
   induction n as [|n IH]; intros st base vals ctrls pos Hlen H;
     unfold code_mark_unreachable_loop in H; rewrite loop_unfold in H;
-    cbn beta iota in H;
-    destruct (alloc_vec_Vec_len st.(code_OpIterState_vals) s<= base) eqn:Hle.
+    cbn beta iota in H.
+  all: destruct (code_ValsStack_len st.(code_OpIterState_vals))
+    as [len|e] eqn:Hstacklen in H; cbn [bind] in H; [|inversion H].
+  all: destruct (len s<= base) eqn:Hle.
   - injection H as <- <- _. split; [apply Nat.le_refl | reflexivity].
   - exfalso. apply scalar_leb_false in Hle.
-    assert (Hnil : vec_list st.(code_OpIterState_vals) = []).
-    { destruct (vec_list st.(code_OpIterState_vals)); [reflexivity|].
+    assert (Hnil : vals_list st.(code_OpIterState_vals) = []).
+    { destruct (vals_list st.(code_OpIterState_vals)); [reflexivity|].
       cbn [List.length] in Hlen. lia. }
-    rewrite vec_len_spec in Hle. rewrite Hnil in Hle. cbn [List.length] in Hle.
+    rewrite (vals_stack_len_spec _ _ Hstacklen) in Hle.
+    rewrite Hnil in Hle. cbn [List.length] in Hle.
     pose proof (usize_nonneg base). lia.
   - injection H as <- <- _. split; [apply Nat.le_refl | reflexivity].
-  - destruct (alloc_vec_Vec_pop alloc_alloc_Global
-                st.(code_OpIterState_vals)) as [[o v]|] eqn:Hpop;
-      cbn [bind] in H; [|discriminate].
-    pose proof (vec_pop_size _ o v Hpop) as Hsh.
+  - destruct (code_ValsStack_pop st.(code_OpIterState_vals))
+      as [[o v]|e] eqn:Hpop in H; cbn [bind] in H; [|inversion H].
+    pose proof (vals_stack_pop_size _ o v Hpop) as Hsh.
     apply scalar_leb_false in Hle.
-    assert (Hne : vec_list st.(code_OpIterState_vals) <> []).
-    { intros Hnil. rewrite vec_len_spec in Hle. rewrite Hnil in Hle.
+    assert (Hne : vals_list st.(code_OpIterState_vals) <> []).
+    { intros Hnil. rewrite (vals_stack_len_spec _ _ Hstacklen) in Hle.
+      rewrite Hnil in Hle.
       cbn [List.length] in Hle. pose proof (usize_nonneg base). lia. }
-    pose proof (vec_pop_len _ o v Hpop Hne) as Hlt.
+    pose proof (vals_stack_pop_len _ o v Hpop Hne) as Hlt.
     destruct (IH {| code_OpIterState_vals := v;
                     code_OpIterState_ctrls := st.(code_OpIterState_ctrls);
                     code_OpIterState_pos := st.(code_OpIterState_pos)
@@ -1401,24 +1443,43 @@ Lemma mark_unreachable_size : forall st st',
   (stack_size st' <= stack_size st)%nat.
 Proof.
   intros st st' H. unfold code_mark_unreachable in H.
-  destruct (code_cur_base st) as [base|] eqn:Hcb; cbn [bind] in H;
-    [|discriminate].
+  destruct (code_cur_base st) as [base|e] eqn:Hcb in H; cbn [bind] in H;
+    [|inversion H].
   destruct (code_mark_unreachable_loop st base)
-    as [[[v v1] i]|] eqn:Hloop; cbn [bind] in H; [|discriminate].
+    as [[[v v1] i]|e] eqn:Hloop in H; cbn [bind] in H; [|inversion H].
   destruct (mark_unreachable_loop_size
-              (List.length (vec_list st.(code_OpIterState_vals)))
+              (List.length (vals_list st.(code_OpIterState_vals)))
               st base v v1 i (Nat.le_refl _) Hloop) as [Hv Hc].
-  destruct (alloc_vec_Vec_len v1 s= 0%usize) eqn:Hz.
+  destruct (code_CtrlsStack_len v1) as [n|e] eqn:Hlen in H;
+    cbn [bind] in H; [|inversion H].
+  destruct (n s= 0%usize) eqn:Hz in H.
   { injection H as <-. unfold stack_size.
     cbn [code_OpIterState_vals code_OpIterState_ctrls]. rewrite Hc. lia. }
-  destruct (usize_sub (alloc_vec_Vec_len v1) 1%usize) as [i1|] eqn:Hsub;
-    cbn [bind] in H; [|discriminate].
-  rewrite vec_index_mut_spec in H.
-  destruct (List.nth_error (vec_list v1) (Z.to_nat (to_Z i1))) as [c|] eqn:Hnth;
-    cbn [bind] in H; [|discriminate].
+  destruct (usize_sub n 1%usize) as [i1|e] eqn:Hsub in H;
+    cbn [bind] in H; [|inversion H].
+  pose proof Hz as Hnz. apply scalar_eqb_false in Hnz.
+  assert (Hnpos : 1 <= to_Z n).
+  { pose proof (usize_nonneg n).
+    assert (to_Z 0%usize = 0) by reflexivity. lia. }
+  assert (Hidx : Z.to_nat (to_Z i1) =
+    (List.length (ctrls_list v1) - 1)%nat).
+  { unfold usize_sub, scalar_sub in Hsub. apply mk_scalar_ok_to_Z in Hsub.
+    assert (Hone : to_Z 1%usize = 1) by reflexivity.
+    rewrite Hsub, Hone. rewrite Z2Nat.inj_sub by lia.
+    rewrite (ctrls_stack_len_spec _ _ Hlen), Nat2Z.id. cbn. reflexivity. }
+  assert (Hbound : (Z.to_nat (to_Z i1) < List.length (ctrls_list v1))%nat).
+  { rewrite (ctrls_stack_len_spec _ _ Hlen) in Hnz.
+    assert (Hlenpos : (0 < List.length (ctrls_list v1))%nat).
+    { destruct (List.length (ctrls_list v1)); [cbn in Hnz; contradiction|lia]. }
+    rewrite Hidx. lia. }
+  destruct (code_CtrlsStack_get v1 i1) as [c|e] eqn:Hget in H;
+    cbn [bind] in H; [|inversion H].
+  destruct (code_CtrlsStack_set v1 i1 _) as [v2|e] eqn:Hset in H;
+    cbn [bind] in H; [|inversion H].
   injection H as <-. unfold stack_size.
   cbn [code_OpIterState_vals code_OpIterState_ctrls].
-  rewrite vec_update_spec. rewrite list_update_length. rewrite Hc. lia.
+  rewrite (ctrls_stack_set_spec _ _ _ _ Hbound Hset).
+  rewrite list_update_length, Hc. lia.
 Qed.
 
 (** Each reader, with the bound the loop invariant needs. Stated uniformly at
@@ -1436,23 +1497,71 @@ Proof.
   pose proof (mark_unreachable_size st st1 Hmu) as Hs1. lia.
 Qed.
 
+Lemma pop_block_results_size : forall st bt r st',
+  code_pop_block_results st bt = Ok (r, st') ->
+  (stack_size st' <= stack_size st)%nat.
+Proof.
+  intros st bt r st' H. destruct bt as [|vt].
+  - cbn [code_pop_block_results] in H. injection H as _ <-. apply Nat.le_refl.
+  - unfold code_pop_block_results in H.
+    destruct (code_pop_with_type st vt) as [[r0 st0]|e] eqn:Hpop in H;
+      cbn [bind] in H; [|inversion H].
+    pose proof (pop_with_type_size st vt r0 st0 Hpop) as Hsize.
+    destruct r0 as [t|e].
+    + rewrite branch_ok in H. cbn [bind] in H. injection H as _ <-. exact Hsize.
+    + rewrite branch_err in H. cbn [bind] in H.
+      rewrite from_residual_err in H. cbn [bind] in H.
+      injection H as _ <-. exact Hsize.
+Qed.
+
+Lemma pop_block_results_ctrls : forall st bt r st',
+  code_pop_block_results st bt = Ok (r, st') ->
+  ctrls_list st'.(code_OpIterState_ctrls) =
+    ctrls_list st.(code_OpIterState_ctrls).
+Proof.
+  intros st bt r st' H. destruct bt as [|vt].
+  - cbn [code_pop_block_results] in H. injection H as _ <-. reflexivity.
+  - unfold code_pop_block_results in H.
+    destruct (code_pop_with_type st vt) as [[r0 st0]|e] eqn:Hpop in H;
+      cbn [bind] in H; [|inversion H].
+    pose proof (pop_with_type_ctrls st vt r0 st0 Hpop) as Hc.
+    destruct r0 as [t|e].
+    + rewrite branch_ok in H. cbn [bind] in H. injection H as _ <-. exact Hc.
+    + rewrite branch_err in H. cbn [bind] in H.
+      rewrite from_residual_err in H. cbn [bind] in H.
+      injection H as _ <-. exact Hc.
+Qed.
+
+Lemma push_block_results_size : forall st bt st',
+  code_push_block_results st bt = Ok st' ->
+  (stack_size st' <= stack_size st + 1)%nat.
+Proof.
+  intros st bt st' H. destruct bt as [|vt].
+  - cbn [code_push_block_results] in H. injection H as <-. lia.
+  - cbn [code_push_block_results] in H.
+    rewrite (push_val_size st (Code_StackType_Val vt) st' H). lia.
+Qed.
+
 Lemma read_return_size : forall st ctx r st',
   code_read_return st ctx = Ok (r, st') ->
   (stack_size st' <= stack_size st + 1)%nat.
 Proof.
   intros st ctx r st' H. unfold code_read_return in H.
-  destruct (code_pop_types st (alloc_vec_Vec_deref ctx.(code_Context_results))) as [[r1 st1]|]
-    eqn:Hpt; cbn [bind] in H; [|discriminate].
-  pose proof (pop_types_size st _ r1 st1 Hpt) as Hs1.
+  destruct ctx.(code_Context_results) as [vt|]; cbn [bind] in H.
+  all: destruct (code_pop_block_results st _) as [[r1 st1]|e]
+    eqn:Hpt in H; cbn [bind] in H; [|inversion H].
+  all: pose proof (pop_block_results_size st _ r1 st1 Hpt) as Hs1.
+  all:
   destruct r1 as [u1|e1].
-  2: { rewrite branch_err in H. cbn [bind] in H.
-       rewrite from_residual_err in H. cbn [bind] in H.
-       injection H as _ <-. lia. }
-  destruct u1. rewrite branch_ok in H. cbn [bind] in H.
+  all: try (rewrite branch_err in H; cbn [bind] in H;
+       rewrite from_residual_err in H; cbn [bind] in H;
+       injection H as _ <-; lia).
+  all: destruct u1; rewrite branch_ok in H; cbn [bind] in H.
+  all:
   destruct (code_mark_unreachable st1) as [st2|] eqn:Hmu; cbn [bind] in H;
     [|discriminate].
-  injection H as _ <-.
-  pose proof (mark_unreachable_size st1 st2 Hmu) as Hs2. lia.
+  all: injection H as _ <-;
+       pose proof (mark_unreachable_size st1 st2 Hmu) as Hs2; lia.
 Qed.
 
 Lemma read_drop_size : forall st r st',
@@ -1729,10 +1838,10 @@ Qed.
     leave both stacks alone, in every branch. *)
 Lemma read_label_fields : forall st data r st',
   code_read_label st data = Ok (r, st') ->
-  vec_list st'.(code_OpIterState_vals)
-    = vec_list st.(code_OpIterState_vals)
-  /\ vec_list st'.(code_OpIterState_ctrls)
-     = vec_list st.(code_OpIterState_ctrls).
+  vals_list st'.(code_OpIterState_vals)
+    = vals_list st.(code_OpIterState_vals)
+  /\ ctrls_list st'.(code_OpIterState_ctrls)
+     = ctrls_list st.(code_OpIterState_ctrls).
 Proof.
   intros st data r st' H. unfold code_read_label in H.
   destruct (reader_read_u32_leb data st.(code_OpIterState_pos)) as [r1|]
@@ -1742,19 +1851,20 @@ Proof.
        rewrite from_residual_err in H. cbn [bind] in H.
        injection H as _ <-. split; reflexivity. }
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (scalar_cast U32 Usize d0) as [d|] eqn:Hcast; cbn [bind] in H;
-    [|discriminate].
-  destruct (d s>= alloc_vec_Vec_len st.(code_OpIterState_ctrls)) eqn:Hge.
+  destruct (code_CtrlsStack_len st.(code_OpIterState_ctrls)) as [n|e]
+    eqn:Hlen in H; cbn [bind] in H; [|inversion H].
+  destruct (scalar_cast U32 Usize d0) as [d|e] eqn:Hcast in H;
+    cbn [bind] in H; [|inversion H].
+  destruct (d s>= n) eqn:Hge.
   { injection H as _ <-.
     cbn [code_OpIterState_vals code_OpIterState_ctrls].
     split; reflexivity. }
-  destruct (usize_sub (alloc_vec_Vec_len st.(code_OpIterState_ctrls)) 1%usize)
-    as [i|] eqn:Hsub1; cbn [bind] in H; [|discriminate].
-  destruct (usize_sub i d) as [i1|] eqn:Hsub2; cbn [bind] in H; [|discriminate].
-  destruct (alloc_vec_Vec_index
-              (core_slice_index_SliceIndexUsizeSliceInst code_Ctrl_t)
-              st.(code_OpIterState_ctrls) i1) as [target|] eqn:Hidx;
-    cbn [bind] in H; [|discriminate].
+  destruct (usize_sub n 1%usize) as [i|e] eqn:Hsub1 in H;
+    cbn [bind] in H; [|inversion H].
+  destruct (usize_sub i d) as [i1|e] eqn:Hsub2 in H;
+    cbn [bind] in H; [|inversion H].
+  destruct (code_CtrlsStack_get st.(code_OpIterState_ctrls) i1)
+    as [target|e] eqn:Hidx in H; cbn [bind] in H; [|inversion H].
   injection H as _ <-.
   cbn [code_OpIterState_vals code_OpIterState_ctrls].
   split; reflexivity.
@@ -1795,17 +1905,17 @@ Qed.
 Definition depth_target (st : code_OpIterState_t) (d : Z)
                         (bt : code_BlockType_t) : Prop :=
   exists c,
-    (Z.to_nat d < List.length (vec_list st.(code_OpIterState_ctrls)))%nat
-    /\ List.nth_error (vec_list st.(code_OpIterState_ctrls))
-         (List.length (vec_list st.(code_OpIterState_ctrls)) - 1 - Z.to_nat d)
+    (Z.to_nat d < List.length (ctrls_list st.(code_OpIterState_ctrls)))%nat
+    /\ List.nth_error (ctrls_list st.(code_OpIterState_ctrls))
+         (List.length (ctrls_list st.(code_OpIterState_ctrls)) - 1 - Z.to_nat d)
        = Some c
     /\ branch_target_bt_of c = bt.
 
 (** Both stacks are untouched by everything [br_table]'s loop does, so a depth
     resolved at one point of the run is resolved at every other. *)
 Lemma depth_target_ctrls : forall st st' d bt,
-  vec_list st'.(code_OpIterState_ctrls)
-    = vec_list st.(code_OpIterState_ctrls) ->
+  ctrls_list st'.(code_OpIterState_ctrls)
+    = ctrls_list st.(code_OpIterState_ctrls) ->
   depth_target st d bt -> depth_target st' d bt.
 Proof. intros st st' d bt Hc H. unfold depth_target in *. rewrite Hc. exact H. Qed.
 
@@ -1822,11 +1932,11 @@ Proof.
        rewrite from_residual_err in H. cbn [bind] in H.
        injection H as _ <-. lia. }
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (code_branch_target_types target) as [types|] eqn:Hbtt;
+  destruct (code_branch_target_bt target) as [bt|] eqn:Hbtt;
     cbn [bind] in H; [|discriminate].
-  destruct (code_pop_types st1 (alloc_vec_Vec_deref types)) as [[r2 st2]|]
+  destruct (code_pop_block_results st1 bt) as [[r2 st2]|]
     eqn:Hpt; cbn [bind] in H; [|discriminate].
-  pose proof (pop_types_size _ _ r2 st2 Hpt) as Hs2.
+  pose proof (pop_block_results_size _ _ r2 st2 Hpt) as Hs2.
   destruct r2 as [u2|e2].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H.
@@ -1845,10 +1955,10 @@ Lemma read_table_labels_loop_fields : forall n V (inst : code_OpVisitor_t V)
   to_Z i + Z.of_nat n = to_Z count ->
   code_read_table_labels_loop inst st data count v expect i
     = Ok (r, st', v') ->
-  vec_list st'.(code_OpIterState_vals)
-    = vec_list st.(code_OpIterState_vals)
-  /\ vec_list st'.(code_OpIterState_ctrls)
-     = vec_list st.(code_OpIterState_ctrls).
+  vals_list st'.(code_OpIterState_vals)
+    = vals_list st.(code_OpIterState_vals)
+  /\ ctrls_list st'.(code_OpIterState_ctrls)
+     = ctrls_list st.(code_OpIterState_ctrls).
 Proof.
   induction n as [|n IH];
     intros V inst v st data count expect i r st' v' Hn H;
@@ -1894,10 +2004,10 @@ Qed.
 Lemma read_table_labels_fields : forall V (inst : code_OpVisitor_t V) v
                                         st data count r st' v',
   code_read_table_labels inst st data count v = Ok (r, st', v') ->
-  vec_list st'.(code_OpIterState_vals)
-    = vec_list st.(code_OpIterState_vals)
-  /\ vec_list st'.(code_OpIterState_ctrls)
-     = vec_list st.(code_OpIterState_ctrls).
+  vals_list st'.(code_OpIterState_vals)
+    = vals_list st.(code_OpIterState_vals)
+  /\ ctrls_list st'.(code_OpIterState_ctrls)
+     = ctrls_list st.(code_OpIterState_ctrls).
 Proof.
   intros V inst v st data count r st' v' H.
   unfold code_read_table_labels in H.
@@ -1970,11 +2080,9 @@ Proof.
        rewrite from_residual_err in H. cbn [bind] in H.
        inversion H; subst. lia. }
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (code_block_results common) as [types|] eqn:Hbr;
-    cbn [bind] in H; [|discriminate].
-  destruct (code_pop_types st3 (alloc_vec_Vec_deref types)) as [[r6 st4]|]
+  destruct (code_pop_block_results st3 common) as [[r6 st4]|]
     eqn:Hpt; cbn [bind] in H; [|discriminate].
-  pose proof (pop_types_size _ _ r6 st4 Hpt) as Hs4.
+  pose proof (pop_block_results_size _ _ r6 st4 Hpt) as Hs4.
   destruct r6 as [u6|e6].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H.
@@ -2089,58 +2197,35 @@ Lemma read_else_size : forall st r st',
   (stack_size st' <= stack_size st)%nat.
 Proof.
   intros st r st' H. unfold code_read_else in H.
-  destruct (alloc_vec_Vec_len st.(code_OpIterState_ctrls) s= 0%usize) eqn:Hn.
+  destruct (code_CtrlsStack_len st.(code_OpIterState_ctrls)) as [n|e]
+    eqn:Hlen in H; cbn [bind] in H; [|inversion H].
+  destruct (n s= 0%usize) eqn:Hn.
   { injection H as _ <-. lia. }
-  destruct (usize_sub (alloc_vec_Vec_len st.(code_OpIterState_ctrls))
-              1%usize) as [i|] eqn:Hsub; cbn [bind] in H; [|discriminate].
-  destruct (alloc_vec_Vec_index
-              (core_slice_index_SliceIndexUsizeSliceInst code_Ctrl_t)
-              st.(code_OpIterState_ctrls) i) as [frame|] eqn:Hidx;
-    cbn [bind] in H; [|discriminate].
+  destruct (usize_sub n 1%usize) as [i|e] eqn:Hsub in H;
+    cbn [bind] in H; [|inversion H].
+  destruct (code_CtrlsStack_get st.(code_OpIterState_ctrls) i)
+    as [frame|e] eqn:Hidx in H; cbn [bind] in H; [|inversion H].
   destruct (code_is_then frame.(code_Ctrl_kind)) as [b|] eqn:Hit;
     cbn [bind] in H; [|discriminate].
   destruct b; [|injection H as _ <-; lia].
-  destruct (code_block_results frame.(code_Ctrl_block_type))
-    as [results|] eqn:Hbr; cbn [bind] in H; [|discriminate].
-  destruct (code_pop_types st (alloc_vec_Vec_deref results))
+  destruct (code_pop_block_results st frame.(code_Ctrl_block_type))
     as [[r1 st1]|] eqn:Hpt; cbn [bind] in H; [|discriminate].
-  pose proof (pop_types_size st _ r1 st1 Hpt) as Hs1.
+  pose proof (pop_block_results_size st _ r1 st1 Hpt) as Hs1.
   destruct r1 as [u1|e1].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H.
        injection H as _ <-. lia. }
   destruct u1. rewrite branch_ok in H. cbn [bind] in H.
-  destruct (alloc_vec_Vec_len st1.(code_OpIterState_vals)
-            s<> frame.(code_Ctrl_value_stack_base)) eqn:Hg.
+  destruct (code_ValsStack_len st1.(code_OpIterState_vals)) as [nv|e]
+    eqn:Hvlen in H; cbn [bind] in H; [|inversion H].
+  destruct (nv s<> frame.(code_Ctrl_value_stack_base)) eqn:Hg.
   { injection H as _ <-. lia. }
-  destruct (alloc_vec_Vec_index_mut
-              (core_slice_index_SliceIndexUsizeSliceInst code_Ctrl_t)
-              st1.(code_OpIterState_ctrls) i) as [[c back]|] eqn:Hidx2;
-    cbn [bind] in H; [|discriminate].
-  destruct (alloc_vec_Vec_index_mut
-              (core_slice_index_SliceIndexUsizeSliceInst code_Ctrl_t)
-              (back {| code_Ctrl_kind := Code_LabelKind_Else;
-                       code_Ctrl_block_type := c.(code_Ctrl_block_type);
-                       code_Ctrl_value_stack_base :=
-                         c.(code_Ctrl_value_stack_base);
-                       code_Ctrl_polymorphic_base :=
-                         c.(code_Ctrl_polymorphic_base) |}) i)
-    as [[c1 back1]|] eqn:Hidx3; cbn [bind] in H; [|discriminate].
+  destruct (code_CtrlsStack_set st1.(code_OpIterState_ctrls) i _)
+    as [cs1|e] eqn:Hset in H; cbn [bind] in H; [|inversion H].
   injection H as _ <-.
-  pose proof (vec_index_mut_len _ _ _ _ Hidx2
-                {| code_Ctrl_kind := Code_LabelKind_Else;
-                   code_Ctrl_block_type := c.(code_Ctrl_block_type);
-                   code_Ctrl_value_stack_base := c.(code_Ctrl_value_stack_base);
-                   code_Ctrl_polymorphic_base := c.(code_Ctrl_polymorphic_base) |})
-    as Hlen2.
-  pose proof (vec_index_mut_len _ _ _ _ Hidx3
-                {| code_Ctrl_kind := c1.(code_Ctrl_kind);
-                   code_Ctrl_block_type := c1.(code_Ctrl_block_type);
-                   code_Ctrl_value_stack_base := c1.(code_Ctrl_value_stack_base);
-                   code_Ctrl_polymorphic_base := false |})
-    as Hlen3.
+  pose proof (ctrls_stack_set_length _ _ _ _ Hset) as Hlen2.
   unfold stack_size in Hs1 |- *.
-  cbn [code_OpIterState_vals code_OpIterState_ctrls] in Hlen2, Hlen3 |- *.
+  cbn [code_OpIterState_vals code_OpIterState_ctrls] in Hlen2 |- *.
   lia.
 Qed.
 
@@ -2151,73 +2236,45 @@ Lemma read_end_size : forall st r st',
   (stack_size st' <= stack_size st + 1)%nat.
 Proof.
   intros st r st' H. unfold code_read_end in H.
-  destruct (alloc_vec_Vec_len st.(code_OpIterState_ctrls) s= 0%usize) eqn:Hn.
+  destruct (code_CtrlsStack_len st.(code_OpIterState_ctrls)) as [n|e]
+    eqn:Hlen in H; cbn [bind] in H; [|inversion H].
+  destruct (n s= 0%usize) eqn:Hn.
   { injection H as _ <-. lia. }
-  destruct (usize_sub (alloc_vec_Vec_len st.(code_OpIterState_ctrls))
-              1%usize) as [i|] eqn:Hsub; cbn [bind] in H; [|discriminate].
-  destruct (alloc_vec_Vec_index
-              (core_slice_index_SliceIndexUsizeSliceInst code_Ctrl_t)
-              st.(code_OpIterState_ctrls) i) as [frame|] eqn:Hidx;
-    cbn [bind] in H; [|discriminate].
-  destruct (code_block_results frame.(code_Ctrl_block_type))
-    as [results|] eqn:Hbr; cbn [bind] in H; [|discriminate].
-  pose proof (block_results_len _ results Hbr) as Hrlen.
+  destruct (usize_sub n 1%usize) as [i|e] eqn:Hsub in H;
+    cbn [bind] in H; [|inversion H].
+  destruct (code_CtrlsStack_get st.(code_OpIterState_ctrls) i)
+    as [frame|e] eqn:Hidx in H; cbn [bind] in H; [|inversion H].
+  destruct frame.(code_Ctrl_block_type) as [|vt] eqn:Hbt in H;
+    cbn [bind] in H.
+  all:
   destruct (code_is_then frame.(code_Ctrl_kind)) as [b|] eqn:Hit;
     cbn [bind] in H; [|discriminate].
-  destruct b.
-  - destruct (alloc_vec_Vec_is_empty alloc_alloc_Global results) as [b1|]
-      eqn:Hemp; cbn [bind] in H; [|discriminate].
-    destruct b1; cbn [bind] in H; [|injection H as _ <-; lia].
-    destruct (code_pop_types st (alloc_vec_Vec_deref results))
-      as [[r1 st1]|] eqn:Hpt; cbn [bind] in H; [|discriminate].
-    pose proof (pop_types_size st _ r1 st1 Hpt) as Hs1.
-    destruct r1 as [u1|e1].
-    2: { rewrite branch_err in H. cbn [bind] in H.
-         rewrite from_residual_err in H. cbn [bind] in H.
-         injection H as _ <-. lia. }
-    destruct u1. rewrite branch_ok in H. cbn [bind] in H.
-    destruct (alloc_vec_Vec_len st1.(code_OpIterState_vals)
-              s<> frame.(code_Ctrl_value_stack_base)) eqn:Hg.
-    { injection H as _ <-. lia. }
-    destruct (alloc_vec_Vec_pop alloc_alloc_Global st1.(code_OpIterState_ctrls))
-      as [[o v]|] eqn:Hpop; cbn [bind] in H; [|discriminate].
-    pose proof (vec_pop_size _ o v Hpop) as Hvp.
-    destruct (code_push_types
-                {| code_OpIterState_vals := st1.(code_OpIterState_vals);
-                   code_OpIterState_ctrls := v;
-                   code_OpIterState_pos := st1.(code_OpIterState_pos)
-                |} (alloc_vec_Vec_deref results)) as [st2|] eqn:Hpush;
-      cbn [bind] in H; [|discriminate].
-    injection H as _ <-.
-    pose proof (push_types_size _ _ st2 Hpush) as Hs2.
-    rewrite vec_deref_spec in Hs2.
-    unfold stack_size in Hs1, Hs2 |- *.
-    cbn [code_OpIterState_vals code_OpIterState_ctrls] in Hs2. lia.
-  - destruct (code_pop_types st (alloc_vec_Vec_deref results))
-      as [[r1 st1]|] eqn:Hpt; cbn [bind] in H; [|discriminate].
-    pose proof (pop_types_size st _ r1 st1 Hpt) as Hs1.
-    destruct r1 as [u1|e1].
-    2: { rewrite branch_err in H. cbn [bind] in H.
-         rewrite from_residual_err in H. cbn [bind] in H.
-         injection H as _ <-. lia. }
-    destruct u1. rewrite branch_ok in H. cbn [bind] in H.
-    destruct (alloc_vec_Vec_len st1.(code_OpIterState_vals)
-              s<> frame.(code_Ctrl_value_stack_base)) eqn:Hg.
-    { injection H as _ <-. lia. }
-    destruct (alloc_vec_Vec_pop alloc_alloc_Global st1.(code_OpIterState_ctrls))
-      as [[o v]|] eqn:Hpop; cbn [bind] in H; [|discriminate].
-    pose proof (vec_pop_size _ o v Hpop) as Hvp.
-    destruct (code_push_types
-                {| code_OpIterState_vals := st1.(code_OpIterState_vals);
-                   code_OpIterState_ctrls := v;
-                   code_OpIterState_pos := st1.(code_OpIterState_pos)
-                |} (alloc_vec_Vec_deref results)) as [st2|] eqn:Hpush;
-      cbn [bind] in H; [|discriminate].
-    injection H as _ <-.
-    pose proof (push_types_size _ _ st2 Hpush) as Hs2.
-    rewrite vec_deref_spec in Hs2.
-    unfold stack_size in Hs1, Hs2 |- *.
-    cbn [code_OpIterState_vals code_OpIterState_ctrls] in Hs2. lia.
+  all: destruct b; cbn [bind] in H.
+  all: try (injection H as _ <-; lia).
+  all: destruct (code_pop_block_results st _) as [[r1 st1]|e]
+    eqn:Hpt in H; cbn [bind] in H; [|inversion H].
+  all: pose proof (pop_block_results_size st _ r1 st1 Hpt) as Hs1.
+  all: destruct r1 as [u1|e1].
+  all: try (rewrite branch_err in H; cbn [bind] in H;
+    rewrite from_residual_err in H; cbn [bind] in H;
+    injection H as _ <-; lia).
+  all: destruct u1; rewrite branch_ok in H; cbn [bind] in H.
+  all: destruct (code_ValsStack_len st1.(code_OpIterState_vals))
+    as [nv|e] eqn:Hvlen in H; cbn [bind] in H; [|inversion H].
+  all: destruct (nv s<> frame.(code_Ctrl_value_stack_base)) eqn:Hg in H.
+  all: try (injection H as _ <-; lia).
+  all: destruct (code_CtrlsStack_pop st1.(code_OpIterState_ctrls))
+    as [[o cs]|e] eqn:Hpop in H; cbn [bind] in H; [|inversion H].
+  all: pose proof (ctrls_stack_pop_size _ o cs Hpop) as Hcp.
+  all: destruct (code_push_block_results
+    {| code_OpIterState_vals := st1.(code_OpIterState_vals);
+       code_OpIterState_ctrls := cs;
+       code_OpIterState_pos := st1.(code_OpIterState_pos) |} _)
+    as [st2|e] eqn:Hpush in H; cbn [bind] in H; [|inversion H].
+  all: injection H as _ <-.
+  all: pose proof (push_block_results_size _ _ st2 Hpush) as Hs2.
+  all: unfold stack_size in Hs1, Hs2 |- *;
+       cbn [code_OpIterState_vals code_OpIterState_ctrls] in Hs2; lia.
 Qed.
 
 (* ================================================================== *)
@@ -2230,64 +2287,88 @@ Qed.
 
     The accessors are total because the code checks the control stack for
     emptiness before indexing it, and [len - 1] is in range once it is not. *)
-Lemma cur_base_total : forall st, exists b, code_cur_base st = Ok b.
+Lemma cur_base_total : forall st,
+  Z.of_nat (List.length (ctrls_list st.(code_OpIterState_ctrls))) <= usize_max ->
+  exists b, code_cur_base st = Ok b.
 Proof.
-  intros st. unfold code_cur_base.
-  destruct (alloc_vec_Vec_len st.(code_OpIterState_ctrls) s= 0%usize) eqn:Hz.
+  intros st Hmax. unfold code_cur_base.
+  destruct (ctrls_stack_len_total st.(code_OpIterState_ctrls) Hmax)
+    as [n Hlen]. rewrite Hlen. cbn [bind].
+  destruct (n s= 0%usize) eqn:Hz.
   - eexists. reflexivity.
-  - apply scalar_eqb_false in Hz. rewrite vec_len_spec in Hz.
+  - apply scalar_eqb_false in Hz.
     assert (H0 : to_Z 0%usize = 0) by reflexivity.
-    destruct (usize_sub_1_ok (alloc_vec_Vec_len st.(code_OpIterState_ctrls)))
-      as [i [Hsub Hival]]; [rewrite vec_len_spec; lia|].
-    rewrite Hsub. cbn [bind]. rewrite vec_index_spec.
+    rewrite H0 in Hz.
+    assert (Hnpos : (1 <= to_Z n)%Z) by (pose proof (usize_nonneg n); lia).
+    destruct (usize_sub_1_ok n ltac:(lia)) as [i [Hsub Hival]].
+    rewrite Hsub. cbn [bind].
+    assert (Hlenpos : (0 < List.length
+      (ctrls_list st.(code_OpIterState_ctrls)))%nat).
+    { rewrite (ctrls_stack_len_spec _ _ Hlen) in Hnpos.
+      destruct (List.length (ctrls_list st.(code_OpIterState_ctrls)));
+        cbn in Hnpos; lia. }
     assert (Hlt : (Z.to_nat (to_Z i)
-                   < List.length (vec_list st.(code_OpIterState_ctrls)))%nat).
-    { rewrite Hival. rewrite vec_len_spec. lia. }
-    destruct (List.nth_error (vec_list st.(code_OpIterState_ctrls))
-                (Z.to_nat (to_Z i))) as [c|] eqn:Hnth.
-    + cbn [bind]. eexists. reflexivity.
-    + exfalso. apply List.nth_error_None in Hnth. lia.
+                   < List.length (ctrls_list st.(code_OpIterState_ctrls)))%nat).
+    { rewrite Hival, (ctrls_stack_len_spec _ _ Hlen).
+      rewrite Z2Nat.inj_sub by lia. cbn. rewrite Nat2Z.id.
+      lia. }
+    destruct (ctrls_stack_get_total _ i Hlt) as [c Hget].
+    rewrite Hget. cbn [bind]. eexists. reflexivity.
 Qed.
 
 Lemma cur_polymorphic_total : forall st,
+  Z.of_nat (List.length (ctrls_list st.(code_OpIterState_ctrls))) <= usize_max ->
   exists u, code_cur_polymorphic st = Ok u.
 Proof.
-  intros st. unfold code_cur_polymorphic.
-  destruct (alloc_vec_Vec_len st.(code_OpIterState_ctrls) s= 0%usize) eqn:Hz.
+  intros st Hmax. unfold code_cur_polymorphic.
+  destruct (ctrls_stack_len_total st.(code_OpIterState_ctrls) Hmax)
+    as [n Hlen]. rewrite Hlen. cbn [bind].
+  destruct (n s= 0%usize) eqn:Hz.
   - eexists. reflexivity.
-  - apply scalar_eqb_false in Hz. rewrite vec_len_spec in Hz.
+  - apply scalar_eqb_false in Hz.
     assert (H0 : to_Z 0%usize = 0) by reflexivity.
-    destruct (usize_sub_1_ok (alloc_vec_Vec_len st.(code_OpIterState_ctrls)))
-      as [i [Hsub Hival]]; [rewrite vec_len_spec; lia|].
-    rewrite Hsub. cbn [bind]. rewrite vec_index_spec.
+    rewrite H0 in Hz.
+    assert (Hnpos : (1 <= to_Z n)%Z) by (pose proof (usize_nonneg n); lia).
+    destruct (usize_sub_1_ok n ltac:(lia)) as [i [Hsub Hival]].
+    rewrite Hsub. cbn [bind].
+    assert (Hlenpos : (0 < List.length
+      (ctrls_list st.(code_OpIterState_ctrls)))%nat).
+    { rewrite (ctrls_stack_len_spec _ _ Hlen) in Hnpos.
+      destruct (List.length (ctrls_list st.(code_OpIterState_ctrls)));
+        cbn in Hnpos; lia. }
     assert (Hlt : (Z.to_nat (to_Z i)
-                   < List.length (vec_list st.(code_OpIterState_ctrls)))%nat).
-    { rewrite Hival. rewrite vec_len_spec. lia. }
-    destruct (List.nth_error (vec_list st.(code_OpIterState_ctrls))
-                (Z.to_nat (to_Z i))) as [c|] eqn:Hnth.
-    + cbn [bind]. eexists. reflexivity.
-    + exfalso. apply List.nth_error_None in Hnth. lia.
+                   < List.length (ctrls_list st.(code_OpIterState_ctrls)))%nat).
+    { rewrite Hival, (ctrls_stack_len_spec _ _ Hlen).
+      rewrite Z2Nat.inj_sub by lia. cbn. rewrite Nat2Z.id.
+      lia. }
+    destruct (ctrls_stack_get_total _ i Hlt) as [c Hget].
+    rewrite Hget. cbn [bind]. eexists. reflexivity.
 Qed.
 
 Lemma pop_stack_type_total : forall st,
+  Z.of_nat (List.length (vals_list st.(code_OpIterState_vals))) <= usize_max ->
+  Z.of_nat (List.length (ctrls_list st.(code_OpIterState_ctrls))) <= usize_max ->
   exists r st', code_pop_stack_type st = Ok (r, st').
 Proof.
-  intros st. unfold code_pop_stack_type.
-  destruct (cur_base_total st) as [base Hcb]. rewrite Hcb. cbn [bind].
-  destruct (alloc_vec_Vec_len st.(code_OpIterState_vals) s= base).
-  - destruct (cur_polymorphic_total st) as [pb Hcp]. rewrite Hcp. cbn [bind].
+  intros st Hvmax Hcmax. unfold code_pop_stack_type.
+  destruct (vals_stack_len_total st.(code_OpIterState_vals) Hvmax)
+    as [n Hlen]. rewrite Hlen. cbn [bind].
+  destruct (cur_base_total st Hcmax) as [base Hcb]. rewrite Hcb. cbn [bind].
+  destruct (n s= base).
+  - destruct (cur_polymorphic_total st Hcmax) as [pb Hcp]. rewrite Hcp. cbn [bind].
     destruct pb; eexists; eexists; reflexivity.
-  - destruct (vec_pop_ok alloc_alloc_Global st.(code_OpIterState_vals))
-      as [o [v Hpop]].
+  - destruct (vals_stack_pop_total st.(code_OpIterState_vals)) as [o [v Hpop]].
     rewrite Hpop. cbn [bind].
     destruct o; eexists; eexists; reflexivity.
 Qed.
 
 Lemma pop_with_type_total : forall st vt,
+  Z.of_nat (List.length (vals_list st.(code_OpIterState_vals))) <= usize_max ->
+  Z.of_nat (List.length (ctrls_list st.(code_OpIterState_ctrls))) <= usize_max ->
   exists r st', code_pop_with_type st vt = Ok (r, st').
 Proof.
-  intros st vt. unfold code_pop_with_type.
-  destruct (pop_stack_type_total st) as [r0 [st0 Hps]].
+  intros st vt Hvmax Hcmax. unfold code_pop_with_type.
+  destruct (pop_stack_type_total st Hvmax Hcmax) as [r0 [st0 Hps]].
   rewrite Hps. cbn [bind].
   destruct r0 as [t|e].
   - rewrite branch_ok. cbn [bind].
@@ -2299,27 +2380,56 @@ Proof.
     eexists. eexists. reflexivity.
 Qed.
 
+Lemma pop_block_results_total : forall st bt,
+  Z.of_nat (stack_size st) <= usize_max ->
+  exists r st', code_pop_block_results st bt = Ok (r, st').
+Proof.
+  intros st bt Hfit. destruct bt as [|vt].
+  - eexists; eexists; reflexivity.
+  - unfold code_pop_block_results.
+    destruct (pop_with_type_total st vt
+      ltac:(unfold stack_size in Hfit; lia)
+      ltac:(unfold stack_size in Hfit; lia)) as [r0 [st0 Hpop]].
+    rewrite Hpop. cbn [bind]. destruct r0 as [t|e].
+    + rewrite branch_ok. cbn [bind]. eexists; eexists; reflexivity.
+    + rewrite branch_err. cbn [bind]. rewrite from_residual_err. cbn [bind].
+      eexists; eexists; reflexivity.
+Qed.
+
 Lemma push_val_total : forall st t,
-  Z.of_nat (List.length (vec_list st.(code_OpIterState_vals))) + 1
+  Z.of_nat (List.length (vals_list st.(code_OpIterState_vals))) + 1
     <= usize_max ->
   exists st', code_push_val st t = Ok st'.
 Proof.
   intros st t Hle. unfold code_push_val.
-  destruct (vec_push_ok st.(code_OpIterState_vals) t Hle) as [v Hpush].
+  destruct (vals_stack_push_total st.(code_OpIterState_vals) t Hle) as [v Hpush].
   rewrite Hpush. cbn [bind]. eexists. reflexivity.
 Qed.
 
+Lemma push_block_results_total : forall st bt,
+  Z.of_nat (List.length (vals_list st.(code_OpIterState_vals))) + 1
+    <= usize_max ->
+  exists st', code_push_block_results st bt = Ok st'.
+Proof.
+  intros st bt Hroom. destruct bt as [|vt].
+  - eexists. reflexivity.
+  - cbn [code_push_block_results].
+    exact (push_val_total st (Code_StackType_Val vt) Hroom).
+Qed.
+
 Lemma push_ctrl_total : forall st kind bt,
-  Z.of_nat (List.length (vec_list st.(code_OpIterState_ctrls))) + 1
+  Z.of_nat (List.length (vals_list st.(code_OpIterState_vals))) <= usize_max ->
+  Z.of_nat (List.length (ctrls_list st.(code_OpIterState_ctrls))) + 1
     <= usize_max ->
   exists st', code_push_ctrl st kind bt = Ok st'.
 Proof.
-  intros st kind bt Hle. unfold code_push_ctrl.
-  destruct (vec_push_ok st.(code_OpIterState_ctrls)
+  intros st kind bt Hvmax Hle. unfold code_push_ctrl.
+  destruct (vals_stack_len_total st.(code_OpIterState_vals) Hvmax)
+    as [base Hlen]. rewrite Hlen. cbn [bind].
+  destruct (ctrls_stack_push_total st.(code_OpIterState_ctrls)
               {| code_Ctrl_kind := kind;
                  code_Ctrl_block_type := bt;
-                 code_Ctrl_value_stack_base :=
-                   alloc_vec_Vec_len st.(code_OpIterState_vals);
+                 code_Ctrl_value_stack_base := base;
                  code_Ctrl_polymorphic_base := false |} Hle) as [v Hpush].
   rewrite Hpush. cbn [bind]. eexists. reflexivity.
 Qed.
@@ -2327,11 +2437,12 @@ Qed.
 (** The loops. [pop_types] walks the expected types backwards, so the index is
     both the measure and the bound that keeps the slice access in range. *)
 Lemma pop_types_loop_total : forall n st types i,
+  Z.of_nat (stack_size st) <= usize_max ->
   to_Z i <= Z.of_nat n ->
   to_Z i <= to_Z (slice_len types) ->
   exists r st', code_pop_types_loop st types i = Ok (r, st').
 Proof.
-  induction n as [|n IH]; intros st types i Hn Hbd;
+  induction n as [|n IH]; intros st types i Hfit Hn Hbd;
     unfold code_pop_types_loop; rewrite loop_unfold; cbn beta iota;
     destruct (i s= 0%usize) eqn:Hz;
     [eexists; eexists; reflexivity | | eexists; eexists; reflexivity | ].
@@ -2346,28 +2457,34 @@ Proof.
     destruct (slice_index_usize_ok types i2) as [vt Hidx].
     { rewrite slice_len_spec in Hbd. lia. }
     rewrite Hidx. cbn [bind].
-    destruct (pop_with_type_total st vt) as [r0 [st0 Hpwt]].
+    destruct (pop_with_type_total st vt
+      ltac:(unfold stack_size in Hfit; lia)
+      ltac:(unfold stack_size in Hfit; lia)) as [r0 [st0 Hpwt]].
+    pose proof (pop_with_type_size st vt r0 st0 Hpwt) as Hsize.
     rewrite Hpwt. cbn [bind].
     destruct r0 as [t|e].
     + rewrite branch_ok. cbn [bind].
-      apply (IH st0 types i2); [cbn in Hn; lia | lia].
+      assert (Hfit0 : Z.of_nat (stack_size st0) <= usize_max).
+      { apply Nat2Z.inj_le in Hsize. lia. }
+      apply (IH st0 types i2); [exact Hfit0 |cbn in Hn; lia | lia].
     + rewrite branch_err. cbn [bind]. rewrite from_residual_err. cbn [bind].
       eexists. eexists. reflexivity.
 Qed.
 
 Lemma pop_types_total : forall st types,
+  Z.of_nat (stack_size st) <= usize_max ->
   exists r st', code_pop_types st types = Ok (r, st').
 Proof.
-  intros st types. unfold code_pop_types.
+  intros st types Hfit. unfold code_pop_types.
   apply (pop_types_loop_total (Z.to_nat (to_Z (slice_len types))) st types);
-    [rewrite Z2Nat.id by apply usize_nonneg | ]; lia.
+    [exact Hfit | rewrite Z2Nat.id by apply usize_nonneg | ]; lia.
 Qed.
 
 (** [push_types] counts up, and each iteration pushes, so the budget it needs is
     one slot per remaining type. *)
 Lemma push_types_loop_total : forall n st types i,
   to_Z (slice_len types) - to_Z i <= Z.of_nat n ->
-  Z.of_nat (List.length (vec_list st.(code_OpIterState_vals)))
+  Z.of_nat (List.length (vals_list st.(code_OpIterState_vals)))
     + (to_Z (slice_len types) - to_Z i) <= usize_max ->
   exists st', code_push_types_loop st types i = Ok st'.
 Proof.
@@ -2391,7 +2508,7 @@ Proof.
 Qed.
 
 Lemma push_types_total : forall st types,
-  Z.of_nat (List.length (vec_list st.(code_OpIterState_vals)))
+  Z.of_nat (List.length (vals_list st.(code_OpIterState_vals)))
     + Z.of_nat (List.length (vec_list types)) <= usize_max ->
   exists st', code_push_types st types = Ok st'.
 Proof.
@@ -2406,83 +2523,82 @@ Qed.
 (** [mark_unreachable] pops down to the frame base, so the operand stack's length
     is the measure, and then rewrites one frame in place. *)
 Lemma mark_unreachable_loop_total : forall n st base,
-  (List.length (vec_list st.(code_OpIterState_vals)) <= n)%nat ->
+  Z.of_nat (List.length (vals_list st.(code_OpIterState_vals))) <= usize_max ->
+  (List.length (vals_list st.(code_OpIterState_vals)) <= n)%nat ->
   exists r, code_mark_unreachable_loop st base = Ok r.
 Proof.
-  induction n as [|n IH]; intros st base Hlen;
+  induction n as [|n IH]; intros st base Hmax Hlen;
     unfold code_mark_unreachable_loop; rewrite loop_unfold; cbn beta iota;
-    destruct (alloc_vec_Vec_len st.(code_OpIterState_vals) s<= base) eqn:Hle;
+    destruct (vals_stack_len_total st.(code_OpIterState_vals) Hmax)
+      as [len Hstacklen]; rewrite Hstacklen; cbn [bind];
+    destruct (len s<= base) eqn:Hle;
     [eexists; reflexivity | | eexists; reflexivity | ].
-  - exfalso. apply scalar_leb_false in Hle. rewrite vec_len_spec in Hle.
-    assert (Hnil : vec_list st.(code_OpIterState_vals) = []).
-    { destruct (vec_list st.(code_OpIterState_vals)); [reflexivity|].
+  - exfalso. apply scalar_leb_false in Hle.
+    rewrite (vals_stack_len_spec _ _ Hstacklen) in Hle.
+    assert (Hnil : vals_list st.(code_OpIterState_vals) = []).
+    { destruct (vals_list st.(code_OpIterState_vals)); [reflexivity|].
       cbn [List.length] in Hlen. lia. }
     rewrite Hnil in Hle. cbn [List.length] in Hle.
     pose proof (usize_nonneg base). lia.
-  - destruct (vec_pop_ok alloc_alloc_Global st.(code_OpIterState_vals))
+  - destruct (vals_stack_pop_total st.(code_OpIterState_vals))
       as [o [v Hpop]].
     rewrite Hpop. cbn [bind].
     apply scalar_leb_false in Hle.
-    assert (Hne : vec_list st.(code_OpIterState_vals) <> []).
-    { intros Hnil. rewrite vec_len_spec in Hle. rewrite Hnil in Hle.
+    assert (Hne : vals_list st.(code_OpIterState_vals) <> []).
+    { intros Hnil. rewrite (vals_stack_len_spec _ _ Hstacklen) in Hle.
+      rewrite Hnil in Hle.
       cbn [List.length] in Hle. pose proof (usize_nonneg base). lia. }
-    pose proof (vec_pop_len _ o v Hpop Hne) as Hlt.
+    pose proof (vals_stack_pop_len _ o v Hpop Hne) as Hlt.
     apply (IH {| code_OpIterState_vals := v;
                  code_OpIterState_ctrls := st.(code_OpIterState_ctrls);
                  code_OpIterState_pos := st.(code_OpIterState_pos)
               |} base).
-    cbn [code_OpIterState_vals]. lia.
+    + cbn [code_OpIterState_vals].
+      pose proof (vals_stack_pop_size _ o v Hpop) as Hsize.
+      apply Nat2Z.inj_le in Hsize. lia.
+    + cbn [code_OpIterState_vals]. lia.
 Qed.
 
 Lemma mark_unreachable_total : forall st,
+  Z.of_nat (stack_size st) <= usize_max ->
   exists st', code_mark_unreachable st = Ok st'.
 Proof.
-  intros st. unfold code_mark_unreachable.
-  destruct (cur_base_total st) as [base Hcb]. rewrite Hcb. cbn [bind].
+  intros st Hfit. unfold code_mark_unreachable.
+  destruct (cur_base_total st ltac:(unfold stack_size in Hfit; lia))
+    as [base Hcb]. rewrite Hcb. cbn [bind].
   destruct (mark_unreachable_loop_total
-              (List.length (vec_list st.(code_OpIterState_vals)))
-              st base (Nat.le_refl _)) as [r Hloop].
+              (List.length (vals_list st.(code_OpIterState_vals)))
+              st base ltac:(unfold stack_size in Hfit; lia) (Nat.le_refl _))
+    as [r Hloop].
   destruct r as [[v v1] i]. rewrite Hloop. cbn [bind].
-  destruct (alloc_vec_Vec_len v1 s= 0%usize) eqn:Hz; [eexists; reflexivity|].
-  apply scalar_eqb_false in Hz. rewrite vec_len_spec in Hz.
+  destruct (mark_unreachable_loop_size
+    (List.length (vals_list st.(code_OpIterState_vals))) st base v v1 i
+    (Nat.le_refl _) Hloop) as [_ Hc].
+  assert (Hcmax : Z.of_nat (List.length (ctrls_list v1)) <= usize_max).
+  { rewrite Hc. unfold stack_size in Hfit. lia. }
+  destruct (ctrls_stack_len_total v1 Hcmax) as [n Hlen].
+  rewrite Hlen. cbn [bind].
+  destruct (n s= 0%usize) eqn:Hz; [eexists; reflexivity|].
+  apply scalar_eqb_false in Hz.
   assert (H0 : to_Z 0%usize = 0) by reflexivity.
-  destruct (usize_sub_1_ok (alloc_vec_Vec_len v1)) as [i1 [Hsub Hi1]];
-    [rewrite vec_len_spec; lia|].
-  rewrite Hsub. cbn [bind]. rewrite vec_index_mut_spec.
-  assert (Hlt : (Z.to_nat (to_Z i1) < List.length (vec_list v1))%nat).
-  { rewrite Hi1. rewrite vec_len_spec. lia. }
-  destruct (List.nth_error (vec_list v1) (Z.to_nat (to_Z i1))) as [c|] eqn:Hnth.
-  - cbn [bind]. eexists. reflexivity.
-  - exfalso. apply List.nth_error_None in Hnth. lia.
-Qed.
-
-(** The two result-list builders push onto a fresh vector, so their bound is
-    trivial. *)
-Lemma block_results_total : forall bt,
-  exists v, code_block_results bt = Ok v.
-Proof.
-  intros bt. unfold code_block_results. destruct bt as [|vt].
-  - eexists. reflexivity.
-  - destruct (vec_push_ok (alloc_vec_Vec_new types_ValueType_t) vt) as [v Hpush].
-    { cbn. pose proof usize_max_bound. rewrite u32_max_val in *. lia. }
-    rewrite Hpush. eexists. reflexivity.
-Qed.
-
-Lemma branch_target_types_total : forall c,
-  exists v, code_branch_target_types c = Ok v.
-Proof.
-  intros c. unfold code_branch_target_types.
-  rewrite branch_target_bt_spec. cbn [bind]. apply block_results_total.
-Qed.
-
-(** A branch target is a Wasm 1.0 result list, so at most one type: what bounds
-    [br_if]'s push. *)
-Lemma branch_target_types_len : forall c v,
-  code_branch_target_types c = Ok v -> (List.length (vec_list v) <= 1)%nat.
-Proof.
-  intros c v H. unfold code_branch_target_types in H.
-  rewrite branch_target_bt_spec in H. cbn [bind] in H.
-  apply (block_results_len _ v H).
+  rewrite H0 in Hz.
+  assert (Hnpos : (1 <= to_Z n)%Z) by (pose proof (usize_nonneg n); lia).
+  destruct (usize_sub_1_ok n ltac:(lia)) as [i1 [Hsub Hi1]].
+  rewrite Hsub. cbn [bind].
+  assert (Hlenpos : (0 < List.length (ctrls_list v1))%nat).
+  { rewrite (ctrls_stack_len_spec _ _ Hlen) in Hnpos.
+    destruct (List.length (ctrls_list v1)); cbn in Hnpos; lia. }
+  assert (Hlt : (Z.to_nat (to_Z i1) < List.length (ctrls_list v1))%nat).
+  { rewrite Hi1, (ctrls_stack_len_spec _ _ Hlen).
+    rewrite Z2Nat.inj_sub by lia. cbn. rewrite Nat2Z.id. lia. }
+  destruct (ctrls_stack_get_total v1 i1 Hlt) as [c Hget].
+  rewrite Hget. cbn [bind].
+  destruct (ctrls_stack_set_total v1 i1
+    {| code_Ctrl_kind := c.(code_Ctrl_kind);
+       code_Ctrl_block_type := c.(code_Ctrl_block_type);
+       code_Ctrl_value_stack_base := c.(code_Ctrl_value_stack_base);
+       code_Ctrl_polymorphic_base := true |} Hlt) as [cs Hset].
+  rewrite Hset. cbn [bind]. eexists. reflexivity.
 Qed.
 
 (** [br_if] pops the condition and the target's types and pushes the types
@@ -2500,9 +2616,8 @@ Proof.
        rewrite from_residual_err in H. cbn [bind] in H.
        injection H as _ <-. lia. }
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (code_branch_target_types target) as [types|] eqn:Hbtt;
+  destruct (code_branch_target_bt target) as [bt|] eqn:Hbtt;
     cbn [bind] in H; [|discriminate].
-  pose proof (branch_target_types_len _ types Hbtt) as Hlen.
   destruct (code_pop_with_type st1 Types_ValueType_I32) as [[r1 st2]|] eqn:Hp1;
     cbn [bind] in H; [|discriminate].
   pose proof (pop_with_type_size st1 _ r1 st2 Hp1) as Hs2.
@@ -2511,19 +2626,18 @@ Proof.
        rewrite from_residual_err in H. cbn [bind] in H.
        injection H as _ <-. lia. }
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (code_pop_types st2 (alloc_vec_Vec_deref types)) as [[r2 st3]|]
+  destruct (code_pop_block_results st2 bt) as [[r2 st3]|]
     eqn:Hpt; cbn [bind] in H; [|discriminate].
-  pose proof (pop_types_size st2 _ r2 st3 Hpt) as Hs3.
+  pose proof (pop_block_results_size st2 _ r2 st3 Hpt) as Hs3.
   destruct r2 as [u2|e2].
   2: { rewrite branch_err in H. cbn [bind] in H.
        rewrite from_residual_err in H. cbn [bind] in H.
        injection H as _ <-. lia. }
   destruct u2. rewrite branch_ok in H. cbn [bind] in H.
-  destruct (code_push_types st3 (alloc_vec_Vec_deref types)) as [st4|]
+  destruct (code_push_block_results st3 bt) as [st4|]
     eqn:Hpush; cbn [bind] in H; [|discriminate].
   injection H as _ <-.
-  pose proof (push_types_size st3 _ st4 Hpush) as Hs4.
-  rewrite vec_deref_spec in Hs4. lia.
+  pose proof (push_block_results_size st3 _ st4 Hpush) as Hs4. lia.
 Qed.
 
 (* ================================================================== *)
@@ -2533,10 +2647,10 @@ Qed.
 (** The reserved byte moves the cursor and nothing else. *)
 Lemma read_reserved_zero_fields : forall st data r st',
   code_read_reserved_zero st data = Ok (r, st') ->
-  vec_list st'.(code_OpIterState_vals)
-    = vec_list st.(code_OpIterState_vals)
-  /\ vec_list st'.(code_OpIterState_ctrls)
-     = vec_list st.(code_OpIterState_ctrls).
+  vals_list st'.(code_OpIterState_vals)
+    = vals_list st.(code_OpIterState_vals)
+  /\ ctrls_list st'.(code_OpIterState_ctrls)
+     = ctrls_list st.(code_OpIterState_ctrls).
 Proof.
   intros st data r st' H. unfold code_read_reserved_zero in H.
   destruct (reader_read_byte data st.(code_OpIterState_pos)) as [r0|] eqn:Hrb;
@@ -2626,12 +2740,12 @@ Definition room (st : code_OpIterState_t) : Prop :=
   Z.of_nat (stack_size st) + 1 <= usize_max.
 
 Lemma room_vals : forall st, room st ->
-  Z.of_nat (List.length (vec_list st.(code_OpIterState_vals))) + 1
+  Z.of_nat (List.length (vals_list st.(code_OpIterState_vals))) + 1
     <= usize_max.
 Proof. intros st H. unfold room, stack_size in H. lia. Qed.
 
 Lemma room_ctrls : forall st, room st ->
-  Z.of_nat (List.length (vec_list st.(code_OpIterState_ctrls))) + 1
+  Z.of_nat (List.length (ctrls_list st.(code_OpIterState_ctrls))) + 1
     <= usize_max.
 Proof. intros st H. unfold room, stack_size in H. lia. Qed.
 
@@ -2640,53 +2754,84 @@ Lemma room_le : forall st st',
 Proof. intros st st' Hle H. unfold room in *. lia. Qed.
 
 Lemma read_unreachable_total : forall st,
+  room st ->
   exists r st', code_read_unreachable st = Ok (r, st').
 Proof.
-  intros st. unfold code_read_unreachable.
-  destruct (mark_unreachable_total st) as [st1 Hmu].
+  intros st Hroom. unfold code_read_unreachable.
+  destruct (mark_unreachable_total st ltac:(unfold room in Hroom; lia))
+    as [st1 Hmu].
   rewrite Hmu. cbn [bind]. eexists. eexists. reflexivity.
 Qed.
 
 Lemma read_return_total : forall st ctx,
+  room st ->
   exists r st', code_read_return st ctx = Ok (r, st').
 Proof.
-  intros st ctx. unfold code_read_return.
-  destruct (pop_types_total st (alloc_vec_Vec_deref ctx.(code_Context_results))) as [r1 [st1 Hpt]].
-  rewrite Hpt. cbn [bind].
-  destruct r1 as [u1|e1].
-  2: { rewrite branch_err. cbn [bind]. rewrite from_residual_err. cbn [bind].
-       eexists. eexists. reflexivity. }
-  destruct u1. rewrite branch_ok. cbn [bind].
-  destruct (mark_unreachable_total st1) as [st2 Hmu].
-  rewrite Hmu. cbn [bind]. eexists. eexists. reflexivity.
+  intros st ctx Hroom. unfold code_read_return.
+  destruct ctx.(code_Context_results) as [vt|]; cbn [bind].
+  - destruct (pop_block_results_total st (Code_BlockType_Value vt)
+      ltac:(unfold room in Hroom; lia)) as [r1 [st1 Hpt]].
+    rewrite Hpt. cbn [bind].
+    pose proof (pop_block_results_size st _ r1 st1 Hpt) as Hsize.
+    destruct r1 as [u1|e1].
+    + destruct u1. rewrite branch_ok. cbn [bind].
+      destruct (mark_unreachable_total st1
+        ltac:(apply Nat2Z.inj_le in Hsize; unfold room in Hroom; lia))
+        as [st2 Hmu].
+      rewrite Hmu. cbn [bind]. eexists; eexists; reflexivity.
+    + rewrite branch_err. cbn [bind]. rewrite from_residual_err. cbn [bind].
+      eexists; eexists; reflexivity.
+  - destruct (pop_block_results_total st Code_BlockType_Empty
+      ltac:(unfold room in Hroom; lia)) as [r1 [st1 Hpt]].
+    rewrite Hpt. cbn [bind].
+    pose proof (pop_block_results_size st _ r1 st1 Hpt) as Hsize.
+    destruct r1 as [u1|e1].
+    + destruct u1. rewrite branch_ok. cbn [bind].
+      destruct (mark_unreachable_total st1
+        ltac:(apply Nat2Z.inj_le in Hsize; unfold room in Hroom; lia))
+        as [st2 Hmu].
+      rewrite Hmu. cbn [bind]. eexists; eexists; reflexivity.
+    + rewrite branch_err. cbn [bind]. rewrite from_residual_err. cbn [bind].
+      eexists; eexists; reflexivity.
 Qed.
 
 Lemma read_drop_total : forall st,
+  room st ->
   exists r st', code_read_drop st = Ok (r, st').
 Proof.
-  intros st. unfold code_read_drop.
-  apply pop_stack_type_total.
+  intros st Hroom. unfold code_read_drop.
+  apply pop_stack_type_total; unfold room, stack_size in *; lia.
 Qed.
 
 Lemma read_select_total : forall st,
   room st -> exists r st', code_read_select st = Ok (r, st').
 Proof.
   intros st Hroom. unfold code_read_select.
-  destruct (pop_with_type_total st Types_ValueType_I32) as [r1 [st1 Hp]].
+  destruct (pop_with_type_total st Types_ValueType_I32
+    ltac:(unfold room, stack_size in *; lia)
+    ltac:(unfold room, stack_size in *; lia)) as [r1 [st1 Hp]].
   rewrite Hp. cbn [bind].
   pose proof (pop_with_type_size st _ r1 st1 Hp) as Hs1.
   destruct r1 as [t1|e1].
   2: { rewrite branch_err. cbn [bind]. rewrite from_residual_err. cbn [bind].
        eexists. eexists. reflexivity. }
   rewrite branch_ok. cbn [bind].
-  destruct (pop_stack_type_total st1) as [r2 [st2 Hq2]].
+  destruct (pop_stack_type_total st1
+    ltac:(pose proof (room_le st st1 Hs1 Hroom); unfold room, stack_size in *; lia)
+    ltac:(pose proof (room_le st st1 Hs1 Hroom); unfold room, stack_size in *; lia))
+    as [r2 [st2 Hq2]].
   rewrite Hq2. cbn [bind].
   pose proof (pop_stack_type_size st1 r2 st2 Hq2) as Hs2.
   destruct r2 as [t2|e2].
   2: { rewrite branch_err. cbn [bind]. rewrite from_residual_err. cbn [bind].
        eexists. eexists. reflexivity. }
   rewrite branch_ok. cbn [bind].
-  destruct (pop_stack_type_total st2) as [r3 [st3 Hq3]].
+  destruct (pop_stack_type_total st2
+    ltac:(pose proof (room_le st st1 Hs1 Hroom) as Hr1;
+      pose proof (room_le st1 st2 Hs2 Hr1); unfold room, stack_size in *; lia)
+    ltac:(pose proof (room_le st st1 Hs1 Hroom) as Hr1;
+      pose proof (room_le st1 st2 Hs2 Hr1); unfold room, stack_size in *; lia))
+    as [r3 [st3 Hq3]].
   rewrite Hq3. cbn [bind].
   pose proof (pop_stack_type_size st2 r3 st3 Hq3) as Hs3.
   destruct r3 as [t3|e3].
@@ -2707,14 +2852,20 @@ Lemma read_binary_total : forall st ty res,
   room st -> exists r st', code_read_binary st ty res = Ok (r, st').
 Proof.
   intros st ty res Hroom. unfold code_read_binary.
-  destruct (pop_with_type_total st ty) as [r1 [st1 Hp1]].
+  destruct (pop_with_type_total st ty
+    ltac:(unfold room, stack_size in *; lia)
+    ltac:(unfold room, stack_size in *; lia)) as [r1 [st1 Hp1]].
   rewrite Hp1. cbn [bind].
   pose proof (pop_with_type_size st ty r1 st1 Hp1) as Hs1.
   destruct r1 as [t1|e1].
   2: { rewrite branch_err. cbn [bind]. rewrite from_residual_err. cbn [bind].
        eexists. eexists. reflexivity. }
   rewrite branch_ok. cbn [bind].
-  destruct (pop_with_type_total st1 ty) as [r2 [st2 Hp2]].
+  destruct (pop_with_type_total st1 ty
+    ltac:(pose proof (room_le st st1 Hs1 Hroom);
+      unfold room, stack_size in *; lia)
+    ltac:(pose proof (room_le st st1 Hs1 Hroom);
+      unfold room, stack_size in *; lia)) as [r2 [st2 Hp2]].
   rewrite Hp2. cbn [bind].
   pose proof (pop_with_type_size st1 ty r2 st2 Hp2) as Hs2.
   destruct r2 as [t2|e2].
@@ -2730,37 +2881,27 @@ Qed.
 (** ** The local operators' shared prologue                            *)
 (* ================================================================== *)
 
-(** The bounds check is what makes the lookup total: past it the index is in
-    range, so [Vec::index] cannot fail. *)
+(** The segmented bounds check makes the lookup total without needing to add
+    the inline capacity to an arbitrary overflow-vector length. *)
 Lemma local_type_ok : forall ctx idx,
   exists r, code_local_type ctx idx = Ok r.
 Proof.
   intros ctx idx. unfold code_local_type.
   destruct (scalar_cast_u32_usize idx) as [i [Hcast Hi]].
   rewrite Hcast. cbn [bind].
-  destruct (i s>= alloc_vec_Vec_len ctx.(code_Context_locals)) eqn:Hge;
-    [eexists; reflexivity|].
-  rewrite vec_index_spec.
-  destruct (List.nth_error (vec_list ctx.(code_Context_locals))
-              (Z.to_nat (to_Z i))) as [vt|] eqn:Hnth;
-    [cbn [bind]; eexists; reflexivity|].
-  exfalso. apply List.nth_error_None in Hnth.
-  apply scalar_geb_false_lt in Hge.
-  assert (Hlen : to_Z (alloc_vec_Vec_len ctx.(code_Context_locals))
-                 = Z.of_nat (List.length
-                     (vec_list ctx.(code_Context_locals)))) by reflexivity.
-  rewrite Hlen in Hge.
-  pose proof (usize_nonneg i) as Hnn. lia.
+  destruct (locals_stack_get_checked_total ctx.(code_Context_locals) i)
+    as [o Hget].
+  rewrite Hget. cbn [bind]. destruct o; eexists; reflexivity.
 Qed.
 
 (** [take_local] moves only the cursor: the index and the lookup are pure, so
     the state it returns is the incoming one with the cursor advanced. *)
 Lemma take_local_fields : forall st data ctx r st',
   code_take_local st data ctx = Ok (r, st') ->
-  vec_list st'.(code_OpIterState_vals)
-    = vec_list st.(code_OpIterState_vals)
-  /\ vec_list st'.(code_OpIterState_ctrls)
-     = vec_list st.(code_OpIterState_ctrls).
+  vals_list st'.(code_OpIterState_vals)
+    = vals_list st.(code_OpIterState_vals)
+  /\ ctrls_list st'.(code_OpIterState_ctrls)
+     = ctrls_list st.(code_OpIterState_ctrls).
 Proof.
   intros st data ctx r st' H. unfold code_take_local in H.
   destruct (reader_read_u32_leb data st.(code_OpIterState_pos)) as [r1|]
@@ -2909,10 +3050,10 @@ Qed.
 
 Lemma take_global_fields : forall st data module r st',
   code_take_global st data module = Ok (r, st') ->
-  vec_list st'.(code_OpIterState_vals)
-    = vec_list st.(code_OpIterState_vals)
-  /\ vec_list st'.(code_OpIterState_ctrls)
-     = vec_list st.(code_OpIterState_ctrls).
+  vals_list st'.(code_OpIterState_vals)
+    = vals_list st.(code_OpIterState_vals)
+  /\ ctrls_list st'.(code_OpIterState_ctrls)
+     = ctrls_list st.(code_OpIterState_ctrls).
 Proof.
   intros st data module r st' H. unfold code_take_global in H.
   destruct (reader_read_u32_leb data st.(code_OpIterState_pos)) as [r1|]
@@ -3020,10 +3161,10 @@ Qed.
     and the index immediate, so it moves the cursor and nothing else. *)
 Lemma take_index_fields : forall st data r st',
   code_take_index st data = Ok (r, st') ->
-  vec_list st'.(code_OpIterState_vals)
-    = vec_list st.(code_OpIterState_vals)
-  /\ vec_list st'.(code_OpIterState_ctrls)
-     = vec_list st.(code_OpIterState_ctrls).
+  vals_list st'.(code_OpIterState_vals)
+    = vals_list st.(code_OpIterState_vals)
+  /\ ctrls_list st'.(code_OpIterState_ctrls)
+     = ctrls_list st.(code_OpIterState_ctrls).
 Proof.
   intros st data r st' H. unfold code_take_index in H.
   destruct (reader_read_u32_leb data st.(code_OpIterState_pos)) as [r1|]
@@ -3211,7 +3352,9 @@ Lemma read_conversion_total : forall st from to,
   exists r st', code_read_conversion st from to = Ok (r, st').
 Proof.
   intros st from to Hroom. unfold code_read_conversion.
-  destruct (pop_with_type_total st from) as [r1 [st1 Hp1]].
+  destruct (pop_with_type_total st from
+    ltac:(unfold room, stack_size in *; lia)
+    ltac:(unfold room, stack_size in *; lia)) as [r1 [st1 Hp1]].
   rewrite Hp1. cbn [bind].
   pose proof (pop_with_type_size st from r1 st1 Hp1) as Hs1.
   destruct r1 as [t1|e1].
@@ -3223,128 +3366,119 @@ Proof.
   rewrite Hpv. cbn [bind]. eexists. eexists. reflexivity.
 Qed.
 
-(** [else] only pops and rewrites two frame fields in place, neither of which
-    can overflow a bound, so it needs no [room] hypothesis at all. *)
 Lemma read_else_total : forall st,
+  room st ->
   exists r st', code_read_else st = Ok (r, st').
 Proof.
-  intros st. unfold code_read_else.
-  destruct (alloc_vec_Vec_len st.(code_OpIterState_ctrls) s= 0%usize) eqn:Hz;
+  intros st Hroom. unfold code_read_else.
+  destruct (ctrls_stack_len_total st.(code_OpIterState_ctrls)
+    ltac:(pose proof (room_ctrls st Hroom); lia)) as [n Hlen].
+  rewrite Hlen. cbn [bind]. destruct (n s= 0%usize) eqn:Hz;
     [eexists; eexists; reflexivity|].
-  apply scalar_eqb_false in Hz. rewrite vec_len_spec in Hz.
+  apply scalar_eqb_false in Hz.
   assert (H0 : to_Z 0%usize = 0) by reflexivity.
-  destruct (usize_sub_1_ok (alloc_vec_Vec_len st.(code_OpIterState_ctrls)))
-    as [i [Hsub Hival]]; [rewrite vec_len_spec; lia|].
-  rewrite Hsub. cbn [bind]. rewrite vec_index_spec.
+  rewrite H0 in Hz.
+  assert (Hnpos : (1 <= to_Z n)%Z) by (pose proof (usize_nonneg n); lia).
+  destruct (usize_sub_1_ok n ltac:(lia)) as [i [Hsub Hival]].
+  rewrite Hsub. cbn [bind].
+  assert (Hlenpos : (0 < List.length
+    (ctrls_list st.(code_OpIterState_ctrls)))%nat).
+  { rewrite (ctrls_stack_len_spec _ _ Hlen) in Hnpos.
+    destruct (List.length (ctrls_list st.(code_OpIterState_ctrls)));
+      cbn in Hnpos; lia. }
   assert (Hlt1 : (Z.to_nat (to_Z i)
-                 < List.length (vec_list st.(code_OpIterState_ctrls)))%nat).
-  { rewrite Hival. rewrite vec_len_spec. lia. }
-  destruct (List.nth_error (vec_list st.(code_OpIterState_ctrls))
-              (Z.to_nat (to_Z i))) as [frame|] eqn:Hnth.
-  2: { exfalso. apply List.nth_error_None in Hnth. lia. }
-  cbn [bind].
+                 < List.length (ctrls_list st.(code_OpIterState_ctrls)))%nat).
+  { rewrite Hival, (ctrls_stack_len_spec _ _ Hlen).
+    rewrite Z2Nat.inj_sub by lia. cbn. rewrite Nat2Z.id. lia. }
+  destruct (ctrls_stack_get_total _ i Hlt1) as [frame Hget].
+  rewrite Hget. cbn [bind].
   destruct (is_then_total frame.(code_Ctrl_kind)) as [b Hit].
   rewrite Hit. cbn [bind].
   destruct b; [|eexists; eexists; reflexivity].
-  destruct (block_results_total frame.(code_Ctrl_block_type)) as [results Hbr].
-  rewrite Hbr. cbn [bind].
-  destruct (pop_types_total st (alloc_vec_Vec_deref results)) as [r1 [st1 Hpt]].
+  destruct (pop_block_results_total st frame.(code_Ctrl_block_type)
+    ltac:(unfold room in Hroom; lia)) as [r1 [st1 Hpt]].
   rewrite Hpt. cbn [bind].
-  pose proof (pop_types_ctrls st _ r1 st1 Hpt) as Hcc.
+  pose proof (pop_block_results_ctrls st _ r1 st1 Hpt) as Hcc.
+  pose proof (pop_block_results_size st _ r1 st1 Hpt) as Hsize.
   destruct r1 as [u1|e1].
   2: { rewrite branch_err. cbn [bind]. rewrite from_residual_err. cbn [bind].
        eexists. eexists. reflexivity. }
   destruct u1. rewrite branch_ok. cbn [bind].
-  destruct (alloc_vec_Vec_len st1.(code_OpIterState_vals)
-            s<> frame.(code_Ctrl_value_stack_base));
+  destruct (vals_stack_len_total st1.(code_OpIterState_vals)
+    ltac:(apply Nat2Z.inj_le in Hsize; unfold room, stack_size in *; lia))
+    as [nv Hvlen].
+  rewrite Hvlen. cbn [bind].
+  destruct (nv s<> frame.(code_Ctrl_value_stack_base));
     [eexists; eexists; reflexivity|].
   assert (Hlt2 : (Z.to_nat (to_Z i)
-                 < List.length (vec_list st1.(code_OpIterState_ctrls)))%nat).
+                 < List.length (ctrls_list st1.(code_OpIterState_ctrls)))%nat).
   { rewrite Hcc. exact Hlt1. }
-  destruct (vec_index_mut_ok st1.(code_OpIterState_ctrls) i Hlt2)
-    as [c [back Hidx2]].
-  rewrite Hidx2. cbn [bind].
-  set (mid := {| code_Ctrl_kind := Code_LabelKind_Else;
-                 code_Ctrl_block_type := c.(code_Ctrl_block_type);
-                 code_Ctrl_value_stack_base := c.(code_Ctrl_value_stack_base);
-                 code_Ctrl_polymorphic_base := c.(code_Ctrl_polymorphic_base)
-              |} : code_Ctrl_t).
-  assert (Hlt3 : (Z.to_nat (to_Z i) < List.length (vec_list (back mid)))%nat).
-  { rewrite (vec_index_mut_len _ _ _ _ Hidx2 mid). exact Hlt2. }
-  destruct (vec_index_mut_ok (back mid) i Hlt3) as [c1 [back1 Hidx3]].
-  rewrite Hidx3. cbn [bind]. eexists. eexists. reflexivity.
+  destruct (ctrls_stack_set_total st1.(code_OpIterState_ctrls) i
+    {| code_Ctrl_kind := Code_LabelKind_Else;
+       code_Ctrl_block_type := frame.(code_Ctrl_block_type);
+       code_Ctrl_value_stack_base := frame.(code_Ctrl_value_stack_base);
+       code_Ctrl_polymorphic_base := false |} Hlt2) as [cs Hset].
+  rewrite Hset. cbn [bind]. eexists. eexists. reflexivity.
 Qed.
 
 Lemma read_end_total : forall st,
   room st -> exists r st', code_read_end st = Ok (r, st').
 Proof.
   intros st Hroom. unfold code_read_end.
-  destruct (alloc_vec_Vec_len st.(code_OpIterState_ctrls) s= 0%usize) eqn:Hz;
+  destruct (ctrls_stack_len_total st.(code_OpIterState_ctrls)
+    ltac:(pose proof (room_ctrls st Hroom); lia)) as [n Hlen].
+  rewrite Hlen. cbn [bind]. destruct (n s= 0%usize) eqn:Hz;
     [eexists; eexists; reflexivity|].
-  apply scalar_eqb_false in Hz. rewrite vec_len_spec in Hz.
+  apply scalar_eqb_false in Hz.
   assert (H0 : to_Z 0%usize = 0) by reflexivity.
-  destruct (usize_sub_1_ok (alloc_vec_Vec_len st.(code_OpIterState_ctrls)))
-    as [i [Hsub Hival]]; [rewrite vec_len_spec; lia|].
-  rewrite Hsub. cbn [bind]. rewrite vec_index_spec.
+  rewrite H0 in Hz.
+  assert (Hnpos : (1 <= to_Z n)%Z) by (pose proof (usize_nonneg n); lia).
+  destruct (usize_sub_1_ok n ltac:(lia)) as [i [Hsub Hival]].
+  rewrite Hsub. cbn [bind].
+  assert (Hlenpos : (0 < List.length
+    (ctrls_list st.(code_OpIterState_ctrls)))%nat).
+  { rewrite (ctrls_stack_len_spec _ _ Hlen) in Hnpos.
+    destruct (List.length (ctrls_list st.(code_OpIterState_ctrls)));
+      cbn in Hnpos; lia. }
   assert (Hlt : (Z.to_nat (to_Z i)
-                 < List.length (vec_list st.(code_OpIterState_ctrls)))%nat).
-  { rewrite Hival. rewrite vec_len_spec. lia. }
-  destruct (List.nth_error (vec_list st.(code_OpIterState_ctrls))
-              (Z.to_nat (to_Z i))) as [frame|] eqn:Hnth.
-  2: { exfalso. apply List.nth_error_None in Hnth. lia. }
-  cbn [bind].
-  destruct (block_results_total frame.(code_Ctrl_block_type))
-    as [results Hbr].
-  rewrite Hbr. cbn [bind].
-  pose proof (block_results_len _ results Hbr) as Hrlen.
-  destruct (is_then_total frame.(code_Ctrl_kind)) as [b Hit].
-  rewrite Hit. cbn [bind].
-  destruct b.
-  - destruct (vec_is_empty_total alloc_alloc_Global results) as [b1 Hemp].
-    rewrite Hemp. cbn [bind].
-    destruct b1; [|eexists; eexists; reflexivity].
-    destruct (pop_types_total st (alloc_vec_Vec_deref results))
-      as [r1 [st1 Hpt]].
-    rewrite Hpt. cbn [bind].
-    pose proof (pop_types_size st _ r1 st1 Hpt) as Hs1.
-    destruct r1 as [u1|e1].
-    2: { rewrite branch_err. cbn [bind]. rewrite from_residual_err. cbn [bind].
-         eexists. eexists. reflexivity. }
-    destruct u1. rewrite branch_ok. cbn [bind].
-    destruct (alloc_vec_Vec_len st1.(code_OpIterState_vals)
-              s<> frame.(code_Ctrl_value_stack_base));
-      [eexists; eexists; reflexivity|].
-    destruct (vec_pop_ok alloc_alloc_Global st1.(code_OpIterState_ctrls))
-      as [o [v Hpop]].
-    rewrite Hpop. cbn [bind].
-    destruct (push_types_total
-                {| code_OpIterState_vals := st1.(code_OpIterState_vals);
-                   code_OpIterState_ctrls := v;
-                   code_OpIterState_pos := st1.(code_OpIterState_pos)
-                |} (alloc_vec_Vec_deref results)) as [st2 Hpush].
-    { cbn [code_OpIterState_vals]. rewrite vec_deref_spec.
-      unfold room, stack_size in Hroom. unfold stack_size in Hs1. lia. }
-    rewrite Hpush. cbn [bind]. eexists. eexists. reflexivity.
-  - destruct (pop_types_total st (alloc_vec_Vec_deref results))
-      as [r1 [st1 Hpt]].
-    rewrite Hpt. cbn [bind].
-    pose proof (pop_types_size st _ r1 st1 Hpt) as Hs1.
-    destruct r1 as [u1|e1].
-    2: { rewrite branch_err. cbn [bind]. rewrite from_residual_err. cbn [bind].
-         eexists. eexists. reflexivity. }
-    destruct u1. rewrite branch_ok. cbn [bind].
-    destruct (alloc_vec_Vec_len st1.(code_OpIterState_vals)
-              s<> frame.(code_Ctrl_value_stack_base));
-      [eexists; eexists; reflexivity|].
-    destruct (vec_pop_ok alloc_alloc_Global st1.(code_OpIterState_ctrls))
-      as [o [v Hpop]].
-    rewrite Hpop. cbn [bind].
-    destruct (push_types_total
-                {| code_OpIterState_vals := st1.(code_OpIterState_vals);
-                   code_OpIterState_ctrls := v;
-                   code_OpIterState_pos := st1.(code_OpIterState_pos)
-                |} (alloc_vec_Vec_deref results)) as [st2 Hpush].
-    { cbn [code_OpIterState_vals]. rewrite vec_deref_spec.
-      unfold room, stack_size in Hroom. unfold stack_size in Hs1. lia. }
-    rewrite Hpush. cbn [bind]. eexists. eexists. reflexivity.
+                 < List.length (ctrls_list st.(code_OpIterState_ctrls)))%nat).
+  { rewrite Hival, (ctrls_stack_len_spec _ _ Hlen).
+    rewrite Z2Nat.inj_sub by lia. cbn. rewrite Nat2Z.id. lia. }
+  destruct (ctrls_stack_get_total _ i Hlt) as [frame Hget].
+  rewrite Hget. cbn [bind].
+  Ltac finish_end stx framex Hroomx bt :=
+    destruct (pop_block_results_total stx bt
+      ltac:(unfold room in Hroomx; lia)) as [r1 [st1 Hpt]];
+    rewrite Hpt; cbn [bind];
+    let Hs1 := fresh "Hs1" in
+    pose proof (pop_block_results_size stx bt r1 st1 Hpt) as Hs1;
+    destruct r1 as [u1|e1];
+    [ destruct u1; rewrite branch_ok; cbn [bind];
+      destruct (vals_stack_len_total st1.(code_OpIterState_vals)
+        ltac:(apply Nat2Z.inj_le in Hs1; unfold room, stack_size in *; lia))
+        as [nv Hvlen];
+      rewrite Hvlen; cbn [bind];
+      destruct (nv s<> framex.(code_Ctrl_value_stack_base));
+      [ eexists; eexists; reflexivity
+      | destruct (ctrls_stack_pop_total st1.(code_OpIterState_ctrls))
+          as [o [cs Hpop]];
+        rewrite Hpop; cbn [bind];
+        destruct (push_block_results_total
+          {| code_OpIterState_vals := st1.(code_OpIterState_vals);
+             code_OpIterState_ctrls := cs;
+             code_OpIterState_pos := st1.(code_OpIterState_pos) |} bt
+          ltac:(cbn [code_OpIterState_vals];
+            apply Nat2Z.inj_le in Hs1; unfold room, stack_size in *; lia))
+          as [st2 Hpush];
+        rewrite Hpush; cbn [bind]; eexists; eexists; reflexivity ]
+    | rewrite branch_err; cbn [bind]; rewrite from_residual_err; cbn [bind];
+      eexists; eexists; reflexivity ].
+  destruct frame.(code_Ctrl_block_type) as [|vt] eqn:Hbt; cbn [bind].
+  - destruct (is_then_total frame.(code_Ctrl_kind)) as [b Hit].
+    rewrite Hit. cbn [bind]. destruct b;
+      finish_end st frame Hroom Code_BlockType_Empty.
+  - destruct (is_then_total frame.(code_Ctrl_kind)) as [b Hit].
+    rewrite Hit. cbn [bind]. destruct b.
+    + eexists; eexists; reflexivity.
+    + finish_end st frame Hroom (Code_BlockType_Value vt).
 Qed.

@@ -1,5 +1,4 @@
 (** * Specifications for Aeneas primitives
-
     Aeneas emits Rust stdlib operations as axioms without specs. This file
     states what they do in terms of the underlying list or integer, plus the
     scalar and list arithmetic facts the proofs need on top.
@@ -15,6 +14,7 @@ Require Import Coq.ZArith.ZArith.
 Require Import Coq.NArith.Nnat.
 Require Import Coq.Lists.List.
 Require Import Coq.Bool.Sumbool.
+Require Import Coq.Logic.ProofIrrelevance.
 Import ListNotations.
 Local Open Scope Primitives_scope.
 Require Import Itasca_Types.
@@ -26,6 +26,70 @@ Include Itasca_Funs.
 
 (** Vec is a bounded list; specs are stated over the underlying list. *)
 Definition vec_list {T} (v : alloc_vec_Vec T) : list T := proj1_sig v.
+
+Lemma scalar_to_Z_inj : forall {ty} (x y : scalar ty),
+  to_Z x = to_Z y -> x = y.
+Proof.
+  intros ty [x Hx] [y Hy] H. cbn in H. subst y.
+  f_equal. apply proof_irrelevance.
+Qed.
+
+Lemma vec_new_list : forall T, vec_list (alloc_vec_Vec_new T) = [].
+Proof. reflexivity. Qed.
+
+(** Logical list views of Aeneas arrays and the allocation-free stacks.  The
+    prefix lives in a fixed array and any suffix in the overflow vector. *)
+Definition array_list {T n} (a : array T n) : list T := proj1_sig a.
+
+Definition vals_inline_list (v : array code_StackType_t 32%usize) :
+  list code_StackType_t := array_list v.
+
+Definition ctrls_inline_list (v : array code_Ctrl_t 16%usize) :
+  list code_Ctrl_t := array_list v.
+
+Definition locals_inline_list (v : array types_ValueType_t 32%usize) :
+  list types_ValueType_t := array_list v.
+
+Definition vals_list (v : code_ValsStack_t) : list code_StackType_t :=
+  if v.(code_ValsStack_inline_len) s>= 32%usize
+  then vals_inline_list v.(code_ValsStack_inline)
+       ++ vec_list v.(code_ValsStack_overflow)
+  else List.firstn (Z.to_nat (to_Z v.(code_ValsStack_inline_len)))
+                   (vals_inline_list v.(code_ValsStack_inline)).
+
+Definition ctrls_list (v : code_CtrlsStack_t) : list code_Ctrl_t :=
+  if v.(code_CtrlsStack_inline_len) s>= 16%usize
+  then ctrls_inline_list v.(code_CtrlsStack_inline)
+       ++ vec_list v.(code_CtrlsStack_overflow)
+  else List.firstn (Z.to_nat (to_Z v.(code_CtrlsStack_inline_len)))
+                   (ctrls_inline_list v.(code_CtrlsStack_inline)).
+
+Definition locals_list (v : code_LocalsStack_t) : list types_ValueType_t :=
+  if v.(code_LocalsStack_inline_len) s>= 32%usize
+  then locals_inline_list v.(code_LocalsStack_inline)
+       ++ vec_list v.(code_LocalsStack_overflow)
+  else List.firstn (Z.to_nat (to_Z v.(code_LocalsStack_inline_len)))
+                   (locals_inline_list v.(code_LocalsStack_inline)).
+Lemma vals_stack_new_spec : forall v,
+  code_ValsStack_new = Ok v -> vals_list v = [].
+Proof.
+  intros v H. unfold code_ValsStack_new in H.
+  cbn [bind] in H. injection H as <-. reflexivity.
+Qed.
+
+Lemma ctrls_stack_new_spec : forall v,
+  code_CtrlsStack_new = Ok v -> ctrls_list v = [].
+Proof.
+  intros v H. unfold code_CtrlsStack_new in H.
+  cbn [bind] in H. injection H as <-. reflexivity.
+Qed.
+
+Lemma locals_stack_new_spec : forall v,
+  code_LocalsStack_new = Ok v -> locals_list v = [].
+Proof.
+  intros v H. unfold code_LocalsStack_new in H.
+  cbn [bind] in H. injection H as <-. reflexivity.
+Qed.
 
 Lemma vec_push_spec : forall {T} (v : alloc_vec_Vec T) (x : T) v',
   alloc_vec_Vec_push v x = Ok v' ->
@@ -946,6 +1010,1240 @@ Fixpoint list_update {T} (l : list T) (n : nat) (x : T) : list T :=
   | h :: t, S n' => h :: list_update t n' x
   end.
 
+(** Aeneas leaves array operations opaque, just as it does several [Vec]
+    operations above.  These assumptions state their ordinary Rust list
+    semantics.  The array length itself is not assumed: it follows from the
+    subtype used by [Primitives.array]. *)
+Lemma array_list_length : forall {T n} (a : array T n),
+  Z.of_nat (List.length (array_list a)) = to_Z n.
+Proof. intros T n [l Hl]. exact Hl. Qed.
+
+Lemma vals_inline_list_length : forall a,
+  List.length (vals_inline_list a) = 32%nat.
+Proof.
+  intros a. unfold vals_inline_list.
+  pose proof (array_list_length a) as H. apply Nat2Z.inj. cbn. exact H.
+Qed.
+
+Lemma ctrls_inline_list_length : forall a,
+  List.length (ctrls_inline_list a) = 16%nat.
+Proof.
+  intros a. unfold ctrls_inline_list.
+  pose proof (array_list_length a) as H. apply Nat2Z.inj. cbn. exact H.
+Qed.
+
+Lemma locals_inline_list_length : forall a,
+  List.length (locals_inline_list a) = 32%nat.
+Proof.
+  intros a. unfold locals_inline_list.
+  pose proof (array_list_length a) as H. apply Nat2Z.inj. cbn. exact H.
+Qed.
+
+Axiom array_index_usize_spec : forall {T n} (a : array T n) i,
+  array_index_usize a i =
+    match List.nth_error (array_list a) (Z.to_nat (to_Z i)) with
+    | Some x => Ok x
+    | None => Fail_ Failure
+    end.
+
+Axiom array_update_spec : forall {T n} (a : array T n) i (x : T),
+  array_list (array_update a i x) =
+    list_update (array_list a) (Z.to_nat (to_Z i)) x.
+
+Axiom array_update_usize_spec : forall {T n} (a : array T n) i (x : T),
+  0 <= to_Z i < to_Z n ->
+  exists a', array_update_usize a i x = Ok a' /\
+    array_list a' = list_update (array_list a) (Z.to_nat (to_Z i)) x.
+
+Lemma array_index_usize_total : forall {T n} (a : array T n) i,
+  0 <= to_Z i < to_Z n -> exists x, array_index_usize a i = Ok x.
+Proof.
+  intros T n a i Hrange. rewrite array_index_usize_spec.
+  destruct (List.nth_error (array_list a) (Z.to_nat (to_Z i))) eqn:Hnth.
+  - eauto.
+  - apply List.nth_error_None in Hnth.
+    pose proof (array_list_length a) as Hlen.
+    pose proof (usize_nonneg i) as Hi.
+    apply Nat2Z.inj_le in Hnth.
+    rewrite Z2Nat.id in Hnth by exact Hi. lia.
+Qed.
+
+Lemma vals_inline_get_spec : forall (a : array code_StackType_t 32%usize) i x,
+  0 <= to_Z i < 32 ->
+  array_index_usize a i = Ok x ->
+  List.nth_error (vals_inline_list a) (Z.to_nat (to_Z i)) = Some x.
+Proof.
+  intros a i x _ Hget. rewrite array_index_usize_spec in Hget.
+  destruct (List.nth_error (array_list a) (Z.to_nat (to_Z i)))
+    eqn:Hnth.
+  - injection Hget as <-. exact Hnth.
+  - discriminate.
+Qed.
+
+Lemma vals_inline_get_total : forall (a : array code_StackType_t 32%usize) i,
+  0 <= to_Z i < 32 -> exists x, array_index_usize a i = Ok x.
+Proof. intros. apply array_index_usize_total. cbn. exact H. Qed.
+
+Lemma vals_inline_set_spec : forall (a : array code_StackType_t 32%usize) i x,
+  vals_inline_list (array_update a i x) =
+    list_update (vals_inline_list a) (Z.to_nat (to_Z i)) x.
+Proof. intros. apply array_update_spec. Qed.
+
+Lemma locals_inline_get_spec : forall (a : array types_ValueType_t 32%usize) i x,
+  0 <= to_Z i < 32 ->
+  array_index_usize a i = Ok x ->
+  List.nth_error (locals_inline_list a) (Z.to_nat (to_Z i)) = Some x.
+Proof.
+  intros a i x _ Hget. rewrite array_index_usize_spec in Hget.
+  destruct (List.nth_error (array_list a) (Z.to_nat (to_Z i)))
+    eqn:Hnth.
+  - injection Hget as <-. exact Hnth.
+  - discriminate.
+Qed.
+
+Lemma locals_inline_get_total : forall (a : array types_ValueType_t 32%usize) i,
+  0 <= to_Z i < 32 -> exists x, array_index_usize a i = Ok x.
+Proof. intros. apply array_index_usize_total. cbn. exact H. Qed.
+
+Lemma locals_inline_set_spec : forall (a : array types_ValueType_t 32%usize) i x,
+  locals_inline_list (array_update a i x) =
+    list_update (locals_inline_list a) (Z.to_nat (to_Z i)) x.
+Proof. intros. apply array_update_spec. Qed.
+
+Lemma ctrls_inline_get_spec : forall (a : array code_Ctrl_t 16%usize) i x,
+  0 <= to_Z i < 16 ->
+  array_index_usize a i = Ok x ->
+  List.nth_error (ctrls_inline_list a) (Z.to_nat (to_Z i)) = Some x.
+Proof.
+  intros a i x _ Hget. rewrite array_index_usize_spec in Hget.
+  destruct (List.nth_error (array_list a) (Z.to_nat (to_Z i)))
+    eqn:Hnth.
+  - injection Hget as <-. exact Hnth.
+  - discriminate.
+Qed.
+
+Lemma ctrls_inline_get_total : forall (a : array code_Ctrl_t 16%usize) i,
+  0 <= to_Z i < 16 -> exists x, array_index_usize a i = Ok x.
+Proof. intros. apply array_index_usize_total. cbn. exact H. Qed.
+
+Lemma ctrls_inline_set_spec : forall (a : array code_Ctrl_t 16%usize) i x,
+  ctrls_inline_list (array_update a i x) =
+    list_update (ctrls_inline_list a) (Z.to_nat (to_Z i)) x.
+Proof. intros. apply array_update_spec. Qed.
+
+Lemma ctrls_inline_update_spec : forall (a : array code_Ctrl_t 16%usize) i x a',
+  0 <= to_Z i < 16 -> array_update_usize a i x = Ok a' ->
+  ctrls_inline_list a' =
+    list_update (ctrls_inline_list a) (Z.to_nat (to_Z i)) x.
+Proof.
+  intros a i x a' Hrange Hupdate.
+  destruct (array_update_usize_spec a i x Hrange) as [a'' [Heq Hlist]].
+  rewrite Hupdate in Heq. injection Heq as <-. exact Hlist.
+Qed.
+
+Lemma ctrls_inline_set_total : forall (a : array code_Ctrl_t 16%usize) i x,
+  0 <= to_Z i < 16 -> exists a', array_update_usize a i x = Ok a'.
+Proof.
+  intros. destruct (array_update_usize_spec a i x H) as [a' [Heq _]].
+  eauto.
+Qed.
+
+Lemma firstn_list_update_snoc : forall {T} (l : list T) n x,
+  (n < List.length l)%nat ->
+  List.firstn (S n) (list_update l n x) = List.firstn n l ++ [x].
+Proof.
+  intros T l. induction l as [|h l IH]; intros [|n] x Hlt; cbn in *;
+    try lia; [reflexivity|].
+  rewrite IH by lia. reflexivity.
+Qed.
+
+Lemma list_update_last_snoc : forall {T} (l : list T) n x,
+  List.length l = S n ->
+  list_update l n x = List.firstn n l ++ [x].
+Proof.
+  intros T l. induction l as [|h l IH]; intros [|n] x Hlen.
+  - discriminate.
+  - discriminate.
+  - cbn in Hlen. destruct l; [reflexivity|discriminate].
+  - cbn in Hlen.
+    change (h :: list_update l n x = h :: (List.firstn n l ++ [x])).
+    f_equal. apply IH. lia.
+Qed.
+
+(** The storage split is fully abstract: every finite inline-length constructor
+    denotes a prefix, while overflow mode denotes all inline slots followed by
+    the vector.  These operation lemmas are the bridge used by the validator
+    proof; they are derived from the definitions above, not assumptions. *)
+Lemma vals_stack_push_spec : forall v x v',
+  code_ValsStack_push v x = Ok v' ->
+  vals_list v' = vals_list v ++ [x].
+Proof.
+  intros [a ov l] x v' H.
+  unfold code_ValsStack_push in H.
+  unfold code_vals_inline_capacity in H.
+  cbn [code_ValsStack_inline_len code_ValsStack_inline
+       code_ValsStack_overflow] in H.
+  destruct (l s>= 32%usize) eqn:Hge.
+  - destruct (alloc_vec_Vec_push ov x) as [ov'|e] eqn:Hpush;
+      cbn [bind] in H.
+    2: inversion H.
+    inversion H; subst; clear H. apply vec_push_spec in Hpush.
+    unfold vals_list. cbn [code_ValsStack_inline_len code_ValsStack_inline
+      code_ValsStack_overflow]. rewrite Hge, Hpush, List.app_assoc.
+    reflexivity.
+  - pose proof (scalar_geb_false_lt _ _ Hge) as Hlt.
+    unfold array_index_mut_usize in H.
+    destruct (vals_inline_get_total a l ltac:(pose proof (usize_nonneg l);
+      assert (to_Z 32%usize = 32) by reflexivity; lia)) as [old Hget].
+    rewrite Hget in H. cbn [bind] in H.
+    change (usize_sub 32%usize 1%usize) with (Ok 31%usize) in H.
+    cbn [bind] in H.
+    destruct (l s= 31%usize) eqn:Hlast.
+    + apply scalar_eqb_true in Hlast.
+      assert (l = 31%usize) by
+        (apply scalar_to_Z_inj; cbn [to_Z] in *; lia).
+      subst l. cbn [bind] in H. injection H as <-.
+      unfold vals_list. cbn [code_ValsStack_inline_len
+        code_ValsStack_inline code_ValsStack_overflow].
+      rewrite vals_inline_set_spec, vec_new_list, List.app_nil_r.
+      apply list_update_last_snoc. apply vals_inline_list_length.
+    + apply scalar_eqb_false in Hlast.
+      cbn [to_Z] in Hlt, Hlast.
+      destruct (usize_add_ok l 1%usize ltac:(
+        pose proof (usize_le_max l);
+        assert (to_Z 1%usize = 1) by reflexivity;
+        assert (to_Z 31%usize = 31) by reflexivity;
+        assert (to_Z 32%usize = 32) by reflexivity;
+        pose proof usize_max_bound; rewrite u32_max_val in *; lia))
+        as [l' [Hadd Hl']].
+      rewrite Hadd in H. cbn [bind] in H. injection H as <-.
+      unfold vals_list. cbn [code_ValsStack_inline_len
+        code_ValsStack_inline code_ValsStack_overflow].
+      rewrite Hge.
+      rewrite (scalar_geb_of_lt l' 32%usize) by
+        (assert (to_Z 1%usize = 1) by reflexivity;
+         assert (to_Z 31%usize = 31) by reflexivity;
+         assert (to_Z 32%usize = 32) by reflexivity; lia).
+      rewrite vals_inline_set_spec.
+      assert (Hnat : Z.to_nat (to_Z l') = S (Z.to_nat (to_Z l))).
+      { rewrite Hl'. change (Z.to_nat (to_Z l + 1) = S (Z.to_nat (to_Z l))).
+        rewrite Z2Nat.inj_add by (pose proof (usize_nonneg l); lia).
+        cbn. lia. }
+      rewrite Hnat.
+      rewrite firstn_list_update_snoc by
+        (rewrite vals_inline_list_length;
+         change (Z.to_nat (to_Z l) < Z.to_nat 32)%nat;
+         exact ((proj1 (Z2Nat.inj_lt (to_Z l) 32
+           (usize_nonneg l) ltac:(lia))) Hlt)).
+      reflexivity.
+Qed.
+
+Lemma ctrls_stack_push_spec : forall v x v',
+  code_CtrlsStack_push v x = Ok v' ->
+  ctrls_list v' = ctrls_list v ++ [x].
+Proof.
+  intros [a ov l] x v' H.
+  unfold code_CtrlsStack_push in H.
+  unfold code_ctrls_inline_capacity in H.
+  cbn [code_CtrlsStack_inline_len code_CtrlsStack_inline
+       code_CtrlsStack_overflow] in H.
+  destruct (l s>= 16%usize) eqn:Hge.
+  - destruct (alloc_vec_Vec_push ov x) as [ov'|e] eqn:Hpush;
+      cbn [bind] in H.
+    2: inversion H.
+    inversion H; subst; clear H. apply vec_push_spec in Hpush.
+    unfold ctrls_list. cbn [code_CtrlsStack_inline_len code_CtrlsStack_inline
+      code_CtrlsStack_overflow]. rewrite Hge, Hpush, List.app_assoc.
+    reflexivity.
+  - pose proof (scalar_geb_false_lt _ _ Hge) as Hlt.
+    unfold array_index_mut_usize in H.
+    destruct (ctrls_inline_get_total a l ltac:(pose proof (usize_nonneg l);
+      assert (to_Z 16%usize = 16) by reflexivity; lia)) as [old Hget].
+    rewrite Hget in H. cbn [bind] in H.
+    change (usize_sub 16%usize 1%usize) with (Ok 15%usize) in H.
+    cbn [bind] in H.
+    destruct (l s= 15%usize) eqn:Hlast.
+    + apply scalar_eqb_true in Hlast.
+      assert (l = 15%usize) by
+        (apply scalar_to_Z_inj; cbn [to_Z] in *; lia).
+      subst l. cbn [bind] in H. injection H as <-.
+      unfold ctrls_list. cbn [code_CtrlsStack_inline_len
+        code_CtrlsStack_inline code_CtrlsStack_overflow].
+      rewrite ctrls_inline_set_spec, vec_new_list, List.app_nil_r.
+      apply list_update_last_snoc. apply ctrls_inline_list_length.
+    + apply scalar_eqb_false in Hlast.
+      cbn [to_Z] in Hlt, Hlast.
+      destruct (usize_add_ok l 1%usize ltac:(
+        pose proof (usize_le_max l);
+        assert (to_Z 1%usize = 1) by reflexivity;
+        assert (to_Z 15%usize = 15) by reflexivity;
+        assert (to_Z 16%usize = 16) by reflexivity;
+        pose proof usize_max_bound; rewrite u32_max_val in *; lia))
+        as [l' [Hadd Hl']].
+      rewrite Hadd in H. cbn [bind] in H. injection H as <-.
+      unfold ctrls_list. cbn [code_CtrlsStack_inline_len
+        code_CtrlsStack_inline code_CtrlsStack_overflow].
+      rewrite Hge.
+      rewrite (scalar_geb_of_lt l' 16%usize) by
+        (assert (to_Z 1%usize = 1) by reflexivity;
+         assert (to_Z 15%usize = 15) by reflexivity;
+         assert (to_Z 16%usize = 16) by reflexivity; lia).
+      rewrite ctrls_inline_set_spec.
+      assert (Hnat : Z.to_nat (to_Z l') = S (Z.to_nat (to_Z l))).
+      { rewrite Hl'. change (Z.to_nat (to_Z l + 1) = S (Z.to_nat (to_Z l))).
+        rewrite Z2Nat.inj_add by (pose proof (usize_nonneg l); lia).
+        cbn. lia. }
+      rewrite Hnat.
+      rewrite firstn_list_update_snoc by
+        (rewrite ctrls_inline_list_length;
+         change (Z.to_nat (to_Z l) < Z.to_nat 16)%nat;
+         exact ((proj1 (Z2Nat.inj_lt (to_Z l) 16
+           (usize_nonneg l) ltac:(lia))) Hlt)).
+      reflexivity.
+Qed.
+
+Lemma locals_stack_push_spec : forall v x v',
+  code_LocalsStack_push v x = Ok v' ->
+  locals_list v' = locals_list v ++ [x].
+Proof.
+  intros [a ov l] x v' H.
+  unfold code_LocalsStack_push in H.
+  unfold code_locals_inline_capacity in H.
+  cbn [code_LocalsStack_inline_len code_LocalsStack_inline
+       code_LocalsStack_overflow] in H.
+  destruct (l s>= 32%usize) eqn:Hge.
+  - destruct (alloc_vec_Vec_push ov x) as [ov'|e] eqn:Hpush;
+      cbn [bind] in H.
+    2: inversion H.
+    inversion H; subst; clear H. apply vec_push_spec in Hpush.
+    unfold locals_list. cbn [code_LocalsStack_inline_len code_LocalsStack_inline
+      code_LocalsStack_overflow]. rewrite Hge, Hpush, List.app_assoc.
+    reflexivity.
+  - pose proof (scalar_geb_false_lt _ _ Hge) as Hlt.
+    unfold array_index_mut_usize in H.
+    destruct (locals_inline_get_total a l ltac:(pose proof (usize_nonneg l);
+      assert (to_Z 32%usize = 32) by reflexivity; lia)) as [old Hget].
+    rewrite Hget in H. cbn [bind] in H.
+    change (usize_sub 32%usize 1%usize) with (Ok 31%usize) in H.
+    cbn [bind] in H.
+    destruct (l s= 31%usize) eqn:Hlast.
+    + apply scalar_eqb_true in Hlast.
+      assert (l = 31%usize) by
+        (apply scalar_to_Z_inj; cbn [to_Z] in *; lia).
+      subst l. cbn [bind] in H. injection H as <-.
+      unfold locals_list. cbn [code_LocalsStack_inline_len
+        code_LocalsStack_inline code_LocalsStack_overflow].
+      rewrite locals_inline_set_spec, vec_new_list, List.app_nil_r.
+      apply list_update_last_snoc. apply locals_inline_list_length.
+    + apply scalar_eqb_false in Hlast.
+      cbn [to_Z] in Hlt, Hlast.
+      destruct (usize_add_ok l 1%usize ltac:(
+        pose proof (usize_le_max l);
+        assert (to_Z 1%usize = 1) by reflexivity;
+        assert (to_Z 31%usize = 31) by reflexivity;
+        assert (to_Z 32%usize = 32) by reflexivity;
+        pose proof usize_max_bound; rewrite u32_max_val in *; lia))
+        as [l' [Hadd Hl']].
+      rewrite Hadd in H. cbn [bind] in H. injection H as <-.
+      unfold locals_list. cbn [code_LocalsStack_inline_len
+        code_LocalsStack_inline code_LocalsStack_overflow].
+      rewrite Hge.
+      rewrite (scalar_geb_of_lt l' 32%usize) by
+        (assert (to_Z 1%usize = 1) by reflexivity;
+         assert (to_Z 31%usize = 31) by reflexivity;
+         assert (to_Z 32%usize = 32) by reflexivity; lia).
+      rewrite locals_inline_set_spec.
+      assert (Hnat : Z.to_nat (to_Z l') = S (Z.to_nat (to_Z l))).
+      { rewrite Hl'. change (Z.to_nat (to_Z l + 1) = S (Z.to_nat (to_Z l))).
+        rewrite Z2Nat.inj_add by (pose proof (usize_nonneg l); lia).
+        cbn. lia. }
+      rewrite Hnat.
+      rewrite firstn_list_update_snoc by
+        (rewrite locals_inline_list_length;
+         change (Z.to_nat (to_Z l) < Z.to_nat 32)%nat;
+         exact ((proj1 (Z2Nat.inj_lt (to_Z l) 32
+           (usize_nonneg l) ltac:(lia))) Hlt)).
+      reflexivity.
+Qed.
+
+Lemma vals_stack_push_total : forall v x,
+  Z.of_nat (List.length (vals_list v)) + 1 <= usize_max ->
+  exists v', code_ValsStack_push v x = Ok v'.
+Proof.
+  intros [a ov l] x Hmax.
+  unfold code_ValsStack_push, code_vals_inline_capacity.
+  cbn [code_ValsStack_inline_len code_ValsStack_inline
+       code_ValsStack_overflow].
+  destruct (l s>= 32%usize) eqn:Hge.
+  - unfold vals_list in Hmax.
+    cbn [code_ValsStack_inline_len code_ValsStack_inline
+      code_ValsStack_overflow] in Hmax.
+    rewrite Hge, List.app_length, vals_inline_list_length in Hmax.
+    destruct (vec_push_ok ov x ltac:(lia)) as [ov' Hpush].
+    rewrite Hpush. cbn [bind]. eexists. reflexivity.
+  - pose proof (scalar_geb_false_lt _ _ Hge) as Hlt.
+    destruct (vals_inline_get_total a l ltac:(
+      pose proof (usize_nonneg l);
+      assert (to_Z 32%usize = 32) by reflexivity; lia)) as [old Hget].
+    unfold array_index_mut_usize. rewrite Hget. cbn [bind].
+    change (usize_sub 32%usize 1%usize) with (Ok 31%usize).
+    cbn [bind]. destruct (l s= 31%usize) eqn:Hlast.
+    + eexists. reflexivity.
+    + apply scalar_eqb_false in Hlast. cbn [to_Z] in Hlt, Hlast.
+      destruct (usize_add_ok l 1%usize ltac:(
+        assert (to_Z 1%usize = 1) by reflexivity;
+        assert (to_Z 31%usize = 31) by reflexivity;
+        assert (to_Z 32%usize = 32) by reflexivity;
+        pose proof usize_max_bound; rewrite u32_max_val in *; lia))
+        as [l' [Hadd _]].
+      rewrite Hadd. cbn [bind]. eexists. reflexivity.
+Qed.
+
+Lemma ctrls_stack_push_total : forall v x,
+  Z.of_nat (List.length (ctrls_list v)) + 1 <= usize_max ->
+  exists v', code_CtrlsStack_push v x = Ok v'.
+Proof.
+  intros [a ov l] x Hmax.
+  unfold code_CtrlsStack_push, code_ctrls_inline_capacity.
+  cbn [code_CtrlsStack_inline_len code_CtrlsStack_inline
+       code_CtrlsStack_overflow].
+  destruct (l s>= 16%usize) eqn:Hge.
+  - unfold ctrls_list in Hmax.
+    cbn [code_CtrlsStack_inline_len code_CtrlsStack_inline
+      code_CtrlsStack_overflow] in Hmax.
+    rewrite Hge, List.app_length, ctrls_inline_list_length in Hmax.
+    destruct (vec_push_ok ov x ltac:(lia)) as [ov' Hpush].
+    rewrite Hpush. cbn [bind]. eexists. reflexivity.
+  - pose proof (scalar_geb_false_lt _ _ Hge) as Hlt.
+    destruct (ctrls_inline_get_total a l ltac:(
+      pose proof (usize_nonneg l);
+      assert (to_Z 16%usize = 16) by reflexivity; lia)) as [old Hget].
+    unfold array_index_mut_usize. rewrite Hget. cbn [bind].
+    change (usize_sub 16%usize 1%usize) with (Ok 15%usize).
+    cbn [bind]. destruct (l s= 15%usize) eqn:Hlast.
+    + eexists. reflexivity.
+    + apply scalar_eqb_false in Hlast. cbn [to_Z] in Hlt, Hlast.
+      destruct (usize_add_ok l 1%usize ltac:(
+        assert (to_Z 1%usize = 1) by reflexivity;
+        assert (to_Z 15%usize = 15) by reflexivity;
+        assert (to_Z 16%usize = 16) by reflexivity;
+        pose proof usize_max_bound; rewrite u32_max_val in *; lia))
+        as [l' [Hadd _]].
+      rewrite Hadd. cbn [bind]. eexists. reflexivity.
+Qed.
+
+Lemma locals_stack_push_total : forall v x,
+  Z.of_nat (List.length (locals_list v)) + 1 <= usize_max ->
+  exists v', code_LocalsStack_push v x = Ok v'.
+Proof.
+  intros [a ov l] x Hmax.
+  unfold code_LocalsStack_push, code_locals_inline_capacity.
+  cbn [code_LocalsStack_inline_len code_LocalsStack_inline
+       code_LocalsStack_overflow].
+  destruct (l s>= 32%usize) eqn:Hge.
+  - unfold locals_list in Hmax.
+    cbn [code_LocalsStack_inline_len code_LocalsStack_inline
+      code_LocalsStack_overflow] in Hmax.
+    rewrite Hge, List.app_length, locals_inline_list_length in Hmax.
+    destruct (vec_push_ok ov x ltac:(lia)) as [ov' Hpush].
+    rewrite Hpush. cbn [bind]. eexists. reflexivity.
+  - pose proof (scalar_geb_false_lt _ _ Hge) as Hlt.
+    destruct (locals_inline_get_total a l ltac:(
+      pose proof (usize_nonneg l);
+      assert (to_Z 32%usize = 32) by reflexivity; lia)) as [old Hget].
+    unfold array_index_mut_usize. rewrite Hget. cbn [bind].
+    change (usize_sub 32%usize 1%usize) with (Ok 31%usize).
+    cbn [bind]. destruct (l s= 31%usize) eqn:Hlast.
+    + eexists. reflexivity.
+    + apply scalar_eqb_false in Hlast. cbn [to_Z] in Hlt, Hlast.
+      destruct (usize_add_ok l 1%usize ltac:(
+        assert (to_Z 1%usize = 1) by reflexivity;
+        assert (to_Z 31%usize = 31) by reflexivity;
+        assert (to_Z 32%usize = 32) by reflexivity;
+        pose proof usize_max_bound; rewrite u32_max_val in *; lia))
+        as [l' [Hadd _]].
+      rewrite Hadd. cbn [bind]. eexists. reflexivity.
+Qed.
+
+Lemma vals_stack_len_spec : forall v n,
+  code_ValsStack_len v = Ok n ->
+  to_Z n = Z.of_nat (List.length (vals_list v)).
+Proof.
+  intros [a ov l] n H.
+  unfold code_ValsStack_len, code_vals_inline_capacity in H.
+  cbn [code_ValsStack_inline_len code_ValsStack_inline
+       code_ValsStack_overflow] in H.
+  destruct (l s>= 32%usize) eqn:Hge.
+  - pose proof (scalar_add_val 32%usize n (alloc_vec_Vec_len ov)
+      (to_Z (alloc_vec_Vec_len ov)) H eq_refl) as Hn.
+    unfold vals_list. cbn [code_ValsStack_inline_len
+      code_ValsStack_inline code_ValsStack_overflow].
+    rewrite Hge, List.app_length, vals_inline_list_length.
+    rewrite vec_len_spec in Hn.
+    assert (to_Z 32%usize = 32) by reflexivity. lia.
+  - injection H as <-.
+    pose proof Hge as Hlt. apply scalar_geb_false_lt in Hlt.
+    cbn [to_Z] in Hlt.
+    unfold vals_list. cbn [code_ValsStack_inline_len
+      code_ValsStack_inline code_ValsStack_overflow].
+    rewrite Hge, List.firstn_length, vals_inline_list_length.
+    rewrite Nat.min_l.
+    + rewrite Z2Nat.id by apply usize_nonneg. reflexivity.
+    + apply Nat.lt_le_incl.
+      change (Z.to_nat (to_Z l) < Z.to_nat 32)%nat.
+      exact ((proj1 (Z2Nat.inj_lt (to_Z l) 32
+        (usize_nonneg l) ltac:(lia))) Hlt).
+Qed.
+
+Lemma ctrls_stack_len_spec : forall v n,
+  code_CtrlsStack_len v = Ok n ->
+  to_Z n = Z.of_nat (List.length (ctrls_list v)).
+Proof.
+  intros [a ov l] n H.
+  unfold code_CtrlsStack_len, code_ctrls_inline_capacity in H.
+  cbn [code_CtrlsStack_inline_len code_CtrlsStack_inline
+       code_CtrlsStack_overflow] in H.
+  destruct (l s>= 16%usize) eqn:Hge.
+  - pose proof (scalar_add_val 16%usize n (alloc_vec_Vec_len ov)
+      (to_Z (alloc_vec_Vec_len ov)) H eq_refl) as Hn.
+    unfold ctrls_list. cbn [code_CtrlsStack_inline_len
+      code_CtrlsStack_inline code_CtrlsStack_overflow].
+    rewrite Hge, List.app_length, ctrls_inline_list_length.
+    rewrite vec_len_spec in Hn.
+    assert (to_Z 16%usize = 16) by reflexivity. lia.
+  - injection H as <-.
+    pose proof Hge as Hlt. apply scalar_geb_false_lt in Hlt.
+    cbn [to_Z] in Hlt.
+    unfold ctrls_list. cbn [code_CtrlsStack_inline_len
+      code_CtrlsStack_inline code_CtrlsStack_overflow].
+    rewrite Hge, List.firstn_length, ctrls_inline_list_length.
+    rewrite Nat.min_l.
+    + rewrite Z2Nat.id by apply usize_nonneg. reflexivity.
+    + apply Nat.lt_le_incl.
+      change (Z.to_nat (to_Z l) < Z.to_nat 16)%nat.
+      exact ((proj1 (Z2Nat.inj_lt (to_Z l) 16
+        (usize_nonneg l) ltac:(lia))) Hlt).
+Qed.
+
+Lemma locals_stack_len_spec : forall v n,
+  code_LocalsStack_len v = Ok n ->
+  to_Z n = Z.of_nat (List.length (locals_list v)).
+Proof.
+  intros [a ov l] n H.
+  unfold code_LocalsStack_len, code_locals_inline_capacity in H.
+  cbn [code_LocalsStack_inline_len code_LocalsStack_inline
+       code_LocalsStack_overflow] in H.
+  destruct (l s>= 32%usize) eqn:Hge.
+  - pose proof (scalar_add_val 32%usize n (alloc_vec_Vec_len ov)
+      (to_Z (alloc_vec_Vec_len ov)) H eq_refl) as Hn.
+    unfold locals_list. cbn [code_LocalsStack_inline_len
+      code_LocalsStack_inline code_LocalsStack_overflow].
+    rewrite Hge, List.app_length, locals_inline_list_length.
+    rewrite vec_len_spec in Hn.
+    assert (to_Z 32%usize = 32) by reflexivity. lia.
+  - injection H as <-.
+    pose proof Hge as Hlt. apply scalar_geb_false_lt in Hlt.
+    cbn [to_Z] in Hlt.
+    unfold locals_list. cbn [code_LocalsStack_inline_len
+      code_LocalsStack_inline code_LocalsStack_overflow].
+    rewrite Hge, List.firstn_length, locals_inline_list_length.
+    rewrite Nat.min_l.
+    + rewrite Z2Nat.id by apply usize_nonneg. reflexivity.
+    + apply Nat.lt_le_incl.
+      change (Z.to_nat (to_Z l) < Z.to_nat 32)%nat.
+      exact ((proj1 (Z2Nat.inj_lt (to_Z l) 32
+        (usize_nonneg l) ltac:(lia))) Hlt).
+Qed.
+
+Lemma vals_stack_len_total : forall v,
+  Z.of_nat (List.length (vals_list v)) <= usize_max ->
+  exists n, code_ValsStack_len v = Ok n.
+Proof.
+  intros [a ov l] Hmax.
+  unfold code_ValsStack_len, code_vals_inline_capacity.
+  cbn [code_ValsStack_inline_len code_ValsStack_inline
+       code_ValsStack_overflow].
+  destruct (l s>= 32%usize) eqn:Hge.
+  - unfold vals_list in Hmax.
+    cbn [code_ValsStack_inline_len code_ValsStack_inline
+      code_ValsStack_overflow] in Hmax.
+    rewrite Hge, List.app_length, vals_inline_list_length in Hmax.
+    destruct (usize_add_ok 32%usize (alloc_vec_Vec_len ov)) as [n [Hadd _]].
+    { rewrite vec_len_spec. assert (to_Z 32%usize = 32) by reflexivity.
+      lia. }
+    rewrite Hadd. eauto.
+  - eauto.
+Qed.
+
+Lemma ctrls_stack_len_total : forall v,
+  Z.of_nat (List.length (ctrls_list v)) <= usize_max ->
+  exists n, code_CtrlsStack_len v = Ok n.
+Proof.
+  intros [a ov l] Hmax.
+  unfold code_CtrlsStack_len, code_ctrls_inline_capacity.
+  cbn [code_CtrlsStack_inline_len code_CtrlsStack_inline
+       code_CtrlsStack_overflow].
+  destruct (l s>= 16%usize) eqn:Hge.
+  - unfold ctrls_list in Hmax.
+    cbn [code_CtrlsStack_inline_len code_CtrlsStack_inline
+      code_CtrlsStack_overflow] in Hmax.
+    rewrite Hge, List.app_length, ctrls_inline_list_length in Hmax.
+    destruct (usize_add_ok 16%usize (alloc_vec_Vec_len ov)) as [n [Hadd _]].
+    { rewrite vec_len_spec. assert (to_Z 16%usize = 16) by reflexivity.
+      lia. }
+    rewrite Hadd. eauto.
+  - eauto.
+Qed.
+
+Lemma locals_stack_len_total : forall v,
+  Z.of_nat (List.length (locals_list v)) <= usize_max ->
+  exists n, code_LocalsStack_len v = Ok n.
+Proof.
+  intros [a ov l] Hmax.
+  unfold code_LocalsStack_len, code_locals_inline_capacity.
+  cbn [code_LocalsStack_inline_len code_LocalsStack_inline
+       code_LocalsStack_overflow].
+  destruct (l s>= 32%usize) eqn:Hge.
+  - unfold locals_list in Hmax.
+    cbn [code_LocalsStack_inline_len code_LocalsStack_inline
+      code_LocalsStack_overflow] in Hmax.
+    rewrite Hge, List.app_length, locals_inline_list_length in Hmax.
+    destruct (usize_add_ok 32%usize (alloc_vec_Vec_len ov)) as [n [Hadd _]].
+    { rewrite vec_len_spec. assert (to_Z 32%usize = 32) by reflexivity.
+      lia. }
+    rewrite Hadd. eauto.
+  - eauto.
+Qed.
+
+Lemma vals_stack_pop_spec : forall v o v',
+  code_ValsStack_pop v = Ok (o, v') ->
+  match List.rev (vals_list v) with
+  | [] => o = None /\ vals_list v' = []
+  | x :: rest => o = Some x /\ vals_list v' = List.rev rest
+  end.
+Proof.
+  intros [a ov l] o v' H.
+  unfold code_ValsStack_pop, code_vals_inline_capacity in H.
+  cbn [code_ValsStack_inline_len code_ValsStack_inline
+       code_ValsStack_overflow] in H.
+  destruct (l s>= 32%usize) eqn:Hge.
+  - destruct (alloc_vec_Vec_len ov s<> 0%usize) eqn:Hne.
+    + destruct (alloc_vec_Vec_pop alloc_alloc_Global ov)
+        as [[o0 ov']|e] eqn:Hpop; cbn [bind] in H.
+      2: inversion H.
+      injection H as <- <-.
+      pose proof (vec_pop_last _ ov o0 ov' Hpop) as Hp.
+      apply scalar_neqb_true in Hne. rewrite vec_len_spec in Hne.
+      assert (H0 : to_Z 0%usize = 0) by reflexivity. rewrite H0 in Hne.
+      destruct (List.rev (vec_list ov)) as [|x rest] eqn:Hrev.
+      * exfalso. apply (f_equal (@List.length code_StackType_t)) in Hrev.
+        rewrite List.rev_length in Hrev. cbn in Hrev. lia.
+      * destruct Hp as [Ho Hov]. rewrite Ho. unfold vals_list.
+        cbn [code_ValsStack_inline_len code_ValsStack_inline
+          code_ValsStack_overflow]. rewrite Hge.
+        rewrite List.rev_app_distr, Hrev. cbn.
+        rewrite List.rev_app_distr, Hov.
+        split; [reflexivity|]. rewrite List.rev_involutive. reflexivity.
+    + change (usize_sub 32%usize 1%usize) with (Ok 31%usize) in H.
+      cbn [bind] in H.
+      destruct (array_index_usize a 31%usize) as [x|e] eqn:Hget;
+        cbn [bind] in H.
+      2: inversion H.
+      injection H as <- <-.
+      apply scalar_neqb_false in Hne. rewrite vec_len_spec in Hne.
+      assert (H0 : to_Z 0%usize = 0) by reflexivity. rewrite H0 in Hne.
+      assert (Hov : vec_list ov = []).
+      { destruct (vec_list ov); [reflexivity|]. cbn in Hne. lia. }
+      pose proof (vals_inline_get_spec a 31%usize x
+        ltac:(assert (to_Z 31%usize = 31) by reflexivity; lia) Hget) as Hnth.
+      pose proof (firstn_nth_error_snoc 31 (vals_inline_list a) x Hnth)
+        as Hsnoc.
+      assert (Hfull : List.firstn 32 (vals_inline_list a) =
+                      vals_inline_list a).
+      { apply List.firstn_all2. rewrite vals_inline_list_length. lia. }
+      assert (Hfull_snoc : vals_inline_list a =
+        List.firstn 31 (vals_inline_list a) ++ [x]).
+      { exact (eq_trans (eq_sym Hfull) Hsnoc). }
+      unfold vals_list. cbn [code_ValsStack_inline_len
+        code_ValsStack_inline code_ValsStack_overflow].
+      rewrite Hge, Hov, List.app_nil_r.
+      replace (List.rev (vals_inline_list a)) with
+        (x :: List.rev (List.firstn 31 (vals_inline_list a))).
+      2: { pose proof (f_equal (@List.rev _) Hfull_snoc) as Hr.
+           rewrite List.rev_app_distr in Hr.
+           cbn [List.rev List.app] in Hr. exact (eq_sym Hr). }
+      cbn. split; [reflexivity|]. symmetry. apply List.rev_involutive.
+  - destruct (l s= 0%usize) eqn:Hz.
+    + injection H as <- <-. apply scalar_eqb_true in Hz.
+      assert (l = 0%usize) by (apply scalar_to_Z_inj; exact Hz).
+      subst l. unfold vals_list.
+      cbn [code_ValsStack_inline_len code_ValsStack_inline
+        code_ValsStack_overflow]. split; reflexivity.
+    + apply scalar_eqb_false in Hz.
+      destruct (usize_sub l 1%usize) as [l'|e] eqn:Hsub;
+        cbn [bind] in H.
+      2: inversion H.
+      destruct (array_index_usize a l') as [x|e] eqn:Hget;
+        cbn [bind] in H.
+      2: inversion H.
+      injection H as <- <-.
+      unfold usize_sub, scalar_sub in Hsub. apply mk_scalar_ok_to_Z in Hsub.
+      pose proof (scalar_geb_false_lt _ _ Hge) as Hlt.
+      assert (Hrange : 0 <= to_Z l' < 32).
+      { pose proof (usize_nonneg l). pose proof (usize_nonneg l').
+        assert (to_Z 0%usize = 0) by reflexivity.
+        assert (to_Z 1%usize = 1) by reflexivity.
+        assert (to_Z 32%usize = 32) by reflexivity. lia. }
+      pose proof (vals_inline_get_spec a l' x Hrange Hget) as Hnth.
+      pose proof (firstn_nth_error_snoc
+        (Z.to_nat (to_Z l')) (vals_inline_list a) x Hnth) as Hsnoc.
+      assert (Hnat : Z.to_nat (to_Z l) = S (Z.to_nat (to_Z l'))).
+      { assert (to_Z 1%usize = 1) by reflexivity.
+        assert (Hsum : to_Z l = to_Z l' + 1) by lia. rewrite Hsum.
+        rewrite Z2Nat.inj_add by
+          (pose proof (usize_nonneg l'); lia). cbn. lia. }
+      unfold vals_list. cbn [code_ValsStack_inline_len
+        code_ValsStack_inline code_ValsStack_overflow].
+      rewrite Hge.
+      rewrite (scalar_geb_of_lt l' 32%usize) by
+        (assert (to_Z 32%usize = 32) by reflexivity; lia).
+      rewrite Hnat, Hsnoc, List.rev_app_distr. cbn.
+      split; [reflexivity|]. symmetry. apply List.rev_involutive.
+Qed.
+
+Lemma ctrls_stack_pop_spec : forall v o v',
+  code_CtrlsStack_pop v = Ok (o, v') ->
+  match List.rev (ctrls_list v) with
+  | [] => o = None /\ ctrls_list v' = []
+  | x :: rest => o = Some x /\ ctrls_list v' = List.rev rest
+  end.
+Proof.
+  intros [a ov l] o v' H.
+  unfold code_CtrlsStack_pop, code_ctrls_inline_capacity in H.
+  cbn [code_CtrlsStack_inline_len code_CtrlsStack_inline
+       code_CtrlsStack_overflow] in H.
+  destruct (l s>= 16%usize) eqn:Hge.
+  - destruct (alloc_vec_Vec_len ov s<> 0%usize) eqn:Hne.
+    + destruct (alloc_vec_Vec_pop alloc_alloc_Global ov)
+        as [[o0 ov']|e] eqn:Hpop; cbn [bind] in H.
+      2: inversion H.
+      injection H as <- <-.
+      pose proof (vec_pop_last _ ov o0 ov' Hpop) as Hp.
+      apply scalar_neqb_true in Hne. rewrite vec_len_spec in Hne.
+      assert (H0 : to_Z 0%usize = 0) by reflexivity. rewrite H0 in Hne.
+      destruct (List.rev (vec_list ov)) as [|x rest] eqn:Hrev.
+      * exfalso. apply (f_equal (@List.length code_Ctrl_t)) in Hrev.
+        rewrite List.rev_length in Hrev. cbn in Hrev. lia.
+      * destruct Hp as [Ho Hov]. rewrite Ho. unfold ctrls_list.
+        cbn [code_CtrlsStack_inline_len code_CtrlsStack_inline
+          code_CtrlsStack_overflow]. rewrite Hge.
+        rewrite List.rev_app_distr, Hrev. cbn.
+        rewrite List.rev_app_distr, Hov.
+        split; [reflexivity|]. rewrite List.rev_involutive. reflexivity.
+    + change (usize_sub 16%usize 1%usize) with (Ok 15%usize) in H.
+      cbn [bind] in H.
+      destruct (array_index_usize a 15%usize) as [x|e] eqn:Hget;
+        cbn [bind] in H.
+      2: inversion H.
+      injection H as <- <-.
+      apply scalar_neqb_false in Hne. rewrite vec_len_spec in Hne.
+      assert (H0 : to_Z 0%usize = 0) by reflexivity. rewrite H0 in Hne.
+      assert (Hov : vec_list ov = []).
+      { destruct (vec_list ov); [reflexivity|]. cbn in Hne. lia. }
+      pose proof (ctrls_inline_get_spec a 15%usize x
+        ltac:(assert (to_Z 15%usize = 15) by reflexivity; lia) Hget) as Hnth.
+      pose proof (firstn_nth_error_snoc 15 (ctrls_inline_list a) x Hnth)
+        as Hsnoc.
+      assert (Hfull : List.firstn 16 (ctrls_inline_list a) =
+                      ctrls_inline_list a).
+      { apply List.firstn_all2. rewrite ctrls_inline_list_length. lia. }
+      assert (Hfull_snoc : ctrls_inline_list a =
+        List.firstn 15 (ctrls_inline_list a) ++ [x]).
+      { exact (eq_trans (eq_sym Hfull) Hsnoc). }
+      unfold ctrls_list. cbn [code_CtrlsStack_inline_len
+        code_CtrlsStack_inline code_CtrlsStack_overflow].
+      rewrite Hge, Hov, List.app_nil_r.
+      replace (List.rev (ctrls_inline_list a)) with
+        (x :: List.rev (List.firstn 15 (ctrls_inline_list a))).
+      2: { pose proof (f_equal (@List.rev _) Hfull_snoc) as Hr.
+           rewrite List.rev_app_distr in Hr.
+           cbn [List.rev List.app] in Hr. exact (eq_sym Hr). }
+      cbn. split; [reflexivity|]. symmetry. apply List.rev_involutive.
+  - destruct (l s= 0%usize) eqn:Hz.
+    + injection H as <- <-. apply scalar_eqb_true in Hz.
+      assert (l = 0%usize) by (apply scalar_to_Z_inj; exact Hz).
+      subst l. unfold ctrls_list.
+      cbn [code_CtrlsStack_inline_len code_CtrlsStack_inline
+        code_CtrlsStack_overflow]. split; reflexivity.
+    + apply scalar_eqb_false in Hz.
+      destruct (usize_sub l 1%usize) as [l'|e] eqn:Hsub;
+        cbn [bind] in H.
+      2: inversion H.
+      destruct (array_index_usize a l') as [x|e] eqn:Hget;
+        cbn [bind] in H.
+      2: inversion H.
+      injection H as <- <-.
+      unfold usize_sub, scalar_sub in Hsub. apply mk_scalar_ok_to_Z in Hsub.
+      pose proof (scalar_geb_false_lt _ _ Hge) as Hlt.
+      assert (Hrange : 0 <= to_Z l' < 16).
+      { pose proof (usize_nonneg l). pose proof (usize_nonneg l').
+        assert (to_Z 0%usize = 0) by reflexivity.
+        assert (to_Z 1%usize = 1) by reflexivity.
+        assert (to_Z 16%usize = 16) by reflexivity. lia. }
+      pose proof (ctrls_inline_get_spec a l' x Hrange Hget) as Hnth.
+      pose proof (firstn_nth_error_snoc
+        (Z.to_nat (to_Z l')) (ctrls_inline_list a) x Hnth) as Hsnoc.
+      assert (Hnat : Z.to_nat (to_Z l) = S (Z.to_nat (to_Z l'))).
+      { assert (to_Z 1%usize = 1) by reflexivity.
+        assert (Hsum : to_Z l = to_Z l' + 1) by lia. rewrite Hsum.
+        rewrite Z2Nat.inj_add by
+          (pose proof (usize_nonneg l'); lia). cbn. lia. }
+      unfold ctrls_list. cbn [code_CtrlsStack_inline_len
+        code_CtrlsStack_inline code_CtrlsStack_overflow].
+      rewrite Hge.
+      rewrite (scalar_geb_of_lt l' 16%usize) by
+        (assert (to_Z 16%usize = 16) by reflexivity; lia).
+      rewrite Hnat, Hsnoc, List.rev_app_distr. cbn.
+      split; [reflexivity|]. symmetry. apply List.rev_involutive.
+Qed.
+
+Lemma ctrls_stack_pop_of_snoc : forall v pre c o v',
+  ctrls_list v = pre ++ [c] ->
+  code_CtrlsStack_pop v = Ok (o, v') ->
+  o = Some c /\ ctrls_list v' = pre.
+Proof.
+  intros v pre c o v' Hsnoc Hpop.
+  pose proof (ctrls_stack_pop_spec v o v' Hpop) as Hspec.
+  rewrite Hsnoc, List.rev_app_distr in Hspec. cbn in Hspec.
+  destruct Hspec as [Ho Hv]. split; [exact Ho|].
+  rewrite Hv. apply List.rev_involutive.
+Qed.
+
+Lemma vals_stack_pop_len : forall v o v',
+  code_ValsStack_pop v = Ok (o, v') ->
+  vals_list v <> [] ->
+  (List.length (vals_list v') < List.length (vals_list v))%nat.
+Proof.
+  intros v o v' Hpop Hne.
+  pose proof (vals_stack_pop_spec v o v' Hpop) as Hspec.
+  destruct (List.rev (vals_list v)) as [|x rest] eqn:Hrev.
+  - exfalso. apply Hne. apply (f_equal (@List.rev code_StackType_t)) in Hrev.
+    rewrite List.rev_involutive in Hrev. cbn in Hrev. exact Hrev.
+  - destruct Hspec as [_ Hv']. rewrite Hv'. rewrite List.rev_length.
+    apply (f_equal (@List.length code_StackType_t)) in Hrev.
+    rewrite List.rev_length in Hrev. rewrite Hrev. cbn. lia.
+Qed.
+
+Lemma vals_stack_pop_size : forall v o v',
+  code_ValsStack_pop v = Ok (o, v') ->
+  (List.length (vals_list v') <= List.length (vals_list v))%nat.
+Proof.
+  intros v o v' Hpop. pose proof (vals_stack_pop_spec v o v' Hpop) as Hspec.
+  destruct (List.rev (vals_list v)) as [|x rest] eqn:Hrev.
+  - destruct Hspec as [_ Hv]. rewrite Hv. apply Nat.le_0_l.
+  - destruct Hspec as [_ Hv]. rewrite Hv, List.rev_length.
+    apply (f_equal (@List.length _)) in Hrev.
+    rewrite List.rev_length in Hrev. rewrite Hrev. cbn. lia.
+Qed.
+
+Lemma vals_stack_pop_total : forall v,
+  exists o v', code_ValsStack_pop v = Ok (o, v').
+Proof.
+  intros [a ov l].
+  unfold code_ValsStack_pop, code_vals_inline_capacity.
+  cbn [code_ValsStack_inline_len code_ValsStack_inline
+       code_ValsStack_overflow].
+  destruct (l s>= 32%usize) eqn:Hge.
+  - destruct (alloc_vec_Vec_len ov s<> 0%usize).
+    + destruct (vec_pop_ok alloc_alloc_Global ov) as [o [ov' Hpop]].
+      rewrite Hpop. cbn [bind]. eexists; eexists; reflexivity.
+    + change (usize_sub 32%usize 1%usize) with (Ok 31%usize).
+      cbn [bind].
+      destruct (vals_inline_get_total a 31%usize ltac:(
+        assert (to_Z 31%usize = 31) by reflexivity; lia)) as [x Hget].
+      rewrite Hget. cbn [bind]. eexists; eexists; reflexivity.
+  - destruct (l s= 0%usize) eqn:Hz.
+    + eexists; eexists; reflexivity.
+    + apply scalar_eqb_false in Hz.
+      pose proof (scalar_geb_false_lt _ _ Hge) as Hlt.
+      destruct (usize_sub_ok l 1%usize ltac:(
+        pose proof (usize_nonneg l);
+        assert (to_Z 0%usize = 0) by reflexivity;
+        assert (to_Z 1%usize = 1) by reflexivity; lia))
+        as [l' [Hsub Hl']].
+      rewrite Hsub. cbn [bind].
+      destruct (vals_inline_get_total a l' ltac:(
+        pose proof (usize_nonneg l');
+        assert (to_Z 1%usize = 1) by reflexivity;
+        assert (to_Z 32%usize = 32) by reflexivity; lia))
+        as [x Hget].
+      rewrite Hget. cbn [bind]. eexists; eexists; reflexivity.
+Qed.
+
+Lemma nth_error_firstn_lt : forall {T} (l : list T) n i,
+  (i < n)%nat -> List.nth_error (List.firstn n l) i = List.nth_error l i.
+Proof.
+  intros T l n. revert l. induction n as [|n IH]; intros l i Hlt;
+    [lia|]. destruct l as [|x xs]; destruct i; cbn; try reflexivity.
+  apply IH. lia.
+Qed.
+
+Lemma locals_stack_get_spec : forall v i x,
+  (Z.to_nat (to_Z i) < List.length (locals_list v))%nat ->
+  code_LocalsStack_get v i = Ok x ->
+  List.nth_error (locals_list v) (Z.to_nat (to_Z i)) = Some x.
+Proof.
+  intros [a ov l] i x Hbound Hget.
+  unfold locals_list in Hbound.
+  cbn [code_LocalsStack_inline_len code_LocalsStack_inline
+       code_LocalsStack_overflow] in Hbound.
+  destruct (l s>= 32%usize) eqn:Hge.
+  - unfold code_LocalsStack_get, code_locals_inline_capacity in Hget.
+    cbn [code_LocalsStack_inline code_LocalsStack_overflow] in Hget.
+    destruct (i s< 32%usize) eqn:Hi.
+    + apply scalar_ltb_true in Hi.
+      pose proof (locals_inline_get_spec a i x ltac:(
+        pose proof (usize_nonneg i);
+        assert (to_Z 32%usize = 32) by reflexivity; lia) Hget) as Hin.
+      unfold locals_list. cbn [code_LocalsStack_inline_len
+        code_LocalsStack_inline code_LocalsStack_overflow].
+      rewrite Hge, List.nth_error_app1; [exact Hin|].
+      rewrite locals_inline_list_length.
+      change (Z.to_nat (to_Z i) < Z.to_nat 32)%nat.
+      exact ((proj1 (Z2Nat.inj_lt (to_Z i) 32
+        (usize_nonneg i) ltac:(lia))) ltac:(
+          assert (to_Z 32%usize = 32) by reflexivity; lia)).
+    + apply scalar_ltb_false in Hi.
+      destruct (usize_sub i 32%usize) as [j|e] eqn:Hsub;
+        cbn [bind] in Hget.
+      2: inversion Hget.
+      unfold usize_sub, scalar_sub in Hsub. apply mk_scalar_ok_to_Z in Hsub.
+      rewrite vec_index_spec in Hget.
+      destruct (List.nth_error (vec_list ov) (Z.to_nat (to_Z j)))
+        as [y|] eqn:Hnth; [injection Hget as <-|inversion Hget].
+      unfold locals_list. cbn [code_LocalsStack_inline_len
+        code_LocalsStack_inline code_LocalsStack_overflow].
+      rewrite Hge, List.nth_error_app2.
+      * rewrite locals_inline_list_length.
+        rewrite Hsub in Hnth. rewrite Z2Nat.inj_sub in Hnth by
+          (pose proof (usize_nonneg i);
+           assert (to_Z 32%usize = 32) by reflexivity; lia).
+        cbn in Hnth. exact Hnth.
+      * rewrite locals_inline_list_length.
+        change (Z.to_nat 32 <= Z.to_nat (to_Z i))%nat.
+        apply (proj1 (Z2Nat.inj_le 32 (to_Z i) ltac:(lia)
+          (usize_nonneg i))). assert (to_Z 32%usize = 32) by reflexivity.
+        lia.
+  - pose proof (scalar_geb_false_lt _ _ Hge) as Hl.
+    unfold code_LocalsStack_get, code_locals_inline_capacity in Hget.
+    cbn [code_LocalsStack_inline code_LocalsStack_overflow] in Hget.
+    assert (Hrange : 0 <= to_Z i < 32).
+    { pose proof (usize_nonneg i).
+      rewrite List.firstn_length, locals_inline_list_length in Hbound.
+      assert (Hnat : (Z.to_nat (to_Z i) < Z.to_nat (to_Z l))%nat) by lia.
+      apply (proj2 (Z2Nat.inj_lt (to_Z i) (to_Z l)
+        (usize_nonneg i) (usize_nonneg l))) in Hnat.
+      assert (to_Z 32%usize = 32) by reflexivity. lia. }
+    assert (Hi : (i s< 32%usize) = true).
+    { unfold scalar_ltb. apply Z.ltb_lt.
+      assert (to_Z 32%usize = 32) by reflexivity. lia. }
+    rewrite Hi in Hget.
+    pose proof (locals_inline_get_spec a i x Hrange Hget) as Hin.
+    unfold locals_list. cbn [code_LocalsStack_inline_len
+      code_LocalsStack_inline code_LocalsStack_overflow].
+    rewrite Hge, nth_error_firstn_lt; [exact Hin|].
+    rewrite List.firstn_length, locals_inline_list_length in Hbound.
+    lia.
+Qed.
+
+Lemma locals_stack_get_total : forall v i,
+  (Z.to_nat (to_Z i) < List.length (locals_list v))%nat ->
+  exists x, code_LocalsStack_get v i = Ok x.
+Proof.
+  intros [a ov l] i Hbound.
+  unfold locals_list in Hbound.
+  cbn [code_LocalsStack_inline_len code_LocalsStack_inline
+       code_LocalsStack_overflow] in Hbound.
+  destruct (l s>= 32%usize) eqn:Hge.
+  - unfold code_LocalsStack_get, code_locals_inline_capacity.
+    cbn [code_LocalsStack_inline code_LocalsStack_overflow].
+    destruct (i s< 32%usize) eqn:Hi.
+    + apply scalar_ltb_true in Hi.
+      apply locals_inline_get_total.
+      pose proof (usize_nonneg i).
+      assert (to_Z 32%usize = 32) by reflexivity. lia.
+    + apply scalar_ltb_false in Hi.
+      destruct (usize_sub_ok i 32%usize ltac:(lia)) as [j [Hsub Hj]].
+      rewrite Hsub. cbn [bind]. rewrite vec_index_spec.
+      assert (Hjbound :
+        (Z.to_nat (to_Z j) < List.length (vec_list ov))%nat).
+      { rewrite List.app_length, locals_inline_list_length in Hbound.
+        assert (H32 : to_Z 32%usize = 32) by reflexivity.
+        rewrite Hj, H32, Z2Nat.inj_sub by
+          (pose proof (usize_nonneg i); lia). lia. }
+      destruct (List.nth_error (vec_list ov) (Z.to_nat (to_Z j)))
+        as [x|] eqn:Hnth; [exists x; reflexivity|].
+      apply List.nth_error_None in Hnth. lia.
+  - pose proof (scalar_geb_false_lt _ _ Hge) as Hl.
+    assert (Hrange : 0 <= to_Z i < 32).
+    { pose proof (usize_nonneg i).
+      rewrite List.firstn_length, locals_inline_list_length in Hbound.
+      assert (Hnat : (Z.to_nat (to_Z i) < Z.to_nat (to_Z l))%nat) by lia.
+      apply (proj2 (Z2Nat.inj_lt (to_Z i) (to_Z l)
+        (usize_nonneg i) (usize_nonneg l))) in Hnat.
+      assert (to_Z 32%usize = 32) by reflexivity. lia. }
+    unfold code_LocalsStack_get, code_locals_inline_capacity.
+    cbn [code_LocalsStack_inline code_LocalsStack_overflow].
+    assert (Hi : (i s< 32%usize) = true).
+    { unfold scalar_ltb. apply Z.ltb_lt.
+      assert (to_Z 32%usize = 32) by reflexivity. lia. }
+    rewrite Hi. apply locals_inline_get_total. exact Hrange.
+Qed.
+
+Lemma locals_stack_get_checked_total : forall v i,
+  exists o, code_LocalsStack_get_checked v i = Ok o.
+Proof.
+  intros [a ov l] i.
+  unfold code_LocalsStack_get_checked, code_locals_inline_capacity.
+  cbn [code_LocalsStack_inline_len code_LocalsStack_inline
+       code_LocalsStack_overflow].
+  destruct (l s>= 32%usize) eqn:Hl.
+  - destruct (i s< 32%usize) eqn:Hi.
+    + apply scalar_ltb_true in Hi.
+      destruct (locals_inline_get_total a i ltac:(
+        pose proof (usize_nonneg i);
+        assert (to_Z 32%usize = 32) by reflexivity; lia)) as [x Hget].
+      rewrite Hget. cbn [bind]. eauto.
+    + apply scalar_ltb_false in Hi.
+      destruct (usize_sub_ok i 32%usize ltac:(lia)) as [j [Hsub Hj]].
+      rewrite Hsub. cbn [bind].
+      destruct (j s>= alloc_vec_Vec_len ov) eqn:Hge.
+      * eauto.
+      * apply scalar_geb_false_lt in Hge. rewrite vec_len_spec in Hge.
+        rewrite vec_index_spec.
+        destruct (List.nth_error (vec_list ov) (Z.to_nat (to_Z j)))
+          as [x|] eqn:Hnth.
+        -- eexists. reflexivity.
+        -- apply List.nth_error_None in Hnth. apply Nat2Z.inj_le in Hnth.
+           pose proof (usize_nonneg j). rewrite Z2Nat.id in Hnth by lia. lia.
+  - pose proof (scalar_geb_false_lt _ _ Hl) as Hllen.
+    destruct (i s>= l) eqn:Hge.
+    + eauto.
+    + apply scalar_geb_false_lt in Hge.
+      destruct (locals_inline_get_total a i ltac:(
+        pose proof (usize_nonneg i);
+        assert (to_Z 32%usize = 32) by reflexivity; lia)) as [x Hget].
+      rewrite Hget. cbn [bind]. eauto.
+Qed.
+
+Lemma locals_stack_get_checked_spec : forall v i o,
+  code_LocalsStack_get_checked v i = Ok o ->
+  o = List.nth_error (locals_list v) (Z.to_nat (to_Z i)).
+Proof.
+  intros [a ov l] i o H.
+  unfold code_LocalsStack_get_checked, code_locals_inline_capacity in H.
+  cbn [code_LocalsStack_inline_len code_LocalsStack_inline
+       code_LocalsStack_overflow] in H.
+  destruct (l s>= 32%usize) eqn:Hl.
+  - destruct (i s< 32%usize) eqn:Hi.
+    + apply scalar_ltb_true in Hi.
+      destruct (array_index_usize a i) as [vt|e] eqn:Hget;
+        cbn [bind] in H.
+      2: inversion H.
+      injection H as <-. unfold locals_list.
+      cbn [code_LocalsStack_inline_len code_LocalsStack_inline
+        code_LocalsStack_overflow]. rewrite Hl. symmetry.
+      rewrite List.nth_error_app1.
+      * apply locals_inline_get_spec; [|exact Hget].
+        pose proof (usize_nonneg i).
+        assert (to_Z 32%usize = 32) by reflexivity. lia.
+      * rewrite locals_inline_list_length.
+        change (Z.to_nat (to_Z i) < Z.to_nat 32)%nat.
+        exact ((proj1 (Z2Nat.inj_lt (to_Z i) 32
+          (usize_nonneg i) ltac:(lia))) ltac:(
+            assert (to_Z 32%usize = 32) by reflexivity; lia)).
+    + apply scalar_ltb_false in Hi.
+      destruct (usize_sub i 32%usize) as [j|e] eqn:Hsub;
+        cbn [bind] in H.
+      2: inversion H.
+      unfold usize_sub, scalar_sub in Hsub. apply mk_scalar_ok_to_Z in Hsub.
+      assert (H32 : to_Z 32%usize = 32) by reflexivity.
+      rewrite H32 in Hsub.
+      destruct (j s>= alloc_vec_Vec_len ov) eqn:Hge.
+      * injection H as <-. symmetry. unfold locals_list.
+        cbn [code_LocalsStack_inline_len code_LocalsStack_inline
+          code_LocalsStack_overflow]. rewrite Hl, List.nth_error_app2.
+        -- rewrite locals_inline_list_length. cbn.
+           change (List.nth_error (vec_list ov)
+             (Z.to_nat (to_Z i) - Z.to_nat 32) = None).
+           rewrite <- Z2Nat.inj_sub by
+             (pose proof (usize_nonneg i);
+              assert (to_Z 32%usize = 32) by reflexivity; lia).
+           rewrite <- Hsub. apply List.nth_error_None.
+           apply (proj2 (Nat2Z.inj_le _ _)).
+           apply scalar_geb_true_ge in Hge. rewrite vec_len_spec in Hge.
+           rewrite Z2Nat.id by apply usize_nonneg. lia.
+        -- rewrite locals_inline_list_length.
+           change (Z.to_nat 32 <= Z.to_nat (to_Z i))%nat.
+           apply (proj1 (Z2Nat.inj_le 32 (to_Z i) ltac:(lia)
+             (usize_nonneg i))). assert (to_Z 32%usize = 32) by reflexivity.
+           lia.
+      * apply scalar_geb_false_lt in Hge. rewrite vec_index_spec in H.
+        destruct (List.nth_error (vec_list ov) (Z.to_nat (to_Z j)))
+          as [vt|] eqn:Hnth; cbn [bind] in H.
+        2: inversion H.
+        injection H as <-. symmetry. unfold locals_list.
+        cbn [code_LocalsStack_inline_len code_LocalsStack_inline
+          code_LocalsStack_overflow]. rewrite Hl, List.nth_error_app2.
+        -- rewrite locals_inline_list_length. cbn.
+           change (List.nth_error (vec_list ov)
+             (Z.to_nat (to_Z i) - Z.to_nat 32) = Some vt).
+           rewrite <- Z2Nat.inj_sub by
+             (pose proof (usize_nonneg i);
+              assert (to_Z 32%usize = 32) by reflexivity; lia).
+           rewrite <- Hsub. exact Hnth.
+        -- rewrite locals_inline_list_length.
+           change (Z.to_nat 32 <= Z.to_nat (to_Z i))%nat.
+           apply (proj1 (Z2Nat.inj_le 32 (to_Z i) ltac:(lia)
+             (usize_nonneg i))). assert (to_Z 32%usize = 32) by reflexivity.
+           lia.
+  - pose proof (scalar_geb_false_lt _ _ Hl) as Hllen.
+    destruct (i s>= l) eqn:Hge.
+    + injection H as <-. symmetry. apply List.nth_error_None.
+      unfold locals_list. cbn [code_LocalsStack_inline_len
+        code_LocalsStack_inline code_LocalsStack_overflow].
+      rewrite Hl, List.firstn_length, locals_inline_list_length.
+      apply scalar_geb_true_ge in Hge.
+      assert (Hnat : (Z.to_nat (to_Z l) <= Z.to_nat (to_Z i))%nat).
+      { apply (proj1 (Z2Nat.inj_le (to_Z l) (to_Z i)
+          (usize_nonneg l) (usize_nonneg i))). lia. }
+      lia.
+    + apply scalar_geb_false_lt in Hge.
+      destruct (array_index_usize a i) as [vt|e] eqn:Hget;
+        cbn [bind] in H.
+      2: inversion H.
+      injection H as <-. symmetry. unfold locals_list.
+      cbn [code_LocalsStack_inline_len code_LocalsStack_inline
+        code_LocalsStack_overflow]. rewrite Hl, nth_error_firstn_lt.
+      * apply locals_inline_get_spec; [|exact Hget].
+        pose proof (usize_nonneg i).
+        assert (to_Z 32%usize = 32) by reflexivity. lia.
+      * apply (proj1 (Z2Nat.inj_lt (to_Z i) (to_Z l)
+          (usize_nonneg i) (usize_nonneg l))). exact Hge.
+Qed.
+
+Lemma ctrls_stack_get_spec : forall v i x,
+  (Z.to_nat (to_Z i) < List.length (ctrls_list v))%nat ->
+  code_CtrlsStack_get v i = Ok x ->
+  List.nth_error (ctrls_list v) (Z.to_nat (to_Z i)) = Some x.
+Proof.
+  intros [a ov l] i x Hbound Hget.
+  unfold ctrls_list in Hbound.
+  cbn [code_CtrlsStack_inline_len code_CtrlsStack_inline
+       code_CtrlsStack_overflow] in Hbound.
+  destruct (l s>= 16%usize) eqn:Hge.
+  - unfold code_CtrlsStack_get, code_ctrls_inline_capacity in Hget.
+    cbn [code_CtrlsStack_inline code_CtrlsStack_overflow] in Hget.
+    destruct (i s< 16%usize) eqn:Hi.
+    + apply scalar_ltb_true in Hi.
+      pose proof (ctrls_inline_get_spec a i x ltac:(
+        pose proof (usize_nonneg i);
+        assert (to_Z 16%usize = 16) by reflexivity; lia) Hget) as Hin.
+      unfold ctrls_list. cbn [code_CtrlsStack_inline_len
+        code_CtrlsStack_inline code_CtrlsStack_overflow].
+      rewrite Hge, List.nth_error_app1; [exact Hin|].
+      rewrite ctrls_inline_list_length.
+      change (Z.to_nat (to_Z i) < Z.to_nat 16)%nat.
+      exact ((proj1 (Z2Nat.inj_lt (to_Z i) 16
+        (usize_nonneg i) ltac:(lia))) ltac:(
+          assert (to_Z 16%usize = 16) by reflexivity; lia)).
+    + apply scalar_ltb_false in Hi.
+      destruct (usize_sub i 16%usize) as [j|e] eqn:Hsub;
+        cbn [bind] in Hget.
+      2: inversion Hget.
+      unfold usize_sub, scalar_sub in Hsub. apply mk_scalar_ok_to_Z in Hsub.
+      rewrite vec_index_spec in Hget.
+      destruct (List.nth_error (vec_list ov) (Z.to_nat (to_Z j)))
+        as [y|] eqn:Hnth; [injection Hget as <-|inversion Hget].
+      unfold ctrls_list. cbn [code_CtrlsStack_inline_len
+        code_CtrlsStack_inline code_CtrlsStack_overflow].
+      rewrite Hge, List.nth_error_app2.
+      * rewrite ctrls_inline_list_length.
+        rewrite Hsub in Hnth. rewrite Z2Nat.inj_sub in Hnth by
+          (pose proof (usize_nonneg i);
+           assert (to_Z 16%usize = 16) by reflexivity; lia).
+        cbn in Hnth. exact Hnth.
+      * rewrite ctrls_inline_list_length.
+        change (Z.to_nat 16 <= Z.to_nat (to_Z i))%nat.
+        apply (proj1 (Z2Nat.inj_le 16 (to_Z i) ltac:(lia)
+          (usize_nonneg i))). assert (to_Z 16%usize = 16) by reflexivity.
+        lia.
+  - pose proof (scalar_geb_false_lt _ _ Hge) as Hl.
+    unfold code_CtrlsStack_get, code_ctrls_inline_capacity in Hget.
+    cbn [code_CtrlsStack_inline code_CtrlsStack_overflow] in Hget.
+    assert (Hrange : 0 <= to_Z i < 16).
+    { pose proof (usize_nonneg i).
+      rewrite List.firstn_length, ctrls_inline_list_length in Hbound.
+      assert (Hnat : (Z.to_nat (to_Z i) < Z.to_nat (to_Z l))%nat) by lia.
+      apply (proj2 (Z2Nat.inj_lt (to_Z i) (to_Z l)
+        (usize_nonneg i) (usize_nonneg l))) in Hnat.
+      assert (to_Z 16%usize = 16) by reflexivity. lia. }
+    assert (Hi : (i s< 16%usize) = true).
+    { unfold scalar_ltb. apply Z.ltb_lt.
+      assert (to_Z 16%usize = 16) by reflexivity. lia. }
+    rewrite Hi in Hget.
+    pose proof (ctrls_inline_get_spec a i x Hrange Hget) as Hin.
+    unfold ctrls_list. cbn [code_CtrlsStack_inline_len
+      code_CtrlsStack_inline code_CtrlsStack_overflow].
+    rewrite Hge, nth_error_firstn_lt; [exact Hin|].
+    rewrite List.firstn_length, ctrls_inline_list_length in Hbound.
+    lia.
+Qed.
+
+Lemma ctrls_stack_get_total : forall v i,
+  (Z.to_nat (to_Z i) < List.length (ctrls_list v))%nat ->
+  exists x, code_CtrlsStack_get v i = Ok x.
+Proof.
+  intros [a ov l] i Hbound.
+  unfold ctrls_list in Hbound.
+  cbn [code_CtrlsStack_inline_len code_CtrlsStack_inline
+       code_CtrlsStack_overflow] in Hbound.
+  destruct (l s>= 16%usize) eqn:Hge.
+  - unfold code_CtrlsStack_get, code_ctrls_inline_capacity.
+    cbn [code_CtrlsStack_inline code_CtrlsStack_overflow].
+    destruct (i s< 16%usize) eqn:Hi.
+    + apply scalar_ltb_true in Hi.
+      apply ctrls_inline_get_total.
+      pose proof (usize_nonneg i).
+      assert (to_Z 16%usize = 16) by reflexivity. lia.
+    + apply scalar_ltb_false in Hi.
+      destruct (usize_sub_ok i 16%usize ltac:(lia)) as [j [Hsub Hj]].
+      rewrite Hsub. cbn [bind]. rewrite vec_index_spec.
+      assert (Hjbound :
+        (Z.to_nat (to_Z j) < List.length (vec_list ov))%nat).
+      { rewrite List.app_length, ctrls_inline_list_length in Hbound.
+        assert (H16 : to_Z 16%usize = 16) by reflexivity.
+        rewrite Hj, H16, Z2Nat.inj_sub by
+          (pose proof (usize_nonneg i); lia). lia. }
+      destruct (List.nth_error (vec_list ov) (Z.to_nat (to_Z j)))
+        as [x|] eqn:Hnth; [exists x; reflexivity|].
+      apply List.nth_error_None in Hnth. lia.
+  - pose proof (scalar_geb_false_lt _ _ Hge) as Hl.
+    assert (Hrange : 0 <= to_Z i < 16).
+    { pose proof (usize_nonneg i).
+      rewrite List.firstn_length, ctrls_inline_list_length in Hbound.
+      assert (Hnat : (Z.to_nat (to_Z i) < Z.to_nat (to_Z l))%nat) by lia.
+      apply (proj2 (Z2Nat.inj_lt (to_Z i) (to_Z l)
+        (usize_nonneg i) (usize_nonneg l))) in Hnat.
+      assert (to_Z 16%usize = 16) by reflexivity. lia. }
+    unfold code_CtrlsStack_get, code_ctrls_inline_capacity.
+    cbn [code_CtrlsStack_inline code_CtrlsStack_overflow].
+    assert (Hi : (i s< 16%usize) = true).
+    { unfold scalar_ltb. apply Z.ltb_lt.
+      assert (to_Z 16%usize = 16) by reflexivity. lia. }
+    rewrite Hi. apply ctrls_inline_get_total. exact Hrange.
+Qed.
+
 Axiom vec_update_spec : forall {T} (v : alloc_vec_Vec T) (i : usize) (x : T),
   vec_list (alloc_vec_Vec_update v i x)
     = list_update (vec_list v) (Z.to_nat (to_Z i)) x.
@@ -956,6 +2254,254 @@ Axiom vec_index_mut_spec : forall {T} (v : alloc_vec_Vec T) (i : usize),
       | Some x => Ok (x, alloc_vec_Vec_update v i)
       | None => Fail_ Failure
       end.
+
+Lemma ctrls_stack_set_total : forall v i x,
+  (Z.to_nat (to_Z i) < List.length (ctrls_list v))%nat ->
+  exists v', code_CtrlsStack_set v i x = Ok v'.
+Proof.
+  intros [a ov l] i x Hbound.
+  unfold ctrls_list in Hbound.
+  cbn [code_CtrlsStack_inline_len code_CtrlsStack_inline
+       code_CtrlsStack_overflow] in Hbound.
+  destruct (l s>= 16%usize) eqn:Hl.
+  - unfold code_CtrlsStack_set, code_ctrls_inline_capacity.
+    cbn [code_CtrlsStack_inline code_CtrlsStack_overflow].
+    destruct (i s< 16%usize) eqn:Hi.
+    + apply scalar_ltb_true in Hi.
+      destruct (ctrls_inline_set_total a i x ltac:(
+        pose proof (usize_nonneg i);
+        assert (to_Z 16%usize = 16) by reflexivity; lia)) as [a' Hset].
+      rewrite Hset. cbn [bind]. eauto.
+    + apply scalar_ltb_false in Hi.
+      destruct (usize_sub_ok i 16%usize ltac:(lia)) as [j [Hsub Hj]].
+      rewrite Hsub. cbn [bind]. rewrite vec_index_mut_spec.
+      assert (Hjbound :
+        (Z.to_nat (to_Z j) < List.length (vec_list ov))%nat).
+      { rewrite List.app_length, ctrls_inline_list_length in Hbound.
+        assert (H16 : to_Z 16%usize = 16) by reflexivity.
+        rewrite Hj, H16, Z2Nat.inj_sub by
+          (pose proof (usize_nonneg i); lia). lia. }
+      destruct (List.nth_error (vec_list ov) (Z.to_nat (to_Z j)))
+        as [old|] eqn:Hnth; [cbn [bind]; eauto|].
+      apply List.nth_error_None in Hnth. lia.
+  - pose proof (scalar_geb_false_lt _ _ Hl) as Hllen.
+    assert (Hrange : 0 <= to_Z i < 16).
+    { pose proof (usize_nonneg i).
+      rewrite List.firstn_length, ctrls_inline_list_length in Hbound.
+      assert (Hnat : (Z.to_nat (to_Z i) < Z.to_nat (to_Z l))%nat) by lia.
+      apply (proj2 (Z2Nat.inj_lt (to_Z i) (to_Z l)
+        (usize_nonneg i) (usize_nonneg l))) in Hnat.
+      assert (to_Z 16%usize = 16) by reflexivity. lia. }
+    unfold code_CtrlsStack_set, code_ctrls_inline_capacity.
+    cbn [code_CtrlsStack_inline code_CtrlsStack_overflow].
+    assert (Hi : (i s< 16%usize) = true).
+    { unfold scalar_ltb. apply Z.ltb_lt.
+      assert (to_Z 16%usize = 16) by reflexivity. lia. }
+    rewrite Hi.
+    destruct (ctrls_inline_set_total a i x Hrange) as [a' Hset].
+    rewrite Hset. cbn [bind]. eauto.
+Qed.
+
+Lemma list_update_app_left : forall {T} (l r : list T) n x,
+  (n < List.length l)%nat ->
+  list_update (l ++ r) n x = list_update l n x ++ r.
+Proof.
+  intros T l. induction l as [|h l IH]; intros r n x Hlt; [cbn in Hlt; lia|].
+  destruct n; [reflexivity|]. cbn [list_update List.app].
+  f_equal. apply IH. apply (proj2 (Nat.succ_lt_mono _ _)). exact Hlt.
+Qed.
+
+Lemma list_update_app_right : forall {T} (l r : list T) n x,
+  (List.length l <= n)%nat ->
+  list_update (l ++ r) n x = l ++ list_update r (n - List.length l) x.
+Proof.
+  intros T l. induction l as [|h l IH]; intros r n x Hle.
+  - cbn [list_update List.app List.length]. rewrite Nat.sub_0_r. reflexivity.
+  - destruct n; [cbn in Hle; lia|].
+    change (h :: list_update (l ++ r) n x =
+      h :: (l ++ list_update r (n - List.length l) x)).
+    f_equal. apply IH. apply (proj2 (Nat.succ_le_mono _ _)). exact Hle.
+Qed.
+
+Lemma firstn_list_update : forall {T} (l : list T) k n x,
+  (n < k)%nat ->
+  List.firstn k (list_update l n x) =
+    list_update (List.firstn k l) n x.
+Proof.
+  intros T l. induction l as [|h l IH]; intros k n x Hlt.
+  - destruct k, n; cbn [list_update]; reflexivity.
+  - destruct k; [lia|]. destruct n; [reflexivity|].
+    change (h :: List.firstn k (list_update l n x) =
+      h :: list_update (List.firstn k l) n x).
+    f_equal. apply IH. apply (proj2 (Nat.succ_lt_mono _ _)). exact Hlt.
+Qed.
+
+Lemma ctrls_stack_set_spec : forall v i x v',
+  (Z.to_nat (to_Z i) < List.length (ctrls_list v))%nat ->
+  code_CtrlsStack_set v i x = Ok v' ->
+  ctrls_list v' = list_update (ctrls_list v) (Z.to_nat (to_Z i)) x.
+Proof.
+  intros [a ov l] i x v' Hbound Hset.
+  unfold ctrls_list in Hbound.
+  cbn [code_CtrlsStack_inline_len code_CtrlsStack_inline
+       code_CtrlsStack_overflow] in Hbound.
+  destruct (l s>= 16%usize) eqn:Hl.
+  - unfold code_CtrlsStack_set, code_ctrls_inline_capacity in Hset.
+    cbn [code_CtrlsStack_inline code_CtrlsStack_overflow] in Hset.
+    destruct (i s< 16%usize) eqn:Hi.
+    + apply scalar_ltb_true in Hi.
+      destruct (array_update_usize a i x) as [a'|e]
+        eqn:Hinline in Hset; cbn [bind] in Hset.
+      2: inversion Hset.
+      injection Hset as <-. unfold ctrls_list.
+      cbn [code_CtrlsStack_inline_len code_CtrlsStack_inline
+        code_CtrlsStack_overflow]. rewrite Hl.
+      assert (Hrange : 0 <= to_Z i < 16).
+      { pose proof (usize_nonneg i).
+        assert (to_Z 16%usize = 16) by reflexivity. lia. }
+      rewrite (ctrls_inline_update_spec _ _ _ _ Hrange Hinline).
+      symmetry. apply list_update_app_left.
+      rewrite ctrls_inline_list_length.
+      change (Z.to_nat (to_Z i) < Z.to_nat 16)%nat.
+      exact ((proj1 (Z2Nat.inj_lt (to_Z i) 16
+        (proj1 Hrange) ltac:(lia))) (proj2 Hrange)).
+    + apply scalar_ltb_false in Hi.
+      destruct (usize_sub i 16%usize) as [j|e] eqn:Hsub;
+        cbn [bind] in Hset.
+      2: inversion Hset.
+      rewrite vec_index_mut_spec in Hset.
+      destruct (List.nth_error (vec_list ov) (Z.to_nat (to_Z j)))
+        as [old|] eqn:Hnth in Hset.
+      2: inversion Hset.
+      cbn [bind] in Hset. injection Hset as <-.
+      unfold ctrls_list. cbn [code_CtrlsStack_inline_len
+        code_CtrlsStack_inline code_CtrlsStack_overflow]. rewrite Hl.
+      rewrite vec_update_spec. symmetry. rewrite list_update_app_right.
+      * f_equal. unfold usize_sub, scalar_sub in Hsub.
+        apply mk_scalar_ok_to_Z in Hsub.
+        assert (H16 : to_Z 16%usize = 16) by reflexivity. rewrite H16 in Hsub.
+        rewrite Hsub, Z2Nat.inj_sub by
+          (pose proof (usize_nonneg i); lia).
+        rewrite ctrls_inline_list_length. reflexivity.
+      * rewrite ctrls_inline_list_length.
+        change (Z.to_nat 16 <= Z.to_nat (to_Z i))%nat.
+        apply (proj1 (Z2Nat.inj_le 16 (to_Z i) ltac:(lia)
+          (usize_nonneg i))). assert (to_Z 16%usize = 16) by reflexivity.
+        lia.
+  - pose proof (scalar_geb_false_lt _ _ Hl) as Hllen.
+    assert (Hlt : (Z.to_nat (to_Z i) < Z.to_nat (to_Z l))%nat).
+    { rewrite List.firstn_length, ctrls_inline_list_length in Hbound. lia. }
+    assert (Hzlt : to_Z i < to_Z l).
+    { apply (proj2 (Z2Nat.inj_lt (to_Z i) (to_Z l)
+        (usize_nonneg i) (usize_nonneg l))). exact Hlt. }
+    assert (Hrange : 0 <= to_Z i < 16).
+    { pose proof (usize_nonneg i).
+      assert (to_Z 16%usize = 16) by reflexivity. lia. }
+    unfold code_CtrlsStack_set, code_ctrls_inline_capacity in Hset.
+    cbn [code_CtrlsStack_inline code_CtrlsStack_overflow] in Hset.
+    assert (Hi : (i s< 16%usize) = true).
+    { unfold scalar_ltb. apply Z.ltb_lt.
+      assert (to_Z 16%usize = 16) by reflexivity. lia. }
+    rewrite Hi in Hset.
+    destruct (array_update_usize a i x) as [a'|e]
+      eqn:Hinline in Hset; cbn [bind] in Hset.
+    2: inversion Hset.
+    injection Hset as <-. unfold ctrls_list.
+    cbn [code_CtrlsStack_inline_len code_CtrlsStack_inline
+      code_CtrlsStack_overflow]. rewrite Hl.
+    rewrite (ctrls_inline_update_spec _ _ _ _ Hrange Hinline).
+    apply firstn_list_update. exact Hlt.
+Qed.
+
+Lemma list_update_length : forall {T} (l : list T) n x,
+  List.length (list_update l n x) = List.length l.
+Proof.
+  intros T l. induction l as [|h l IH]; intros n x; [reflexivity|].
+  destruct n as [|n]; simpl; [reflexivity | rewrite IH; reflexivity].
+Qed.
+
+Lemma ctrls_stack_set_length : forall v i x v',
+  code_CtrlsStack_set v i x = Ok v' ->
+  List.length (ctrls_list v') = List.length (ctrls_list v).
+Proof.
+  intros [a ov l] i x v' Hset.
+  unfold code_CtrlsStack_set, code_ctrls_inline_capacity in Hset.
+  cbn [code_CtrlsStack_inline_len code_CtrlsStack_inline
+       code_CtrlsStack_overflow] in Hset.
+  destruct (i s< 16%usize) eqn:Hi.
+  - destruct (array_update_usize a i x) as [a'|e]
+      eqn:Hinline in Hset; cbn [bind] in Hset.
+    2: inversion Hset.
+    injection Hset as <-. unfold ctrls_list.
+    cbn [code_CtrlsStack_inline_len code_CtrlsStack_inline
+      code_CtrlsStack_overflow].
+    destruct (l s>= 16%usize).
+    + repeat rewrite List.app_length.
+      repeat rewrite ctrls_inline_list_length. reflexivity.
+    + repeat rewrite List.firstn_length.
+      repeat rewrite ctrls_inline_list_length. reflexivity.
+  - destruct (usize_sub i 16%usize) as [j|e] eqn:Hsub;
+      cbn [bind] in Hset.
+    2: inversion Hset.
+    rewrite vec_index_mut_spec in Hset.
+    destruct (List.nth_error (vec_list ov) (Z.to_nat (to_Z j)))
+      as [old|] eqn:Hnth in Hset.
+    2: inversion Hset.
+    cbn [bind] in Hset. injection Hset as <-.
+    unfold ctrls_list. cbn [code_CtrlsStack_inline_len
+      code_CtrlsStack_inline code_CtrlsStack_overflow].
+    destruct (l s>= 16%usize).
+    + repeat rewrite List.app_length.
+      rewrite vec_update_spec, list_update_length. reflexivity.
+    + reflexivity.
+Qed.
+
+Lemma ctrls_stack_pop_size : forall v o v',
+  code_CtrlsStack_pop v = Ok (o, v') ->
+  (List.length (ctrls_list v') <= List.length (ctrls_list v))%nat.
+Proof.
+  intros v o v' Hpop.
+  pose proof (ctrls_stack_pop_spec v o v' Hpop) as Hspec.
+  destruct (List.rev (ctrls_list v)) as [|x rest] eqn:Hrev.
+  - destruct Hspec as [_ Hv]. rewrite Hv. apply Nat.le_0_l.
+  - destruct Hspec as [_ Hv]. rewrite Hv, List.rev_length.
+    apply (f_equal (@List.length _)) in Hrev.
+    rewrite List.rev_length in Hrev. rewrite Hrev. cbn. lia.
+Qed.
+
+Lemma ctrls_stack_pop_total : forall v,
+  exists o v', code_CtrlsStack_pop v = Ok (o, v').
+Proof.
+  intros [a ov l].
+  unfold code_CtrlsStack_pop, code_ctrls_inline_capacity.
+  cbn [code_CtrlsStack_inline_len code_CtrlsStack_inline
+       code_CtrlsStack_overflow].
+  destruct (l s>= 16%usize) eqn:Hge.
+  - destruct (alloc_vec_Vec_len ov s<> 0%usize).
+    + destruct (vec_pop_ok alloc_alloc_Global ov) as [o [ov' Hpop]].
+      rewrite Hpop. cbn [bind]. eexists; eexists; reflexivity.
+    + change (usize_sub 16%usize 1%usize) with (Ok 15%usize).
+      cbn [bind].
+      destruct (ctrls_inline_get_total a 15%usize ltac:(
+        assert (to_Z 15%usize = 15) by reflexivity; lia)) as [x Hget].
+      rewrite Hget. cbn [bind]. eexists; eexists; reflexivity.
+  - destruct (l s= 0%usize) eqn:Hz.
+    + eexists; eexists; reflexivity.
+    + apply scalar_eqb_false in Hz.
+      pose proof (scalar_geb_false_lt _ _ Hge) as Hlt.
+      destruct (usize_sub_ok l 1%usize ltac:(
+        pose proof (usize_nonneg l);
+        assert (to_Z 0%usize = 0) by reflexivity;
+        assert (to_Z 1%usize = 1) by reflexivity; lia))
+        as [l' [Hsub Hl']].
+      rewrite Hsub. cbn [bind].
+      destruct (ctrls_inline_get_total a l' ltac:(
+        pose proof (usize_nonneg l');
+        assert (to_Z 1%usize = 1) by reflexivity;
+        assert (to_Z 16%usize = 16) by reflexivity; lia))
+        as [x Hget].
+      rewrite Hget. cbn [bind]. eexists; eexists; reflexivity.
+Qed.
 
 Lemma list_update_snoc : forall {T} (cs : list T) (c x : T),
   list_update (cs ++ [c]) (List.length cs) x = cs ++ [x].
@@ -991,13 +2537,6 @@ Proof.
   - destruct Hspec as [_ Hv]. rewrite Hv. rewrite List.rev_length.
     apply (f_equal (@List.length _)) in Hrev.
     rewrite List.rev_length in Hrev. rewrite Hrev. simpl. lia.
-Qed.
-
-Lemma list_update_length : forall {T} (l : list T) n x,
-  List.length (list_update l n x) = List.length l.
-Proof.
-  intros T l. induction l as [|h l IH]; intros n x; [reflexivity|].
-  destruct n as [|n]; simpl; [reflexivity | rewrite IH; reflexivity].
 Qed.
 
 (** The other direction: a vector already known to be a snoc pops its last

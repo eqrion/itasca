@@ -99,7 +99,7 @@ fn code_section(entries: &[(&[(u32, u8)], &[u8])]) -> Vec<u8> {
         }
         entry.extend_from_slice(body);
         entry.push(0x0B); // end
-        // Write entry size + entry
+                          // Write entry size + entry
         contents.extend_from_slice(&leb128_u32(entry.len() as u32));
         contents.extend_from_slice(&entry);
     }
@@ -342,7 +342,10 @@ fn test_decode_invalid_version() {
 #[test]
 fn test_decode_truncated() {
     let bytes = [0x00, 0x61, 0x73];
-    assert_eq!(itasca::validate_module(&bytes), Err(Error::Read(OpError::UnexpectedEof)));
+    assert_eq!(
+        itasca::validate_module(&bytes),
+        Err(Error::Read(OpError::UnexpectedEof))
+    );
 }
 
 #[test]
@@ -378,7 +381,10 @@ fn test_decode_section_out_of_order() {
     bytes.push(0x01);
     bytes.push(0x00);
 
-    assert_eq!(itasca::validate_module(&bytes), Err(Error::SectionOutOfOrder));
+    assert_eq!(
+        itasca::validate_module(&bytes),
+        Err(Error::SectionOutOfOrder)
+    );
 }
 
 // ---- Validate tests ----
@@ -721,7 +727,10 @@ fn test_validate_duplicate_export_name() {
     bytes.push(0x00);
     bytes.push(0x0B);
 
-    assert_eq!(itasca::validate_module(&bytes), Err(Error::DuplicateExportName));
+    assert_eq!(
+        itasca::validate_module(&bytes),
+        Err(Error::DuplicateExportName)
+    );
 }
 
 #[test]
@@ -880,9 +889,12 @@ fn test_validate_select() {
     bytes.push(0x01);
     bytes.push(0x09); // body size
     bytes.push(0x00);
-    bytes.push(0x20); bytes.push(0x00); // local.get 0
-    bytes.push(0x20); bytes.push(0x01); // local.get 1
-    bytes.push(0x20); bytes.push(0x02); // local.get 2
+    bytes.push(0x20);
+    bytes.push(0x00); // local.get 0
+    bytes.push(0x20);
+    bytes.push(0x01); // local.get 1
+    bytes.push(0x20);
+    bytes.push(0x02); // local.get 2
     bytes.push(0x1B); // select
     bytes.push(0x0B);
 
@@ -921,11 +933,17 @@ fn test_validate_global_mutable_in_const_expr() {
     bytes.push(0x0B);
     bytes.push(0x02);
     // Global 0: i32 const = 1
-    bytes.push(0x7F); bytes.push(0x00);
-    bytes.push(0x41); bytes.push(0x01); bytes.push(0x0B);
+    bytes.push(0x7F);
+    bytes.push(0x00);
+    bytes.push(0x41);
+    bytes.push(0x01);
+    bytes.push(0x0B);
     // Global 1: i32 const = global.get 0 (not imported - invalid!)
-    bytes.push(0x7F); bytes.push(0x00);
-    bytes.push(0x23); bytes.push(0x00); bytes.push(0x0B);
+    bytes.push(0x7F);
+    bytes.push(0x00);
+    bytes.push(0x23);
+    bytes.push(0x00);
+    bytes.push(0x0B);
 
     assert!(itasca::validate_module(&bytes).is_err());
 }
@@ -938,11 +956,17 @@ fn test_call_indirect() {
     b.section(1, &type_section(&[(&[I32], &[I32])]));
     b.section(3, &func_section(&[0]));
     b.section(4, &table_section(1, None));
-    b.section(10, &code_section(&[(&[], &[
-        0x41, 0x00,       // i32.const 0 (argument)
-        0x41, 0x00,       // i32.const 0 (table index)
-        0x11, 0x00, 0x00, // call_indirect type=0, table=0
-    ])]));
+    b.section(
+        10,
+        &code_section(&[(
+            &[],
+            &[
+                0x41, 0x00, // i32.const 0 (argument)
+                0x41, 0x00, // i32.const 0 (table index)
+                0x11, 0x00, 0x00, // call_indirect type=0, table=0
+            ],
+        )]),
+    );
     itasca::validate_module(&b.build()).unwrap();
 }
 
@@ -951,56 +975,77 @@ fn test_call_indirect_no_table() {
     let mut b = ModuleBuilder::new();
     b.section(1, &type_section(&[(&[I32], &[I32])]));
     b.section(3, &func_section(&[0]));
-    b.section(10, &code_section(&[(&[], &[
-        0x41, 0x00, 0x41, 0x00, 0x11, 0x00, 0x00,
-    ])]));
+    b.section(
+        10,
+        &code_section(&[(&[], &[0x41, 0x00, 0x41, 0x00, 0x11, 0x00, 0x00])]),
+    );
     assert!(itasca::validate_module(&b.build()).is_err());
 }
 
 #[test]
 fn test_br_table() {
-    let bytes = one_func_module(&[I32], &[I32], &[], &[
-        0x02, 0x7F,       // block (result i32)
-        0x02, 0x7F,       //   block (result i32)
-        0x20, 0x00,       //     local.get 0
-        0x41, 0x01,       //     i32.const 1
-        0x0E, 0x02,       //     br_table vec_len=2
-        0x00, 0x01,       //       labels [0, 1]
-        0x00,             //       default 0
-        0x0B,             //   end
-        0x0B,             // end
-    ]);
+    let bytes = one_func_module(
+        &[I32],
+        &[I32],
+        &[],
+        &[
+            0x02, 0x7F, // block (result i32)
+            0x02, 0x7F, //   block (result i32)
+            0x20, 0x00, //     local.get 0
+            0x41, 0x01, //     i32.const 1
+            0x0E, 0x02, //     br_table vec_len=2
+            0x00, 0x01, //       labels [0, 1]
+            0x00, //       default 0
+            0x0B, //   end
+            0x0B, // end
+        ],
+    );
     itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
 fn test_br_table_arity_mismatch() {
-    let bytes = one_func_module(&[I32], &[I32], &[], &[
-        0x02, 0x7F,       // block (result i32)
-        0x02, 0x7E,       //   block (result i64)
-        0x20, 0x00,       //     local.get 0 (i32)
-        0x0E, 0x01,       //     br_table vec_len=1
-        0x01,             //       labels [1] (i32 block)
-        0x00,             //       default 0 (i64 block) - mismatch!
-        0x0B,             //   end
-        0x0B,             // end
-    ]);
+    let bytes = one_func_module(
+        &[I32],
+        &[I32],
+        &[],
+        &[
+            0x02, 0x7F, // block (result i32)
+            0x02, 0x7E, //   block (result i64)
+            0x20, 0x00, //     local.get 0 (i32)
+            0x0E, 0x01, //     br_table vec_len=1
+            0x01, //       labels [1] (i32 block)
+            0x00, //       default 0 (i64 block) - mismatch!
+            0x0B, //   end
+            0x0B, // end
+        ],
+    );
     assert!(itasca::validate_module(&bytes).is_err());
 }
 
 #[test]
 fn test_return_from_function() {
-    let bytes = one_func_module(&[], &[I32], &[], &[
-        0x41, 0x2A, 0x0F, // i32.const 42, return
-    ]);
+    let bytes = one_func_module(
+        &[],
+        &[I32],
+        &[],
+        &[
+            0x41, 0x2A, 0x0F, // i32.const 42, return
+        ],
+    );
     itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
 fn test_return_wrong_type() {
-    let bytes = one_func_module(&[], &[I32], &[], &[
-        0x42, 0x2A, 0x0F, // i64.const 42, return -- wrong type
-    ]);
+    let bytes = one_func_module(
+        &[],
+        &[I32],
+        &[],
+        &[
+            0x42, 0x2A, 0x0F, // i64.const 42, return -- wrong type
+        ],
+    );
     assert!(itasca::validate_module(&bytes).is_err());
 }
 
@@ -1018,37 +1063,55 @@ fn test_select_after_unreachable() {
 
 #[test]
 fn test_nested_blocks_deep() {
-    let bytes = one_func_module(&[], &[I32], &[], &[
-        0x02, 0x7F,  // block (result i32)
-        0x02, 0x7F,  //   block (result i32)
-        0x02, 0x7F,  //     block (result i32)
-        0x41, 0x01,  //       i32.const 1
-        0x0C, 0x02,  //       br 2 (outermost)
-        0x0B, 0x0B, 0x0B,
-    ]);
+    let bytes = one_func_module(
+        &[],
+        &[I32],
+        &[],
+        &[
+            0x02, 0x7F, // block (result i32)
+            0x02, 0x7F, //   block (result i32)
+            0x02, 0x7F, //     block (result i32)
+            0x41, 0x01, //       i32.const 1
+            0x0C, 0x02, //       br 2 (outermost)
+            0x0B, 0x0B, 0x0B,
+        ],
+    );
     itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
 fn test_br_unknown_label() {
-    let bytes = one_func_module(&[], &[], &[], &[
-        0x02, 0x40, 0x0C, 0x05, 0x0B, // block, br 5, end
-    ]);
+    let bytes = one_func_module(
+        &[],
+        &[],
+        &[],
+        &[
+            0x02, 0x40, 0x0C, 0x05, 0x0B, // block, br 5, end
+        ],
+    );
     assert!(itasca::validate_module(&bytes).is_err());
 }
 
 #[test]
 fn test_local_tee() {
-    let bytes = one_func_module(&[I32], &[I32], &[], &[
-        0x20, 0x00, 0x22, 0x00, // local.get 0, local.tee 0
-    ]);
+    let bytes = one_func_module(
+        &[I32],
+        &[I32],
+        &[],
+        &[
+            0x20, 0x00, 0x22, 0x00, // local.get 0, local.tee 0
+        ],
+    );
     itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
 fn test_unknown_local() {
     let bytes = one_func_module(&[], &[I32], &[], &[0x20, 0x63]); // local.get 99
-    assert_eq!(itasca::validate_module(&bytes), Err(Error::Body(OpError::UnknownLocal)));
+    assert_eq!(
+        itasca::validate_module(&bytes),
+        Err(Error::Body(OpError::UnknownLocal))
+    );
 }
 
 #[test]
@@ -1077,9 +1140,10 @@ fn test_memory_store() {
     b.section(1, &type_section(&[(&[I32, I32], &[])]));
     b.section(3, &func_section(&[0]));
     b.section(5, &memory_section(1, None));
-    b.section(10, &code_section(&[(&[], &[
-        0x20, 0x00, 0x20, 0x01, 0x36, 0x02, 0x00,
-    ])]));
+    b.section(
+        10,
+        &code_section(&[(&[], &[0x20, 0x00, 0x20, 0x01, 0x36, 0x02, 0x00])]),
+    );
     itasca::validate_module(&b.build()).unwrap();
 }
 
@@ -1090,7 +1154,10 @@ fn test_memory_invalid_alignment() {
     b.section(3, &func_section(&[0]));
     b.section(5, &memory_section(1, None));
     b.section(10, &code_section(&[(&[], &[0x20, 0x00, 0x28, 0x03, 0x00])]));
-    assert_eq!(itasca::validate_module(&b.build()), Err(Error::Body(OpError::InvalidAlignment)));
+    assert_eq!(
+        itasca::validate_module(&b.build()),
+        Err(Error::Body(OpError::InvalidAlignment))
+    );
 }
 
 #[test]
@@ -1114,10 +1181,13 @@ fn test_call_between_functions() {
     let mut b = ModuleBuilder::new();
     b.section(1, &type_section(&[(&[], &[I32])]));
     b.section(3, &func_section(&[0, 0]));
-    b.section(10, &code_section(&[
-        (&[], &[0x10, 0x01]),       // call func 1
-        (&[], &[0x41, 0x2A]),       // i32.const 42
-    ]));
+    b.section(
+        10,
+        &code_section(&[
+            (&[], &[0x10, 0x01]), // call func 1
+            (&[], &[0x41, 0x2A]), // i32.const 42
+        ]),
+    );
     itasca::validate_module(&b.build()).unwrap();
 }
 
@@ -1144,7 +1214,10 @@ fn test_start_function_wrong_type() {
     b.section(3, &func_section(&[0]));
     b.section(8, &start_section(0));
     b.section(10, &code_section(&[(&[], &[])]));
-    assert_eq!(itasca::validate_module(&b.build()), Err(Error::InvalidStartType));
+    assert_eq!(
+        itasca::validate_module(&b.build()),
+        Err(Error::InvalidStartType)
+    );
 }
 
 #[test]
@@ -1205,7 +1278,10 @@ fn test_import_mutable_global_in_const_expr() {
     let mut b = ModuleBuilder::new();
     b.section(2, &import_section(&[("env", "g", &[0x03, I32, 0x01])]));
     b.section(6, &global_section(&[(I32, 0x00, &[0x23, 0x00])]));
-    assert_eq!(itasca::validate_module(&b.build()), Err(Error::MutableGlobalInConstExpr));
+    assert_eq!(
+        itasca::validate_module(&b.build()),
+        Err(Error::MutableGlobalInConstExpr)
+    );
 }
 
 #[test]
@@ -1266,14 +1342,20 @@ fn test_memory_limits_valid() {
 fn test_memory_limits_min_exceeds_max() {
     let mut b = ModuleBuilder::new();
     b.section(5, &memory_section(10, Some(5)));
-    assert_eq!(itasca::validate_module(&b.build()), Err(Error::LimitsOutOfRange));
+    assert_eq!(
+        itasca::validate_module(&b.build()),
+        Err(Error::LimitsOutOfRange)
+    );
 }
 
 #[test]
 fn test_memory_limits_exceeds_range() {
     let mut b = ModuleBuilder::new();
     b.section(5, &memory_section(65537, None));
-    assert_eq!(itasca::validate_module(&b.build()), Err(Error::LimitsOutOfRange));
+    assert_eq!(
+        itasca::validate_module(&b.build()),
+        Err(Error::LimitsOutOfRange)
+    );
 }
 
 #[test]
@@ -1332,67 +1414,79 @@ fn test_custom_section_in_the_tail_is_checked_too() {
 
 #[test]
 fn test_if_without_else() {
-    let bytes = one_func_module(&[I32], &[], &[], &[
-        0x20, 0x00, 0x04, 0x40, 0x01, 0x0B,
-    ]);
+    let bytes = one_func_module(&[I32], &[], &[], &[0x20, 0x00, 0x04, 0x40, 0x01, 0x0B]);
     itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
 fn test_if_result_without_else_fails() {
     // if (result i32) without else - else branch is empty, can't produce i32
-    let bytes = one_func_module(&[I32], &[I32], &[], &[
-        0x20, 0x00, 0x04, 0x7F, 0x41, 0x01, 0x0B,
-    ]);
+    let bytes = one_func_module(
+        &[I32],
+        &[I32],
+        &[],
+        &[0x20, 0x00, 0x04, 0x7F, 0x41, 0x01, 0x0B],
+    );
     assert!(itasca::validate_module(&bytes).is_err());
 }
 
 #[test]
 fn test_unreachable_code_after_br() {
-    let bytes = one_func_module(&[], &[I32], &[], &[
-        0x02, 0x7F,  // block (result i32)
-        0x41, 0x01,  // i32.const 1
-        0x0C, 0x00,  // br 0
-        0x41, 0x02,  // dead code
-        0x1A,        // drop (dead)
-        0x0B,        // end
-    ]);
+    let bytes = one_func_module(
+        &[],
+        &[I32],
+        &[],
+        &[
+            0x02, 0x7F, // block (result i32)
+            0x41, 0x01, // i32.const 1
+            0x0C, 0x00, // br 0
+            0x41, 0x02, // dead code
+            0x1A, // drop (dead)
+            0x0B, // end
+        ],
+    );
     itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
 fn test_br_if_typing() {
-    let bytes = one_func_module(&[I32], &[I32], &[], &[
-        0x02, 0x7F,  // block (result i32)
-        0x20, 0x00,  // local.get 0 (value)
-        0x20, 0x00,  // local.get 0 (condition)
-        0x0D, 0x00,  // br_if 0
-        0x0B,        // end
-    ]);
+    let bytes = one_func_module(
+        &[I32],
+        &[I32],
+        &[],
+        &[
+            0x02, 0x7F, // block (result i32)
+            0x20, 0x00, // local.get 0 (value)
+            0x20, 0x00, // local.get 0 (condition)
+            0x0D, 0x00, // br_if 0
+            0x0B, // end
+        ],
+    );
     itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
 fn test_loop_with_br() {
-    let bytes = one_func_module(&[], &[], &[], &[
-        0x03, 0x40, 0x0C, 0x00, 0x0B, // loop, br 0, end
-    ]);
+    let bytes = one_func_module(
+        &[],
+        &[],
+        &[],
+        &[
+            0x03, 0x40, 0x0C, 0x00, 0x0B, // loop, br 0, end
+        ],
+    );
     itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
 fn test_f64_add() {
-    let bytes = one_func_module(&[F64, F64], &[F64], &[], &[
-        0x20, 0x00, 0x20, 0x01, 0xA0,
-    ]);
+    let bytes = one_func_module(&[F64, F64], &[F64], &[], &[0x20, 0x00, 0x20, 0x01, 0xA0]);
     itasca::validate_module(&bytes).unwrap();
 }
 
 #[test]
 fn test_f32_mul() {
-    let bytes = one_func_module(&[F32, F32], &[F32], &[], &[
-        0x20, 0x00, 0x20, 0x01, 0x94,
-    ]);
+    let bytes = one_func_module(&[F32, F32], &[F32], &[], &[0x20, 0x00, 0x20, 0x01, 0x94]);
     itasca::validate_module(&bytes).unwrap();
 }
 
@@ -1432,10 +1526,16 @@ fn test_i64_load_store() {
     b.section(1, &type_section(&[(&[I32, I64], &[I64])]));
     b.section(3, &func_section(&[0]));
     b.section(5, &memory_section(1, None));
-    b.section(10, &code_section(&[(&[], &[
-        0x20, 0x00, 0x20, 0x01, 0x37, 0x03, 0x00, // store
-        0x20, 0x00, 0x29, 0x03, 0x00,              // load
-    ])]));
+    b.section(
+        10,
+        &code_section(&[(
+            &[],
+            &[
+                0x20, 0x00, 0x20, 0x01, 0x37, 0x03, 0x00, // store
+                0x20, 0x00, 0x29, 0x03, 0x00, // load
+            ],
+        )]),
+    );
     itasca::validate_module(&b.build()).unwrap();
 }
 
@@ -1445,10 +1545,16 @@ fn test_i32_load8_store8() {
     b.section(1, &type_section(&[(&[I32, I32], &[I32])]));
     b.section(3, &func_section(&[0]));
     b.section(5, &memory_section(1, None));
-    b.section(10, &code_section(&[(&[], &[
-        0x20, 0x00, 0x20, 0x01, 0x3A, 0x00, 0x00, // i32.store8
-        0x20, 0x00, 0x2D, 0x00, 0x00,              // i32.load8_u
-    ])]));
+    b.section(
+        10,
+        &code_section(&[(
+            &[],
+            &[
+                0x20, 0x00, 0x20, 0x01, 0x3A, 0x00, 0x00, // i32.store8
+                0x20, 0x00, 0x2D, 0x00, 0x00, // i32.load8_u
+            ],
+        )]),
+    );
     itasca::validate_module(&b.build()).unwrap();
 }
 
@@ -1476,7 +1582,10 @@ fn test_import_memory() {
 fn test_import_table() {
     let mut b = ModuleBuilder::new();
     b.section(1, &type_section(&[(&[], &[])]));
-    b.section(2, &import_section(&[("env", "tbl", &[0x01, 0x70, 0x00, 0x01])]));
+    b.section(
+        2,
+        &import_section(&[("env", "tbl", &[0x01, 0x70, 0x00, 0x01])]),
+    );
     b.section(3, &func_section(&[0]));
     b.section(10, &code_section(&[(&[], &[])]));
     itasca::validate_module(&b.build()).unwrap();
@@ -1489,7 +1598,10 @@ fn test_multiple_memories_rejected() {
     mem.push(0x02); // count=2
     mem.extend_from_slice(&[0x00, 0x01, 0x00, 0x01]);
     b.section(5, &mem);
-    assert_eq!(itasca::validate_module(&b.build()), Err(Error::MultipleMemories));
+    assert_eq!(
+        itasca::validate_module(&b.build()),
+        Err(Error::MultipleMemories)
+    );
 }
 
 #[test]
@@ -1497,25 +1609,34 @@ fn test_import_plus_defined_memory_rejected() {
     let mut b = ModuleBuilder::new();
     b.section(2, &import_section(&[("env", "mem", &[0x02, 0x00, 0x01])]));
     b.section(5, &memory_section(1, None));
-    assert_eq!(itasca::validate_module(&b.build()), Err(Error::MultipleMemories));
+    assert_eq!(
+        itasca::validate_module(&b.build()),
+        Err(Error::MultipleMemories)
+    );
 }
 
 #[test]
 fn test_multiple_types() {
     let mut b = ModuleBuilder::new();
-    b.section(1, &type_section(&[
-        (&[], &[]),
-        (&[I32], &[I32]),
-        (&[I32, I32], &[I32]),
-        (&[F64], &[F64]),
-    ]));
+    b.section(
+        1,
+        &type_section(&[
+            (&[], &[]),
+            (&[I32], &[I32]),
+            (&[I32, I32], &[I32]),
+            (&[F64], &[F64]),
+        ]),
+    );
     b.section(3, &func_section(&[0, 1, 2, 3]));
-    b.section(10, &code_section(&[
-        (&[], &[]),
-        (&[], &[0x20, 0x00]),
-        (&[], &[0x20, 0x00, 0x20, 0x01, 0x6A]),
-        (&[], &[0x20, 0x00]),
-    ]));
+    b.section(
+        10,
+        &code_section(&[
+            (&[], &[]),
+            (&[], &[0x20, 0x00]),
+            (&[], &[0x20, 0x00, 0x20, 0x01, 0x6A]),
+            (&[], &[0x20, 0x00]),
+        ]),
+    );
     itasca::validate_module(&b.build()).unwrap();
 }
 
@@ -1525,7 +1646,10 @@ fn test_func_code_count_mismatch() {
     b.section(1, &type_section(&[(&[], &[])]));
     b.section(3, &func_section(&[0, 0]));
     b.section(10, &code_section(&[(&[], &[])]));
-    assert_eq!(itasca::validate_module(&b.build()), Err(Error::FuncCodeMismatch));
+    assert_eq!(
+        itasca::validate_module(&b.build()),
+        Err(Error::FuncCodeMismatch)
+    );
 }
 
 #[test]
@@ -1567,9 +1691,7 @@ fn test_drop_on_empty_stack() {
 
 #[test]
 fn test_decode_f32_const() {
-    let bytes = one_func_module(&[], &[F32], &[], &[
-        0x43, 0x00, 0x00, 0xC0, 0x3F,
-    ]);
+    let bytes = one_func_module(&[], &[F32], &[], &[0x43, 0x00, 0x00, 0xC0, 0x3F]);
     itasca::validate_module(&bytes).unwrap();
 }
 
@@ -1584,9 +1706,12 @@ fn test_unreachable_with_dead_const_rejected() {
 
 #[test]
 fn test_decode_f64_const() {
-    let bytes = one_func_module(&[], &[F64], &[], &[
-        0x44, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0x3F,
-    ]);
+    let bytes = one_func_module(
+        &[],
+        &[F64],
+        &[],
+        &[0x44, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0x3F],
+    );
     itasca::validate_module(&bytes).unwrap();
 }
 
@@ -1606,7 +1731,10 @@ fn test_code_section_without_function_section() {
     let mut b = ModuleBuilder::new();
     b.section(1, &type_section(&[(&[], &[])]));
     b.section(10, &code_section(&[(&[], &[])]));
-    assert_eq!(itasca::validate_module(&b.build()), Err(Error::FuncCodeMismatch));
+    assert_eq!(
+        itasca::validate_module(&b.build()),
+        Err(Error::FuncCodeMismatch)
+    );
 }
 
 /// Reported apart from a count mismatch, because a consumer reading a module as
@@ -1657,7 +1785,10 @@ fn test_two_data_sections_are_rejected() {
     b.section(5, &memory_section(1, None));
     b.section(11, &data_section(&[(0, &[0x41, 0x00], b"a")]));
     b.section(11, &data_section(&[(0, &[0x41, 0x00], b"b")]));
-    assert_eq!(itasca::validate_module(&b.build()), Err(Error::SectionOutOfOrder));
+    assert_eq!(
+        itasca::validate_module(&b.build()),
+        Err(Error::SectionOutOfOrder)
+    );
 }
 
 #[test]
@@ -1746,10 +1877,10 @@ fn test_validate_code_entry_matches_validate_code() {
     let mut b = ModuleBuilder::new();
     b.section(1, &type_section(&[(&[], &[I32])]));
     b.section(3, &func_section(&[0, 0]));
-    b.section(10, &code_section(&[
-        (&[], &[0x41, 0x07]),
-        (&[(1, I32)], &[0x20, 0x00]),
-    ]));
+    b.section(
+        10,
+        &code_section(&[(&[], &[0x41, 0x07]), (&[(1, I32)], &[0x20, 0x00])]),
+    );
     let bytes = b.build();
 
     let (env, code_pos) = itasca::module::validate_env(&bytes).unwrap();
@@ -1767,8 +1898,14 @@ fn test_validate_code_entry_matches_validate_code() {
     }
 
     // The same position validate_code would have stopped at.
-    assert_eq!(pos, itasca::module::validate_code(&bytes, code_pos, &env).unwrap());
-    assert!(itasca::module::validate_tail(&bytes, pos, &env).unwrap().data.is_empty());
+    assert_eq!(
+        pos,
+        itasca::module::validate_code(&bytes, code_pos, &env).unwrap()
+    );
+    assert!(itasca::module::validate_tail(&bytes, pos, &env)
+        .unwrap()
+        .data
+        .is_empty());
 }
 
 #[test]
@@ -1777,14 +1914,20 @@ fn test_too_many_locals_is_rejected() {
     b.section(1, &type_section(&[(&[], &[])]));
     b.section(3, &func_section(&[0]));
     b.section(10, &code_section(&[(&[(1_000_000, I32)], &[])]));
-    assert_eq!(itasca::validate_module(&b.build()), Err(Error::TooManyLocals));
+    assert_eq!(
+        itasca::validate_module(&b.build()),
+        Err(Error::TooManyLocals)
+    );
 }
 
 #[test]
 fn test_multi_result_type_is_rejected() {
     let mut b = ModuleBuilder::new();
     b.section(1, &type_section(&[(&[], &[I32, I32])]));
-    assert_eq!(itasca::validate_module(&b.build()), Err(Error::TooManyResults));
+    assert_eq!(
+        itasca::validate_module(&b.build()),
+        Err(Error::TooManyResults)
+    );
 }
 
 #[test]
@@ -1797,7 +1940,10 @@ fn test_section_size_must_match_its_contents() {
     bytes.extend_from_slice(&leb128_u32(contents.len() as u32 + 1));
     bytes.extend_from_slice(&contents);
     bytes.push(0x00);
-    assert_eq!(itasca::validate_module(&bytes), Err(Error::SectionSizeMismatch));
+    assert_eq!(
+        itasca::validate_module(&bytes),
+        Err(Error::SectionSizeMismatch)
+    );
 }
 
 /// `MAX_LOCALS` caps what a function *declares*, not its whole frame, so a
@@ -1841,10 +1987,7 @@ fn test_the_locals_cap_is_on_the_declaration_not_the_frame() {
 struct Customs(Vec<itasca::types::CustomSection>);
 
 impl itasca::module::ModuleVisitor for Customs {
-    fn on_custom_section(
-        &mut self,
-        s: itasca::types::CustomSection,
-    ) -> itasca::VisitResult {
+    fn on_custom_section(&mut self, s: itasca::types::CustomSection) -> itasca::VisitResult {
         self.0.push(s);
         Ok(())
     }
@@ -1904,7 +2047,10 @@ fn test_custom_sections_are_split_across_the_code_section() {
     let mut seen = Customs::default();
     let (env, code_pos) = itasca::module::validate_env_with(&bytes, &mut seen).unwrap();
     assert_eq!(
-        seen.0.iter().map(|c| custom_name(&bytes, c)).collect::<Vec<_>>(),
+        seen.0
+            .iter()
+            .map(|c| custom_name(&bytes, c))
+            .collect::<Vec<_>>(),
         vec![&b"before.code"[..]]
     );
 
@@ -1916,7 +2062,10 @@ fn test_custom_sections_are_split_across_the_code_section() {
     // Carrying on with the same visitor gives the module's customs in order.
     itasca::module::validate_tail_with(&bytes, tail_pos, &env, &mut seen).unwrap();
     assert_eq!(
-        seen.0.iter().map(|c| custom_name(&bytes, c)).collect::<Vec<_>>(),
+        seen.0
+            .iter()
+            .map(|c| custom_name(&bytes, c))
+            .collect::<Vec<_>>(),
         vec![&b"before.code"[..], &b"after.code"[..]]
     );
     let after = seen.0[1];
@@ -1928,7 +2077,11 @@ fn test_custom_sections_are_split_across_the_code_section() {
     let mut piece = Customs::default();
     itasca::module::validate_tail_with(region, 0, &env, &mut piece).unwrap();
     assert_eq!(
-        piece.0.iter().map(|c| custom_name(region, c)).collect::<Vec<_>>(),
+        piece
+            .0
+            .iter()
+            .map(|c| custom_name(region, c))
+            .collect::<Vec<_>>(),
         vec![&b"after.code"[..]]
     );
     assert_eq!(piece.0[0].payload_start + tail_pos, after.payload_start);
@@ -1940,10 +2093,7 @@ fn test_custom_sections_are_split_across_the_code_section() {
 fn test_a_declining_module_consumer_stops_the_decode() {
     struct Refuser;
     impl itasca::module::ModuleVisitor for Refuser {
-        fn on_custom_section(
-            &mut self,
-            _s: itasca::types::CustomSection,
-        ) -> itasca::VisitResult {
+        fn on_custom_section(&mut self, _s: itasca::types::CustomSection) -> itasca::VisitResult {
             Err(itasca::VisitError::OutOfMemory)
         }
     }
@@ -1994,7 +2144,8 @@ impl itasca::module::CodeVisitor for Entries {
         contents_start: usize,
         entry_end: usize,
     ) -> Result<(), Error> {
-        self.seen.push((index, entry_pos, contents_start, entry_end));
+        self.seen
+            .push((index, entry_pos, contents_start, entry_end));
         itasca::module::validate_code_entry(data, entry_pos, env, index)?;
         Ok(())
     }
@@ -2009,11 +2160,7 @@ fn test_validate_code_with_agrees_with_validate_code() {
     b.section(3, &func_section(&[0, 1, 0]));
     b.section(
         10,
-        &code_section(&[
-            (&[], &[]),
-            (&[(1, I64)], &[0x20, 0x00]),
-            (&[], &[0x01]),
-        ]),
+        &code_section(&[(&[], &[]), (&[(1, I64)], &[0x20, 0x00]), (&[], &[0x01])]),
     );
     let bytes = b.build();
 
@@ -2023,9 +2170,11 @@ fn test_validate_code_with_agrees_with_validate_code() {
         .unwrap();
 
     let mut seen = Entries::default();
-    let next =
-        itasca::module::validate_code_with(&bytes, code_pos, &env, &mut seen).unwrap();
-    assert_eq!(next, itasca::module::validate_code(&bytes, code_pos, &env).unwrap());
+    let next = itasca::module::validate_code_with(&bytes, code_pos, &env, &mut seen).unwrap();
+    assert_eq!(
+        next,
+        itasca::module::validate_code(&bytes, code_pos, &env).unwrap()
+    );
     assert_eq!(next, cs.end);
 
     // Three entries, in order, and their extents tile the section exactly.
@@ -2072,8 +2221,7 @@ fn test_a_declining_code_consumer_stops_the_walk() {
     let (env, code_pos) = itasca::module::validate_env(&bytes).unwrap();
     assert!(itasca::module::validate_code(&bytes, code_pos, &env).is_ok());
     assert_eq!(
-        itasca::module::validate_code_with(&bytes, code_pos, &env, &mut Refuser)
-            .unwrap_err(),
+        itasca::module::validate_code_with(&bytes, code_pos, &env, &mut Refuser).unwrap_err(),
         Error::Visitor(itasca::VisitError::OutOfMemory)
     );
 }
@@ -2088,10 +2236,7 @@ struct Driver {
 }
 
 impl itasca::module::ModuleVisitor for Driver {
-    fn on_custom_section(
-        &mut self,
-        s: itasca::types::CustomSection,
-    ) -> itasca::VisitResult {
+    fn on_custom_section(&mut self, s: itasca::types::CustomSection) -> itasca::VisitResult {
         self.customs.push(s);
         Ok(())
     }
@@ -2171,4 +2316,47 @@ fn test_a_declining_driver_stops_the_module() {
         itasca::module::validate_module_with(&bytes, &mut Refuser).unwrap_err(),
         Error::Visitor(itasca::VisitError::OutOfMemory)
     );
+}
+
+/// Pushes past `ValsStack`'s 32-entry inline capacity and back down again,
+/// so the overflow `Vec` and the boundary between it and the inline array
+/// both get exercised, not just the common case.
+#[test]
+fn test_operand_stack_past_inline_capacity() {
+    let mut body = Vec::new();
+    for _ in 0..40 {
+        body.extend_from_slice(&[0x41, 0x01]); // i32.const 1
+    }
+    for _ in 0..40 {
+        body.push(0x1A); // drop
+    }
+    let bytes = one_func_module(&[], &[], &[], &body);
+    itasca::validate_module(&bytes).unwrap();
+}
+
+/// Declares past `LocalsStack`'s 32-entry inline capacity, then reads the
+/// last one, so both the overflow `Vec` and the boundary between it and the
+/// inline array are exercised for locals too.
+#[test]
+fn test_locals_past_inline_capacity() {
+    let body = [0x20, 39, 0x1A]; // local.get 39, drop
+    let bytes = one_func_module(&[], &[], &[(40, I32)], &body);
+    itasca::validate_module(&bytes).unwrap();
+}
+
+/// Nests past `CtrlsStack`'s 16-entry inline capacity, then `br`s out from
+/// the innermost frame to the outermost, so label resolution and frame
+/// popping both cross the inline/overflow boundary.
+#[test]
+fn test_control_stack_past_inline_capacity() {
+    let mut body = Vec::new();
+    for _ in 0..20 {
+        body.extend_from_slice(&[0x02, 0x40]); // block (empty)
+    }
+    body.extend_from_slice(&[0x0C, 19]); // br 19 (out to the outermost)
+    for _ in 0..20 {
+        body.push(0x0B); // end
+    }
+    let bytes = one_func_module(&[], &[], &[], &body);
+    itasca::validate_module(&bytes).unwrap();
 }

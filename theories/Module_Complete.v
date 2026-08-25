@@ -350,7 +350,8 @@ Proof.
   pose proof (usize_nonneg p). pose proof (usize_nonneg n).
   destruct (usize_add_ok p n) as [q [Hadd Hq]];
     [pose proof (usize_le_max (slice_len data)); lia|].
-  destruct (copy_bytes_ok data p q (ltac:(lia)) Hmod) as [v Hcopy].
+  destruct (copy_bytes_ok data p q (ltac:(lia)) (ltac:(lia)) Hmod)
+    as [v Hcopy].
   destruct (copy_bytes_sound _ _ _ _ Hcopy) as [Hmap _].
   exists len, n, p, q, v.
   split; [exact Hrun|]. split; [exact Hcast|].
@@ -3596,19 +3597,18 @@ Proof.
   do 3 eexists. split; [eassumption|]. split; [eassumption | reflexivity].
 Qed.
 
-Lemma decode_locals_loop_complete :
-  forall k data groups out q i r gs rest,
+Lemma decode_and_build_locals_loop_complete :
+  forall k data groups out declared_len q i r gs rest,
   Z.to_nat (to_Z groups - to_Z i) = k ->
-  module_decode_locals_loop data groups out q i = Ok r ->
+  module_decode_and_build_locals_loop1 data groups out declared_len q i = Ok r ->
   repr_rep repr_locals k (bytes_from data q) gs rest ->
-  Z.of_nat (List.length (vec_list out))
-    + Z.of_nat (List.length (List.concat gs)) <= 50000 ->
+  to_Z declared_len + Z.of_nat (List.length (List.concat gs)) <= 50000 ->
   exists out' q', r = Core_result_Result_Ok (out', q')
                   /\ bytes_from data q' = rest.
 Proof.
   induction k as [|k IH];
-    intros data groups out q i r gs rest Hk Hw Hrep Hroom;
-    unfold module_decode_locals_loop in Hw; rewrite loop_unfold in Hw;
+    intros data groups out declared_len q i r gs rest Hk Hw Hrep Hroom;
+    unfold module_decode_and_build_locals_loop1 in Hw; rewrite loop_unfold in Hw;
     cbn beta iota in Hw; destruct (i s>= groups) eqn:Hge.
   - injection Hw as <-.
     destruct (repr_rep_O_inv _ _ _ _ _ Hrep) as [-> ->].
@@ -3640,49 +3640,54 @@ Proof.
       by (unfold scalar_cast in Hcast; apply mk_scalar_ok_to_Z in Hcast;
           exact Hcast).
     assert (Hmx : to_Z limits_max_locals = 50000) by reflexivity.
-    destruct (usize_sub limits_max_locals (alloc_vec_Vec_len out)) as [d|] eqn:Hd;
+    destruct (usize_sub limits_max_locals declared_len) as [d|] eqn:Hd;
       cbn [bind] in Hw; [|discriminate].
     unfold usize_sub, scalar_sub in Hd. apply mk_scalar_ok_to_Z in Hd.
-    rewrite vec_len_spec in Hd.
     (* the group fits, because the whole run of groups does *)
     rewrite (scalar_gtb_of_le j d) in Hw
       by (rewrite Hj; rewrite Hcv; rewrite Hd; lia).
     destruct (module_push_locals out count vt) as [out2|] eqn:Hp;
       cbn [bind] in Hw; [|discriminate].
+    destruct (usize_add declared_len j) as [declared_len2|] eqn:Hdecl;
+      cbn [bind] in Hw; [|discriminate].
+    assert (Hdecl2 : to_Z declared_len2 = to_Z declared_len + to_Z j).
+    { unfold usize_add, scalar_add in Hdecl. apply mk_scalar_ok_to_Z in Hdecl.
+      exact Hdecl. }
     destruct (u32_add i 1%u32) as [i2|] eqn:Hadd; cbn [bind] in Hw;
       [|discriminate].
     assert (Hi2 : to_Z i2 = to_Z i + 1).
     { unfold u32_add, scalar_add in Hadd. apply mk_scalar_ok_to_Z in Hadd.
       assert (H1 : to_Z 1%u32 = 1) by reflexivity. lia. }
-    apply (IH data groups out2 q2 i2 r gs' rest
+    apply (IH data groups out2 declared_len2 q2 i2 r gs' rest
              (ltac:(rewrite Hi2; f_equal; lia)) Hw
              (ltac:(rewrite Hq2; exact Hrest))).
     (* the room the loop has left, after this group's own *)
-    pose proof (push_locals_sound out count vt out2 Hp) as Hpl.
-    rewrite Hpl. rewrite List.app_length. rewrite List.repeat_length.
-    rewrite Nat2Z.inj_add. rewrite Z2Nat.id by (rewrite Hcv; lia).
-    rewrite Hcv. lia.
+    rewrite Hdecl2, Hj, Hcv. lia.
 Qed.
 
-Lemma decode_locals_complete : forall data pos r gs rest,
-  module_decode_locals data pos = Ok r ->
+Lemma decode_and_build_locals_complete : forall data pos params r gs rest,
+  module_decode_and_build_locals data pos params = Ok r ->
   repr_vec repr_locals (bytes_from data pos) gs rest ->
   Z.of_nat (List.length (List.concat gs)) <= 50000 ->
   exists out q', r = Core_result_Result_Ok (out, q')
                  /\ bytes_from data q' = rest.
 Proof.
-  intros data pos r gs rest Hrun H Hroom.
+  intros data pos params r gs rest Hrun H Hroom.
   destruct (repr_vec_inv _ _ _ _ _ H) as [n [mid [Hn Hrep]]].
   destruct (read_u32_leb_complete _ _ _ _ Hn) as [groups [p [Hleb [Hval Hp]]]].
-  pose proof Hrun as Hw. unfold module_decode_locals in Hw.
+  pose proof Hrun as Hw. unfold module_decode_and_build_locals in Hw.
   rewrite Hleb in Hw. cbn [bind] in Hw. rewrite branch_ok in Hw.
   cbn [bind] in Hw.
+  destruct code_LocalsStack_new as [locals|] eqn:Hnew;
+    cbn [bind] in Hw; [|discriminate].
+  destruct (module_decode_and_build_locals_loop0 params locals 0%usize)
+    as [locals1|] eqn:Hcopy; cbn [bind] in Hw; [|discriminate].
   assert (H0 : to_Z 0%u32 = 0) by reflexivity.
-  apply (decode_locals_loop_complete (Z.to_nat n) data groups
-           (alloc_vec_Vec_new types_ValueType_t) p 0%u32 r gs rest
+  apply (decode_and_build_locals_loop_complete (Z.to_nat n) data groups
+           locals1 0%usize p 0%u32 r gs rest
            (ltac:(rewrite H0; rewrite Hval; f_equal; lia)) Hw
            (ltac:(rewrite Hp; exact Hrep))).
-  cbn [vec_list alloc_vec_Vec_new proj1_sig List.length]. lia.
+  cbn. lia.
 Qed.
 
 (* ================================================================== *)
@@ -3730,18 +3735,18 @@ Qed.
     [validate_body] proves its obligation in the other, and [context_reverse] is
     exactly the difference. *)
 Lemma func_body_context_reverse :
-  forall elems datas refs env ft locals results (declared : alloc_vec_Vec types_ValueType_t),
-  vec_list locals
-    = vec_list ft.(types_FuncType_params) ++ vec_list declared ->
-  vec_list results = vec_list ft.(types_FuncType_results) ->
-  func_body_context elems datas refs env ft
-    (List.map translate_vt_v (vec_list declared))
+  forall elems datas refs env ft locals results (declared : list value_type),
+  List.map translate_vt_v (locals_list locals)
+    = List.map translate_vt_v (vec_list ft.(types_FuncType_params))
+        ++ declared ->
+  context_results_of results = vec_list ft.(types_FuncType_results) ->
+  func_body_context elems datas refs env ft declared
   = context_reverse
       (upd_label
          (body_context elems datas refs env
             {| code_Context_locals := locals;
                code_Context_results := results |})
-         [translate_typelist (vec_list results)]).
+         [translate_typelist (context_results_of results)]).
 Proof.
   intros elems datas refs env ft locals results declared Hloc Hres.
   unfold func_body_context, context_reverse, upd_label,
@@ -3754,8 +3759,7 @@ Proof.
   { intros l. induction l as [|x l IH]; [reflexivity|].
     cbn [List.map seq.map]. rewrite IH. rewrite rev_tf_translate_ft.
     reflexivity. }
-  rewrite Hrv. rewrite Hrv.
-  rewrite Hloc. rewrite List.map_app.
+  rewrite Hrv. rewrite Hrv. rewrite Hloc.
   unfold translate_typelist. cbn [List.map seq.map option_map].
   rewrite seq.revK. rewrite Hres. reflexivity.
 Qed.
@@ -3884,25 +3888,6 @@ Proof.
     rewrite Hp. apply skipn_app_exact. }
   assert (Hdl : Z.of_nat (List.length (vec_list data)) = dlen data)
     by (rewrite slice_len_spec; reflexivity).
-  (* the locals, read inside the frame *)
-  assert (Hgs' : repr_vec repr_locals (bytes_from data p) gs (m1 ++ rest)).
-  { rewrite Hp.
-    apply (frame_lift _ (repr_vec repr_locals) _ content rest gs m1
-             (repr_vec_prefix _ _ repr_locals_prefix) (ltac:(reflexivity))
-             Hgs). }
-  destruct (module_decode_locals data p) as [rl|] eqn:El; cbn [bind] in Hw;
-    [|discriminate].
-  destruct (decode_locals_complete data p rl gs (m1 ++ rest) El Hgs'
-              (ltac:(rewrite Hceq in Hlocs; cbn [fst] in Hlocs; exact Hlocs)))
-    as [declared [p1 [-> Hp1]]].
-  rewrite branch_ok in Hw. cbn [bind] in Hw.
-  destruct (decode_locals_ok data p (ltac:(lia))) as [r0 [Hr0 Hpost]].
-  rewrite El in Hr0. injection Hr0 as Hr1.
-  destruct (Hpost declared p1 (eq_sym Hr1)) as [Hpp1 [Hp1le _]].
-  assert (Hp1e : to_Z p1 <= to_Z end1).
-  { apply (bytes_from_len_le data p1 end1 Hp1le (ltac:(lia))).
-    rewrite Hp1. rewrite Hend1b. rewrite List.app_length. lia. }
-  rewrite (scalar_gtb_of_le p1 end1 Hp1e) in Hw.
   (* the entry's signature *)
   destruct (alloc_vec_Vec_index
               (core_slice_index_SliceIndexUsizeSliceInst Primitives.u32)
@@ -3922,11 +3907,30 @@ Proof.
     exact Hsome. }
   rewrite Htr in Hw.
   rewrite vec_index_spec in Hw. rewrite Htv in Hw. rewrite Hnthf in Hw.
-  cbn [bind] in Hw. rewrite vec_deref_spec in Hw. rewrite vec_deref_spec in Hw.
-  destruct (module_build_func_locals ft.(types_FuncType_params) declared)
-    as [locals|] eqn:Hbl; cbn [bind] in Hw; [|discriminate].
+  cbn [bind] in Hw. rewrite vec_deref_spec in Hw.
+  (* the fused decoder copies the parameters into the inline-backed locals
+     stack and then reads the declared groups into that same stack *)
+  assert (Hgs' : repr_vec repr_locals (bytes_from data p) gs (m1 ++ rest)).
+  { rewrite Hp.
+    apply (frame_lift _ (repr_vec repr_locals) _ content rest gs m1
+             (repr_vec_prefix _ _ repr_locals_prefix) (ltac:(reflexivity))
+             Hgs). }
+  destruct (module_decode_and_build_locals data p ft.(types_FuncType_params))
+    as [rl|] eqn:El; cbn [bind] in Hw; [|discriminate].
+  destruct (decode_and_build_locals_complete data p
+              ft.(types_FuncType_params) rl gs (m1 ++ rest) El Hgs'
+              (ltac:(rewrite Hceq in Hlocs; cbn [fst] in Hlocs; exact Hlocs)))
+    as [locals [p1 [-> Hp1]]].
+  rewrite branch_ok in Hw. cbn [bind] in Hw.
+  destruct (decode_and_build_locals_progress data p
+              ft.(types_FuncType_params) locals p1 Hple El)
+    as [Hpp1 Hp1le].
+  assert (Hp1e : to_Z p1 <= to_Z end1).
+  { apply (bytes_from_len_le data p1 end1 Hp1le (ltac:(lia))).
+    rewrite Hp1. rewrite Hend1b. rewrite List.app_length. lia. }
+  rewrite (scalar_gtb_of_le p1 end1 Hp1e) in Hw.
   rewrite vec_deref_spec in Hw.
-  destruct (module_copy_value_types ft.(types_FuncType_results))
+  destruct (module_single_result ft.(types_FuncType_results))
     as [results|] eqn:Hcopy; cbn [bind] in Hw; [|discriminate].
   (* the consumer accepts the frame, so the hook cannot be what stopped it *)
   destruct (frame_hook_accept V inst vis
@@ -3952,16 +3956,20 @@ Proof.
     apply (f_equal (@List.length Z)) in Hp1. rewrite List.app_length in Hp1.
     lia. }
   (* the groups the specification names are the locals the decoder read *)
-  destruct (decode_locals_sound _ _ _ _ El) as [gs0 [Hflat Hrep0]].
-  assert (Hgseq : gs0 = gs).
+  destruct (decode_and_build_locals_sound _ _ _ _ _ El)
+    as [gs0 [Hflat Hrep0]].
+  assert (Hgseq : List.map (List.map translate_vt_v) gs0 = gs).
   { rewrite Hp1 in Hrep0.
     destruct (repr_vec_det _ _ repr_locals_det _ _ _ _ _ Hrep0 Hgs')
       as [Hg1 _]. exact Hg1. }
-  rewrite Hgseq in Hflat.
+  rewrite concat_map in Hflat. rewrite Hgseq in Hflat.
   (* the body checks, so the body validator accepts it *)
-  assert (Hlen1 : (List.length (vec_list results) <= 1)%nat).
-  { rewrite (copy_value_types_sound _ _ Hcopy).
-    apply (Htw10 ft (List.nth_error_In _ _ Hnthf)). }
+  assert (Hftlen :
+    (List.length (vec_list ft.(types_FuncType_results)) <= 1)%nat).
+  { apply (Htw10 ft (List.nth_error_In _ _ Hnthf)). }
+  pose proof (single_result_sound _ _ Hcopy Hftlen) as Hresults.
+  assert (Hlen1 : (List.length (context_results_of results) <= 1)%nat).
+  { rewrite Hresults. exact Hftlen. }
   destruct (body_context_agrees elems datas refs env
               {| code_Context_locals := locals;
                  code_Context_results := results |})
@@ -3969,13 +3977,10 @@ Proof.
   pose proof Hchk as Hc0.
   unfold b_e_type_checker in Hc0.
   rewrite Hceq in Hc0. cbn [fst snd] in Hc0.
-  rewrite <- Hflat in Hc0.
   rewrite (func_body_context_reverse elems datas refs env ft locals results
-             declared
-             (build_func_locals_sound _ _ _ Hbl)
-             (copy_value_types_sound _ _ Hcopy)) in Hc0.
+             (List.concat gs) Hflat Hresults) in Hc0.
   rewrite context_reverseK in Hc0.
-  rewrite <- (copy_value_types_sound _ _ Hcopy) in Hc0.
+  rewrite <- Hresults in Hc0.
   destruct (code_validate_body_with inst sub env
               {| code_Context_locals := locals;
                  code_Context_results := results |} vf) as [[rb vb]|] eqn:Evb;

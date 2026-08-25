@@ -199,9 +199,7 @@ Proof.
     eqn:Hpop; cbn [bind] in H |- *; [|discriminate].
   destruct r4 as [u4|e4]; [|try_err_rw_in H; discriminate].
   rewrite branch_ok in H |- *. cbn [bind] in H |- *.
-  destruct (code_block_results bt1) as [types|] eqn:Hbr;
-    cbn [bind] in H |- *; [|discriminate].
-  destruct (code_pop_types st3 (alloc_vec_Vec_deref types)) as [[r5 st4]|]
+  destruct (code_pop_block_results st3 bt1) as [[r5 st4]|]
     eqn:Hpt; cbn [bind] in H |- *; [|discriminate].
   destruct r5 as [u5|e5]; [|try_err_rw_in H; discriminate].
   rewrite branch_ok in H |- *. cbn [bind] in H |- *.
@@ -327,9 +325,18 @@ Proof.
     unfold code_validate_body_with_loop in H |- *;
     rewrite loop_unfold in H; rewrite loop_unfold;
     cbn beta iota in H |- *;
-    unfold code_control_stack_empty in H |- *;
-    rewrite vec_is_empty_spec in H |- *; cbn [bind] in H |- *;
-    destruct (vec_list st.(code_OpIterState_ctrls)) eqn:Hctrls.
+    unfold code_control_stack_empty in H |- *.
+  all: destruct (code_CtrlsStack_len st.(code_OpIterState_ctrls)) as [n|e]
+         eqn:Hlen in H |- *; cbn [bind] in H |- *; try discriminate.
+  all: destruct (ctrls_list st.(code_OpIterState_ctrls)) eqn:Hctrls.
+  all: try (assert (Hz : (n s= 0%usize) = true)
+    by (apply scalar_eqb_zero_true;
+        rewrite (ctrls_stack_len_spec _ _ Hlen), Hctrls; reflexivity);
+    rewrite Hz in H |- *).
+  all: try (assert (Hz : (n s= 0%usize) = false)
+    by (apply scalar_eqb_zero_false;
+        rewrite (ctrls_stack_len_spec _ _ Hlen), Hctrls; cbn; lia);
+    rewrite Hz in H |- *).
   1,3: destruct (st.(code_OpIterState_pos) s= slice_len data);
        [inversion H; subst; eauto | discriminate].
   - (* the budget is spent, so [read_op] is past the end and the run rejected *)
@@ -373,7 +380,6 @@ Proof.
   intros V W inst inst' data env ctx v w v' Hacc H.
   unfold code_validate_body_with in H |- *.
   destruct (slice_len data s> limits_max_function_bytes); [discriminate|].
-  rewrite vec_deref_spec in H |- *.
   destruct (code_start_function ctx.(code_Context_results)) as [st|]
     eqn:Hsf; cbn [bind] in H |- *; [|discriminate].
   pose proof (start_function_pos _ st Hsf) as Hpos.

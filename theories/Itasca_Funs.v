@@ -66,7 +66,7 @@ Definition types_ValueType_Insts_CoreCmpPartialEqValueType :
 |}.
 
 (** [itasca::code::{core::cmp::PartialEq<itasca::code::BlockType> for itasca::code::BlockType}::eq]:
-    Source: 'src/code.rs', lines 55:4-61:5 *)
+    Source: 'src/code.rs', lines 45:4-51:5 *)
 Definition code_BlockType_Insts_CoreCmpPartialEqBlockType_eq
   (self : code_BlockType_t) (other : code_BlockType_t) : result bool :=
   match self with
@@ -85,7 +85,7 @@ Definition code_BlockType_Insts_CoreCmpPartialEqBlockType_eq
 .
 
 (** Trait implementation: [itasca::code::{core::cmp::PartialEq<itasca::code::BlockType> for itasca::code::BlockType}]
-    Source: 'src/code.rs', lines 54:0-62:1 *)
+    Source: 'src/code.rs', lines 44:0-52:1 *)
 Definition code_BlockType_Insts_CoreCmpPartialEqBlockType :
   core_cmp_PartialEq_t code_BlockType_t code_BlockType_t := {|
   core_cmp_PartialEq_t_eq := code_BlockType_Insts_CoreCmpPartialEqBlockType_eq;
@@ -93,7 +93,7 @@ Definition code_BlockType_Insts_CoreCmpPartialEqBlockType :
 |}.
 
 (** Trait implementation: [itasca::code::{core::cmp::Eq for itasca::code::BlockType}]
-    Source: 'src/code.rs', lines 64:0-64:24 *)
+    Source: 'src/code.rs', lines 54:0-54:24 *)
 Definition code_BlockType_Insts_CoreCmpEq : core_cmp_Eq_t code_BlockType_t
   := {|
   core_cmp_Eq_tcore_cmp_Eq_t_PartialEqInst :=
@@ -101,7 +101,7 @@ Definition code_BlockType_Insts_CoreCmpEq : core_cmp_Eq_t code_BlockType_t
 |}.
 
 (** [itasca::code::visit]:
-    Source: 'src/code.rs', lines 94:0-99:1 *)
+    Source: 'src/code.rs', lines 86:0-91:1 *)
 Definition code_visit
   (r : core_result_Result_t unit error_VisitError_t) :
   result (core_result_Result_t unit error_OpError_t)
@@ -113,696 +113,1083 @@ Definition code_visit
   end
 .
 
+(** [itasca::code::VALS_INLINE_CAPACITY]
+    Source: 'src/code.rs', lines 139:0-139:39 *)
+Definition code_vals_inline_capacity : usize := 32%usize.
+
+(** [itasca::code::{itasca::code::ValsStack}::new]:
+    Source: 'src/code.rs', lines 155:4-161:5 *)
+Definition code_ValsStack_new : result code_ValsStack_t :=
+  let a := array_repeat 32%usize Code_StackType_Bot in
+  Ok
+    {|
+      code_ValsStack_inline := a;
+      code_ValsStack_overflow := (alloc_vec_Vec_new code_StackType_t);
+      code_ValsStack_inline_len := 0%usize
+    |}
+.
+
+(** [itasca::code::{itasca::code::ValsStack}::len]:
+    Source: 'src/code.rs', lines 163:4-169:5 *)
+Definition code_ValsStack_len (self : code_ValsStack_t) : result usize :=
+  if self.(code_ValsStack_inline_len) s>= code_vals_inline_capacity
+  then
+    let i := alloc_vec_Vec_len self.(code_ValsStack_overflow) in
+    usize_add code_vals_inline_capacity i
+  else Ok self.(code_ValsStack_inline_len)
+.
+
+(** [itasca::code::{itasca::code::ValsStack}::get]:
+    Source: 'src/code.rs', lines 173:4-179:5 *)
+Definition code_ValsStack_get
+  (self : code_ValsStack_t) (i : usize) : result code_StackType_t :=
+  if i s< code_vals_inline_capacity
+  then array_index_usize self.(code_ValsStack_inline) i
+  else (
+    i1 <- usize_sub i code_vals_inline_capacity;
+    alloc_vec_Vec_index (core_slice_index_SliceIndexUsizeSliceInst
+      code_StackType_t) self.(code_ValsStack_overflow) i1)
+.
+
+(** [itasca::code::{itasca::code::ValsStack}::push]:
+    Source: 'src/code.rs', lines 182:4-194:5 *)
+Definition code_ValsStack_push
+  (self : code_ValsStack_t) (v : code_StackType_t) : result code_ValsStack_t :=
+  if self.(code_ValsStack_inline_len) s>= code_vals_inline_capacity
+  then (
+    v1 <- alloc_vec_Vec_push self.(code_ValsStack_overflow) v;
+    Ok
+      {|
+        code_ValsStack_inline := self.(code_ValsStack_inline);
+        code_ValsStack_overflow := v1;
+        code_ValsStack_inline_len := self.(code_ValsStack_inline_len)
+      |})
+  else (
+    p <-
+      array_index_mut_usize self.(code_ValsStack_inline)
+        self.(code_ValsStack_inline_len);
+    let (_, index_mut_back) := p in
+    i <- usize_sub code_vals_inline_capacity 1%usize;
+    if self.(code_ValsStack_inline_len) s= i
+    then
+      let a := index_mut_back v in
+      Ok
+        {|
+          code_ValsStack_inline := a;
+          code_ValsStack_overflow := (alloc_vec_Vec_new code_StackType_t);
+          code_ValsStack_inline_len := code_vals_inline_capacity
+        |}
+    else (
+      i1 <- usize_add self.(code_ValsStack_inline_len) 1%usize;
+      let a := index_mut_back v in
+      Ok
+        {|
+          code_ValsStack_inline := a;
+          code_ValsStack_overflow := self.(code_ValsStack_overflow);
+          code_ValsStack_inline_len := i1
+        |}))
+.
+
+(** [itasca::code::{itasca::code::ValsStack}::pop]:
+    Source: 'src/code.rs', lines 198:4-214:5 *)
+Definition code_ValsStack_pop
+  (self : code_ValsStack_t) :
+  result ((option code_StackType_t) * code_ValsStack_t)
+  :=
+  if self.(code_ValsStack_inline_len) s>= code_vals_inline_capacity
+  then
+    let i := alloc_vec_Vec_len self.(code_ValsStack_overflow) in
+    if i s<> 0%usize
+    then (
+      p <- alloc_vec_Vec_pop alloc_alloc_Global self.(code_ValsStack_overflow);
+      let (o, v) := p in
+      Ok (o,
+        {|
+          code_ValsStack_inline := self.(code_ValsStack_inline);
+          code_ValsStack_overflow := v;
+          code_ValsStack_inline_len := self.(code_ValsStack_inline_len)
+        |}))
+    else (
+      i1 <- usize_sub code_vals_inline_capacity 1%usize;
+      st <- array_index_usize self.(code_ValsStack_inline) 31%usize;
+      Ok (Some st,
+        {|
+          code_ValsStack_inline := self.(code_ValsStack_inline);
+          code_ValsStack_overflow := self.(code_ValsStack_overflow);
+          code_ValsStack_inline_len := i1
+        |}))
+  else
+    if self.(code_ValsStack_inline_len) s= 0%usize
+    then Ok (None, self)
+    else (
+      i <- usize_sub self.(code_ValsStack_inline_len) 1%usize;
+      st <- array_index_usize self.(code_ValsStack_inline) i;
+      Ok (Some st,
+        {|
+          code_ValsStack_inline := self.(code_ValsStack_inline);
+          code_ValsStack_overflow := self.(code_ValsStack_overflow);
+          code_ValsStack_inline_len := i
+        |}))
+.
+
+(** [itasca::code::CTRLS_INLINE_CAPACITY]
+    Source: 'src/code.rs', lines 217:0-217:40 *)
+Definition code_ctrls_inline_capacity : usize := 16%usize.
+
+(** [itasca::code::EMPTY_CTRL]
+    Source: 'src/code.rs', lines 219:0-224:2 *)
+Definition code_empty_ctrl : code_Ctrl_t :=
+  {|
+    code_Ctrl_kind := Code_LabelKind_Body;
+    code_Ctrl_block_type := Code_BlockType_Empty;
+    code_Ctrl_value_stack_base := 0%usize;
+    code_Ctrl_polymorphic_base := false
+  |}
+.
+
+(** [itasca::code::{itasca::code::CtrlsStack}::new]:
+    Source: 'src/code.rs', lines 237:4-243:5 *)
+Definition code_CtrlsStack_new : result code_CtrlsStack_t :=
+  let a := array_repeat 16%usize code_empty_ctrl in
+  Ok
+    {|
+      code_CtrlsStack_inline := a;
+      code_CtrlsStack_overflow := (alloc_vec_Vec_new code_Ctrl_t);
+      code_CtrlsStack_inline_len := 0%usize
+    |}
+.
+
+(** [itasca::code::{itasca::code::CtrlsStack}::len]:
+    Source: 'src/code.rs', lines 245:4-251:5 *)
+Definition code_CtrlsStack_len (self : code_CtrlsStack_t) : result usize :=
+  if self.(code_CtrlsStack_inline_len) s>= code_ctrls_inline_capacity
+  then
+    let i := alloc_vec_Vec_len self.(code_CtrlsStack_overflow) in
+    usize_add code_ctrls_inline_capacity i
+  else Ok self.(code_CtrlsStack_inline_len)
+.
+
+(** [itasca::code::{itasca::code::CtrlsStack}::get]:
+    Source: 'src/code.rs', lines 253:4-259:5 *)
+Definition code_CtrlsStack_get
+  (self : code_CtrlsStack_t) (i : usize) : result code_Ctrl_t :=
+  if i s< code_ctrls_inline_capacity
+  then array_index_usize self.(code_CtrlsStack_inline) i
+  else (
+    i1 <- usize_sub i code_ctrls_inline_capacity;
+    alloc_vec_Vec_index (core_slice_index_SliceIndexUsizeSliceInst code_Ctrl_t)
+      self.(code_CtrlsStack_overflow) i1)
+.
+
+(** [itasca::code::{itasca::code::CtrlsStack}::set]:
+    Source: 'src/code.rs', lines 265:4-271:5 *)
+Definition code_CtrlsStack_set
+  (self : code_CtrlsStack_t) (i : usize) (c : code_Ctrl_t) :
+  result code_CtrlsStack_t
+  :=
+  if i s< code_ctrls_inline_capacity
+  then (
+    a <- array_update_usize self.(code_CtrlsStack_inline) i c;
+    Ok
+      {|
+        code_CtrlsStack_inline := a;
+        code_CtrlsStack_overflow := self.(code_CtrlsStack_overflow);
+        code_CtrlsStack_inline_len := self.(code_CtrlsStack_inline_len)
+      |})
+  else (
+    i1 <- usize_sub i code_ctrls_inline_capacity;
+    p <-
+      alloc_vec_Vec_index_mut (core_slice_index_SliceIndexUsizeSliceInst
+        code_Ctrl_t) self.(code_CtrlsStack_overflow) i1;
+    let (_, index_mut_back) := p in
+    let v := index_mut_back c in
+    Ok
+      {|
+        code_CtrlsStack_inline := self.(code_CtrlsStack_inline);
+        code_CtrlsStack_overflow := v;
+        code_CtrlsStack_inline_len := self.(code_CtrlsStack_inline_len)
+      |})
+.
+
+(** [itasca::code::{itasca::code::CtrlsStack}::push]:
+    Source: 'src/code.rs', lines 274:4-286:5 *)
+Definition code_CtrlsStack_push
+  (self : code_CtrlsStack_t) (c : code_Ctrl_t) : result code_CtrlsStack_t :=
+  if self.(code_CtrlsStack_inline_len) s>= code_ctrls_inline_capacity
+  then (
+    v <- alloc_vec_Vec_push self.(code_CtrlsStack_overflow) c;
+    Ok
+      {|
+        code_CtrlsStack_inline := self.(code_CtrlsStack_inline);
+        code_CtrlsStack_overflow := v;
+        code_CtrlsStack_inline_len := self.(code_CtrlsStack_inline_len)
+      |})
+  else (
+    p <-
+      array_index_mut_usize self.(code_CtrlsStack_inline)
+        self.(code_CtrlsStack_inline_len);
+    let (_, index_mut_back) := p in
+    i <- usize_sub code_ctrls_inline_capacity 1%usize;
+    if self.(code_CtrlsStack_inline_len) s= i
+    then
+      let a := index_mut_back c in
+      Ok
+        {|
+          code_CtrlsStack_inline := a;
+          code_CtrlsStack_overflow := (alloc_vec_Vec_new code_Ctrl_t);
+          code_CtrlsStack_inline_len := code_ctrls_inline_capacity
+        |}
+    else (
+      i1 <- usize_add self.(code_CtrlsStack_inline_len) 1%usize;
+      let a := index_mut_back c in
+      Ok
+        {|
+          code_CtrlsStack_inline := a;
+          code_CtrlsStack_overflow := self.(code_CtrlsStack_overflow);
+          code_CtrlsStack_inline_len := i1
+        |}))
+.
+
+(** [itasca::code::{itasca::code::CtrlsStack}::pop]:
+    Source: 'src/code.rs', lines 289:4-305:5 *)
+Definition code_CtrlsStack_pop
+  (self : code_CtrlsStack_t) :
+  result ((option code_Ctrl_t) * code_CtrlsStack_t)
+  :=
+  if self.(code_CtrlsStack_inline_len) s>= code_ctrls_inline_capacity
+  then
+    let i := alloc_vec_Vec_len self.(code_CtrlsStack_overflow) in
+    if i s<> 0%usize
+    then (
+      p <-
+        alloc_vec_Vec_pop alloc_alloc_Global self.(code_CtrlsStack_overflow);
+      let (o, v) := p in
+      Ok (o,
+        {|
+          code_CtrlsStack_inline := self.(code_CtrlsStack_inline);
+          code_CtrlsStack_overflow := v;
+          code_CtrlsStack_inline_len := self.(code_CtrlsStack_inline_len)
+        |}))
+    else (
+      i1 <- usize_sub code_ctrls_inline_capacity 1%usize;
+      c <- array_index_usize self.(code_CtrlsStack_inline) 15%usize;
+      Ok (Some c,
+        {|
+          code_CtrlsStack_inline := self.(code_CtrlsStack_inline);
+          code_CtrlsStack_overflow := self.(code_CtrlsStack_overflow);
+          code_CtrlsStack_inline_len := i1
+        |}))
+  else
+    if self.(code_CtrlsStack_inline_len) s= 0%usize
+    then Ok (None, self)
+    else (
+      i <- usize_sub self.(code_CtrlsStack_inline_len) 1%usize;
+      c <- array_index_usize self.(code_CtrlsStack_inline) i;
+      Ok (Some c,
+        {|
+          code_CtrlsStack_inline := self.(code_CtrlsStack_inline);
+          code_CtrlsStack_overflow := self.(code_CtrlsStack_overflow);
+          code_CtrlsStack_inline_len := i
+        |}))
+.
+
+(** [itasca::code::LOCALS_INLINE_CAPACITY]
+    Source: 'src/code.rs', lines 308:0-308:41 *)
+Definition code_locals_inline_capacity : usize := 32%usize.
+
+(** [itasca::code::{itasca::code::LocalsStack}::new]:
+    Source: 'src/code.rs', lines 320:4-326:5 *)
+Definition code_LocalsStack_new : result code_LocalsStack_t :=
+  let a := array_repeat 32%usize Types_ValueType_I32 in
+  Ok
+    {|
+      code_LocalsStack_inline := a;
+      code_LocalsStack_overflow := (alloc_vec_Vec_new types_ValueType_t);
+      code_LocalsStack_inline_len := 0%usize
+    |}
+.
+
+(** [itasca::code::{itasca::code::LocalsStack}::len]:
+    Source: 'src/code.rs', lines 328:4-334:5 *)
+Definition code_LocalsStack_len (self : code_LocalsStack_t) : result usize :=
+  if self.(code_LocalsStack_inline_len) s>= code_locals_inline_capacity
+  then
+    let i := alloc_vec_Vec_len self.(code_LocalsStack_overflow) in
+    usize_add code_locals_inline_capacity i
+  else Ok self.(code_LocalsStack_inline_len)
+.
+
+(** [itasca::code::{itasca::code::LocalsStack}::get]:
+    Source: 'src/code.rs', lines 336:4-342:5 *)
+Definition code_LocalsStack_get
+  (self : code_LocalsStack_t) (i : usize) : result types_ValueType_t :=
+  if i s< code_locals_inline_capacity
+  then array_index_usize self.(code_LocalsStack_inline) i
+  else (
+    i1 <- usize_sub i code_locals_inline_capacity;
+    alloc_vec_Vec_index (core_slice_index_SliceIndexUsizeSliceInst
+      types_ValueType_t) self.(code_LocalsStack_overflow) i1)
+.
+
+(** [itasca::code::{itasca::code::LocalsStack}::get_checked]:
+    Source: 'src/code.rs', lines 344:4-363:5 *)
+Definition code_LocalsStack_get_checked
+  (self : code_LocalsStack_t) (i : usize) :
+  result (option types_ValueType_t)
+  :=
+  if self.(code_LocalsStack_inline_len) s>= code_locals_inline_capacity
+  then
+    if i s< code_locals_inline_capacity
+    then (
+      vt <- array_index_usize self.(code_LocalsStack_inline) i; Ok (Some vt))
+    else (
+      j <- usize_sub i code_locals_inline_capacity;
+      let i1 := alloc_vec_Vec_len self.(code_LocalsStack_overflow) in
+      if j s>= i1
+      then Ok None
+      else (
+        vt <-
+          alloc_vec_Vec_index (core_slice_index_SliceIndexUsizeSliceInst
+            types_ValueType_t) self.(code_LocalsStack_overflow) j;
+        Ok (Some vt)))
+  else
+    if i s>= self.(code_LocalsStack_inline_len)
+    then Ok None
+    else (
+      vt <- array_index_usize self.(code_LocalsStack_inline) i; Ok (Some vt))
+.
+
+(** [itasca::code::{itasca::code::LocalsStack}::push]:
+    Source: 'src/code.rs', lines 365:4-377:5 *)
+Definition code_LocalsStack_push
+  (self : code_LocalsStack_t) (v : types_ValueType_t) :
+  result code_LocalsStack_t
+  :=
+  if self.(code_LocalsStack_inline_len) s>= code_locals_inline_capacity
+  then (
+    v1 <- alloc_vec_Vec_push self.(code_LocalsStack_overflow) v;
+    Ok
+      {|
+        code_LocalsStack_inline := self.(code_LocalsStack_inline);
+        code_LocalsStack_overflow := v1;
+        code_LocalsStack_inline_len := self.(code_LocalsStack_inline_len)
+      |})
+  else (
+    p <-
+      array_index_mut_usize self.(code_LocalsStack_inline)
+        self.(code_LocalsStack_inline_len);
+    let (_, index_mut_back) := p in
+    i <- usize_sub code_locals_inline_capacity 1%usize;
+    if self.(code_LocalsStack_inline_len) s= i
+    then
+      let a := index_mut_back v in
+      Ok
+        {|
+          code_LocalsStack_inline := a;
+          code_LocalsStack_overflow := (alloc_vec_Vec_new types_ValueType_t);
+          code_LocalsStack_inline_len := code_locals_inline_capacity
+        |}
+    else (
+      i1 <- usize_add self.(code_LocalsStack_inline_len) 1%usize;
+      let a := index_mut_back v in
+      Ok
+        {|
+          code_LocalsStack_inline := a;
+          code_LocalsStack_overflow := self.(code_LocalsStack_overflow);
+          code_LocalsStack_inline_len := i1
+        |}))
+.
+
 (** [itasca::code::OP_UNREACHABLE]
-    Source: 'src/code.rs', lines 150:0-150:36 *)
+    Source: 'src/code.rs', lines 391:0-391:36 *)
 Definition code_op_unreachable : u8 := 0%u8.
 
 (** [itasca::code::OP_NOP]
-    Source: 'src/code.rs', lines 151:0-151:28 *)
+    Source: 'src/code.rs', lines 392:0-392:28 *)
 Definition code_op_nop : u8 := 1%u8.
 
 (** [itasca::code::OP_BLOCK]
-    Source: 'src/code.rs', lines 152:0-152:30 *)
+    Source: 'src/code.rs', lines 393:0-393:30 *)
 Definition code_op_block : u8 := 2%u8.
 
 (** [itasca::code::OP_LOOP]
-    Source: 'src/code.rs', lines 153:0-153:29 *)
+    Source: 'src/code.rs', lines 394:0-394:29 *)
 Definition code_op_loop : u8 := 3%u8.
 
 (** [itasca::code::OP_IF]
-    Source: 'src/code.rs', lines 154:0-154:27 *)
+    Source: 'src/code.rs', lines 395:0-395:27 *)
 Definition code_op_if : u8 := 4%u8.
 
 (** [itasca::code::OP_ELSE]
-    Source: 'src/code.rs', lines 155:0-155:29 *)
+    Source: 'src/code.rs', lines 396:0-396:29 *)
 Definition code_op_else : u8 := 5%u8.
 
 (** [itasca::code::OP_END]
-    Source: 'src/code.rs', lines 156:0-156:28 *)
+    Source: 'src/code.rs', lines 397:0-397:28 *)
 Definition code_op_end : u8 := 11%u8.
 
 (** [itasca::code::OP_BR]
-    Source: 'src/code.rs', lines 157:0-157:27 *)
+    Source: 'src/code.rs', lines 398:0-398:27 *)
 Definition code_op_br : u8 := 12%u8.
 
 (** [itasca::code::OP_BR_IF]
-    Source: 'src/code.rs', lines 158:0-158:30 *)
+    Source: 'src/code.rs', lines 399:0-399:30 *)
 Definition code_op_br_if : u8 := 13%u8.
 
 (** [itasca::code::OP_BR_TABLE]
-    Source: 'src/code.rs', lines 159:0-159:33 *)
+    Source: 'src/code.rs', lines 400:0-400:33 *)
 Definition code_op_br_table : u8 := 14%u8.
 
 (** [itasca::code::OP_RETURN]
-    Source: 'src/code.rs', lines 160:0-160:31 *)
+    Source: 'src/code.rs', lines 401:0-401:31 *)
 Definition code_op_return : u8 := 15%u8.
 
 (** [itasca::code::OP_CALL]
-    Source: 'src/code.rs', lines 161:0-161:29 *)
+    Source: 'src/code.rs', lines 402:0-402:29 *)
 Definition code_op_call : u8 := 16%u8.
 
 (** [itasca::code::OP_CALL_INDIRECT]
-    Source: 'src/code.rs', lines 162:0-162:38 *)
+    Source: 'src/code.rs', lines 403:0-403:38 *)
 Definition code_op_call_indirect : u8 := 17%u8.
 
 (** [itasca::code::OP_DROP]
-    Source: 'src/code.rs', lines 163:0-163:29 *)
+    Source: 'src/code.rs', lines 404:0-404:29 *)
 Definition code_op_drop : u8 := 26%u8.
 
 (** [itasca::code::OP_SELECT]
-    Source: 'src/code.rs', lines 164:0-164:31 *)
+    Source: 'src/code.rs', lines 405:0-405:31 *)
 Definition code_op_select : u8 := 27%u8.
 
 (** [itasca::code::OP_LOCAL_GET]
-    Source: 'src/code.rs', lines 166:0-166:34 *)
+    Source: 'src/code.rs', lines 407:0-407:34 *)
 Definition code_op_local_get : u8 := 32%u8.
 
 (** [itasca::code::OP_LOCAL_SET]
-    Source: 'src/code.rs', lines 167:0-167:34 *)
+    Source: 'src/code.rs', lines 408:0-408:34 *)
 Definition code_op_local_set : u8 := 33%u8.
 
 (** [itasca::code::OP_LOCAL_TEE]
-    Source: 'src/code.rs', lines 168:0-168:34 *)
+    Source: 'src/code.rs', lines 409:0-409:34 *)
 Definition code_op_local_tee : u8 := 34%u8.
 
 (** [itasca::code::OP_GLOBAL_GET]
-    Source: 'src/code.rs', lines 169:0-169:35 *)
+    Source: 'src/code.rs', lines 410:0-410:35 *)
 Definition code_op_global_get : u8 := 35%u8.
 
 (** [itasca::code::OP_GLOBAL_SET]
-    Source: 'src/code.rs', lines 170:0-170:35 *)
+    Source: 'src/code.rs', lines 411:0-411:35 *)
 Definition code_op_global_set : u8 := 36%u8.
 
 (** [itasca::code::OP_I32_LOAD]
-    Source: 'src/code.rs', lines 172:0-172:33 *)
+    Source: 'src/code.rs', lines 413:0-413:33 *)
 Definition code_op_i32_load : u8 := 40%u8.
 
 (** [itasca::code::OP_I64_LOAD]
-    Source: 'src/code.rs', lines 173:0-173:33 *)
+    Source: 'src/code.rs', lines 414:0-414:33 *)
 Definition code_op_i64_load : u8 := 41%u8.
 
 (** [itasca::code::OP_F32_LOAD]
-    Source: 'src/code.rs', lines 174:0-174:33 *)
+    Source: 'src/code.rs', lines 415:0-415:33 *)
 Definition code_op_f32_load : u8 := 42%u8.
 
 (** [itasca::code::OP_F64_LOAD]
-    Source: 'src/code.rs', lines 175:0-175:33 *)
+    Source: 'src/code.rs', lines 416:0-416:33 *)
 Definition code_op_f64_load : u8 := 43%u8.
 
 (** [itasca::code::OP_I32_LOAD8_S]
-    Source: 'src/code.rs', lines 176:0-176:36 *)
+    Source: 'src/code.rs', lines 417:0-417:36 *)
 Definition code_op_i32_load8_s : u8 := 44%u8.
 
 (** [itasca::code::OP_I32_LOAD8_U]
-    Source: 'src/code.rs', lines 177:0-177:36 *)
+    Source: 'src/code.rs', lines 418:0-418:36 *)
 Definition code_op_i32_load8_u : u8 := 45%u8.
 
 (** [itasca::code::OP_I32_LOAD16_S]
-    Source: 'src/code.rs', lines 178:0-178:37 *)
+    Source: 'src/code.rs', lines 419:0-419:37 *)
 Definition code_op_i32_load16_s : u8 := 46%u8.
 
 (** [itasca::code::OP_I32_LOAD16_U]
-    Source: 'src/code.rs', lines 179:0-179:37 *)
+    Source: 'src/code.rs', lines 420:0-420:37 *)
 Definition code_op_i32_load16_u : u8 := 47%u8.
 
 (** [itasca::code::OP_I64_LOAD8_S]
-    Source: 'src/code.rs', lines 180:0-180:36 *)
+    Source: 'src/code.rs', lines 421:0-421:36 *)
 Definition code_op_i64_load8_s : u8 := 48%u8.
 
 (** [itasca::code::OP_I64_LOAD8_U]
-    Source: 'src/code.rs', lines 181:0-181:36 *)
+    Source: 'src/code.rs', lines 422:0-422:36 *)
 Definition code_op_i64_load8_u : u8 := 49%u8.
 
 (** [itasca::code::OP_I64_LOAD16_S]
-    Source: 'src/code.rs', lines 182:0-182:37 *)
+    Source: 'src/code.rs', lines 423:0-423:37 *)
 Definition code_op_i64_load16_s : u8 := 50%u8.
 
 (** [itasca::code::OP_I64_LOAD16_U]
-    Source: 'src/code.rs', lines 183:0-183:37 *)
+    Source: 'src/code.rs', lines 424:0-424:37 *)
 Definition code_op_i64_load16_u : u8 := 51%u8.
 
 (** [itasca::code::OP_I64_LOAD32_S]
-    Source: 'src/code.rs', lines 184:0-184:37 *)
+    Source: 'src/code.rs', lines 425:0-425:37 *)
 Definition code_op_i64_load32_s : u8 := 52%u8.
 
 (** [itasca::code::OP_I64_LOAD32_U]
-    Source: 'src/code.rs', lines 185:0-185:37 *)
+    Source: 'src/code.rs', lines 426:0-426:37 *)
 Definition code_op_i64_load32_u : u8 := 53%u8.
 
 (** [itasca::code::OP_I32_STORE]
-    Source: 'src/code.rs', lines 187:0-187:34 *)
+    Source: 'src/code.rs', lines 428:0-428:34 *)
 Definition code_op_i32_store : u8 := 54%u8.
 
 (** [itasca::code::OP_I64_STORE]
-    Source: 'src/code.rs', lines 188:0-188:34 *)
+    Source: 'src/code.rs', lines 429:0-429:34 *)
 Definition code_op_i64_store : u8 := 55%u8.
 
 (** [itasca::code::OP_F32_STORE]
-    Source: 'src/code.rs', lines 189:0-189:34 *)
+    Source: 'src/code.rs', lines 430:0-430:34 *)
 Definition code_op_f32_store : u8 := 56%u8.
 
 (** [itasca::code::OP_F64_STORE]
-    Source: 'src/code.rs', lines 190:0-190:34 *)
+    Source: 'src/code.rs', lines 431:0-431:34 *)
 Definition code_op_f64_store : u8 := 57%u8.
 
 (** [itasca::code::OP_I32_STORE8]
-    Source: 'src/code.rs', lines 191:0-191:35 *)
+    Source: 'src/code.rs', lines 432:0-432:35 *)
 Definition code_op_i32_store8 : u8 := 58%u8.
 
 (** [itasca::code::OP_I32_STORE16]
-    Source: 'src/code.rs', lines 192:0-192:36 *)
+    Source: 'src/code.rs', lines 433:0-433:36 *)
 Definition code_op_i32_store16 : u8 := 59%u8.
 
 (** [itasca::code::OP_I64_STORE8]
-    Source: 'src/code.rs', lines 193:0-193:35 *)
+    Source: 'src/code.rs', lines 434:0-434:35 *)
 Definition code_op_i64_store8 : u8 := 60%u8.
 
 (** [itasca::code::OP_I64_STORE16]
-    Source: 'src/code.rs', lines 194:0-194:36 *)
+    Source: 'src/code.rs', lines 435:0-435:36 *)
 Definition code_op_i64_store16 : u8 := 61%u8.
 
 (** [itasca::code::OP_I64_STORE32]
-    Source: 'src/code.rs', lines 195:0-195:36 *)
+    Source: 'src/code.rs', lines 436:0-436:36 *)
 Definition code_op_i64_store32 : u8 := 62%u8.
 
 (** [itasca::code::OP_MEMORY_SIZE]
-    Source: 'src/code.rs', lines 197:0-197:36 *)
+    Source: 'src/code.rs', lines 438:0-438:36 *)
 Definition code_op_memory_size : u8 := 63%u8.
 
 (** [itasca::code::OP_MEMORY_GROW]
-    Source: 'src/code.rs', lines 198:0-198:36 *)
+    Source: 'src/code.rs', lines 439:0-439:36 *)
 Definition code_op_memory_grow : u8 := 64%u8.
 
 (** [itasca::code::OP_I32_CONST]
-    Source: 'src/code.rs', lines 200:0-200:34 *)
+    Source: 'src/code.rs', lines 441:0-441:34 *)
 Definition code_op_i32_const : u8 := 65%u8.
 
 (** [itasca::code::OP_I64_CONST]
-    Source: 'src/code.rs', lines 201:0-201:34 *)
+    Source: 'src/code.rs', lines 442:0-442:34 *)
 Definition code_op_i64_const : u8 := 66%u8.
 
 (** [itasca::code::OP_F32_CONST]
-    Source: 'src/code.rs', lines 202:0-202:34 *)
+    Source: 'src/code.rs', lines 443:0-443:34 *)
 Definition code_op_f32_const : u8 := 67%u8.
 
 (** [itasca::code::OP_F64_CONST]
-    Source: 'src/code.rs', lines 203:0-203:34 *)
+    Source: 'src/code.rs', lines 444:0-444:34 *)
 Definition code_op_f64_const : u8 := 68%u8.
 
 (** [itasca::code::OP_I32_EQZ]
-    Source: 'src/code.rs', lines 205:0-205:32 *)
+    Source: 'src/code.rs', lines 446:0-446:32 *)
 Definition code_op_i32_eqz : u8 := 69%u8.
 
 (** [itasca::code::OP_I32_EQ]
-    Source: 'src/code.rs', lines 206:0-206:31 *)
+    Source: 'src/code.rs', lines 447:0-447:31 *)
 Definition code_op_i32_eq : u8 := 70%u8.
 
 (** [itasca::code::OP_I32_NE]
-    Source: 'src/code.rs', lines 207:0-207:31 *)
+    Source: 'src/code.rs', lines 448:0-448:31 *)
 Definition code_op_i32_ne : u8 := 71%u8.
 
 (** [itasca::code::OP_I32_LT_S]
-    Source: 'src/code.rs', lines 208:0-208:33 *)
+    Source: 'src/code.rs', lines 449:0-449:33 *)
 Definition code_op_i32_lt_s : u8 := 72%u8.
 
 (** [itasca::code::OP_I32_LT_U]
-    Source: 'src/code.rs', lines 209:0-209:33 *)
+    Source: 'src/code.rs', lines 450:0-450:33 *)
 Definition code_op_i32_lt_u : u8 := 73%u8.
 
 (** [itasca::code::OP_I32_GT_S]
-    Source: 'src/code.rs', lines 210:0-210:33 *)
+    Source: 'src/code.rs', lines 451:0-451:33 *)
 Definition code_op_i32_gt_s : u8 := 74%u8.
 
 (** [itasca::code::OP_I32_GT_U]
-    Source: 'src/code.rs', lines 211:0-211:33 *)
+    Source: 'src/code.rs', lines 452:0-452:33 *)
 Definition code_op_i32_gt_u : u8 := 75%u8.
 
 (** [itasca::code::OP_I32_LE_S]
-    Source: 'src/code.rs', lines 212:0-212:33 *)
+    Source: 'src/code.rs', lines 453:0-453:33 *)
 Definition code_op_i32_le_s : u8 := 76%u8.
 
 (** [itasca::code::OP_I32_LE_U]
-    Source: 'src/code.rs', lines 213:0-213:33 *)
+    Source: 'src/code.rs', lines 454:0-454:33 *)
 Definition code_op_i32_le_u : u8 := 77%u8.
 
 (** [itasca::code::OP_I32_GE_S]
-    Source: 'src/code.rs', lines 214:0-214:33 *)
+    Source: 'src/code.rs', lines 455:0-455:33 *)
 Definition code_op_i32_ge_s : u8 := 78%u8.
 
 (** [itasca::code::OP_I32_GE_U]
-    Source: 'src/code.rs', lines 215:0-215:33 *)
+    Source: 'src/code.rs', lines 456:0-456:33 *)
 Definition code_op_i32_ge_u : u8 := 79%u8.
 
 (** [itasca::code::OP_I64_EQZ]
-    Source: 'src/code.rs', lines 217:0-217:32 *)
+    Source: 'src/code.rs', lines 458:0-458:32 *)
 Definition code_op_i64_eqz : u8 := 80%u8.
 
 (** [itasca::code::OP_I64_EQ]
-    Source: 'src/code.rs', lines 218:0-218:31 *)
+    Source: 'src/code.rs', lines 459:0-459:31 *)
 Definition code_op_i64_eq : u8 := 81%u8.
 
 (** [itasca::code::OP_I64_NE]
-    Source: 'src/code.rs', lines 219:0-219:31 *)
+    Source: 'src/code.rs', lines 460:0-460:31 *)
 Definition code_op_i64_ne : u8 := 82%u8.
 
 (** [itasca::code::OP_I64_LT_S]
-    Source: 'src/code.rs', lines 220:0-220:33 *)
+    Source: 'src/code.rs', lines 461:0-461:33 *)
 Definition code_op_i64_lt_s : u8 := 83%u8.
 
 (** [itasca::code::OP_I64_LT_U]
-    Source: 'src/code.rs', lines 221:0-221:33 *)
+    Source: 'src/code.rs', lines 462:0-462:33 *)
 Definition code_op_i64_lt_u : u8 := 84%u8.
 
 (** [itasca::code::OP_I64_GT_S]
-    Source: 'src/code.rs', lines 222:0-222:33 *)
+    Source: 'src/code.rs', lines 463:0-463:33 *)
 Definition code_op_i64_gt_s : u8 := 85%u8.
 
 (** [itasca::code::OP_I64_GT_U]
-    Source: 'src/code.rs', lines 223:0-223:33 *)
+    Source: 'src/code.rs', lines 464:0-464:33 *)
 Definition code_op_i64_gt_u : u8 := 86%u8.
 
 (** [itasca::code::OP_I64_LE_S]
-    Source: 'src/code.rs', lines 224:0-224:33 *)
+    Source: 'src/code.rs', lines 465:0-465:33 *)
 Definition code_op_i64_le_s : u8 := 87%u8.
 
 (** [itasca::code::OP_I64_LE_U]
-    Source: 'src/code.rs', lines 225:0-225:33 *)
+    Source: 'src/code.rs', lines 466:0-466:33 *)
 Definition code_op_i64_le_u : u8 := 88%u8.
 
 (** [itasca::code::OP_I64_GE_S]
-    Source: 'src/code.rs', lines 226:0-226:33 *)
+    Source: 'src/code.rs', lines 467:0-467:33 *)
 Definition code_op_i64_ge_s : u8 := 89%u8.
 
 (** [itasca::code::OP_I64_GE_U]
-    Source: 'src/code.rs', lines 227:0-227:33 *)
+    Source: 'src/code.rs', lines 468:0-468:33 *)
 Definition code_op_i64_ge_u : u8 := 90%u8.
 
 (** [itasca::code::OP_F32_EQ]
-    Source: 'src/code.rs', lines 229:0-229:31 *)
+    Source: 'src/code.rs', lines 470:0-470:31 *)
 Definition code_op_f32_eq : u8 := 91%u8.
 
 (** [itasca::code::OP_F32_NE]
-    Source: 'src/code.rs', lines 230:0-230:31 *)
+    Source: 'src/code.rs', lines 471:0-471:31 *)
 Definition code_op_f32_ne : u8 := 92%u8.
 
 (** [itasca::code::OP_F32_LT]
-    Source: 'src/code.rs', lines 231:0-231:31 *)
+    Source: 'src/code.rs', lines 472:0-472:31 *)
 Definition code_op_f32_lt : u8 := 93%u8.
 
 (** [itasca::code::OP_F32_GT]
-    Source: 'src/code.rs', lines 232:0-232:31 *)
+    Source: 'src/code.rs', lines 473:0-473:31 *)
 Definition code_op_f32_gt : u8 := 94%u8.
 
 (** [itasca::code::OP_F32_LE]
-    Source: 'src/code.rs', lines 233:0-233:31 *)
+    Source: 'src/code.rs', lines 474:0-474:31 *)
 Definition code_op_f32_le : u8 := 95%u8.
 
 (** [itasca::code::OP_F32_GE]
-    Source: 'src/code.rs', lines 234:0-234:31 *)
+    Source: 'src/code.rs', lines 475:0-475:31 *)
 Definition code_op_f32_ge : u8 := 96%u8.
 
 (** [itasca::code::OP_F64_EQ]
-    Source: 'src/code.rs', lines 236:0-236:31 *)
+    Source: 'src/code.rs', lines 477:0-477:31 *)
 Definition code_op_f64_eq : u8 := 97%u8.
 
 (** [itasca::code::OP_F64_NE]
-    Source: 'src/code.rs', lines 237:0-237:31 *)
+    Source: 'src/code.rs', lines 478:0-478:31 *)
 Definition code_op_f64_ne : u8 := 98%u8.
 
 (** [itasca::code::OP_F64_LT]
-    Source: 'src/code.rs', lines 238:0-238:31 *)
+    Source: 'src/code.rs', lines 479:0-479:31 *)
 Definition code_op_f64_lt : u8 := 99%u8.
 
 (** [itasca::code::OP_F64_GT]
-    Source: 'src/code.rs', lines 239:0-239:31 *)
+    Source: 'src/code.rs', lines 480:0-480:31 *)
 Definition code_op_f64_gt : u8 := 100%u8.
 
 (** [itasca::code::OP_F64_LE]
-    Source: 'src/code.rs', lines 240:0-240:31 *)
+    Source: 'src/code.rs', lines 481:0-481:31 *)
 Definition code_op_f64_le : u8 := 101%u8.
 
 (** [itasca::code::OP_F64_GE]
-    Source: 'src/code.rs', lines 241:0-241:31 *)
+    Source: 'src/code.rs', lines 482:0-482:31 *)
 Definition code_op_f64_ge : u8 := 102%u8.
 
 (** [itasca::code::OP_I32_SUB]
-    Source: 'src/code.rs', lines 243:0-243:32 *)
+    Source: 'src/code.rs', lines 484:0-484:32 *)
 Definition code_op_i32_sub : u8 := 107%u8.
 
 (** [itasca::code::OP_I32_MUL]
-    Source: 'src/code.rs', lines 244:0-244:32 *)
+    Source: 'src/code.rs', lines 485:0-485:32 *)
 Definition code_op_i32_mul : u8 := 108%u8.
 
 (** [itasca::code::OP_I32_DIV_S]
-    Source: 'src/code.rs', lines 245:0-245:34 *)
+    Source: 'src/code.rs', lines 486:0-486:34 *)
 Definition code_op_i32_div_s : u8 := 109%u8.
 
 (** [itasca::code::OP_I32_DIV_U]
-    Source: 'src/code.rs', lines 246:0-246:34 *)
+    Source: 'src/code.rs', lines 487:0-487:34 *)
 Definition code_op_i32_div_u : u8 := 110%u8.
 
 (** [itasca::code::OP_I32_REM_S]
-    Source: 'src/code.rs', lines 247:0-247:34 *)
+    Source: 'src/code.rs', lines 488:0-488:34 *)
 Definition code_op_i32_rem_s : u8 := 111%u8.
 
 (** [itasca::code::OP_I32_REM_U]
-    Source: 'src/code.rs', lines 248:0-248:34 *)
+    Source: 'src/code.rs', lines 489:0-489:34 *)
 Definition code_op_i32_rem_u : u8 := 112%u8.
 
 (** [itasca::code::OP_I32_AND]
-    Source: 'src/code.rs', lines 249:0-249:32 *)
+    Source: 'src/code.rs', lines 490:0-490:32 *)
 Definition code_op_i32_and : u8 := 113%u8.
 
 (** [itasca::code::OP_I32_OR]
-    Source: 'src/code.rs', lines 250:0-250:31 *)
+    Source: 'src/code.rs', lines 491:0-491:31 *)
 Definition code_op_i32_or : u8 := 114%u8.
 
 (** [itasca::code::OP_I32_XOR]
-    Source: 'src/code.rs', lines 251:0-251:32 *)
+    Source: 'src/code.rs', lines 492:0-492:32 *)
 Definition code_op_i32_xor : u8 := 115%u8.
 
 (** [itasca::code::OP_I32_SHL]
-    Source: 'src/code.rs', lines 252:0-252:32 *)
+    Source: 'src/code.rs', lines 493:0-493:32 *)
 Definition code_op_i32_shl : u8 := 116%u8.
 
 (** [itasca::code::OP_I32_SHR_S]
-    Source: 'src/code.rs', lines 253:0-253:34 *)
+    Source: 'src/code.rs', lines 494:0-494:34 *)
 Definition code_op_i32_shr_s : u8 := 117%u8.
 
 (** [itasca::code::OP_I32_SHR_U]
-    Source: 'src/code.rs', lines 254:0-254:34 *)
+    Source: 'src/code.rs', lines 495:0-495:34 *)
 Definition code_op_i32_shr_u : u8 := 118%u8.
 
 (** [itasca::code::OP_I32_ROTL]
-    Source: 'src/code.rs', lines 255:0-255:33 *)
+    Source: 'src/code.rs', lines 496:0-496:33 *)
 Definition code_op_i32_rotl : u8 := 119%u8.
 
 (** [itasca::code::OP_I32_ROTR]
-    Source: 'src/code.rs', lines 256:0-256:33 *)
+    Source: 'src/code.rs', lines 497:0-497:33 *)
 Definition code_op_i32_rotr : u8 := 120%u8.
 
 (** [itasca::code::OP_I64_ADD]
-    Source: 'src/code.rs', lines 258:0-258:32 *)
+    Source: 'src/code.rs', lines 499:0-499:32 *)
 Definition code_op_i64_add : u8 := 124%u8.
 
 (** [itasca::code::OP_I64_SUB]
-    Source: 'src/code.rs', lines 259:0-259:32 *)
+    Source: 'src/code.rs', lines 500:0-500:32 *)
 Definition code_op_i64_sub : u8 := 125%u8.
 
 (** [itasca::code::OP_I64_MUL]
-    Source: 'src/code.rs', lines 260:0-260:32 *)
+    Source: 'src/code.rs', lines 501:0-501:32 *)
 Definition code_op_i64_mul : u8 := 126%u8.
 
 (** [itasca::code::OP_I64_DIV_S]
-    Source: 'src/code.rs', lines 261:0-261:34 *)
+    Source: 'src/code.rs', lines 502:0-502:34 *)
 Definition code_op_i64_div_s : u8 := 127%u8.
 
 (** [itasca::code::OP_I64_DIV_U]
-    Source: 'src/code.rs', lines 262:0-262:34 *)
+    Source: 'src/code.rs', lines 503:0-503:34 *)
 Definition code_op_i64_div_u : u8 := 128%u8.
 
 (** [itasca::code::OP_I64_REM_S]
-    Source: 'src/code.rs', lines 263:0-263:34 *)
+    Source: 'src/code.rs', lines 504:0-504:34 *)
 Definition code_op_i64_rem_s : u8 := 129%u8.
 
 (** [itasca::code::OP_I64_REM_U]
-    Source: 'src/code.rs', lines 264:0-264:34 *)
+    Source: 'src/code.rs', lines 505:0-505:34 *)
 Definition code_op_i64_rem_u : u8 := 130%u8.
 
 (** [itasca::code::OP_I64_AND]
-    Source: 'src/code.rs', lines 265:0-265:32 *)
+    Source: 'src/code.rs', lines 506:0-506:32 *)
 Definition code_op_i64_and : u8 := 131%u8.
 
 (** [itasca::code::OP_I64_OR]
-    Source: 'src/code.rs', lines 266:0-266:31 *)
+    Source: 'src/code.rs', lines 507:0-507:31 *)
 Definition code_op_i64_or : u8 := 132%u8.
 
 (** [itasca::code::OP_I64_XOR]
-    Source: 'src/code.rs', lines 267:0-267:32 *)
+    Source: 'src/code.rs', lines 508:0-508:32 *)
 Definition code_op_i64_xor : u8 := 133%u8.
 
 (** [itasca::code::OP_I64_SHL]
-    Source: 'src/code.rs', lines 268:0-268:32 *)
+    Source: 'src/code.rs', lines 509:0-509:32 *)
 Definition code_op_i64_shl : u8 := 134%u8.
 
 (** [itasca::code::OP_I64_SHR_S]
-    Source: 'src/code.rs', lines 269:0-269:34 *)
+    Source: 'src/code.rs', lines 510:0-510:34 *)
 Definition code_op_i64_shr_s : u8 := 135%u8.
 
 (** [itasca::code::OP_I64_SHR_U]
-    Source: 'src/code.rs', lines 270:0-270:34 *)
+    Source: 'src/code.rs', lines 511:0-511:34 *)
 Definition code_op_i64_shr_u : u8 := 136%u8.
 
 (** [itasca::code::OP_I64_ROTL]
-    Source: 'src/code.rs', lines 271:0-271:33 *)
+    Source: 'src/code.rs', lines 512:0-512:33 *)
 Definition code_op_i64_rotl : u8 := 137%u8.
 
 (** [itasca::code::OP_I64_ROTR]
-    Source: 'src/code.rs', lines 272:0-272:33 *)
+    Source: 'src/code.rs', lines 513:0-513:33 *)
 Definition code_op_i64_rotr : u8 := 138%u8.
 
 (** [itasca::code::OP_F32_ADD]
-    Source: 'src/code.rs', lines 274:0-274:32 *)
+    Source: 'src/code.rs', lines 515:0-515:32 *)
 Definition code_op_f32_add : u8 := 146%u8.
 
 (** [itasca::code::OP_F32_SUB]
-    Source: 'src/code.rs', lines 275:0-275:32 *)
+    Source: 'src/code.rs', lines 516:0-516:32 *)
 Definition code_op_f32_sub : u8 := 147%u8.
 
 (** [itasca::code::OP_F32_MUL]
-    Source: 'src/code.rs', lines 276:0-276:32 *)
+    Source: 'src/code.rs', lines 517:0-517:32 *)
 Definition code_op_f32_mul : u8 := 148%u8.
 
 (** [itasca::code::OP_F32_DIV]
-    Source: 'src/code.rs', lines 277:0-277:32 *)
+    Source: 'src/code.rs', lines 518:0-518:32 *)
 Definition code_op_f32_div : u8 := 149%u8.
 
 (** [itasca::code::OP_F32_MIN]
-    Source: 'src/code.rs', lines 278:0-278:32 *)
+    Source: 'src/code.rs', lines 519:0-519:32 *)
 Definition code_op_f32_min : u8 := 150%u8.
 
 (** [itasca::code::OP_F32_MAX]
-    Source: 'src/code.rs', lines 279:0-279:32 *)
+    Source: 'src/code.rs', lines 520:0-520:32 *)
 Definition code_op_f32_max : u8 := 151%u8.
 
 (** [itasca::code::OP_F32_COPYSIGN]
-    Source: 'src/code.rs', lines 280:0-280:37 *)
+    Source: 'src/code.rs', lines 521:0-521:37 *)
 Definition code_op_f32_copysign : u8 := 152%u8.
 
 (** [itasca::code::OP_F64_ADD]
-    Source: 'src/code.rs', lines 282:0-282:32 *)
+    Source: 'src/code.rs', lines 523:0-523:32 *)
 Definition code_op_f64_add : u8 := 160%u8.
 
 (** [itasca::code::OP_F64_SUB]
-    Source: 'src/code.rs', lines 283:0-283:32 *)
+    Source: 'src/code.rs', lines 524:0-524:32 *)
 Definition code_op_f64_sub : u8 := 161%u8.
 
 (** [itasca::code::OP_F64_MUL]
-    Source: 'src/code.rs', lines 284:0-284:32 *)
+    Source: 'src/code.rs', lines 525:0-525:32 *)
 Definition code_op_f64_mul : u8 := 162%u8.
 
 (** [itasca::code::OP_F64_DIV]
-    Source: 'src/code.rs', lines 285:0-285:32 *)
+    Source: 'src/code.rs', lines 526:0-526:32 *)
 Definition code_op_f64_div : u8 := 163%u8.
 
 (** [itasca::code::OP_F64_MIN]
-    Source: 'src/code.rs', lines 286:0-286:32 *)
+    Source: 'src/code.rs', lines 527:0-527:32 *)
 Definition code_op_f64_min : u8 := 164%u8.
 
 (** [itasca::code::OP_F64_MAX]
-    Source: 'src/code.rs', lines 287:0-287:32 *)
+    Source: 'src/code.rs', lines 528:0-528:32 *)
 Definition code_op_f64_max : u8 := 165%u8.
 
 (** [itasca::code::OP_F64_COPYSIGN]
-    Source: 'src/code.rs', lines 288:0-288:37 *)
+    Source: 'src/code.rs', lines 529:0-529:37 *)
 Definition code_op_f64_copysign : u8 := 166%u8.
 
 (** [itasca::code::OP_I32_CLZ]
-    Source: 'src/code.rs', lines 290:0-290:32 *)
+    Source: 'src/code.rs', lines 531:0-531:32 *)
 Definition code_op_i32_clz : u8 := 103%u8.
 
 (** [itasca::code::OP_I32_CTZ]
-    Source: 'src/code.rs', lines 291:0-291:32 *)
+    Source: 'src/code.rs', lines 532:0-532:32 *)
 Definition code_op_i32_ctz : u8 := 104%u8.
 
 (** [itasca::code::OP_I32_POPCNT]
-    Source: 'src/code.rs', lines 292:0-292:35 *)
+    Source: 'src/code.rs', lines 533:0-533:35 *)
 Definition code_op_i32_popcnt : u8 := 105%u8.
 
 (** [itasca::code::OP_I32_ADD]
-    Source: 'src/code.rs', lines 293:0-293:32 *)
+    Source: 'src/code.rs', lines 534:0-534:32 *)
 Definition code_op_i32_add : u8 := 106%u8.
 
 (** [itasca::code::OP_I64_CLZ]
-    Source: 'src/code.rs', lines 295:0-295:32 *)
+    Source: 'src/code.rs', lines 536:0-536:32 *)
 Definition code_op_i64_clz : u8 := 121%u8.
 
 (** [itasca::code::OP_I64_CTZ]
-    Source: 'src/code.rs', lines 296:0-296:32 *)
+    Source: 'src/code.rs', lines 537:0-537:32 *)
 Definition code_op_i64_ctz : u8 := 122%u8.
 
 (** [itasca::code::OP_I64_POPCNT]
-    Source: 'src/code.rs', lines 297:0-297:35 *)
+    Source: 'src/code.rs', lines 538:0-538:35 *)
 Definition code_op_i64_popcnt : u8 := 123%u8.
 
 (** [itasca::code::OP_F32_ABS]
-    Source: 'src/code.rs', lines 299:0-299:32 *)
+    Source: 'src/code.rs', lines 540:0-540:32 *)
 Definition code_op_f32_abs : u8 := 139%u8.
 
 (** [itasca::code::OP_F32_NEG]
-    Source: 'src/code.rs', lines 300:0-300:32 *)
+    Source: 'src/code.rs', lines 541:0-541:32 *)
 Definition code_op_f32_neg : u8 := 140%u8.
 
 (** [itasca::code::OP_F32_CEIL]
-    Source: 'src/code.rs', lines 301:0-301:33 *)
+    Source: 'src/code.rs', lines 542:0-542:33 *)
 Definition code_op_f32_ceil : u8 := 141%u8.
 
 (** [itasca::code::OP_F32_FLOOR]
-    Source: 'src/code.rs', lines 302:0-302:34 *)
+    Source: 'src/code.rs', lines 543:0-543:34 *)
 Definition code_op_f32_floor : u8 := 142%u8.
 
 (** [itasca::code::OP_F32_TRUNC]
-    Source: 'src/code.rs', lines 303:0-303:34 *)
+    Source: 'src/code.rs', lines 544:0-544:34 *)
 Definition code_op_f32_trunc : u8 := 143%u8.
 
 (** [itasca::code::OP_F32_NEAREST]
-    Source: 'src/code.rs', lines 304:0-304:36 *)
+    Source: 'src/code.rs', lines 545:0-545:36 *)
 Definition code_op_f32_nearest : u8 := 144%u8.
 
 (** [itasca::code::OP_F32_SQRT]
-    Source: 'src/code.rs', lines 305:0-305:33 *)
+    Source: 'src/code.rs', lines 546:0-546:33 *)
 Definition code_op_f32_sqrt : u8 := 145%u8.
 
 (** [itasca::code::OP_F64_ABS]
-    Source: 'src/code.rs', lines 307:0-307:32 *)
+    Source: 'src/code.rs', lines 548:0-548:32 *)
 Definition code_op_f64_abs : u8 := 153%u8.
 
 (** [itasca::code::OP_F64_NEG]
-    Source: 'src/code.rs', lines 308:0-308:32 *)
+    Source: 'src/code.rs', lines 549:0-549:32 *)
 Definition code_op_f64_neg : u8 := 154%u8.
 
 (** [itasca::code::OP_F64_CEIL]
-    Source: 'src/code.rs', lines 309:0-309:33 *)
+    Source: 'src/code.rs', lines 550:0-550:33 *)
 Definition code_op_f64_ceil : u8 := 155%u8.
 
 (** [itasca::code::OP_F64_FLOOR]
-    Source: 'src/code.rs', lines 310:0-310:34 *)
+    Source: 'src/code.rs', lines 551:0-551:34 *)
 Definition code_op_f64_floor : u8 := 156%u8.
 
 (** [itasca::code::OP_F64_TRUNC]
-    Source: 'src/code.rs', lines 311:0-311:34 *)
+    Source: 'src/code.rs', lines 552:0-552:34 *)
 Definition code_op_f64_trunc : u8 := 157%u8.
 
 (** [itasca::code::OP_F64_NEAREST]
-    Source: 'src/code.rs', lines 312:0-312:36 *)
+    Source: 'src/code.rs', lines 553:0-553:36 *)
 Definition code_op_f64_nearest : u8 := 158%u8.
 
 (** [itasca::code::OP_F64_SQRT]
-    Source: 'src/code.rs', lines 313:0-313:33 *)
+    Source: 'src/code.rs', lines 554:0-554:33 *)
 Definition code_op_f64_sqrt : u8 := 159%u8.
 
 (** [itasca::code::OP_I32_WRAP_I64]
-    Source: 'src/code.rs', lines 315:0-315:37 *)
+    Source: 'src/code.rs', lines 556:0-556:37 *)
 Definition code_op_i32_wrap_i64 : u8 := 167%u8.
 
 (** [itasca::code::OP_I32_TRUNC_F32_S]
-    Source: 'src/code.rs', lines 316:0-316:40 *)
+    Source: 'src/code.rs', lines 557:0-557:40 *)
 Definition code_op_i32_trunc_f32_s : u8 := 168%u8.
 
 (** [itasca::code::OP_I32_TRUNC_F32_U]
-    Source: 'src/code.rs', lines 317:0-317:40 *)
+    Source: 'src/code.rs', lines 558:0-558:40 *)
 Definition code_op_i32_trunc_f32_u : u8 := 169%u8.
 
 (** [itasca::code::OP_I32_TRUNC_F64_S]
-    Source: 'src/code.rs', lines 318:0-318:40 *)
+    Source: 'src/code.rs', lines 559:0-559:40 *)
 Definition code_op_i32_trunc_f64_s : u8 := 170%u8.
 
 (** [itasca::code::OP_I32_TRUNC_F64_U]
-    Source: 'src/code.rs', lines 319:0-319:40 *)
+    Source: 'src/code.rs', lines 560:0-560:40 *)
 Definition code_op_i32_trunc_f64_u : u8 := 171%u8.
 
 (** [itasca::code::OP_I64_EXTEND_I32_S]
-    Source: 'src/code.rs', lines 320:0-320:41 *)
+    Source: 'src/code.rs', lines 561:0-561:41 *)
 Definition code_op_i64_extend_i32_s : u8 := 172%u8.
 
 (** [itasca::code::OP_I64_EXTEND_I32_U]
-    Source: 'src/code.rs', lines 321:0-321:41 *)
+    Source: 'src/code.rs', lines 562:0-562:41 *)
 Definition code_op_i64_extend_i32_u : u8 := 173%u8.
 
 (** [itasca::code::OP_I64_TRUNC_F32_S]
-    Source: 'src/code.rs', lines 322:0-322:40 *)
+    Source: 'src/code.rs', lines 563:0-563:40 *)
 Definition code_op_i64_trunc_f32_s : u8 := 174%u8.
 
 (** [itasca::code::OP_I64_TRUNC_F32_U]
-    Source: 'src/code.rs', lines 323:0-323:40 *)
+    Source: 'src/code.rs', lines 564:0-564:40 *)
 Definition code_op_i64_trunc_f32_u : u8 := 175%u8.
 
 (** [itasca::code::OP_I64_TRUNC_F64_S]
-    Source: 'src/code.rs', lines 324:0-324:40 *)
+    Source: 'src/code.rs', lines 565:0-565:40 *)
 Definition code_op_i64_trunc_f64_s : u8 := 176%u8.
 
 (** [itasca::code::OP_I64_TRUNC_F64_U]
-    Source: 'src/code.rs', lines 325:0-325:40 *)
+    Source: 'src/code.rs', lines 566:0-566:40 *)
 Definition code_op_i64_trunc_f64_u : u8 := 177%u8.
 
 (** [itasca::code::OP_F32_CONVERT_I32_S]
-    Source: 'src/code.rs', lines 326:0-326:42 *)
+    Source: 'src/code.rs', lines 567:0-567:42 *)
 Definition code_op_f32_convert_i32_s : u8 := 178%u8.
 
 (** [itasca::code::OP_F32_CONVERT_I32_U]
-    Source: 'src/code.rs', lines 327:0-327:42 *)
+    Source: 'src/code.rs', lines 568:0-568:42 *)
 Definition code_op_f32_convert_i32_u : u8 := 179%u8.
 
 (** [itasca::code::OP_F32_CONVERT_I64_S]
-    Source: 'src/code.rs', lines 328:0-328:42 *)
+    Source: 'src/code.rs', lines 569:0-569:42 *)
 Definition code_op_f32_convert_i64_s : u8 := 180%u8.
 
 (** [itasca::code::OP_F32_CONVERT_I64_U]
-    Source: 'src/code.rs', lines 329:0-329:42 *)
+    Source: 'src/code.rs', lines 570:0-570:42 *)
 Definition code_op_f32_convert_i64_u : u8 := 181%u8.
 
 (** [itasca::code::OP_F32_DEMOTE_F64]
-    Source: 'src/code.rs', lines 330:0-330:39 *)
+    Source: 'src/code.rs', lines 571:0-571:39 *)
 Definition code_op_f32_demote_f64 : u8 := 182%u8.
 
 (** [itasca::code::OP_F64_CONVERT_I32_S]
-    Source: 'src/code.rs', lines 331:0-331:42 *)
+    Source: 'src/code.rs', lines 572:0-572:42 *)
 Definition code_op_f64_convert_i32_s : u8 := 183%u8.
 
 (** [itasca::code::OP_F64_CONVERT_I32_U]
-    Source: 'src/code.rs', lines 332:0-332:42 *)
+    Source: 'src/code.rs', lines 573:0-573:42 *)
 Definition code_op_f64_convert_i32_u : u8 := 184%u8.
 
 (** [itasca::code::OP_F64_CONVERT_I64_S]
-    Source: 'src/code.rs', lines 333:0-333:42 *)
+    Source: 'src/code.rs', lines 574:0-574:42 *)
 Definition code_op_f64_convert_i64_s : u8 := 185%u8.
 
 (** [itasca::code::OP_F64_CONVERT_I64_U]
-    Source: 'src/code.rs', lines 334:0-334:42 *)
+    Source: 'src/code.rs', lines 575:0-575:42 *)
 Definition code_op_f64_convert_i64_u : u8 := 186%u8.
 
 (** [itasca::code::OP_F64_PROMOTE_F32]
-    Source: 'src/code.rs', lines 335:0-335:40 *)
+    Source: 'src/code.rs', lines 576:0-576:40 *)
 Definition code_op_f64_promote_f32 : u8 := 187%u8.
 
 (** [itasca::code::OP_I32_REINTERPRET_F32]
-    Source: 'src/code.rs', lines 336:0-336:44 *)
+    Source: 'src/code.rs', lines 577:0-577:44 *)
 Definition code_op_i32_reinterpret_f32 : u8 := 188%u8.
 
 (** [itasca::code::OP_I64_REINTERPRET_F64]
-    Source: 'src/code.rs', lines 337:0-337:44 *)
+    Source: 'src/code.rs', lines 578:0-578:44 *)
 Definition code_op_i64_reinterpret_f64 : u8 := 189%u8.
 
 (** [itasca::code::OP_F32_REINTERPRET_I32]
-    Source: 'src/code.rs', lines 338:0-338:44 *)
+    Source: 'src/code.rs', lines 579:0-579:44 *)
 Definition code_op_f32_reinterpret_i32 : u8 := 190%u8.
 
 (** [itasca::code::OP_F64_REINTERPRET_I64]
-    Source: 'src/code.rs', lines 339:0-339:44 *)
+    Source: 'src/code.rs', lines 580:0-580:44 *)
 Definition code_op_f64_reinterpret_i64 : u8 := 191%u8.
 
 (** [itasca::reader::read_byte]:
-    Source: 'src/reader.rs', lines 17:0-23:1 *)
+    Source: 'src/reader.rs', lines 16:0-22:1 *)
 Definition reader_read_byte
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (u8 * usize) error_OpError_t)
@@ -817,7 +1204,7 @@ Definition reader_read_byte
 .
 
 (** [itasca::code::read_block_type]:
-    Source: 'src/code.rs', lines 341:0-359:1 *)
+    Source: 'src/code.rs', lines 582:0-600:1 *)
 Definition code_read_block_type
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (code_BlockType_t * usize) error_OpError_t)
@@ -859,56 +1246,52 @@ Definition code_read_block_type
 .
 
 (** [itasca::code::cur_base]:
-    Source: 'src/code.rs', lines 363:0-369:1 *)
+    Source: 'src/code.rs', lines 604:0-610:1 *)
 Definition code_cur_base (st : code_OpIterState_t) : result usize :=
-  let n := alloc_vec_Vec_len st.(code_OpIterState_ctrls) in
+  n <- code_CtrlsStack_len st.(code_OpIterState_ctrls);
   if n s= 0%usize
   then Ok 0%usize
   else (
     i <- usize_sub n 1%usize;
-    c <-
-      alloc_vec_Vec_index (core_slice_index_SliceIndexUsizeSliceInst
-        code_Ctrl_t) st.(code_OpIterState_ctrls) i;
+    c <- code_CtrlsStack_get st.(code_OpIterState_ctrls) i;
     Ok c.(code_Ctrl_value_stack_base))
 .
 
 (** [itasca::code::cur_polymorphic]:
-    Source: 'src/code.rs', lines 371:0-377:1 *)
+    Source: 'src/code.rs', lines 612:0-618:1 *)
 Definition code_cur_polymorphic (st : code_OpIterState_t) : result bool :=
-  let n := alloc_vec_Vec_len st.(code_OpIterState_ctrls) in
+  n <- code_CtrlsStack_len st.(code_OpIterState_ctrls);
   if n s= 0%usize
   then Ok false
   else (
     i <- usize_sub n 1%usize;
-    c <-
-      alloc_vec_Vec_index (core_slice_index_SliceIndexUsizeSliceInst
-        code_Ctrl_t) st.(code_OpIterState_ctrls) i;
+    c <- code_CtrlsStack_get st.(code_OpIterState_ctrls) i;
     Ok c.(code_Ctrl_polymorphic_base))
 .
 
 (** [itasca::code::push_val]:
-    Source: 'src/code.rs', lines 379:0-381:1 *)
+    Source: 'src/code.rs', lines 620:0-622:1 *)
 Definition code_push_val
   (st : code_OpIterState_t) (t : code_StackType_t) :
   result code_OpIterState_t
   :=
-  v <- alloc_vec_Vec_push st.(code_OpIterState_vals) t;
+  vs <- code_ValsStack_push st.(code_OpIterState_vals) t;
   Ok
     {|
-      code_OpIterState_vals := v;
+      code_OpIterState_vals := vs;
       code_OpIterState_ctrls := st.(code_OpIterState_ctrls);
       code_OpIterState_pos := st.(code_OpIterState_pos)
     |}
 .
 
 (** [itasca::code::pop_stack_type]:
-    Source: 'src/code.rs', lines 385:0-396:1 *)
+    Source: 'src/code.rs', lines 626:0-637:1 *)
 Definition code_pop_stack_type
   (st : code_OpIterState_t) :
   result ((core_result_Result_t code_StackType_t error_OpError_t) *
     code_OpIterState_t)
   :=
-  let i := alloc_vec_Vec_len st.(code_OpIterState_vals) in
+  i <- code_ValsStack_len st.(code_OpIterState_vals);
   i1 <- code_cur_base st;
   if i s= i1
   then (
@@ -917,20 +1300,20 @@ Definition code_pop_stack_type
     then Ok (Core_result_Result_Ok Code_StackType_Bot, st)
     else Ok (Core_result_Result_Err Error_OpError_EmptyStack, st))
   else (
-    p <- alloc_vec_Vec_pop alloc_alloc_Global st.(code_OpIterState_vals);
-    let (o, v) := p in
+    p <- code_ValsStack_pop st.(code_OpIterState_vals);
+    let (o, vs) := p in
     match o with
     | None =>
       Ok (Core_result_Result_Err Error_OpError_EmptyStack,
         {|
-          code_OpIterState_vals := v;
+          code_OpIterState_vals := vs;
           code_OpIterState_ctrls := st.(code_OpIterState_ctrls);
           code_OpIterState_pos := st.(code_OpIterState_pos)
         |})
     | Some t =>
       Ok (Core_result_Result_Ok t,
         {|
-          code_OpIterState_vals := v;
+          code_OpIterState_vals := vs;
           code_OpIterState_ctrls := st.(code_OpIterState_ctrls);
           code_OpIterState_pos := st.(code_OpIterState_pos)
         |})
@@ -938,7 +1321,7 @@ Definition code_pop_stack_type
 .
 
 (** [itasca::code::pop_with_type]:
-    Source: 'src/code.rs', lines 400:0-412:1 *)
+    Source: 'src/code.rs', lines 641:0-653:1 *)
 Definition code_pop_with_type
   (st : code_OpIterState_t) (expected : types_ValueType_t) :
   result ((core_result_Result_t code_StackType_t error_OpError_t) *
@@ -967,7 +1350,7 @@ Definition code_pop_with_type
 .
 
 (** [itasca::code::pop_types]: loop 0:
-    Source: 'src/code.rs', lines 418:4-424:5 *)
+    Source: 'src/code.rs', lines 659:4-665:5 *)
 Definition code_pop_types_loop
   (st : code_OpIterState_t) (types : slice types_ValueType_t) (i : usize) :
   result ((core_result_Result_t unit error_OpError_t) * code_OpIterState_t)
@@ -996,7 +1379,7 @@ Definition code_pop_types_loop
 .
 
 (** [itasca::code::pop_types]:
-    Source: 'src/code.rs', lines 416:0-425:1 *)
+    Source: 'src/code.rs', lines 657:0-666:1 *)
 Definition code_pop_types
   (st : code_OpIterState_t) (types : slice types_ValueType_t) :
   result ((core_result_Result_t unit error_OpError_t) * code_OpIterState_t)
@@ -1005,7 +1388,7 @@ Definition code_pop_types
 .
 
 (** [itasca::code::push_types]: loop 0:
-    Source: 'src/code.rs', lines 429:4-435:5 *)
+    Source: 'src/code.rs', lines 670:4-676:5 *)
 Definition code_push_types_loop
   (st : code_OpIterState_t) (types : slice types_ValueType_t) (i : usize) :
   result code_OpIterState_t
@@ -1024,7 +1407,7 @@ Definition code_push_types_loop
 .
 
 (** [itasca::code::push_types]:
-    Source: 'src/code.rs', lines 427:0-436:1 *)
+    Source: 'src/code.rs', lines 668:0-677:1 *)
 Definition code_push_types
   (st : code_OpIterState_t) (types : slice types_ValueType_t) :
   result code_OpIterState_t
@@ -1032,19 +1415,45 @@ Definition code_push_types
   code_push_types_loop st types 0%usize
 .
 
-(** [itasca::code::block_results]:
-    Source: 'src/code.rs', lines 439:0-448:1 *)
-Definition code_block_results
-  (bt : code_BlockType_t) : result (alloc_vec_Vec types_ValueType_t) :=
+(** [itasca::code::pop_block_results]:
+    Source: 'src/code.rs', lines 683:0-691:1 *)
+Definition code_pop_block_results
+  (st : code_OpIterState_t) (bt : code_BlockType_t) :
+  result ((core_result_Result_t unit error_OpError_t) * code_OpIterState_t)
+  :=
   match bt with
-  | Code_BlockType_Empty => Ok (alloc_vec_Vec_new types_ValueType_t)
+  | Code_BlockType_Empty => Ok (Core_result_Result_Ok tt, st)
   | Code_BlockType_Value vt =>
-    alloc_vec_Vec_push (alloc_vec_Vec_new types_ValueType_t) vt
+    p <- code_pop_with_type st vt;
+    let (r, st1) := p in
+    cf <-
+      core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
+    match cf with
+    | Core_ops_control_flow_ControlFlow_Continue _ =>
+      Ok (Core_result_Result_Ok tt, st1)
+    | Core_ops_control_flow_ControlFlow_Break residual =>
+      r1 <-
+        core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+          unit (core_convert_From_Blanket error_OpError_t) residual;
+      Ok (r1, st1)
+    end
+  end
+.
+
+(** [itasca::code::push_block_results]:
+    Source: 'src/code.rs', lines 693:0-698:1 *)
+Definition code_push_block_results
+  (st : code_OpIterState_t) (bt : code_BlockType_t) :
+  result code_OpIterState_t
+  :=
+  match bt with
+  | Code_BlockType_Empty => Ok st
+  | Code_BlockType_Value vt => code_push_val st (Code_StackType_Val vt)
   end
 .
 
 (** [itasca::code::branch_target_bt]:
-    Source: 'src/code.rs', lines 457:0-462:1 *)
+    Source: 'src/code.rs', lines 707:0-712:1 *)
 Definition code_branch_target_bt (c : code_Ctrl_t) : result code_BlockType_t :=
   match c.(code_Ctrl_kind) with
   | Code_LabelKind_Body => Ok c.(code_Ctrl_block_type)
@@ -1055,22 +1464,15 @@ Definition code_branch_target_bt (c : code_Ctrl_t) : result code_BlockType_t :=
   end
 .
 
-(** [itasca::code::branch_target_types]:
-    Source: 'src/code.rs', lines 464:0-466:1 *)
-Definition code_branch_target_types
-  (c : code_Ctrl_t) : result (alloc_vec_Vec types_ValueType_t) :=
-  bt <- code_branch_target_bt c; code_block_results bt
-.
-
 (** [itasca::code::push_ctrl]:
-    Source: 'src/code.rs', lines 468:0-476:1 *)
+    Source: 'src/code.rs', lines 714:0-722:1 *)
 Definition code_push_ctrl
   (st : code_OpIterState_t) (kind : code_LabelKind_t) (bt : code_BlockType_t) :
   result code_OpIterState_t
   :=
-  let base := alloc_vec_Vec_len st.(code_OpIterState_vals) in
-  v <-
-    alloc_vec_Vec_push st.(code_OpIterState_ctrls)
+  base <- code_ValsStack_len st.(code_OpIterState_vals);
+  cs <-
+    code_CtrlsStack_push st.(code_OpIterState_ctrls)
       {|
         code_Ctrl_kind := kind;
         code_Ctrl_block_type := bt;
@@ -1080,31 +1482,30 @@ Definition code_push_ctrl
   Ok
     {|
       code_OpIterState_vals := st.(code_OpIterState_vals);
-      code_OpIterState_ctrls := v;
+      code_OpIterState_ctrls := cs;
       code_OpIterState_pos := st.(code_OpIterState_pos)
     |}
 .
 
 (** [itasca::code::mark_unreachable]: loop 0:
-    Source: 'src/code.rs', lines 481:4-486:5 *)
+    Source: 'src/code.rs', lines 727:4-732:5 *)
 Definition code_mark_unreachable_loop
   (st : code_OpIterState_t) (base : usize) :
-  result ((alloc_vec_Vec code_StackType_t) * (alloc_vec_Vec code_Ctrl_t) *
-    usize)
+  result (code_ValsStack_t * code_CtrlsStack_t * usize)
   :=
   loop
     (fun (st1 : code_OpIterState_t) =>
-      let i := alloc_vec_Vec_len st1.(code_OpIterState_vals) in
+      i <- code_ValsStack_len st1.(code_OpIterState_vals);
       if i s<= base
       then
         Ok (Done (st1.(code_OpIterState_vals), st1.(code_OpIterState_ctrls),
           st1.(code_OpIterState_pos)))
       else (
-        p <- alloc_vec_Vec_pop alloc_alloc_Global st1.(code_OpIterState_vals);
-        let (_, v) := p in
+        p <- code_ValsStack_pop st1.(code_OpIterState_vals);
+        let (_, vs) := p in
         Ok (Cont
           {|
-            code_OpIterState_vals := v;
+            code_OpIterState_vals := vs;
             code_OpIterState_ctrls := st1.(code_OpIterState_ctrls);
             code_OpIterState_pos := st1.(code_OpIterState_pos)
           |})))
@@ -1112,70 +1513,67 @@ Definition code_mark_unreachable_loop
 .
 
 (** [itasca::code::mark_unreachable]:
-    Source: 'src/code.rs', lines 479:0-492:1 *)
+    Source: 'src/code.rs', lines 725:0-740:1 *)
 Definition code_mark_unreachable
   (st : code_OpIterState_t) : result code_OpIterState_t :=
   base <- code_cur_base st;
   t <- code_mark_unreachable_loop st base;
-  let '(v, v1, i) := t in
-  let n := alloc_vec_Vec_len v1 in
+  let '(vs, cs, i) := t in
+  n <- code_CtrlsStack_len cs;
   if n s= 0%usize
   then
     Ok
       {|
-        code_OpIterState_vals := v;
-        code_OpIterState_ctrls := v1;
+        code_OpIterState_vals := vs;
+        code_OpIterState_ctrls := cs;
         code_OpIterState_pos := i
       |}
   else (
     i1 <- usize_sub n 1%usize;
-    p <-
-      alloc_vec_Vec_index_mut (core_slice_index_SliceIndexUsizeSliceInst
-        code_Ctrl_t) v1 i1;
-    let (c, index_mut_back) := p in
-    let v2 :=
-      index_mut_back
+    top <- code_CtrlsStack_get cs i1;
+    cs1 <-
+      code_CtrlsStack_set cs i1
         {|
-          code_Ctrl_kind := c.(code_Ctrl_kind);
-          code_Ctrl_block_type := c.(code_Ctrl_block_type);
-          code_Ctrl_value_stack_base := c.(code_Ctrl_value_stack_base);
+          code_Ctrl_kind := top.(code_Ctrl_kind);
+          code_Ctrl_block_type := top.(code_Ctrl_block_type);
+          code_Ctrl_value_stack_base := top.(code_Ctrl_value_stack_base);
           code_Ctrl_polymorphic_base := true
-        |}
-    in
+        |};
     Ok
       {|
-        code_OpIterState_vals := v;
-        code_OpIterState_ctrls := v2;
+        code_OpIterState_vals := vs;
+        code_OpIterState_ctrls := cs1;
         code_OpIterState_pos := i
       |})
 .
 
 (** [itasca::code::start_function]:
-    Source: 'src/code.rs', lines 496:0-508:1 *)
+    Source: 'src/code.rs', lines 744:0-756:1 *)
 Definition code_start_function
-  (results : slice types_ValueType_t) : result code_OpIterState_t :=
-  let i := slice_len results in
+  (results : option types_ValueType_t) : result code_OpIterState_t :=
+  vs <- code_ValsStack_new;
+  cs <- code_CtrlsStack_new;
   bt <-
-    if i s= 1%usize
-    then (
-      vt <- slice_index_usize results 0%usize; Ok (Code_BlockType_Value vt))
-    else Ok Code_BlockType_Empty;
+    match results with
+    | None => Ok Code_BlockType_Empty
+    | Some vt => Ok (Code_BlockType_Value vt)
+    end;
   code_push_ctrl
     {|
-      code_OpIterState_vals := (alloc_vec_Vec_new code_StackType_t);
-      code_OpIterState_ctrls := (alloc_vec_Vec_new code_Ctrl_t);
+      code_OpIterState_vals := vs;
+      code_OpIterState_ctrls := cs;
       code_OpIterState_pos := 0%usize
     |} Code_LabelKind_Body bt
 .
 
 (** [itasca::code::control_stack_empty]:
-    Source: 'src/code.rs', lines 510:0-512:1 *)
+    Source: 'src/code.rs', lines 758:0-760:1 *)
 Definition code_control_stack_empty (st : code_OpIterState_t) : result bool :=
-  alloc_vec_Vec_is_empty alloc_alloc_Global st.(code_OpIterState_ctrls)
+  i <- code_CtrlsStack_len st.(code_OpIterState_ctrls); Ok (i s= 0%usize)
 .
 
 (** [itasca::code::read_op]:
-    Source: 'src/code.rs', lines 515:0-519:1 *)
+    Source: 'src/code.rs', lines 763:0-767:1 *)
 Definition code_read_op
   (st : code_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t u8 error_OpError_t) * code_OpIterState_t)
@@ -1201,7 +1599,7 @@ Definition code_read_op
 .
 
 (** [itasca::code::read_unreachable]:
-    Source: 'src/code.rs', lines 523:0-526:1 *)
+    Source: 'src/code.rs', lines 771:0-774:1 *)
 Definition code_read_unreachable
   (st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_OpError_t) * code_OpIterState_t)
@@ -1210,7 +1608,7 @@ Definition code_read_unreachable
 .
 
 (** [itasca::reader::read_sn_leb]: loop 0:
-    Source: 'src/reader.rs', lines 79:4-102:5 *)
+    Source: 'src/reader.rs', lines 66:4-89:5 *)
 Definition reader_read_sn_leb_loop
   (data : slice u8) (last : u32) (lo : i128) (hi : i128) (acc : i128)
   (mult : i128) (p : usize) (i : u32) :
@@ -1251,7 +1649,7 @@ Definition reader_read_sn_leb_loop
 .
 
 (** [itasca::reader::read_sn_leb]:
-    Source: 'src/reader.rs', lines 68:0-103:1 *)
+    Source: 'src/reader.rs', lines 61:0-90:1 *)
 Definition reader_read_sn_leb
   (data : slice u8) (pos : usize) (last : u32) (lo : i128) (hi : i128) :
   result (core_result_Result_t (i128 * usize) error_OpError_t)
@@ -1260,7 +1658,7 @@ Definition reader_read_sn_leb
 .
 
 (** [itasca::reader::read_s32_leb]:
-    Source: 'src/reader.rs', lines 107:0-110:1 *)
+    Source: 'src/reader.rs', lines 94:0-97:1 *)
 Definition reader_read_s32_leb
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (i32 * usize) error_OpError_t)
@@ -1280,7 +1678,7 @@ Definition reader_read_s32_leb
 .
 
 (** [itasca::code::read_i32_const]:
-    Source: 'src/code.rs', lines 528:0-533:1 *)
+    Source: 'src/code.rs', lines 776:0-781:1 *)
 Definition code_read_i32_const
   (st : code_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t i32 error_OpError_t) * code_OpIterState_t)
@@ -1308,7 +1706,7 @@ Definition code_read_i32_const
 .
 
 (** [itasca::reader::read_s64_leb]:
-    Source: 'src/reader.rs', lines 113:0-122:1 *)
+    Source: 'src/reader.rs', lines 100:0-103:1 *)
 Definition reader_read_s64_leb
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (i64 * usize) error_OpError_t)
@@ -1330,7 +1728,7 @@ Definition reader_read_s64_leb
 .
 
 (** [itasca::code::read_i64_const]:
-    Source: 'src/code.rs', lines 535:0-540:1 *)
+    Source: 'src/code.rs', lines 783:0-788:1 *)
 Definition code_read_i64_const
   (st : code_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t i64 error_OpError_t) * code_OpIterState_t)
@@ -1358,7 +1756,7 @@ Definition code_read_i64_const
 .
 
 (** [itasca::reader::read_fn_bits]: loop 0:
-    Source: 'src/reader.rs', lines 135:4-153:5 *)
+    Source: 'src/reader.rs', lines 113:4-131:5 *)
 Definition reader_read_fn_bits_loop
   (data : slice u8) (n : u32) (acc : u64) (mult : u64) (p : usize) (i : u32) :
   result (core_result_Result_t (u64 * usize) error_OpError_t)
@@ -1386,7 +1784,7 @@ Definition reader_read_fn_bits_loop
 .
 
 (** [itasca::reader::read_fn_bits]:
-    Source: 'src/reader.rs', lines 130:0-154:1 *)
+    Source: 'src/reader.rs', lines 108:0-132:1 *)
 Definition reader_read_fn_bits
   (data : slice u8) (pos : usize) (n : u32) :
   result (core_result_Result_t (u64 * usize) error_OpError_t)
@@ -1395,7 +1793,7 @@ Definition reader_read_fn_bits
 .
 
 (** [itasca::reader::read_f32_bits]:
-    Source: 'src/reader.rs', lines 159:0-162:1 *)
+    Source: 'src/reader.rs', lines 137:0-140:1 *)
 Definition reader_read_f32_bits
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (u32 * usize) error_OpError_t)
@@ -1415,7 +1813,7 @@ Definition reader_read_f32_bits
 .
 
 (** [itasca::code::read_f32_const]:
-    Source: 'src/code.rs', lines 543:0-548:1 *)
+    Source: 'src/code.rs', lines 791:0-796:1 *)
 Definition code_read_f32_const
   (st : code_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t u32 error_OpError_t) * code_OpIterState_t)
@@ -1443,7 +1841,7 @@ Definition code_read_f32_const
 .
 
 (** [itasca::reader::read_f64_bits]:
-    Source: 'src/reader.rs', lines 164:0-166:1 *)
+    Source: 'src/reader.rs', lines 143:0-145:1 *)
 Definition reader_read_f64_bits
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (u64 * usize) error_OpError_t)
@@ -1452,7 +1850,7 @@ Definition reader_read_f64_bits
 .
 
 (** [itasca::code::read_f64_const]:
-    Source: 'src/code.rs', lines 551:0-556:1 *)
+    Source: 'src/code.rs', lines 799:0-804:1 *)
 Definition code_read_f64_const
   (st : code_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t u64 error_OpError_t) * code_OpIterState_t)
@@ -1480,7 +1878,7 @@ Definition code_read_f64_const
 .
 
 (** [itasca::code::read_binary]:
-    Source: 'src/code.rs', lines 562:0-567:1 *)
+    Source: 'src/code.rs', lines 810:0-815:1 *)
 Definition code_read_binary
   (st : code_OpIterState_t) (ty : types_ValueType_t)
   (result1 : types_ValueType_t) :
@@ -1515,7 +1913,7 @@ Definition code_read_binary
 .
 
 (** [itasca::code::read_conversion]:
-    Source: 'src/code.rs', lines 573:0-577:1 *)
+    Source: 'src/code.rs', lines 821:0-825:1 *)
 Definition code_read_conversion
   (st : code_OpIterState_t) (from : types_ValueType_t) (to : types_ValueType_t)
   :
@@ -1538,7 +1936,7 @@ Definition code_read_conversion
 .
 
 (** [itasca::code::read_drop]:
-    Source: 'src/code.rs', lines 579:0-581:1 *)
+    Source: 'src/code.rs', lines 827:0-829:1 *)
 Definition code_read_drop
   (st : code_OpIterState_t) :
   result ((core_result_Result_t code_StackType_t error_OpError_t) *
@@ -1548,7 +1946,7 @@ Definition code_read_drop
 .
 
 (** [itasca::code::join_stack_type]:
-    Source: 'src/code.rs', lines 586:0-600:1 *)
+    Source: 'src/code.rs', lines 834:0-848:1 *)
 Definition code_join_stack_type
   (a : code_StackType_t) (b : code_StackType_t) :
   result (core_result_Result_t code_StackType_t error_OpError_t)
@@ -1568,7 +1966,7 @@ Definition code_join_stack_type
 .
 
 (** [itasca::code::read_select]:
-    Source: 'src/code.rs', lines 610:0-619:1 *)
+    Source: 'src/code.rs', lines 858:0-867:1 *)
 Definition code_read_select
   (st : code_OpIterState_t) :
   result ((core_result_Result_t code_StackType_t error_OpError_t) *
@@ -1630,24 +2028,21 @@ Definition code_read_select
 .
 
 (** [itasca::code::local_type]:
-    Source: 'src/code.rs', lines 622:0-628:1 *)
+    Source: 'src/code.rs', lines 870:0-876:1 *)
 Definition code_local_type
   (ctx : code_Context_t) (idx : u32) :
   result (core_result_Result_t types_ValueType_t error_OpError_t)
   :=
   i <- scalar_cast U32 Usize idx;
-  let i1 := alloc_vec_Vec_len ctx.(code_Context_locals) in
-  if i s>= i1
-  then Ok (Core_result_Result_Err Error_OpError_UnknownLocal)
-  else (
-    vt <-
-      alloc_vec_Vec_index (core_slice_index_SliceIndexUsizeSliceInst
-        types_ValueType_t) ctx.(code_Context_locals) i;
-    Ok (Core_result_Result_Ok vt))
+  o <- code_LocalsStack_get_checked ctx.(code_Context_locals) i;
+  match o with
+  | None => Ok (Core_result_Result_Err Error_OpError_UnknownLocal)
+  | Some vt => Ok (Core_result_Result_Ok vt)
+  end
 .
 
 (** [itasca::reader::read_u32_leb]: loop 0:
-    Source: 'src/reader.rs', lines 36:4-55:5 *)
+    Source: 'src/reader.rs', lines 31:4-50:5 *)
 Definition reader_read_u32_leb_loop
   (data : slice u8) (acc : u32) (mult : u32) (p : usize) (i : u32) :
   result (core_result_Result_t (u32 * usize) error_OpError_t)
@@ -1695,7 +2090,7 @@ Definition reader_read_u32_leb_loop
 .
 
 (** [itasca::reader::read_u32_leb]:
-    Source: 'src/reader.rs', lines 31:0-56:1 *)
+    Source: 'src/reader.rs', lines 26:0-51:1 *)
 Definition reader_read_u32_leb
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (u32 * usize) error_OpError_t)
@@ -1704,7 +2099,7 @@ Definition reader_read_u32_leb
 .
 
 (** [itasca::code::take_local]:
-    Source: 'src/code.rs', lines 633:0-638:1 *)
+    Source: 'src/code.rs', lines 881:0-886:1 *)
 Definition code_take_local
   (st : code_OpIterState_t) (data : slice u8) (ctx : code_Context_t) :
   result ((core_result_Result_t (u32 * types_ValueType_t) error_OpError_t) *
@@ -1749,7 +2144,7 @@ Definition code_take_local
 .
 
 (** [itasca::code::read_local_get]:
-    Source: 'src/code.rs', lines 641:0-645:1 *)
+    Source: 'src/code.rs', lines 889:0-893:1 *)
 Definition code_read_local_get
   (st : code_OpIterState_t) (data : slice u8) (ctx : code_Context_t) :
   result ((core_result_Result_t u32 error_OpError_t) * code_OpIterState_t)
@@ -1772,7 +2167,7 @@ Definition code_read_local_get
 .
 
 (** [itasca::code::read_local_set]:
-    Source: 'src/code.rs', lines 648:0-652:1 *)
+    Source: 'src/code.rs', lines 896:0-900:1 *)
 Definition code_read_local_set
   (st : code_OpIterState_t) (data : slice u8) (ctx : code_Context_t) :
   result ((core_result_Result_t u32 error_OpError_t) * code_OpIterState_t)
@@ -1806,7 +2201,7 @@ Definition code_read_local_set
 .
 
 (** [itasca::code::read_local_tee]:
-    Source: 'src/code.rs', lines 655:0-660:1 *)
+    Source: 'src/code.rs', lines 903:0-908:1 *)
 Definition code_read_local_tee
   (st : code_OpIterState_t) (data : slice u8) (ctx : code_Context_t) :
   result ((core_result_Result_t u32 error_OpError_t) * code_OpIterState_t)
@@ -1841,7 +2236,7 @@ Definition code_read_local_tee
 .
 
 (** [itasca::code::global_type]:
-    Source: 'src/code.rs', lines 663:0-669:1 *)
+    Source: 'src/code.rs', lines 911:0-917:1 *)
 Definition code_global_type
   (env : module_Env_t) (idx : u32) :
   result (core_result_Result_t types_GlobalType_t error_OpError_t)
@@ -1858,7 +2253,7 @@ Definition code_global_type
 .
 
 (** [itasca::code::take_global]:
-    Source: 'src/code.rs', lines 674:0-679:1 *)
+    Source: 'src/code.rs', lines 922:0-927:1 *)
 Definition code_take_global
   (st : code_OpIterState_t) (data : slice u8) (env : module_Env_t) :
   result ((core_result_Result_t (u32 * types_GlobalType_t) error_OpError_t) *
@@ -1903,7 +2298,7 @@ Definition code_take_global
 .
 
 (** [itasca::code::read_global_get]:
-    Source: 'src/code.rs', lines 682:0-686:1 *)
+    Source: 'src/code.rs', lines 930:0-934:1 *)
 Definition code_read_global_get
   (st : code_OpIterState_t) (data : slice u8) (env : module_Env_t) :
   result ((core_result_Result_t u32 error_OpError_t) * code_OpIterState_t)
@@ -1926,7 +2321,7 @@ Definition code_read_global_get
 .
 
 (** [itasca::code::read_global_set]:
-    Source: 'src/code.rs', lines 691:0-699:1 *)
+    Source: 'src/code.rs', lines 937:0-945:1 *)
 Definition code_read_global_set
   (st : code_OpIterState_t) (data : slice u8) (env : module_Env_t) :
   result ((core_result_Result_t u32 error_OpError_t) * code_OpIterState_t)
@@ -1966,7 +2361,7 @@ Definition code_read_global_set
 .
 
 (** [itasca::code::read_reserved_zero]:
-    Source: 'src/code.rs', lines 705:0-712:1 *)
+    Source: 'src/code.rs', lines 951:0-958:1 *)
 Definition code_read_reserved_zero
   (st : code_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t unit error_OpError_t) * code_OpIterState_t)
@@ -1995,7 +2390,7 @@ Definition code_read_reserved_zero
 .
 
 (** [itasca::code::require_memory]:
-    Source: 'src/code.rs', lines 1044:0-1049:1 *)
+    Source: 'src/code.rs', lines 1289:0-1294:1 *)
 Definition code_require_memory
   (env : module_Env_t) : result (core_result_Result_t unit error_OpError_t) :=
   b <- alloc_vec_Vec_is_empty alloc_alloc_Global env.(module_Env_mem_types);
@@ -2005,7 +2400,7 @@ Definition code_require_memory
 .
 
 (** [itasca::code::read_memory_size]:
-    Source: 'src/code.rs', lines 715:0-720:1 *)
+    Source: 'src/code.rs', lines 961:0-966:1 *)
 Definition code_read_memory_size
   (st : code_OpIterState_t) (data : slice u8) (env : module_Env_t) :
   result ((core_result_Result_t unit error_OpError_t) * code_OpIterState_t)
@@ -2038,7 +2433,7 @@ Definition code_read_memory_size
 .
 
 (** [itasca::code::read_memory_grow]:
-    Source: 'src/code.rs', lines 723:0-729:1 *)
+    Source: 'src/code.rs', lines 969:0-975:1 *)
 Definition code_read_memory_grow
   (st : code_OpIterState_t) (data : slice u8) (env : module_Env_t) :
   result ((core_result_Result_t unit error_OpError_t) * code_OpIterState_t)
@@ -2084,7 +2479,7 @@ Definition code_read_memory_grow
 .
 
 (** [itasca::code::read_block]:
-    Source: 'src/code.rs', lines 731:0-736:1 *)
+    Source: 'src/code.rs', lines 977:0-982:1 *)
 Definition code_read_block
   (st : code_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t code_BlockType_t error_OpError_t) *
@@ -2113,7 +2508,7 @@ Definition code_read_block
 .
 
 (** [itasca::code::read_loop]:
-    Source: 'src/code.rs', lines 738:0-743:1 *)
+    Source: 'src/code.rs', lines 984:0-989:1 *)
 Definition code_read_loop
   (st : code_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t code_BlockType_t error_OpError_t) *
@@ -2142,7 +2537,7 @@ Definition code_read_loop
 .
 
 (** [itasca::code::is_then]:
-    Source: 'src/code.rs', lines 750:0-758:1 *)
+    Source: 'src/code.rs', lines 993:0-1001:1 *)
 Definition code_is_then (kind : code_LabelKind_t) : result bool :=
   match kind with
   | Code_LabelKind_Body => Ok false
@@ -2154,7 +2549,7 @@ Definition code_is_then (kind : code_LabelKind_t) : result bool :=
 .
 
 (** [itasca::code::read_if]:
-    Source: 'src/code.rs', lines 762:0-768:1 *)
+    Source: 'src/code.rs', lines 1005:0-1011:1 *)
 Definition code_read_if
   (st : code_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t code_BlockType_t error_OpError_t) *
@@ -2196,66 +2591,45 @@ Definition code_read_if
 .
 
 (** [itasca::code::read_else]:
-    Source: 'src/code.rs', lines 774:0-791:1 *)
+    Source: 'src/code.rs', lines 1017:0-1035:1 *)
 Definition code_read_else
   (st : code_OpIterState_t) :
   result ((core_result_Result_t code_BlockType_t error_OpError_t) *
     code_OpIterState_t)
   :=
-  let n := alloc_vec_Vec_len st.(code_OpIterState_ctrls) in
+  n <- code_CtrlsStack_len st.(code_OpIterState_ctrls);
   if n s= 0%usize
   then Ok (Core_result_Result_Err Error_OpError_StackMismatch, st)
   else (
     i <- usize_sub n 1%usize;
-    frame <-
-      alloc_vec_Vec_index (core_slice_index_SliceIndexUsizeSliceInst
-        code_Ctrl_t) st.(code_OpIterState_ctrls) i;
+    frame <- code_CtrlsStack_get st.(code_OpIterState_ctrls) i;
     b <- code_is_then frame.(code_Ctrl_kind);
     if b
     then (
-      results <- code_block_results frame.(code_Ctrl_block_type);
-      let s := alloc_vec_Vec_deref results in
-      p <- code_pop_types st s;
+      p <- code_pop_block_results st frame.(code_Ctrl_block_type);
       let (r, st1) := p in
       cf <-
         core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
           r;
       match cf with
       | Core_ops_control_flow_ControlFlow_Continue _ =>
-        let i1 := alloc_vec_Vec_len st1.(code_OpIterState_vals) in
+        i1 <- code_ValsStack_len st1.(code_OpIterState_vals);
         if i1 s<> frame.(code_Ctrl_value_stack_base)
         then Ok (Core_result_Result_Err Error_OpError_StackMismatch, st1)
         else (
-          p1 <-
-            alloc_vec_Vec_index_mut (core_slice_index_SliceIndexUsizeSliceInst
-              code_Ctrl_t) st1.(code_OpIterState_ctrls) i;
-          let (c, index_mut_back) := p1 in
-          let v :=
-            index_mut_back
+          cs <-
+            code_CtrlsStack_set st1.(code_OpIterState_ctrls) i
               {|
                 code_Ctrl_kind := Code_LabelKind_Else;
-                code_Ctrl_block_type := c.(code_Ctrl_block_type);
-                code_Ctrl_value_stack_base := c.(code_Ctrl_value_stack_base);
-                code_Ctrl_polymorphic_base := c.(code_Ctrl_polymorphic_base)
-              |}
-          in
-          p2 <-
-            alloc_vec_Vec_index_mut (core_slice_index_SliceIndexUsizeSliceInst
-              code_Ctrl_t) v i;
-          let (c1, index_mut_back1) := p2 in
-          let v1 :=
-            index_mut_back1
-              {|
-                code_Ctrl_kind := c1.(code_Ctrl_kind);
-                code_Ctrl_block_type := c1.(code_Ctrl_block_type);
-                code_Ctrl_value_stack_base := c1.(code_Ctrl_value_stack_base);
+                code_Ctrl_block_type := frame.(code_Ctrl_block_type);
+                code_Ctrl_value_stack_base :=
+                  frame.(code_Ctrl_value_stack_base);
                 code_Ctrl_polymorphic_base := false
-              |}
-          in
+              |};
           Ok (Core_result_Result_Ok frame.(code_Ctrl_block_type),
             {|
               code_OpIterState_vals := st1.(code_OpIterState_vals);
-              code_OpIterState_ctrls := v1;
+              code_OpIterState_ctrls := cs;
               code_OpIterState_pos := st1.(code_OpIterState_pos)
             |}))
       | Core_ops_control_flow_ControlFlow_Break residual =>
@@ -2269,53 +2643,50 @@ Definition code_read_else
 .
 
 (** [itasca::code::read_end]:
-    Source: 'src/code.rs', lines 800:0-817:1 *)
+    Source: 'src/code.rs', lines 1044:0-1064:1 *)
 Definition code_read_end
   (st : code_OpIterState_t) :
   result ((core_result_Result_t (code_LabelKind_t * code_BlockType_t)
     error_OpError_t) * code_OpIterState_t)
   :=
-  let n := alloc_vec_Vec_len st.(code_OpIterState_ctrls) in
+  n <- code_CtrlsStack_len st.(code_OpIterState_ctrls);
   if n s= 0%usize
   then Ok (Core_result_Result_Err Error_OpError_StackMismatch, st)
   else (
     i <- usize_sub n 1%usize;
-    frame <-
-      alloc_vec_Vec_index (core_slice_index_SliceIndexUsizeSliceInst
-        code_Ctrl_t) st.(code_OpIterState_ctrls) i;
-    results <- code_block_results frame.(code_Ctrl_block_type);
+    frame <- code_CtrlsStack_get st.(code_OpIterState_ctrls) i;
+    p <-
+      match frame.(code_Ctrl_block_type) with
+      | Code_BlockType_Empty => Ok (Code_BlockType_Empty, true)
+      | Code_BlockType_Value _ => Ok (frame.(code_Ctrl_block_type), false)
+      end;
+    let (bt, is_empty_bt) := p in
     b <- code_is_then frame.(code_Ctrl_kind);
     if b
-    then (
-      b1 <- alloc_vec_Vec_is_empty alloc_alloc_Global results;
-      if b1
+    then
+      if is_empty_bt
       then (
-        let s := alloc_vec_Vec_deref results in
-        p <- code_pop_types st s;
-        let (r, st1) := p in
+        p1 <- code_pop_block_results st bt;
+        let (r, st1) := p1 in
         cf <-
           core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
             r;
         match cf with
         | Core_ops_control_flow_ControlFlow_Continue _ =>
-          let i1 := alloc_vec_Vec_len st1.(code_OpIterState_vals) in
+          i1 <- code_ValsStack_len st1.(code_OpIterState_vals);
           if i1 s<> frame.(code_Ctrl_value_stack_base)
           then Ok (Core_result_Result_Err Error_OpError_StackMismatch, st1)
           else (
-            p1 <-
-              alloc_vec_Vec_pop alloc_alloc_Global
-                st1.(code_OpIterState_ctrls);
-            let (_, v) := p1 in
-            let s1 := alloc_vec_Vec_deref results in
+            p2 <- code_CtrlsStack_pop st1.(code_OpIterState_ctrls);
+            let (_, cs) := p2 in
             st2 <-
-              code_push_types
+              code_push_block_results
                 {|
                   code_OpIterState_vals := st1.(code_OpIterState_vals);
-                  code_OpIterState_ctrls := v;
+                  code_OpIterState_ctrls := cs;
                   code_OpIterState_pos := st1.(code_OpIterState_pos)
-                |} s1;
-            Ok (Core_result_Result_Ok (frame.(code_Ctrl_kind),
-              frame.(code_Ctrl_block_type)), st2))
+                |} bt;
+            Ok (Core_result_Result_Ok (frame.(code_Ctrl_kind), bt), st2))
         | Core_ops_control_flow_ControlFlow_Break residual =>
           r1 <-
             core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
@@ -2323,33 +2694,29 @@ Definition code_read_end
               error_OpError_t) residual;
           Ok (r1, st1)
         end)
-      else Ok (Core_result_Result_Err Error_OpError_StackMismatch, st))
+      else Ok (Core_result_Result_Err Error_OpError_StackMismatch, st)
     else (
-      let s := alloc_vec_Vec_deref results in
-      p <- code_pop_types st s;
-      let (r, st1) := p in
+      p1 <- code_pop_block_results st bt;
+      let (r, st1) := p1 in
       cf <-
         core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
           r;
       match cf with
       | Core_ops_control_flow_ControlFlow_Continue _ =>
-        let i1 := alloc_vec_Vec_len st1.(code_OpIterState_vals) in
+        i1 <- code_ValsStack_len st1.(code_OpIterState_vals);
         if i1 s<> frame.(code_Ctrl_value_stack_base)
         then Ok (Core_result_Result_Err Error_OpError_StackMismatch, st1)
         else (
-          p1 <-
-            alloc_vec_Vec_pop alloc_alloc_Global st1.(code_OpIterState_ctrls);
-          let (_, v) := p1 in
-          let s1 := alloc_vec_Vec_deref results in
+          p2 <- code_CtrlsStack_pop st1.(code_OpIterState_ctrls);
+          let (_, cs) := p2 in
           st2 <-
-            code_push_types
+            code_push_block_results
               {|
                 code_OpIterState_vals := st1.(code_OpIterState_vals);
-                code_OpIterState_ctrls := v;
+                code_OpIterState_ctrls := cs;
                 code_OpIterState_pos := st1.(code_OpIterState_pos)
-              |} s1;
-          Ok (Core_result_Result_Ok (frame.(code_Ctrl_kind),
-            frame.(code_Ctrl_block_type)), st2))
+              |} bt;
+          Ok (Core_result_Result_Ok (frame.(code_Ctrl_kind), bt), st2))
       | Core_ops_control_flow_ControlFlow_Break residual =>
         r1 <-
           core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
@@ -2360,7 +2727,7 @@ Definition code_read_end
 .
 
 (** [itasca::code::read_label]:
-    Source: 'src/code.rs', lines 825:0-834:1 *)
+    Source: 'src/code.rs', lines 1072:0-1081:1 *)
 Definition code_read_label
   (st : code_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t (u32 * code_Ctrl_t) error_OpError_t) *
@@ -2372,7 +2739,7 @@ Definition code_read_label
   match cf with
   | Core_ops_control_flow_ControlFlow_Continue val =>
     let (depth, p) := val in
-    let n := alloc_vec_Vec_len st.(code_OpIterState_ctrls) in
+    n <- code_CtrlsStack_len st.(code_OpIterState_ctrls);
     d <- scalar_cast U32 Usize depth;
     if d s>= n
     then
@@ -2385,9 +2752,7 @@ Definition code_read_label
     else (
       i <- usize_sub n 1%usize;
       i1 <- usize_sub i d;
-      c <-
-        alloc_vec_Vec_index (core_slice_index_SliceIndexUsizeSliceInst
-          code_Ctrl_t) st.(code_OpIterState_ctrls) i1;
+      c <- code_CtrlsStack_get st.(code_OpIterState_ctrls) i1;
       Ok (Core_result_Result_Ok (depth, c),
         {|
           code_OpIterState_vals := st.(code_OpIterState_vals);
@@ -2404,7 +2769,7 @@ Definition code_read_label
 .
 
 (** [itasca::code::read_br]:
-    Source: 'src/code.rs', lines 838:0-844:1 *)
+    Source: 'src/code.rs', lines 1085:0-1091:1 *)
 Definition code_read_br
   (st : code_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t (u32 * code_BlockType_t) error_OpError_t) *
@@ -2417,9 +2782,8 @@ Definition code_read_br
   match cf with
   | Core_ops_control_flow_ControlFlow_Continue val =>
     let (depth, target) := val in
-    types <- code_branch_target_types target;
-    let s := alloc_vec_Vec_deref types in
-    p1 <- code_pop_types st1 s;
+    bt <- code_branch_target_bt target;
+    p1 <- code_pop_block_results st1 bt;
     let (r1, st2) := p1 in
     cf1 <-
       core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r1;
@@ -2444,13 +2808,17 @@ Definition code_read_br
 .
 
 (** [itasca::code::read_return]:
-    Source: 'src/code.rs', lines 849:0-853:1 *)
+    Source: 'src/code.rs', lines 1096:0-1104:1 *)
 Definition code_read_return
   (st : code_OpIterState_t) (ctx : code_Context_t) :
   result ((core_result_Result_t unit error_OpError_t) * code_OpIterState_t)
   :=
-  let s := alloc_vec_Vec_deref ctx.(code_Context_results) in
-  p <- code_pop_types st s;
+  bt <-
+    match ctx.(code_Context_results) with
+    | None => Ok Code_BlockType_Empty
+    | Some vt => Ok (Code_BlockType_Value vt)
+    end;
+  p <- code_pop_block_results st bt;
   let (r, st1) := p in
   cf <-
     core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r;
@@ -2466,7 +2834,7 @@ Definition code_read_return
 .
 
 (** [itasca::code::read_br_if]:
-    Source: 'src/code.rs', lines 858:0-865:1 *)
+    Source: 'src/code.rs', lines 1109:0-1116:1 *)
 Definition code_read_br_if
   (st : code_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t (u32 * code_BlockType_t) error_OpError_t) *
@@ -2479,23 +2847,21 @@ Definition code_read_br_if
   match cf with
   | Core_ops_control_flow_ControlFlow_Continue val =>
     let (depth, target) := val in
-    types <- code_branch_target_types target;
+    bt <- code_branch_target_bt target;
     p1 <- code_pop_with_type st1 Types_ValueType_I32;
     let (r1, st2) := p1 in
     cf1 <-
       core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch r1;
     match cf1 with
     | Core_ops_control_flow_ControlFlow_Continue _ =>
-      let s := alloc_vec_Vec_deref types in
-      p2 <- code_pop_types st2 s;
+      p2 <- code_pop_block_results st2 bt;
       let (r2, st3) := p2 in
       cf2 <-
         core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
           r2;
       match cf2 with
       | Core_ops_control_flow_ControlFlow_Continue _ =>
-        let s1 := alloc_vec_Vec_deref types in
-        st4 <- code_push_types st3 s1;
+        st4 <- code_push_block_results st3 bt;
         Ok (Core_result_Result_Ok (depth, target.(code_Ctrl_block_type)), st4)
       | Core_ops_control_flow_ControlFlow_Break residual =>
         r3 <-
@@ -2521,7 +2887,7 @@ Definition code_read_br_if
 .
 
 (** [itasca::code::merge_target]:
-    Source: 'src/code.rs', lines 870:0-881:1 *)
+    Source: 'src/code.rs', lines 1121:0-1132:1 *)
 Definition code_merge_target
   (expect : option code_BlockType_t) (bt : code_BlockType_t) :
   result (core_result_Result_t code_BlockType_t error_OpError_t)
@@ -2537,7 +2903,7 @@ Definition code_merge_target
 .
 
 (** [itasca::code::OpVisitor::on_br_table_label]:
-    Source: 'src/code.rs', lines 1915:4-1917:5 *)
+    Source: 'src/code.rs', lines 2136:4-2138:5 *)
 Definition code_OpVisitor_on_br_table_label_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) (_depth : u32) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -2546,7 +2912,7 @@ Definition code_OpVisitor_on_br_table_label_default
 .
 
 (** [itasca::code::read_table_labels]: loop 0:
-    Source: 'src/code.rs', lines 896:4-908:5 *)
+    Source: 'src/code.rs', lines 1147:4-1159:5 *)
 Definition code_read_table_labels_loop
   {V : Type} (opVisitorInst : code_OpVisitor_t V) (st : code_OpIterState_t)
   (data : slice u8) (count : u32) (v : V) (expect : option code_BlockType_t)
@@ -2610,7 +2976,7 @@ Definition code_read_table_labels_loop
 .
 
 (** [itasca::code::read_table_labels]:
-    Source: 'src/code.rs', lines 888:0-909:1 *)
+    Source: 'src/code.rs', lines 1139:0-1160:1 *)
 Definition code_read_table_labels
   {V : Type} (opVisitorInst : code_OpVisitor_t V) (st : code_OpIterState_t)
   (data : slice u8) (count : u32) (v : V) :
@@ -2621,7 +2987,7 @@ Definition code_read_table_labels
 .
 
 (** [itasca::code::read_br_table]:
-    Source: 'src/code.rs', lines 919:0-934:1 *)
+    Source: 'src/code.rs', lines 1170:0-1184:1 *)
 Definition code_read_br_table
   {V : Type} (opVisitorInst : code_OpVisitor_t V) (st : code_OpIterState_t)
   (data : slice u8) (v : V) :
@@ -2668,9 +3034,7 @@ Definition code_read_br_table
               r4;
           match cf4 with
           | Core_ops_control_flow_ControlFlow_Continue _ =>
-            types <- code_block_results val3;
-            let s := alloc_vec_Vec_deref types in
-            p3 <- code_pop_types st3 s;
+            p3 <- code_pop_block_results st3 val3;
             let (r5, st4) := p3 in
             cf5 <-
               core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
@@ -2724,7 +3088,7 @@ Definition code_read_br_table
 .
 
 (** [itasca::code::take_index]:
-    Source: 'src/code.rs', lines 939:0-943:1 *)
+    Source: 'src/code.rs', lines 1189:0-1193:1 *)
 Definition code_take_index
   (st : code_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t u32 error_OpError_t) * code_OpIterState_t)
@@ -2750,11 +3114,11 @@ Definition code_take_index
 .
 
 (** [itasca::limits::MAX_RESULTS]
-    Source: 'src/limits.rs', lines 32:0-32:33 *)
+    Source: 'src/limits.rs', lines 29:0-29:33 *)
 Definition limits_max_results : usize := 1%usize.
 
 (** [itasca::code::require_single_result]:
-    Source: 'src/code.rs', lines 950:0-955:1 *)
+    Source: 'src/code.rs', lines 1200:0-1205:1 *)
 Definition code_require_single_result
   (results : slice types_ValueType_t) :
   result (core_result_Result_t unit error_OpError_t)
@@ -2766,7 +3130,7 @@ Definition code_require_single_result
 .
 
 (** [itasca::code::read_call]:
-    Source: 'src/code.rs', lines 964:0-974:1 *)
+    Source: 'src/code.rs', lines 1213:0-1223:1 *)
 Definition code_read_call
   (st : code_OpIterState_t) (data : slice u8) (env : module_Env_t) :
   result ((core_result_Result_t u32 error_OpError_t) * code_OpIterState_t)
@@ -2824,7 +3188,7 @@ Definition code_read_call
 .
 
 (** [itasca::code::read_call_indirect]:
-    Source: 'src/code.rs', lines 983:0-1002:1 *)
+    Source: 'src/code.rs', lines 1232:0-1247:1 *)
 Definition code_read_call_indirect
   (st : code_OpIterState_t) (data : slice u8) (env : module_Env_t) :
   result ((core_result_Result_t u32 error_OpError_t) * code_OpIterState_t)
@@ -2912,7 +3276,7 @@ Definition code_read_call_indirect
 .
 
 (** [itasca::code::check_memory_and_alignment]:
-    Source: 'src/code.rs', lines 1052:0-1058:1 *)
+    Source: 'src/code.rs', lines 1297:0-1303:1 *)
 Definition code_check_memory_and_alignment
   (env : module_Env_t) (memarg : code_MemArg_t) (natural_align : u32) :
   result (core_result_Result_t unit error_OpError_t)
@@ -2932,7 +3296,7 @@ Definition code_check_memory_and_alignment
 .
 
 (** [itasca::code::read_memarg]:
-    Source: 'src/code.rs', lines 1035:0-1040:1 *)
+    Source: 'src/code.rs', lines 1280:0-1285:1 *)
 Definition code_read_memarg
   (st : code_OpIterState_t) (data : slice u8) :
   result ((core_result_Result_t code_MemArg_t error_OpError_t) *
@@ -2972,7 +3336,7 @@ Definition code_read_memarg
 .
 
 (** [itasca::code::read_load]:
-    Source: 'src/code.rs', lines 1006:0-1018:1 *)
+    Source: 'src/code.rs', lines 1251:0-1263:1 *)
 Definition code_read_load
   (st : code_OpIterState_t) (data : slice u8) (env : module_Env_t)
   (ty : types_ValueType_t) (natural_align : u32) :
@@ -3020,7 +3384,7 @@ Definition code_read_load
 .
 
 (** [itasca::code::read_store]:
-    Source: 'src/code.rs', lines 1021:0-1033:1 *)
+    Source: 'src/code.rs', lines 1266:0-1278:1 *)
 Definition code_read_store
   (st : code_OpIterState_t) (data : slice u8) (env : module_Env_t)
   (ty : types_ValueType_t) (natural_align : u32) :
@@ -3081,7 +3445,7 @@ Definition code_read_store
 .
 
 (** [itasca::code::convert_types]:
-    Source: 'src/code.rs', lines 1076:0-1156:1 *)
+    Source: 'src/code.rs', lines 1320:0-1400:1 *)
 Definition code_convert_types
   (opcode : u8) : result (option (types_ValueType_t * types_ValueType_t)) :=
   if opcode s= code_op_i32_eqz
@@ -3362,7 +3726,7 @@ Definition code_convert_types
 .
 
 (** [itasca::code::binary_types]:
-    Source: 'src/code.rs', lines 1164:0-1263:1 *)
+    Source: 'src/code.rs', lines 1408:0-1507:1 *)
 Definition code_binary_types
   (opcode : u8) : result (option (types_ValueType_t * types_ValueType_t)) :=
   if opcode s= code_op_i32_eq
@@ -3872,7 +4236,7 @@ Definition code_binary_types
 .
 
 (** [itasca::code::OpVisitor::on_f64_const]:
-    Source: 'src/code.rs', lines 2003:4-2005:5 *)
+    Source: 'src/code.rs', lines 2219:4-2221:5 *)
 Definition code_OpVisitor_on_f64_const_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) (_bits : u64) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -3881,7 +4245,7 @@ Definition code_OpVisitor_on_f64_const_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_const]:
-    Source: 'src/code.rs', lines 1999:4-2001:5 *)
+    Source: 'src/code.rs', lines 2215:4-2217:5 *)
 Definition code_OpVisitor_on_f32_const_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) (_bits : u32) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -3890,7 +4254,7 @@ Definition code_OpVisitor_on_f32_const_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_const]:
-    Source: 'src/code.rs', lines 1993:4-1995:5 *)
+    Source: 'src/code.rs', lines 2209:4-2211:5 *)
 Definition code_OpVisitor_on_i64_const_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) (_v : i64) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -3899,7 +4263,7 @@ Definition code_OpVisitor_on_i64_const_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_const]:
-    Source: 'src/code.rs', lines 1989:4-1991:5 *)
+    Source: 'src/code.rs', lines 2205:4-2207:5 *)
 Definition code_OpVisitor_on_i32_const_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) (_v : i32) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -3908,7 +4272,7 @@ Definition code_OpVisitor_on_i32_const_default
 .
 
 (** [itasca::code::OpVisitor::on_global_set]:
-    Source: 'src/code.rs', lines 1973:4-1975:5 *)
+    Source: 'src/code.rs', lines 2189:4-2191:5 *)
 Definition code_OpVisitor_on_global_set_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) (_idx : u32) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -3917,7 +4281,7 @@ Definition code_OpVisitor_on_global_set_default
 .
 
 (** [itasca::code::OpVisitor::on_global_get]:
-    Source: 'src/code.rs', lines 1969:4-1971:5 *)
+    Source: 'src/code.rs', lines 2185:4-2187:5 *)
 Definition code_OpVisitor_on_global_get_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) (_idx : u32) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -3926,7 +4290,7 @@ Definition code_OpVisitor_on_global_get_default
 .
 
 (** [itasca::code::OpVisitor::on_local_tee]:
-    Source: 'src/code.rs', lines 1965:4-1967:5 *)
+    Source: 'src/code.rs', lines 2181:4-2183:5 *)
 Definition code_OpVisitor_on_local_tee_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) (_idx : u32) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -3935,7 +4299,7 @@ Definition code_OpVisitor_on_local_tee_default
 .
 
 (** [itasca::code::OpVisitor::on_local_set]:
-    Source: 'src/code.rs', lines 1961:4-1963:5 *)
+    Source: 'src/code.rs', lines 2177:4-2179:5 *)
 Definition code_OpVisitor_on_local_set_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) (_idx : u32) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -3944,7 +4308,7 @@ Definition code_OpVisitor_on_local_set_default
 .
 
 (** [itasca::code::OpVisitor::on_local_get]:
-    Source: 'src/code.rs', lines 1957:4-1959:5 *)
+    Source: 'src/code.rs', lines 2173:4-2175:5 *)
 Definition code_OpVisitor_on_local_get_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) (_idx : u32) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -3953,7 +4317,7 @@ Definition code_OpVisitor_on_local_get_default
 .
 
 (** [itasca::code::OpVisitor::on_select]:
-    Source: 'src/code.rs', lines 1951:4-1953:5 *)
+    Source: 'src/code.rs', lines 2167:4-2169:5 *)
 Definition code_OpVisitor_on_select_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_ty : code_StackType_t) :
@@ -3963,7 +4327,7 @@ Definition code_OpVisitor_on_select_default
 .
 
 (** [itasca::code::OpVisitor::on_drop]:
-    Source: 'src/code.rs', lines 1945:4-1947:5 *)
+    Source: 'src/code.rs', lines 2161:4-2163:5 *)
 Definition code_OpVisitor_on_drop_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_ty : code_StackType_t) :
@@ -3973,7 +4337,7 @@ Definition code_OpVisitor_on_drop_default
 .
 
 (** [itasca::code::OpVisitor::on_call_indirect]:
-    Source: 'src/code.rs', lines 1938:4-1940:5 *)
+    Source: 'src/code.rs', lines 2154:4-2156:5 *)
 Definition code_OpVisitor_on_call_indirect_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) (_type_idx : u32) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -3982,7 +4346,7 @@ Definition code_OpVisitor_on_call_indirect_default
 .
 
 (** [itasca::code::OpVisitor::on_call]:
-    Source: 'src/code.rs', lines 1934:4-1936:5 *)
+    Source: 'src/code.rs', lines 2150:4-2152:5 *)
 Definition code_OpVisitor_on_call_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) (_idx : u32) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -3991,7 +4355,7 @@ Definition code_OpVisitor_on_call_default
 .
 
 (** [itasca::code::OpVisitor::on_return]:
-    Source: 'src/code.rs', lines 1930:4-1932:5 *)
+    Source: 'src/code.rs', lines 2146:4-2148:5 *)
 Definition code_OpVisitor_on_return_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4000,7 +4364,7 @@ Definition code_OpVisitor_on_return_default
 .
 
 (** [itasca::code::OpVisitor::on_br_table]:
-    Source: 'src/code.rs', lines 1921:4-1928:5 *)
+    Source: 'src/code.rs', lines 2142:4-2144:5 *)
 Definition code_OpVisitor_on_br_table_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) (_default : u32)
   (_common : code_BlockType_t) :
@@ -4010,7 +4374,7 @@ Definition code_OpVisitor_on_br_table_default
 .
 
 (** [itasca::code::OpVisitor::on_br_if]:
-    Source: 'src/code.rs', lines 1907:4-1909:5 *)
+    Source: 'src/code.rs', lines 2128:4-2130:5 *)
 Definition code_OpVisitor_on_br_if_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) (_depth : u32)
   (_bt : code_BlockType_t) :
@@ -4020,7 +4384,7 @@ Definition code_OpVisitor_on_br_if_default
 .
 
 (** [itasca::code::OpVisitor::on_br]:
-    Source: 'src/code.rs', lines 1903:4-1905:5 *)
+    Source: 'src/code.rs', lines 2124:4-2126:5 *)
 Definition code_OpVisitor_on_br_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) (_depth : u32)
   (_bt : code_BlockType_t) :
@@ -4030,7 +4394,7 @@ Definition code_OpVisitor_on_br_default
 .
 
 (** [itasca::code::OpVisitor::on_end]:
-    Source: 'src/code.rs', lines 1893:4-1900:5 *)
+    Source: 'src/code.rs', lines 2119:4-2121:5 *)
 Definition code_OpVisitor_on_end_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_kind : code_LabelKind_t) (_bt : code_BlockType_t) :
@@ -4040,7 +4404,7 @@ Definition code_OpVisitor_on_end_default
 .
 
 (** [itasca::code::OpVisitor::on_else]:
-    Source: 'src/code.rs', lines 1886:4-1888:5 *)
+    Source: 'src/code.rs', lines 2112:4-2114:5 *)
 Definition code_OpVisitor_on_else_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_bt : code_BlockType_t) :
@@ -4050,7 +4414,7 @@ Definition code_OpVisitor_on_else_default
 .
 
 (** [itasca::code::OpVisitor::on_if]:
-    Source: 'src/code.rs', lines 1881:4-1883:5 *)
+    Source: 'src/code.rs', lines 2107:4-2109:5 *)
 Definition code_OpVisitor_on_if_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_bt : code_BlockType_t) :
@@ -4060,7 +4424,7 @@ Definition code_OpVisitor_on_if_default
 .
 
 (** [itasca::code::OpVisitor::on_loop]:
-    Source: 'src/code.rs', lines 1877:4-1879:5 *)
+    Source: 'src/code.rs', lines 2103:4-2105:5 *)
 Definition code_OpVisitor_on_loop_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_bt : code_BlockType_t) :
@@ -4070,7 +4434,7 @@ Definition code_OpVisitor_on_loop_default
 .
 
 (** [itasca::code::OpVisitor::on_block]:
-    Source: 'src/code.rs', lines 1873:4-1875:5 *)
+    Source: 'src/code.rs', lines 2099:4-2101:5 *)
 Definition code_OpVisitor_on_block_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_bt : code_BlockType_t) :
@@ -4080,7 +4444,7 @@ Definition code_OpVisitor_on_block_default
 .
 
 (** [itasca::code::OpVisitor::on_nop]:
-    Source: 'src/code.rs', lines 1869:4-1871:5 *)
+    Source: 'src/code.rs', lines 2095:4-2097:5 *)
 Definition code_OpVisitor_on_nop_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4089,7 +4453,7 @@ Definition code_OpVisitor_on_nop_default
 .
 
 (** [itasca::code::OpVisitor::on_unreachable]:
-    Source: 'src/code.rs', lines 1865:4-1867:5 *)
+    Source: 'src/code.rs', lines 2091:4-2093:5 *)
 Definition code_OpVisitor_on_unreachable_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4098,7 +4462,7 @@ Definition code_OpVisitor_on_unreachable_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_store32]:
-    Source: 'src/code.rs', lines 1811:10-1813:9 *)
+    Source: 'src/code.rs', lines 2042:10-2044:9 *)
 Definition code_OpVisitor_on_i64_store32_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -4108,7 +4472,7 @@ Definition code_OpVisitor_on_i64_store32_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_store16]:
-    Source: 'src/code.rs', lines 1811:10-1813:9 *)
+    Source: 'src/code.rs', lines 2042:10-2044:9 *)
 Definition code_OpVisitor_on_i64_store16_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -4118,7 +4482,7 @@ Definition code_OpVisitor_on_i64_store16_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_store8]:
-    Source: 'src/code.rs', lines 1811:10-1813:9 *)
+    Source: 'src/code.rs', lines 2042:10-2044:9 *)
 Definition code_OpVisitor_on_i64_store8_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -4128,7 +4492,7 @@ Definition code_OpVisitor_on_i64_store8_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_store16]:
-    Source: 'src/code.rs', lines 1811:10-1813:9 *)
+    Source: 'src/code.rs', lines 2042:10-2044:9 *)
 Definition code_OpVisitor_on_i32_store16_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -4138,7 +4502,7 @@ Definition code_OpVisitor_on_i32_store16_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_store8]:
-    Source: 'src/code.rs', lines 1811:10-1813:9 *)
+    Source: 'src/code.rs', lines 2042:10-2044:9 *)
 Definition code_OpVisitor_on_i32_store8_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -4148,7 +4512,7 @@ Definition code_OpVisitor_on_i32_store8_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_store]:
-    Source: 'src/code.rs', lines 1811:10-1813:9 *)
+    Source: 'src/code.rs', lines 2042:10-2044:9 *)
 Definition code_OpVisitor_on_f64_store_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -4158,7 +4522,7 @@ Definition code_OpVisitor_on_f64_store_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_store]:
-    Source: 'src/code.rs', lines 1811:10-1813:9 *)
+    Source: 'src/code.rs', lines 2042:10-2044:9 *)
 Definition code_OpVisitor_on_f32_store_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -4168,7 +4532,7 @@ Definition code_OpVisitor_on_f32_store_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_store]:
-    Source: 'src/code.rs', lines 1811:10-1813:9 *)
+    Source: 'src/code.rs', lines 2042:10-2044:9 *)
 Definition code_OpVisitor_on_i64_store_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -4178,7 +4542,7 @@ Definition code_OpVisitor_on_i64_store_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_store]:
-    Source: 'src/code.rs', lines 1811:10-1813:9 *)
+    Source: 'src/code.rs', lines 2042:10-2044:9 *)
 Definition code_OpVisitor_on_i32_store_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -4188,7 +4552,7 @@ Definition code_OpVisitor_on_i32_store_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_load32_u]:
-    Source: 'src/code.rs', lines 1811:10-1813:9 *)
+    Source: 'src/code.rs', lines 2042:10-2044:9 *)
 Definition code_OpVisitor_on_i64_load32_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -4198,7 +4562,7 @@ Definition code_OpVisitor_on_i64_load32_u_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_load32_s]:
-    Source: 'src/code.rs', lines 1811:10-1813:9 *)
+    Source: 'src/code.rs', lines 2042:10-2044:9 *)
 Definition code_OpVisitor_on_i64_load32_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -4208,7 +4572,7 @@ Definition code_OpVisitor_on_i64_load32_s_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_load16_u]:
-    Source: 'src/code.rs', lines 1811:10-1813:9 *)
+    Source: 'src/code.rs', lines 2042:10-2044:9 *)
 Definition code_OpVisitor_on_i64_load16_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -4218,7 +4582,7 @@ Definition code_OpVisitor_on_i64_load16_u_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_load16_s]:
-    Source: 'src/code.rs', lines 1811:10-1813:9 *)
+    Source: 'src/code.rs', lines 2042:10-2044:9 *)
 Definition code_OpVisitor_on_i64_load16_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -4228,7 +4592,7 @@ Definition code_OpVisitor_on_i64_load16_s_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_load8_u]:
-    Source: 'src/code.rs', lines 1811:10-1813:9 *)
+    Source: 'src/code.rs', lines 2042:10-2044:9 *)
 Definition code_OpVisitor_on_i64_load8_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -4238,7 +4602,7 @@ Definition code_OpVisitor_on_i64_load8_u_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_load8_s]:
-    Source: 'src/code.rs', lines 1811:10-1813:9 *)
+    Source: 'src/code.rs', lines 2042:10-2044:9 *)
 Definition code_OpVisitor_on_i64_load8_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -4248,7 +4612,7 @@ Definition code_OpVisitor_on_i64_load8_s_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_load16_u]:
-    Source: 'src/code.rs', lines 1811:10-1813:9 *)
+    Source: 'src/code.rs', lines 2042:10-2044:9 *)
 Definition code_OpVisitor_on_i32_load16_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -4258,7 +4622,7 @@ Definition code_OpVisitor_on_i32_load16_u_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_load16_s]:
-    Source: 'src/code.rs', lines 1811:10-1813:9 *)
+    Source: 'src/code.rs', lines 2042:10-2044:9 *)
 Definition code_OpVisitor_on_i32_load16_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -4268,7 +4632,7 @@ Definition code_OpVisitor_on_i32_load16_s_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_load8_u]:
-    Source: 'src/code.rs', lines 1811:10-1813:9 *)
+    Source: 'src/code.rs', lines 2042:10-2044:9 *)
 Definition code_OpVisitor_on_i32_load8_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -4278,7 +4642,7 @@ Definition code_OpVisitor_on_i32_load8_u_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_load8_s]:
-    Source: 'src/code.rs', lines 1811:10-1813:9 *)
+    Source: 'src/code.rs', lines 2042:10-2044:9 *)
 Definition code_OpVisitor_on_i32_load8_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -4288,7 +4652,7 @@ Definition code_OpVisitor_on_i32_load8_s_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_load]:
-    Source: 'src/code.rs', lines 1811:10-1813:9 *)
+    Source: 'src/code.rs', lines 2042:10-2044:9 *)
 Definition code_OpVisitor_on_f64_load_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -4298,7 +4662,7 @@ Definition code_OpVisitor_on_f64_load_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_load]:
-    Source: 'src/code.rs', lines 1811:10-1813:9 *)
+    Source: 'src/code.rs', lines 2042:10-2044:9 *)
 Definition code_OpVisitor_on_f32_load_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -4308,7 +4672,7 @@ Definition code_OpVisitor_on_f32_load_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_load]:
-    Source: 'src/code.rs', lines 1811:10-1813:9 *)
+    Source: 'src/code.rs', lines 2042:10-2044:9 *)
 Definition code_OpVisitor_on_i64_load_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -4318,7 +4682,7 @@ Definition code_OpVisitor_on_i64_load_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_load]:
-    Source: 'src/code.rs', lines 1811:10-1813:9 *)
+    Source: 'src/code.rs', lines 2042:10-2044:9 *)
 Definition code_OpVisitor_on_i32_load_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -4328,7 +4692,7 @@ Definition code_OpVisitor_on_i32_load_default
 .
 
 (** [itasca::code::visit_memory]:
-    Source: 'src/code.rs', lines 2044:8-2054:9 *)
+    Source: 'src/code.rs', lines 2260:8-2270:9 *)
 Definition code_visit_memory
   {V : Type} (opVisitorInst : code_OpVisitor_t V) (v : V)
   (st : code_OpIterState_t) (opcode : u8) (memarg : code_MemArg_t) :
@@ -4438,7 +4802,7 @@ Definition code_visit_memory
 .
 
 (** [itasca::code::OpVisitor::on_memory_grow]:
-    Source: 'src/code.rs', lines 1983:4-1985:5 *)
+    Source: 'src/code.rs', lines 2199:4-2201:5 *)
 Definition code_OpVisitor_on_memory_grow_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4447,7 +4811,7 @@ Definition code_OpVisitor_on_memory_grow_default
 .
 
 (** [itasca::code::OpVisitor::on_memory_size]:
-    Source: 'src/code.rs', lines 1979:4-1981:5 *)
+    Source: 'src/code.rs', lines 2195:4-2197:5 *)
 Definition code_OpVisitor_on_memory_size_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4456,7 +4820,7 @@ Definition code_OpVisitor_on_memory_size_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_reinterpret_i64]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f64_reinterpret_i64_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4465,7 +4829,7 @@ Definition code_OpVisitor_on_f64_reinterpret_i64_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_reinterpret_i32]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f32_reinterpret_i32_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4474,7 +4838,7 @@ Definition code_OpVisitor_on_f32_reinterpret_i32_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_reinterpret_f64]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_reinterpret_f64_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4483,7 +4847,7 @@ Definition code_OpVisitor_on_i64_reinterpret_f64_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_reinterpret_f32]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_reinterpret_f32_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4492,7 +4856,7 @@ Definition code_OpVisitor_on_i32_reinterpret_f32_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_promote_f32]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f64_promote_f32_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4501,7 +4865,7 @@ Definition code_OpVisitor_on_f64_promote_f32_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_convert_i64_u]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f64_convert_i64_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4510,7 +4874,7 @@ Definition code_OpVisitor_on_f64_convert_i64_u_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_convert_i64_s]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f64_convert_i64_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4519,7 +4883,7 @@ Definition code_OpVisitor_on_f64_convert_i64_s_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_convert_i32_u]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f64_convert_i32_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4528,7 +4892,7 @@ Definition code_OpVisitor_on_f64_convert_i32_u_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_convert_i32_s]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f64_convert_i32_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4537,7 +4901,7 @@ Definition code_OpVisitor_on_f64_convert_i32_s_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_demote_f64]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f32_demote_f64_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4546,7 +4910,7 @@ Definition code_OpVisitor_on_f32_demote_f64_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_convert_i64_u]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f32_convert_i64_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4555,7 +4919,7 @@ Definition code_OpVisitor_on_f32_convert_i64_u_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_convert_i64_s]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f32_convert_i64_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4564,7 +4928,7 @@ Definition code_OpVisitor_on_f32_convert_i64_s_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_convert_i32_u]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f32_convert_i32_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4573,7 +4937,7 @@ Definition code_OpVisitor_on_f32_convert_i32_u_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_convert_i32_s]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f32_convert_i32_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4582,7 +4946,7 @@ Definition code_OpVisitor_on_f32_convert_i32_s_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_trunc_f64_u]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_trunc_f64_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4591,7 +4955,7 @@ Definition code_OpVisitor_on_i64_trunc_f64_u_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_trunc_f64_s]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_trunc_f64_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4600,7 +4964,7 @@ Definition code_OpVisitor_on_i64_trunc_f64_s_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_trunc_f32_u]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_trunc_f32_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4609,7 +4973,7 @@ Definition code_OpVisitor_on_i64_trunc_f32_u_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_trunc_f32_s]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_trunc_f32_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4618,7 +4982,7 @@ Definition code_OpVisitor_on_i64_trunc_f32_s_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_extend_i32_u]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_extend_i32_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4627,7 +4991,7 @@ Definition code_OpVisitor_on_i64_extend_i32_u_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_extend_i32_s]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_extend_i32_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4636,7 +5000,7 @@ Definition code_OpVisitor_on_i64_extend_i32_s_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_trunc_f64_u]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_trunc_f64_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4645,7 +5009,7 @@ Definition code_OpVisitor_on_i32_trunc_f64_u_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_trunc_f64_s]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_trunc_f64_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4654,7 +5018,7 @@ Definition code_OpVisitor_on_i32_trunc_f64_s_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_trunc_f32_u]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_trunc_f32_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4663,7 +5027,7 @@ Definition code_OpVisitor_on_i32_trunc_f32_u_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_trunc_f32_s]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_trunc_f32_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4672,7 +5036,7 @@ Definition code_OpVisitor_on_i32_trunc_f32_s_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_wrap_i64]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_wrap_i64_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4681,7 +5045,7 @@ Definition code_OpVisitor_on_i32_wrap_i64_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_sqrt]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f64_sqrt_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4690,7 +5054,7 @@ Definition code_OpVisitor_on_f64_sqrt_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_nearest]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f64_nearest_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4699,7 +5063,7 @@ Definition code_OpVisitor_on_f64_nearest_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_trunc]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f64_trunc_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4708,7 +5072,7 @@ Definition code_OpVisitor_on_f64_trunc_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_floor]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f64_floor_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4717,7 +5081,7 @@ Definition code_OpVisitor_on_f64_floor_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_ceil]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f64_ceil_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4726,7 +5090,7 @@ Definition code_OpVisitor_on_f64_ceil_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_neg]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f64_neg_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4735,7 +5099,7 @@ Definition code_OpVisitor_on_f64_neg_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_abs]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f64_abs_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4744,7 +5108,7 @@ Definition code_OpVisitor_on_f64_abs_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_sqrt]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f32_sqrt_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4753,7 +5117,7 @@ Definition code_OpVisitor_on_f32_sqrt_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_nearest]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f32_nearest_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4762,7 +5126,7 @@ Definition code_OpVisitor_on_f32_nearest_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_trunc]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f32_trunc_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4771,7 +5135,7 @@ Definition code_OpVisitor_on_f32_trunc_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_floor]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f32_floor_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4780,7 +5144,7 @@ Definition code_OpVisitor_on_f32_floor_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_ceil]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f32_ceil_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4789,7 +5153,7 @@ Definition code_OpVisitor_on_f32_ceil_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_neg]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f32_neg_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4798,7 +5162,7 @@ Definition code_OpVisitor_on_f32_neg_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_abs]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f32_abs_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4807,7 +5171,7 @@ Definition code_OpVisitor_on_f32_abs_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_popcnt]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_popcnt_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4816,7 +5180,7 @@ Definition code_OpVisitor_on_i64_popcnt_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_ctz]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_ctz_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4825,7 +5189,7 @@ Definition code_OpVisitor_on_i64_ctz_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_clz]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_clz_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4834,7 +5198,7 @@ Definition code_OpVisitor_on_i64_clz_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_add]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_add_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4843,7 +5207,7 @@ Definition code_OpVisitor_on_i32_add_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_popcnt]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_popcnt_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4852,7 +5216,7 @@ Definition code_OpVisitor_on_i32_popcnt_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_ctz]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_ctz_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4861,7 +5225,7 @@ Definition code_OpVisitor_on_i32_ctz_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_clz]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_clz_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4870,7 +5234,7 @@ Definition code_OpVisitor_on_i32_clz_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_copysign]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f64_copysign_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4879,7 +5243,7 @@ Definition code_OpVisitor_on_f64_copysign_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_max]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f64_max_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4888,7 +5252,7 @@ Definition code_OpVisitor_on_f64_max_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_min]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f64_min_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4897,7 +5261,7 @@ Definition code_OpVisitor_on_f64_min_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_div]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f64_div_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4906,7 +5270,7 @@ Definition code_OpVisitor_on_f64_div_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_mul]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f64_mul_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4915,7 +5279,7 @@ Definition code_OpVisitor_on_f64_mul_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_sub]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f64_sub_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4924,7 +5288,7 @@ Definition code_OpVisitor_on_f64_sub_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_add]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f64_add_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4933,7 +5297,7 @@ Definition code_OpVisitor_on_f64_add_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_copysign]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f32_copysign_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4942,7 +5306,7 @@ Definition code_OpVisitor_on_f32_copysign_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_max]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f32_max_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4951,7 +5315,7 @@ Definition code_OpVisitor_on_f32_max_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_min]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f32_min_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4960,7 +5324,7 @@ Definition code_OpVisitor_on_f32_min_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_div]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f32_div_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4969,7 +5333,7 @@ Definition code_OpVisitor_on_f32_div_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_mul]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f32_mul_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4978,7 +5342,7 @@ Definition code_OpVisitor_on_f32_mul_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_sub]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f32_sub_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4987,7 +5351,7 @@ Definition code_OpVisitor_on_f32_sub_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_add]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f32_add_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -4996,7 +5360,7 @@ Definition code_OpVisitor_on_f32_add_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_rotr]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_rotr_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5005,7 +5369,7 @@ Definition code_OpVisitor_on_i64_rotr_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_rotl]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_rotl_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5014,7 +5378,7 @@ Definition code_OpVisitor_on_i64_rotl_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_shr_u]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_shr_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5023,7 +5387,7 @@ Definition code_OpVisitor_on_i64_shr_u_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_shr_s]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_shr_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5032,7 +5396,7 @@ Definition code_OpVisitor_on_i64_shr_s_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_shl]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_shl_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5041,7 +5405,7 @@ Definition code_OpVisitor_on_i64_shl_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_xor]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_xor_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5050,7 +5414,7 @@ Definition code_OpVisitor_on_i64_xor_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_or]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_or_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5059,7 +5423,7 @@ Definition code_OpVisitor_on_i64_or_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_and]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_and_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5068,7 +5432,7 @@ Definition code_OpVisitor_on_i64_and_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_rem_u]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_rem_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5077,7 +5441,7 @@ Definition code_OpVisitor_on_i64_rem_u_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_rem_s]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_rem_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5086,7 +5450,7 @@ Definition code_OpVisitor_on_i64_rem_s_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_div_u]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_div_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5095,7 +5459,7 @@ Definition code_OpVisitor_on_i64_div_u_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_div_s]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_div_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5104,7 +5468,7 @@ Definition code_OpVisitor_on_i64_div_s_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_mul]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_mul_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5113,7 +5477,7 @@ Definition code_OpVisitor_on_i64_mul_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_sub]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_sub_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5122,7 +5486,7 @@ Definition code_OpVisitor_on_i64_sub_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_add]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_add_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5131,7 +5495,7 @@ Definition code_OpVisitor_on_i64_add_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_rotr]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_rotr_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5140,7 +5504,7 @@ Definition code_OpVisitor_on_i32_rotr_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_rotl]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_rotl_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5149,7 +5513,7 @@ Definition code_OpVisitor_on_i32_rotl_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_shr_u]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_shr_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5158,7 +5522,7 @@ Definition code_OpVisitor_on_i32_shr_u_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_shr_s]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_shr_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5167,7 +5531,7 @@ Definition code_OpVisitor_on_i32_shr_s_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_shl]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_shl_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5176,7 +5540,7 @@ Definition code_OpVisitor_on_i32_shl_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_xor]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_xor_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5185,7 +5549,7 @@ Definition code_OpVisitor_on_i32_xor_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_or]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_or_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5194,7 +5558,7 @@ Definition code_OpVisitor_on_i32_or_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_and]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_and_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5203,7 +5567,7 @@ Definition code_OpVisitor_on_i32_and_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_rem_u]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_rem_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5212,7 +5576,7 @@ Definition code_OpVisitor_on_i32_rem_u_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_rem_s]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_rem_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5221,7 +5585,7 @@ Definition code_OpVisitor_on_i32_rem_s_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_div_u]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_div_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5230,7 +5594,7 @@ Definition code_OpVisitor_on_i32_div_u_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_div_s]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_div_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5239,7 +5603,7 @@ Definition code_OpVisitor_on_i32_div_s_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_mul]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_mul_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5248,7 +5612,7 @@ Definition code_OpVisitor_on_i32_mul_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_sub]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_sub_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5257,7 +5621,7 @@ Definition code_OpVisitor_on_i32_sub_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_ge]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f64_ge_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5266,7 +5630,7 @@ Definition code_OpVisitor_on_f64_ge_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_le]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f64_le_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5275,7 +5639,7 @@ Definition code_OpVisitor_on_f64_le_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_gt]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f64_gt_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5284,7 +5648,7 @@ Definition code_OpVisitor_on_f64_gt_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_lt]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f64_lt_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5293,7 +5657,7 @@ Definition code_OpVisitor_on_f64_lt_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_ne]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f64_ne_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5302,7 +5666,7 @@ Definition code_OpVisitor_on_f64_ne_default
 .
 
 (** [itasca::code::OpVisitor::on_f64_eq]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f64_eq_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5311,7 +5675,7 @@ Definition code_OpVisitor_on_f64_eq_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_ge]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f32_ge_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5320,7 +5684,7 @@ Definition code_OpVisitor_on_f32_ge_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_le]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f32_le_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5329,7 +5693,7 @@ Definition code_OpVisitor_on_f32_le_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_gt]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f32_gt_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5338,7 +5702,7 @@ Definition code_OpVisitor_on_f32_gt_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_lt]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f32_lt_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5347,7 +5711,7 @@ Definition code_OpVisitor_on_f32_lt_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_ne]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f32_ne_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5356,7 +5720,7 @@ Definition code_OpVisitor_on_f32_ne_default
 .
 
 (** [itasca::code::OpVisitor::on_f32_eq]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_f32_eq_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5365,7 +5729,7 @@ Definition code_OpVisitor_on_f32_eq_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_ge_u]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_ge_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5374,7 +5738,7 @@ Definition code_OpVisitor_on_i64_ge_u_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_ge_s]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_ge_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5383,7 +5747,7 @@ Definition code_OpVisitor_on_i64_ge_s_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_le_u]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_le_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5392,7 +5756,7 @@ Definition code_OpVisitor_on_i64_le_u_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_le_s]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_le_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5401,7 +5765,7 @@ Definition code_OpVisitor_on_i64_le_s_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_gt_u]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_gt_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5410,7 +5774,7 @@ Definition code_OpVisitor_on_i64_gt_u_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_gt_s]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_gt_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5419,7 +5783,7 @@ Definition code_OpVisitor_on_i64_gt_s_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_lt_u]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_lt_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5428,7 +5792,7 @@ Definition code_OpVisitor_on_i64_lt_u_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_lt_s]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_lt_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5437,7 +5801,7 @@ Definition code_OpVisitor_on_i64_lt_s_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_ne]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_ne_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5446,7 +5810,7 @@ Definition code_OpVisitor_on_i64_ne_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_eq]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_eq_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5455,7 +5819,7 @@ Definition code_OpVisitor_on_i64_eq_default
 .
 
 (** [itasca::code::OpVisitor::on_i64_eqz]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i64_eqz_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5464,7 +5828,7 @@ Definition code_OpVisitor_on_i64_eqz_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_ge_u]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_ge_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5473,7 +5837,7 @@ Definition code_OpVisitor_on_i32_ge_u_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_ge_s]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_ge_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5482,7 +5846,7 @@ Definition code_OpVisitor_on_i32_ge_s_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_le_u]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_le_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5491,7 +5855,7 @@ Definition code_OpVisitor_on_i32_le_u_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_le_s]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_le_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5500,7 +5864,7 @@ Definition code_OpVisitor_on_i32_le_s_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_gt_u]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_gt_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5509,7 +5873,7 @@ Definition code_OpVisitor_on_i32_gt_u_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_gt_s]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_gt_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5518,7 +5882,7 @@ Definition code_OpVisitor_on_i32_gt_s_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_lt_u]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_lt_u_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5527,7 +5891,7 @@ Definition code_OpVisitor_on_i32_lt_u_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_lt_s]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_lt_s_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5536,7 +5900,7 @@ Definition code_OpVisitor_on_i32_lt_s_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_ne]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_ne_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5545,7 +5909,7 @@ Definition code_OpVisitor_on_i32_ne_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_eq]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_eq_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5554,7 +5918,7 @@ Definition code_OpVisitor_on_i32_eq_default
 .
 
 (** [itasca::code::OpVisitor::on_i32_eqz]:
-    Source: 'src/code.rs', lines 1803:10-1805:9 *)
+    Source: 'src/code.rs', lines 2034:10-2036:9 *)
 Definition code_OpVisitor_on_i32_eqz_default
   {Self : Type} (self : Self) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -5563,7 +5927,7 @@ Definition code_OpVisitor_on_i32_eqz_default
 .
 
 (** [itasca::code::visit_numeric]:
-    Source: 'src/code.rs', lines 2028:8-2037:9 *)
+    Source: 'src/code.rs', lines 2244:8-2253:9 *)
 Definition code_visit_numeric
   {V : Type} (opVisitorInst : code_OpVisitor_t V) (v : V)
   (st : code_OpIterState_t) (opcode : u8) :
@@ -6350,7 +6714,7 @@ Definition code_visit_numeric
 .
 
 (** [itasca::code::step_numeric]:
-    Source: 'src/code.rs', lines 1540:0-1562:1 *)
+    Source: 'src/code.rs', lines 1784:0-1802:1 *)
 Definition code_step_numeric
   {V : Type} (opVisitorInst : code_OpVisitor_t V) (st : code_OpIterState_t)
   (opcode : u8) (v : V) :
@@ -6427,7 +6791,7 @@ Definition code_step_numeric
 .
 
 (** [itasca::code::step_memory]:
-    Source: 'src/code.rs', lines 1402:0-1535:1 *)
+    Source: 'src/code.rs', lines 1646:0-1779:1 *)
 Definition code_step_memory
   {V : Type} (opVisitorInst : code_OpVisitor_t V) (st : code_OpIterState_t)
   (data : slice u8) (env : module_Env_t) (opcode : u8) (v : V) :
@@ -7425,7 +7789,7 @@ Definition code_step_memory
 .
 
 (** [itasca::code::step]:
-    Source: 'src/code.rs', lines 1272:0-1400:1 *)
+    Source: 'src/code.rs', lines 1516:0-1644:1 *)
 Definition code_step
   {V : Type} (opVisitorInst : code_OpVisitor_t V) (st : code_OpIterState_t)
   (data : slice u8) (env : module_Env_t) (ctx : code_Context_t) (opcode : u8)
@@ -8345,26 +8709,26 @@ Definition code_step
 .
 
 (** [itasca::limits::MAX_FUNCTION_BYTES]
-    Source: 'src/limits.rs', lines 40:0-40:48 *)
+    Source: 'src/limits.rs', lines 33:0-33:48 *)
 Definition limits_max_function_bytes : usize := 7654321%usize.
 
 (** [itasca::code::validate_body_with]: loop 0:
-    Source: 'src/code.rs', lines 1602:4-1612:5 *)
+    Source: 'src/code.rs', lines 1837:4-1847:5 *)
 Definition code_validate_body_with_loop
   {V : Type} (opVisitorInst : code_OpVisitor_t V) (data : slice u8)
-  (env : module_Env_t) (v : alloc_vec_Vec types_ValueType_t)
-  (v1 : alloc_vec_Vec types_ValueType_t) (v2 : V) (st : code_OpIterState_t) :
+  (env : module_Env_t) (ls : code_LocalsStack_t) (o : option types_ValueType_t)
+  (v : V) (st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_OpError_t) * V)
   :=
   loop
-    (fun '((v3, st1) : (V * code_OpIterState_t)) =>
+    (fun '((v1, st1) : (V * code_OpIterState_t)) =>
       b <- code_control_stack_empty st1;
       if b
       then
         let i := slice_len data in
         if st1.(code_OpIterState_pos) s= i
-        then Ok (Done (Core_result_Result_Ok tt, v3))
-        else Ok (Done (Core_result_Result_Err Error_OpError_TrailingBytes, v3))
+        then Ok (Done (Core_result_Result_Ok tt, v1))
+        else Ok (Done (Core_result_Result_Err Error_OpError_TrailingBytes, v1))
       else (
         p <- code_read_op st1 data;
         let (r, st2) := p in
@@ -8375,31 +8739,31 @@ Definition code_validate_body_with_loop
         | Core_ops_control_flow_ControlFlow_Continue val =>
           t <-
             code_step opVisitorInst st2 data env
-              {| code_Context_locals := v; code_Context_results := v1 |} val
-              v3;
-          let '(r1, st3, v4) := t in
+              {| code_Context_locals := ls; code_Context_results := o |} val
+              v1;
+          let '(r1, st3, v2) := t in
           cf1 <-
             core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
               r1;
           match cf1 with
-          | Core_ops_control_flow_ControlFlow_Continue _ => Ok (Cont (v4, st3))
+          | Core_ops_control_flow_ControlFlow_Continue _ => Ok (Cont (v2, st3))
           | Core_ops_control_flow_ControlFlow_Break residual =>
             r2 <-
               core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
                 unit (core_convert_From_Blanket error_OpError_t) residual;
-            Ok (Done (r2, v4))
+            Ok (Done (r2, v2))
           end
         | Core_ops_control_flow_ControlFlow_Break residual =>
           r1 <-
             core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
               unit (core_convert_From_Blanket error_OpError_t) residual;
-          Ok (Done (r1, v3))
+          Ok (Done (r1, v1))
         end))
-    (v2, st)
+    (v, st)
 .
 
 (** [itasca::code::validate_body_with]:
-    Source: 'src/code.rs', lines 1592:0-1613:1 *)
+    Source: 'src/code.rs', lines 1827:0-1848:1 *)
 Definition code_validate_body_with
   {V : Type} (opVisitorInst : code_OpVisitor_t V) (data : slice u8)
   (env : module_Env_t) (ctx : code_Context_t) (v : V) :
@@ -8409,14 +8773,13 @@ Definition code_validate_body_with
   if i s> limits_max_function_bytes
   then Ok (Core_result_Result_Err Error_OpError_BodyTooLarge, v)
   else (
-    let s := alloc_vec_Vec_deref ctx.(code_Context_results) in
-    st <- code_start_function s;
+    st <- code_start_function ctx.(code_Context_results);
     code_validate_body_with_loop opVisitorInst data env
       ctx.(code_Context_locals) ctx.(code_Context_results) v st)
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_reinterpret_i64]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_reinterpret_i64
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8426,7 +8789,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_reinterpret_i64
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_reinterpret_i32]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_reinterpret_i32
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8436,7 +8799,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_reinterpret_i32
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_reinterpret_f64]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_reinterpret_f64
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8446,7 +8809,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_reinterpret_f64
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_reinterpret_f32]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_reinterpret_f32
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8456,7 +8819,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_reinterpret_f32
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_promote_f32]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_promote_f32
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8466,7 +8829,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_promote_f32
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_convert_i64_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_convert_i64_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8476,7 +8839,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_convert_i64_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_convert_i64_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_convert_i64_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8486,7 +8849,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_convert_i64_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_convert_i32_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_convert_i32_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8496,7 +8859,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_convert_i32_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_convert_i32_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_convert_i32_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8506,7 +8869,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_convert_i32_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_demote_f64]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_demote_f64
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8516,7 +8879,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_demote_f64
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_convert_i64_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_convert_i64_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8526,7 +8889,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_convert_i64_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_convert_i64_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_convert_i64_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8536,7 +8899,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_convert_i64_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_convert_i32_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_convert_i32_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8546,7 +8909,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_convert_i32_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_convert_i32_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_convert_i32_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8556,7 +8919,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_convert_i32_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_trunc_f64_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_trunc_f64_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8566,7 +8929,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_trunc_f64_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_trunc_f64_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_trunc_f64_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8576,7 +8939,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_trunc_f64_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_trunc_f32_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_trunc_f32_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8586,7 +8949,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_trunc_f32_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_trunc_f32_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_trunc_f32_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8596,7 +8959,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_trunc_f32_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_extend_i32_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_extend_i32_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8606,7 +8969,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_extend_i32_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_extend_i32_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_extend_i32_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8616,7 +8979,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_extend_i32_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_trunc_f64_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_trunc_f64_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8626,7 +8989,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_trunc_f64_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_trunc_f64_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_trunc_f64_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8636,7 +8999,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_trunc_f64_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_trunc_f32_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_trunc_f32_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8646,7 +9009,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_trunc_f32_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_trunc_f32_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_trunc_f32_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8656,7 +9019,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_trunc_f32_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_wrap_i64]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_wrap_i64
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8666,7 +9029,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_wrap_i64
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_sqrt]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_sqrt
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8676,7 +9039,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_sqrt
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_nearest]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_nearest
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8686,7 +9049,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_nearest
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_trunc]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_trunc
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8696,7 +9059,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_trunc
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_floor]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_floor
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8706,7 +9069,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_floor
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_ceil]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_ceil
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8716,7 +9079,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_ceil
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_neg]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_neg
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8726,7 +9089,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_neg
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_abs]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_abs
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8736,7 +9099,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_abs
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_sqrt]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_sqrt
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8746,7 +9109,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_sqrt
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_nearest]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_nearest
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8756,7 +9119,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_nearest
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_trunc]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_trunc
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8766,7 +9129,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_trunc
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_floor]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_floor
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8776,7 +9139,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_floor
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_ceil]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_ceil
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8786,7 +9149,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_ceil
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_neg]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_neg
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8796,7 +9159,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_neg
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_abs]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_abs
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8806,7 +9169,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_abs
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_popcnt]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_popcnt
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8816,7 +9179,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_popcnt
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_ctz]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_ctz
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8826,7 +9189,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_ctz
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_clz]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_clz
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8836,7 +9199,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_clz
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_add]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_add
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8846,7 +9209,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_add
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_popcnt]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_popcnt
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8856,7 +9219,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_popcnt
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_ctz]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_ctz
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8866,7 +9229,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_ctz
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_clz]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_clz
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8876,7 +9239,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_clz
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_copysign]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_copysign
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8886,7 +9249,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_copysign
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_max]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_max
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8896,7 +9259,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_max
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_min]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_min
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8906,7 +9269,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_min
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_div]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_div
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8916,7 +9279,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_div
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_mul]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_mul
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8926,7 +9289,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_mul
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_sub]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_sub
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8936,7 +9299,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_sub
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_add]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_add
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8946,7 +9309,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_add
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_copysign]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_copysign
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8956,7 +9319,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_copysign
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_max]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_max
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8966,7 +9329,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_max
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_min]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_min
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8976,7 +9339,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_min
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_div]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_div
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8986,7 +9349,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_div
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_mul]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_mul
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -8996,7 +9359,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_mul
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_sub]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_sub
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9006,7 +9369,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_sub
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_add]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_add
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9016,7 +9379,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_add
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_rotr]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_rotr
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9026,7 +9389,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_rotr
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_rotl]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_rotl
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9036,7 +9399,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_rotl
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_shr_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_shr_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9046,7 +9409,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_shr_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_shr_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_shr_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9056,7 +9419,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_shr_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_shl]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_shl
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9066,7 +9429,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_shl
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_xor]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_xor
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9076,7 +9439,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_xor
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_or]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_or
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9086,7 +9449,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_or
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_and]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_and
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9096,7 +9459,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_and
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_rem_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_rem_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9106,7 +9469,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_rem_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_rem_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_rem_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9116,7 +9479,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_rem_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_div_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_div_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9126,7 +9489,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_div_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_div_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_div_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9136,7 +9499,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_div_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_mul]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_mul
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9146,7 +9509,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_mul
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_sub]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_sub
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9156,7 +9519,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_sub
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_add]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_add
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9166,7 +9529,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_add
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_rotr]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_rotr
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9176,7 +9539,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_rotr
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_rotl]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_rotl
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9186,7 +9549,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_rotl
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_shr_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_shr_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9196,7 +9559,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_shr_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_shr_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_shr_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9206,7 +9569,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_shr_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_shl]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_shl
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9216,7 +9579,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_shl
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_xor]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_xor
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9226,7 +9589,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_xor
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_or]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_or
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9236,7 +9599,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_or
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_and]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_and
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9246,7 +9609,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_and
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_rem_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_rem_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9256,7 +9619,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_rem_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_rem_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_rem_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9266,7 +9629,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_rem_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_div_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_div_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9276,7 +9639,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_div_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_div_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_div_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9286,7 +9649,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_div_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_mul]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_mul
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9296,7 +9659,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_mul
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_sub]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_sub
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9306,7 +9669,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_sub
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_ge]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_ge
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9316,7 +9679,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_ge
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_le]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_le
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9326,7 +9689,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_le
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_gt]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_gt
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9336,7 +9699,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_gt
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_lt]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_lt
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9346,7 +9709,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_lt
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_ne]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_ne
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9356,7 +9719,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_ne
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_eq]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_eq
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9366,7 +9729,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_eq
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_ge]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_ge
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9376,7 +9739,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_ge
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_le]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_le
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9386,7 +9749,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_le
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_gt]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_gt
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9396,7 +9759,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_gt
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_lt]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_lt
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9406,7 +9769,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_lt
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_ne]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_ne
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9416,7 +9779,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_ne
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_eq]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_eq
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9426,7 +9789,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_eq
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_ge_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_ge_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9436,7 +9799,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_ge_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_ge_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_ge_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9446,7 +9809,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_ge_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_le_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_le_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9456,7 +9819,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_le_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_le_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_le_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9466,7 +9829,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_le_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_gt_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_gt_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9476,7 +9839,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_gt_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_gt_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_gt_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9486,7 +9849,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_gt_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_lt_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_lt_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9496,7 +9859,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_lt_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_lt_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_lt_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9506,7 +9869,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_lt_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_ne]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_ne
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9516,7 +9879,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_ne
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_eq]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_eq
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9526,7 +9889,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_eq
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_eqz]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_eqz
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9536,7 +9899,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_eqz
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_ge_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_ge_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9546,7 +9909,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_ge_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_ge_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_ge_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9556,7 +9919,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_ge_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_le_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_le_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9566,7 +9929,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_le_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_le_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_le_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9576,7 +9939,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_le_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_gt_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_gt_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9586,7 +9949,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_gt_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_gt_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_gt_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9596,7 +9959,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_gt_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_lt_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_lt_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9606,7 +9969,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_lt_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_lt_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_lt_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9616,7 +9979,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_lt_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_ne]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_ne
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9626,7 +9989,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_ne
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_eq]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_eq
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9636,7 +9999,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_eq
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_eqz]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_eqz
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9646,7 +10009,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_eqz
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_store32]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_store32
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -9657,7 +10020,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_store32
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_store16]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_store16
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -9668,7 +10031,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_store16
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_store8]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_store8
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -9679,7 +10042,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_store8
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_store16]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_store16
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -9690,7 +10053,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_store16
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_store8]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_store8
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -9701,7 +10064,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_store8
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_store]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_store
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -9712,7 +10075,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_store
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_store]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_store
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -9723,7 +10086,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_store
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_store]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_store
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -9734,7 +10097,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_store
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_store]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_store
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -9745,7 +10108,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_store
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_load32_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_load32_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -9756,7 +10119,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_load32_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_load32_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_load32_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -9767,7 +10130,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_load32_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_load16_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_load16_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -9778,7 +10141,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_load16_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_load16_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_load16_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -9789,7 +10152,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_load16_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_load8_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_load8_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -9800,7 +10163,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_load8_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_load8_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_load8_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -9811,7 +10174,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_load8_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_load16_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_load16_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -9822,7 +10185,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_load16_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_load16_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_load16_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -9833,7 +10196,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_load16_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_load8_u]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_load8_u
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -9844,7 +10207,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_load8_u
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_load8_s]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_load8_s
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -9855,7 +10218,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_load8_s
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_load]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_load
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -9866,7 +10229,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_load
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_load]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_load
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -9877,7 +10240,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_load
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_load]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_load
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -9888,7 +10251,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_load
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_load]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_load
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_memarg : code_MemArg_t) :
@@ -9899,7 +10262,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_load
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f64_const]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_const
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) (_bits : u64) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9909,7 +10272,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f64_const
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_f32_const]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_const
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) (_bits : u32) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9919,7 +10282,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_f32_const
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i64_const]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_const
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) (_v : i64) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9929,7 +10292,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i64_const
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_i32_const]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_const
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) (_v : i32) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9939,7 +10302,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_i32_const
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_memory_grow]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_memory_grow
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9949,7 +10312,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_memory_grow
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_memory_size]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_memory_size
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9959,7 +10322,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_memory_size
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_global_set]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_global_set
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) (_idx : u32) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9969,7 +10332,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_global_set
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_global_get]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_global_get
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) (_idx : u32) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9979,7 +10342,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_global_get
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_local_tee]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_local_tee
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) (_idx : u32) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9989,7 +10352,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_local_tee
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_local_set]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_local_set
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) (_idx : u32) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -9999,7 +10362,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_local_set
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_local_get]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_local_get
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) (_idx : u32) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -10009,7 +10372,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_local_get
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_select]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_select
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_ty : code_StackType_t) :
@@ -10020,7 +10383,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_select
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_drop]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_drop
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_ty : code_StackType_t) :
@@ -10031,7 +10394,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_drop
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_call_indirect]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_call_indirect
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) (_type_idx : u32) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -10041,7 +10404,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_call_indirect
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_call]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_call
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) (_idx : u32) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -10051,7 +10414,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_call
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_return]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_return
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -10061,7 +10424,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_return
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_br_table]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_br_table
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) (_default : u32)
   (_common : code_BlockType_t) :
@@ -10072,7 +10435,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_br_table
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_br_table_label]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_br_table_label
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) (_depth : u32) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -10082,7 +10445,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_br_table_label
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_br_if]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_br_if
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) (_depth : u32)
   (_bt : code_BlockType_t) :
@@ -10093,7 +10456,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_br_if
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_br]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_br
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) (_depth : u32)
   (_bt : code_BlockType_t) :
@@ -10104,7 +10467,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_br
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_end]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_end
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_kind : code_LabelKind_t) (_bt : code_BlockType_t) :
@@ -10115,7 +10478,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_end
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_else]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_else
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_bt : code_BlockType_t) :
@@ -10126,7 +10489,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_else
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_if]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_if
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_bt : code_BlockType_t) :
@@ -10137,7 +10500,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_if
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_loop]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_loop
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_bt : code_BlockType_t) :
@@ -10148,7 +10511,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_loop
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_block]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_block
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t)
   (_bt : code_BlockType_t) :
@@ -10159,7 +10522,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_block
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_nop]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_nop
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -10169,7 +10532,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_nop
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_unreachable]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_unreachable
   (self : code_EmptyOpVisitor_t) (_st : code_OpIterState_t) :
   result ((core_result_Result_t unit error_VisitError_t) *
@@ -10179,7 +10542,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_unreachable
 .
 
 (** [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}::on_function_start]:
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_function_start
   (self : code_EmptyOpVisitor_t) (_ctx : code_Context_t) (_type_idx : u32)
   (_body_begin : usize) (_body_end : usize) :
@@ -10190,7 +10553,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor_on_function_start
 .
 
 (** Trait implementation: [itasca::code::{itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}]
-    Source: 'src/code.rs', lines 2020:0-2020:36 *)
+    Source: 'src/code.rs', lines 2236:0-2236:36 *)
 Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor : code_OpVisitor_t
   code_EmptyOpVisitor_t := {|
   code_OpVisitor_t_on_function_start :=
@@ -10544,7 +10907,7 @@ Definition code_EmptyOpVisitor_Insts_ItascaCodeOpVisitor : code_OpVisitor_t
 |}.
 
 (** [itasca::code::validate_body]:
-    Source: 'src/code.rs', lines 1621:0-1624:1 *)
+    Source: 'src/code.rs', lines 1852:0-1855:1 *)
 Definition code_validate_body
   (data : slice u8) (env : module_Env_t) (ctx : code_Context_t) :
   result (core_result_Result_t unit error_OpError_t)
@@ -10557,7 +10920,7 @@ Definition code_validate_body
 .
 
 (** [itasca::code::OpVisitor::on_function_start]:
-    Source: 'src/code.rs', lines 1853:4-1861:5 *)
+    Source: 'src/code.rs', lines 2079:4-2087:5 *)
 Definition code_OpVisitor_on_function_start_default
   {Self : Type} (self : Self) (_ctx : code_Context_t) (_type_idx : u32)
   (_body_begin : usize) (_body_end : usize) :
@@ -10567,45 +10930,45 @@ Definition code_OpVisitor_on_function_start_default
 .
 
 (** [itasca::error::{core::convert::From<itasca::error::OpError> for itasca::error::Error}::from]:
-    Source: 'src/error.rs', lines 113:4-115:5 *)
+    Source: 'src/error.rs', lines 112:4-114:5 *)
 Definition error_Error_Insts_CoreConvertFromOpError_from
   (e : error_OpError_t) : result error_Error_t :=
   Ok (Error_Error_Read e)
 .
 
 (** Trait implementation: [itasca::error::{core::convert::From<itasca::error::OpError> for itasca::error::Error}]
-    Source: 'src/error.rs', lines 112:0-116:1 *)
+    Source: 'src/error.rs', lines 111:0-115:1 *)
 Definition error_Error_Insts_CoreConvertFromOpError : core_convert_From
   error_Error_t error_OpError_t := {|
   from_ := error_Error_Insts_CoreConvertFromOpError_from;
 |}.
 
 (** [itasca::limits::MAX_MEMORY_PAGES]
-    Source: 'src/limits.rs', lines 15:0-15:40 *)
+    Source: 'src/limits.rs', lines 14:0-14:40 *)
 Definition limits_max_memory_pages : u32 := 65536%u32.
 
 (** [itasca::limits::MAX_TABLE_ELEMS]
-    Source: 'src/limits.rs', lines 18:0-18:42 *)
+    Source: 'src/limits.rs', lines 17:0-17:42 *)
 Definition limits_max_table_elems : u32 := core_num_U32_MAX.
 
 (** [itasca::limits::MAX_TABLES]
-    Source: 'src/limits.rs', lines 21:0-21:32 *)
+    Source: 'src/limits.rs', lines 20:0-20:32 *)
 Definition limits_max_tables : usize := 1%usize.
 
 (** [itasca::limits::MAX_MEMORIES]
-    Source: 'src/limits.rs', lines 24:0-24:34 *)
+    Source: 'src/limits.rs', lines 23:0-23:34 *)
 Definition limits_max_memories : usize := 1%usize.
 
 (** [itasca::limits::MAX_MODULE_BYTES]
-    Source: 'src/limits.rs', lines 44:0-44:50 *)
+    Source: 'src/limits.rs', lines 37:0-37:50 *)
 Definition limits_max_module_bytes : usize := 1073741824%usize.
 
 (** [itasca::limits::MAX_LEB_BYTES]
-    Source: 'src/limits.rs', lines 49:0-49:35 *)
+    Source: 'src/limits.rs', lines 42:0-42:35 *)
 Definition limits_max_leb_bytes : usize := 5%usize.
 
 (** [itasca::limits::MAX_CODE_HEADER_BYTES]
-    Source: 'src/limits.rs', lines 54:0-54:63 *)
+    Source: 'src/limits.rs', lines 46:0-46:63 *)
 Definition limits_max_code_header_bytes_body : result usize :=
   i <- usize_mul 2%usize limits_max_leb_bytes; usize_add 1%usize i
 .
@@ -10614,11 +10977,11 @@ Definition limits_max_code_header_bytes : usize :=
 .
 
 (** [itasca::limits::MAX_LOCALS]
-    Source: 'src/limits.rs', lines 59:0-59:37 *)
+    Source: 'src/limits.rs', lines 51:0-51:37 *)
 Definition limits_max_locals : usize := 50000%usize.
 
 (** [itasca::limits::validate_limits]:
-    Source: 'src/limits.rs', lines 63:0-76:1 *)
+    Source: 'src/limits.rs', lines 55:0-68:1 *)
 Definition limits_validate_limits
   (limits : types_Limits_t) (range : u32) :
   result (core_result_Result_t unit error_Error_t)
@@ -10639,51 +11002,51 @@ Definition limits_validate_limits
 .
 
 (** [itasca::module::SECTION_CUSTOM]
-    Source: 'src/module.rs', lines 38:0-38:29 *)
+    Source: 'src/module.rs', lines 39:0-39:29 *)
 Definition module_section_custom : u8 := 0%u8.
 
 (** [itasca::module::SECTION_TYPE]
-    Source: 'src/module.rs', lines 39:0-39:27 *)
+    Source: 'src/module.rs', lines 40:0-40:27 *)
 Definition module_section_type : u8 := 1%u8.
 
 (** [itasca::module::SECTION_IMPORT]
-    Source: 'src/module.rs', lines 40:0-40:29 *)
+    Source: 'src/module.rs', lines 41:0-41:29 *)
 Definition module_section_import : u8 := 2%u8.
 
 (** [itasca::module::SECTION_FUNCTION]
-    Source: 'src/module.rs', lines 41:0-41:31 *)
+    Source: 'src/module.rs', lines 42:0-42:31 *)
 Definition module_section_function : u8 := 3%u8.
 
 (** [itasca::module::SECTION_TABLE]
-    Source: 'src/module.rs', lines 42:0-42:28 *)
+    Source: 'src/module.rs', lines 43:0-43:28 *)
 Definition module_section_table : u8 := 4%u8.
 
 (** [itasca::module::SECTION_MEMORY]
-    Source: 'src/module.rs', lines 43:0-43:29 *)
+    Source: 'src/module.rs', lines 44:0-44:29 *)
 Definition module_section_memory : u8 := 5%u8.
 
 (** [itasca::module::SECTION_GLOBAL]
-    Source: 'src/module.rs', lines 44:0-44:29 *)
+    Source: 'src/module.rs', lines 45:0-45:29 *)
 Definition module_section_global : u8 := 6%u8.
 
 (** [itasca::module::SECTION_EXPORT]
-    Source: 'src/module.rs', lines 45:0-45:29 *)
+    Source: 'src/module.rs', lines 46:0-46:29 *)
 Definition module_section_export : u8 := 7%u8.
 
 (** [itasca::module::SECTION_START]
-    Source: 'src/module.rs', lines 46:0-46:28 *)
+    Source: 'src/module.rs', lines 47:0-47:28 *)
 Definition module_section_start : u8 := 8%u8.
 
 (** [itasca::module::SECTION_ELEMENT]
-    Source: 'src/module.rs', lines 47:0-47:30 *)
+    Source: 'src/module.rs', lines 48:0-48:30 *)
 Definition module_section_element : u8 := 9%u8.
 
 (** [itasca::module::SECTION_CODE]
-    Source: 'src/module.rs', lines 48:0-48:28 *)
+    Source: 'src/module.rs', lines 49:0-49:28 *)
 Definition module_section_code : u8 := 10%u8.
 
 (** [itasca::module::SECTION_DATA]
-    Source: 'src/module.rs', lines 49:0-49:28 *)
+    Source: 'src/module.rs', lines 50:0-50:28 *)
 Definition module_section_data : u8 := 11%u8.
 
 (** [itasca::module::{itasca::module::Env}::new]:
@@ -10708,7 +11071,7 @@ Definition module_Env_new : result module_Env_t :=
 .
 
 (** [itasca::module::ModuleVisitor::on_custom_section]:
-    Source: 'src/module.rs', lines 1536:4-1538:5 *)
+    Source: 'src/module.rs', lines 1493:4-1495:5 *)
 Definition module_ModuleVisitor_on_custom_section_default
   {Self : Type} (self : Self) (_section : types_CustomSection_t) :
   result ((core_result_Result_t unit error_VisitError_t) * Self)
@@ -10717,7 +11080,7 @@ Definition module_ModuleVisitor_on_custom_section_default
 .
 
 (** [itasca::module::const_global]:
-    Source: 'src/module.rs', lines 635:0-648:1 *)
+    Source: 'src/module.rs', lines 625:0-638:1 *)
 Definition module_const_global
   (env : module_Env_t) (idx : u32) :
   result (core_result_Result_t types_GlobalType_t error_Error_t)
@@ -10742,7 +11105,7 @@ Definition module_const_global
 .
 
 (** [itasca::module::read_expr_end]:
-    Source: 'src/module.rs', lines 625:0-631:1 *)
+    Source: 'src/module.rs', lines 615:0-621:1 *)
 Definition module_read_expr_end
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t usize error_Error_t)
@@ -10763,7 +11126,7 @@ Definition module_read_expr_end
 .
 
 (** [itasca::module::expect_const_type]:
-    Source: 'src/module.rs', lines 618:0-623:1 *)
+    Source: 'src/module.rs', lines 608:0-613:1 *)
 Definition module_expect_const_type
   (actual : types_ValueType_t) (expected : types_ValueType_t) :
   result (core_result_Result_t unit error_Error_t)
@@ -10775,7 +11138,7 @@ Definition module_expect_const_type
 .
 
 (** [itasca::module::decode_const_expr]:
-    Source: 'src/module.rs', lines 652:0-691:1 *)
+    Source: 'src/module.rs', lines 642:0-681:1 *)
 Definition module_decode_const_expr
   (data : slice u8) (pos : usize) (env : module_Env_t)
   (expected : types_ValueType_t) :
@@ -10999,7 +11362,7 @@ Definition module_decode_const_expr
 .
 
 (** [itasca::module::have_bytes]:
-    Source: 'src/module.rs', lines 352:0-357:1 *)
+    Source: 'src/module.rs', lines 342:0-347:1 *)
 Definition module_have_bytes
   (data : slice u8) (pos : usize) (n : usize) :
   result (core_result_Result_t unit error_Error_t)
@@ -11012,7 +11375,7 @@ Definition module_have_bytes
 .
 
 (** [itasca::module::copy_bytes]: loop 0:
-    Source: 'src/module.rs', lines 341:4-347:5 *)
+    Source: 'src/module.rs', lines 331:4-337:5 *)
 Definition module_copy_bytes_loop
   (data : slice u8) (to : usize) (out : alloc_vec_Vec u8) (i : usize) :
   result (alloc_vec_Vec u8)
@@ -11030,14 +11393,16 @@ Definition module_copy_bytes_loop
 .
 
 (** [itasca::module::copy_bytes]:
-    Source: 'src/module.rs', lines 338:0-348:1 *)
+    Source: 'src/module.rs', lines 325:0-338:1 *)
 Definition module_copy_bytes
   (data : slice u8) (from : usize) (to : usize) : result (alloc_vec_Vec u8) :=
-  module_copy_bytes_loop data to (alloc_vec_Vec_new u8) from
+  i <- usize_sub to from;
+  let out := alloc_vec_Vec_with_capacity u8 i in
+  module_copy_bytes_loop data to out from
 .
 
 (** [itasca::module::decode_data_segment]:
-    Source: 'src/module.rs', lines 1387:0-1405:1 *)
+    Source: 'src/module.rs', lines 1363:0-1381:1 *)
 Definition module_decode_data_segment
   (data : slice u8) (pos : usize) (env : module_Env_t) :
   result (core_result_Result_t (module_Data_t * usize) error_Error_t)
@@ -11104,7 +11469,7 @@ Definition module_decode_data_segment
 .
 
 (** [itasca::module::decode_data_section]: loop 0:
-    Source: 'src/module.rs', lines 1412:4-1420:5 *)
+    Source: 'src/module.rs', lines 1388:4-1396:5 *)
 Definition module_decode_data_section_loop
   (data : slice u8) (env : module_Env_t) (count : u32)
   (out : alloc_vec_Vec module_Data_t) (q : usize) (i : u32) :
@@ -11137,7 +11502,7 @@ Definition module_decode_data_section_loop
 .
 
 (** [itasca::module::decode_data_section]:
-    Source: 'src/module.rs', lines 1407:0-1421:1 *)
+    Source: 'src/module.rs', lines 1383:0-1397:1 *)
 Definition module_decode_data_section
   (data : slice u8) (pos : usize) (env : module_Env_t) :
   result (core_result_Result_t ((alloc_vec_Vec module_Data_t) * usize)
@@ -11159,7 +11524,7 @@ Definition module_decode_data_section
 .
 
 (** [itasca::module::utf8_cont]:
-    Source: 'src/module.rs', lines 514:0-523:1 *)
+    Source: 'src/module.rs', lines 504:0-513:1 *)
 Definition module_utf8_cont
   (bytes : slice u8) (i : usize) (lo : u8) (hi : u8) :
   result (core_result_Result_t unit error_Error_t)
@@ -11178,7 +11543,7 @@ Definition module_utf8_cont
 .
 
 (** [itasca::module::utf8_sequence_len]:
-    Source: 'src/module.rs', lines 530:0-573:1 *)
+    Source: 'src/module.rs', lines 519:0-562:1 *)
 Definition module_utf8_sequence_len
   (bytes : slice u8) (i : usize) :
   result (core_result_Result_t usize error_Error_t)
@@ -12088,7 +12453,7 @@ Definition module_utf8_sequence_len
 .
 
 (** [itasca::module::validate_utf8]: loop 0:
-    Source: 'src/module.rs', lines 577:4-583:5 *)
+    Source: 'src/module.rs', lines 566:4-572:5 *)
 Definition module_validate_utf8_loop
   (bytes : slice u8) (i : usize) :
   result (core_result_Result_t unit error_Error_t)
@@ -12116,14 +12481,14 @@ Definition module_validate_utf8_loop
 .
 
 (** [itasca::module::validate_utf8]:
-    Source: 'src/module.rs', lines 575:0-584:1 *)
+    Source: 'src/module.rs', lines 564:0-573:1 *)
 Definition module_validate_utf8
   (bytes : slice u8) : result (core_result_Result_t unit error_Error_t) :=
   module_validate_utf8_loop bytes 0%usize
 .
 
 (** [itasca::module::decode_name]:
-    Source: 'src/module.rs', lines 587:0-594:1 *)
+    Source: 'src/module.rs', lines 576:0-583:1 *)
 Definition module_decode_name
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t ((alloc_vec_Vec u8) * usize) error_Error_t)
@@ -12168,7 +12533,7 @@ Definition module_decode_name
 .
 
 (** [itasca::module::decode_custom_section]:
-    Source: 'src/module.rs', lines 604:0-614:1 *)
+    Source: 'src/module.rs', lines 594:0-604:1 *)
 Definition module_decode_custom_section
   (data : slice u8) (pos : usize) (end1 : usize) :
   result (core_result_Result_t types_CustomSection_t error_Error_t)
@@ -12196,7 +12561,7 @@ Definition module_decode_custom_section
 .
 
 (** [itasca::module::read_section_header]:
-    Source: 'src/module.rs', lines 382:0-388:1 *)
+    Source: 'src/module.rs', lines 372:0-378:1 *)
 Definition module_read_section_header
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (u8 * usize * usize) error_Error_t)
@@ -12237,7 +12602,7 @@ Definition module_read_section_header
 .
 
 (** [itasca::module::validate_tail_with]: loop 0:
-    Source: 'src/module.rs', lines 1451:4-1474:5 *)
+    Source: 'src/module.rs', lines 1420:4-1443:5 *)
 Definition module_validate_tail_with_loop
   {V : Type} (moduleVisitorInst : module_ModuleVisitor_t V) (data : slice u8)
   (env : module_Env_t) (v : V) (segments : alloc_vec_Vec module_Data_t)
@@ -12325,7 +12690,7 @@ Definition module_validate_tail_with_loop
 .
 
 (** [itasca::module::validate_tail_with]:
-    Source: 'src/module.rs', lines 1442:0-1475:1 *)
+    Source: 'src/module.rs', lines 1411:0-1444:1 *)
 Definition module_validate_tail_with
   {V : Type} (moduleVisitorInst : module_ModuleVisitor_t V) (data : slice u8)
   (pos : usize) (env : module_Env_t) (v : V) :
@@ -12336,7 +12701,7 @@ Definition module_validate_tail_with
 .
 
 (** [itasca::module::CodeVisitor::on_need_bytes]:
-    Source: 'src/module.rs', lines 1590:4-1592:5 *)
+    Source: 'src/module.rs', lines 1537:4-1539:5 *)
 Definition module_CodeVisitor_on_need_bytes_default
   {Self : Type} (self : Self) (_end : usize) :
   result ((core_result_Result_t unit error_Error_t) * Self)
@@ -12345,7 +12710,7 @@ Definition module_CodeVisitor_on_need_bytes_default
 .
 
 (** [itasca::module::no_code_section]:
-    Source: 'src/module.rs', lines 1331:0-1336:1 *)
+    Source: 'src/module.rs', lines 1313:0-1318:1 *)
 Definition module_no_code_section
   (env : module_Env_t) :
   result (core_result_Result_t (option module_CodeSection_t) error_Error_t)
@@ -12359,7 +12724,7 @@ Definition module_no_code_section
 .
 
 (** [itasca::module::code_section]:
-    Source: 'src/module.rs', lines 1310:0-1327:1 *)
+    Source: 'src/module.rs', lines 1292:0-1309:1 *)
 Definition module_code_section
   (data : slice u8) (pos : usize) (env : module_Env_t) :
   result (core_result_Result_t (option module_CodeSection_t) error_Error_t)
@@ -12407,94 +12772,34 @@ Definition module_code_section
     end)
 .
 
-(** [itasca::module::copy_value_types]: loop 0:
-    Source: 'src/module.rs', lines 698:4-704:5 *)
-Definition module_copy_value_types_loop
-  (src : slice types_ValueType_t) (out : alloc_vec_Vec types_ValueType_t)
-  (i : usize) :
-  result (alloc_vec_Vec types_ValueType_t)
-  :=
-  loop
-    (fun '((out1, i1) : ((alloc_vec_Vec types_ValueType_t) * usize)) =>
-      let i2 := slice_len src in
-      if i1 s>= i2
-      then Ok (Done out1)
-      else (
-        vt <- slice_index_usize src i1;
-        out2 <- alloc_vec_Vec_push out1 vt;
-        i3 <- usize_add i1 1%usize;
-        Ok (Cont (out2, i3))))
-    (out, i)
-.
-
-(** [itasca::module::copy_value_types]:
-    Source: 'src/module.rs', lines 695:0-705:1 *)
-Definition module_copy_value_types
-  (src : slice types_ValueType_t) : result (alloc_vec_Vec types_ValueType_t) :=
-  module_copy_value_types_loop src (alloc_vec_Vec_new types_ValueType_t)
-    0%usize
-.
-
-(** [itasca::module::build_func_locals]: loop 0:
-    Source: 'src/module.rs', lines 1147:4-1153:5 *)
-Definition module_build_func_locals_loop
-  (declared : slice types_ValueType_t)
-  (locals : alloc_vec_Vec types_ValueType_t) (i : usize) :
-  result (alloc_vec_Vec types_ValueType_t)
-  :=
-  loop
-    (fun '((locals1, i1) : ((alloc_vec_Vec types_ValueType_t) * usize)) =>
-      let i2 := slice_len declared in
-      if i1 s>= i2
-      then Ok (Done locals1)
-      else (
-        vt <- slice_index_usize declared i1;
-        locals2 <- alloc_vec_Vec_push locals1 vt;
-        i3 <- usize_add i1 1%usize;
-        Ok (Cont (locals2, i3))))
-    (locals, i)
-.
-
-(** [itasca::module::build_func_locals]:
-    Source: 'src/module.rs', lines 1144:0-1154:1 *)
-Definition module_build_func_locals
-  (params : slice types_ValueType_t) (declared : slice types_ValueType_t) :
-  result (alloc_vec_Vec types_ValueType_t)
-  :=
-  locals <- module_copy_value_types params;
-  module_build_func_locals_loop declared locals 0%usize
-.
-
 (** [itasca::module::push_locals]: loop 0:
-    Source: 'src/module.rs', lines 1112:4-1118:5 *)
+    Source: 'src/module.rs', lines 1104:4-1110:5 *)
 Definition module_push_locals_loop
-  (out : alloc_vec_Vec types_ValueType_t) (count : u32)
-  (vt : types_ValueType_t) (i : u32) :
-  result (alloc_vec_Vec types_ValueType_t)
+  (out : code_LocalsStack_t) (count : u32) (vt : types_ValueType_t) (i : u32) :
+  result code_LocalsStack_t
   :=
   loop
-    (fun '((out1, i1) : ((alloc_vec_Vec types_ValueType_t) * u32)) =>
+    (fun '((out1, i1) : (code_LocalsStack_t * u32)) =>
       if i1 s>= count
       then Ok (Done out1)
       else (
-        out2 <- alloc_vec_Vec_push out1 vt;
+        out2 <- code_LocalsStack_push out1 vt;
         i2 <- u32_add i1 1%u32;
         Ok (Cont (out2, i2))))
     (out, i)
 .
 
 (** [itasca::module::push_locals]:
-    Source: 'src/module.rs', lines 1110:0-1119:1 *)
+    Source: 'src/module.rs', lines 1102:0-1111:1 *)
 Definition module_push_locals
-  (out : alloc_vec_Vec types_ValueType_t) (count : u32)
-  (vt : types_ValueType_t) :
-  result (alloc_vec_Vec types_ValueType_t)
+  (out : code_LocalsStack_t) (count : u32) (vt : types_ValueType_t) :
+  result code_LocalsStack_t
   :=
   module_push_locals_loop out count vt 0%u32
 .
 
 (** [itasca::module::decode_value_type]:
-    Source: 'src/module.rs', lines 392:0-407:1 *)
+    Source: 'src/module.rs', lines 382:0-397:1 *)
 Definition module_decode_value_type
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (types_ValueType_t * usize) error_Error_t)
@@ -12524,19 +12829,38 @@ Definition module_decode_value_type
   end
 .
 
-(** [itasca::module::decode_locals]: loop 0:
-    Source: 'src/module.rs', lines 1127:4-1141:5 *)
-Definition module_decode_locals_loop
-  (data : slice u8) (groups : u32) (out : alloc_vec_Vec types_ValueType_t)
-  (q : usize) (i : u32) :
-  result (core_result_Result_t ((alloc_vec_Vec types_ValueType_t) * usize)
-    error_Error_t)
+(** [itasca::module::decode_and_build_locals]: loop 0:
+    Source: 'src/module.rs', lines 1128:4-1134:5 *)
+Definition module_decode_and_build_locals_loop0
+  (params : slice types_ValueType_t) (locals : code_LocalsStack_t) (i : usize)
+  :
+  result code_LocalsStack_t
   :=
   loop
-    (fun '((out1, q1, i1) : ((alloc_vec_Vec types_ValueType_t) * usize * u32))
-      =>
-      if i1 s>= groups
-      then Ok (Done (Core_result_Result_Ok (out1, q1)))
+    (fun '((locals1, i1) : (code_LocalsStack_t * usize)) =>
+      let i2 := slice_len params in
+      if i1 s>= i2
+      then Ok (Done locals1)
+      else (
+        vt <- slice_index_usize params i1;
+        locals2 <- code_LocalsStack_push locals1 vt;
+        i3 <- usize_add i1 1%usize;
+        Ok (Cont (locals2, i3))))
+    (locals, i)
+.
+
+(** [itasca::module::decode_and_build_locals]: loop 1:
+    Source: 'src/module.rs', lines 1141:4-1156:5 *)
+Definition module_decode_and_build_locals_loop1
+  (data : slice u8) (groups : u32) (locals : code_LocalsStack_t)
+  (declared_len : usize) (q : usize) (g : u32) :
+  result (core_result_Result_t (code_LocalsStack_t * usize) error_Error_t)
+  :=
+  loop
+    (fun '((locals1, declared_len1, q1, g1) : (code_LocalsStack_t * usize *
+      usize * u32)) =>
+      if g1 s>= groups
+      then Ok (Done (Core_result_Result_Ok (locals1, q1)))
       else (
         r <- reader_read_u32_leb data q1;
         cf <-
@@ -12552,38 +12876,37 @@ Definition module_decode_locals_loop
           match cf1 with
           | Core_ops_control_flow_ControlFlow_Continue val1 =>
             let (vt, q2) := val1 in
-            i2 <- scalar_cast U32 Usize count;
-            let i3 := alloc_vec_Vec_len out1 in
-            i4 <- usize_sub limits_max_locals i3;
-            if i2 s> i4
+            i <- scalar_cast U32 Usize count;
+            i1 <- usize_sub limits_max_locals declared_len1;
+            if i s> i1
             then Ok (Done (Core_result_Result_Err Error_Error_TooManyLocals))
             else (
-              out2 <- module_push_locals out1 count vt;
-              i5 <- u32_add i1 1%u32;
-              Ok (Cont (out2, q2, i5)))
+              locals2 <- module_push_locals locals1 count vt;
+              declared_len2 <- usize_add declared_len1 i;
+              g2 <- u32_add g1 1%u32;
+              Ok (Cont (locals2, declared_len2, q2, g2)))
           | Core_ops_control_flow_ControlFlow_Break residual =>
             r2 <-
               core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-                ((alloc_vec_Vec types_ValueType_t) * usize)
-                (core_convert_From_Blanket error_Error_t) residual;
+                (code_LocalsStack_t * usize) (core_convert_From_Blanket
+                error_Error_t) residual;
             Ok (Done r2)
           end
         | Core_ops_control_flow_ControlFlow_Break residual =>
           r1 <-
             core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-              ((alloc_vec_Vec types_ValueType_t) * usize)
+              (code_LocalsStack_t * usize)
               error_Error_Insts_CoreConvertFromOpError residual;
           Ok (Done r1)
         end))
-    (out, q, i)
+    (locals, declared_len, q, g)
 .
 
-(** [itasca::module::decode_locals]:
-    Source: 'src/module.rs', lines 1122:0-1142:1 *)
-Definition module_decode_locals
-  (data : slice u8) (pos : usize) :
-  result (core_result_Result_t ((alloc_vec_Vec types_ValueType_t) * usize)
-    error_Error_t)
+(** [itasca::module::decode_and_build_locals]:
+    Source: 'src/module.rs', lines 1120:0-1157:1 *)
+Definition module_decode_and_build_locals
+  (data : slice u8) (pos : usize) (params : slice types_ValueType_t) :
+  result (core_result_Result_t (code_LocalsStack_t * usize) error_Error_t)
   :=
   r <- reader_read_u32_leb data pos;
   cf <-
@@ -12591,17 +12914,28 @@ Definition module_decode_locals
   match cf with
   | Core_ops_control_flow_ControlFlow_Continue val =>
     let (groups, p) := val in
-    module_decode_locals_loop data groups (alloc_vec_Vec_new types_ValueType_t)
-      p 0%u32
+    locals <- code_LocalsStack_new;
+    locals1 <- module_decode_and_build_locals_loop0 params locals 0%usize;
+    module_decode_and_build_locals_loop1 data groups locals1 0%usize p 0%u32
   | Core_ops_control_flow_ControlFlow_Break residual =>
     core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-      ((alloc_vec_Vec types_ValueType_t) * usize)
-      error_Error_Insts_CoreConvertFromOpError residual
+      (code_LocalsStack_t * usize) error_Error_Insts_CoreConvertFromOpError
+      residual
   end
 .
 
+(** [itasca::module::single_result]:
+    Source: 'src/module.rs', lines 688:0-694:1 *)
+Definition module_single_result
+  (results : slice types_ValueType_t) : result (option types_ValueType_t) :=
+  let i := slice_len results in
+  if i s= 0%usize
+  then Ok None
+  else (vt <- slice_index_usize results 0%usize; Ok (Some vt))
+.
+
 (** [itasca::module::validate_code_entry_with]:
-    Source: 'src/module.rs', lines 1190:0-1233:1 *)
+    Source: 'src/module.rs', lines 1177:0-1221:1 *)
 Definition module_validate_code_entry_with
   {V : Type} (codeOpVisitorInst : code_OpVisitor_t V) (data : slice u8)
   (pos : usize) (env : module_Env_t) (index : usize) (v : V) :
@@ -12625,41 +12959,38 @@ Definition module_validate_code_entry_with
       match cf1 with
       | Core_ops_control_flow_ControlFlow_Continue _ =>
         end1 <- usize_add p n;
-        r2 <- module_decode_locals data p;
-        cf2 <-
-          core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
-            r2;
-        match cf2 with
-        | Core_ops_control_flow_ControlFlow_Continue val1 =>
-          let (declared, p1) := val1 in
-          if p1 s> end1
-          then Ok (Core_result_Result_Err Error_Error_SectionSizeMismatch, v)
-          else (
-            type_idx <-
-              alloc_vec_Vec_index (core_slice_index_SliceIndexUsizeSliceInst
-                u32) env.(module_Env_func_type_indices) index;
-            t <- scalar_cast U32 Usize type_idx;
-            let i1 := alloc_vec_Vec_len env.(module_Env_types) in
-            if t s>= i1
-            then
-              Ok (Core_result_Result_Err (Error_Error_UnknownType type_idx), v)
+        type_idx <-
+          alloc_vec_Vec_index (core_slice_index_SliceIndexUsizeSliceInst u32)
+            env.(module_Env_func_type_indices) index;
+        t <- scalar_cast U32 Usize type_idx;
+        let i1 := alloc_vec_Vec_len env.(module_Env_types) in
+        if t s>= i1
+        then Ok (Core_result_Result_Err (Error_Error_UnknownType type_idx), v)
+        else (
+          ft <-
+            alloc_vec_Vec_index (core_slice_index_SliceIndexUsizeSliceInst
+              types_FuncType_t) env.(module_Env_types) t;
+          let s := alloc_vec_Vec_deref ft.(types_FuncType_params) in
+          r2 <- module_decode_and_build_locals data p s;
+          cf2 <-
+            core_result_Result_Insts_CoreOpsTry_traitTryTResultInfallibleE_branch
+              r2;
+          match cf2 with
+          | Core_ops_control_flow_ControlFlow_Continue val1 =>
+            let (locals, p1) := val1 in
+            if p1 s> end1
+            then Ok (Core_result_Result_Err Error_Error_SectionSizeMismatch, v)
             else (
-              ft <-
-                alloc_vec_Vec_index (core_slice_index_SliceIndexUsizeSliceInst
-                  types_FuncType_t) env.(module_Env_types) t;
-              let s := alloc_vec_Vec_deref ft.(types_FuncType_params) in
-              let s1 := alloc_vec_Vec_deref declared in
-              v1 <- module_build_func_locals s s1;
-              let s2 := alloc_vec_Vec_deref ft.(types_FuncType_results) in
-              v2 <- module_copy_value_types s2;
+              let s1 := alloc_vec_Vec_deref ft.(types_FuncType_results) in
+              o <- module_single_result s1;
               p2 <-
                 codeOpVisitorInst.(code_OpVisitor_t_on_function_start) v
-                  {| code_Context_locals := v1; code_Context_results := v2 |}
-                  type_idx p1 end1;
-              let (r3, v3) := p2 in
+                  {| code_Context_locals := locals; code_Context_results := o
+                  |} type_idx p1 end1;
+              let (r3, v1) := p2 in
               match r3 with
               | Core_result_Result_Ok _ =>
-                s3 <-
+                s2 <-
                   core_slice_index_Slice_index
                     (core_slice_index_SliceIndexRangeUsizeSliceInst u8) data
                     {|
@@ -12667,26 +12998,26 @@ Definition module_validate_code_entry_with
                       core_ops_range_Range_end_ := end1
                     |};
                 p3 <-
-                  code_validate_body_with codeOpVisitorInst s3 env
-                    {| code_Context_locals := v1; code_Context_results := v2 |}
-                    v3;
-                let (r4, v4) := p3 in
+                  code_validate_body_with codeOpVisitorInst s2 env
+                    {| code_Context_locals := locals; code_Context_results := o
+                    |} v1;
+                let (r4, v2) := p3 in
                 match r4 with
                 | Core_result_Result_Ok _ =>
-                  Ok (Core_result_Result_Ok end1, v4)
+                  Ok (Core_result_Result_Ok end1, v2)
                 | Core_result_Result_Err e =>
-                  Ok (Core_result_Result_Err (Error_Error_Body e), v4)
+                  Ok (Core_result_Result_Err (Error_Error_Body e), v2)
                 end
               | Core_result_Result_Err e =>
                 Ok (Core_result_Result_Err (Error_Error_Body
-                  (Error_OpError_Visitor e)), v3)
-              end))
-        | Core_ops_control_flow_ControlFlow_Break residual =>
-          r3 <-
-            core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
-              usize (core_convert_From_Blanket error_Error_t) residual;
-          Ok (r3, v)
-        end
+                  (Error_OpError_Visitor e)), v1)
+              end)
+          | Core_ops_control_flow_ControlFlow_Break residual =>
+            r3 <-
+              core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
+                usize (core_convert_From_Blanket error_Error_t) residual;
+            Ok (r3, v)
+          end)
       | Core_ops_control_flow_ControlFlow_Break residual =>
         r2 <-
           core_result_Result_Insts_CoreOpsTry_traitFromResidualResultInfallibleE_from_residual
@@ -12702,7 +13033,7 @@ Definition module_validate_code_entry_with
 .
 
 (** [itasca::module::validate_code_entry]:
-    Source: 'src/module.rs', lines 1239:0-1247:1 *)
+    Source: 'src/module.rs', lines 1227:0-1230:1 *)
 Definition module_validate_code_entry
   (data : slice u8) (pos : usize) (env : module_Env_t) (index : usize) :
   result (core_result_Result_t usize error_Error_t)
@@ -12715,7 +13046,7 @@ Definition module_validate_code_entry
 .
 
 (** [itasca::module::CodeVisitor::on_code_entry]:
-    Source: 'src/module.rs', lines 1606:4-1617:5 *)
+    Source: 'src/module.rs', lines 1550:4-1561:5 *)
 Definition module_CodeVisitor_on_code_entry_default
   {Self : Type} (self : Self) (data : slice u8) (env : module_Env_t)
   (index : usize) (entry_pos : usize) (_contents_start : usize)
@@ -12737,7 +13068,7 @@ Definition module_CodeVisitor_on_code_entry_default
 .
 
 (** [itasca::module::code_entry_extent]:
-    Source: 'src/module.rs', lines 1487:0-1492:1 *)
+    Source: 'src/module.rs', lines 1455:0-1460:1 *)
 Definition module_code_entry_extent
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (usize * usize) error_Error_t)
@@ -12766,7 +13097,7 @@ Definition module_code_entry_extent
 .
 
 (** [itasca::module::validate_code_entries_with]: loop 0:
-    Source: 'src/module.rs', lines 1260:4-1272:5 *)
+    Source: 'src/module.rs', lines 1244:4-1256:5 *)
 Definition module_validate_code_entries_with_loop
   {V : Type} (codeVisitorInst : module_CodeVisitor_t V) (data : slice u8)
   (env : module_Env_t) (v : V) (q : usize) (i : usize) :
@@ -12838,7 +13169,7 @@ Definition module_validate_code_entries_with_loop
 .
 
 (** [itasca::module::validate_code_entries_with]:
-    Source: 'src/module.rs', lines 1252:0-1273:1 *)
+    Source: 'src/module.rs', lines 1236:0-1257:1 *)
 Definition module_validate_code_entries_with
   {V : Type} (codeVisitorInst : module_CodeVisitor_t V) (data : slice u8)
   (pos : usize) (env : module_Env_t) (v : V) :
@@ -12848,7 +13179,7 @@ Definition module_validate_code_entries_with
 .
 
 (** [itasca::module::validate_code_with]:
-    Source: 'src/module.rs', lines 1355:0-1374:1 *)
+    Source: 'src/module.rs', lines 1333:0-1352:1 *)
 Definition module_validate_code_with
   {V : Type} (codeVisitorInst : module_CodeVisitor_t V) (data : slice u8)
   (pos : usize) (env : module_Env_t) (v : V) :
@@ -12903,7 +13234,7 @@ Definition module_validate_code_with
 .
 
 (** [itasca::module::decode_func_indices]: loop 0:
-    Source: 'src/module.rs', lines 980:4-991:5 *)
+    Source: 'src/module.rs', lines 981:4-992:5 *)
 Definition module_decode_func_indices_loop
   (data : slice u8) (env : module_Env_t) (count : u32)
   (out : alloc_vec_Vec u32) (q : usize) (i : u32) :
@@ -12940,7 +13271,7 @@ Definition module_decode_func_indices_loop
 .
 
 (** [itasca::module::decode_func_indices]:
-    Source: 'src/module.rs', lines 975:0-992:1 *)
+    Source: 'src/module.rs', lines 976:0-993:1 *)
 Definition module_decode_func_indices
   (data : slice u8) (pos : usize) (env : module_Env_t) :
   result (core_result_Result_t ((alloc_vec_Vec u32) * usize) error_Error_t)
@@ -12961,7 +13292,7 @@ Definition module_decode_func_indices
 .
 
 (** [itasca::module::decode_element_section]: loop 0:
-    Source: 'src/module.rs', lines 998:4-1015:5 *)
+    Source: 'src/module.rs', lines 999:4-1016:5 *)
 Definition module_decode_element_section_loop
   (data : slice u8) (env : module_Env_t) (count : u32) (q : usize) (i : u32) :
   result ((core_result_Result_t usize error_Error_t) * module_Env_t)
@@ -13048,7 +13379,7 @@ Definition module_decode_element_section_loop
 .
 
 (** [itasca::module::decode_element_section]:
-    Source: 'src/module.rs', lines 994:0-1016:1 *)
+    Source: 'src/module.rs', lines 995:0-1017:1 *)
 Definition module_decode_element_section
   (data : slice u8) (pos : usize) (env : module_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * module_Env_t)
@@ -13069,7 +13400,7 @@ Definition module_decode_element_section
 .
 
 (** [itasca::module::decode_start_section]:
-    Source: 'src/module.rs', lines 962:0-973:1 *)
+    Source: 'src/module.rs', lines 963:0-974:1 *)
 Definition module_decode_start_section
   (data : slice u8) (pos : usize) (env : module_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * module_Env_t)
@@ -13127,7 +13458,7 @@ Definition module_decode_start_section
 .
 
 (** [itasca::module::export_desc]:
-    Source: 'src/module.rs', lines 911:0-938:1 *)
+    Source: 'src/module.rs', lines 912:0-939:1 *)
 Definition module_export_desc
   (env : module_Env_t) (kind : u8) (idx : u32) :
   result (core_result_Result_t module_ExportDesc_t error_Error_t)
@@ -13164,7 +13495,7 @@ Definition module_export_desc
 .
 
 (** [itasca::module::names_equal]: loop 0:
-    Source: 'src/module.rs', lines 885:4-893:5 *)
+    Source: 'src/module.rs', lines 886:4-894:5 *)
 Definition module_names_equal_loop
   (a : slice u8) (b : slice u8) (i : usize) : result bool :=
   loop
@@ -13182,7 +13513,7 @@ Definition module_names_equal_loop
 .
 
 (** [itasca::module::names_equal]:
-    Source: 'src/module.rs', lines 880:0-894:1 *)
+    Source: 'src/module.rs', lines 881:0-895:1 *)
 Definition module_names_equal (a : slice u8) (b : slice u8) : result bool :=
   let i := slice_len a in
   let i1 := slice_len b in
@@ -13190,7 +13521,7 @@ Definition module_names_equal (a : slice u8) (b : slice u8) : result bool :=
 .
 
 (** [itasca::module::export_name_taken]: loop 0:
-    Source: 'src/module.rs', lines 900:4-908:5 *)
+    Source: 'src/module.rs', lines 901:4-909:5 *)
 Definition module_export_name_taken_loop
   (env : module_Env_t) (name : slice u8) (i : usize) : result bool :=
   loop
@@ -13211,14 +13542,14 @@ Definition module_export_name_taken_loop
 .
 
 (** [itasca::module::export_name_taken]:
-    Source: 'src/module.rs', lines 898:0-909:1 *)
+    Source: 'src/module.rs', lines 899:0-910:1 *)
 Definition module_export_name_taken
   (env : module_Env_t) (name : slice u8) : result bool :=
   module_export_name_taken_loop env name 0%usize
 .
 
 (** [itasca::module::decode_export_section]: loop 0:
-    Source: 'src/module.rs', lines 944:4-958:5 *)
+    Source: 'src/module.rs', lines 945:4-959:5 *)
 Definition module_decode_export_section_loop
   (data : slice u8) (env : module_Env_t) (count : u32) (q : usize) (i : u32) :
   result ((core_result_Result_t usize error_Error_t) * module_Env_t)
@@ -13315,7 +13646,7 @@ Definition module_decode_export_section_loop
 .
 
 (** [itasca::module::decode_export_section]:
-    Source: 'src/module.rs', lines 940:0-959:1 *)
+    Source: 'src/module.rs', lines 941:0-960:1 *)
 Definition module_decode_export_section
   (data : slice u8) (pos : usize) (env : module_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * module_Env_t)
@@ -13336,7 +13667,7 @@ Definition module_decode_export_section
 .
 
 (** [itasca::module::decode_global_type]:
-    Source: 'src/module.rs', lines 487:0-509:1 *)
+    Source: 'src/module.rs', lines 477:0-499:1 *)
 Definition module_decode_global_type
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (types_GlobalType_t * usize) error_Error_t)
@@ -13382,7 +13713,7 @@ Definition module_decode_global_type
 .
 
 (** [itasca::module::decode_global_section]: loop 0:
-    Source: 'src/module.rs', lines 867:4-877:5 *)
+    Source: 'src/module.rs', lines 868:4-878:5 *)
 Definition module_decode_global_section_loop
   (data : slice u8) (env : module_Env_t) (count : u32) (q : usize) (i : u32) :
   result ((core_result_Result_t usize error_Error_t) * module_Env_t)
@@ -13448,7 +13779,7 @@ Definition module_decode_global_section_loop
 .
 
 (** [itasca::module::decode_global_section]:
-    Source: 'src/module.rs', lines 863:0-878:1 *)
+    Source: 'src/module.rs', lines 864:0-879:1 *)
 Definition module_decode_global_section
   (data : slice u8) (pos : usize) (env : module_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * module_Env_t)
@@ -13469,7 +13800,7 @@ Definition module_decode_global_section
 .
 
 (** [itasca::module::decode_limits]:
-    Source: 'src/module.rs', lines 442:0-460:1 *)
+    Source: 'src/module.rs', lines 432:0-450:1 *)
 Definition module_decode_limits
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (types_Limits_t * usize) error_Error_t)
@@ -13535,7 +13866,7 @@ Definition module_decode_limits
 .
 
 (** [itasca::module::decode_mem_type]:
-    Source: 'src/module.rs', lines 480:0-484:1 *)
+    Source: 'src/module.rs', lines 470:0-474:1 *)
 Definition module_decode_mem_type
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (types_MemType_t * usize) error_Error_t)
@@ -13565,7 +13896,7 @@ Definition module_decode_mem_type
 .
 
 (** [itasca::module::decode_memory_section]: loop 0:
-    Source: 'src/module.rs', lines 849:4-860:5 *)
+    Source: 'src/module.rs', lines 850:4-861:5 *)
 Definition module_decode_memory_section_loop
   (data : slice u8) (env : module_Env_t) (count : u32) (q : usize) (i : u32) :
   result ((core_result_Result_t usize error_Error_t) * module_Env_t)
@@ -13636,7 +13967,7 @@ Definition module_decode_memory_section_loop
 .
 
 (** [itasca::module::decode_memory_section]:
-    Source: 'src/module.rs', lines 845:0-861:1 *)
+    Source: 'src/module.rs', lines 846:0-862:1 *)
 Definition module_decode_memory_section
   (data : slice u8) (pos : usize) (env : module_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * module_Env_t)
@@ -13657,7 +13988,7 @@ Definition module_decode_memory_section
 .
 
 (** [itasca::module::decode_table_type]:
-    Source: 'src/module.rs', lines 463:0-477:1 *)
+    Source: 'src/module.rs', lines 453:0-467:1 *)
 Definition module_decode_table_type
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (types_TableType_t * usize) error_Error_t)
@@ -13707,7 +14038,7 @@ Definition module_decode_table_type
 .
 
 (** [itasca::module::decode_table_section]: loop 0:
-    Source: 'src/module.rs', lines 831:4-842:5 *)
+    Source: 'src/module.rs', lines 832:4-843:5 *)
 Definition module_decode_table_section_loop
   (data : slice u8) (env : module_Env_t) (count : u32) (q : usize) (i : u32) :
   result ((core_result_Result_t usize error_Error_t) * module_Env_t)
@@ -13778,7 +14109,7 @@ Definition module_decode_table_section_loop
 .
 
 (** [itasca::module::decode_table_section]:
-    Source: 'src/module.rs', lines 827:0-843:1 *)
+    Source: 'src/module.rs', lines 828:0-844:1 *)
 Definition module_decode_table_section
   (data : slice u8) (pos : usize) (env : module_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * module_Env_t)
@@ -13798,8 +14129,37 @@ Definition module_decode_table_section
   end
 .
 
+(** [itasca::module::copy_value_types]: loop 0:
+    Source: 'src/module.rs', lines 699:4-705:5 *)
+Definition module_copy_value_types_loop
+  (src : slice types_ValueType_t) (out : alloc_vec_Vec types_ValueType_t)
+  (i : usize) :
+  result (alloc_vec_Vec types_ValueType_t)
+  :=
+  loop
+    (fun '((out1, i1) : ((alloc_vec_Vec types_ValueType_t) * usize)) =>
+      let i2 := slice_len src in
+      if i1 s>= i2
+      then Ok (Done out1)
+      else (
+        vt <- slice_index_usize src i1;
+        out2 <- alloc_vec_Vec_push out1 vt;
+        i3 <- usize_add i1 1%usize;
+        Ok (Cont (out2, i3))))
+    (out, i)
+.
+
+(** [itasca::module::copy_value_types]:
+    Source: 'src/module.rs', lines 696:0-706:1 *)
+Definition module_copy_value_types
+  (src : slice types_ValueType_t) : result (alloc_vec_Vec types_ValueType_t) :=
+  let i := slice_len src in
+  let out := alloc_vec_Vec_with_capacity types_ValueType_t i in
+  module_copy_value_types_loop src out 0%usize
+.
+
 (** [itasca::module::copy_func_type]:
-    Source: 'src/module.rs', lines 707:0-712:1 *)
+    Source: 'src/module.rs', lines 708:0-713:1 *)
 Definition module_copy_func_type
   (ft : types_FuncType_t) : result types_FuncType_t :=
   let s := alloc_vec_Vec_deref ft.(types_FuncType_params) in
@@ -13810,7 +14170,7 @@ Definition module_copy_func_type
 .
 
 (** [itasca::module::lookup_type]:
-    Source: 'src/module.rs', lines 715:0-721:1 *)
+    Source: 'src/module.rs', lines 716:0-722:1 *)
 Definition module_lookup_type
   (env : module_Env_t) (idx : u32) :
   result (core_result_Result_t types_FuncType_t error_Error_t)
@@ -13828,7 +14188,7 @@ Definition module_lookup_type
 .
 
 (** [itasca::module::decode_function_section]: loop 0:
-    Source: 'src/module.rs', lines 814:4-824:5 *)
+    Source: 'src/module.rs', lines 815:4-825:5 *)
 Definition module_decode_function_section_loop
   (data : slice u8) (env : module_Env_t) (count : u32) (q : usize) (i : u32) :
   result ((core_result_Result_t usize error_Error_t) * module_Env_t)
@@ -13888,7 +14248,7 @@ Definition module_decode_function_section_loop
 .
 
 (** [itasca::module::decode_function_section]:
-    Source: 'src/module.rs', lines 810:0-825:1 *)
+    Source: 'src/module.rs', lines 811:0-826:1 *)
 Definition module_decode_function_section
   (data : slice u8) (pos : usize) (env : module_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * module_Env_t)
@@ -13909,7 +14269,7 @@ Definition module_decode_function_section
 .
 
 (** [itasca::module::decode_import]:
-    Source: 'src/module.rs', lines 741:0-795:1 *)
+    Source: 'src/module.rs', lines 742:0-796:1 *)
 Definition module_decode_import
   (data : slice u8) (pos : usize) (env : module_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * module_Env_t)
@@ -14185,7 +14545,7 @@ Definition module_decode_import
 .
 
 (** [itasca::module::decode_import_section]: loop 0:
-    Source: 'src/module.rs', lines 801:4-807:5 *)
+    Source: 'src/module.rs', lines 802:4-808:5 *)
 Definition module_decode_import_section_loop
   (data : slice u8) (env : module_Env_t) (count : u32) (q : usize) (i : u32) :
   result ((core_result_Result_t usize error_Error_t) * module_Env_t)
@@ -14213,7 +14573,7 @@ Definition module_decode_import_section_loop
 .
 
 (** [itasca::module::decode_import_section]:
-    Source: 'src/module.rs', lines 797:0-808:1 *)
+    Source: 'src/module.rs', lines 798:0-809:1 *)
 Definition module_decode_import_section
   (data : slice u8) (pos : usize) (env : module_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * module_Env_t)
@@ -14234,7 +14594,7 @@ Definition module_decode_import_section
 .
 
 (** [itasca::module::decode_value_types]: loop 0:
-    Source: 'src/module.rs', lines 414:4-422:5 *)
+    Source: 'src/module.rs', lines 404:4-412:5 *)
 Definition module_decode_value_types_loop
   (data : slice u8) (count : u32) (out : alloc_vec_Vec types_ValueType_t)
   (q : usize) (i : u32) :
@@ -14268,7 +14628,7 @@ Definition module_decode_value_types_loop
 .
 
 (** [itasca::module::decode_value_types]:
-    Source: 'src/module.rs', lines 409:0-423:1 *)
+    Source: 'src/module.rs', lines 399:0-413:1 *)
 Definition module_decode_value_types
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t ((alloc_vec_Vec types_ValueType_t) * usize)
@@ -14290,7 +14650,7 @@ Definition module_decode_value_types
 .
 
 (** [itasca::module::decode_func_type]:
-    Source: 'src/module.rs', lines 428:0-439:1 *)
+    Source: 'src/module.rs', lines 418:0-429:1 *)
 Definition module_decode_func_type
   (data : slice u8) (pos : usize) :
   result (core_result_Result_t (types_FuncType_t * usize) error_Error_t)
@@ -14345,7 +14705,7 @@ Definition module_decode_func_type
 .
 
 (** [itasca::module::decode_type_section]: loop 0:
-    Source: 'src/module.rs', lines 729:4-737:5 *)
+    Source: 'src/module.rs', lines 730:4-738:5 *)
 Definition module_decode_type_section_loop
   (data : slice u8) (env : module_Env_t) (count : u32) (q : usize) (i : u32) :
   result ((core_result_Result_t usize error_Error_t) * module_Env_t)
@@ -14393,7 +14753,7 @@ Definition module_decode_type_section_loop
 .
 
 (** [itasca::module::decode_type_section]:
-    Source: 'src/module.rs', lines 725:0-738:1 *)
+    Source: 'src/module.rs', lines 726:0-739:1 *)
 Definition module_decode_type_section
   (data : slice u8) (pos : usize) (env : module_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * module_Env_t)
@@ -14414,7 +14774,7 @@ Definition module_decode_type_section
 .
 
 (** [itasca::module::decode_env_section]:
-    Source: 'src/module.rs', lines 1018:0-1047:1 *)
+    Source: 'src/module.rs', lines 1019:0-1048:1 *)
 Definition module_decode_env_section
   (data : slice u8) (pos : usize) (id : u8) (env : module_Env_t) :
   result ((core_result_Result_t usize error_Error_t) * module_Env_t)
@@ -14451,7 +14811,7 @@ Definition module_decode_env_section
 .
 
 (** [itasca::module::read_header]:
-    Source: 'src/module.rs', lines 362:0-378:1 *)
+    Source: 'src/module.rs', lines 352:0-368:1 *)
 Definition module_read_header
   (data : slice u8) : result (core_result_Result_t usize error_Error_t) :=
   r <- reader_read_byte data 0%usize;
@@ -14577,7 +14937,7 @@ Definition module_read_header
 .
 
 (** [itasca::module::validate_env_with]: loop 0:
-    Source: 'src/module.rs', lines 1079:4-1105:5 *)
+    Source: 'src/module.rs', lines 1071:4-1097:5 *)
 Definition module_validate_env_with_loop
   {V : Type} (moduleVisitorInst : module_ModuleVisitor_t V) (data : slice u8)
   (v : V) (env : module_Env_t) (q : usize) (last_id : u8) :
@@ -14659,7 +15019,7 @@ Definition module_validate_env_with_loop
 .
 
 (** [itasca::module::validate_env_with]:
-    Source: 'src/module.rs', lines 1075:0-1106:1 *)
+    Source: 'src/module.rs', lines 1067:0-1098:1 *)
 Definition module_validate_env_with
   {V : Type} (moduleVisitorInst : module_ModuleVisitor_t V) (data : slice u8)
   (v : V) :
@@ -14682,7 +15042,7 @@ Definition module_validate_env_with
 .
 
 (** [itasca::module::validate_module_with]:
-    Source: 'src/module.rs', lines 222:0-233:1 *)
+    Source: 'src/module.rs', lines 212:0-223:1 *)
 Definition module_validate_module_with
   {V : Type} (moduleVisitorInst : module_ModuleVisitor_t V) (codeVisitorInst :
   module_CodeVisitor_t V) (data : slice u8) (v : V) :
@@ -14737,7 +15097,7 @@ Definition module_validate_module_with
 .
 
 (** [itasca::module::{itasca::module::ModuleVisitor for itasca::module::EmptyModuleVisitor}::on_custom_section]:
-    Source: 'src/module.rs', lines 1545:0-1545:44 *)
+    Source: 'src/module.rs', lines 1501:0-1501:44 *)
 Definition
   module_EmptyModuleVisitor_Insts_ItascaModuleModuleVisitor_on_custom_section
   (self : module_EmptyModuleVisitor_t) (_section : types_CustomSection_t) :
@@ -14748,7 +15108,7 @@ Definition
 .
 
 (** Trait implementation: [itasca::module::{itasca::module::ModuleVisitor for itasca::module::EmptyModuleVisitor}]
-    Source: 'src/module.rs', lines 1545:0-1545:44 *)
+    Source: 'src/module.rs', lines 1501:0-1501:44 *)
 Definition module_EmptyModuleVisitor_Insts_ItascaModuleModuleVisitor :
   module_ModuleVisitor_t module_EmptyModuleVisitor_t := {|
   module_ModuleVisitor_t_on_custom_section :=
@@ -14756,7 +15116,7 @@ Definition module_EmptyModuleVisitor_Insts_ItascaModuleModuleVisitor :
 |}.
 
 (** [itasca::module::validate_tail]:
-    Source: 'src/module.rs', lines 1427:0-1430:1 *)
+    Source: 'src/module.rs', lines 1400:0-1403:1 *)
 Definition module_validate_tail
   (data : slice u8) (pos : usize) (env : module_Env_t) :
   result (core_result_Result_t module_Tail_t error_Error_t)
@@ -14770,7 +15130,7 @@ Definition module_validate_tail
 .
 
 (** [itasca::module::{itasca::module::CodeVisitor for itasca::module::ValidatingCodeVisitor}::on_code_entry]:
-    Source: 'src/module.rs', lines 1626:0-1626:45 *)
+    Source: 'src/module.rs', lines 1568:0-1568:45 *)
 Definition
   module_ValidatingCodeVisitor_Insts_ItascaModuleCodeVisitor_on_code_entry
   (self : module_ValidatingCodeVisitor_t) (data : slice u8)
@@ -14794,7 +15154,7 @@ Definition
 .
 
 (** [itasca::module::{itasca::module::CodeVisitor for itasca::module::ValidatingCodeVisitor}::on_need_bytes]:
-    Source: 'src/module.rs', lines 1626:0-1626:45 *)
+    Source: 'src/module.rs', lines 1568:0-1568:45 *)
 Definition
   module_ValidatingCodeVisitor_Insts_ItascaModuleCodeVisitor_on_need_bytes
   (self : module_ValidatingCodeVisitor_t) (_end : usize) :
@@ -14805,7 +15165,7 @@ Definition
 .
 
 (** Trait implementation: [itasca::module::{itasca::module::CodeVisitor for itasca::module::ValidatingCodeVisitor}]
-    Source: 'src/module.rs', lines 1626:0-1626:45 *)
+    Source: 'src/module.rs', lines 1568:0-1568:45 *)
 Definition module_ValidatingCodeVisitor_Insts_ItascaModuleCodeVisitor :
   module_CodeVisitor_t module_ValidatingCodeVisitor_t := {|
   module_CodeVisitor_t_on_need_bytes :=
@@ -14815,7 +15175,7 @@ Definition module_ValidatingCodeVisitor_Insts_ItascaModuleCodeVisitor :
 |}.
 
 (** [itasca::module::validate_code]:
-    Source: 'src/module.rs', lines 1380:0-1383:1 *)
+    Source: 'src/module.rs', lines 1356:0-1359:1 *)
 Definition module_validate_code
   (data : slice u8) (pos : usize) (env : module_Env_t) :
   result (core_result_Result_t usize error_Error_t)
@@ -14829,7 +15189,7 @@ Definition module_validate_code
 .
 
 (** [itasca::module::validate_env]:
-    Source: 'src/module.rs', lines 1053:0-1056:1 *)
+    Source: 'src/module.rs', lines 1051:0-1054:1 *)
 Definition module_validate_env
   (data : slice u8) :
   result (core_result_Result_t (module_Env_t * usize) error_Error_t)
@@ -14842,7 +15202,7 @@ Definition module_validate_env
 .
 
 (** [itasca::module::validate_module]:
-    Source: 'src/module.rs', lines 242:0-250:1 *)
+    Source: 'src/module.rs', lines 230:0-238:1 *)
 Definition module_validate_module
   (data : slice u8) :
   result (core_result_Result_t module_Module_t error_Error_t)
@@ -14886,7 +15246,7 @@ Definition module_validate_module
 .
 
 (** [itasca::module::import_types]: loop 0:
-    Source: 'src/module.rs', lines 266:4-281:5 *)
+    Source: 'src/module.rs', lines 253:4-268:5 *)
 Definition module_import_types_loop
   (env : module_Env_t) (out : alloc_vec_Vec types_ExternType_t) (i : usize) :
   result (core_result_Result_t (alloc_vec_Vec types_ExternType_t)
@@ -14936,7 +15296,7 @@ Definition module_import_types_loop
 .
 
 (** [itasca::module::import_types]:
-    Source: 'src/module.rs', lines 263:0-282:1 *)
+    Source: 'src/module.rs', lines 250:0-269:1 *)
 Definition module_import_types
   (env : module_Env_t) :
   result (core_result_Result_t (alloc_vec_Vec types_ExternType_t)
@@ -14946,7 +15306,7 @@ Definition module_import_types
 .
 
 (** [itasca::module::export_types]: loop 0:
-    Source: 'src/module.rs', lines 294:4-330:5 *)
+    Source: 'src/module.rs', lines 281:4-317:5 *)
 Definition module_export_types_loop
   (env : module_Env_t) (out : alloc_vec_Vec types_ExternType_t) (i : usize) :
   result (core_result_Result_t (alloc_vec_Vec types_ExternType_t)
@@ -15019,7 +15379,7 @@ Definition module_export_types_loop
 .
 
 (** [itasca::module::export_types]:
-    Source: 'src/module.rs', lines 291:0-331:1 *)
+    Source: 'src/module.rs', lines 278:0-318:1 *)
 Definition module_export_types
   (env : module_Env_t) :
   result (core_result_Result_t (alloc_vec_Vec types_ExternType_t)

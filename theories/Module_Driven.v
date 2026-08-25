@@ -98,11 +98,6 @@ Proof.
   rewrite branch_ok in H |- *. cbn [bind] in H |- *.
   destruct (usize_add p n) as [fin|] eqn:Hend;
     cbn [bind] in H |- *; [|discriminate].
-  destruct (module_decode_locals data p) as [r2|] eqn:Hloc;
-    cbn [bind] in H |- *; [|discriminate].
-  destruct r2 as [[declared p1]|e2]; [|try_err_rw_in H; discriminate].
-  rewrite branch_ok in H |- *. cbn [bind] in H |- *.
-  destruct (p1 s> fin); [discriminate|].
   destruct (alloc_vec_Vec_index
               (core_slice_index_SliceIndexUsizeSliceInst _)
               env.(module_Env_func_type_indices) index) as [tidx|] eqn:Hti;
@@ -114,12 +109,15 @@ Proof.
               (core_slice_index_SliceIndexUsizeSliceInst types_FuncType_t)
               env.(module_Env_types) t) as [ft|] eqn:Hft;
     cbn [bind] in H |- *; [|discriminate].
-  destruct (module_build_func_locals
-              (alloc_vec_Vec_deref ft.(types_FuncType_params))
-              (alloc_vec_Vec_deref declared)) as [locals|] eqn:Hbl;
-    cbn [bind] in H |- *; [|discriminate].
-  destruct (module_copy_value_types
-              (alloc_vec_Vec_deref ft.(types_FuncType_results)))
+  rewrite vec_deref_spec in H |- *.
+  destruct (module_decode_and_build_locals data p ft.(types_FuncType_params))
+    as [r2|] eqn:Hloc; cbn [bind] in H |- *; [|discriminate].
+  destruct r2 as [[locals p1]|e2]; [|try_err_rw_in H; discriminate].
+  rewrite branch_ok in H |- *. cbn [bind] in H |- *.
+  destruct (p1 s> fin); [discriminate|].
+  rewrite vec_deref_spec in H |- *.
+  destruct (module_single_result
+              ft.(types_FuncType_results))
     as [results|] eqn:Hcv; cbn [bind] in H |- *; [|discriminate].
   destruct (inst.(code_OpVisitor_t_on_function_start) v
               (mkcode_Context_t locals results) tidx p1 fin) as [[r3 v3]|]

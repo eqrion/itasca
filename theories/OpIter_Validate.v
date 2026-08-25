@@ -81,7 +81,7 @@ Definition body_done (C0 : t_context) (bt0 : code_BlockType_t) (data : slice u8)
     /\ (fv_ctrl f).(code_Ctrl_block_type) = bt0
     /\ c_types_agree (fv_ct f)
          (translate_typelist (block_results_of bt0)) = true
-    /\ vec_list st'.(code_OpIterState_ctrls) = []
+    /\ ctrls_list st'.(code_OpIterState_ctrls) = []
     /\ repr_op (bytes_from data st.(code_OpIterState_pos)) FO_end
                (bytes_from data st'.(code_OpIterState_pos)).
 
@@ -1057,7 +1057,7 @@ Qed.
     So an accepting run that got here consumed every byte. *)
 Lemma validate_body_loop_finished : forall V (inst : code_OpVisitor_t V) vis
                                            vis' data module ctx st,
-  vec_list st.(code_OpIterState_ctrls) = [] ->
+  ctrls_list st.(code_OpIterState_ctrls) = [] ->
   code_validate_body_with_loop inst data module ctx.(code_Context_locals)
     ctx.(code_Context_results) vis st = Ok (Core_result_Result_Ok tt, vis') ->
   to_Z st.(code_OpIterState_pos) = to_Z (slice_len data).
@@ -1065,7 +1065,12 @@ Proof.
   intros V inst vis vis' data module ctx st Hnil H.
   unfold code_validate_body_with_loop in H. rewrite loop_unfold in H.
   cbn beta iota in H. unfold code_control_stack_empty in H.
-  rewrite vec_is_empty_spec in H. rewrite Hnil in H. cbn [bind] in H.
+  destruct (code_CtrlsStack_len st.(code_OpIterState_ctrls)) as [n|e]
+    eqn:Hlen in H; cbn [bind] in H; [|discriminate].
+  assert (Hz : (n s= 0%usize) = true).
+  { apply scalar_eqb_zero_true.
+    rewrite (ctrls_stack_len_spec _ _ Hlen), Hnil. reflexivity. }
+  rewrite Hz in H.
   destruct (st.(code_OpIterState_pos) s= slice_len data) eqn:Heq;
     [|discriminate].
   apply scalar_eqb_true in Heq. exact Heq.
@@ -1075,7 +1080,7 @@ Qed.
     no hook. *)
 Lemma validate_body_loop_done : forall V (inst : code_OpVisitor_t V) vis vis'
                                        data module ctx st,
-  vec_list st.(code_OpIterState_ctrls) = [] ->
+  ctrls_list st.(code_OpIterState_ctrls) = [] ->
   code_validate_body_with_loop inst data module ctx.(code_Context_locals)
     ctx.(code_Context_results) vis st = Ok (Core_result_Result_Ok tt, vis') ->
   vis' = vis.
@@ -1083,7 +1088,12 @@ Proof.
   intros V inst vis vis' data module ctx st Hnil H.
   unfold code_validate_body_with_loop in H. rewrite loop_unfold in H.
   cbn beta iota in H. unfold code_control_stack_empty in H.
-  rewrite vec_is_empty_spec in H. rewrite Hnil in H. cbn [bind] in H.
+  destruct (code_CtrlsStack_len st.(code_OpIterState_ctrls)) as [n|e]
+    eqn:Hlen in H; cbn [bind] in H; [|discriminate].
+  assert (Hz : (n s= 0%usize) = true).
+  { apply scalar_eqb_zero_true.
+    rewrite (ctrls_stack_len_spec _ _ Hlen), Hnil. reflexivity. }
+  rewrite Hz in H.
   destruct (st.(code_OpIterState_pos) s= slice_len data) eqn:Heq;
     [|discriminate].
   inversion H. reflexivity.
@@ -1125,14 +1135,19 @@ Proof.
            Hsug Hops Hmeas H.
   (* the body frame is still on the stack, so the accepting branch is not taken *)
   all: assert (Hcons : exists c cs,
-                 vec_list st.(code_OpIterState_ctrls) = c :: cs)
+                 ctrls_list st.(code_OpIterState_ctrls) = c :: cs)
          by (destruct Hinv as [K1 _]; rewrite K1; destruct fs as [|h t];
              [exfalso; exact Hbf
              | exists (fv_ctrl h), (List.map fv_ctrl t); reflexivity]).
   all: destruct Hcons as [c [cs Hcons]].
   all: unfold code_validate_body_with_loop in H; rewrite loop_unfold in H;
        cbn beta iota in H; unfold code_control_stack_empty in H;
-       rewrite vec_is_empty_spec in H; rewrite Hcons in H; cbn [bind] in H;
+       destruct (code_CtrlsStack_len st.(code_OpIterState_ctrls)) as [n|e]
+         eqn:Hlen in H; cbn [bind] in H; [|discriminate];
+       assert (Hz : (n s= 0%usize) = false)
+         by (apply scalar_eqb_zero_false;
+             rewrite (ctrls_stack_len_spec _ _ Hlen), Hcons; cbn; lia);
+       rewrite Hz in H;
        rewrite ctx_eta in H.
   - (* no bytes left, so [read_op] reports end of input *)
     assert (Hend : Z.of_nat (List.length (vec_list data))
@@ -1241,23 +1256,22 @@ Theorem validate_body_with_sound : forall V (inst : code_OpVisitor_t V) vis
   mems_agree module C0 -> locals_agree ctx C0 -> globals_agree module C0 ->
   return_agree ctx C0 -> funcs_agree module C0 -> types_agree module C0 ->
   tables_agree module C0 ->
-  (List.length (vec_list ctx.(code_Context_results)) <= 1)%nat ->
+  (List.length (context_results_of ctx.(code_Context_results)) <= 1)%nat ->
   code_validate_body_with inst data module ctx vis
     = Ok (Core_result_Result_Ok tt, vis') ->
   exists es,
     repr_expr (byte_list data) es []
     /\ b_e_type_checker_aux
-         (upd_label C0 [translate_typelist (vec_list ctx.(code_Context_results))]) es
-         (Tf [] (translate_typelist (vec_list ctx.(code_Context_results)))) = true.
+         (upd_label C0 [translate_typelist (context_results_of ctx.(code_Context_results))]) es
+         (Tf [] (translate_typelist (context_results_of ctx.(code_Context_results)))) = true.
 Proof.
   intros V inst vis vis' C0 module ctx data Hmems Hlocals Hglobals Hret Hfuncs
          Htypes Htables Hlen1 H.
   unfold code_validate_body_with in H.
   destruct (slice_len data s> limits_max_function_bytes); [discriminate|].
-  rewrite vec_deref_spec in H.
   destruct (code_start_function ctx.(code_Context_results)) as [st|] eqn:Hsf; cbn [bind] in H;
     [|discriminate].
-  destruct (Inv_start C0 st ctx.(code_Context_results) Hlen1 Hsf) as [bt [Hinv Hbt]].
+  destruct (Inv_start C0 st ctx.(code_Context_results) Hsf) as [bt [Hinv Hbt]].
   pose proof (start_function_pos ctx.(code_Context_results) st Hsf) as Hpos.
   destruct (validate_body_loop_sound (Z.to_nat (to_Z (slice_len data)))
               V inst vis vis'
@@ -1289,7 +1303,7 @@ Theorem validate_body_with_trace : forall V (inst : code_OpVisitor_t V) vis
   mems_agree module C0 -> locals_agree ctx C0 -> globals_agree module C0 ->
   return_agree ctx C0 -> funcs_agree module C0 -> types_agree module C0 ->
   tables_agree module C0 ->
-  (List.length (vec_list ctx.(code_Context_results)) <= 1)%nat ->
+  (List.length (context_results_of ctx.(code_Context_results)) <= 1)%nat ->
   code_validate_body_with inst data module ctx vis
     = Ok (Core_result_Result_Ok tt, vis') ->
   exists es ops,
@@ -1305,10 +1319,9 @@ Proof.
          Htypes Htables Hlen1 H.
   unfold code_validate_body_with in H.
   destruct (slice_len data s> limits_max_function_bytes); [discriminate|].
-  rewrite vec_deref_spec in H.
   destruct (code_start_function ctx.(code_Context_results)) as [st|] eqn:Hsf;
     cbn [bind] in H; [|discriminate].
-  destruct (Inv_start C0 st ctx.(code_Context_results) Hlen1 Hsf)
+  destruct (Inv_start C0 st ctx.(code_Context_results) Hsf)
     as [bt [Hinv Hbt]].
   pose proof (start_function_pos ctx.(code_Context_results) st Hsf) as Hpos.
   destruct (validate_body_loop_sound (Z.to_nat (to_Z (slice_len data)))
@@ -1340,15 +1353,15 @@ Corollary validate_body_with_checker : forall V (inst : code_OpVisitor_t V) vis
   mems_agree module C0 -> locals_agree ctx C0 -> globals_agree module C0 ->
   return_agree ctx C0 -> funcs_agree module C0 -> types_agree module C0 ->
   tables_agree module C0 ->
-  (List.length (vec_list ctx.(code_Context_results)) <= 1)%nat ->
+  (List.length (context_results_of ctx.(code_Context_results)) <= 1)%nat ->
   code_validate_body_with inst data module ctx vis
     = Ok (Core_result_Result_Ok tt, vis') ->
   exists es,
     repr_expr (byte_list data) es []
     /\ b_e_type_checker
          (context_reverse
-            (upd_label C0 [translate_typelist (vec_list ctx.(code_Context_results))])) es
-         (Tf [] (List.map translate_vt_v (vec_list ctx.(code_Context_results)))) = true.
+            (upd_label C0 [translate_typelist (context_results_of ctx.(code_Context_results))])) es
+         (Tf [] (List.map translate_vt_v (context_results_of ctx.(code_Context_results)))) = true.
 Proof.
   intros V inst vis vis' C0 module ctx data Hmems Hlocals Hglobals Hret Hfuncs
          Htypes Htables Hlen1 H.
@@ -1358,7 +1371,7 @@ Proof.
   exists es. split; [exact Hexpr|].
   unfold b_e_type_checker.
   rewrite (context_reverseK
-             (upd_label C0 [translate_typelist (vec_list ctx.(code_Context_results))])).
+             (upd_label C0 [translate_typelist (context_results_of ctx.(code_Context_results))])).
   exact Hchk.
 Qed.
 
@@ -1388,16 +1401,16 @@ Corollary validate_body_with_typed : forall V (inst : code_OpVisitor_t V) vis
   mems_agree module C0 -> locals_agree ctx C0 -> globals_agree module C0 ->
   return_agree ctx C0 -> funcs_agree module C0 -> types_agree module C0 ->
   tables_agree module C0 ->
-  (List.length (vec_list ctx.(code_Context_results)) <= 1)%nat ->
+  (List.length (context_results_of ctx.(code_Context_results)) <= 1)%nat ->
   code_validate_body_with inst data module ctx vis
     = Ok (Core_result_Result_Ok tt, vis') ->
   exists es,
     repr_expr (byte_list data) es []
     /\ be_typing
          (upd_label (context_reverse C0)
-            [List.map translate_vt_v (vec_list ctx.(code_Context_results))])
+            [List.map translate_vt_v (context_results_of ctx.(code_Context_results))])
          es
-         (Tf [] (List.map translate_vt_v (vec_list ctx.(code_Context_results)))).
+         (Tf [] (List.map translate_vt_v (context_results_of ctx.(code_Context_results)))).
 Proof.
   intros V inst vis vis' C0 module ctx data Hmems Hlocals Hglobals Hret Hfuncs
          Htypes Htables Hlen1 H.
@@ -1409,10 +1422,10 @@ Proof.
   pose proof (b_e_type_checker_reflects_typing
                 (context_reverse
                    (upd_label C0
-                      [translate_typelist (vec_list ctx.(code_Context_results))]))
+                      [translate_typelist (context_results_of ctx.(code_Context_results))]))
                 es
                 (Tf [] (List.map translate_vt_v
-                          (vec_list ctx.(code_Context_results))))) as Hr.
+                          (context_results_of ctx.(code_Context_results))))) as Hr.
   rewrite Hchk in Hr. inversion Hr as [Hty|]. exact Hty.
 Qed.
 
@@ -1440,13 +1453,13 @@ Corollary validate_body_sound : forall C0 module ctx data,
   mems_agree module C0 -> locals_agree ctx C0 -> globals_agree module C0 ->
   return_agree ctx C0 -> funcs_agree module C0 -> types_agree module C0 ->
   tables_agree module C0 ->
-  (List.length (vec_list ctx.(code_Context_results)) <= 1)%nat ->
+  (List.length (context_results_of ctx.(code_Context_results)) <= 1)%nat ->
   code_validate_body data module ctx = Ok (Core_result_Result_Ok tt) ->
   exists es,
     repr_expr (byte_list data) es []
     /\ b_e_type_checker_aux
-         (upd_label C0 [translate_typelist (vec_list ctx.(code_Context_results))]) es
-         (Tf [] (translate_typelist (vec_list ctx.(code_Context_results)))) = true.
+         (upd_label C0 [translate_typelist (context_results_of ctx.(code_Context_results))]) es
+         (Tf [] (translate_typelist (context_results_of ctx.(code_Context_results)))) = true.
 Proof.
   intros C0 module ctx data Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables
          Hlen1 H.
@@ -1460,14 +1473,14 @@ Corollary validate_body_checker : forall C0 module ctx data,
   mems_agree module C0 -> locals_agree ctx C0 -> globals_agree module C0 ->
   return_agree ctx C0 -> funcs_agree module C0 -> types_agree module C0 ->
   tables_agree module C0 ->
-  (List.length (vec_list ctx.(code_Context_results)) <= 1)%nat ->
+  (List.length (context_results_of ctx.(code_Context_results)) <= 1)%nat ->
   code_validate_body data module ctx = Ok (Core_result_Result_Ok tt) ->
   exists es,
     repr_expr (byte_list data) es []
     /\ b_e_type_checker
          (context_reverse
-            (upd_label C0 [translate_typelist (vec_list ctx.(code_Context_results))])) es
-         (Tf [] (List.map translate_vt_v (vec_list ctx.(code_Context_results)))) = true.
+            (upd_label C0 [translate_typelist (context_results_of ctx.(code_Context_results))])) es
+         (Tf [] (List.map translate_vt_v (context_results_of ctx.(code_Context_results)))) = true.
 Proof.
   intros C0 module ctx data Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables
          Hlen1 H.
@@ -1481,15 +1494,15 @@ Corollary validate_body_typed : forall C0 module ctx data,
   mems_agree module C0 -> locals_agree ctx C0 -> globals_agree module C0 ->
   return_agree ctx C0 -> funcs_agree module C0 -> types_agree module C0 ->
   tables_agree module C0 ->
-  (List.length (vec_list ctx.(code_Context_results)) <= 1)%nat ->
+  (List.length (context_results_of ctx.(code_Context_results)) <= 1)%nat ->
   code_validate_body data module ctx = Ok (Core_result_Result_Ok tt) ->
   exists es,
     repr_expr (byte_list data) es []
     /\ be_typing
          (upd_label (context_reverse C0)
-            [List.map translate_vt_v (vec_list ctx.(code_Context_results))])
+            [List.map translate_vt_v (context_results_of ctx.(code_Context_results))])
          es
-         (Tf [] (List.map translate_vt_v (vec_list ctx.(code_Context_results)))).
+         (Tf [] (List.map translate_vt_v (context_results_of ctx.(code_Context_results)))).
 Proof.
   intros C0 module ctx data Hmems Hlocals Hglobals Hret Hfuncs Htypes Htables
          Hlen1 H.
@@ -1512,7 +1525,7 @@ Corollary validate_body_trace : forall C0 module ctx data tr pd,
   mems_agree module C0 -> locals_agree ctx C0 -> globals_agree module C0 ->
   return_agree ctx C0 -> funcs_agree module C0 -> types_agree module C0 ->
   tables_agree module C0 ->
-  (List.length (vec_list ctx.(code_Context_results)) <= 1)%nat ->
+  (List.length (context_results_of ctx.(code_Context_results)) <= 1)%nat ->
   code_validate_body_with trace_visitor data module ctx ([], [])
     = Ok (Core_result_Result_Ok tt, (tr, pd)) ->
   exists es,

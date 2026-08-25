@@ -208,14 +208,18 @@ Lemma copy_bytes_sound : forall data from to v,
         <= List.length (bytes_at data (to_Z from)))%nat.
 Proof.
   intros data from to v H. unfold module_copy_bytes in H.
+  destruct (usize_sub to from) as [capacity|] eqn:Hsub;
+    cbn [bind] in H; [|discriminate].
   destruct (copy_bytes_loop_sound (Z.to_nat (to_Z to)) data to
-              (alloc_vec_Vec_new u8) from v) as [Hmap Hlen].
+              (alloc_vec_Vec_with_capacity u8 capacity) from v)
+    as [Hmap Hlen].
   - rewrite Z2Nat.id by apply usize_nonneg.
     pose proof (usize_nonneg from). lia.
   - exact H.
   - split; [|exact Hlen].
     rewrite Hmap.
-    cbn [vec_list alloc_vec_Vec_new proj1_sig List.map List.app]. reflexivity.
+    cbn [alloc_vec_Vec_with_capacity vec_list alloc_vec_Vec_new proj1_sig
+         List.map List.app]. reflexivity.
 Qed.
 
 (* ================================================================== *)
@@ -5363,7 +5367,7 @@ Lemma push_locals_loop_sound : forall m out count vt i out',
   to_Z count - to_Z i <= Z.of_nat m ->
   0 <= to_Z i ->
   module_push_locals_loop out count vt i = Ok out' ->
-  vec_list out' = vec_list out
+  locals_list out' = locals_list out
                   ++ List.repeat vt (Z.to_nat (to_Z count - to_Z i)).
 Proof.
   induction m as [|m IH]; intros out count vt i out' Hmeas Hi H;
@@ -5374,21 +5378,22 @@ Proof.
        rewrite app_nil_r; reflexivity.
   - exfalso. apply scalar_geb_false_lt in Hge. cbn in Hmeas. lia.
   - apply scalar_geb_false_lt in Hge.
-    destruct (alloc_vec_Vec_push out vt) as [out2|] eqn:Hpush;
+    destruct (code_LocalsStack_push out vt) as [out2|] eqn:Hpush;
       cbn [bind] in H; [|discriminate].
     destruct (u32_add i 1%u32) as [i2|] eqn:Hadd; cbn [bind] in H;
       [|discriminate].
     pose proof (scalar_add_val _ _ _ 1 Hadd eq_refl) as Hi2.
     rewrite (IH out2 count vt i2 out' (ltac:(cbn in Hmeas; lia))
                (ltac:(lia)) H).
-    rewrite (vec_push_spec _ _ _ Hpush). rewrite <- app_assoc.
+    rewrite (locals_stack_push_spec _ _ _ Hpush). rewrite <- app_assoc.
     assert (Hcnt : to_Z count - to_Z i = 1 + (to_Z count - to_Z i2)) by lia.
     rewrite Hcnt. rewrite Z2Nat.inj_add by lia. reflexivity.
 Qed.
 
 Lemma push_locals_sound : forall out count vt out',
   module_push_locals out count vt = Ok out' ->
-  vec_list out' = vec_list out ++ List.repeat vt (Z.to_nat (to_Z count)).
+  locals_list out' =
+    locals_list out ++ List.repeat vt (Z.to_nat (to_Z count)).
 Proof.
   intros out count vt out' H. unfold module_push_locals in H.
   assert (H0 : to_Z 0%u32 = 0) by reflexivity.
@@ -5399,19 +5404,58 @@ Proof.
   rewrite H0 in Hr. rewrite Z.sub_0_r in Hr. exact Hr.
 Qed.
 
-Lemma decode_locals_loop_sound : forall m data groups out q i out' q',
+Lemma copy_params_loop_sound : forall m params locals i out,
+  Z.of_nat (List.length (vec_list params)) - to_Z i <= Z.of_nat m ->
+  0 <= to_Z i ->
+  module_decode_and_build_locals_loop0 params locals i = Ok out ->
+  locals_list out =
+    locals_list locals ++
+      List.skipn (Z.to_nat (to_Z i)) (vec_list params).
+Proof.
+  induction m as [|m IH]; intros params locals i out Hmeas Hi H;
+    unfold module_decode_and_build_locals_loop0 in H; rewrite loop_unfold in H;
+    cbn beta iota in H; destruct (i s>= slice_len params) eqn:Hge.
+  1,3: injection H as <-; apply scalar_geb_true_ge in Hge;
+       rewrite slice_len_spec in Hge;
+       rewrite List.skipn_all2 by (apply Nat2Z.inj_le;
+         rewrite Z2Nat.id by lia; lia);
+       rewrite app_nil_r; reflexivity.
+  1: { exfalso. apply scalar_geb_false_lt in Hge.
+       rewrite slice_len_spec in Hge. lia. }
+  apply scalar_geb_false_lt in Hge. rewrite slice_len_spec in Hge.
+  destruct (slice_index_usize params i) as [vt|] eqn:Hvt; cbn [bind] in H;
+    [|discriminate].
+  destruct (code_LocalsStack_push locals vt) as [locals2|] eqn:Hpush;
+    cbn [bind] in H; [|discriminate].
+  destruct (usize_add i 1%usize) as [i2|] eqn:Hadd; cbn [bind] in H;
+    [|discriminate].
+  pose proof (scalar_add_val _ _ _ 1 Hadd eq_refl) as Hi2.
+  rewrite (IH params locals2 i2 out (ltac:(lia)) (ltac:(lia)) H).
+  rewrite (locals_stack_push_spec _ _ _ Hpush). rewrite <- app_assoc.
+  rewrite slice_index_usize_spec in Hvt.
+  destruct (List.nth_error (vec_list params) (Z.to_nat (to_Z i)))
+    as [x|] eqn:Hnth; [|discriminate].
+  injection Hvt as <-.
+  rewrite (skipn_nth_error _ _ _ Hnth).
+  rewrite Hi2. rewrite Z_to_nat_add1 by lia. reflexivity.
+Qed.
+
+Lemma decode_and_build_locals_loop_sound :
+  forall m data groups out declared_len q i out' q',
   to_Z groups - to_Z i <= Z.of_nat m ->
-  module_decode_locals_loop data groups out q i
+  module_decode_and_build_locals_loop1 data groups out declared_len q i
     = Ok (Core_result_Result_Ok (out', q')) ->
   exists gs,
-    vec_list out' = vec_list out ++ List.concat gs
+    locals_list out' = locals_list out ++ List.concat gs
     /\ repr_rep repr_locals (Z.to_nat (to_Z groups - to_Z i))
          (bytes_from data q) (List.map (List.map translate_vt_v) gs)
          (bytes_from data q').
 Proof.
-  induction m as [|m IH]; intros data groups out q i out' q' Hmeas H;
-    unfold module_decode_locals_loop in H; rewrite loop_unfold in H;
-    cbn beta iota in H; destruct (i s>= groups) eqn:Hge.
+  induction m as [|m IH];
+    intros data groups out declared_len q i out' q' Hmeas H;
+    unfold module_decode_and_build_locals_loop1 in H;
+    rewrite loop_unfold in H; cbn beta iota in H;
+    destruct (i s>= groups) eqn:Hge.
   1,3: injection H as <- <-; exists []; cbn [List.concat List.map];
        rewrite app_nil_r; split; [reflexivity|];
        apply scalar_geb_true_ge in Hge;
@@ -5426,17 +5470,19 @@ Proof.
       cbn [bind] in H; [|discriminate].
     destruct r1 as [[vt q2]|e1]; [|try_err_rw_in H; discriminate].
     rewrite branch_ok in H. cbn [bind] in H.
-    destruct (scalar_cast U32 Usize count) as [n|]; cbn [bind] in H;
-      [|discriminate].
-    destruct (usize_sub limits_max_locals (alloc_vec_Vec_len out)) as [room|];
+    destruct (scalar_cast U32 Usize count) as [n|] eqn:Hcast;
+      cbn [bind] in H; [|discriminate].
+    destruct (usize_sub limits_max_locals declared_len) as [room|];
       cbn [bind] in H; [|discriminate].
     destruct (n s> room); [discriminate|].
     destruct (module_push_locals out count vt) as [out2|] eqn:Hpush;
       cbn [bind] in H; [|discriminate].
+    destruct (usize_add declared_len n) as [declared_len2|];
+      cbn [bind] in H; [|discriminate].
     destruct (u32_add i 1%u32) as [i2|] eqn:Hadd; cbn [bind] in H;
       [|discriminate].
     pose proof (scalar_add_val _ _ _ 1 Hadd eq_refl) as Hi2.
-    destruct (IH data groups out2 q2 i2 out' q'
+    destruct (IH data groups out2 declared_len2 q2 i2 out' q'
                 (ltac:(cbn in Hmeas; lia)) H) as [gs [Hlist Hrep]].
     exists (List.repeat vt (Z.to_nat (to_Z count)) :: gs). split.
     + rewrite Hlist. rewrite (push_locals_sound _ _ _ _ Hpush).
@@ -5452,32 +5498,46 @@ Proof.
       * apply (decode_value_type_sound _ _ _ _ Hvt).
 Qed.
 
-Lemma decode_locals_sound : forall data pos out q',
-  module_decode_locals data pos = Ok (Core_result_Result_Ok (out, q')) ->
+Lemma decode_and_build_locals_sound : forall data pos params out q',
+  module_decode_and_build_locals data pos params
+    = Ok (Core_result_Result_Ok (out, q')) ->
   exists gs,
-    List.map translate_vt_v (vec_list out) = List.concat gs
-    /\ repr_vec repr_locals (bytes_from data pos) gs (bytes_from data q').
+    List.map translate_vt_v (locals_list out)
+      = List.map translate_vt_v (vec_list params)
+        ++ List.map translate_vt_v (List.concat gs)
+    /\ repr_vec repr_locals (bytes_from data pos)
+         (List.map (List.map translate_vt_v) gs) (bytes_from data q').
 Proof.
-  intros data pos out q' H. unfold module_decode_locals in H.
+  intros data pos params out q' H.
+  unfold module_decode_and_build_locals in H.
   destruct (reader_read_u32_leb data pos) as [r|] eqn:Hn; cbn [bind] in H;
     [|discriminate].
   destruct r as [[groups p]|e]; [|try_err_rw_in H; discriminate].
   rewrite branch_ok in H. cbn [bind] in H.
-  destruct (decode_locals_loop_sound (Z.to_nat (to_Z groups)) data groups
-              (alloc_vec_Vec_new types_ValueType_t) p 0%u32 out q')
-    as [gs [Hlist Hrep]].
+  destruct code_LocalsStack_new as [locals|e] eqn:Hnew;
+    cbn [bind] in H; [|discriminate].
+  destruct (module_decode_and_build_locals_loop0 params locals 0%usize)
+    as [locals1|e] eqn:Hcopy; cbn [bind] in H; [|discriminate].
+  destruct (decode_and_build_locals_loop_sound
+    (Z.to_nat (to_Z groups)) data groups locals1 0%usize p 0%u32 out q')
+    as [raw [Hlist Hrep]].
   - assert (H0 : to_Z 0%u32 = 0) by reflexivity.
     pose proof (u32_nonneg groups). lia.
   - exact H.
-  - exists (List.map (List.map translate_vt_v) gs). split.
-    + rewrite Hlist.
-      cbn [vec_list alloc_vec_Vec_new proj1_sig List.app].
-      apply List.concat_map.
+  - pose proof (locals_stack_new_spec locals Hnew) as Hnil.
+    pose proof (copy_params_loop_sound
+      (List.length (vec_list params)) params locals 0%usize locals1
+      (ltac:(assert (H0 : to_Z 0%usize = 0) by reflexivity; lia))
+      (ltac:(apply usize_nonneg)) Hcopy) as Hparams.
+    exists raw. split.
+    + rewrite Hlist, Hparams, Hnil. cbn [List.app].
+      repeat rewrite List.map_app. reflexivity.
     + apply repr_vec_intro with (n := to_Z groups) (mid := bytes_from data p).
       * apply (read_u32_leb_sound _ _ _ _ Hn).
       * assert (H0 : to_Z 0%u32 = 0) by reflexivity.
         rewrite H0 in Hrep. rewrite Z.sub_0_r in Hrep. exact Hrep.
 Qed.
+
 
 (** The context [validate_body] is proven against, built from the environment
     and the entry's own signature. The four fields the agreement clauses say
@@ -5500,10 +5560,10 @@ Definition body_context (elems : list reference_type) (datas : list ok)
      tc_elems := elems;
      tc_datas := datas;
      tc_locals :=
-       List.map translate_vt_v (vec_list ctx.(code_Context_locals));
+       List.map translate_vt_v (locals_list ctx.(code_Context_locals));
      tc_labels := [];
      tc_return :=
-       Some (translate_typelist (vec_list ctx.(code_Context_results)));
+       Some (translate_typelist (context_results_of ctx.(code_Context_results)));
      tc_refs := refs |}.
 
 (** All seven agreement clauses, by construction. This is the join between the
@@ -5520,6 +5580,25 @@ Proof.
          funcs_agree, types_agree, tables_agree.
   cbn [tc_mems tc_locals tc_globals tc_return tc_funcs tc_types tc_tables].
   repeat split.
+Qed.
+
+Lemma single_result_sound : forall results o,
+  module_single_result results = Ok o ->
+  (List.length (vec_list results) <= 1)%nat ->
+  context_results_of o = vec_list results.
+Proof.
+  intros results o H Hlen. unfold module_single_result in H.
+  destruct (slice_len results s= 0%usize) eqn:Hz.
+  - injection H as <-. apply scalar_eqb_true in Hz.
+    rewrite slice_len_spec in Hz. destruct (vec_list results); [reflexivity|].
+    cbn [List.length] in Hz.
+    assert (H0 : to_Z 0%usize = 0) by reflexivity. lia.
+  - destruct (slice_index_usize results 0%usize) as [vt|e] eqn:Hidx;
+      cbn [bind] in H; [|discriminate].
+    injection H as <-. rewrite slice_index_usize_spec in Hidx.
+    cbn in Hidx. destruct (vec_list results) as [|x xs]; [discriminate|].
+    injection Hidx as <-. destruct xs; [reflexivity|].
+    cbn [List.length] in Hlen. lia.
 Qed.
 
 
@@ -5551,62 +5630,6 @@ Qed.
     [validate_body_sound] needs and [decode_func_type] enforces. It is a
     property of the environment rather than of this entry, so it is carried in
     from the type section. *)
-(** [build_func_locals] copies the signature's parameters and then appends the
-    body's declared locals, which is the [tn ++ t_locs] the type system puts
-    in front of a function's locals. *)
-Lemma build_func_locals_loop_sound : forall m declared locals i out,
-  Z.of_nat (List.length (vec_list declared)) - to_Z i <= Z.of_nat m ->
-  0 <= to_Z i ->
-  module_build_func_locals_loop declared locals i = Ok out ->
-  vec_list out
-    = vec_list locals ++ List.skipn (Z.to_nat (to_Z i)) (vec_list declared).
-Proof.
-  induction m as [|m IH]; intros declared locals i out Hmeas Hi H;
-    unfold module_build_func_locals_loop in H; rewrite loop_unfold in H;
-    cbn beta iota in H; destruct (i s>= slice_len declared) eqn:Hge.
-  1,3: injection H as <-; apply scalar_geb_true_ge in Hge;
-       rewrite slice_len_spec in Hge;
-       rewrite List.skipn_all2 by (apply Nat2Z.inj_le;
-         rewrite Z2Nat.id by lia; lia);
-       rewrite app_nil_r; reflexivity.
-  1: { exfalso. apply scalar_geb_false_lt in Hge.
-       rewrite slice_len_spec in Hge. lia. }
-  apply scalar_geb_false_lt in Hge. rewrite slice_len_spec in Hge.
-  destruct (slice_index_usize declared i) as [vt|] eqn:Hvt; cbn [bind] in H;
-    [|discriminate].
-  destruct (alloc_vec_Vec_push locals vt) as [locals2|] eqn:Hpush;
-    cbn [bind] in H; [|discriminate].
-  destruct (usize_add_1_ok i (usize_add_1_lt_max i declared
-              (ltac:(destruct (i s>= slice_len declared) eqn:E;
-                     [apply scalar_geb_true_ge in E;
-                      rewrite slice_len_spec in E; lia | reflexivity]))))
-    as [i2 [Hadd Hi2]].
-  rewrite Hadd in H. cbn [bind] in H.
-  rewrite (IH declared locals2 i2 out (ltac:(lia)) (ltac:(lia)) H).
-  rewrite (vec_push_spec _ _ _ Hpush). rewrite <- app_assoc.
-  rewrite slice_index_usize_spec in Hvt.
-  destruct (List.nth_error (vec_list declared) (Z.to_nat (to_Z i)))
-    as [x|] eqn:Hnth; [|discriminate].
-  injection Hvt as <-.
-  rewrite (skipn_nth_error _ _ _ Hnth).
-  rewrite Hi2. rewrite Z_to_nat_add1 by lia. reflexivity.
-Qed.
-
-Lemma build_func_locals_sound : forall params declared out,
-  module_build_func_locals params declared = Ok out ->
-  vec_list out = vec_list params ++ vec_list declared.
-Proof.
-  intros params declared out H. unfold module_build_func_locals in H.
-  destruct (module_copy_value_types params) as [locals|] eqn:Hc;
-    cbn [bind] in H; [|discriminate].
-  rewrite (build_func_locals_loop_sound
-             (List.length (vec_list declared)) declared locals 0%usize out
-             (ltac:(assert (H0 : to_Z 0%usize = 0) by reflexivity; lia))
-             (ltac:(assert (H0 : to_Z 0%usize = 0) by reflexivity; lia)) H).
-  rewrite (copy_value_types_sound _ _ Hc).
-  assert (H0 : to_Z 0%usize = 0) by reflexivity. rewrite H0.
-  cbn [Z.to_nat List.skipn]. reflexivity.
-Qed.
 
 (** The context a code entry's body is checked in, which is the module's own
     context with the signature's parameters in front of the declared locals,
@@ -5690,25 +5713,6 @@ Proof.
   rewrite branch_ok in H. cbn [bind] in H.
   destruct (usize_add p n) as [end1|] eqn:Hadd; cbn [bind] in H;
     [|discriminate].
-  destruct (module_decode_locals data p) as [r2|] eqn:Hdl; cbn [bind] in H;
-    [|discriminate].
-  destruct r2 as [[declared p1]|e2]; [|try_err_rw_in H; discriminate].
-  rewrite branch_ok in H. cbn [bind] in H.
-  destruct (p1 s> end1) eqn:Hgt; [discriminate|].
-  apply scalar_gtb_false in Hgt.
-  assert (Hn : to_Z n = to_Z size)
-    by (unfold scalar_cast in Hcast; apply mk_scalar_ok_to_Z in Hcast;
-        exact Hcast).
-  pose proof (scalar_add_val _ _ _ (to_Z n) Hadd eq_refl) as Hend1.
-  pose proof (have_bytes_room _ _ _ Hh) as Hroom.
-  rewrite slice_len_spec in Hroom.
-  pose proof (usize_nonneg n).
-  (* the locals were read inside the frame *)
-  destruct (decode_locals_ok data p (ltac:(rewrite slice_len_spec; lia)))
-    as [r0 [Hr0 Hpost]].
-  rewrite Hdl in Hr0. injection Hr0 as <-.
-  destruct (Hpost declared p1 eq_refl) as [Hpp1 _].
-  destruct (decode_locals_sound _ _ _ _ Hdl) as [gs [Hflat Hlocals]].
   (* the entry's signature *)
   destruct (alloc_vec_Vec_index
               (core_slice_index_SliceIndexUsizeSliceInst Primitives.u32)
@@ -5728,11 +5732,28 @@ Proof.
               (core_slice_index_SliceIndexUsizeSliceInst types_FuncType_t)
               env.(module_Env_types) t) as [ft|] eqn:Hft; cbn [bind] in H;
     [|discriminate].
-  rewrite vec_deref_spec in H. rewrite vec_deref_spec in H.
-  destruct (module_build_func_locals ft.(types_FuncType_params) declared)
-    as [locals|] eqn:Hbl; cbn [bind] in H; [|discriminate].
   rewrite vec_deref_spec in H.
-  destruct (module_copy_value_types ft.(types_FuncType_results))
+  destruct (module_decode_and_build_locals data p ft.(types_FuncType_params))
+    as [r2|] eqn:Hdl; cbn [bind] in H; [|discriminate].
+  destruct r2 as [[locals p1]|e2]; [|try_err_rw_in H; discriminate].
+  rewrite branch_ok in H. cbn [bind] in H.
+  destruct (p1 s> end1) eqn:Hgt; [discriminate|].
+  apply scalar_gtb_false in Hgt.
+  assert (Hn : to_Z n = to_Z size)
+    by (unfold scalar_cast in Hcast; apply mk_scalar_ok_to_Z in Hcast;
+        exact Hcast).
+  pose proof (scalar_add_val _ _ _ (to_Z n) Hadd eq_refl) as Hend1.
+  pose proof (have_bytes_room _ _ _ Hh) as Hroom.
+  rewrite slice_len_spec in Hroom.
+  pose proof (usize_nonneg n).
+  pose proof (read_u32_leb_le_len _ _ _ _ Hsz) as Hp_le.
+  destruct (decode_and_build_locals_progress data p
+    ft.(types_FuncType_params) locals p1 Hp_le Hdl)
+    as [Hpp1 _].
+  destruct (decode_and_build_locals_sound _ _ _ _ _ Hdl)
+    as [gs [Hflat Hlocals]].
+  rewrite vec_deref_spec in H.
+  destruct (module_single_result ft.(types_FuncType_results))
     as [results|] eqn:Hcopy; cbn [bind] in H; [|discriminate].
   (* the frame hook comes first, and the run got past it, so the consumer
      accepted the frame *)
@@ -5754,12 +5775,16 @@ Proof.
   destruct r3 as [u|e3]; [|discriminate]. destruct u.
   injection H as <- <-.
   (* the body's expression *)
-  assert (Hlen1 : (List.length (vec_list results) <= 1)%nat).
-  { rewrite (copy_value_types_sound _ _ Hcopy). apply Hres.
+  assert (Hftlen : (List.length (vec_list ft.(types_FuncType_results)) <= 1)%nat).
+  { apply Hres.
     rewrite vec_index_spec in Hft.
     destruct (List.nth_error (vec_list env.(module_Env_types))
                 (Z.to_nat (to_Z t))) as [x|] eqn:Hnth; [|discriminate].
     injection Hft as <-. apply (List.nth_error_In _ _ Hnth). }
+  pose proof (single_result_sound _ _ Hcopy Hftlen) as Hresults.
+  assert (Hlen1 :
+    (List.length (context_results_of results) <= 1)%nat).
+  { rewrite Hresults. exact Hftlen. }
   destruct (body_context_agrees [] [] [] env
               {| code_Context_locals := locals;
                  code_Context_results := results |})
@@ -5787,13 +5812,14 @@ Proof.
   assert (Hfits : (Z.to_nat (to_Z end1 - to_Z p)
                      <= List.length (bytes_from data p))%nat)
     by (apply bytes_from_length_ge; lia).
-  exists (List.concat gs, es), ops. split.
+  exists (List.map translate_vt_v (List.concat gs), es), ops. split.
   - apply repr_code_intro with (size := to_Z size)
                                (content := section_content data p end1).
     + rewrite <- Hsplit. apply (read_u32_leb_sound _ _ _ _ Hsz).
     + unfold section_content. rewrite List.firstn_length_le by exact Hfits.
       rewrite Z2Nat.id; lia.
-    + apply repr_func_intro with (p1 := section_content data p1 end1).
+    + rewrite concat_map.
+      apply repr_func_intro with (p1 := section_content data p1 end1).
       * apply (section_contents_within _ (repr_vec repr_locals) data p p1 end1);
           [ apply repr_vec_prefix; apply repr_locals_prefix
           | exact Hlocals | lia | lia ].
@@ -5806,7 +5832,7 @@ Proof.
     injection Hft as <-.
     exists tidx. split; [reflexivity|]. exists ft0.
     split; [rewrite <- Ht; exact Hnthf|].
-    split; [cbn [fst]; exists (vec_list declared); symmetry; exact Hflat|].
+    split; [cbn [fst]; exists (List.concat gs); reflexivity|].
     intros elems datas refs.
     destruct (body_context_agrees elems datas refs env
                 {| code_Context_locals := locals;
@@ -5820,18 +5846,18 @@ Proof.
     rewrite <- (repr_expr_det _ _ _ Hexpr' Hexpr).
     cbn [fst snd].
     (* the two contexts are the same record *)
-    assert (Hres' : List.map translate_vt_v (vec_list results)
+    assert (Hres' : List.map translate_vt_v (context_results_of results)
                     = List.map translate_vt_v
                         (vec_list ft0.(types_FuncType_results)))
-      by (rewrite (copy_value_types_sound _ _ Hcopy); reflexivity).
+      by (rewrite Hresults; reflexivity).
     assert (Hctx : func_body_context elems datas refs env ft0
-                     (List.concat gs)
+                     (List.map translate_vt_v (List.concat gs))
                    = context_reverse
                        (upd_label
                           (body_context elems datas refs env
                              {| code_Context_locals := locals;
                                 code_Context_results := results |})
-                          [translate_typelist (vec_list results)])).
+                          [translate_typelist (context_results_of results)])).
     { unfold func_body_context, context_reverse, upd_label,
              upd_local_label_return, body_context.
       cbn [tc_types tc_funcs tc_tables tc_mems tc_globals tc_elems tc_datas
@@ -5843,11 +5869,10 @@ Proof.
         cbn [List.map seq.map]. rewrite IH. rewrite rev_tf_translate_ft.
         reflexivity. }
       rewrite Hrv. rewrite Hrv.
-      rewrite (build_func_locals_sound _ _ _ Hbl).
-      rewrite List.map_app. rewrite <- Hflat.
+      rewrite Hflat.
       unfold translate_typelist. cbn [List.map seq.map option_map].
       rewrite seq.revK.
-      rewrite (copy_value_types_sound _ _ Hcopy).
+      rewrite Hresults.
       reflexivity. }
     rewrite Hctx. rewrite <- Hres'. exact Hchk.
 Qed.

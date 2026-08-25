@@ -17,14 +17,14 @@
 
 use alloc::vec::Vec;
 
+use crate::code::{
+    self, Context, EmptyOpVisitor, LocalsStack, OpVisitor, VisitResult, OP_END, OP_F32_CONST,
+    OP_F64_CONST, OP_GLOBAL_GET, OP_I32_CONST, OP_I64_CONST,
+};
 use crate::error::{Error, OpError};
 use crate::limits::{
     validate_limits, MAX_CODE_HEADER_BYTES, MAX_LEB_BYTES, MAX_LOCALS, MAX_MEMORIES,
     MAX_MEMORY_PAGES, MAX_MODULE_BYTES, MAX_RESULTS, MAX_TABLES, MAX_TABLE_ELEMS,
-};
-use crate::code::{
-    self, Context, EmptyOpVisitor, OpVisitor, VisitResult, OP_END, OP_F32_CONST, OP_F64_CONST,
-    OP_GLOBAL_GET, OP_I32_CONST, OP_I64_CONST,
 };
 use crate::reader::{
     read_byte, read_f32_bits, read_f64_bits, read_s32_leb, read_s64_leb, read_u32_leb,
@@ -323,7 +323,10 @@ pub fn export_types(env: &Env) -> Result<Vec<ExternType>> {
 /// keeps: a name and a data segment's contents. A byte range that is merely
 /// read, like a function body, is passed as a sub-slice instead.
 fn copy_bytes(data: &[u8], from: usize, to: usize) -> Vec<u8> {
-    let mut out = Vec::new();
+    // `to - from` is exact: both call sites already checked `have_bytes` for
+    // this range, so reserving it up front turns what would be several
+    // doubling reallocations (worth it for a multi-MB data segment) into one.
+    let mut out = Vec::with_capacity(to - from);
     let mut i: usize = from;
     loop {
         if i >= to {
@@ -679,8 +682,19 @@ fn decode_const_expr(
 
 // --- Copying, since no Clone impl reaches the extraction ---
 
+/// A function type's result, read back out of the `Vec` `decode_func_type`
+/// already bounded to at most `MAX_RESULTS`. Every caller here holds a type
+/// that passed that check, so this never has to reject a second one.
+fn single_result(results: &[ValueType]) -> Option<ValueType> {
+    if results.len() == 0 {
+        None
+    } else {
+        Some(results[0])
+    }
+}
+
 fn copy_value_types(src: &[ValueType]) -> Vec<ValueType> {
-    let mut out = Vec::new();
+    let mut out = Vec::with_capacity(src.len());
     let mut i: usize = 0;
     loop {
         if i >= src.len() {
@@ -1085,7 +1099,7 @@ pub fn validate_env_with<V: ModuleVisitor>(data: &[u8], v: &mut V) -> Result<(En
 
 // --- The code section ---
 
-fn push_locals(out: &mut Vec<ValueType>, count: u32, vt: ValueType) {
+fn push_locals(out: &mut LocalsStack, count: u32, vt: ValueType) {
     let mut i: u32 = 0;
     loop {
         if i >= count {
@@ -1096,38 +1110,49 @@ fn push_locals(out: &mut Vec<ValueType>, count: u32, vt: ValueType) {
     }
 }
 
-/// Spec 5.5.13's `locals`: run-length encoded, flattened here.
-fn decode_locals(data: &[u8], pos: usize) -> Result<(Vec<ValueType>, usize)> {
+/// Spec 5.5.13's `locals` (run-length encoded, flattened here) appended to
+/// the function's own parameters, which is `Context.locals` in its entirety.
+///
+/// One `LocalsStack` built in place rather than a separately decoded list
+/// merged into a second one afterward: `params` is copy in up front, so
+/// there is only ever the one growing collection, and past the inline
+/// capacity, only ever the one `Vec` behind it.
+fn decode_and_build_locals(
+    data: &[u8],
+    pos: usize,
+    params: &[ValueType],
+) -> Result<(LocalsStack, usize)> {
     let (groups, p) = read_u32_leb(data, pos)?;
-    let mut out = Vec::new();
-    let mut q = p;
-    let mut i: u32 = 0;
+    let mut locals = LocalsStack::new();
+    let mut i: usize = 0;
     loop {
-        if i >= groups {
-            return Ok((out, q));
+        if i >= params.len() {
+            break;
+        }
+        locals.push(params[i]);
+        i += 1;
+    }
+    // Tracked apart from `locals.len()`, which also counts the parameters
+    // just copied in: the cap is spec'd as being on the declaration alone,
+    // so a parameter must not eat into the declared locals' own room.
+    let mut declared_len: usize = 0;
+    let mut q = p;
+    let mut g: u32 = 0;
+    loop {
+        if g >= groups {
+            return Ok((locals, q));
         }
         let (count, q1) = read_u32_leb(data, q)?;
         let (vt, q2) = decode_value_type(data, q1)?;
         // The count is a u32 with no byte cost, so it is the one place in the
         // format where a couple of bytes can ask for an unbounded allocation.
-        if count as usize > MAX_LOCALS - out.len() {
+        if count as usize > MAX_LOCALS - declared_len {
             return Err(Error::TooManyLocals);
         }
-        push_locals(&mut out, count, vt);
+        push_locals(&mut locals, count, vt);
+        declared_len += count as usize;
         q = q2;
-        i += 1;
-    }
-}
-
-fn build_func_locals(params: &[ValueType], declared: &[ValueType]) -> Vec<ValueType> {
-    let mut locals = copy_value_types(params);
-    let mut i: usize = 0;
-    loop {
-        if i >= declared.len() {
-            return locals;
-        }
-        locals.push(declared[i]);
-        i += 1;
+        g += 1;
     }
 }
 
@@ -1164,19 +1189,20 @@ pub fn validate_code_entry_with<V: OpVisitor>(
     have_bytes(data, p, n)?;
     let end = p + n;
 
-    let (declared, p1) = decode_locals(data, p)?;
-    if p1 > end {
-        return Err(Error::SectionSizeMismatch);
-    }
-
     let type_idx = env.func_type_indices[index];
     let t = type_idx as usize;
     if t >= env.types.len() {
         return Err(Error::UnknownType(type_idx));
     }
+
+    let (locals, p1) = decode_and_build_locals(data, p, &env.types[t].params)?;
+    if p1 > end {
+        return Err(Error::SectionSizeMismatch);
+    }
+
     let ctx = Context {
-        locals: build_func_locals(&env.types[t].params, &declared),
-        results: copy_value_types(&env.types[t].results),
+        locals,
+        results: single_result(&env.types[t].results),
     };
 
     // The consumer sees the frame it is about to compile before the first
@@ -1198,12 +1224,7 @@ pub fn validate_code_entry_with<V: OpVisitor>(
 ///
 /// [`validate_code_entry_with`] with a visitor that does nothing, and the
 /// same preconditions.
-pub fn validate_code_entry(
-    data: &[u8],
-    pos: usize,
-    env: &Env,
-    index: usize,
-) -> Result<usize> {
+pub fn validate_code_entry(data: &[u8], pos: usize, env: &Env, index: usize) -> Result<usize> {
     let mut nop = EmptyOpVisitor;
     validate_code_entry_with(data, pos, env, index, &mut nop)
 }
@@ -1437,7 +1458,6 @@ fn code_entry_extent(data: &[u8], pos: usize) -> Result<(usize, usize)> {
     have_bytes(data, p, n)?;
     Ok((p, p + n))
 }
-
 
 /// What a consumer is told as a module is decoded around its code section.
 ///

@@ -188,7 +188,12 @@ so all of `src/` has to stay inside it: safe Rust, no raw pointers, full stop.
   part of a theorem; nothing else should need to
 - No `.clone()`. `Charon.toml` excludes the `Clone` and `Copy` impls from the
   LLBC, so a clone anywhere fails to translate. Copy what you need with an
-  explicit loop, as `module::copy_value_types` does
+  explicit loop, as `module::decode_and_build_locals` does for parameters
+- Fixed arrays do extract, but their indexing and update operations are opaque
+  primitives in Aeneas, just like `Vec` and slice operations. The inline-backed
+  stacks use arrays and `theories/Aeneas_Specs.v` states the list semantics the
+  proofs rely on; changing those operations changes the trust-base accounting
+  in `TRUST.md`.
 
 ### Line numbers are part of the extraction
 

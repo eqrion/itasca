@@ -207,7 +207,7 @@ trust:
         Module_Complete:decode_element_section_complete \
         Module_Complete:decode_data_section_complete \
         Module_Complete:validate_tail_complete \
-        Module_Complete:decode_locals_complete \
+        Module_Complete:decode_and_build_locals_complete \
         Module_Complete:validate_code_entry_complete \
         Module_Complete:validate_code_complete \
         Module_Complete:validate_env_with_loop_complete \

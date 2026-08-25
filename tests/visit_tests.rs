@@ -1,9 +1,9 @@
 //! Tests for the push interface: which hook fires, with what immediates, and
 //! what happens when a consumer declines.
 
-use itasca::module::*;
-use itasca::error::{OpError, VisitError};
 use itasca::code::*;
+use itasca::error::{OpError, VisitError};
+use itasca::module::*;
 use itasca::types::*;
 
 fn env_with_memory() -> Env {
@@ -15,9 +15,13 @@ fn env_with_memory() -> Env {
 }
 
 fn ctx(locals: &[ValueType], results: &[ValueType]) -> Context {
+    let mut stack = LocalsStack::new();
+    for vt in locals {
+        stack.push(*vt);
+    }
     Context {
-        locals: locals.to_vec(),
-        results: results.to_vec(),
+        locals: stack,
+        results: results.first().copied(),
     }
 }
 
@@ -74,12 +78,7 @@ impl OpVisitor for Recorder {
     fn on_br_table_label(&mut self, _st: &OpIterState, depth: u32) -> VisitResult {
         self.record(&format!("br_table label {depth}"))
     }
-    fn on_br_table(
-        &mut self,
-        _st: &OpIterState,
-        default: u32,
-        common: BlockType,
-    ) -> VisitResult {
+    fn on_br_table(&mut self, _st: &OpIterState, default: u32, common: BlockType) -> VisitResult {
         self.record(&format!("br_table default={default} {common:?}"))
     }
     fn on_return(&mut self, _st: &OpIterState) -> VisitResult {
@@ -187,7 +186,11 @@ fn constants_carry_their_immediates_and_the_cursor() {
             &[],
             &[]
         ),
-        ["f64.const 0x3ff0000000000000", "drop Val(F64)", "end Body Empty"]
+        [
+            "f64.const 0x3ff0000000000000",
+            "drop Val(F64)",
+            "end Body Empty"
+        ]
     );
 }
 
@@ -256,8 +259,17 @@ fn variables_and_memory_carry_their_immediates() {
         ]
     );
     assert_eq!(
-        record(&[OP_MEMORY_SIZE, 0, OP_MEMORY_GROW, 0, OP_DROP, OP_END], &[], &[]),
-        ["memory.size", "memory.grow", "drop Val(I32)", "end Body Empty"]
+        record(
+            &[OP_MEMORY_SIZE, 0, OP_MEMORY_GROW, 0, OP_DROP, OP_END],
+            &[],
+            &[]
+        ),
+        [
+            "memory.size",
+            "memory.grow",
+            "drop Val(I32)",
+            "end Body Empty"
+        ]
     );
 }
 
@@ -280,7 +292,12 @@ fn control_operators_carry_their_block_types_and_depths() {
     // a loop's branch target is its parameters, which 1.0 has none of
     assert_eq!(
         record(&[OP_LOOP, 0x40, OP_BR, 0, OP_END, OP_END], &[], &[]),
-        ["loop Empty", "br 0 Empty", "end Loop Empty", "end Body Empty"]
+        [
+            "loop Empty",
+            "br 0 Empty",
+            "end Loop Empty",
+            "end Body Empty"
+        ]
     );
     // `if` with no `else`: the frame closes as Then, so a consumer knows the
     // empty else was elided
@@ -392,7 +409,15 @@ fn unreachable_code_reports_bottom() {
 fn each_numeric_opcode_reaches_its_own_hook() {
     assert_eq!(
         record(
-            &[OP_I32_CONST, 1, OP_I32_CONST, 2, OP_I32_ADD, OP_DROP, OP_END],
+            &[
+                OP_I32_CONST,
+                1,
+                OP_I32_CONST,
+                2,
+                OP_I32_ADD,
+                OP_DROP,
+                OP_END
+            ],
             &[],
             &[]
         )[2],
@@ -400,7 +425,15 @@ fn each_numeric_opcode_reaches_its_own_hook() {
     );
     assert_eq!(
         record(
-            &[OP_I32_CONST, 1, OP_I32_CONST, 2, OP_I32_SUB, OP_DROP, OP_END],
+            &[
+                OP_I32_CONST,
+                1,
+                OP_I32_CONST,
+                2,
+                OP_I32_SUB,
+                OP_DROP,
+                OP_END
+            ],
             &[],
             &[]
         )[2],
@@ -464,11 +497,24 @@ fn a_numeric_opcode_with_no_override_is_still_validated() {
     // body is still accepted.
     assert_eq!(
         record(
-            &[OP_I32_CONST, 1, OP_I32_CONST, 2, OP_I32_MUL, OP_DROP, OP_END],
+            &[
+                OP_I32_CONST,
+                1,
+                OP_I32_CONST,
+                2,
+                OP_I32_MUL,
+                OP_DROP,
+                OP_END
+            ],
             &[],
             &[]
         ),
-        ["i32.const 1 @2", "i32.const 2 @4", "drop Val(I32)", "end Body Empty"]
+        [
+            "i32.const 1 @2",
+            "i32.const 2 @4",
+            "drop Val(I32)",
+            "end Body Empty"
+        ]
     );
 }
 
@@ -476,7 +522,15 @@ fn a_numeric_opcode_with_no_override_is_still_validated() {
 
 #[test]
 fn a_consumer_may_decline_a_valid_body() {
-    let body = [OP_I32_CONST, 1, OP_I32_CONST, 2, OP_I32_ADD, OP_DROP, OP_END];
+    let body = [
+        OP_I32_CONST,
+        1,
+        OP_I32_CONST,
+        2,
+        OP_I32_ADD,
+        OP_DROP,
+        OP_END,
+    ];
     let env = env_with_memory();
     let c = ctx(&[], &[]);
 
@@ -499,7 +553,12 @@ fn a_consumer_may_decline_a_valid_body() {
 fn an_invalid_body_is_rejected_for_its_own_reason() {
     let mut r = Recorder::default();
     assert_eq!(
-        validate_body_with(&[OP_I32_ADD, OP_END], &env_with_memory(), &ctx(&[], &[]), &mut r),
+        validate_body_with(
+            &[OP_I32_ADD, OP_END],
+            &env_with_memory(),
+            &ctx(&[], &[]),
+            &mut r
+        ),
         Err(OpError::EmptyStack)
     );
 }
@@ -555,9 +614,13 @@ impl OpVisitor for FrameRecorder {
         body_begin: usize,
         body_end: usize,
     ) -> VisitResult {
+        let mut locals = Vec::new();
+        for i in 0..ctx.locals.len() {
+            locals.push(ctx.locals.get(i));
+        }
         self.frames.push(format!(
             "type={type_idx} locals={:?} results={:?} bytes={body_begin}..{body_end}",
-            ctx.locals, ctx.results
+            locals, ctx.results
         ));
         self.body = Some((body_begin, body_end));
         Ok(())
@@ -576,7 +639,7 @@ fn a_code_entry_hands_over_its_frame() {
     // params come first, then the declared locals, in order
     assert_eq!(
         r.frames,
-        ["type=0 locals=[I32, I64, I64] results=[I32] bytes=27..30"]
+        ["type=0 locals=[I32, I64, I64] results=Some(I32) bytes=27..30"]
     );
     // And the range really brackets the operators: past the locals declaration
     // at one end, at the entry's end at the other.
@@ -596,8 +659,11 @@ fn wat_module() -> Vec<u8> {
     // code section: one entry, two i64 locals, body `local.get 0`
     let body: &[u8] = &[
         0x01, // one local run
-        0x02, 0x7e, // two i64
-        OP_LOCAL_GET, 0x00, OP_END,
+        0x02,
+        0x7e, // two i64
+        OP_LOCAL_GET,
+        0x00,
+        OP_END,
     ];
     m.push(0x0a);
     m.push((body.len() + 2) as u8);

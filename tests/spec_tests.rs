@@ -163,7 +163,11 @@ fn ours(t: &itasca::ExternType) -> String {
         ),
         ExternType::Global(gt) => format!(
             "global {} {}",
-            if gt.mutability == Mut::Var { "var" } else { "const" },
+            if gt.mutability == Mut::Var {
+                "var"
+            } else {
+                "const"
+            },
             valtype(gt.valtype)
         ),
     }

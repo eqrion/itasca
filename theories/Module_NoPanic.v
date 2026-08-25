@@ -125,16 +125,21 @@ Proof.
 Qed.
 
 Lemma copy_bytes_ok : forall data from to,
+  to_Z from <= to_Z to ->
   to_Z to <= dlen data ->
   dlen data <= module_bytes ->
   exists v, module_copy_bytes data from to = Ok v.
 Proof.
-  intros data from to Hto Hlen. unfold module_copy_bytes.
+  intros data from to Hfrom Hto Hlen. unfold module_copy_bytes.
+  destruct (usize_sub_ok to from (ltac:(lia)))
+    as [capacity [Hsub Hcapacity]].
+  rewrite Hsub. cbn [bind].
   apply (copy_bytes_loop_ok (Z.to_nat (Z.max 0 (to_Z to - to_Z from))) data to
-           (alloc_vec_Vec_new u8) from).
+           (alloc_vec_Vec_with_capacity u8 capacity) from).
   - exact Hto.
   - exact Hlen.
-  - cbn [vec_list alloc_vec_Vec_new proj1_sig List.length].
+  - cbn [alloc_vec_Vec_with_capacity vec_list alloc_vec_Vec_new proj1_sig
+         List.length].
     pose proof (usize_nonneg from). lia.
   - rewrite Z2Nat.id by lia. lia.
 Qed.
@@ -170,9 +175,13 @@ Proof.
       rewrite (vec_push_spec _ _ _ Hpush) in Hle. rewrite List.app_length in Hle.
       cbn [List.length] in Hle. lia. }
   unfold module_copy_bytes in H.
+  destruct (usize_sub to from) as [capacity|] eqn:Hsub;
+    cbn [bind] in H; [|discriminate].
   pose proof (Hgen (Z.to_nat (Z.max 0 (to_Z to - to_Z from)))
-                (alloc_vec_Vec_new u8) from (ltac:(lia)) v H) as Hle.
-  cbn [vec_list alloc_vec_Vec_new proj1_sig List.length] in Hle. lia.
+                (alloc_vec_Vec_with_capacity u8 capacity) from
+                (ltac:(lia)) v H) as Hle.
+  cbn [alloc_vec_Vec_with_capacity vec_list alloc_vec_Vec_new proj1_sig
+       List.length] in Hle. lia.
 Qed.
 
 (* ================================================================== *)
@@ -371,7 +380,8 @@ Proof.
   pose proof (usize_nonneg n).
   destruct (usize_add_ok p n (ltac:(fits))) as [q [Hadd Hq]].
   rewrite Hadd. cbn [bind].
-  destruct (copy_bytes_ok data p q (ltac:(lia)) Hlen) as [bs Hcopy].
+  destruct (copy_bytes_ok data p q (ltac:(lia)) (ltac:(lia)) Hlen)
+    as [bs Hcopy].
   rewrite Hcopy. cbn [bind].
   pose proof (copy_bytes_length _ _ _ _ Hcopy) as Hbl.
   rewrite vec_deref_spec.
@@ -950,69 +960,74 @@ Proof.
     rewrite Hlv. cbn [vec_list alloc_vec_Vec_new proj1_sig List.length]. lia.
 Qed.
 
-Lemma build_func_locals_loop_ok : forall m declared locals i,
-  to_Z (slice_len declared) - to_Z i <= Z.of_nat m ->
-  to_Z i <= to_Z (slice_len declared) ->
-  Z.of_nat (List.length (vec_list locals))
-    + (to_Z (slice_len declared) - to_Z i) <= usize_max ->
-  exists v, module_build_func_locals_loop declared locals i = Ok v.
+Lemma single_result_ok : forall results,
+  exists r, module_single_result results = Ok r.
 Proof.
-  induction m as [|m IH]; intros declared locals i Hmeas Hi Hroom;
-    unfold module_build_func_locals_loop; rewrite loop_unfold; cbn beta iota;
-    destruct (i s>= slice_len declared) eqn:Hge;
-    [eexists; reflexivity| |eexists; reflexivity|].
-  - exfalso. apply scalar_geb_false_lt in Hge. cbn in Hmeas. lia.
-  - apply scalar_geb_false_lt in Hge.
-    destruct (slice_index_usize_ok declared i) as [vt Hidx];
-      [rewrite slice_len_spec in Hge; lia|].
-    rewrite Hidx. cbn [bind].
-    destruct (vec_push_ok locals vt (ltac:(lia))) as [l2 Hpush].
-    rewrite Hpush. cbn [bind].
-    pose proof (usize_le_max (slice_len declared)).
-    destruct (usize_add_1_ok i (ltac:(lia))) as [i2 [Hadd Hi2]].
-    rewrite Hadd. cbn [bind].
-    apply (IH declared l2 i2).
-    + rewrite Nat2Z.inj_succ in Hmeas. lia.
-    + lia.
-    + rewrite (vec_push_spec _ _ _ Hpush). rewrite List.app_length.
-      cbn [List.length]. lia.
+  intros results. unfold module_single_result.
+  destruct (slice_len results s= 0%usize) eqn:Hz; [eexists; reflexivity|].
+  apply scalar_eqb_false in Hz.
+  destruct (slice_index_usize_ok results 0%usize) as [vt Hidx].
+  { rewrite slice_len_spec in Hz.
+    assert (H0 : to_Z 0%usize = 0) by reflexivity. lia. }
+  rewrite Hidx. cbn [bind]. eexists. reflexivity.
 Qed.
 
-(** The one place two independently bounded lengths are added together: a
-    function's locals are its parameters and then its declarations. *)
-Lemma build_func_locals_ok : forall params declared,
-  to_Z (slice_len params) + to_Z (slice_len declared) <= usize_max ->
-  exists v, module_build_func_locals params declared = Ok v.
+Lemma copy_params_loop_ok : forall m params locals i,
+  to_Z (slice_len params) - to_Z i <= Z.of_nat m ->
+  to_Z i <= to_Z (slice_len params) ->
+  Z.of_nat (List.length (locals_list locals))
+    + (to_Z (slice_len params) - to_Z i) <= usize_max ->
+  exists v, module_decode_and_build_locals_loop0 params locals i = Ok v
+    /\ Z.of_nat (List.length (locals_list v))
+       = Z.of_nat (List.length (locals_list locals))
+         + (to_Z (slice_len params) - to_Z i).
 Proof.
-  intros params declared Hsum. unfold module_build_func_locals.
-  destruct (copy_value_types_ok params) as [locals [Hc Hlc]].
-  rewrite Hc. cbn [bind].
-  pose proof (usize_nonneg (slice_len declared)).
-  assert (Hz : to_Z 0%usize = 0) by reflexivity.
-  apply (build_func_locals_loop_ok (Z.to_nat (to_Z (slice_len declared)))
-           declared locals 0%usize).
-  - rewrite Z2Nat.id by lia. lia.
-  - lia.
-  - lia.
+  induction m as [|m IH]; intros params locals i Hmeas Hi Hroom;
+    unfold module_decode_and_build_locals_loop0; rewrite loop_unfold;
+    cbn beta iota; destruct (i s>= slice_len params) eqn:Hge;
+    [ apply scalar_geb_true_ge in Hge; eexists; split; [reflexivity|lia]
+    | | apply scalar_geb_true_ge in Hge; eexists; split; [reflexivity|lia]
+    | ].
+  - exfalso. apply scalar_geb_false_lt in Hge. cbn in Hmeas. lia.
+  - apply scalar_geb_false_lt in Hge.
+    destruct (slice_index_usize_ok params i) as [vt Hidx];
+      [rewrite slice_len_spec in Hge; lia|].
+    rewrite Hidx. cbn [bind].
+    destruct (locals_stack_push_total locals vt ltac:(lia))
+      as [locals2 Hpush].
+    rewrite Hpush. cbn [bind].
+    pose proof (usize_le_max (slice_len params)).
+    destruct (usize_add_1_ok i (ltac:(lia))) as [i2 [Hadd Hi2]].
+    rewrite Hadd. cbn [bind].
+    destruct (IH params locals2 i2) as [v [Hv Hlv]].
+    + rewrite Nat2Z.inj_succ in Hmeas. lia.
+    + lia.
+    + rewrite (locals_stack_push_spec _ _ _ Hpush).
+      rewrite List.app_length. cbn [List.length]. lia.
+    + exists v. split; [exact Hv|].
+      rewrite Hlv, (locals_stack_push_spec _ _ _ Hpush).
+      rewrite List.app_length. cbn [List.length]. lia.
 Qed.
+
 
 Lemma push_locals_loop_ok : forall m out count vt i,
   to_Z count - to_Z i <= Z.of_nat m ->
   to_Z i <= to_Z count ->
-  Z.of_nat (List.length (vec_list out)) + (to_Z count - to_Z i) <= usize_max ->
+  Z.of_nat (List.length (locals_list out)) + (to_Z count - to_Z i)
+    <= usize_max ->
   exists v, module_push_locals_loop out count vt i = Ok v
-            /\ Z.of_nat (List.length (vec_list v))
-               = Z.of_nat (List.length (vec_list out)) + (to_Z count - to_Z i).
+    /\ Z.of_nat (List.length (locals_list v))
+       = Z.of_nat (List.length (locals_list out)) + (to_Z count - to_Z i).
 Proof.
   induction m as [|m IH]; intros out count vt i Hmeas Hi Hroom;
     unfold module_push_locals_loop; rewrite loop_unfold; cbn beta iota;
     destruct (i s>= count) eqn:Hge;
-    [ apply scalar_geb_true_ge in Hge; eexists; split; [reflexivity | lia]
-    | | apply scalar_geb_true_ge in Hge; eexists; split; [reflexivity | lia]
+    [ apply scalar_geb_true_ge in Hge; eexists; split; [reflexivity|lia]
+    | | apply scalar_geb_true_ge in Hge; eexists; split; [reflexivity|lia]
     | ].
   - exfalso. apply scalar_geb_false_lt in Hge. cbn in Hmeas. lia.
   - apply scalar_geb_false_lt in Hge.
-    destruct (vec_push_ok out vt (ltac:(lia))) as [out2 Hpush].
+    destruct (locals_stack_push_total out vt ltac:(lia)) as [out2 Hpush].
     rewrite Hpush. cbn [bind].
     assert (Hu1 : to_Z 1%u32 = 1) by reflexivity.
     pose proof (u32_bounds count).
@@ -1021,44 +1036,48 @@ Proof.
     destruct (IH out2 count vt i2) as [v [Hv Hlv]].
     + rewrite Nat2Z.inj_succ in Hmeas. lia.
     + lia.
-    + rewrite (vec_push_spec _ _ _ Hpush). rewrite List.app_length.
-      cbn [List.length]. lia.
+    + rewrite (locals_stack_push_spec _ _ _ Hpush).
+      rewrite List.app_length. cbn [List.length]. lia.
     + exists v. split; [exact Hv|].
-      rewrite Hlv. rewrite (vec_push_spec _ _ _ Hpush).
+      rewrite Hlv, (locals_stack_push_spec _ _ _ Hpush).
       rewrite List.app_length. cbn [List.length]. lia.
 Qed.
 
 Lemma push_locals_ok : forall out count vt,
-  Z.of_nat (List.length (vec_list out)) + to_Z count <= usize_max ->
+  Z.of_nat (List.length (locals_list out)) + to_Z count <= usize_max ->
   exists v, module_push_locals out count vt = Ok v
-            /\ Z.of_nat (List.length (vec_list v))
-               = Z.of_nat (List.length (vec_list out)) + to_Z count.
+    /\ Z.of_nat (List.length (locals_list v))
+       = Z.of_nat (List.length (locals_list out)) + to_Z count.
 Proof.
   intros out count vt Hroom. unfold module_push_locals.
   assert (H0 : to_Z 0%u32 = 0) by reflexivity.
   pose proof (u32_bounds count).
-  destruct (push_locals_loop_ok (Z.to_nat (to_Z count)) out count vt 0%u32)
-    as [v [Hv Hlv]]; [rewrite Z2Nat.id by lia; lia | lia | lia |].
-  exists v. split; [exact Hv | lia].
+  destruct (push_locals_loop_ok (Z.to_nat (to_Z count))
+    out count vt 0%u32) as [v [Hv Hlv]].
+  - rewrite Z2Nat.id by lia. lia.
+  - lia.
+  - lia.
+  - exists v. split; [exact Hv|lia].
 Qed.
 
-(** Spec 5.5.13's locals. This is the one loop whose vector is not bounded by
-    the bytes read: a group is a count and a type, so two bytes can ask for
-    four billion locals. [MAX_LOCALS] is the bound instead, and the check that
-    imposes it is itself a [usize] subtraction, so the invariant has to be
-    [length out <= MAX_LOCALS] rather than something looser. *)
-Lemma decode_locals_loop_ok : forall m data groups out q i,
-  to_Z groups - to_Z i <= Z.of_nat m ->
-  Z.of_nat (List.length (vec_list out)) <= 50000 ->
+Lemma decode_and_build_locals_loop_ok :
+  forall m data groups locals declared_len q g,
+  to_Z groups - to_Z g <= Z.of_nat m ->
+  to_Z declared_len <= 50000 ->
+  Z.of_nat (List.length (locals_list locals))
+    + (50000 - to_Z declared_len) <= module_bytes + 50000 ->
   to_Z q <= dlen data ->
-  exists r, module_decode_locals_loop data groups out q i = Ok r
-            /\ forall out' q', r = Core_result_Result_Ok (out', q') ->
-                 to_Z q <= to_Z q' /\ to_Z q' <= dlen data
-                 /\ Z.of_nat (List.length (vec_list out')) <= 50000.
+  exists r, module_decode_and_build_locals_loop1
+      data groups locals declared_len q g = Ok r
+    /\ forall out q', r = Core_result_Result_Ok (out, q') ->
+         to_Z q <= to_Z q' /\ to_Z q' <= dlen data
+         /\ Z.of_nat (List.length (locals_list out))
+              <= module_bytes + 50000.
 Proof.
-  induction m as [|m IH]; intros data groups out q i Hmeas Hacc Hq;
-    unfold module_decode_locals_loop; rewrite loop_unfold; cbn beta iota;
-    destruct (i s>= groups) eqn:Hge;
+  induction m as [|m IH];
+    intros data groups locals declared_len q g Hmeas Hdecl Hacc Hq;
+    unfold module_decode_and_build_locals_loop1; rewrite loop_unfold;
+    cbn beta iota; destruct (g s>= groups) eqn:Hge;
     [ eexists; split; [reflexivity|]; intros ? ? Hc; injection Hc as <- <-;
       repeat split; lia
     | | eexists; split; [reflexivity|]; intros ? ? Hc; injection Hc as <- <-;
@@ -1071,57 +1090,157 @@ Proof.
     rewrite branch_ok. cbn [bind].
     pose proof (read_u32_leb_lt _ _ _ _ Hr) as Hlt1.
     pose proof (read_u32_leb_le_len _ _ _ _ Hr) as Hle1.
-    destruct (decode_value_type_ok data q1) as [r1 Hr1]. rewrite Hr1. cbn [bind].
+    destruct (decode_value_type_ok data q1) as [r1 Hr1].
+    rewrite Hr1. cbn [bind].
     destruct r1 as [[vt q2]|e]; [|try_err_post].
     rewrite branch_ok. cbn [bind].
     destruct (decode_value_type_step _ _ _ _ Hr1) as [Hlt2 Hle2].
     destruct (scalar_cast_u32_usize count) as [n [Hcast Hn]].
     rewrite Hcast. cbn [bind].
     pose proof max_locals_val as Hml.
-    destruct (usize_sub_ok limits_max_locals (alloc_vec_Vec_len out)
-                (ltac:(rewrite vec_len_spec; lia))) as [room [Hsub Hroom]].
-    rewrite vec_len_spec in Hroom.
+    destruct (usize_sub_ok limits_max_locals declared_len
+      (ltac:(lia))) as [room [Hsub Hroom]].
     rewrite Hsub. cbn [bind].
-    destruct (n s> room) eqn:Hbig;
-      [eexists; split; [reflexivity|]; intros ? ? Hc; discriminate|].
-    apply scalar_gtb_false in Hbig.
-    destruct (push_locals_ok out count vt (ltac:(fits))) as [out2 [Hpush Hlp]].
-    rewrite Hpush. cbn [bind].
-    assert (Hu1 : to_Z 1%u32 = 1) by reflexivity.
-    pose proof (u32_bounds groups).
-    destruct (u32_add_ok i 1%u32 (ltac:(lia))) as [i2 [Hadd Hi2]].
-    rewrite Hadd. cbn [bind].
-    destruct (IH data groups out2 q2 i2) as [r2 [Hr2 Hpost]].
-    + rewrite Nat2Z.inj_succ in Hmeas. lia.
-    + lia.
-    + exact Hle2.
-    + exists r2. split; [exact Hr2|].
-      intros out' q' Hc. destruct (Hpost _ _ Hc) as [A [B C]].
-      repeat split; lia.
+    destruct (n s> room) eqn:Hbig.
+    + eexists. split; [reflexivity|]. intros ? ? Hc. discriminate.
+    + apply scalar_gtb_false in Hbig.
+      assert (Hpushroom :
+        Z.of_nat (List.length (locals_list locals)) + to_Z count
+          <= usize_max).
+      { pose proof module_bytes_fits. rewrite <- Hn. lia. }
+      destruct (push_locals_ok locals count vt Hpushroom)
+        as [locals2 [Hpush Hlen]].
+      rewrite Hpush. cbn [bind].
+      destruct (usize_add_ok declared_len n ltac:(
+        pose proof usize_max_bound; rewrite u32_max_val in *; lia))
+        as [declared_len2 [Hadd Hdecl2]].
+      rewrite Hadd. cbn [bind].
+      assert (Hu1 : to_Z 1%u32 = 1) by reflexivity.
+      pose proof (u32_bounds groups).
+      destruct (u32_add_ok g 1%u32 (ltac:(lia))) as [g2 [Hgadd Hg2]].
+      rewrite Hgadd. cbn [bind].
+      destruct (IH data groups locals2 declared_len2 q2 g2)
+        as [r2 [Hr2 Hpost]].
+      * rewrite Nat2Z.inj_succ in Hmeas. lia.
+      * lia.
+      * rewrite Hlen, <- Hn. lia.
+      * exact Hle2.
+      * exists r2. split; [exact Hr2|].
+        intros out q' Hc. destruct (Hpost _ _ Hc) as [A [B C]].
+        repeat split; lia.
 Qed.
 
-Lemma decode_locals_ok : forall data pos,
+Lemma decode_and_build_locals_ok : forall data pos params,
   to_Z pos <= dlen data ->
-  exists r, module_decode_locals data pos = Ok r
-            /\ forall out q', r = Core_result_Result_Ok (out, q') ->
-                 to_Z pos < to_Z q' /\ to_Z q' <= dlen data
-                 /\ Z.of_nat (List.length (vec_list out)) <= 50000.
+  to_Z (slice_len params) <= module_bytes ->
+  exists r, module_decode_and_build_locals data pos params = Ok r
+    /\ forall out q', r = Core_result_Result_Ok (out, q') ->
+         to_Z pos < to_Z q' /\ to_Z q' <= dlen data
+         /\ Z.of_nat (List.length (locals_list out))
+              <= module_bytes + 50000.
 Proof.
-  intros data pos Hpos. unfold module_decode_locals.
+  intros data pos params Hpos Hparams.
+  unfold module_decode_and_build_locals.
   destruct (read_u32_leb_ok data pos) as [r Hr]. rewrite Hr. cbn [bind].
   destruct r as [[groups p]|e]; [|try_err_post].
   rewrite branch_ok. cbn [bind].
   pose proof (read_u32_leb_lt _ _ _ _ Hr) as Hlt.
   pose proof (read_u32_leb_le_len _ _ _ _ Hr) as Hple.
-  assert (Hz : to_Z 0%u32 = 0) by reflexivity.
+  destruct code_LocalsStack_new as [locals|e] eqn:Hnew.
+  2: { unfold code_LocalsStack_new in Hnew. inversion Hnew. }
+  pose proof (locals_stack_new_spec locals Hnew) as Hnil.
+  assert (Hz : to_Z 0%usize = 0) by reflexivity.
+  pose proof (usize_nonneg (slice_len params)).
+  destruct (copy_params_loop_ok (Z.to_nat (to_Z (slice_len params)))
+    params locals 0%usize) as [locals1 [Hcopy Hcopylen]].
+  - rewrite Z2Nat.id by apply usize_nonneg. lia.
+  - lia.
+  - rewrite Hnil. cbn. pose proof usize_max_bound.
+    pose proof module_bytes_fits. lia.
+  - cbn [bind]. rewrite Hcopy. cbn [bind].
+    assert (Hg0 : to_Z 0%u32 = 0) by reflexivity.
+    pose proof (u32_bounds groups).
+    destruct (decode_and_build_locals_loop_ok
+      (Z.to_nat (to_Z groups)) data groups locals1 0%usize p 0%u32)
+      as [r2 [Hr2 Hpost]].
+    + rewrite Z2Nat.id by lia. lia.
+    + lia.
+    + rewrite Hcopylen, Hnil. cbn. lia.
+    + exact Hple.
+    + exists r2. split; [exact Hr2|].
+      intros out q' Hc. destruct (Hpost _ _ Hc) as [A [B C]].
+      repeat split; lia.
+Qed.
+
+Lemma decode_and_build_locals_loop_progress :
+  forall m data groups locals declared_len q g out q',
+  to_Z groups - to_Z g <= Z.of_nat m ->
+  to_Z q <= dlen data ->
+  module_decode_and_build_locals_loop1 data groups locals declared_len q g
+    = Ok (Core_result_Result_Ok (out, q')) ->
+  to_Z q <= to_Z q' /\ to_Z q' <= dlen data.
+Proof.
+  induction m as [|m IH];
+    intros data groups locals declared_len q g out q' Hmeas Hq H;
+    unfold module_decode_and_build_locals_loop1 in H;
+    rewrite loop_unfold in H; cbn beta iota in H;
+    destruct (g s>= groups) eqn:Hge.
+  1,3: injection H as <- <-; lia.
+  - exfalso. apply scalar_geb_false_lt in Hge. cbn in Hmeas. lia.
+  - apply scalar_geb_false_lt in Hge.
+    destruct (reader_read_u32_leb data q) as [r|] eqn:Hr;
+      cbn [bind] in H; [|discriminate].
+    destruct r as [[count q1]|e]; [|try_err_rw_in H; discriminate].
+    rewrite branch_ok in H. cbn [bind] in H.
+    pose proof (read_u32_leb_mono _ _ _ _ Hr) as Hqq1.
+    pose proof (read_u32_leb_le_len _ _ _ _ Hr) as Hq1.
+    destruct (module_decode_value_type data q1) as [r1|] eqn:Hvt;
+      cbn [bind] in H; [|discriminate].
+    destruct r1 as [[vt q2]|e]; [|try_err_rw_in H; discriminate].
+    rewrite branch_ok in H. cbn [bind] in H.
+    pose proof (decode_value_type_step _ _ _ _ Hvt) as [Hstep Hq2].
+    destruct (scalar_cast U32 Usize count) as [n|]; cbn [bind] in H;
+      [|discriminate].
+    destruct (usize_sub limits_max_locals declared_len) as [room|];
+      cbn [bind] in H; [|discriminate].
+    destruct (n s> room); [discriminate|].
+    destruct (module_push_locals locals count vt) as [locals2|];
+      cbn [bind] in H; [|discriminate].
+    destruct (usize_add declared_len n) as [declared_len2|];
+      cbn [bind] in H; [|discriminate].
+    destruct (u32_add g 1%u32) as [g2|] eqn:Hgadd;
+      cbn [bind] in H; [|discriminate].
+    pose proof (scalar_add_val _ _ _ 1 Hgadd eq_refl) as Hg2.
+    assert (Hnext : to_Z groups - to_Z g2 <= Z.of_nat m).
+    { pose proof Hmeas as Hmeasure. rewrite Nat2Z.inj_succ in Hmeasure.
+      rewrite Hg2. lia. }
+    destruct (IH data groups locals2 declared_len2 q2 g2 out q'
+      Hnext Hq2 H) as [A B]. lia.
+Qed.
+
+Lemma decode_and_build_locals_progress : forall data pos params out q',
+  to_Z pos <= dlen data ->
+  module_decode_and_build_locals data pos params
+    = Ok (Core_result_Result_Ok (out, q')) ->
+  to_Z pos < to_Z q' /\ to_Z q' <= dlen data.
+Proof.
+  intros data pos params out q' Hpos H.
+  unfold module_decode_and_build_locals in H.
+  destruct (reader_read_u32_leb data pos) as [r|] eqn:Hr;
+    cbn [bind] in H; [|discriminate].
+  destruct r as [[groups p]|e]; [|try_err_rw_in H; discriminate].
+  rewrite branch_ok in H. cbn [bind] in H.
+  pose proof (read_u32_leb_lt _ _ _ _ Hr) as Hlt.
+  pose proof (read_u32_leb_le_len _ _ _ _ Hr) as Hp.
+  destruct code_LocalsStack_new as [locals|]; cbn [bind] in H;
+    [|discriminate].
+  destruct (module_decode_and_build_locals_loop0 params locals 0%usize)
+    as [locals1|]; cbn [bind] in H; [|discriminate].
+  assert (Hg0 : to_Z 0%u32 = 0) by reflexivity.
   pose proof (u32_bounds groups).
-  destruct (decode_locals_loop_ok (Z.to_nat (to_Z groups)) data groups
-              (alloc_vec_Vec_new types_ValueType_t) p 0%u32) as [r2 [Hr2 Hpost]].
-  - rewrite Z2Nat.id by lia. lia.
-  - cbn [vec_list alloc_vec_Vec_new proj1_sig List.length]. lia.
-  - exact Hple.
-  - exists r2. split; [exact Hr2|].
-    intros out q' Hc. destruct (Hpost _ _ Hc) as [A [B C]]. repeat split; lia.
+  destruct (decode_and_build_locals_loop_progress
+    (Z.to_nat (to_Z groups)) data groups locals1 0%usize p 0%u32 out q'
+    (ltac:(rewrite Z2Nat.id by lia; lia)) Hp H) as [A B]. lia.
 Qed.
 
 Lemma decode_func_type_ok : forall data pos,
@@ -2504,14 +2623,6 @@ Proof.
   pose proof (usize_nonneg n).
   destruct (usize_add_ok p n (ltac:(fits))) as [end1 [Hadd Hend]].
   rewrite Hadd. cbn [bind].
-  destruct (decode_locals_ok data p Hple) as [r1 [Hr1 Hloc]].
-  rewrite Hr1. cbn [bind].
-  destruct r1 as [[declared p1]|e]; [|try_err_post].
-  rewrite branch_ok. cbn [bind].
-  destruct (Hloc _ _ (ltac:(reflexivity))) as [Hlt1 [Hp1 Hdec]].
-  destruct (p1 s> end1) eqn:Hover;
-    [finish_post|].
-  apply scalar_gtb_false in Hover.
   destruct (vec_index_ok env.(module_Env_func_type_indices) index Hix)
     as [tidx Hidx].
   rewrite Hidx. cbn [bind].
@@ -2530,13 +2641,17 @@ Proof.
     rewrite List.Forall_forall in Hall. apply Hall.
     eapply List.nth_error_In. exact Hnth. }
   unfold ft_small in Hsmall.
-  rewrite vec_deref_spec. rewrite vec_deref_spec.
-  destruct (build_func_locals_ok ft.(types_FuncType_params) declared
-              (ltac:(rewrite slice_len_spec; rewrite slice_len_spec; fits)))
-    as [locals Hbl].
-  rewrite Hbl. cbn [bind].
   rewrite vec_deref_spec.
-  destruct (copy_value_types_ok ft.(types_FuncType_results)) as [res [Hres _]].
+  destruct (decode_and_build_locals_ok data p ft.(types_FuncType_params)
+    Hple ltac:(rewrite slice_len_spec; exact Hsmall)) as [r1 [Hr1 Hloc]].
+  rewrite Hr1. cbn [bind].
+  destruct r1 as [[locals p1]|e]; [|try_err_post].
+  rewrite branch_ok. cbn [bind].
+  destruct (Hloc _ _ (ltac:(reflexivity))) as [Hlt1 [Hp1 Hdec]].
+  destruct (p1 s> end1) eqn:Hover; [finish_post|].
+  apply scalar_gtb_false in Hover.
+  rewrite vec_deref_spec.
+  destruct (single_result_ok ft.(types_FuncType_results)) as [res Hres].
   rewrite Hres. cbn [bind].
   (* the frame hook returns, since the consumer's hooks do *)
   destruct (frame_hook_total V inst vis
@@ -2951,7 +3066,8 @@ Proof.
   pose proof (usize_nonneg n).
   destruct (usize_add_ok p3 n (ltac:(fits))) as [q2 [Hadd Hq2]].
   rewrite Hadd. cbn [bind].
-  destruct (copy_bytes_ok data p3 q2 (ltac:(lia)) Hlen) as [init Hinit].
+  destruct (copy_bytes_ok data p3 q2 (ltac:(lia)) (ltac:(lia)) Hlen)
+    as [init Hinit].
   rewrite Hinit. cbn [bind].
   eexists. split; [reflexivity|]. intros seg q' Hc. injection Hc as _ <-.
   split; lia.

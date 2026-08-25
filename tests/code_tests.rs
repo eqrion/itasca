@@ -1,8 +1,8 @@
 //! Tests for the streaming decode+validate function-body validator.
 
-use itasca::module::*;
-use itasca::error::OpError;
 use itasca::code::*;
+use itasca::error::OpError;
+use itasca::module::*;
 use itasca::types::*;
 
 fn empty_env() -> Env {
@@ -27,9 +27,13 @@ fn env_with_globals(globals: &[GlobalType]) -> Env {
 /// The per-function half of the context. `results` is both what the outermost
 /// frame has to be left holding and what `return` branches to: one list.
 fn ctx(locals: &[ValueType], results: &[ValueType]) -> Context {
+    let mut stack = LocalsStack::new();
+    for vt in locals {
+        stack.push(*vt);
+    }
     Context {
-        locals: locals.to_vec(),
-        results: results.to_vec(),
+        locals: stack,
+        results: results.first().copied(),
     }
 }
 
@@ -112,8 +116,18 @@ fn i64_const_pushes_an_i64() {
 #[test]
 fn i64_const_takes_a_ten_byte_immediate() {
     let body = [
-        OP_I64_CONST, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        0x7f, OP_END,
+        OP_I64_CONST,
+        0x80,
+        0x80,
+        0x80,
+        0x80,
+        0x80,
+        0x80,
+        0x80,
+        0x80,
+        0x80,
+        0x7f,
+        OP_END,
     ];
     assert!(accepts(&body, &[ValueType::I64]));
 }
@@ -125,16 +139,20 @@ fn float_consts_push_their_type() {
     assert!(accepts(&f32_body, &[ValueType::F32]));
     assert!(!accepts(&f32_body, &[ValueType::F64]));
     // 1.0f64 is 0x3FF0000000000000.
-    let f64_body = [
-        OP_F64_CONST, 0, 0, 0, 0, 0, 0, 0xf0, 0x3f, OP_END,
-    ];
+    let f64_body = [OP_F64_CONST, 0, 0, 0, 0, 0, 0, 0xf0, 0x3f, OP_END];
     assert!(accepts(&f64_body, &[ValueType::F64]));
 }
 
 #[test]
 fn a_truncated_float_immediate_is_rejected() {
-    assert!(!accepts(&[OP_F32_CONST, 0, 0, 0, OP_END], &[ValueType::F32]));
-    assert!(!accepts(&[OP_F64_CONST, 0, 0, 0, 0, OP_END], &[ValueType::F64]));
+    assert!(!accepts(
+        &[OP_F32_CONST, 0, 0, 0, OP_END],
+        &[ValueType::F32]
+    ));
+    assert!(!accepts(
+        &[OP_F64_CONST, 0, 0, 0, 0, OP_END],
+        &[ValueType::F64]
+    ));
 }
 
 #[test]
@@ -151,8 +169,20 @@ fn drop_on_empty_stack_is_rejected() {
 #[test]
 fn select_picks_the_common_operand_type() {
     let body = [
-        OP_I32_CONST, 0, OP_F64_LOAD, 3, 0, OP_I32_CONST, 0, OP_F64_LOAD, 3, 0,
-        OP_I32_CONST, 1, OP_SELECT, OP_END,
+        OP_I32_CONST,
+        0,
+        OP_F64_LOAD,
+        3,
+        0,
+        OP_I32_CONST,
+        0,
+        OP_F64_LOAD,
+        3,
+        0,
+        OP_I32_CONST,
+        1,
+        OP_SELECT,
+        OP_END,
     ];
     assert!(accepts(&body, &[ValueType::F64]));
 }
@@ -160,7 +190,15 @@ fn select_picks_the_common_operand_type() {
 #[test]
 fn select_with_mismatched_operands_is_rejected() {
     let body = [
-        OP_I32_CONST, 1, OP_F32_LOAD, 2, 0, OP_I32_CONST, 1, OP_SELECT, OP_END,
+        OP_I32_CONST,
+        1,
+        OP_F32_LOAD,
+        2,
+        0,
+        OP_I32_CONST,
+        1,
+        OP_SELECT,
+        OP_END,
     ];
     assert!(!accepts(&body, &[ValueType::F32]));
 }
@@ -168,7 +206,15 @@ fn select_with_mismatched_operands_is_rejected() {
 #[test]
 fn select_needs_an_i32_condition() {
     let body = [
-        OP_I32_CONST, 1, OP_I32_CONST, 2, OP_F32_LOAD, 2, 0, OP_SELECT, OP_END,
+        OP_I32_CONST,
+        1,
+        OP_I32_CONST,
+        2,
+        OP_F32_LOAD,
+        2,
+        0,
+        OP_SELECT,
+        OP_END,
     ];
     assert!(!accepts(&body, &[ValueType::I32]));
 }
@@ -182,14 +228,25 @@ fn select_on_an_empty_reachable_stack_is_rejected() {
 fn select_in_unreachable_code_is_polymorphic() {
     // Nothing is on the stack, so all three operands come off as Bot and the
     // result is Bot, which then satisfies any expected type.
-    assert!(accepts(&[OP_UNREACHABLE, OP_SELECT, OP_END], &[ValueType::F64]));
+    assert!(accepts(
+        &[OP_UNREACHABLE, OP_SELECT, OP_END],
+        &[ValueType::F64]
+    ));
 }
 
 #[test]
 fn select_in_unreachable_code_keeps_a_known_operand() {
     // One real i32 is visible, the other operand comes off as Bot, so the join
     // is i32 and an f64 result is rejected.
-    let body = [OP_UNREACHABLE, OP_I32_CONST, 1, OP_I32_CONST, 2, OP_SELECT, OP_END];
+    let body = [
+        OP_UNREACHABLE,
+        OP_I32_CONST,
+        1,
+        OP_I32_CONST,
+        2,
+        OP_SELECT,
+        OP_END,
+    ];
     assert!(accepts(&body, &[ValueType::I32]));
     assert!(!accepts(&body, &[ValueType::F64]));
 }
@@ -225,7 +282,15 @@ fn block_cannot_see_enclosing_operands() {
     // The i32 pushed outside the block is below the frame base, so i32.add
     // inside the block has nothing to work with.
     let body = [
-        OP_I32_CONST, 1, OP_BLOCK, 0x40, OP_I32_CONST, 2, OP_I32_ADD, OP_END, OP_END,
+        OP_I32_CONST,
+        1,
+        OP_BLOCK,
+        0x40,
+        OP_I32_CONST,
+        2,
+        OP_I32_ADD,
+        OP_END,
+        OP_END,
     ];
     assert!(!accepts(&body, &[ValueType::I32]));
 }
@@ -238,9 +303,7 @@ fn unbalanced_block_is_rejected() {
 
 #[test]
 fn nested_blocks() {
-    let body = [
-        OP_BLOCK, 0x40, OP_BLOCK, 0x40, OP_END, OP_END, OP_END,
-    ];
+    let body = [OP_BLOCK, 0x40, OP_BLOCK, 0x40, OP_END, OP_END, OP_END];
     assert!(accepts(&body, &[]));
 }
 
@@ -275,14 +338,32 @@ fn if_without_else_and_no_result() {
 fn if_without_else_producing_a_result_is_rejected() {
     // Wasm 1.0 requires an `else` whenever the `if` has a result type: the
     // implicit empty else-branch cannot produce it.
-    let body = [OP_I32_CONST, 0, OP_IF, 0x7f, OP_I32_CONST, 1, OP_END, OP_END];
+    let body = [
+        OP_I32_CONST,
+        0,
+        OP_IF,
+        0x7f,
+        OP_I32_CONST,
+        1,
+        OP_END,
+        OP_END,
+    ];
     assert!(!accepts(&body, &[ValueType::I32]));
 }
 
 #[test]
 fn if_else_producing_a_result() {
     let body = [
-        OP_I32_CONST, 0, OP_IF, 0x7f, OP_I32_CONST, 1, OP_ELSE, OP_I32_CONST, 2, OP_END,
+        OP_I32_CONST,
+        0,
+        OP_IF,
+        0x7f,
+        OP_I32_CONST,
+        1,
+        OP_ELSE,
+        OP_I32_CONST,
+        2,
+        OP_END,
         OP_END,
     ];
     assert!(accepts(&body, &[ValueType::I32]));
@@ -291,7 +372,15 @@ fn if_else_producing_a_result() {
 #[test]
 fn else_branch_must_produce_the_result() {
     let body = [
-        OP_I32_CONST, 0, OP_IF, 0x7f, OP_I32_CONST, 1, OP_ELSE, OP_END, OP_END,
+        OP_I32_CONST,
+        0,
+        OP_IF,
+        0x7f,
+        OP_I32_CONST,
+        1,
+        OP_ELSE,
+        OP_END,
+        OP_END,
     ];
     assert!(!accepts(&body, &[ValueType::I32]));
 }
@@ -299,7 +388,15 @@ fn else_branch_must_produce_the_result() {
 #[test]
 fn then_branch_must_produce_the_result() {
     let body = [
-        OP_I32_CONST, 0, OP_IF, 0x7f, OP_ELSE, OP_I32_CONST, 1, OP_END, OP_END,
+        OP_I32_CONST,
+        0,
+        OP_IF,
+        0x7f,
+        OP_ELSE,
+        OP_I32_CONST,
+        1,
+        OP_END,
+        OP_END,
     ];
     assert!(!accepts(&body, &[ValueType::I32]));
 }
@@ -309,7 +406,16 @@ fn else_branch_starts_from_the_ifs_base_not_the_then_branchs_stack() {
     // The then-branch nets to an empty stack before `else`, so the else-branch
     // starts from the same base the then-branch did and has nothing to drop.
     let body = [
-        OP_I32_CONST, 0, OP_IF, 0x40, OP_I32_CONST, 1, OP_DROP, OP_ELSE, OP_DROP, OP_END,
+        OP_I32_CONST,
+        0,
+        OP_IF,
+        0x40,
+        OP_I32_CONST,
+        1,
+        OP_DROP,
+        OP_ELSE,
+        OP_DROP,
+        OP_END,
         OP_END,
     ];
     assert!(!accepts(&body, &[]));
@@ -318,7 +424,16 @@ fn else_branch_starts_from_the_ifs_base_not_the_then_branchs_stack() {
 #[test]
 fn then_branch_leftover_operand_is_rejected_at_else() {
     let body = [
-        OP_I32_CONST, 0, OP_IF, 0x40, OP_I32_CONST, 1, OP_ELSE, OP_DROP, OP_END, OP_END,
+        OP_I32_CONST,
+        0,
+        OP_IF,
+        0x40,
+        OP_I32_CONST,
+        1,
+        OP_ELSE,
+        OP_DROP,
+        OP_END,
+        OP_END,
     ];
     assert!(!accepts(&body, &[]));
 }
@@ -331,7 +446,14 @@ fn else_without_if_is_rejected() {
 #[test]
 fn double_else_is_rejected() {
     let body = [
-        OP_I32_CONST, 0, OP_IF, 0x40, OP_ELSE, OP_ELSE, OP_END, OP_END,
+        OP_I32_CONST,
+        0,
+        OP_IF,
+        0x40,
+        OP_ELSE,
+        OP_ELSE,
+        OP_END,
+        OP_END,
     ];
     assert!(!accepts(&body, &[]));
 }
@@ -345,8 +467,20 @@ fn else_after_block_is_rejected() {
 #[test]
 fn nested_if_in_then_branch() {
     let body = [
-        OP_I32_CONST, 0, OP_IF, 0x40, OP_I32_CONST, 1, OP_I32_CONST, 1, OP_IF, 0x40, OP_END,
-        OP_DROP, OP_END, OP_END,
+        OP_I32_CONST,
+        0,
+        OP_IF,
+        0x40,
+        OP_I32_CONST,
+        1,
+        OP_I32_CONST,
+        1,
+        OP_IF,
+        0x40,
+        OP_END,
+        OP_DROP,
+        OP_END,
+        OP_END,
     ];
     assert!(accepts(&body, &[]));
 }
@@ -354,7 +488,17 @@ fn nested_if_in_then_branch() {
 #[test]
 fn br_out_of_then_branch() {
     let body = [
-        OP_BLOCK, 0x40, OP_I32_CONST, 0, OP_IF, 0x40, OP_BR, 1, OP_ELSE, OP_END, OP_END,
+        OP_BLOCK,
+        0x40,
+        OP_I32_CONST,
+        0,
+        OP_IF,
+        0x40,
+        OP_BR,
+        1,
+        OP_ELSE,
+        OP_END,
+        OP_END,
         OP_END,
     ];
     assert!(accepts(&body, &[]));
@@ -363,8 +507,23 @@ fn br_out_of_then_branch() {
 #[test]
 fn br_out_of_else_branch_makes_it_unreachable() {
     let body = [
-        OP_BLOCK, 0x7f, OP_I32_CONST, 0, OP_IF, 0x7f, OP_I32_CONST, 1, OP_ELSE, OP_I32_CONST,
-        2, OP_BR, 1, OP_END, OP_END, OP_DROP, OP_END,
+        OP_BLOCK,
+        0x7f,
+        OP_I32_CONST,
+        0,
+        OP_IF,
+        0x7f,
+        OP_I32_CONST,
+        1,
+        OP_ELSE,
+        OP_I32_CONST,
+        2,
+        OP_BR,
+        1,
+        OP_END,
+        OP_END,
+        OP_DROP,
+        OP_END,
     ];
     assert!(accepts(&body, &[]));
 }
@@ -373,24 +532,42 @@ fn br_out_of_else_branch_makes_it_unreachable() {
 fn if_with_an_explicit_empty_else() {
     // `if bt in* end` and `if bt in* else end` decode to the same instruction,
     // so both are accepted; only the bytes tell them apart.
-    let body = [OP_I32_CONST, 0, OP_IF, 0x40, OP_NOP, OP_ELSE, OP_END, OP_END];
+    let body = [
+        OP_I32_CONST,
+        0,
+        OP_IF,
+        0x40,
+        OP_NOP,
+        OP_ELSE,
+        OP_END,
+        OP_END,
+    ];
     assert!(accepts(&body, &[]));
 }
 
 #[test]
 fn bare_if_nested_in_an_else_branch() {
     let body = [
-        OP_I32_CONST, 0, OP_IF, 0x40, OP_ELSE, OP_I32_CONST, 1, OP_IF, 0x40, OP_NOP,
-        OP_END, OP_END, OP_END,
+        OP_I32_CONST,
+        0,
+        OP_IF,
+        0x40,
+        OP_ELSE,
+        OP_I32_CONST,
+        1,
+        OP_IF,
+        0x40,
+        OP_NOP,
+        OP_END,
+        OP_END,
+        OP_END,
     ];
     assert!(accepts(&body, &[]));
 }
 
 #[test]
 fn if_condition_is_polymorphic_in_unreachable_code() {
-    let body = [
-        OP_UNREACHABLE, OP_IF, 0x40, OP_ELSE, OP_END, OP_END,
-    ];
+    let body = [OP_UNREACHABLE, OP_IF, 0x40, OP_ELSE, OP_END, OP_END];
     assert!(accepts(&body, &[]));
 }
 
@@ -440,15 +617,34 @@ fn br_if_leaves_the_target_types_on_the_stack() {
     // The fall-through path continues, so the block's i32 result is still
     // there and satisfies the block's own end.
     let body = [
-        OP_BLOCK, 0x7f, OP_I32_CONST, 7, OP_I32_CONST, 1, OP_BR_IF, 0, OP_END,
-        OP_DROP, OP_END,
+        OP_BLOCK,
+        0x7f,
+        OP_I32_CONST,
+        7,
+        OP_I32_CONST,
+        1,
+        OP_BR_IF,
+        0,
+        OP_END,
+        OP_DROP,
+        OP_END,
     ];
     assert!(accepts(&body, &[]));
 }
 
 #[test]
 fn br_if_requires_the_target_result() {
-    let body = [OP_BLOCK, 0x7f, OP_I32_CONST, 1, OP_BR_IF, 0, OP_END, OP_DROP, OP_END];
+    let body = [
+        OP_BLOCK,
+        0x7f,
+        OP_I32_CONST,
+        1,
+        OP_BR_IF,
+        0,
+        OP_END,
+        OP_DROP,
+        OP_END,
+    ];
     assert!(!accepts(&body, &[]));
 }
 
@@ -473,7 +669,17 @@ fn br_if_past_the_outermost_frame_is_rejected() {
 fn br_table_with_an_empty_table() {
     // Only the default label, which is what `vec(labelidx)` of length zero
     // leaves; the effect is br's.
-    let body = [OP_BLOCK, 0x40, OP_I32_CONST, 0, OP_BR_TABLE, 0, 0, OP_END, OP_END];
+    let body = [
+        OP_BLOCK,
+        0x40,
+        OP_I32_CONST,
+        0,
+        OP_BR_TABLE,
+        0,
+        0,
+        OP_END,
+        OP_END,
+    ];
     assert!(accepts(&body, &[]));
 }
 
@@ -488,8 +694,20 @@ fn br_table_targets_must_agree() {
     // Depth 0 is the i32 block, depth 1 the empty one, so the two targets
     // disagree and `same_lab` has no common type.
     let body = [
-        OP_BLOCK, 0x40, OP_BLOCK, 0x7f, OP_I32_CONST, 0, OP_BR_TABLE, 1, 0, 1,
-        OP_END, OP_DROP, OP_END, OP_END,
+        OP_BLOCK,
+        0x40,
+        OP_BLOCK,
+        0x7f,
+        OP_I32_CONST,
+        0,
+        OP_BR_TABLE,
+        1,
+        0,
+        1,
+        OP_END,
+        OP_DROP,
+        OP_END,
+        OP_END,
     ];
     assert!(!accepts(&body, &[]));
 }
@@ -498,8 +716,19 @@ fn br_table_targets_must_agree() {
 fn br_table_with_agreeing_targets() {
     // Both targets are empty blocks, so the table is well typed.
     let body = [
-        OP_BLOCK, 0x40, OP_BLOCK, 0x40, OP_I32_CONST, 0, OP_BR_TABLE, 1, 0, 1,
-        OP_END, OP_END, OP_END,
+        OP_BLOCK,
+        0x40,
+        OP_BLOCK,
+        0x40,
+        OP_I32_CONST,
+        0,
+        OP_BR_TABLE,
+        1,
+        0,
+        1,
+        OP_END,
+        OP_END,
+        OP_END,
     ];
     assert!(accepts(&body, &[]));
 }
@@ -507,27 +736,57 @@ fn br_table_with_agreeing_targets() {
 #[test]
 fn br_table_requires_the_target_result() {
     let body = [
-        OP_BLOCK, 0x7f, OP_I32_CONST, 0, OP_BR_TABLE, 0, 0, OP_END, OP_DROP,
+        OP_BLOCK,
+        0x7f,
+        OP_I32_CONST,
+        0,
+        OP_BR_TABLE,
+        0,
+        0,
+        OP_END,
+        OP_DROP,
         OP_END,
     ];
     assert!(!accepts(&body, &[]));
     let body_ok = [
-        OP_BLOCK, 0x7f, OP_I32_CONST, 7, OP_I32_CONST, 0, OP_BR_TABLE, 0, 0,
-        OP_END, OP_DROP, OP_END,
+        OP_BLOCK,
+        0x7f,
+        OP_I32_CONST,
+        7,
+        OP_I32_CONST,
+        0,
+        OP_BR_TABLE,
+        0,
+        0,
+        OP_END,
+        OP_DROP,
+        OP_END,
     ];
     assert!(accepts(&body_ok, &[]));
 }
 
 #[test]
 fn br_table_makes_the_rest_unreachable() {
-    let body = [OP_I32_CONST, 0, OP_BR_TABLE, 0, 0, OP_I32_ADD, OP_DROP, OP_END];
+    let body = [
+        OP_I32_CONST,
+        0,
+        OP_BR_TABLE,
+        0,
+        0,
+        OP_I32_ADD,
+        OP_DROP,
+        OP_END,
+    ];
     assert!(accepts(&body, &[]));
 }
 
 #[test]
 fn br_table_past_the_outermost_frame_is_rejected() {
     assert!(!accepts(&[OP_I32_CONST, 0, OP_BR_TABLE, 0, 5, OP_END], &[]));
-    assert!(!accepts(&[OP_I32_CONST, 0, OP_BR_TABLE, 1, 5, 0, OP_END], &[]));
+    assert!(!accepts(
+        &[OP_I32_CONST, 0, OP_BR_TABLE, 1, 5, 0, OP_END],
+        &[]
+    ));
 }
 
 #[test]
@@ -541,8 +800,20 @@ fn br_table_to_a_loop_needs_nothing() {
     // A loop's branch target is empty, so a table mixing a loop with an empty
     // block agrees.
     let body = [
-        OP_BLOCK, 0x40, OP_LOOP, 0x7f, OP_I32_CONST, 0, OP_BR_TABLE, 1, 0, 1,
-        OP_END, OP_DROP, OP_END, OP_END,
+        OP_BLOCK,
+        0x40,
+        OP_LOOP,
+        0x7f,
+        OP_I32_CONST,
+        0,
+        OP_BR_TABLE,
+        1,
+        0,
+        1,
+        OP_END,
+        OP_DROP,
+        OP_END,
+        OP_END,
     ];
     assert!(accepts(&body, &[]));
 }
@@ -572,7 +843,14 @@ fn return_from_a_block_yields_the_functions_results() {
     // block's `end` would reject.
     assert!(accepts(
         &[
-            OP_BLOCK, 0x40, OP_I32_CONST, 1, OP_RETURN, OP_END, OP_I32_CONST, 2,
+            OP_BLOCK,
+            0x40,
+            OP_I32_CONST,
+            1,
+            OP_RETURN,
+            OP_END,
+            OP_I32_CONST,
+            2,
             OP_END
         ],
         &[ValueType::I32]
@@ -595,9 +873,7 @@ fn unreachable_satisfies_a_missing_result() {
 fn unreachable_does_not_leak_past_end() {
     // The block is polymorphic, but the enclosing frame is not, so the outer
     // i32.add still has nothing to work with.
-    let body = [
-        OP_BLOCK, 0x40, OP_UNREACHABLE, OP_END, OP_I32_ADD, OP_END,
-    ];
+    let body = [OP_BLOCK, 0x40, OP_UNREACHABLE, OP_END, OP_I32_ADD, OP_END];
     assert!(!accepts(&body, &[ValueType::I32]));
 }
 
@@ -641,25 +917,19 @@ fn load_needs_an_i32_address() {
 
 #[test]
 fn i32_store_consumes_address_and_value() {
-    let body = [
-        OP_I32_CONST, 0, OP_I32_CONST, 7, OP_I32_STORE, 2, 0, OP_END,
-    ];
+    let body = [OP_I32_CONST, 0, OP_I32_CONST, 7, OP_I32_STORE, 2, 0, OP_END];
     assert!(accepts(&body, &[]));
 }
 
 #[test]
 fn i64_store_wants_an_i64_value() {
-    let body = [
-        OP_I32_CONST, 0, OP_I32_CONST, 7, OP_I64_STORE, 3, 0, OP_END,
-    ];
+    let body = [OP_I32_CONST, 0, OP_I32_CONST, 7, OP_I64_STORE, 3, 0, OP_END];
     assert!(!accepts(&body, &[]));
 }
 
 #[test]
 fn store_leaves_nothing_behind() {
-    let body = [
-        OP_I32_CONST, 0, OP_I32_CONST, 7, OP_I32_STORE, 2, 0, OP_END,
-    ];
+    let body = [OP_I32_CONST, 0, OP_I32_CONST, 7, OP_I32_STORE, 2, 0, OP_END];
     assert!(!accepts(&body, &[ValueType::I32]));
 }
 
@@ -770,7 +1040,15 @@ fn i32_wrap_i64_rejects_an_i32_operand() {
 #[test]
 fn f32_demote_f64_wants_an_f64() {
     assert!(!accepts(
-        &[OP_I32_CONST, 0, OP_F32_LOAD, 2, 0, OP_F32_DEMOTE_F64, OP_END],
+        &[
+            OP_I32_CONST,
+            0,
+            OP_F32_LOAD,
+            2,
+            0,
+            OP_F32_DEMOTE_F64,
+            OP_END
+        ],
         &[ValueType::F32]
     ));
 }
@@ -1213,11 +1491,7 @@ fn call_takes_its_parameters_in_order() {
 
 #[test]
 fn call_needs_the_function_to_exist() {
-    assert!(!accepts_sig(
-        &[OP_CALL, 1, OP_END],
-        ft(&[], &[]),
-        &[]
-    ));
+    assert!(!accepts_sig(&[OP_CALL, 1, OP_END], ft(&[], &[]), &[]));
 }
 
 #[test]
@@ -1235,7 +1509,16 @@ fn call_rejects_a_multi_value_callee() {
 #[test]
 fn call_indirect_takes_the_table_index_on_top() {
     assert!(accepts_sig(
-        &[OP_I64_CONST, 2, OP_I32_CONST, 0, OP_CALL_INDIRECT, 0, 0x00, OP_END],
+        &[
+            OP_I64_CONST,
+            2,
+            OP_I32_CONST,
+            0,
+            OP_CALL_INDIRECT,
+            0,
+            0x00,
+            OP_END
+        ],
         ft(&[ValueType::I64], &[ValueType::F32]),
         &[ValueType::F32]
     ));

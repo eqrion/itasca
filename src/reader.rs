@@ -58,13 +58,7 @@ pub fn read_u32_leb(data: &[u8], pos: usize) -> Result<(u32, usize)> {
 /// `128^9`, which is `2^63`: a 64-bit accumulator would overflow on the
 /// tenth byte of an s64, before the final range check gets a chance to
 /// reject it.
-fn read_sn_leb(
-    data: &[u8],
-    pos: usize,
-    last: u32,
-    lo: i128,
-    hi: i128,
-) -> Result<(i128, usize)> {
+fn read_sn_leb(data: &[u8], pos: usize, last: u32, lo: i128, hi: i128) -> Result<(i128, usize)> {
     let mut acc: i128 = 0;
     let mut mult: i128 = 1;
     let mut p: usize = pos;
@@ -104,13 +98,7 @@ pub fn read_s32_leb(data: &[u8], pos: usize) -> Result<(i32, usize)> {
 
 /// LEB128 signed 64-bit: ten bytes at most, the tenth carrying one bit.
 pub fn read_s64_leb(data: &[u8], pos: usize) -> Result<(i64, usize)> {
-    let (v, p) = read_sn_leb(
-        data,
-        pos,
-        9,
-        -9223372036854775808,
-        9223372036854775807,
-    )?;
+    let (v, p) = read_sn_leb(data, pos, 9, -9223372036854775808, 9223372036854775807)?;
     Ok((v as i64, p))
 }
 
@@ -232,7 +220,9 @@ mod tests {
     #[test]
     fn leb128_signed_64_rejects_out_of_range() {
         // An eleventh byte is one too many.
-        let eleven = [0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x00];
+        let eleven = [
+            0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x00,
+        ];
         assert!(read_s64_leb(&eleven, 0).is_err());
         // Ten bytes, but the tenth carries more than the one bit left.
         let wide = [0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x01];
@@ -241,12 +231,18 @@ mod tests {
 
     #[test]
     fn float_immediates_are_little_endian_bit_patterns() {
-        assert_eq!(read_f32_bits(&[0x00, 0x00, 0x80, 0x3f], 0).unwrap(),
-                   (0x3f800000, 4));
-        assert_eq!(read_f64_bits(&[0, 0, 0, 0, 0, 0, 0xf0, 0x3f], 0).unwrap(),
-                   (0x3ff0000000000000, 8));
-        assert_eq!(read_f32_bits(&[0xff, 0xff, 0xff, 0xff], 0).unwrap(),
-                   (u32::MAX, 4));
+        assert_eq!(
+            read_f32_bits(&[0x00, 0x00, 0x80, 0x3f], 0).unwrap(),
+            (0x3f800000, 4)
+        );
+        assert_eq!(
+            read_f64_bits(&[0, 0, 0, 0, 0, 0, 0xf0, 0x3f], 0).unwrap(),
+            (0x3ff0000000000000, 8)
+        );
+        assert_eq!(
+            read_f32_bits(&[0xff, 0xff, 0xff, 0xff], 0).unwrap(),
+            (u32::MAX, 4)
+        );
         assert_eq!(read_f64_bits(&[0xff; 8], 0).unwrap(), (u64::MAX, 8));
     }
 }

@@ -27,6 +27,11 @@ Arguments from_ { _ } { _ } _.
 (** [alloc::alloc::Global] *)
 Axiom alloc_alloc_Global : Type.
 
+(** [alloc::vec::Vec::with_capacity]: capacity is not observable in the
+    logical list model, so this is the same empty vector as [Vec::new]. *)
+Definition alloc_vec_Vec_with_capacity (T : Type) (_ : usize) : alloc_vec_Vec T :=
+  alloc_vec_Vec_new T.
+
 (** [alloc::vec::Vec::deref]: convert Vec to slice. *)
 Axiom alloc_vec_Vec_deref : forall {T : Type}, alloc_vec_Vec T -> slice T.
 
