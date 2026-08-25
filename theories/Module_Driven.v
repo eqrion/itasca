@@ -5,7 +5,7 @@
     section's entries to other threads, and decode the tail, hearing about each
     step through its own hooks. Every theorem about that shape lives in
     [Module_Sound.v], [Module_NoPanic.v] and [Module_Complete.v], stated about
-    the run the consumer made. This file closes the three gaps between those
+    the run the consumer made. This file closes the four gaps between those
     statements and what a consumer can actually put its hands on.
 
     The first is the one that matters. [Module_Sound.code_hooks_validate] is
@@ -21,12 +21,28 @@
     because soundness needs it; completeness needs this one, and with both,
     driving a walk changes nothing about its verdict.
 
-    The third is [validate_module]'s own decomposition read backwards.
+    The third is that [code_hooks_validate] cannot be discharged by a consumer
+    that validates entries *later*, since it is a claim about what the hook
+    returns and such a hook returns before the answer is known. A parallel
+    function compiler is exactly that consumer, so
+    [validate_code_with_deferred] restates the obligation over the list of
+    entries the walk reported, which is what that consumer holds once its
+    threads are done.
+
+    The fourth is [validate_module]'s own decomposition read backwards.
     [Module_Sound.validate_module_parts] says an accepting whole-module run is
     three accepting parts; [validate_module_of_parts] says three accepting
     parts are an accepting whole-module run, which is what lets a consumer that
     called the three itself inherit [validate_module_repr],
-    [validate_module_typed] and the rest rather than have them restated. *)
+    [validate_module_typed] and the rest rather than have them restated.
+
+    A consumer whose three parts came from three separate buffers is a fifth
+    gap, and the one theorem for it lives in
+    [Module_Typing.validate_module_regions_typed], since what it needs is the
+    module production assembled over a concatenation rather than anything about
+    driving. [validate_module_regions_deferred_typed] at the bottom of this
+    file is that theorem and the third one composed, which together are the
+    shape a streaming parallel compiler is in. *)
 
 Require Import Primitives.
 Import Primitives.
@@ -462,6 +478,264 @@ Proof.
 Qed.
 
 (* ================================================================== *)
+(** ** A consumer that validates the entries later                     *)
+(* ================================================================== *)
+
+(** [Module_Sound.code_hooks_validate] is a claim about the hook: it returns
+    [Ok] only for an entry the validator accepts. A consumer that hands entries
+    to other threads cannot answer that when the hook returns, and answers it
+    afterwards instead, once the threads are done. That consumer does not
+    satisfy [code_hooks_validate], so nothing above applies to it, and the walk
+    handing entries over unvalidated is the whole reason the interface has that
+    shape in the first place.
+
+    What replaces it is the same move [OpIter_Visit.records] makes one level
+    down. The consumer says what its own state records, the walk is shown to
+    record exactly the entries it framed, and the obligation becomes a claim
+    about that list rather than about the hook. *)
+
+(** What a consumer claims about its own state: [obs] reads it as the list of
+    entries the walk has handed over, as (index, position) pairs in order. One
+    clause per hook, and the hook that is not an entry leaves the list alone. *)
+Definition code_records {V : Type} (inst : module_CodeVisitor_t V)
+                        (obs : V -> list (usize * usize)) : Prop :=
+  (forall v e r v',
+     inst.(module_CodeVisitor_t_on_need_bytes) v e = Ok (r, v') ->
+     obs v' = obs v)
+  /\ (forall v data env i p c f v',
+        inst.(module_CodeVisitor_t_on_code_entry) v data env i p c f
+          = Ok (Core_result_Result_Ok tt, v') ->
+        obs v' = obs v ++ [(i, p)]).
+
+(** The obligation itself: every entry on the list validates. Quantified over a
+    list rather than over the hook, which is the whole difference from
+    [code_hooks_validate], and the reason it can be discharged after the walk
+    has returned. *)
+Definition entries_validate (data : slice u8) (env : module_Env_t)
+                            (ps : list (usize * usize)) : Prop :=
+  forall i p, List.In (i, p) ps ->
+    exists e, module_validate_code_entry data p env i
+                = Ok (Core_result_Result_Ok e).
+
+Lemma entries_validate_app_r : forall data env xs ys,
+  entries_validate data env (xs ++ ys) -> entries_validate data env ys.
+Proof.
+  intros data env xs ys H i p Hin.
+  apply H. apply List.in_or_app. right. exact Hin.
+Qed.
+
+(** The walk only ever appends to what a recording consumer has seen. Needed
+    because the obligation is about the list the run *ends* with, while the
+    induction below meets each entry in the middle. *)
+Lemma validate_code_entries_with_loop_obs :
+  forall m V (inst : module_CodeVisitor_t V) obs data env v q i q' v',
+  code_records inst obs ->
+  Z.of_nat (List.length (vec_list env.(module_Env_func_type_indices)))
+    - to_Z i <= Z.of_nat m ->
+  module_validate_code_entries_with_loop inst data env v q i
+    = Ok (Core_result_Result_Ok q', v') ->
+  exists suffix, obs v' = obs v ++ suffix.
+Proof.
+  induction m as [|m IH];
+    intros V inst obs data env v q i q' v' Hrec Hmeas H;
+    pose proof Hrec as [Hnb Hce];
+    unfold module_validate_code_entries_with_loop in H;
+    rewrite loop_unfold in H; cbn beta iota in H;
+    destruct (i s>= alloc_vec_Vec_len env.(module_Env_func_type_indices))
+      eqn:Hge.
+  1,3: inversion H; subst; exists []; rewrite List.app_nil_r; reflexivity.
+  - exfalso. apply scalar_geb_false_lt in Hge. rewrite vec_len_spec in Hge.
+    cbn in Hmeas. lia.
+  - apply scalar_geb_false_lt in Hge. rewrite vec_len_spec in Hge.
+    destruct (usize_add q limits_max_leb_bytes) as [qw|] eqn:Hqw;
+      cbn [bind] in H; [|discriminate].
+    destruct (inst.(module_CodeVisitor_t_on_need_bytes) v qw) as [[rn v1]|]
+      eqn:Hn; cbn [bind] in H; [|discriminate].
+    destruct rn as [un|en]; [|try_err_rw_in H; cbn beta iota in H; discriminate].
+    rewrite branch_ok in H. cbn [bind] in H.
+    destruct (module_code_entry_extent data q) as [rx|] eqn:Hx;
+      cbn [bind] in H; [|discriminate].
+    destruct rx as [[contents fin]|ex];
+      [|try_err_rw_in H; cbn beta iota in H; discriminate].
+    rewrite branch_ok in H. cbn [bind] in H.
+    destruct (inst.(module_CodeVisitor_t_on_need_bytes) v1 fin) as [[rn2 v2]|]
+      eqn:Hn2; cbn [bind] in H; [|discriminate].
+    destruct rn2 as [un2|en2];
+      [|try_err_rw_in H; cbn beta iota in H; discriminate].
+    rewrite branch_ok in H. cbn [bind] in H.
+    destruct (inst.(module_CodeVisitor_t_on_code_entry) v2 data env i q contents
+                fin) as [[re v3]|] eqn:He; cbn [bind] in H; [|discriminate].
+    destruct re as [ue|ee];
+      [|try_err_rw_in H; cbn beta iota in H; discriminate].
+    rewrite branch_ok in H. cbn [bind] in H.
+    destruct ue.
+    destruct (usize_add i 1%usize) as [i2|] eqn:Hadd;
+      cbn [bind] in H; [|discriminate].
+    destruct (IH V inst obs data env v3 fin i2 q' v' Hrec
+                (ltac:(pose proof (scalar_add_val _ _ _ 1 Hadd eq_refl);
+                       cbn in Hmeas; lia)) H) as [suffix Hsuf].
+    exists ((i, q) :: suffix).
+    rewrite Hsuf. rewrite (Hce _ _ _ _ _ _ _ _ He).
+    rewrite (Hnb _ _ _ _ Hn2). rewrite (Hnb _ _ _ _ Hn).
+    rewrite <- List.app_assoc. reflexivity.
+Qed.
+
+(** [validate_code_entries_with_loop_transfer] with the validating obligation
+    moved off the hook and onto the list the run reported. The two proofs are
+    the same walk; the only difference is where the fact that this entry
+    validates comes from. *)
+Lemma validate_code_entries_with_loop_deferred :
+  forall m V W (inst : module_CodeVisitor_t V) (inst' : module_CodeVisitor_t W)
+         obs data env v w q i q' v',
+  code_records inst obs ->
+  code_hooks_accept inst' data env ->
+  entries_validate data env (obs v') ->
+  Z.of_nat (List.length (vec_list env.(module_Env_func_type_indices)))
+    - to_Z i <= Z.of_nat m ->
+  module_validate_code_entries_with_loop inst data env v q i
+    = Ok (Core_result_Result_Ok q', v') ->
+  exists w', module_validate_code_entries_with_loop inst' data env w q i
+             = Ok (Core_result_Result_Ok q', w').
+Proof.
+  induction m as [|m IH];
+    intros V W inst inst' obs data env v w q i q' v' Hrec Hacc Hval Hmeas H;
+    pose proof Hrec as [Hnb Hce];
+    pose proof Hacc as [Hnb' Hce'];
+    unfold module_validate_code_entries_with_loop in H |- *;
+    rewrite loop_unfold in H; rewrite loop_unfold; cbn beta iota in H |- *;
+    destruct (i s>= alloc_vec_Vec_len env.(module_Env_func_type_indices))
+      eqn:Hge.
+  1,3: inversion H; subst; eauto.
+  - exfalso. apply scalar_geb_false_lt in Hge. rewrite vec_len_spec in Hge.
+    cbn in Hmeas. lia.
+  - apply scalar_geb_false_lt in Hge. rewrite vec_len_spec in Hge.
+    destruct (usize_add q limits_max_leb_bytes) as [qw|] eqn:Hqw;
+      cbn [bind] in H |- *; [|discriminate].
+    destruct (inst.(module_CodeVisitor_t_on_need_bytes) v qw) as [[rn v1]|]
+      eqn:Hn; cbn [bind] in H; [|discriminate].
+    destruct rn as [un|en]; [|try_err_rw_in H; cbn beta iota in H; discriminate].
+    rewrite branch_ok in H. cbn [bind] in H.
+    destruct (Hnb' w qw) as [w1 Hw1].
+    rewrite Hw1. cbn [bind]. rewrite branch_ok. cbn [bind].
+    destruct (module_code_entry_extent data q) as [rx|] eqn:Hx;
+      cbn [bind] in H |- *; [|discriminate].
+    destruct rx as [[contents fin]|ex];
+      [|try_err_rw_in H; cbn beta iota in H; discriminate].
+    rewrite branch_ok in H |- *. cbn [bind] in H |- *.
+    destruct (inst.(module_CodeVisitor_t_on_need_bytes) v1 fin) as [[rn2 v2]|]
+      eqn:Hn2; cbn [bind] in H; [|discriminate].
+    destruct rn2 as [un2|en2];
+      [|try_err_rw_in H; cbn beta iota in H; discriminate].
+    rewrite branch_ok in H. cbn [bind] in H.
+    destruct (Hnb' w1 fin) as [w2 Hw2].
+    rewrite Hw2. cbn [bind]. rewrite branch_ok. cbn [bind].
+    destruct (inst.(module_CodeVisitor_t_on_code_entry) v2 data env i q contents
+                fin) as [[re v3]|] eqn:He; cbn [bind] in H; [|discriminate].
+    destruct re as [ue|ee];
+      [|try_err_rw_in H; cbn beta iota in H; discriminate].
+    rewrite branch_ok in H. cbn [bind] in H.
+    destruct ue.
+    destruct (usize_add i 1%usize) as [i2|] eqn:Hadd;
+      cbn [bind] in H |- *; [|discriminate].
+    (* this entry is on the list the run ended with, so the caller validated it *)
+    destruct (validate_code_entries_with_loop_obs m V inst obs data env v3 fin i2
+                q' v' Hrec
+                (ltac:(pose proof (scalar_add_val _ _ _ 1 Hadd eq_refl);
+                       cbn in Hmeas; lia)) H) as [suffix Hsuf].
+    assert (Hin : List.In (i, q) (obs v')).
+    { rewrite Hsuf. rewrite (Hce _ _ _ _ _ _ _ _ He).
+      apply List.in_or_app. left. apply List.in_or_app. right.
+      left. reflexivity. }
+    destruct (Hval i q Hin) as [q1 Hent].
+    destruct (Hce' w2 i q contents fin q1 Hent) as [w3 Hw3].
+    rewrite Hw3. cbn [bind]. rewrite branch_ok. cbn [bind].
+    apply (IH V W inst inst' obs data env v3 w3 fin i2 q' v' Hrec Hacc Hval
+             (ltac:(pose proof (scalar_add_val _ _ _ 1 Hadd eq_refl);
+                    cbn in Hmeas; lia)) H).
+Qed.
+
+(** The whole code section, with the obligation deferred. This is what a
+    consumer that dispatches entries to compile threads discharges, and the
+    hypothesis is what it has when the last thread finishes: every entry the
+    walk reported turns out to validate. The hook itself may have accepted an
+    entry it had not looked at. *)
+Theorem validate_code_with_deferred :
+  forall V (inst : module_CodeVisitor_t V) obs data pos env v q' v',
+  code_records inst obs ->
+  module_validate_code_with inst data pos env v
+    = Ok (Core_result_Result_Ok q', v') ->
+  entries_validate data env (obs v') ->
+  module_validate_code data pos env = Ok (Core_result_Result_Ok q').
+Proof.
+  intros V inst obs data pos env v q' v' Hrec H Hval.
+  apply validate_code_nop.
+  pose proof (validating_code_hooks_accept data env) as Hacc.
+  pose proof Hacc as [Hnb' _].
+  unfold module_validate_code_with in H |- *.
+  destruct (usize_add pos limits_max_code_header_bytes) as [pw|] eqn:Hpw;
+    cbn [bind] in H |- *; [|discriminate].
+  destruct (inst.(module_CodeVisitor_t_on_need_bytes) v pw) as [[rn v1]|]
+    eqn:Hn; cbn [bind] in H; [|discriminate].
+  destruct rn as [un|en]; [|try_err_rw_in H; cbn beta iota in H; discriminate].
+  rewrite branch_ok in H. cbn [bind] in H.
+  destruct (Hnb' tt pw) as [w1 Hw1]. destruct w1.
+  rewrite Hw1. cbn [bind]. rewrite branch_ok. cbn [bind].
+  destruct (module_code_section data pos env) as [r|] eqn:Hcs;
+    cbn [bind] in H |- *; [|discriminate].
+  destruct r as [oc|e]; [|try_err_rw_in H; discriminate].
+  rewrite branch_ok in H |- *. cbn [bind] in H |- *.
+  destruct oc as [cs|]; [|inversion H; subst; reflexivity].
+  unfold module_validate_code_entries_with in H |- *.
+  destruct (module_validate_code_entries_with_loop inst data env v1
+              cs.(module_CodeSection_entries) 0%usize) as [[r2 v2]|] eqn:Hents;
+    cbn [bind] in H; [|discriminate].
+  destruct r2 as [q|e2]; [|try_err_rw_in H; cbn beta iota in H; discriminate].
+  rewrite branch_ok in H. cbn [bind] in H.
+  destruct (q s<> cs.(module_CodeSection_end)) eqn:Hne; [discriminate|].
+  cbn beta iota in H. inversion H. subst v2. subst q'.
+  destruct (validate_code_entries_with_loop_deferred
+              (List.length (vec_list env.(module_Env_func_type_indices)))
+              V _ inst module_ValidatingCodeVisitor_Insts_ItascaModuleCodeVisitor
+              obs data env v1 tt cs.(module_CodeSection_entries) 0%usize q v'
+              Hrec Hacc Hval
+              (ltac:(assert (to_Z 0%usize = 0) by reflexivity; lia)) Hents)
+    as [w2 Hw2].
+  destruct w2.
+  rewrite Hw2. cbn [bind]. rewrite branch_ok. cbn [bind].
+  rewrite Hne. cbn beta iota. reflexivity.
+Qed.
+
+(** A consumer that records the entries it is shown and nothing else. Here for
+    the reason [OpIter_Table.trace_visitor] is: [code_records] is a claim a
+    consumer makes about its own state, so one instance has to satisfy it or
+    the theorem above says nothing about anybody. *)
+Definition entry_recorder : module_CodeVisitor_t (list (usize * usize)) :=
+  {| module_CodeVisitor_t_on_need_bytes :=
+       fun v _ => Ok (Core_result_Result_Ok tt, v);
+     module_CodeVisitor_t_on_code_entry :=
+       fun v _ _ i p _ _ => Ok (Core_result_Result_Ok tt, v ++ [(i, p)]) |}.
+
+Lemma entry_recorder_records : code_records entry_recorder (fun v => v).
+Proof.
+  split.
+  - intros v e r v' H. cbn in H. injection H as _ <-. reflexivity.
+  - intros v data env i p c f v' H. cbn in H. injection H as <-. reflexivity.
+Qed.
+
+(** The deferred theorem at that consumer, where the list of entries is a value
+    the run produced rather than a hypothesis about a state. *)
+Corollary validate_code_recorded : forall data pos env ps q',
+  module_validate_code_with entry_recorder data pos env []
+    = Ok (Core_result_Result_Ok q', ps) ->
+  entries_validate data env ps ->
+  module_validate_code data pos env = Ok (Core_result_Result_Ok q').
+Proof.
+  intros data pos env ps q' H Hval.
+  exact (validate_code_with_deferred _ entry_recorder (fun v => v) data pos env
+           [] q' ps entry_recorder_records H Hval).
+Qed.
+
+(* ================================================================== *)
 (** ** The whole module                                                *)
 (* ================================================================== *)
 
@@ -605,4 +879,72 @@ Proof.
   exact (validate_module_typed data _
            (validate_module_of_parts data env code_pos tail_pos tl Hlen Henv
               Hcode Htail)).
+Qed.
+
+(** The payoff for a consumer that dispatches entries to other threads:
+    [validate_module_parts_typed] with the code section's obligation deferred,
+    which is the shape a parallel function compiler is in when its last thread
+    finishes. [validate_module_repr] and
+    [Module_Wasm10.validate_module_typechecked] transfer the same way, through
+    [validate_code_with_deferred] and then [validate_module_of_parts]. *)
+Corollary validate_module_deferred_typed :
+  forall V (inst : module_CodeVisitor_t V) obs data env code_pos v tail_pos v' tl,
+  dlen data <= module_bytes ->
+  module_validate_env data = Ok (Core_result_Result_Ok (env, code_pos)) ->
+  code_records inst obs ->
+  module_validate_code_with inst data code_pos env v
+    = Ok (Core_result_Result_Ok tail_pos, v') ->
+  entries_validate data env (obs v') ->
+  module_validate_tail data tail_pos env = Ok (Core_result_Result_Ok tl) ->
+  exists m imps exps,
+    repr_module (byte_list data) m
+    /\ module_import_types env = Ok (Core_result_Result_Ok imps)
+    /\ module_export_types env = Ok (Core_result_Result_Ok exps)
+    /\ mod_imports m = List.map translate_import (vec_list env.(module_Env_imports))
+    /\ mod_exports m = List.map translate_export (vec_list env.(module_Env_exports))
+    /\ module_typing m (translate_externtypes imps)
+                       (translate_externtypes exps).
+Proof.
+  intros V inst obs data env code_pos v tail_pos v' tl Hlen Henv Hrec Hcode
+         Hval Htail.
+  exact (validate_module_parts_typed data env code_pos tail_pos tl Hlen Henv
+           (validate_code_with_deferred V inst obs data code_pos env v tail_pos
+              v' Hrec Hcode Hval)
+           Htail).
+Qed.
+
+(** Both at once, which is the shape SpiderMonkey's compile path is in: the
+    module arrives in three regions, and the code section's entries are
+    validated on other threads after the walk that framed them has returned.
+    [Module_Typing.validate_module_regions_typed] wants the code region's
+    do-nothing verdict, and [validate_code_with_deferred] is what supplies it
+    from the driven run plus the list of entries that turned out to validate. *)
+Corollary validate_module_regions_deferred_typed :
+  forall V (inst : module_CodeVisitor_t V) obs E C T env cp v nc v' tl,
+  module_validate_env E = Ok (Core_result_Result_Ok (env, cp)) ->
+  to_Z cp = to_Z (slice_len E) ->
+  code_records inst obs ->
+  module_validate_code_with inst C 0%usize env v
+    = Ok (Core_result_Result_Ok nc, v') ->
+  entries_validate C env (obs v') ->
+  to_Z nc = to_Z (slice_len C) ->
+  module_validate_tail T 0%usize env = Ok (Core_result_Result_Ok tl) ->
+  begins_code_section (byte_list C) ->
+  exists m imps exps,
+    repr_module (byte_list E ++ byte_list C ++ byte_list T) m
+    /\ module_import_types env = Ok (Core_result_Result_Ok imps)
+    /\ module_export_types env = Ok (Core_result_Result_Ok exps)
+    /\ mod_imports m
+         = List.map translate_import (vec_list env.(module_Env_imports))
+    /\ mod_exports m
+         = List.map translate_export (vec_list env.(module_Env_exports))
+    /\ module_typing m (translate_externtypes imps)
+                       (translate_externtypes exps).
+Proof.
+  intros V inst obs E C T env cp v nc v' tl Henv Hcp Hrec Hcode Hval Hnc Htail
+         Hcs.
+  exact (validate_module_regions_typed E C T env cp nc tl Henv Hcp
+           (validate_code_with_deferred V inst obs C 0%usize env v nc v' Hrec
+              Hcode Hval)
+           Hnc Htail Hcs).
 Qed.

@@ -488,6 +488,36 @@ Proof.
   injection H as _ <- <-. lia.
 Qed.
 
+(** The header's own extent, which is what a streaming consumer waits for
+    before reading it: an id byte and a size, so the contents start at most six
+    bytes along. [read_section_header_step] bounds the header by the input;
+    this bounds it by its own start. *)
+Lemma read_section_header_span : forall data pos id start end_,
+  module_read_section_header data pos
+    = Ok (Core_result_Result_Ok (id, start, end_)) ->
+  to_Z start <= to_Z pos + 1 + to_Z limits_max_leb_bytes.
+Proof.
+  intros data pos id start end_ H. unfold module_read_section_header in H.
+  destruct (reader_read_byte data pos) as [r|] eqn:Hr; cbn [bind] in H;
+    [|discriminate].
+  destruct r as [[id0 p]|e]; [|err_absurd H].
+  rewrite branch_ok in H. cbn [bind] in H.
+  destruct (read_byte_ok _ _ _ _ Hr) as [_ Hp].
+  destruct (reader_read_u32_leb data p) as [r1|] eqn:Hr1; cbn [bind] in H;
+    [|discriminate].
+  destruct r1 as [[size q]|e]; [|err_absurd H].
+  rewrite branch_ok in H. cbn [bind] in H.
+  pose proof (read_u32_leb_span _ _ _ _ Hr1) as Hq.
+  destruct (scalar_cast U32 Usize size) as [n|] eqn:Hcast; cbn [bind] in H;
+    [|discriminate].
+  destruct (module_have_bytes data q n) as [rh|] eqn:Hh; cbn [bind] in H;
+    [|discriminate].
+  destruct rh as [u|e]; [|err_absurd H]. destruct u.
+  rewrite branch_ok in H. cbn [bind] in H.
+  destruct (usize_add q n) as [e2|] eqn:Hadd; cbn [bind] in H; [|discriminate].
+  injection H as _ <- _. lia.
+Qed.
+
 (** The magic number and the version. Eight [read_byte]s and two comparisons,
     with nothing to say about them beyond that each read is total. *)
 Lemma read_header_ok : forall data,
@@ -2575,6 +2605,33 @@ Proof.
   eexists. split; [reflexivity|]. intros b e Hc. injection Hc as <- <-. lia.
 Qed.
 
+(** Framing an entry reads its size prefix and nothing else, so the contents
+    begin at most [MAX_LEB_BYTES] along. This is the bound the walk's first
+    [on_need_bytes] per entry reports, so it is what makes that wait cover the
+    read that follows it. The second wait per entry is reported as the entry's
+    own end, which [Module_Sound.code_entry_extent_frames] pins to the
+    validator's. *)
+Lemma code_entry_extent_span : forall data pos contents fin,
+  module_code_entry_extent data pos
+    = Ok (Core_result_Result_Ok (contents, fin)) ->
+  to_Z contents <= to_Z pos + to_Z limits_max_leb_bytes.
+Proof.
+  intros data pos contents fin H. unfold module_code_entry_extent in H.
+  destruct (reader_read_u32_leb data pos) as [r|] eqn:Hr; cbn [bind] in H;
+    [|discriminate].
+  destruct r as [[size p]|e]; [|err_absurd H].
+  rewrite branch_ok in H. cbn [bind] in H.
+  pose proof (read_u32_leb_span _ _ _ _ Hr) as Hp.
+  destruct (scalar_cast U32 Usize size) as [n|] eqn:Hcast; cbn [bind] in H;
+    [|discriminate].
+  destruct (module_have_bytes data p n) as [rh|] eqn:Hh; cbn [bind] in H;
+    [|discriminate].
+  destruct rh as [u|e]; [|err_absurd H]. destruct u.
+  rewrite branch_ok in H. cbn [bind] in H.
+  destruct (usize_add p n) as [e2|] eqn:Hadd; cbn [bind] in H; [|discriminate].
+  injection H as <- _. lia.
+Qed.
+
 (** Every code hook returns.
     [on_need_bytes] is unconditional; [on_code_entry] is not, because its
     default *is* [validate_code_entry], and that is total only where the
@@ -2727,6 +2784,47 @@ Proof.
     [eexists; split; [reflexivity|]; intros ? Hc; discriminate|].
   eexists. split; [reflexivity|]. intros cs Hc. injection Hc as <-.
   cbn. lia.
+Qed.
+
+(** The header's extent, which is what [validate_code_with] waits for before
+    reading it: an id byte, a size, and an entry count, so the first entry
+    starts at most [MAX_CODE_HEADER_BYTES] along. The absent cases return
+    [None] and read nothing past the header, so the [Some] case is the whole
+    of the obligation. *)
+Lemma code_section_span : forall data pos env cs,
+  module_code_section data pos env
+    = Ok (Core_result_Result_Ok (Some cs)) ->
+  to_Z cs.(module_CodeSection_entries)
+    <= to_Z pos + to_Z limits_max_code_header_bytes.
+Proof.
+  intros data pos env cs H. unfold module_code_section in H.
+  assert (Hh : to_Z limits_max_code_header_bytes = 11) by reflexivity.
+  rewrite Hh.
+  (* the two absent cases return [None], so neither can be this run *)
+  assert (Hnone : forall r, module_no_code_section env
+                    = Ok (Core_result_Result_Ok (Some r)) -> False).
+  { intros r Hno. unfold module_no_code_section in Hno.
+    rewrite vec_is_empty_spec in Hno. cbn [bind] in Hno.
+    destruct (vec_list env.(module_Env_func_type_indices)); discriminate. }
+  destruct (pos s>= slice_len data); [exfalso; exact (Hnone _ H)|].
+  destruct (module_read_section_header data pos) as [r|] eqn:Hhdr;
+    cbn [bind] in H; [|discriminate].
+  destruct r as [[[id start] fin]|e]; [|err_absurd H].
+  rewrite branch_ok in H. cbn [bind] in H.
+  pose proof (read_section_header_span _ _ _ _ _ Hhdr) as Hstart.
+  assert (H5 : to_Z limits_max_leb_bytes = 5) by reflexivity.
+  rewrite H5 in Hstart.
+  destruct (id s<> module_section_code); [exfalso; exact (Hnone _ H)|].
+  destruct (reader_read_u32_leb data start) as [r1|] eqn:Hr1; cbn [bind] in H;
+    [|discriminate].
+  destruct r1 as [[count p]|e]; [|err_absurd H].
+  rewrite branch_ok in H. cbn [bind] in H.
+  pose proof (read_u32_leb_span _ _ _ _ Hr1) as Hp. rewrite H5 in Hp.
+  destruct (scalar_cast U32 Usize count) as [n|] eqn:Hcast; cbn [bind] in H;
+    [|discriminate].
+  destruct (n s<> alloc_vec_Vec_len env.(module_Env_func_type_indices));
+    [discriminate|].
+  injection H as <-. cbn [module_CodeSection_entries]. lia.
 Qed.
 
 Lemma validate_code_with_ok :

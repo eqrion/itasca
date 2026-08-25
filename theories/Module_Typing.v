@@ -1057,4 +1057,145 @@ Proof.
   apply module_type_checker_sound. exact Hchk.
 Qed.
 
+(* ================================================================== *)
+(** ** A module held in regions                                        *)
+(* ================================================================== *)
+
+(** The same conclusion for a consumer whose three parts were validated against
+    three separate buffers rather than against one.
+
+    A streamed module arrives that way: the environment is one allocation, the
+    code section another, the tail a third, and each part is driven over the
+    region that holds it with a position relative to that region. So what the
+    consumer has is a reading of each region, and
+    [Module_Driven.validate_module_of_parts] does not apply, because its three
+    hypotheses are about one [data].
+
+    The byte-level facts move across with [Spec_Module.repr_padded_app], on the
+    hypothesis that the region following the environment begins with the code
+    section: that is what keeps the environment's nine absent cases absent,
+    since a section that ran out of region could otherwise reappear at the head
+    of the next one. The rest of what the parts establish is about the
+    environment and the decoded values, so it does not mention the bytes and
+    carries over as it stands.
+
+    Two positions are pinned to their region's end, which is what says the
+    regions tile the module rather than overlapping or leaving a gap. A consumer
+    checks both: that the environment stopped exactly where the split is, and
+    that the code section's entries filled exactly the code region. *)
+Theorem validate_module_regions_typed : forall E C T env cp nc tl,
+  module_validate_env E = Ok (Core_result_Result_Ok (env, cp)) ->
+  to_Z cp = to_Z (slice_len E) ->
+  module_validate_code C 0%usize env = Ok (Core_result_Result_Ok nc) ->
+  to_Z nc = to_Z (slice_len C) ->
+  module_validate_tail T 0%usize env = Ok (Core_result_Result_Ok tl) ->
+  begins_code_section (byte_list C) ->
+  exists m imps exps,
+    repr_module (byte_list E ++ byte_list C ++ byte_list T) m
+    /\ module_import_types env = Ok (Core_result_Result_Ok imps)
+    /\ module_export_types env = Ok (Core_result_Result_Ok exps)
+    /\ mod_imports m
+         = List.map translate_import (vec_list env.(module_Env_imports))
+    /\ mod_exports m
+         = List.map translate_export (vec_list env.(module_Env_exports))
+    /\ module_typing m (translate_externtypes imps)
+                       (translate_externtypes exps).
+Proof.
+  intros E C T env cp nc tl Henv Hcp Hcode Hnc Htail Hcs.
+  (* the stream the environment's region is followed by *)
+  remember (byte_list C ++ byte_list T) as s eqn:Hs.
+  assert (Hsc : begins_code_section s).
+  { destruct Hcs as [more Hm]. exists (more ++ byte_list T).
+    rewrite Hs. rewrite Hm. reflexivity. }
+  assert (H0 : ~ begins_with 0 s)
+    by (apply (begins_code_section_not s 0 Hsc); lia).
+  (* the environment's nine lines and its own conditions *)
+  destruct (validate_env_lines _ _ _ Henv)
+    as [p0 [p1 [p2 [p3 [p4 [p5 [p6 [p7 [p8 [p9 [tabs [mems
+       [Hmagic [Hp1 [Hp2 [Hp3 [Hp4 [Hp5 [Hp6 [Hp7 [Hp8 [Hp9 [Hcustoms
+       [Htab [Hmem [Hfsp [Hgsp [Hnig [Hels [Hstart
+       [Hdist [Hdesc Hglob]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]].
+  (* the code section's region, and the tail's *)
+  destruct (validate_code_sound _ _ _ _ (validate_env_wasm10 _ _ _ Henv) Hcode)
+    as [codes [Hcodesec [Hcodelen Hcodety]]].
+  destruct (validate_tail_sound _ _ _ _ Htail) as [Htailchain Hdataok].
+  (* the environment's region ran out, so the customs run it stopped in ends
+     where the code section's region begins *)
+  rewrite (bytes_from_end E cp Hcp) in Hcustoms.
+  pose proof (repr_customs_app _ _ s H0 Hcustoms) as Hcustoms'.
+  cbn [List.app] in Hcustoms'.
+  (* and the code section filled its own region, so its reading ends at the
+     tail's *)
+  rewrite (bytes_from_at_zero C 0%usize (ltac:(reflexivity))) in Hcodesec.
+  rewrite (bytes_from_end C nc Hnc) in Hcodesec.
+  (* an accepting tail rejects any section id but a custom one's or the data
+     section's, so the code section's region is the only one holding one *)
+  assert (HnoT : ~ begins_with 10 (byte_list T)).
+  { rewrite <- (bytes_from_at_zero T 0%usize (ltac:(reflexivity))).
+    exact (tail_chain_no_code T 0%usize _ Htailchain). }
+  pose proof (repr_optsec_app _ 10 _ _ _ _ _ (byte_list T) HnoT Hcodesec)
+    as Hcodesec'.
+  cbn [List.app] in Hcodesec'.
+  rewrite <- Hs in Hcodesec'.
+  assert (Hp10 : repr_padded 10 (repr_vec repr_code) [] (bytes_from E p9 ++ s)
+                   codes (byte_list T))
+    by (exists s; split; [exact Hcustoms' | exact Hcodesec']).
+  (* the tail is the last region, so its reading needs no lifting *)
+  unfold tail_chain in Htailchain.
+  rewrite (bytes_from_at_zero T 0%usize (ltac:(reflexivity))) in Htailchain.
+  destruct Htailchain as [mid11 [Hp11 Hend]].
+  (* the functions, paired off with the code entries *)
+  destruct (funcs_of_exists
+              (List.map translate_idx
+                 (vec_list env.(module_Env_func_type_indices))) codes
+              (ltac:(rewrite List.map_length; rewrite Hcodelen; reflexivity)))
+    as [fs Hfs].
+  (* the module the three regions denote *)
+  assert (Hm : repr_module (byte_list E ++ s)
+                 (module_of env fs tabs mems
+                    (List.map translate_data (vec_list tl.(module_Tail_data))))).
+  { unfold module_of. eapply repr_module_intro.
+    - unfold repr_magic_version in Hmagic |- *. rewrite Hmagic. reflexivity.
+    - exact (repr_padded_app _ _ _ _ _ _ _ s H0
+               (ltac:(apply (begins_code_section_not s 1 Hsc); lia)) Hp1).
+    - exact (repr_padded_app _ _ _ _ _ _ _ s H0
+               (ltac:(apply (begins_code_section_not s 2 Hsc); lia)) Hp2).
+    - exact (repr_padded_app _ _ _ _ _ _ _ s H0
+               (ltac:(apply (begins_code_section_not s 3 Hsc); lia)) Hp3).
+    - exact (repr_padded_app _ _ _ _ _ _ _ s H0
+               (ltac:(apply (begins_code_section_not s 4 Hsc); lia)) Hp4).
+    - exact (repr_padded_app _ _ _ _ _ _ _ s H0
+               (ltac:(apply (begins_code_section_not s 5 Hsc); lia)) Hp5).
+    - exact (repr_padded_app _ _ _ _ _ _ _ s H0
+               (ltac:(apply (begins_code_section_not s 6 Hsc); lia)) Hp6).
+    - exact (repr_padded_app _ _ _ _ _ _ _ s H0
+               (ltac:(apply (begins_code_section_not s 7 Hsc); lia)) Hp7).
+    - exact (repr_padded_app _ _ _ _ _ _ _ s H0
+               (ltac:(apply (begins_code_section_not s 8 Hsc); lia)) Hp8).
+    - exact (repr_padded_app _ _ _ _ _ _ _ s H0
+               (ltac:(apply (begins_code_section_not s 9 Hsc); lia)) Hp9).
+    - exact Hp10.
+    - exact Hp11.
+    - exact Hend.
+    - exact Hfs. }
+  (* the checker's verdict, from the environment alone *)
+  pose proof (module_of_type_checker env fs tabs mems
+                (vec_list tl.(module_Tail_data)) codes
+                (validate_env_limits_valid _ _ _ Henv)
+                Htab Hmem Hfsp Hgsp Hnig Hels Hstart Hdist Hdesc Hdataok Hglob
+                Hcodety Hfs) as Hchk.
+  destruct Hfsp as [_ Hfall].
+  apply List.Forall_app in Hfall. destruct Hfall as [Hfimp _].
+  destruct (import_types_externs env Hfimp) as [imps [Himps Hiv]].
+  destruct (export_types_externs env Hdesc) as [exps [Hexps Hev]].
+  exists (module_of env fs tabs mems
+            (List.map translate_data (vec_list tl.(module_Tail_data)))).
+  exists imps. exists exps.
+  split; [exact Hm|].
+  split; [exact Himps|]. split; [exact Hexps|].
+  split; [reflexivity|]. split; [reflexivity|].
+  apply module_type_checker_sound.
+  rewrite Hiv. rewrite Hev. exact Hchk.
+Qed.
+
 End Typed.

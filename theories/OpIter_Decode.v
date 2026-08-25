@@ -3596,6 +3596,86 @@ Proof.
                   (ltac:(reflexivity)) H)).
 Qed.
 
+(** How far a [u32] LEB read can move the cursor, as opposed to the length
+    bounds above.
+
+    A streaming consumer needs this one. It cannot read a byte that has not
+    arrived, so it has to know, before a read, how far that read can reach; the
+    interface answers with [pos + MAX_LEB_BYTES], and this is the proof that
+    the answer covers the read. The loop is entered with four continuations left
+    and each iteration costs exactly one byte, so the budget is the bound.
+
+    Read together with [read_u32_leb_sound], which says the bytes consumed are
+    exactly those between the two cursors: the pair is what turns "the cursor
+    moved at most five" into "no byte at or past [pos + 5] was read". *)
+Lemma read_u32_leb_loop_span : forall n data acc mult p i v p',
+  to_Z i + Z.of_nat n = 4 ->
+  reader_read_u32_leb_loop data acc mult p i
+    = Ok (Core_result_Result_Ok (v, p')) ->
+  to_Z p' <= to_Z p + Z.of_nat n + 1.
+Proof.
+  induction n as [|n IH]; intros data acc mult p i v p' Hn H;
+    unfold reader_read_u32_leb_loop in H; rewrite loop_unfold in H;
+    cbn beta iota in H;
+    destruct (p s>= slice_len data) eqn:Hge; [discriminate| |discriminate| ].
+  all: apply scalar_geb_false_lt in Hge.
+  all: destruct (slice_index_usize data p) as [b|] eqn:Hidx; cbn [bind] in H;
+         [|discriminate].
+  all: destruct (usize_add p 1%usize) as [p2|] eqn:Hadd; cbn [bind] in H;
+         [|discriminate].
+  all: destruct (bytes_from_step data p b p2 Hidx Hadd) as [_ Hp2].
+  all: destruct (u8_rem b 128%u8) as [low|] eqn:Hrem; cbn [bind] in H;
+         [|discriminate].
+  - (* i = 4: the terminal iteration, one byte and then done either way *)
+    assert (Heq4 : (i s= 4%u32) = true).
+    { unfold scalar_eqb. apply Z.eqb_eq.
+      assert (H4 : to_Z 4%u32 = 4) by reflexivity. rewrite H4.
+      cbn in Hn. lia. }
+    rewrite Heq4 in H. cbn beta iota in H.
+    destruct (low s> 15%u8); [discriminate|].
+    destruct (scalar_cast U8 U32 low) as [c|] eqn:Hcast; cbn [bind] in H;
+      [|discriminate].
+    destruct (u32_mul c mult) as [prod|] eqn:Hmul; cbn [bind] in H;
+      [|discriminate].
+    destruct (u32_add acc prod) as [sum|] eqn:Hadd2; cbn [bind] in H;
+      [|discriminate].
+    destruct (b s< 128%u8); [injection H as _ <-; lia|].
+    cbn beta iota in H. discriminate.
+  - (* i < 4: one byte, then either stop or recurse with one less budget *)
+    assert (Heq4 : (i s= 4%u32) = false).
+    { unfold scalar_eqb. apply Z.eqb_neq.
+      assert (H4 : to_Z 4%u32 = 4) by reflexivity. cbn in Hn. lia. }
+    rewrite Heq4 in H. cbn beta iota in H.
+    destruct (scalar_cast U8 U32 low) as [c|] eqn:Hcast; cbn [bind] in H;
+      [|discriminate].
+    destruct (u32_mul c mult) as [prod|] eqn:Hmul; cbn [bind] in H;
+      [|discriminate].
+    destruct (u32_add acc prod) as [sum|] eqn:Hadd2; cbn [bind] in H;
+      [|discriminate].
+    destruct (b s< 128%u8); [injection H as _ <-; lia|].
+    cbn beta iota in H.
+    destruct (u32_mul mult 128%u32) as [mult2|] eqn:Hmul2; cbn [bind] in H;
+      [|discriminate].
+    destruct (u32_add i 1%u32) as [i5|] eqn:Hadd3; cbn [bind] in H;
+      [|discriminate].
+    assert (Hi5 : to_Z i5 = to_Z i + 1).
+    { unfold u32_add, scalar_add in Hadd3. apply mk_scalar_ok_to_Z in Hadd3.
+      assert (H1 : to_Z 1%u32 = 1) by reflexivity. rewrite Hadd3. lia. }
+    pose proof (IH data sum mult2 p2 i5 v p' (ltac:(cbn in Hn; lia)) H). lia.
+Qed.
+
+(** Stated against the constant rather than against 5, so the theorem is
+    literally the bound the interface reports. *)
+Lemma read_u32_leb_span : forall data pos v pos',
+  reader_read_u32_leb data pos = Ok (Core_result_Result_Ok (v, pos')) ->
+  to_Z pos' <= to_Z pos + to_Z limits_max_leb_bytes.
+Proof.
+  intros data pos v pos' H. unfold reader_read_u32_leb in H.
+  assert (H5 : to_Z limits_max_leb_bytes = 5) by reflexivity. rewrite H5.
+  pose proof (read_u32_leb_loop_span 4 data 0%u32 1%u32 pos 0%u32 v pos'
+                (ltac:(reflexivity)) H). lia.
+Qed.
+
 Lemma read_sn_leb_loop_range : forall n data last lo hi acc mult p i v p',
   to_Z i + Z.of_nat n = to_Z last ->
   reader_read_sn_leb_loop data last lo hi acc mult p i

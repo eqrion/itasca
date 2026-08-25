@@ -1279,6 +1279,151 @@ Proof.
 Qed.
 
 (* ================================================================== *)
+(** ** A line of the module, over a longer stream                       *)
+(* ================================================================== *)
+
+(** A module does not always arrive as one buffer. A streamed one comes in three
+    pieces, and a consumer validates each against the piece it holds, so what it
+    has in hand is a reading of each region rather than of the module. These
+    lemmas are what put the three back together: a line read over one region
+    still reads the same way once the regions that follow it are appended.
+
+    [reads_prefix] does the work for the framed case, and the absent cases are
+    the reason there are hypotheses. A section absent at the end of a region is
+    absent because the region ran out, and appending the next one could put that
+    very section id back in front of the cursor. Requiring the appended stream
+    to begin with neither this line's id nor a custom section's rules that out,
+    and for the environment's nine lines the code section's id byte discharges
+    it. *)
+
+(** The only case that needs the second hypothesis is the empty one, and it is
+    the case that matters. *)
+Lemma not_begins_app : forall id bs s,
+  ~ begins_with id bs -> ~ begins_with id s -> ~ begins_with id (bs ++ s).
+Proof.
+  intros id bs s Hbs Hs [more Hm].
+  destruct bs as [|b bs'].
+  - cbn in Hm. apply Hs. exists more. exact Hm.
+  - cbn in Hm. injection Hm as Hb _. apply Hbs. exists bs'. rewrite Hb.
+    reflexivity.
+Qed.
+
+(** [repr_section] read back out. [Module_Complete.v] has the same inversion,
+    but it is downstream of this file. *)
+Lemma repr_section_shape : forall A (id : Z) (R : list Z -> A -> list Z -> Prop)
+                                  bs x rest,
+  repr_section id R bs x rest ->
+  exists p0 size content,
+    bs = id :: p0
+    /\ repr_u32 p0 size (content ++ rest)
+    /\ Z.of_nat (List.length content) = size
+    /\ R content x [].
+Proof.
+  intros A id R bs x rest H. inversion H; subst.
+  do 3 eexists. split; [reflexivity|]. split; [eassumption|].
+  split; [first [reflexivity | eassumption] | assumption].
+Qed.
+
+(** The size prefix re-reads over the longer stream, and the contents relation
+    is untouched: it was already stated about the section's own bytes. *)
+Lemma repr_section_app : forall A id (R : list Z -> A -> list Z -> Prop)
+                                bs x rest s,
+  repr_section id R bs x rest -> repr_section id R (bs ++ s) x (rest ++ s).
+Proof.
+  intros A id R bs x rest s H.
+  destruct (repr_section_shape _ _ _ _ _ _ H)
+    as [p0 [size [content [-> [Hn [Hlen HR]]]]]].
+  destruct (repr_u32_prefix _ _ _ Hn) as [pre [Heq Hall]].
+  cbn [List.app].
+  apply repr_section_intro with (size := size) (content := content).
+  - rewrite Heq. rewrite <- app_assoc. rewrite <- app_assoc.
+    rewrite (app_assoc content rest s). apply Hall.
+  - exact Hlen.
+  - exact HR.
+Qed.
+
+Lemma repr_optsec_app : forall A id (R : list Z -> A -> list Z -> Prop)
+                               absent bs x rest s,
+  ~ begins_with id s ->
+  repr_optsec id R absent bs x rest ->
+  repr_optsec id R absent (bs ++ s) x (rest ++ s).
+Proof.
+  intros A id R absent bs x rest s Hs H.
+  inversion H as [b0 x0 r0 Hsec|b0 Hnb]; subst.
+  - apply repr_optsec_present. apply repr_section_app. exact Hsec.
+  - apply repr_optsec_absent. apply not_begins_app; assumption.
+Qed.
+
+Lemma repr_customs_app : forall bs rest s,
+  ~ begins_with 0 s ->
+  repr_customs bs rest -> repr_customs (bs ++ s) (rest ++ s).
+Proof.
+  intros bs rest s Hs H. induction H as [b0 Hnb|b0 mid r0 Hsec Hrest IH].
+  - apply repr_customs_done. apply not_begins_app; assumption.
+  - apply repr_customs_more with (mid := mid ++ s).
+    + apply repr_section_app. exact Hsec.
+    + exact IH.
+Qed.
+
+(** One line of the module production, which is a run of custom sections and
+    then an optional section, so it needs both absent cases ruled out. *)
+Lemma repr_padded_app : forall A id (R : list Z -> A -> list Z -> Prop)
+                               absent bs x rest s,
+  ~ begins_with 0 s ->
+  ~ begins_with id s ->
+  repr_padded id R absent bs x rest ->
+  repr_padded id R absent (bs ++ s) x (rest ++ s).
+Proof.
+  intros A id R absent bs x rest s H0 Hid [mid [Hc Ho]].
+  exists (mid ++ s). split.
+  - apply repr_customs_app; assumption.
+  - apply repr_optsec_app; assumption.
+Qed.
+
+(** A run of custom sections cannot start on an id that is not a custom
+    section's, so it stops where it began. The three below read the two absent
+    cases off a known head byte, which is how a consumer holding the module in
+    regions shows that a section it is looking for is not in the next region. *)
+Lemma repr_customs_head_ne : forall id more rest,
+  id <> 0 -> repr_customs (id :: more) rest -> rest = id :: more.
+Proof.
+  intros id more rest Hne H. inversion H; subst.
+  - reflexivity.
+  - destruct (repr_section_shape _ _ _ _ _ _ H0) as [q0 [sz [ct [Hq _]]]].
+    injection Hq as Hi _. congruence.
+Qed.
+
+Lemma repr_optsec_head_ne : forall A id (R : list Z -> A -> list Z -> Prop)
+                                   absent k more x rest,
+  k <> id -> repr_optsec id R absent (k :: more) x rest ->
+  x = absent /\ rest = k :: more.
+Proof.
+  intros A id R absent k more x rest Hne H. inversion H; subst.
+  - destruct (repr_section_shape _ _ _ _ _ _ H0) as [q0 [sz [ct [Hq _]]]].
+    injection Hq as Hi _. congruence.
+  - split; reflexivity.
+Qed.
+
+Lemma repr_customs_nil_head_ne : forall id more,
+  id <> 0 -> ~ repr_customs (id :: more) [].
+Proof.
+  intros id more Hne H.
+  pose proof (repr_customs_head_ne id more [] Hne H) as Heq. discriminate.
+Qed.
+
+(** What the environment's nine lines and the run that pads the code section
+    ask of the region that follows them: it starts with the code section, so it
+    starts with none of the ids they could still be looking for. *)
+Definition begins_code_section (s : list Z) : Prop := begins_with 10 s.
+
+Lemma begins_code_section_not : forall s k,
+  begins_code_section s -> k <> 10 -> ~ begins_with k s.
+Proof.
+  intros s k [more Hm] Hk [more' Hm']. rewrite Hm in Hm'.
+  injection Hm' as Hkk _. apply Hk. symmetry. exact Hkk.
+Qed.
+
+(* ================================================================== *)
 (** ** Transcription cross-checks                                      *)
 (* ================================================================== *)
 

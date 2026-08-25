@@ -126,6 +126,7 @@ trust:
         OpIter_Decode:read_f64_bits_complete \
         OpIter_Decode:read_op_sound \
         OpIter_Decode:read_memarg_sound \
+        OpIter_Decode:read_u32_leb_span \
         OpIter_State:push_types_pos \
         OpIter_Sim:ctx_at_label_lookup \
         OpIter_Sim:step_end_block \
@@ -168,6 +169,9 @@ trust:
         Module_NoPanic:validate_module_no_panic \
         Module_NoPanic:validate_env_ok \
         Module_NoPanic:validate_tail_ok \
+        Module_NoPanic:read_section_header_span \
+        Module_NoPanic:code_entry_extent_span \
+        Module_NoPanic:code_section_span \
         Module_Sound:validate_module_repr \
         Module_Sound:validate_code_entry_with_sound \
         Module_Sound:code_section_sound \
@@ -218,11 +222,19 @@ trust:
         Module_Driven:validate_env_with_accepts \
         Module_Driven:validate_tail_with_accepts \
         Module_Driven:validate_code_with_accepts \
+        Module_Driven:entry_recorder_records \
+        Module_Driven:validate_code_with_deferred \
+        Module_Driven:validate_code_recorded \
         Module_Driven:validate_module_of_parts \
         Module_Driven:validate_module_with_accepts \
         Module_Driven:validate_module_with_no_panic \
         Module_Driven:validate_module_with_complete \
-        Module_Driven:validate_module_parts_typed
+        Module_Driven:validate_module_parts_typed \
+        Module_Driven:validate_module_deferred_typed \
+        Module_Sound:validate_env_lines \
+        Module_Sound:tail_chain_no_code \
+        Module_Typing:validate_module_regions_typed \
+        Module_Driven:validate_module_regions_deferred_typed
     do
         m="${pair%%:*}"; t="${pair##*:}"
         out=$(just assumptions "$m" "$t" 2>/dev/null)

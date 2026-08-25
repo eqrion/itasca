@@ -296,7 +296,7 @@ the visitor obligations below, no entry point is a gap.
 | `validate_module_with` | `validate_module_with_no_panic` | `validate_module_driven` | `validate_module_with_accepts`, `validate_module_with_complete` |
 | `validate_env`, `_with` | `validate_env_ok`, `validate_env_with_ok` | `validate_env_sound` | `validate_env_complete` |
 | `code_section` | `code_section_ok` | `code_section_sound` | `code_section_complete` |
-| `validate_code`, `_with` | `validate_code_ok`, `validate_code_with_ok` | `validate_code_sound`, `validate_code_with_sound` | `validate_code_complete`, `validate_code_with_complete` |
+| `validate_code`, `_with` | `validate_code_ok`, `validate_code_with_ok` | `validate_code_sound`, `validate_code_with_sound`, `validate_code_with_deferred` | `validate_code_complete`, `validate_code_with_complete` |
 | `validate_code_entry`, `_with` | `validate_code_entry_ok`, `validate_code_entry_with_ok` | `validate_code_entry_sound`, `validate_code_entry_with_sound` | `validate_code_entry_complete`, `validate_code_entry_with_complete` |
 | `validate_tail`, `_with` | `validate_tail_ok`, `validate_tail_with_ok` | `validate_tail_sound` | `validate_tail_complete` |
 | `validate_body`, `_with` | `validate_body_no_panic`, `validate_body_with_no_panic` | `validate_body_typed`, `validate_body_with_typed` | `validate_body_complete`, `validate_body_with_complete` |
@@ -317,6 +317,20 @@ that count; absent means nothing at `pos` begins a code section and the module
 declared no functions. A consumer that frames the entries itself from
 `CodeSection::entries` still owes the check that the extents tile the section
 exactly, which `validate_code_with` performs and nothing else does.
+
+**How far a read reaches.** A consumer streaming the code section cannot read a
+byte that has not arrived, so before each read it has to know how far that read
+can go. `CodeVisitor::on_need_bytes` is where the walk says so, and four lemmas
+say the answer covers the read: `read_u32_leb_span` (a `u32` LEB moves the
+cursor by at most `MAX_LEB_BYTES`), `read_section_header_span`,
+`code_entry_extent_span`, and `code_section_span` (the first entry starts at
+most `MAX_CODE_HEADER_BYTES` along). Each is stated against the constant rather
+than against 5 or 11, so the theorem is the bound the interface reports. Read
+with the matching `_sound` lemma, which says the bytes consumed are exactly
+those between the two cursors, the pair turns "the cursor moved at most five"
+into "no byte at or past `pos + 5` was read". The per-entry wait is covered by
+`code_entry_extent_frames` and `validate_code_entry_with_sound` instead, which
+pin the entry's bytes to `[pos, end)`.
 
 ### One function body
 
@@ -417,6 +431,77 @@ so without this the interface would have a hole exactly where its main use is.
 `validate_code_entry_accepts` is its mirror, which discharges
 `code_hooks_accept`: the same consumer does not refuse an entry the validator
 accepts, provided its own operator hooks do not.
+
+### Validating the entries later
+
+`code_hooks_validate` is a claim about what the hook *returns*, so a consumer
+that hands each entry to a compile thread and returns before the thread reports
+back cannot satisfy it. That consumer is the main one: the walk frames each
+entry and hands it over unvalidated precisely so it can go to another thread.
+
+```coq
+Theorem validate_code_with_deferred : forall V inst obs data pos env v q' v',
+  code_records inst obs ->
+  module_validate_code_with inst data pos env v = Ok (Ok q', v') ->
+  entries_validate data env (obs v') ->
+  module_validate_code data pos env = Ok (Ok q').
+```
+
+The obligation has moved off the hook and onto a list. `code_records inst obs`
+is the `CodeVisitor` analogue of `records`: the consumer says `obs` reads its
+state as the entries it was handed, as `(index, position)` pairs.
+`entries_validate` says every pair on that list validates, which is what the
+consumer holds once its last thread finishes rather than when the hook returns.
+`entry_recorder` and `entry_recorder_records` supply one visitor that satisfies
+`code_records`, so the theorem is not vacuous, and `validate_code_recorded` is
+the statement at that visitor with the list as a value.
+
+`validate_module_deferred_typed` composes this with
+`validate_module_parts_typed`, so a parallel function compiler reaches the whole
+of Part 1 from the state it is actually in when it finishes.
+
+### A module held in three buffers
+
+A streamed module does not arrive as one buffer: the environment is one
+allocation, the code section another, the tail a third, and each part is driven
+over the region that holds it with a position relative to that region.
+`validate_module_of_parts` does not apply to that, because its three hypotheses
+are about one `data`.
+
+```coq
+Theorem validate_module_regions_typed : forall E C T env cp nc tl,
+  module_validate_env E = Ok (Ok (env, cp)) ->
+  to_Z cp = to_Z (slice_len E) ->
+  module_validate_code C 0 env = Ok (Ok nc) ->
+  to_Z nc = to_Z (slice_len C) ->
+  module_validate_tail T 0 env = Ok (Ok tl) ->
+  begins_code_section (byte_list C) ->
+  exists m imps exps,
+    repr_module (byte_list E ++ byte_list C ++ byte_list T) m
+    /\ ...
+    /\ module_typing m (translate_externtypes imps)
+                       (translate_externtypes exps).
+```
+
+The conclusion is about the concatenation of the three regions' bytes, which is
+the module, and there is no fourth slice holding it. Three things make it go
+through, and each is something a consumer checks:
+
+- **The regions tile the module.** The two position hypotheses say the
+  environment stopped exactly where the split is and the code section's entries
+  filled exactly the code region. Without them the regions could overlap or
+  leave a gap, and the concatenation would not be what any of them read.
+- **The next region begins with the code section.** This is what keeps the
+  environment's nine absent cases absent: a section that was absent because its
+  region ran out could otherwise reappear at the head of the next one.
+  `Spec_Module.repr_padded_app` is the lifting, and the hypothesis is what its
+  absent case needs.
+- **The tail holds no code section.** Not a hypothesis:
+  `Module_Sound.tail_chain_no_code` derives it, since an accepting tail rejects
+  any section id but a custom section's or the data section's.
+
+`Module_Driven.validate_module_regions_deferred_typed` is this and the deferred
+obligation together, which is the shape a streaming parallel compiler is in.
 
 ### The trace
 
@@ -521,18 +606,6 @@ rejects would fall outside the theorem. Function bodies do not have this gap,
 because there WasmCert's reflection lemma is an if-and-only-if.
 
 **The custom-section report.** As above.
-
-**`on_need_bytes`'s bounds.** This hook exists so a consumer streaming the code
-section can block until the bytes it is about to be shown have arrived. Two of
-the three call sites are covered and one is not. For an entry,
-`Module_Sound.code_entry_extent_frames` proves the framing step and the
-validator agree on where the entry ends, and `validate_code_entry_with_sound`
-proves the entry's bytes are exactly `[pos, end)`, so `on_need_bytes(end)` does
-bound what is read next. For the two header reads, `on_need_bytes(q +
-MAX_LEB_BYTES)` and `on_need_bytes(pos + MAX_CODE_HEADER_BYTES)`, there is no
-lemma bounding an LEB128 read by five bytes; the readers are proven to advance
-by at least one byte and to stay inside the input, and nothing more. Those two
-bounds are correct by inspection of `reader.rs` and are not theorems.
 
 **Error messages and byte offsets.** `Error` carries no position, and nothing is
 proven about which error a rejection produces, only that it is a rejection.

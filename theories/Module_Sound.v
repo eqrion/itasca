@@ -5184,6 +5184,30 @@ Definition tail_chain (data : slice u8) (p : usize)
 Definition tail_after (data : slice u8) (p : usize) : Prop :=
   repr_customs (bytes_from data p) [].
 
+(** The tail cannot begin with a code section. Obvious from the Rust, which
+    rejects any id there but a custom section's or the data section's, and
+    needed by a consumer that holds the module in regions: it is what says the
+    code section's own region is the only place a code section is, so that
+    region's reading is the module's tenth line rather than a prefix of it.
+
+    Read off the two absent cases instead of off the loop. A stream beginning
+    with id 10 is not a custom section, so the padding run stops on it; it is
+    not the data section either, so the optional section is absent and the
+    cursor has not moved; and the run that closes the module then has to
+    consume it, which it cannot. *)
+Lemma tail_chain_no_code : forall data p segs,
+  tail_chain data p segs -> ~ begins_with 10 (bytes_from data p).
+Proof.
+  intros data p segs [mid [[m0 [Hc Ho]] Hend]] [more Hmore].
+  rewrite Hmore in Hc.
+  (* the padding run cannot take an id-10 section, so it stops where it is *)
+  rewrite (repr_customs_head_ne 10 more m0 ltac:(lia) Hc) in Ho.
+  (* nor is it the data section, so the optional section is absent *)
+  destruct (repr_optsec_head_ne _ 11 _ _ 10 more _ mid ltac:(lia) Ho) as [_ ->].
+  (* and the run that closes the module cannot consume it either *)
+  exact (repr_customs_nil_head_ne 10 more ltac:(lia) Hend).
+Qed.
+
 Lemma tail_chain_custom : forall data p fin segs,
   repr_section 0 repr_custom (bytes_from data p) tt (bytes_from data fin) ->
   tail_chain data fin segs -> tail_chain data p segs.
@@ -6827,15 +6851,55 @@ Proof.
   injection H as <- _. reflexivity.
 Qed.
 
-Theorem validate_module_parts : forall data vm,
-  module_validate_module data = Ok (Core_result_Result_Ok vm) ->
-  exists env code_pos tail_pos tl fs tabs mems,
-    vm = {| module_Module_env := env;
-            module_Module_tail := tl |}
-    /\ module_validate_env data = Ok (Core_result_Result_Ok (env, code_pos))
-    /\ module_validate_code data code_pos env
-         = Ok (Core_result_Result_Ok tail_pos)
-    /\ module_validate_tail data tail_pos env = Ok (Core_result_Result_Ok tl)
+(* ================================================================== *)
+(** ** What the environment contributes                                *)
+(* ================================================================== *)
+
+(** [validate_env_sound] hands back a chain, which is the shape the induction
+    that built it wanted: one link per section, each naming the environment the
+    next line starts from. What the module production wants instead is the nine
+    lines on their own, with the values read off the environment the run ended
+    with rather than off the intermediate one that wrote them. Turning the one
+    into the other is the [_keeps] machinery above, applied nine times, and this
+    is that work stated once.
+
+    It is stated once because there are two consumers.
+    [validate_module_parts] is the whole-module one. The other is a consumer
+    holding the module in regions, whose environment was validated against its
+    own region rather than against the module: the ten byte-level facts below
+    are separate conjuncts, so each can be lifted to the longer stream with
+    [Spec_Module.repr_padded_app], and the environment's own conditions do not
+    mention the bytes at all. *)
+Lemma validate_env_lines : forall data env cp,
+  module_validate_env data = Ok (Core_result_Result_Ok (env, cp)) ->
+  exists p0 p1 p2 p3 p4 p5 p6 p7 p8 p9 tabs mems,
+    repr_magic_version (byte_list data) (bytes_from data p0)
+    /\ repr_padded 1 (repr_vec repr_functype) [] (bytes_from data p0)
+         (List.map translate_functype (vec_list env.(module_Env_types)))
+         (bytes_from data p1)
+    /\ repr_padded 2 (repr_vec repr_import) [] (bytes_from data p1)
+         (List.map translate_import (vec_list env.(module_Env_imports)))
+         (bytes_from data p2)
+    /\ repr_padded 3 (repr_vec repr_idx) [] (bytes_from data p2)
+         (List.map translate_idx (vec_list env.(module_Env_func_type_indices)))
+         (bytes_from data p3)
+    /\ repr_padded 4 (repr_vec repr_table) [] (bytes_from data p3)
+         (List.map translate_table tabs) (bytes_from data p4)
+    /\ repr_padded 5 (repr_vec repr_mem) [] (bytes_from data p4)
+         (List.map translate_mem mems) (bytes_from data p5)
+    /\ repr_padded 6 (repr_vec repr_global) [] (bytes_from data p5)
+         (List.map translate_global (vec_list env.(module_Env_globals)))
+         (bytes_from data p6)
+    /\ repr_padded 7 (repr_vec repr_export) [] (bytes_from data p6)
+         (List.map translate_export (vec_list env.(module_Env_exports)))
+         (bytes_from data p7)
+    /\ repr_padded 8 repr_start None (bytes_from data p7)
+         (translate_start env.(module_Env_start)) (bytes_from data p8)
+    /\ repr_padded 9 (repr_vec repr_elem) [] (bytes_from data p8)
+         (List.map translate_element (vec_list env.(module_Env_elements)))
+         (bytes_from data p9)
+    /\ repr_customs (bytes_from data p9) (bytes_from data cp)
+    (* and the environment's own conditions, which mention no bytes *)
     /\ vec_list env.(module_Env_table_types)
          = imported_tables (vec_list env.(module_Env_imports)) ++ tabs
     /\ vec_list env.(module_Env_mem_types)
@@ -6854,41 +6918,10 @@ Theorem validate_module_parts : forall data vm,
     /\ start_ok env
     /\ exports_distinct env
     /\ List.Forall (export_desc_ok env) (vec_list env.(module_Env_exports))
-    /\ List.Forall (data_ok env) (vec_list tl.(module_Tail_data))
-    /\ List.Forall (global_ok env) (vec_list env.(module_Env_globals))
-    /\ (exists codes,
-          List.Forall2 (code_typed env)
-            (vec_list env.(module_Env_func_type_indices)) codes
-          /\ funcs_of (List.map translate_idx
-                        (vec_list env.(module_Env_func_type_indices))) codes fs)
-    /\ repr_module (byte_list data)
-         (module_of env fs tabs mems
-            (List.map translate_data (vec_list tl.(module_Tail_data)))).
+    /\ List.Forall (global_ok env) (vec_list env.(module_Env_globals)).
 Proof.
-  intros data vm H. unfold module_validate_module in H.
-  destruct (slice_len data s> limits_max_module_bytes); [discriminate|].
-  destruct (module_validate_env data) as [r|] eqn:Henv; cbn [bind] in H;
-    [|discriminate].
-  destruct r as [[env code_pos]|e]; [|try_err_rw_in H; discriminate].
-  rewrite branch_ok in H. cbn [bind] in H.
-  destruct (module_validate_code data code_pos env) as [r1|] eqn:Hcode;
-    cbn [bind] in H; [|discriminate].
-  destruct r1 as [tail_pos|e1]; [|try_err_rw_in H; discriminate].
-  rewrite branch_ok in H. cbn [bind] in H.
-  destruct (module_validate_tail data tail_pos env) as [r2|] eqn:Htail;
-    cbn [bind] in H; [|discriminate].
-  destruct r2 as [tl|e2]; [|try_err_rw_in H; discriminate].
-  (* the value the run returned is built from these two parts, which is what
-     lets the theorems downstream talk about [vm] rather than about [env] *)
-  assert (Hvm : vm = {| module_Module_env := env;
-                        module_Module_tail := tl |}).
-  { rewrite branch_ok in H. cbn [bind] in H. injection H as H.
-    symmetry. exact H. }
-  clear H.
+  intros data env cp Henv.
   destruct (validate_env_sound _ _ _ Henv) as [p0 [env0 [Hmagic [Hnew Hchain]]]].
-  destruct (validate_code_sound _ _ _ _ (validate_env_wasm10 _ _ _ Henv) Hcode)
-    as [codes [Hcodesec [Hcodelen Hcodety]]].
-  destruct (validate_tail_sound _ _ _ _ Htail) as [Htailchain Hdataok].
   unfold module_Env_new in Hnew. injection Hnew as <-.
   (* peel the nine environment lines and the run of customs that follows,
      keeping the tail of the chain at each line: that is what carries a field
@@ -6911,14 +6944,8 @@ Proof.
   pose proof Hchain9 as C9.
   destruct C9 as [p9 [e9' [els [Hp9 [Hl9 [Hv9 [Hels9 Hchaint]]]]]]].
   destruct Hchaint as [Hcustoms Henvf].
-  destruct Htailchain as [mid11 [Hp11 Hend]].
   unfold env_imported in Hv2.
   destruct Hsp2 as [Hsp2t [Hsp2m [Hsp2g [Hsp2ty [Hfs2 Hnig2]]]]].
-  (* the code section's line, padded by the run [validate_env] stopped in *)
-  assert (Hp10 : repr_padded 10 (repr_vec repr_code) [] (bytes_from data p9)
-                   codes (bytes_from data tail_pos))
-    by (exists (bytes_from data code_pos); split;
-        [exact Hcustoms | exact Hcodesec]).
   (* the ten fields, each carried from the line that wrote it *)
   assert (Ktypes1 : vec_list env.(module_Env_types) = vec_list e1'.(module_Env_types))
     by (apply (env_chain_2_keeps _ (fun e => vec_list e.(module_Env_types))
@@ -7070,24 +7097,116 @@ Proof.
     rewrite Hv6. env_proj. rewrite Hv5. env_proj. rewrite Hv4. env_proj.
     rewrite Hv3. env_proj. rewrite Hv2. env_proj. rewrite Hv1. env_proj.
     cbn [vec_list alloc_vec_Vec_new proj1_sig List.map]. apply List.NoDup_nil. }
-  destruct (funcs_of_exists (List.map translate_idx tidxs) codes
-              (ltac:(rewrite List.map_length; rewrite Hcodelen;
-                     rewrite Kfti; reflexivity))) as [fs Hfs].
-  exists env, code_pos, tail_pos, tl, fs, tabs, mems.
-  split; [exact Hvm|].
-  (* [destruct ... eqn:] rewrote the first of the three in the goal already *)
-  split; [reflexivity|]. split; [exact Hcode|]. split; [exact Htail|].
+  exists p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, tabs, mems.
+  split; [exact Hmagic|].
+  split; [rewrite Ktypes; exact Hp1|].
+  split; [rewrite Kimports; exact Hp2|].
+  split; [rewrite Kfti; exact Hp3|].
+  split; [exact Hp4|].
+  split; [exact Hp5|].
+  split; [rewrite Kglobals; exact Hp6|].
+  split; [rewrite Kexports; exact Hp7|].
+  split; [rewrite Kstart; exact Hp8|].
+  split; [rewrite Kelems; exact Hp9|].
+  split; [exact Hcustoms|].
   split; [rewrite Kimports; exact Ktables|].
   split; [rewrite Kimports; exact Kmems|].
   split; [exact Kfuncs|]. split; [exact Kgts|]. split; [exact Knig|].
   split; [exact Kelems_ok|]. split; [exact Kstart_ok|].
   split; [exact Kdist_ok|]. split; [exact Kdesc_ok|].
+  exact Kglob_ok.
+Qed.
+
+Theorem validate_module_parts : forall data vm,
+  module_validate_module data = Ok (Core_result_Result_Ok vm) ->
+  exists env code_pos tail_pos tl fs tabs mems,
+    vm = {| module_Module_env := env;
+            module_Module_tail := tl |}
+    /\ module_validate_env data = Ok (Core_result_Result_Ok (env, code_pos))
+    /\ module_validate_code data code_pos env
+         = Ok (Core_result_Result_Ok tail_pos)
+    /\ module_validate_tail data tail_pos env = Ok (Core_result_Result_Ok tl)
+    /\ vec_list env.(module_Env_table_types)
+         = imported_tables (vec_list env.(module_Env_imports)) ++ tabs
+    /\ vec_list env.(module_Env_mem_types)
+         = imported_mems (vec_list env.(module_Env_imports)) ++ mems
+    /\ env_func_space env
+         (imported_func_idxs (vec_list env.(module_Env_imports))
+          ++ vec_list env.(module_Env_func_type_indices))
+    /\ vec_list env.(module_Env_global_types)
+         = imported_globals (vec_list env.(module_Env_imports))
+           ++ List.map (fun g => g.(module_Global_gtype))
+                (vec_list env.(module_Env_globals))
+    /\ to_Z env.(module_Env_num_imported_globals)
+         = Z.of_nat (List.length
+             (imported_globals (vec_list env.(module_Env_imports))))
+    /\ List.Forall (element_ok env) (vec_list env.(module_Env_elements))
+    /\ start_ok env
+    /\ exports_distinct env
+    /\ List.Forall (export_desc_ok env) (vec_list env.(module_Env_exports))
+    /\ List.Forall (data_ok env) (vec_list tl.(module_Tail_data))
+    /\ List.Forall (global_ok env) (vec_list env.(module_Env_globals))
+    /\ (exists codes,
+          List.Forall2 (code_typed env)
+            (vec_list env.(module_Env_func_type_indices)) codes
+          /\ funcs_of (List.map translate_idx
+                        (vec_list env.(module_Env_func_type_indices))) codes fs)
+    /\ repr_module (byte_list data)
+         (module_of env fs tabs mems
+            (List.map translate_data (vec_list tl.(module_Tail_data)))).
+Proof.
+  intros data vm H. unfold module_validate_module in H.
+  destruct (slice_len data s> limits_max_module_bytes); [discriminate|].
+  destruct (module_validate_env data) as [r|] eqn:Henv; cbn [bind] in H;
+    [|discriminate].
+  destruct r as [[env code_pos]|e]; [|try_err_rw_in H; discriminate].
+  rewrite branch_ok in H. cbn [bind] in H.
+  destruct (module_validate_code data code_pos env) as [r1|] eqn:Hcode;
+    cbn [bind] in H; [|discriminate].
+  destruct r1 as [tail_pos|e1]; [|try_err_rw_in H; discriminate].
+  rewrite branch_ok in H. cbn [bind] in H.
+  destruct (module_validate_tail data tail_pos env) as [r2|] eqn:Htail;
+    cbn [bind] in H; [|discriminate].
+  destruct r2 as [tl|e2]; [|try_err_rw_in H; discriminate].
+  (* the value the run returned is built from these two parts, which is what
+     lets the theorems downstream talk about [vm] rather than about [env] *)
+  assert (Hvm : vm = {| module_Module_env := env;
+                        module_Module_tail := tl |}).
+  { rewrite branch_ok in H. cbn [bind] in H. injection H as H.
+    symmetry. exact H. }
+  clear H.
+  (* the environment's nine lines and its own conditions, in one step *)
+  destruct (validate_env_lines _ _ _ Henv)
+    as [p0 [p1 [p2 [p3 [p4 [p5 [p6 [p7 [p8 [p9 [tabs [mems
+       [Hmagic [Hp1 [Hp2 [Hp3 [Hp4 [Hp5 [Hp6 [Hp7 [Hp8 [Hp9 [Hcustoms
+       [Ktables [Kmems [Kfuncs [Kgts [Knig [Kelems_ok [Kstart_ok
+       [Kdist_ok [Kdesc_ok Kglob_ok]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]].
+  destruct (validate_code_sound _ _ _ _ (validate_env_wasm10 _ _ _ Henv) Hcode)
+    as [codes [Hcodesec [Hcodelen Hcodety]]].
+  destruct (validate_tail_sound _ _ _ _ Htail) as [Htailchain Hdataok].
+  destruct Htailchain as [mid11 [Hp11 Hend]].
+  (* the code section's line, padded by the run [validate_env] stopped in *)
+  assert (Hp10 : repr_padded 10 (repr_vec repr_code) [] (bytes_from data p9)
+                   codes (bytes_from data tail_pos))
+    by (exists (bytes_from data code_pos); split;
+        [exact Hcustoms | exact Hcodesec]).
+  destruct (funcs_of_exists
+              (List.map translate_idx
+                 (vec_list env.(module_Env_func_type_indices))) codes
+              (ltac:(rewrite List.map_length; rewrite Hcodelen; reflexivity)))
+    as [fs Hfs].
+  exists env, code_pos, tail_pos, tl, fs, tabs, mems.
+  split; [exact Hvm|].
+  (* [destruct ... eqn:] rewrote the first of the three in the goal already *)
+  split; [reflexivity|]. split; [exact Hcode|]. split; [exact Htail|].
+  split; [exact Ktables|]. split; [exact Kmems|].
+  split; [exact Kfuncs|]. split; [exact Kgts|]. split; [exact Knig|].
+  split; [exact Kelems_ok|]. split; [exact Kstart_ok|].
+  split; [exact Kdist_ok|]. split; [exact Kdesc_ok|].
   split; [exact Hdataok|].
   split; [exact Kglob_ok|].
-  split; [exists codes; split; [exact Hcodety|];
-          rewrite Kfti; exact Hfs|].
+  split; [exists codes; split; [exact Hcodety | exact Hfs]|].
   unfold module_of.
-  rewrite Ktypes, Kglobals, Kelems, Kstart, Kimports, Kexports.
   eapply repr_module_intro.
   - exact Hmagic.
   - exact Hp1.
