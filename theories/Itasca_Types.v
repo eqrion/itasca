@@ -72,14 +72,14 @@ Inductive types_ValueType_t :=
 .
 
 (** [itasca::code::BlockType]
-    Source: 'src/code.rs', lines 49:0-52:1 *)
+    Source: 'src/code.rs', lines 39:0-42:1 *)
 Inductive code_BlockType_t :=
 | Code_BlockType_Empty : code_BlockType_t
 | Code_BlockType_Value : types_ValueType_t -> code_BlockType_t
 .
 
 (** [itasca::code::MemArg]
-    Source: 'src/code.rs', lines 69:0-72:1 *)
+    Source: 'src/code.rs', lines 59:0-62:1 *)
 Record code_MemArg_t :=
 mkcode_MemArg_t {
   code_MemArg_align : u32; code_MemArg_offset : u32;
@@ -87,7 +87,7 @@ mkcode_MemArg_t {
 .
 
 (** [itasca::code::Context]
-    Source: 'src/code.rs', lines 83:0-87:1 *)
+    Source: 'src/code.rs', lines 73:0-77:1 *)
 Record code_Context_t :=
 mkcode_Context_t {
   code_Context_locals : alloc_vec_Vec types_ValueType_t;
@@ -96,13 +96,13 @@ mkcode_Context_t {
 .
 
 (** [itasca::error::VisitError]
-    Source: 'src/error.rs', lines 51:0-53:1 *)
+    Source: 'src/error.rs', lines 50:0-52:1 *)
 Inductive error_VisitError_t :=
 | Error_VisitError_OutOfMemory : error_VisitError_t
 .
 
 (** [itasca::error::OpError]
-    Source: 'src/error.rs', lines 19:0-46:1 *)
+    Source: 'src/error.rs', lines 18:0-45:1 *)
 Inductive error_OpError_t :=
 | Error_OpError_UnexpectedEof : error_OpError_t
 | Error_OpError_LebTooLong : error_OpError_t
@@ -128,14 +128,14 @@ Inductive error_OpError_t :=
 .
 
 (** [itasca::code::StackType]
-    Source: 'src/code.rs', lines 110:0-113:1 *)
+    Source: 'src/code.rs', lines 97:0-100:1 *)
 Inductive code_StackType_t :=
 | Code_StackType_Val : types_ValueType_t -> code_StackType_t
 | Code_StackType_Bot : code_StackType_t
 .
 
 (** [itasca::code::LabelKind]
-    Source: 'src/code.rs', lines 119:0-125:1 *)
+    Source: 'src/code.rs', lines 106:0-112:1 *)
 Inductive code_LabelKind_t :=
 | Code_LabelKind_Body : code_LabelKind_t
 | Code_LabelKind_Block : code_LabelKind_t
@@ -145,7 +145,7 @@ Inductive code_LabelKind_t :=
 .
 
 (** [itasca::code::Ctrl]
-    Source: 'src/code.rs', lines 130:0-137:1 *)
+    Source: 'src/code.rs', lines 117:0-124:1 *)
 Record code_Ctrl_t :=
 mkcode_Ctrl_t {
   code_Ctrl_kind : code_LabelKind_t;
@@ -156,7 +156,7 @@ mkcode_Ctrl_t {
 .
 
 (** [itasca::code::OpIterState]
-    Source: 'src/code.rs', lines 142:0-146:1 *)
+    Source: 'src/code.rs', lines 129:0-133:1 *)
 Record code_OpIterState_t :=
 mkcode_OpIterState_t {
   code_OpIterState_vals : alloc_vec_Vec code_StackType_t;
@@ -258,7 +258,7 @@ mkmodule_Export_t {
 .
 
 (** [itasca::module::ImportDesc]
-    Source: 'src/module.rs', lines 64:0-69:1 *)
+    Source: 'src/module.rs', lines 65:0-70:1 *)
 Inductive module_ImportDesc_t :=
 | Module_ImportDesc_Func : u32 -> module_ImportDesc_t
 | Module_ImportDesc_Table : types_TableType_t -> module_ImportDesc_t
@@ -277,7 +277,7 @@ mkmodule_Import_t {
 .
 
 (** [itasca::module::Global]
-    Source: 'src/module.rs', lines 56:0-59:1 *)
+    Source: 'src/module.rs', lines 57:0-60:1 *)
 Record module_Global_t :=
 mkmodule_Global_t {
   module_Global_gtype : types_GlobalType_t;
@@ -286,7 +286,7 @@ mkmodule_Global_t {
 .
 
 (** [itasca::module::Env]
-    Source: 'src/module.rs', lines 117:0-149:1 *)
+    Source: 'src/module.rs', lines 119:0-151:1 *)
 Record module_Env_t :=
 mkmodule_Env_t {
   module_Env_types : alloc_vec_Vec types_FuncType_t;
@@ -306,7 +306,7 @@ mkmodule_Env_t {
 .
 
 (** Trait declaration: [itasca::code::OpVisitor]
-    Source: 'src/code.rs', lines 1839:0-2014:1 *)
+    Source: 'src/code.rs', lines 1805:0-1980:1 *)
 Record code_OpVisitor_t (Self : Type) := mkcode_OpVisitor_t {
   code_OpVisitor_t_on_function_start : Self -> code_Context_t -> u32 -> usize
     -> usize -> result ((core_result_Result_t unit error_VisitError_t) * Self);
@@ -845,11 +845,11 @@ Arguments code_OpVisitor_t_on_f32_reinterpret_i32 { _ } _.
 Arguments code_OpVisitor_t_on_f64_reinterpret_i64 { _ } _.
 
 (** [itasca::code::EmptyOpVisitor]
-    Source: 'src/code.rs', lines 2018:0-2018:26 *)
+    Source: 'src/code.rs', lines 1984:0-1984:26 *)
 Definition code_EmptyOpVisitor_t : Type := unit.
 
 (** [itasca::error::Error]
-    Source: 'src/error.rs', lines 58:0-110:1 *)
+    Source: 'src/error.rs', lines 57:0-109:1 *)
 Inductive error_Error_t :=
 | Error_Error_Read : error_OpError_t -> error_Error_t
 | Error_Error_InvalidMagic : error_Error_t
@@ -908,7 +908,7 @@ mkmodule_Module_t {
 .
 
 (** Trait declaration: [itasca::module::CodeVisitor]
-    Source: 'src/module.rs', lines 1582:0-1618:1 *)
+    Source: 'src/module.rs', lines 1510:0-1542:1 *)
 Record module_CodeVisitor_t (Self : Type) := mkmodule_CodeVisitor_t {
   module_CodeVisitor_t_on_need_bytes : Self -> usize -> result
     ((core_result_Result_t unit error_Error_t) * Self);
@@ -922,7 +922,7 @@ Arguments module_CodeVisitor_t_on_need_bytes { _ } _.
 Arguments module_CodeVisitor_t_on_code_entry { _ } _.
 
 (** [itasca::types::CustomSection]
-    Source: 'src/types.rs', lines 137:0-148:1 *)
+    Source: 'src/types.rs', lines 136:0-144:1 *)
 Record types_CustomSection_t :=
 mktypes_CustomSection_t {
   types_CustomSection_name_len : usize;
@@ -932,7 +932,7 @@ mktypes_CustomSection_t {
 .
 
 (** Trait declaration: [itasca::module::ModuleVisitor]
-    Source: 'src/module.rs', lines 1529:0-1539:1 *)
+    Source: 'src/module.rs', lines 1466:0-1476:1 *)
 Record module_ModuleVisitor_t (Self : Type) := mkmodule_ModuleVisitor_t {
   module_ModuleVisitor_t_on_custom_section : Self -> types_CustomSection_t ->
     result ((core_result_Result_t unit error_VisitError_t) * Self);
@@ -942,7 +942,7 @@ Arguments mkmodule_ModuleVisitor_t { _ }.
 Arguments module_ModuleVisitor_t_on_custom_section { _ } _.
 
 (** [itasca::module::CodeSection]
-    Source: 'src/module.rs', lines 1279:0-1288:1 *)
+    Source: 'src/module.rs', lines 1242:0-1251:1 *)
 Record module_CodeSection_t :=
 mkmodule_CodeSection_t {
   module_CodeSection_count : u32;
@@ -952,11 +952,11 @@ mkmodule_CodeSection_t {
 .
 
 (** [itasca::module::EmptyModuleVisitor]
-    Source: 'src/module.rs', lines 1544:0-1544:30 *)
+    Source: 'src/module.rs', lines 1480:0-1480:30 *)
 Definition module_EmptyModuleVisitor_t : Type := unit.
 
 (** [itasca::module::ValidatingCodeVisitor]
-    Source: 'src/module.rs', lines 1625:0-1625:33 *)
+    Source: 'src/module.rs', lines 1547:0-1547:33 *)
 Definition module_ValidatingCodeVisitor_t : Type := unit.
 
 (** [itasca::types::ExternType]
