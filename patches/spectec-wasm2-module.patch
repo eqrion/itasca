@@ -1,0 +1,47 @@
+diff --git a/specification/wasm-2.0/A-binary.spectec b/specification/wasm-2.0/A-binary.spectec
+--- a/specification/wasm-2.0/A-binary.spectec
++++ b/specification/wasm-2.0/A-binary.spectec
+@@ -54,7 +54,7 @@
+ def $utf8(ch) = b  -- if ch < U+0080 /\ ch = b
+ def $utf8(ch) = b_1 b_2  -- if U+0080 <= ch < U+0800 /\ ch = $(2^6*(b_1 - 0xC0) + (b_2 - 0x80))
+ def $utf8(ch) = b_1 b_2 b_3  -- if (U+0800 <= ch < U+D800 \/ U+E000 <= ch < U+10000) /\ ch = $(2^12*(b_1 - 0xE0) + 2^6*(b_2 - 0x80) + (b_3 - 0x80))
+-def $utf8(ch) = b_1 b_2 b_3 b_4  -- if (U+10000 <= ch < U+11000) /\ ch = $(2^18*(b_1 - 0xF0) + 2^12*(b_2 - 0x80) + 2^6*(b_3 - 0x80) + (b_4 - 0x80))
++def $utf8(ch) = b_1 b_2 b_3 b_4  -- if (U+10000 <= ch < U+110000) /\ ch = $(2^18*(b_1 - 0xF0) + 2^12*(b_2 - 0x80) + 2^6*(b_3 - 0x80) + (b_4 - 0x80))
+ def $utf8(ch*) = $concat_(byte, $utf8(ch)*)
+ 
+ grammar Bname : name =
+diff --git a/specification/wasm-2.0/2-syntax-aux.spectec b/specification/wasm-2.0/2-syntax-aux.spectec
+--- a/specification/wasm-2.0/2-syntax-aux.spectec
++++ b/specification/wasm-2.0/2-syntax-aux.spectec
+@@ -55,19 +55,27 @@
+ 
+ def $funcsxt(eps) = eps
+ def $funcsxt((FUNC ft) xt*) = ft $funcsxt(xt*)
+-def $funcsxt(externtype xt*) = $funcsxt(xt*)  -- otherwise
++def $funcsxt((GLOBAL gt) xt*) = $funcsxt(xt*)
++def $funcsxt((TABLE tt) xt*) = $funcsxt(xt*)
++def $funcsxt((MEM mt) xt*) = $funcsxt(xt*)
+ 
+ def $globalsxt(eps) = eps
+ def $globalsxt((GLOBAL gt) xt*) = gt $globalsxt(xt*)
+-def $globalsxt(externtype xt*) = $globalsxt(xt*)  -- otherwise
++def $globalsxt((FUNC ft) xt*) = $globalsxt(xt*)
++def $globalsxt((TABLE tt) xt*) = $globalsxt(xt*)
++def $globalsxt((MEM mt) xt*) = $globalsxt(xt*)
+ 
+ def $tablesxt(eps) = eps
+ def $tablesxt((TABLE tt) xt*) = tt $tablesxt(xt*)
+-def $tablesxt(externtype xt*) = $tablesxt(xt*)  -- otherwise
++def $tablesxt((FUNC ft) xt*) = $tablesxt(xt*)
++def $tablesxt((GLOBAL gt) xt*) = $tablesxt(xt*)
++def $tablesxt((MEM mt) xt*) = $tablesxt(xt*)
+ 
+ def $memsxt(eps) = eps
+ def $memsxt((MEM mt) xt*) = mt $memsxt(xt*)
+-def $memsxt(externtype xt*) = $memsxt(xt*)  -- otherwise
++def $memsxt((FUNC ft) xt*) = $memsxt(xt*)
++def $memsxt((GLOBAL gt) xt*) = $memsxt(xt*)
++def $memsxt((TABLE tt) xt*) = $memsxt(xt*)
+ 
+ 
+ 

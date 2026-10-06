@@ -1,0 +1,9 @@
+{
+  "itasca": "e7a6ce602de0716de89f955300f711b23bc1403e",
+  "aeneas_rocq": "f5e3e99398aa0b3a125dafa5423212d93ebcbc7e",
+  "wasmcert_rocq": "c5b233aaf854a35d747c0984689b29deca6177f9",
+  "wasm_spec_tests": "977f97014c962f7bd1291fcc6d28b41a924882bf",
+  "aeneas_lean": "557eff83ecef5083b98a52a94ca7fae63d6c1dab",
+  "charon_lean": "c8f15d7d658c86a95658f71ad99cddd4be002e04",
+  "spectec": "edc84f7ec81f927f3fdb952a82ecd38fed8e4f29"
+}

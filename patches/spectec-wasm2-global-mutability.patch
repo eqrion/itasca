@@ -1,0 +1,13 @@
+diff --git a/specification/wasm-2.0/6-typing.spectec b/specification/wasm-2.0/6-typing.spectec
+index 073b464..e3bc394 100644
+--- a/specification/wasm-2.0/6-typing.spectec
++++ b/specification/wasm-2.0/6-typing.spectec
+@@ -33,7 +33,7 @@ rule Functype_ok:
+   |- t_1* -> t_2* : OK
+ 
+ rule Globaltype_ok:
+-  |- MUT? t : OK
++  |- mut t : OK
+ 
+ rule Tabletype_ok:
+   |- limits reftype : OK

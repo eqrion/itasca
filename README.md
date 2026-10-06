@@ -10,9 +10,9 @@ This project was built using Claude extensively. It's meant to be an experiment 
 
 Written by Ryan Hunt, who is learning formal verification but is a newbie.
 
-With formal verification it is very easy to mistaken about what you have proved. I've tried to be as rigorous as I can, but be warned.
+With formal verification it is very easy to be mistaken about what you have proved. I've tried to be as rigorous as I can, but be warned.
 
-I believe the top-level theorems for whole module validation are solid, but the decomposed module validation entry points may have some gaps.
+The proof statements and their limits are documented below, including the obligations on decomposed and deferred validation consumers.
 
 ## Overview
 
@@ -20,21 +20,24 @@ This is a Rust library that implements the Wasm 1.0 decoding and validation algo
 
 It implements both a 'whole module' validator, and also a 'decomposed' streaming validator. The interface is compatible with SpiderMonkey's WebAssembly engine and a branch with it integrated is [here](https://github.com/eqrion/firefox/tree/itasca).
 
-The library has been verified to correspond with the [WasmCert](https://github.com/WasmCert/WasmCert-Coq) mechanisation of the specification. See [formal verification](#formal-verification) for more details.
+The library is verified in Lean against declarative judgments generated from the [SpecTec](https://github.com/zilinc/spectec/tree/lean-backend) WebAssembly specification. It implements Wasm 1.0, with an explicit profile of the generated Wasm 2.0 specification. See [formal verification](#formal-verification) for the exact claims.
 
-To test this out yourself, run:
-```bash
-# build the rust code
-make build
-# run the rust tests
-make test
-# run charon to get llbc
-make llbc
-# generate the rocq (coq) code from llbc
-make coq
-# compile all the rocq code
-make prove
+To build and test the Rust library:
+
+```sh
+cargo build
+just test
 ```
+
+For verification, first follow the [toolchain setup](lean/README.md), then run:
+
+```sh
+just extract        # Rust -> Charon LLBC -> generated Lean
+just extract-check  # Regenerate separately and compare committed output
+just prove          # Check all Lean proofs and the axiom audit
+```
+
+See [DEVELOPMENT.md](DEVELOPMENT.md) for the complete workflow and checks required after each kind of change.
 
 ## Decomposed module validation
 
@@ -59,7 +62,7 @@ validate_module() {
   // Validate all sections until the code section.
   validate_env()
 
-  // Validate the code section and call a hook for each entry entry.
+  // Validate the code section and call a hook for each entry.
   // Must be called after validate_env, and the hook must call
   // validate_code_entry.
   validate_code() {
@@ -87,85 +90,136 @@ In addition to formal verification, the validator has been conventionally tested
 
 It has also been integrated into SpiderMonkey in a [branch](https://github.com/eqrion/firefox/tree/itasca) and passes all of SpiderMonkey's tests.
 
-## Formal Verification
+## Formal verification
 
-The Rust code is extracted using [Charon](https://github.com/AeneasVerif/charon) to LLBC (a JSON extraction of the rustc internals). That is converted using [Aeneas](https://github.com/AeneasVerif/aeneas) to [Rocq](https://rocq-prover.org/).
+The proofs cover the actual extracted public Rust validator, including malformed
+input, size guards, streaming loops, visitor dispatch, and final byte-consumption
+checks. The pipeline is:
 
-The Rocq code models the original Rust code. We then combine that with the [WasmCert](https://github.com/WasmCert/WasmCert-Coq) Rocq mechanisation of the Wasm specification. We then have proofs that the model of the Rust code corresponds to WasmCert version.
+```text
+Rust --Charon--> LLBC --Aeneas--> Lean program model
+SpecTec Wasm 2.0 source ----------> Lean declarative specification
+                                   + independent Wasm 1.0 binary grammar
+                                   + handwritten proofs checked by Lean
+```
 
-`theories` contains the Rocq source code.
+The [Lean guide](lean/README.md) describes the proof architecture, dependencies,
+and commands. [The parity review](lean/PARITY.md) maps the previous Rocq claims
+to their Lean replacements. [UPSTREAM.md](UPSTREAM.md) tracks the local tool and
+specification repairs and the remaining upstream work.
 
-### Reading the theorems
+### Reading the guarantees
 
-- "Accepts" means the Rust function returned `Ok`.
-- "Returns" means it did not panic, overflow, index out of bounds, or loop forever.
-- "Decodes to" means the bytes match the hand-written binary format in `Spec_Module.v` / `Spec_Expr.v`.
-- "Well typed" means WasmCert's declarative typing judgement (`module_typing` for modules, `be_typing` for instruction sequences) holds.
+“Accepts” means the extracted function returns an ordinary `Ok`. “Returns”
+means it produces ordinary success or a validation error, without modeled panic,
+arithmetic overflow, out-of-bounds access, or divergence. Allocation failure is
+outside this model. “Decodes to” uses the independent handwritten binary grammar;
+“well typed” uses the generated SpecTec declarative judgments.
 
-Completeness results have two side conditions:
+| Entry point | Checked guarantees and proof sources |
+| --- | --- |
+| Whole module | [`module.validate_module.wasm_total` and `wasm_sound`](lean/Itasca/ModuleValidation.lean) prove arbitrary-byte termination and acceptance soundness. The certificate includes the full binary encoding, generated `Module_ok`, the Wasm 1.0 profile, coherent index spaces, and exact public import/export metadata. [`wasm_complete` and `wasm_complete_with_metadata`](lean/Itasca/ModuleCompleteness.lean) derive acceptance directly from independent encoding and declarative typing, within the implementation limits. |
+| Function body | [`code.validate_body.wasm_total` and `wasm_sound`](lean/Itasca/WasmSoundness.lean) cover every Wasm 1.0 opcode and arbitrary bytes. [`wasm1_sound`](lean/Itasca/Wasm1Soundness.lean) also establishes the recursive 1.0 profile. [`wasm_complete`](lean/Itasca/WasmComplete.lean) proves completeness from encoding, declarative typing, and that profile. |
+| Visiting APIs | [Body acceptance soundness](lean/Itasca/VisitorBodyErasure.lean) holds for arbitrary opcode visitors. [Module acceptance soundness](lean/Itasca/ModuleVisitorTransfer.lean) additionally requires an overridden code-entry hook to accept only entries the validator accepts. [Module termination](lean/Itasca/ModuleVisitorValidation.lean) and [body termination](lean/Itasca/WasmSoundness.lean) require terminating hooks; completeness requires accepting hooks. Acceptance-only theorems do not assume termination of unrelated callback runs. |
+| Decomposed APIs | [Entry contracts](lean/Itasca/ModuleDecomposed.lean) derive their environment obligations from an actual accepted environment decode. [Entry completeness](lean/Itasca/ModuleCodeEntryComplete.lean) covers typed entries within the limits. [Composition](lean/Itasca/ModuleRegions.lean) covers adjacent phases on one buffer and exact concatenations of separate environment/code/tail buffers. |
+| Deferred workers | [Deferred soundness](lean/Itasca/ModuleDeferredValidation.lean) permits code-entry callbacks to return before validation, provided every recorded entry later validates. [Entry ordering](lean/Itasca/ModuleEntryOrder.lean) proves exactly one obligation per defined function, in index order. Custom callbacks must preserve the work observation when obligations are read from the final visitor state. |
+| Callback traces | [Body traces](lean/Itasca/VisitorBodyTrace.lean) identify hook names, order, and original immediates, including float bits and branch-table labels. [Entry traces](lean/Itasca/ModuleEntryTrace.lean) add the function-start context and precise body/local boundaries. [Accepted module traces](lean/Itasca/ModuleTraceValidation.lean) identify custom-section ranges, byte requests, and ordered entry handoffs. [Rejection properties](lean/Itasca/VisitorTraceCorollaries.lean) prove an observed rejecting body callback is last and matches the returned visitor error. |
 
-- **Implementation limits.** Modules, function bodies, and locals have limits on their size. A valid module over one of these limits is rejected. These limits match what SpiderMonkey already imposes.
-- **Wasm 1.0 restrictions.** WasmCert formalises Wasm 2.0, so its checker accepts modules 1.0 does not. These are captured by `module_1_0`.
+Body soundness assumes the function's result vector has the API's zero-or-one
+result shape. Body termination permits arbitrary caller-supplied environments
+and result vectors. Standalone body completeness also requires zero-or-one
+results in the environment's stored function signatures. Whole-module theorems
+derive these facts, index validity, and cache coherence from the actual module;
+they do not assume successful parser steps or prevalidated function bodies.
 
-### The whole-module entry point
+The binary grammar accounts for nonminimal but valid LEB encodings, strict UTF-8
+names, section framing and ordering, grouped local declarations, active segments,
+and complete consumption of the input. Float constants retain their raw bits,
+including signed zero and NaN payloads. The body context is constructed from the
+actual stored environment, locals, and results; it is not an unrelated assumed
+specification context.
 
-| Theorem | Statement |
-|---|---|
-| [`validate_module_no_panic`](theories/Module_NoPanic.v#L3125) | `validate_module` returns on every input. No hypotheses. |
-| [`validate_module_typed`](theories/Module_Typing.v#L1037) | If `validate_module` accepts, the bytes decode to a module that is well typed. `import_types` and `export_types` succeed and report that module's import and export types. |
-| [`validate_module_typechecked`](theories/Module_Wasm10.v#L1088) | If the bytes decode to a Wasm 1.0 module that WasmCert's type checker accepts, and it is within the implementation limits, `validate_module` accepts it and reports the same import and export types as the checker. |
-| [`validate_module_with_no_panic`](theories/Module_Driven.v#L810) | `validate_module_with` returns on every input, provided the visitor's hooks return. |
-| [`validate_module_driven`](theories/Module_Sound.v#L6818) | If `validate_module_with` accepts, `validate_module` accepts the same bytes with the same result. Assumes that any overridden `on_code_entry` only accepts entries `validate_code_entry` accepts. |
-| [`validate_module_with_complete`](theories/Module_Driven.v#L840) | `validate_module_with` accepts every valid module `validate_module` does, provided the visitor's hooks return `Ok`. |
+### Wasm 1.0 profile and limits
 
-### One function body
+The generated specification describes Wasm 2.0. The independent grammar and
+[`Profile`](lean/Itasca/ModuleProfile.lean) restrict the result to Wasm 1.0:
+scalar value types and 1.0 instruction/section forms, at most one table and one
+memory counting imports and definitions together, and at most one function or
+block result. The profile also requires unique decoded export names, a condition
+missing from the current generated module judgment.
 
-These are stated against a WasmCert context `C0`, with seven `_agree` equations saying `C0` is the context described by the environment and `Context` passed in.
+Branch-table targets must have identical signatures, including in unreachable
+code. Wasm 2.0 permits some cases through its `BOT` subtype that this 1.0
+validator rejects. A [checked counterexample](lean/Itasca/WasmCompletenessBoundary.lean)
+shows why 1.0 opcode bytes alone are insufficient for completeness against the
+2.0 typing judgment. [Elaboration](lean/Itasca/ModuleElaboration.lean) separately
+requires valid function-type references and matching function/code counts.
 
-| Theorem | Statement |
-|---|---|
-| [`validate_body_no_panic`](theories/OpIter_NoPanic.v#L177) | `validate_body` returns for every body, environment and context. No hypotheses. |
-| [`validate_body_with_no_panic`](theories/OpIter_NoPanic.v#L154) | Same for `validate_body_with`, provided the visitor's hooks return. |
-| [`validate_body_with_typed`](theories/OpIter_Validate.v#L1386) | If `validate_body_with` accepts a body with at most one result, the bytes decode to an instruction sequence that is well typed in `C0`. Holds for every visitor, so hooks can't turn a rejection into an acceptance. |
-| [`validate_body_complete`](theories/OpIter_Complete.v#L3333) | If the bytes decode to an instruction sequence that WasmCert's checker accepts in `C0`, and the Wasm 1.0 restrictions and body size limit hold, `validate_body` accepts. WasmCert's checker is equivalent to `be_typing` for bodies, so this is full completeness. |
-| [`validate_body_with_trace`](theories/OpIter_Validate.v#L1287) | If `validate_body_with` accepts, the visitor was shown exactly the operators the bytes encode, in order, none skipped or invented. Applies to visitors that satisfy `records`, meaning each hook logs the operator it is named for. |
-| [`validate_body_trace`](theories/OpIter_Validate.v#L1511), [`trace_records`](theories/OpIter_Table.v#L1046) | A visitor that logs every hook satisfies `records`, so the trace theorem applies to a real visitor. This also shows no opcode is sent to the wrong hook. |
+Completeness respects the actual limits in [src/limits.rs](src/limits.rs):
 
-### The decomposed entry points
+| Implementation cap | Value |
+| --- | ---: |
+| Module bytes | 1,073,741,824 |
+| Instruction-body bytes, including the final `end` and excluding local declarations | 7,654,321 |
+| Declared locals per function, excluding parameters | 50,000 |
 
-Every decomposed entry point requires `data.len() <= MAX_MODULE_BYTES`, and that the `Env` and positions passed in came from the earlier steps on the same bytes.
+These caps are represented by [`ModuleEncodingWithinLimits`](lean/Itasca/ModuleLimits.lean)
+and [`CodeEncodingWithinLimits`](lean/Itasca/ModuleCodeLimits.lean). Valid modules
+outside them may be rejected. Specification limits, such as the 65,536-page
+memory bound, also remain in force.
 
-| Theorem | Statement |
-|---|---|
-| [`validate_module_of_parts`](theories/Module_Driven.v#L747) | If `validate_env`, `validate_code` and `validate_tail` each accept, each starting where the last stopped on the same bytes, `validate_module` accepts with the same `Env` and `Tail`. Everything above applies. |
-| [`validate_code_entry_ok`](theories/Module_NoPanic.v#L2562) | `validate_code_entry` returns when given an `Env` from `validate_env` and an in-bounds position, and on success moves forward within the data. |
-| [`validate_code_entry_with_sound`](theories/Module_Sound.v#L5660) | If `validate_code_entry_with` accepts, the bytes from `pos` decode to a code entry that is well typed at its declared function type, and the visitor was shown exactly its operators. Unlike the body theorems, the context is built from `Env`, so there are no `_agree` hypotheses. |
-| [`validate_code_entry_complete`](theories/Module_Complete.v#L3997) | `validate_code_entry` accepts every well-typed code entry within the implementation limits. |
-| [`validate_code_entry_driven`](theories/Module_Driven.v#L153) | If `validate_code_entry_with` accepts, `validate_code_entry` accepts. No hypotheses on the visitor. This is how an `on_code_entry` override meets the `validate_module_driven` assumption. |
-| [`validate_code_with_deferred`](theories/Module_Driven.v#L662) | An `on_code_entry` can return before validating its entry. If every entry it was handed later validates, `validate_code` accepts. This is the theorem for validating on other threads. |
-| [`validate_module_regions_typed`](theories/Module_Typing.v#L1086) | The env, code section and tail can be in three separate buffers. If each part accepts, the buffers fit together exactly, and the code buffer starts with the code section header, the concatenated bytes are a well-typed module. |
-| [`validate_module_regions_deferred_typed`](theories/Module_Driven.v#L922) | The two above combined: three buffers and deferred entries. This is the streaming, parallel case SpiderMonkey uses. |
+### Trust boundary
 
-### The trust base
+The checked claims rely on the following correspondence with the real program
+and specification:
 
-**WasmCert-Coq is a faithful formalisation of WebAssembly.** "Well typed" means WasmCert says so.
+- Charon and Aeneas must translate Rust faithfully. The generated files are
+  committed and reproducibly checked; local extractor fixes are source patches
+  with regressions, not edits to generated Lean.
+- The pinned SpecTec source and its Lean backend must faithfully express the
+  intended WebAssembly judgments. Known repairs and gaps are listed in
+  [UPSTREAM.md](UPSTREAM.md). Generated typing is supplemented by the explicit
+  profile above.
+- The handwritten [body grammar](lean/Itasca/WasmBinary.lean),
+  [module grammar](lean/Itasca/ModuleBinary.lean), and translations must describe
+  the intended binary format and map it to the intended specification syntax.
+  The pinned backend does not provide a generated binary-format judgment or an
+  executable validator used by these proofs.
+- Aeneas's standard-library and loop models, and the concrete local
+  [`Vec.pop`/`Vec.is_empty` models](lean/Itasca/Generated/FunsExternal.lean), must
+  correspond to Rust. Allocation capacity, allocator behavior, and allocation
+  failure are not modeled; the return guarantees assume allocation succeeds.
+- Lean's kernel and its standard logical foundations are trusted, as are the
+  compiler/runtime/hardware when running the resulting Rust library.
 
-**The binary format is transcribed correctly.** `Spec_Binary.v`,
-`Spec_Expr.v` and `Spec_Module.v` are a hand transcription of the spec's
-binary format, since WasmCert has no verified parser to prove against.
-[`repr_module_det`](theories/Spec_Module.v#L933), [`repr_expr_det`](theories/Spec_Expr.v#L542) and [`repr_ops_det`](theories/Spec_Binary.v#L814) check that no byte string can be read two ways.
+There are **no project-specific axioms or kernel bypasses** in the checked proof
+dependencies. [`Audit.lean`](lean/Itasca/Audit.lean) checks every imported Itasca
+theorem transitively, plus the semantic adapters and public predicates. It permits
+only `propext`, `Classical.choice`, and `Quot.sound`, and rejects `sorryAx` and
+other domain axioms. Upstream's generated file still contains unfinished lemmas
+and opaque execution definitions; the audited proofs do not depend on them.
+Run `just trust` to check the current dependency report.
 
-**`Translate.v` maps itasca's types to WasmCert's correctly.** One line per case. At the module level, the proofs already check it against `Spec_Module.v` and WasmCert. It matters most for the body theorems, whose `_agree` hypotheses use it directly.
+### Scope and retained baseline
 
-**Charon and Aeneas translate Rust to Rocq faithfully.** Otherwise the proofs are about a different program.
+These are validation and decoding proofs, not proofs of WebAssembly execution,
+compiler correctness, a consumer's generated IR, or actual thread scheduling.
+Deferred soundness is conditional on completing all recorded validation work.
+Body callback rejection is characterized; a complete trace specification for
+rejected whole-module runs and a general specification of which validation error
+must be selected are not claimed. Individual rejection regressions do check exact
+errors. An arbitrary overriding code-entry callback can accept invalid code;
+typing follows only under its validation contract or completed worker obligations.
 
-**The hand-written axioms about Rust.** `Aeneas_Specs.v` and `Itasca_FunsExternal.v` describe the standard library functions Aeneas doesn't translate (`Vec`, slices, `PartialEq`) and the `loop` combinator. Termination relies on `loop_unfold` modelling a Rust loop correctly. Running out of memory isn't modelled, so "returns" assumes allocation succeeds.
+The [comparison](lean/PARITY.md) records narrower premises for some
+arbitrary-environment and oversized-region helper statements. Full uniqueness
+of the independently encoded structured-body and raw-module ASTs remains an
+unported auxiliary guarantee; flat instruction/token decoding uniqueness is
+proved. No equivalence theorem between the complete Rocq and SpecTec
+specifications is claimed.
 
-**Rocq's kernel.** There are no `Admitted` proofs and no guard or positivity checking bypasses.
-
-### Not proven
-
-- Module completeness is stated against WasmCert's type checker, not `module_typing`. WasmCert proves its module checker sound but not complete. Function bodies don't have this gap.
-- The custom section ranges reported to `ModuleVisitor` are unverified.
-- Which error a rejection returns.
-- Anything about execution.
+Lean is the active verification pipeline. The previous Rocq implementation,
+proofs, and toolchain are retained in the annotated `rocq-baseline` tag at
+`e7a6ce602de0716de89f955300f711b23bc1403e`; they are not a dependency of the Lean
+build. The saved [baseline revisions](lean/baseline/revisions.json) and
+[Rocq assumption report](lean/baseline/rocq-trust.txt) remain available for comparison.

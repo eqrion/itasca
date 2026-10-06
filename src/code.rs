@@ -2027,16 +2027,16 @@ memory_table!(memory_fanout);
 // Public so a consumer building a C ABI on top of this crate -- SpiderMonkey's
 // veriwasm_glue, for instance -- can build its vtable from these two tables
 // rather than transcribing them. They are the only place the opcode-to-hook
-// mapping lives and `OpIter_Table.v` proves their rows are not off by one, so
+// mapping lives and Lean's visitor trace proofs check their dispatch, so
 // a second copy would be a copy that proof does not cover.
 //
 // Declared here at the bottom, rather than next to the tables, so that adding
 // it moved no line above it: the extraction records a source line per
-// definition, and `theories/Itasca_Funs.v` is generated and committed.
+// definition, and `lean/Itasca/Generated/Funs.lean` is generated and committed.
 pub use {memory_table, numeric_table};
 
 // Declared here at the bottom so that adding them moved no line above: the
-// extraction records a source line per definition and `Itasca_Funs.v` is
+// extraction records a source line per definition and Lean's `Funs.lean` is
 // generated and committed.
 #[cfg(test)]
 mod tests {
@@ -2111,7 +2111,7 @@ mod tests {
         // byte over, so stop one short. This is the largest body the
         // validator accepts, and it must be accepted on its merits rather
         // than rejected for size.
-        let mut body = vec![OP_NOP; MAX_FUNCTION_BYTES - 1];
+        let mut body = alloc::vec![OP_NOP; MAX_FUNCTION_BYTES - 1];
         body.push(OP_END);
         assert_eq!(body.len(), MAX_FUNCTION_BYTES);
         let ctx = Context {
@@ -2123,7 +2123,7 @@ mod tests {
 
     #[test]
     fn a_body_over_the_size_limit_is_rejected_for_size() {
-        let mut body = vec![OP_NOP; MAX_FUNCTION_BYTES];
+        let mut body = alloc::vec![OP_NOP; MAX_FUNCTION_BYTES];
         body.push(OP_END);
         let ctx = Context {
             locals: Vec::new(),
@@ -2139,7 +2139,7 @@ mod tests {
     fn the_size_limit_is_checked_before_anything_else() {
         // An oversized body that is also ill-typed is rejected for size, so
         // the check cannot be reached only on otherwise-valid input.
-        let body = vec![OP_I32_ADD; MAX_FUNCTION_BYTES + 1];
+        let body = alloc::vec![OP_I32_ADD; MAX_FUNCTION_BYTES + 1];
         let ctx = Context {
             locals: Vec::new(),
             results: Vec::new(),

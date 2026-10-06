@@ -1,0 +1,9 @@
+;; A fallback must not discard KEEP. The pinned Lean pipeline drops the
+;; `otherwise` guard and permits both [] and [KEEP] as results for [KEEP].
+syntax item = KEEP | DROP
+var it : item
+
+def $keeps(item*) : item*
+def $keeps(eps) = eps
+def $keeps(KEEP it*) = KEEP $keeps(it*)
+def $keeps(item it*) = $keeps(it*)  -- otherwise
