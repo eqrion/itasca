@@ -343,7 +343,7 @@ theorem code.step_br_table.dispatch {V : Type} (visitor : code.OpVisitor V)
     code.step visitor st data env ctx code.OP_BR_TABLE v = (do
       let (res, s, w) ← code.read_br_table visitor st data v
       CoreVisitor.run (.ok (res, s)) (fun v s a => visitor.on_br_table v s a.1 a.2) w) := by
-  simp [code.step, global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
+  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
   funext x

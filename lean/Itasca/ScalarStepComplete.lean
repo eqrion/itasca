@@ -68,7 +68,7 @@ theorem Frame.step_drop {st} (f : Frame st) (data : Slice U8) (env : module.Env)
           (by simpa [f.poly_eq] using hr)
       apply same_ctrls f data env ctx 0x1A#u8 next _ s after _ (hp.trans hb.empty.symm) hc hv
         (by omega) (by simpa using hout)
-      simp [code.step, global_simps, hs, code.OpVisitor.on_drop.default, code.visit,
+      simp [global_simps, hs, code.OpVisitor.on_drop.default, code.visit,
         core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Implicit select retains the common principal operand interpretation. -/
@@ -103,7 +103,7 @@ theorem Frame.step_i32Const {st} (f : Frame st) (data : Slice U8) (env : module.
       ⟨bytes, hbytes.suffix, hbytes.length, hbytes.bound, he⟩ f.vals hsize
       (by simpa [f.poly_eq] using hr)
   apply same_ctrls f data env ctx 0x41#u8 next _ s after _ hp hc hv (by omega) hout
-  simp [code.step, global_simps, hs, code.OpVisitor.on_i32_const.default, code.visit,
+  simp [global_simps, hs, code.OpVisitor.on_i32_const.default, code.visit,
     core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Exact scalar bytes and principal typing force successful constant dispatch. -/
@@ -122,7 +122,7 @@ theorem Frame.step_i64Const {st} (f : Frame st) (data : Slice U8) (env : module.
       ⟨bytes, hbytes.suffix, hbytes.length, hbytes.bound, he⟩ f.vals hsize
       (by simpa [f.poly_eq] using hr)
   apply same_ctrls f data env ctx 0x42#u8 next _ s after _ hp hc hv (by omega) hout
-  simp [code.step, global_simps, hs, code.OpVisitor.on_i64_const.default, code.visit,
+  simp [global_simps, hs, code.OpVisitor.on_i64_const.default, code.visit,
     core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Exact scalar bytes and principal typing force successful constant dispatch. -/
@@ -141,7 +141,7 @@ theorem Frame.step_f32Const {st} (f : Frame st) (data : Slice U8) (env : module.
       ⟨bytes, hbytes.suffix, by simpa [he.1] using hbytes.length, hbytes.bound, he⟩ f.vals hsize
       (by simpa [f.poly_eq] using hr)
   apply same_ctrls f data env ctx 0x43#u8 next _ s after _ hp hc hv (by omega) hout
-  simp [code.step, global_simps, hs, code.OpVisitor.on_f32_const.default, code.visit,
+  simp [global_simps, hs, code.OpVisitor.on_f32_const.default, code.visit,
     core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Exact scalar bytes and principal typing force successful constant dispatch. -/
@@ -160,7 +160,7 @@ theorem Frame.step_f64Const {st} (f : Frame st) (data : Slice U8) (env : module.
       ⟨bytes, hbytes.suffix, by simpa [he.1] using hbytes.length, hbytes.bound, he⟩ f.vals hsize
       (by simpa [f.poly_eq] using hr)
   apply same_ctrls f data env ctx 0x44#u8 next _ s after _ hp hc hv (by omega) hout
-  simp [code.step, global_simps, hs, code.OpVisitor.on_f64_const.default, code.visit,
+  simp [global_simps, hs, code.OpVisitor.on_f64_const.default, code.visit,
     core.result.Result.Insts.CoreOpsTry.branch]
 
 end Itasca.Completeness

@@ -1,4 +1,4 @@
-import Itasca.Generated.Funs
+import Itasca.ScalarMatch
 import Itasca.SpecChecks
 import Itasca.ReadByte
 
@@ -12,8 +12,8 @@ theorem code.step_nop {V : Type} (visitor : code.OpVisitor V)
     (ctx : code.Context) (v v' : V)
     (hvisit : visitor.on_nop v st = .ok (.Ok (), v')) :
     code.step visitor st data env ctx code.OP_NOP v = .ok (.Ok (), st, v') := by
-  rw [code.step, if_pos rfl, hvisit]
-  simp [code.visit, core.result.Result.Insts.CoreOpsTry.branch]
+  simp only [global_simps]
+  simp [hvisit, code.visit, core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- A visitor's rejection remains a validation error and preserves validator state. -/
 theorem code.step_nop_rejected {V : Type} (visitor : code.OpVisitor V)
@@ -21,8 +21,8 @@ theorem code.step_nop_rejected {V : Type} (visitor : code.OpVisitor V)
     (ctx : code.Context) (v v' : V) (e : error.VisitError)
     (hvisit : visitor.on_nop v st = .ok (.Err e, v')) :
     code.step visitor st data env ctx code.OP_NOP v = .ok (.Err (.Visitor e), st, v') := by
-  rw [code.step, if_pos rfl, hvisit]
-  simp [code.visit, core.result.Result.Insts.CoreOpsTry.branch,
+  simp only [global_simps]
+  simp [hvisit, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
 /-- The successful NOP step has the generated specification's empty stack effect. -/

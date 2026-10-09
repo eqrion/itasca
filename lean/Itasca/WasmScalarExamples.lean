@@ -75,7 +75,7 @@ private theorem step_end (data : Slice U8) (env : module.Env) (ctx : code.Contex
     (hr : code.read_end st = .ok (.Ok (kind, bt), next)) :
     code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx code.OP_END () =
       .ok (.Ok (), next, ()) := by
-  simp [code.step, global_simps, hr,
+  simp [global_simps, hr,
     code.OpVisitor.on_end.default, code.visit, core.result.Result.Insts.CoreOpsTry.branch]
 
 
@@ -114,7 +114,7 @@ theorem i64_body_accepted (env : module.Env) :
   dsimp only at hfc hfv hfp
   have hstep : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor first i64Bytes env
       (resultContext .I64) code.OP_I64_CONST () = .ok (.Ok (), pushed, ()) := by
-    simp [code.step, global_simps, hconst, code.OpVisitor.on_i64_const.default, code.visit,
+    simp [global_simps, hconst, code.OpVisitor.on_i64_const.default, code.visit,
       core.result.Result.Insts.CoreOpsTry.branch]
   apply public_of_loop i64Bytes env (resultContext .I64) (.Value .I64) (.Ok ())
     (by simp [i64Bytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
@@ -158,7 +158,7 @@ theorem f32_body_accepted (env : module.Env) :
   dsimp only at hfc hfv hfp
   have hstep : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor first f32Bytes env
       (resultContext .F32) code.OP_F32_CONST () = .ok (.Ok (), pushed, ()) := by
-    simp [code.step, global_simps, hconst, code.OpVisitor.on_f32_const.default, code.visit,
+    simp [global_simps, hconst, code.OpVisitor.on_f32_const.default, code.visit,
       core.result.Result.Insts.CoreOpsTry.branch]
   apply public_of_loop f32Bytes env (resultContext .F32) (.Value .F32) (.Ok ())
     (by simp [f32Bytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
@@ -202,7 +202,7 @@ theorem f64_body_accepted (env : module.Env) :
   dsimp only at hfc hfv hfp
   have hstep : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor first f64Bytes env
       (resultContext .F64) code.OP_F64_CONST () = .ok (.Ok (), pushed, ()) := by
-    simp [code.step, global_simps, hconst, code.OpVisitor.on_f64_const.default, code.visit,
+    simp [global_simps, hconst, code.OpVisitor.on_f64_const.default, code.visit,
       core.result.Result.Insts.CoreOpsTry.branch]
   apply public_of_loop f64Bytes env (resultContext .F64) (.Value .F64) (.Ok ())
     (by simp [f64Bytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
@@ -275,7 +275,7 @@ theorem truncated_f64_body_rejected (env : module.Env) :
   have hread := code.read_f64_const.failed_read first truncatedF64Bytes .UnexpectedEof truncated_f64_reader
   have hstep : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor first truncatedF64Bytes env
       (resultContext .F64) code.OP_F64_CONST () = .ok (.Err .UnexpectedEof, first, ()) := by
-    simp [code.step, global_simps, hread, core.result.Result.Insts.CoreOpsTry.branch,
+    simp [global_simps, hread, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   apply public_of_loop truncatedF64Bytes env (resultContext .F64) (.Value .F64) (.Err .UnexpectedEof)
     (by simp [truncatedF64Bytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
@@ -291,7 +291,7 @@ theorem overlong_i64_body_rejected (env : module.Env) :
   have hread := code.read_i64_const.failed_read first overlongI64Bytes .LebTooLong overlong_i64_reader
   have hstep : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor first overlongI64Bytes env
       (resultContext .I64) code.OP_I64_CONST () = .ok (.Err .LebTooLong, first, ()) := by
-    simp [code.step, global_simps, hread, core.result.Result.Insts.CoreOpsTry.branch,
+    simp [global_simps, hread, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   apply public_of_loop overlongI64Bytes env (resultContext .I64) (.Value .I64) (.Err .LebTooLong)
     (by simp [overlongI64Bytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl

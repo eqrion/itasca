@@ -135,7 +135,7 @@ theorem code.step_br {V : Type} (visitor : code.OpVisitor V)
     (hread : code.read_br st data = .ok (.Ok (depth, bt), st'))
     (hvisit : visitor.on_br v st' depth bt = .ok (.Ok (), v')) :
     code.step visitor st data env ctx code.OP_BR v = .ok (.Ok (), st', v') := by
-  simp [code.step, code.OP_BR, code.OP_NOP, code.OP_UNREACHABLE,
+  simp [code.OP_BR, code.OP_NOP, code.OP_UNREACHABLE,
     code.OP_I32_CONST, code.OP_I64_CONST, code.OP_F32_CONST, code.OP_F64_CONST,
     code.OP_DROP, code.OP_SELECT, code.OP_BLOCK, code.OP_LOOP, code.OP_IF,
     code.OP_ELSE, code.OP_END, hread, hvisit, code.visit,

@@ -70,7 +70,7 @@ theorem code.step_i32_const {V : Type} (visitor : code.OpVisitor V)
     (hread : code.read_i32_const st data = .ok (.Ok value, st'))
     (hvisit : visitor.on_i32_const v st' value = .ok (.Ok (), v')) :
     code.step visitor st data env ctx code.OP_I32_CONST v = .ok (.Ok (), st', v') := by
-  simp [code.step, code.OP_I32_CONST, code.OP_NOP, code.OP_UNREACHABLE,
+  simp [code.OP_I32_CONST, code.OP_NOP, code.OP_UNREACHABLE,
     hread, hvisit, code.visit, core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- An invalid immediate fails before invoking the visitor. -/
@@ -80,7 +80,7 @@ theorem code.step_i32_const.failed_read {V : Type} (visitor : code.OpVisitor V)
     (hread : reader.read_s32_leb data st.pos = .ok (.Err e)) :
     code.step visitor st data env ctx code.OP_I32_CONST v = .ok (.Err e, st, v) := by
   have hr := code.read_i32_const.failed_read st data e hread
-  simp [code.step, code.OP_I32_CONST, code.OP_NOP, code.OP_UNREACHABLE, hr,
+  simp [code.OP_I32_CONST, code.OP_NOP, code.OP_UNREACHABLE, hr,
     core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
@@ -134,7 +134,7 @@ theorem code.step_i32_const.visitor_rejected {V : Type} (visitor : code.OpVisito
     (hread : code.read_i32_const st data = .ok (.Ok value, st'))
     (hvisit : visitor.on_i32_const v st' value = .ok (.Err e, v')) :
     code.step visitor st data env ctx code.OP_I32_CONST v = .ok (.Err (.Visitor e), st', v') := by
-  simp [code.step, code.OP_I32_CONST, code.OP_NOP, code.OP_UNREACHABLE,
+  simp [code.OP_I32_CONST, code.OP_NOP, code.OP_UNREACHABLE,
     hread, hvisit, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
@@ -148,7 +148,7 @@ theorem code.step_i32_const.total {V : Type} (visitor : code.OpVisitor V)
   cases r with
   | Err e =>
     refine ⟨(.Err e, st', v), ?_⟩
-    simp [code.step, code.OP_I32_CONST, code.OP_NOP, code.OP_UNREACHABLE, hr,
+    simp [code.OP_I32_CONST, code.OP_NOP, code.OP_UNREACHABLE, hr,
       core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok value =>

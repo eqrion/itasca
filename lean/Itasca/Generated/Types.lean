@@ -250,7 +250,7 @@ structure module.Env where
   num_imported_globals : Std.Usize
 
 /-- Trait declaration: [itasca::code::OpVisitor]
-    Source: 'src/code.rs', lines 1805:0-1980:1
+    Source: 'src/code.rs', lines 1655:0-1830:1
     Visibility: public -/
 structure code.OpVisitor (Self : Type) where
   on_function_start : Self → _root_.Itasca.code.Context → Std.U32 →
@@ -637,7 +637,7 @@ structure code.OpVisitor (Self : Type) where
     ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
 
 /-- [itasca::code::EmptyOpVisitor]
-    Source: 'src/code.rs', lines 1984:0-1984:26
+    Source: 'src/code.rs', lines 1834:0-1834:26
     Visibility: public -/
 @[reducible]
 def code.EmptyOpVisitor := Unit
@@ -698,7 +698,7 @@ structure module.Module where
   tail : _root_.Itasca.module.Tail
 
 /-- Trait declaration: [itasca::module::CodeVisitor]
-    Source: 'src/module.rs', lines 1510:0-1542:1
+    Source: 'src/module.rs', lines 1494:0-1526:1
     Visibility: public -/
 structure module.CodeVisitor (Self : Type) where
   on_need_bytes : Self → Std.Usize → Result ((core.result.Result Unit
@@ -716,14 +716,14 @@ structure types.CustomSection where
   payload_end : Std.Usize
 
 /-- Trait declaration: [itasca::module::ModuleVisitor]
-    Source: 'src/module.rs', lines 1466:0-1476:1
+    Source: 'src/module.rs', lines 1450:0-1460:1
     Visibility: public -/
 structure module.ModuleVisitor (Self : Type) where
   on_custom_section : Self → _root_.Itasca.types.CustomSection → Result
     ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
 
 /-- [itasca::module::CodeSection]
-    Source: 'src/module.rs', lines 1242:0-1251:1
+    Source: 'src/module.rs', lines 1226:0-1235:1
     Visibility: public -/
 structure module.CodeSection where
   count : Std.U32
@@ -731,13 +731,13 @@ structure module.CodeSection where
   «end» : Std.Usize
 
 /-- [itasca::module::EmptyModuleVisitor]
-    Source: 'src/module.rs', lines 1480:0-1480:30
+    Source: 'src/module.rs', lines 1464:0-1464:30
     Visibility: public -/
 @[reducible]
 def module.EmptyModuleVisitor := Unit
 
 /-- [itasca::module::ValidatingCodeVisitor]
-    Source: 'src/module.rs', lines 1547:0-1547:33
+    Source: 'src/module.rs', lines 1531:0-1531:33
     Visibility: public -/
 @[reducible]
 def module.ValidatingCodeVisitor := Unit

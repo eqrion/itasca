@@ -63,8 +63,11 @@ theorem module.export_desc.complete (env : module.Env) (desc : module.ExportDesc
     (h : ExportDescValid env desc) :
     module.export_desc env (descByte desc) (descIndex desc) = .ok (.Ok desc) := by
   have hs : module.export_desc env (descByte desc) (descIndex desc) ⦃ r => r = .Ok desc ⦄ := by
-    cases desc <;> simp only [descByte, descIndex, ExportDescValid] at * <;>
-      unfold module.export_desc <;> step*
+    cases desc <;> simp only [descByte, descIndex, ExportDescValid] at *
+    all_goals unfold module.export_desc
+    all_goals step
+    all_goals simp
+    all_goals step*
   obtain ⟨r, hr, rfl⟩ := WP.spec_imp_exists hs
   exact hr
 

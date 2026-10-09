@@ -378,19 +378,13 @@ fn read_section_header(data: &[u8], pos: usize) -> Result<(u8, usize, usize)> {
 
 fn decode_value_type(data: &[u8], pos: usize) -> Result<(ValueType, usize)> {
     let (b, p) = read_byte(data, pos)?;
-    if b == 0x7f {
-        return Ok((ValueType::I32, p));
+    match b {
+        0x7f => Ok((ValueType::I32, p)),
+        0x7e => Ok((ValueType::I64, p)),
+        0x7d => Ok((ValueType::F32, p)),
+        0x7c => Ok((ValueType::F64, p)),
+        _ => Err(Error::InvalidType(b)),
     }
-    if b == 0x7e {
-        return Ok((ValueType::I64, p));
-    }
-    if b == 0x7d {
-        return Ok((ValueType::F32, p));
-    }
-    if b == 0x7c {
-        return Ok((ValueType::F64, p));
-    }
-    Err(Error::InvalidType(b))
 }
 
 fn decode_value_types(data: &[u8], pos: usize) -> Result<(Vec<ValueType>, usize)> {
@@ -428,22 +422,24 @@ fn decode_func_type(data: &[u8], pos: usize) -> Result<(FuncType, usize)> {
 /// Spec 5.3.7.
 fn decode_limits(data: &[u8], pos: usize) -> Result<(Limits, usize)> {
     let (flag, p) = read_byte(data, pos)?;
-    if flag == 0x00 {
-        let (min, p1) = read_u32_leb(data, p)?;
-        return Ok((Limits { min, max: None }, p1));
+    match flag {
+        0x00 => {
+            let (min, p1) = read_u32_leb(data, p)?;
+            Ok((Limits { min, max: None }, p1))
+        }
+        0x01 => {
+            let (min, p1) = read_u32_leb(data, p)?;
+            let (max, p2) = read_u32_leb(data, p1)?;
+            Ok((
+                Limits {
+                    min,
+                    max: Some(max),
+                },
+                p2,
+            ))
+        }
+        _ => Err(Error::InvalidType(flag)),
     }
-    if flag == 0x01 {
-        let (min, p1) = read_u32_leb(data, p)?;
-        let (max, p2) = read_u32_leb(data, p1)?;
-        return Ok((
-            Limits {
-                min,
-                max: Some(max),
-            },
-            p2,
-        ));
-    }
-    Err(Error::InvalidType(flag))
 }
 
 /// Spec 5.3.9. `funcref` is the only element type Wasm 1.0 has.
@@ -474,25 +470,23 @@ fn decode_mem_type(data: &[u8], pos: usize) -> Result<(MemType, usize)> {
 fn decode_global_type(data: &[u8], pos: usize) -> Result<(GlobalType, usize)> {
     let (valtype, p) = decode_value_type(data, pos)?;
     let (m, p1) = read_byte(data, p)?;
-    if m == 0x00 {
-        return Ok((
+    match m {
+        0x00 => Ok((
             GlobalType {
                 mutability: Mut::Const,
                 valtype,
             },
             p1,
-        ));
-    }
-    if m == 0x01 {
-        return Ok((
+        )),
+        0x01 => Ok((
             GlobalType {
                 mutability: Mut::Var,
                 valtype,
             },
             p1,
-        ));
+        )),
+        _ => Err(Error::InvalidType(m)),
     }
-    Err(Error::InvalidType(m))
 }
 
 // --- Names (spec 5.2.4) ---
@@ -515,47 +509,47 @@ fn utf8_cont(bytes: &[u8], i: usize, lo: u8, hi: u8) -> Result<()> {
 /// excludes overlong encodings and the surrogate range.
 fn utf8_sequence_len(bytes: &[u8], i: usize) -> Result<usize> {
     let b = bytes[i];
-    if b <= 0x7f {
-        return Ok(1);
+    match b {
+        0xe0 => {
+            utf8_cont(bytes, i + 1, 0xa0, 0xbf)?;
+            utf8_cont(bytes, i + 2, 0x80, 0xbf)?;
+            Ok(3)
+        }
+        0xed => {
+            utf8_cont(bytes, i + 1, 0x80, 0x9f)?;
+            utf8_cont(bytes, i + 2, 0x80, 0xbf)?;
+            Ok(3)
+        }
+        0xf0 => {
+            utf8_cont(bytes, i + 1, 0x90, 0xbf)?;
+            utf8_cont(bytes, i + 2, 0x80, 0xbf)?;
+            utf8_cont(bytes, i + 3, 0x80, 0xbf)?;
+            Ok(4)
+        }
+        0xf4 => {
+            utf8_cont(bytes, i + 1, 0x80, 0x8f)?;
+            utf8_cont(bytes, i + 2, 0x80, 0xbf)?;
+            utf8_cont(bytes, i + 3, 0x80, 0xbf)?;
+            Ok(4)
+        }
+        ..=0x7f => Ok(1),
+        0xc2..=0xdf => {
+            utf8_cont(bytes, i + 1, 0x80, 0xbf)?;
+            Ok(2)
+        }
+        0xe1..=0xef => {
+            utf8_cont(bytes, i + 1, 0x80, 0xbf)?;
+            utf8_cont(bytes, i + 2, 0x80, 0xbf)?;
+            Ok(3)
+        }
+        0xf1..=0xf3 => {
+            utf8_cont(bytes, i + 1, 0x80, 0xbf)?;
+            utf8_cont(bytes, i + 2, 0x80, 0xbf)?;
+            utf8_cont(bytes, i + 3, 0x80, 0xbf)?;
+            Ok(4)
+        }
+        _ => Err(Error::InvalidUtf8),
     }
-    if b >= 0xc2 && b <= 0xdf {
-        utf8_cont(bytes, i + 1, 0x80, 0xbf)?;
-        return Ok(2);
-    }
-    if b == 0xe0 {
-        utf8_cont(bytes, i + 1, 0xa0, 0xbf)?;
-        utf8_cont(bytes, i + 2, 0x80, 0xbf)?;
-        return Ok(3);
-    }
-    if b == 0xed {
-        utf8_cont(bytes, i + 1, 0x80, 0x9f)?;
-        utf8_cont(bytes, i + 2, 0x80, 0xbf)?;
-        return Ok(3);
-    }
-    if (b >= 0xe1 && b <= 0xec) || b == 0xee || b == 0xef {
-        utf8_cont(bytes, i + 1, 0x80, 0xbf)?;
-        utf8_cont(bytes, i + 2, 0x80, 0xbf)?;
-        return Ok(3);
-    }
-    if b == 0xf0 {
-        utf8_cont(bytes, i + 1, 0x90, 0xbf)?;
-        utf8_cont(bytes, i + 2, 0x80, 0xbf)?;
-        utf8_cont(bytes, i + 3, 0x80, 0xbf)?;
-        return Ok(4);
-    }
-    if b == 0xf4 {
-        utf8_cont(bytes, i + 1, 0x80, 0x8f)?;
-        utf8_cont(bytes, i + 2, 0x80, 0xbf)?;
-        utf8_cont(bytes, i + 3, 0x80, 0xbf)?;
-        return Ok(4);
-    }
-    if b >= 0xf1 && b <= 0xf3 {
-        utf8_cont(bytes, i + 1, 0x80, 0xbf)?;
-        utf8_cont(bytes, i + 2, 0x80, 0xbf)?;
-        utf8_cont(bytes, i + 3, 0x80, 0xbf)?;
-        return Ok(4);
-    }
-    Err(Error::InvalidUtf8)
 }
 
 fn validate_utf8(bytes: &[u8]) -> Result<()> {
@@ -643,38 +637,40 @@ fn decode_const_expr(
     expected: ValueType,
 ) -> Result<(ConstExpr, usize)> {
     let (op, p) = read_byte(data, pos)?;
-    if op == OP_I32_CONST {
-        let (v, p1) = read_s32_leb(data, p)?;
-        expect_const_type(ValueType::I32, expected)?;
-        let p2 = read_expr_end(data, p1)?;
-        return Ok((ConstExpr::I32(v), p2));
+    match op {
+        OP_I32_CONST => {
+            let (v, p1) = read_s32_leb(data, p)?;
+            expect_const_type(ValueType::I32, expected)?;
+            let p2 = read_expr_end(data, p1)?;
+            Ok((ConstExpr::I32(v), p2))
+        }
+        OP_I64_CONST => {
+            let (v, p1) = read_s64_leb(data, p)?;
+            expect_const_type(ValueType::I64, expected)?;
+            let p2 = read_expr_end(data, p1)?;
+            Ok((ConstExpr::I64(v), p2))
+        }
+        OP_F32_CONST => {
+            let (v, p1) = read_f32_bits(data, p)?;
+            expect_const_type(ValueType::F32, expected)?;
+            let p2 = read_expr_end(data, p1)?;
+            Ok((ConstExpr::F32(v), p2))
+        }
+        OP_F64_CONST => {
+            let (v, p1) = read_f64_bits(data, p)?;
+            expect_const_type(ValueType::F64, expected)?;
+            let p2 = read_expr_end(data, p1)?;
+            Ok((ConstExpr::F64(v), p2))
+        }
+        OP_GLOBAL_GET => {
+            let (idx, p1) = read_u32_leb(data, p)?;
+            let gt = const_global(env, idx)?;
+            expect_const_type(gt.valtype, expected)?;
+            let p2 = read_expr_end(data, p1)?;
+            Ok((ConstExpr::GlobalGet(idx), p2))
+        }
+        _ => Err(Error::InvalidConstExpr),
     }
-    if op == OP_I64_CONST {
-        let (v, p1) = read_s64_leb(data, p)?;
-        expect_const_type(ValueType::I64, expected)?;
-        let p2 = read_expr_end(data, p1)?;
-        return Ok((ConstExpr::I64(v), p2));
-    }
-    if op == OP_F32_CONST {
-        let (v, p1) = read_f32_bits(data, p)?;
-        expect_const_type(ValueType::F32, expected)?;
-        let p2 = read_expr_end(data, p1)?;
-        return Ok((ConstExpr::F32(v), p2));
-    }
-    if op == OP_F64_CONST {
-        let (v, p1) = read_f64_bits(data, p)?;
-        expect_const_type(ValueType::F64, expected)?;
-        let p2 = read_expr_end(data, p1)?;
-        return Ok((ConstExpr::F64(v), p2));
-    }
-    if op == OP_GLOBAL_GET {
-        let (idx, p1) = read_u32_leb(data, p)?;
-        let gt = const_global(env, idx)?;
-        expect_const_type(gt.valtype, expected)?;
-        let p2 = read_expr_end(data, p1)?;
-        return Ok((ConstExpr::GlobalGet(idx), p2));
-    }
-    Err(Error::InvalidConstExpr)
 }
 
 // --- Copying, since no Clone impl reaches the extraction ---
@@ -729,56 +725,58 @@ fn decode_import(data: &[u8], pos: usize, env: &mut Env) -> Result<usize> {
     let (module, p1) = decode_name(data, pos)?;
     let (name, p2) = decode_name(data, p1)?;
     let (kind, p3) = read_byte(data, p2)?;
-    if kind == 0x00 {
-        let (idx, p4) = read_u32_leb(data, p3)?;
-        let ft = lookup_type(env, idx)?;
-        env.func_types.push(ft);
-        env.num_imported_funcs += 1;
-        env.imports.push(Import {
-            module,
-            name,
-            desc: ImportDesc::Func(idx),
-        });
-        return Ok(p4);
-    }
-    if kind == 0x01 {
-        let (tt, p4) = decode_table_type(data, p3)?;
-        env.table_types.push(tt);
-        if env.table_types.len() > MAX_TABLES {
-            return Err(Error::MultipleTables);
+    match kind {
+        0x00 => {
+            let (idx, p4) = read_u32_leb(data, p3)?;
+            let ft = lookup_type(env, idx)?;
+            env.func_types.push(ft);
+            env.num_imported_funcs += 1;
+            env.imports.push(Import {
+                module,
+                name,
+                desc: ImportDesc::Func(idx),
+            });
+            Ok(p4)
         }
-        env.imports.push(Import {
-            module,
-            name,
-            desc: ImportDesc::Table(tt),
-        });
-        return Ok(p4);
-    }
-    if kind == 0x02 {
-        let (mt, p4) = decode_mem_type(data, p3)?;
-        env.mem_types.push(mt);
-        if env.mem_types.len() > MAX_MEMORIES {
-            return Err(Error::MultipleMemories);
+        0x01 => {
+            let (tt, p4) = decode_table_type(data, p3)?;
+            env.table_types.push(tt);
+            if env.table_types.len() > MAX_TABLES {
+                return Err(Error::MultipleTables);
+            }
+            env.imports.push(Import {
+                module,
+                name,
+                desc: ImportDesc::Table(tt),
+            });
+            Ok(p4)
         }
-        env.imports.push(Import {
-            module,
-            name,
-            desc: ImportDesc::Memory(mt),
-        });
-        return Ok(p4);
+        0x02 => {
+            let (mt, p4) = decode_mem_type(data, p3)?;
+            env.mem_types.push(mt);
+            if env.mem_types.len() > MAX_MEMORIES {
+                return Err(Error::MultipleMemories);
+            }
+            env.imports.push(Import {
+                module,
+                name,
+                desc: ImportDesc::Memory(mt),
+            });
+            Ok(p4)
+        }
+        0x03 => {
+            let (gt, p4) = decode_global_type(data, p3)?;
+            env.global_types.push(gt);
+            env.num_imported_globals += 1;
+            env.imports.push(Import {
+                module,
+                name,
+                desc: ImportDesc::Global(gt),
+            });
+            Ok(p4)
+        }
+        _ => Err(Error::InvalidType(kind)),
     }
-    if kind == 0x03 {
-        let (gt, p4) = decode_global_type(data, p3)?;
-        env.global_types.push(gt);
-        env.num_imported_globals += 1;
-        env.imports.push(Import {
-            module,
-            name,
-            desc: ImportDesc::Global(gt),
-        });
-        return Ok(p4);
-    }
-    Err(Error::InvalidType(kind))
 }
 
 fn decode_import_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize> {
@@ -897,31 +895,33 @@ fn export_name_taken(env: &Env, name: &[u8]) -> bool {
 
 fn export_desc(env: &Env, kind: u8, idx: u32) -> Result<ExportDesc> {
     let i = idx as usize;
-    if kind == 0x00 {
-        if i >= env.func_types.len() {
-            return Err(Error::UnknownFunc(idx));
+    match kind {
+        0x00 => {
+            if i >= env.func_types.len() {
+                return Err(Error::UnknownFunc(idx));
+            }
+            Ok(ExportDesc::Func(idx))
         }
-        return Ok(ExportDesc::Func(idx));
-    }
-    if kind == 0x01 {
-        if i >= env.table_types.len() {
-            return Err(Error::UnknownTable(idx));
+        0x01 => {
+            if i >= env.table_types.len() {
+                return Err(Error::UnknownTable(idx));
+            }
+            Ok(ExportDesc::Table(idx))
         }
-        return Ok(ExportDesc::Table(idx));
-    }
-    if kind == 0x02 {
-        if i >= env.mem_types.len() {
-            return Err(Error::UnknownMemory(idx));
+        0x02 => {
+            if i >= env.mem_types.len() {
+                return Err(Error::UnknownMemory(idx));
+            }
+            Ok(ExportDesc::Memory(idx))
         }
-        return Ok(ExportDesc::Memory(idx));
-    }
-    if kind == 0x03 {
-        if i >= env.global_types.len() {
-            return Err(Error::UnknownGlobal(idx));
+        0x03 => {
+            if i >= env.global_types.len() {
+                return Err(Error::UnknownGlobal(idx));
+            }
+            Ok(ExportDesc::Global(idx))
         }
-        return Ok(ExportDesc::Global(idx));
+        _ => Err(Error::InvalidType(kind)),
     }
-    Err(Error::InvalidType(kind))
 }
 
 fn decode_export_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize> {
@@ -1003,34 +1003,18 @@ fn decode_element_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usiz
 }
 
 fn decode_env_section(data: &[u8], pos: usize, id: u8, env: &mut Env) -> Result<usize> {
-    if id == SECTION_TYPE {
-        return decode_type_section(data, pos, env);
+    match id {
+        SECTION_TYPE => decode_type_section(data, pos, env),
+        SECTION_IMPORT => decode_import_section(data, pos, env),
+        SECTION_FUNCTION => decode_function_section(data, pos, env),
+        SECTION_TABLE => decode_table_section(data, pos, env),
+        SECTION_MEMORY => decode_memory_section(data, pos, env),
+        SECTION_GLOBAL => decode_global_section(data, pos, env),
+        SECTION_EXPORT => decode_export_section(data, pos, env),
+        SECTION_START => decode_start_section(data, pos, env),
+        SECTION_ELEMENT => decode_element_section(data, pos, env),
+        _ => Err(Error::UnknownSection(id)),
     }
-    if id == SECTION_IMPORT {
-        return decode_import_section(data, pos, env);
-    }
-    if id == SECTION_FUNCTION {
-        return decode_function_section(data, pos, env);
-    }
-    if id == SECTION_TABLE {
-        return decode_table_section(data, pos, env);
-    }
-    if id == SECTION_MEMORY {
-        return decode_memory_section(data, pos, env);
-    }
-    if id == SECTION_GLOBAL {
-        return decode_global_section(data, pos, env);
-    }
-    if id == SECTION_EXPORT {
-        return decode_export_section(data, pos, env);
-    }
-    if id == SECTION_START {
-        return decode_start_section(data, pos, env);
-    }
-    if id == SECTION_ELEMENT {
-        return decode_element_section(data, pos, env);
-    }
-    Err(Error::UnknownSection(id))
 }
 
 /// [`validate_env_with`] with a visitor that does nothing.

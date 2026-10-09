@@ -217,7 +217,7 @@ theorem rejected (env : module.Env) :
     simpa [first, initial, Body.initial, body] using hoc
   have hstep0 : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor first bytes env
       ctx code.OP_BLOCK () = .ok (.Ok (), opened, ()) := by
-    simp [code.step, global_simps, hopen,
+    simp [global_simps, hopen,
       code.OpVisitor.on_block.default, code.visit, core.result.Result.Insts.CoreOpsTry.branch]
   let unreachable := { opened with pos := 3#usize }
   obtain ⟨marked, hmark, hmv, hml, hmc, hmp⟩ := WP.spec_imp_exists
@@ -225,7 +225,7 @@ theorem rejected (env : module.Env) :
       (by simp [unreachable, hoc']) (by simp [frame]))
   have hstepUnreachable : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor unreachable bytes env
       ctx code.OP_UNREACHABLE () = .ok (.Ok (), marked, ()) := by
-    simp [code.step, global_simps, code.read_unreachable, hmark,
+    simp [global_simps, code.read_unreachable, hmark,
       code.OpVisitor.on_unreachable.default, code.visit, core.result.Result.Insts.CoreOpsTry.branch]
   let tableState := { marked with pos := 4#usize }
   let entry := { marked with pos := 5#usize }

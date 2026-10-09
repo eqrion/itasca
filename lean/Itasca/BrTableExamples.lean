@@ -52,7 +52,7 @@ private theorem step_end (data : Slice U8) (env : module.Env) (ctx : code.Contex
     (hr : code.read_end st = .ok (.Ok (kind, bt), next)) :
     code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx code.OP_END () =
       .ok (.Ok (), next, ()) := by
-  simp [code.step, global_simps, hr,
+  simp [global_simps, hr,
     code.OpVisitor.on_end.default, code.visit, core.result.Result.Insts.CoreOpsTry.branch]
 
 
@@ -108,7 +108,7 @@ theorem br_table_body_accepted (env : module.Env) :
     (code.mark_unreachable.spec first [] frame rfl (by simp [frame]))
   have hstep0 : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor first brTableBytes env
       emptyContext code.OP_UNREACHABLE () = .ok (.Ok (), marked, ()) := by
-    simp [code.step, global_simps, code.read_unreachable, hmark,
+    simp [global_simps, code.read_unreachable, hmark,
       code.OpVisitor.on_unreachable.default, code.visit, core.result.Result.Insts.CoreOpsTry.branch]
   let table := { marked with pos := 2#usize }
   let entry := { marked with pos := 3#usize }

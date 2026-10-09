@@ -75,7 +75,7 @@ private theorem step_end (data : Slice U8) (env : module.Env) (ctx : code.Contex
     (hr : code.read_end st = .ok (.Ok (kind, bt), next)) :
     code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx code.OP_END () =
       .ok (.Ok (), next, ()) := by
-  simp [code.step, global_simps, hr,
+  simp [global_simps, hr,
     code.OpVisitor.on_end.default, code.visit, core.result.Result.Insts.CoreOpsTry.branch]
 
 
@@ -239,7 +239,7 @@ theorem polymorphic_select_accepted (env : module.Env) :
   have hv1' : s1.vals.val = [] := by simpa [first, Body.initial] using hv1
   have hunreachable : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor first data env emptyContext
       code.OP_UNREACHABLE () = .ok (.Ok (), s1, ()) := by
-    simp [code.step, global_simps, code.read_unreachable, hm, code.OpVisitor.on_unreachable.default,
+    simp [global_simps, code.read_unreachable, hm, code.OpVisitor.on_unreachable.default,
       code.visit, core.result.Result.Insts.CoreOpsTry.branch]
   let second := {s1 with pos := 2#usize}
   have hbase : alloc.vec.Vec.len second.vals = Control.base second := by
@@ -264,7 +264,7 @@ theorem polymorphic_select_accepted (env : module.Env) :
   dsimp only at hv3 hc3 hp3
   have hdrop : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor third data env emptyContext
       code.OP_DROP () = .ok (.Ok (), s3, ()) := by
-    simp [code.step, global_simps, code.read_drop, hd, code.OpVisitor.on_drop.default,
+    simp [global_simps, code.read_drop, hd, code.OpVisitor.on_drop.default,
       code.visit, core.result.Result.Insts.CoreOpsTry.branch]
   apply public_of_loop data env emptyContext .Empty (.Ok ())
     (by simp [data, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
@@ -294,7 +294,7 @@ theorem unknown_opcode_rejected (env : module.Env) :
   let first := {Body.initial .Empty with pos := 1#usize}
   have hstep : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor first data env emptyContext 0xFF#u8 () =
       .ok (.Err .UnrecognizedOpcode, first, ()) := by
-    simp [code.step, code.step_memory, code.step_numeric, code.convert_types, code.binary_types, global_simps]
+    simp [code.step_numeric, global_simps]
   apply public_of_loop data env emptyContext .Empty (.Err .UnrecognizedOpcode)
     (by simp [data, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
   exact loop_error data env emptyContext (Body.initial .Empty) first first 0xFF#u8

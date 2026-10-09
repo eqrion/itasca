@@ -83,19 +83,16 @@ theorem module.decode_value_type.spec (data : Slice U8) (pos : Usize) :
       have hs := ModuleBinary.At.byte hp
       simp [module.decode_value_type, hr,
         core.result.Result.Insts.CoreOpsTry.branch, ModuleBinary.ParserPost]
-      split <;> rename_i h1
+      split
       · simp only [WP.spec_ok]
-        exact ⟨_, rfl, by simpa [ModuleBinary.valueByte, h1] using hs⟩
-      · split <;> rename_i h2
-        · simp only [WP.spec_ok]
-          exact ⟨_, rfl, by simpa [ModuleBinary.valueByte, h2] using hs⟩
-        · split <;> rename_i h3
-          · simp only [WP.spec_ok]
-            exact ⟨_, rfl, by simpa [ModuleBinary.valueByte, h3] using hs⟩
-          · split <;> rename_i h4
-            · simp only [WP.spec_ok]
-              exact ⟨_, rfl, by simpa [ModuleBinary.valueByte, h4] using hs⟩
-            · simp
+        exact ⟨_, rfl, by with_unfolding_all exact hs⟩
+      · simp only [WP.spec_ok]
+        exact ⟨_, rfl, by with_unfolding_all exact hs⟩
+      · simp only [WP.spec_ok]
+        exact ⟨_, rfl, by with_unfolding_all exact hs⟩
+      · simp only [WP.spec_ok]
+        exact ⟨_, rfl, by with_unfolding_all exact hs⟩
+      · simp
 
 private theorem copy_bytes_body (data : Slice U8) (last : Usize) (out : alloc.vec.Vec U8)
     (i : Usize) (hi : i.val < last.val) (hb : last.val ≤ data.length)

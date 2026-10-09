@@ -1,4 +1,5 @@
 import Itasca.Stack
+import Itasca.ScalarMatch
 
 open Aeneas Aeneas.Std
 
@@ -75,16 +76,16 @@ theorem code.read_binary.polymorphic (st : code.OpIterState)
     core.result.Result.Insts.CoreOpsTry.branch, hr]
 
 private theorem i32_add_conversion : code.convert_types code.OP_I32_ADD = .ok none := by
-  simp [code.convert_types, global_simps]
+  simp [global_simps]
 
 private theorem i32_add_binary :
     code.binary_types code.OP_I32_ADD = .ok (some (.I32, .I32)) := by
-  simp [code.binary_types, global_simps]
+  simp [global_simps]
 
 private theorem i32_add_visit {V : Type} (visitor : code.OpVisitor V)
     (v : V) (st : code.OpIterState) :
     code.visit_numeric visitor v st code.OP_I32_ADD = visitor.on_i32_add v st := by
-  simp [code.visit_numeric, global_simps]
+  simp [global_simps]
 
 namespace Numeric
 
@@ -123,7 +124,7 @@ private theorem i32_add_dispatch {V : Type} (visitor : code.OpVisitor V)
     (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_I32_ADD v =
       code.step_numeric visitor st code.OP_I32_ADD v := by
-  simp [code.step, code.step_memory, global_simps]
+  simp [global_simps]
 
 /-- The full instruction dispatcher validates i32.add with SpecTec's numeric stack effect. -/
 theorem code.step_i32_add_typed {V : Type} (visitor : code.OpVisitor V)

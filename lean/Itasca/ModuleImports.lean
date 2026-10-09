@@ -80,8 +80,7 @@ theorem module.decode_import.spec (data : Slice U8) (pos : Usize) (env : module.
         cases hbound
         simp [module.decode_import, hr, hn, hk, core.result.Result.Insts.CoreOpsTry.branch]
         split
-        · rename_i hkindEq
-          obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data p3)
+        · obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data p3)
           cases r with
           | Err e => simp [hd,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
@@ -105,91 +104,84 @@ theorem module.decode_import.spec (data : Slice U8) (pos : Usize) (env : module.
               refine ⟨entry, ?_, ?_, ?_⟩
               · refine ⟨v1_post, ft, hlookup, rfl, v_post, i_post⟩
               · apply import_encoded hm hname
-                apply At.prepend (by simpa [hkindEq] using hkind) (At.of_u32 hdesc)
+                apply At.prepend (by with_unfolding_all exact hkind) (At.of_u32 hdesc)
                 intro bytes hbytes
                 exact .func value hbytes
               · constructor <;> simp only [v_post, v1_post, List.length_append, List.length_singleton] <;> scalar_tac
-        · split
-          · rename_i hkindEq
-            obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (module.decode_table_type.spec data p3)
-            cases r with
-            | Err e => simp [hd,
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-            | Ok pair =>
-              obtain ⟨value, next⟩ := pair
-              obtain ⟨hdesc, hlimits⟩ := hdesc
-              have hspanD := hdesc.span
-              have hcapacity : env.table_types.val.length < Usize.max := by scalar_tac
-              have hcapacityI : env.imports.val.length < Usize.max := by scalar_tac
-              simp [hd]
+        · obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (module.decode_table_type.spec data p3)
+          cases r with
+          | Err e => simp [hd,
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+          | Ok pair =>
+            obtain ⟨value, next⟩ := pair
+            obtain ⟨hdesc, hlimits⟩ := hdesc
+            have hspanD := hdesc.span
+            have hcapacity : env.table_types.val.length < Usize.max := by scalar_tac
+            have hcapacityI : env.imports.val.length < Usize.max := by scalar_tac
+            simp [hd]
+            step
+            split
+            · simp
+            · rename_i hcount
               step
-              split
-              · simp
-              · rename_i hcount
-                step
-                let entry : module.Import := ⟨modname, nm, .Table value⟩
-                refine ⟨entry, ?_, ?_, ?_⟩
-                · refine ⟨v1_post, rfl, v_post, ?_, ?_⟩
-                  · simpa [global_simps] using hcount
-                  · simpa [ModuleTranslation.LimitsValid, ModuleBinary.LimitsValid, Option.mem_def, global_simps, U32.rMax] using hlimits
-                · apply import_encoded hm hname
-                  apply At.prepend (by simpa [hkindEq] using hkind) hdesc
-                  intro bytes hbytes
-                  exact .table value hbytes
-                · constructor <;> simp only [v_post, v1_post, List.length_append, List.length_singleton] <;> scalar_tac
-          · split
-            · rename_i hkindEq
-              obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (module.decode_mem_type.spec data p3)
-              cases r with
-              | Err e => simp [hd,
-                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-              | Ok pair =>
-                obtain ⟨value, next⟩ := pair
-                obtain ⟨hdesc, hlimits⟩ := hdesc
-                have hspanD := hdesc.span
-                have hcapacity : env.mem_types.val.length < Usize.max := by scalar_tac
-                have hcapacityI : env.imports.val.length < Usize.max := by scalar_tac
-                simp [hd]
-                step
-                split
-                · simp
-                · rename_i hcount
-                  step
-                  let entry : module.Import := ⟨modname, nm, .Memory value⟩
-                  refine ⟨entry, ?_, ?_, ?_⟩
-                  · refine ⟨v1_post, rfl, v_post, ?_, ?_⟩
-                    · simpa [global_simps] using hcount
-                    · simpa [ModuleTranslation.LimitsValid, ModuleBinary.LimitsValid, Option.mem_def, global_simps, U32.rMax] using hlimits
-                  · apply import_encoded hm hname
-                    apply At.prepend (by simpa [hkindEq] using hkind) hdesc
-                    intro bytes hbytes
-                    exact .memory value hbytes
-                  · constructor <;> simp only [v_post, v1_post, List.length_append, List.length_singleton] <;> scalar_tac
-            · split
-              · rename_i hkindEq
-                obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (module.decode_global_type.spec data p3)
-                cases r with
-                | Err e => simp [hd,
-                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-                | Ok pair =>
-                  obtain ⟨value, next⟩ := pair
-                  have hspanD := hdesc.span
-                  have hcapacity : env.global_types.val.length < Usize.max := by scalar_tac
-                  have hcapacityI : env.imports.val.length < Usize.max := by scalar_tac
-                  have hcapacityN : env.num_imported_globals.val < Usize.max := by scalar_tac
-                  simp [hd]
-                  step
-                  step
-                  step
-                  let entry : module.Import := ⟨modname, nm, .Global value⟩
-                  refine ⟨entry, ?_, ?_, ?_⟩
-                  · exact ⟨v1_post, rfl, v_post, i_post⟩
-                  · apply import_encoded hm hname
-                    apply At.prepend (by simpa [hkindEq] using hkind) hdesc
-                    intro bytes hbytes
-                    exact .global value hbytes
-                  · constructor <;> simp only [v_post, v1_post, List.length_append, List.length_singleton] <;> scalar_tac
-              ·
-                simp
+              let entry : module.Import := ⟨modname, nm, .Table value⟩
+              refine ⟨entry, ?_, ?_, ?_⟩
+              · refine ⟨v1_post, rfl, v_post, ?_, ?_⟩
+                · simpa [global_simps] using hcount
+                · simpa [ModuleTranslation.LimitsValid, ModuleBinary.LimitsValid, Option.mem_def, global_simps, U32.rMax] using hlimits
+              · apply import_encoded hm hname
+                apply At.prepend (by with_unfolding_all exact hkind) hdesc
+                intro bytes hbytes
+                exact .table value hbytes
+              · constructor <;> simp only [v_post, v1_post, List.length_append, List.length_singleton] <;> scalar_tac
+        · obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (module.decode_mem_type.spec data p3)
+          cases r with
+          | Err e => simp [hd,
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+          | Ok pair =>
+            obtain ⟨value, next⟩ := pair
+            obtain ⟨hdesc, hlimits⟩ := hdesc
+            have hspanD := hdesc.span
+            have hcapacity : env.mem_types.val.length < Usize.max := by scalar_tac
+            have hcapacityI : env.imports.val.length < Usize.max := by scalar_tac
+            simp [hd]
+            step
+            split
+            · simp
+            · rename_i hcount
+              step
+              let entry : module.Import := ⟨modname, nm, .Memory value⟩
+              refine ⟨entry, ?_, ?_, ?_⟩
+              · refine ⟨v1_post, rfl, v_post, ?_, ?_⟩
+                · simpa [global_simps] using hcount
+                · simpa [ModuleTranslation.LimitsValid, ModuleBinary.LimitsValid, Option.mem_def, global_simps, U32.rMax] using hlimits
+              · apply import_encoded hm hname
+                apply At.prepend (by with_unfolding_all exact hkind) hdesc
+                intro bytes hbytes
+                exact .memory value hbytes
+              · constructor <;> simp only [v_post, v1_post, List.length_append, List.length_singleton] <;> scalar_tac
+        · obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (module.decode_global_type.spec data p3)
+          cases r with
+          | Err e => simp [hd,
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+          | Ok pair =>
+            obtain ⟨value, next⟩ := pair
+            have hspanD := hdesc.span
+            have hcapacity : env.global_types.val.length < Usize.max := by scalar_tac
+            have hcapacityI : env.imports.val.length < Usize.max := by scalar_tac
+            have hcapacityN : env.num_imported_globals.val < Usize.max := by scalar_tac
+            simp [hd]
+            step
+            step
+            step
+            let entry : module.Import := ⟨modname, nm, .Global value⟩
+            refine ⟨entry, ?_, ?_, ?_⟩
+            · exact ⟨v1_post, rfl, v_post, i_post⟩
+            · apply import_encoded hm hname
+              apply At.prepend (by with_unfolding_all exact hkind) hdesc
+              intro bytes hbytes
+              exact .global value hbytes
+            · constructor <;> simp only [v_post, v1_post, List.length_append, List.length_singleton] <;> scalar_tac
+        · simp
 
 end Itasca

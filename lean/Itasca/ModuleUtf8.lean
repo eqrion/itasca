@@ -56,9 +56,16 @@ theorem module.utf8_sequence_len.spec (bytes : Slice U8) (pos : Usize)
       | .Ok count => Utf8Sequence bytes pos count
       | .Err _ => True ⦄ := by
   unfold module.utf8_sequence_len
-  step*
+  step
+  split <;> step*
   all_goals try casesm* core.result.Result Unit error.Error
   all_goals simp_all
+  all_goals have hbval := congrArg UScalar.val b_post
+  all_goals clear b_post
+  all_goals try simp only [show (224#8#uscalar : U8).val = 224 from rfl,
+    show (237#8#uscalar : U8).val = 237 from rfl,
+    show (240#8#uscalar : U8).val = 240 from rfl,
+    show (244#8#uscalar : U8).val = 244 from rfl] at *
   all_goals try casesm* (∃ _, _), (_ ∧ _)
   all_goals try scalar_tac
   all_goals unfold Utf8Sequence

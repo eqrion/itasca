@@ -90,7 +90,7 @@ private theorem step_end (data : Slice U8) (env : module.Env) (ctx : code.Contex
     (hr : code.read_end st = .ok (.Ok (kind, bt), next)) :
     code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx code.OP_END () =
       .ok (.Ok (), next, ()) := by
-  simp [code.step, global_simps, hr,
+  simp [global_simps, hr,
     code.OpVisitor.on_end.default, code.visit, core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- The public extracted validator really accepts the empty instruction sequence plus its end. -/
@@ -180,7 +180,7 @@ theorem i32_const_body_accepted (env : module.Env) :
   dsimp only at hfc hfv hfp
   have hstep : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor first constBytes env
       i32Context code.OP_I32_CONST () = .ok (.Ok (), pushed, ()) := by
-    simp [code.step, global_simps, hconst, code.OpVisitor.on_i32_const.default, code.visit,
+    simp [global_simps, hconst, code.OpVisitor.on_i32_const.default, code.visit,
       core.result.Result.Insts.CoreOpsTry.branch]
   apply public_of_loop constBytes env i32Context (.Value .I32) (.Ok ())
     (by simp [constBytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
@@ -207,7 +207,7 @@ theorem drop_body_rejected (env : module.Env) :
     simpa [first, Control.polymorphic, Body.initial] using hpop
   have hstep : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor first dropBytes env
       emptyContext code.OP_DROP () = .ok (.Err .EmptyStack, first, ()) := by
-    simp [code.step, global_simps, code.read_drop, hpop',
+    simp [global_simps, code.read_drop, hpop',
       core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   apply public_of_loop dropBytes env emptyContext .Empty (.Err .EmptyStack)

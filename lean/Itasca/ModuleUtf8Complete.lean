@@ -38,33 +38,77 @@ theorem module.utf8_sequence_len.complete (data : Slice U8) (pos next : Usize)
       ∃ count, r = .Ok count ∧ count.val = encoded.length ⦄ := by
     have hlen := hb.length
     have hbound := hb.bound
+    have heqval (a b : U8) : a = b ↔ a.val = b.val :=
+      ⟨fun h => congrArg UScalar.val h, UScalar.eq_of_val_eq⟩
     cases hc with
     | one a ha =>
         have h0 := hb.get 0 (by simp)
         simp only [List.getElem_cons_zero, Nat.add_zero] at h0
         unfold module.utf8_sequence_len
-        step*
+        step
+        split
+        all_goals have hbval := congrArg UScalar.val b_post
+        all_goals clear b_post
+        all_goals try simp only [heqval, show (224#8#uscalar : U8).val = 224 from rfl,
+          show (237#8#uscalar : U8).val = 237 from rfl,
+          show (240#8#uscalar : U8).val = 240 from rfl,
+          show (244#8#uscalar : U8).val = 244 from rfl] at *
+        all_goals try (exfalso; scalar_tac)
+        all_goals step* -grind by scalar_tac
+        all_goals scalar_tac
     | two a b ha ha' hb0 hb1 =>
         have h0 := hb.get 0 (by simp)
         have h1 := hb.get 1 (by simp)
         simp only [List.getElem_cons_zero, List.getElem_cons_succ, Nat.add_zero] at h0 h1
         unfold module.utf8_sequence_len
-        step*
+        step
+        split
+        all_goals have hbval := congrArg UScalar.val b_post
+        all_goals clear b_post
+        all_goals try simp only [heqval, show (224#8#uscalar : U8).val = 224 from rfl,
+          show (237#8#uscalar : U8).val = 237 from rfl,
+          show (240#8#uscalar : U8).val = 240 from rfl,
+          show (244#8#uscalar : U8).val = 244 from rfl] at *
+        all_goals try (exfalso; scalar_tac)
+        all_goals step* -grind by scalar_tac
+        all_goals scalar_tac
     | three a b c ha hc0 hc1 =>
         have h0 := hb.get 0 (by simp)
         have h1 := hb.get 1 (by simp)
         have h2 := hb.get 2 (by simp)
         simp only [List.getElem_cons_zero, List.getElem_cons_succ, Nat.add_zero] at h0 h1 h2
-        unfold module.utf8_sequence_len
-        step* by scalar_tac
+        rcases ha with ha | ha | ha | ha
+        all_goals unfold module.utf8_sequence_len
+        all_goals step
+        all_goals split
+        all_goals have hbval := congrArg UScalar.val b_post
+        all_goals clear b_post
+        all_goals try simp only [heqval, show (224#8#uscalar : U8).val = 224 from rfl,
+          show (237#8#uscalar : U8).val = 237 from rfl,
+          show (240#8#uscalar : U8).val = 240 from rfl,
+          show (244#8#uscalar : U8).val = 244 from rfl] at *
+        all_goals try (exfalso; scalar_tac)
+        all_goals step* -grind by scalar_tac
+        all_goals scalar_tac
     | four a b c d ha hc0 hc1 hd0 hd1 =>
         have h0 := hb.get 0 (by simp)
         have h1 := hb.get 1 (by simp)
         have h2 := hb.get 2 (by simp)
         have h3 := hb.get 3 (by simp)
         simp only [List.getElem_cons_zero, List.getElem_cons_succ, Nat.add_zero] at h0 h1 h2 h3
-        unfold module.utf8_sequence_len
-        step* by scalar_tac
+        rcases ha with ha | ha | ha
+        all_goals unfold module.utf8_sequence_len
+        all_goals step
+        all_goals split
+        all_goals have hbval := congrArg UScalar.val b_post
+        all_goals clear b_post
+        all_goals try simp only [heqval, show (224#8#uscalar : U8).val = 224 from rfl,
+          show (237#8#uscalar : U8).val = 237 from rfl,
+          show (240#8#uscalar : U8).val = 240 from rfl,
+          show (244#8#uscalar : U8).val = 244 from rfl] at *
+        all_goals try (exfalso; scalar_tac)
+        all_goals step* -grind by scalar_tac
+        all_goals scalar_tac
   obtain ⟨r, hr, count, rfl, hc⟩ := WP.spec_imp_exists hs
   exact ⟨count, hr, hc⟩
 

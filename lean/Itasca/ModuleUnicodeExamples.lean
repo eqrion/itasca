@@ -19,6 +19,8 @@ theorem last_scalar_sequence : module.utf8_sequence_len lastScalar 0#usize = .ok
     have hmax : 4 ≤ Usize.max := by scalar_tac
     simp only [lastScalar, bytes, alloc.vec.Vec.deref]
     unfold module.utf8_sequence_len module.utf8_cont
+    step
+    simp_all
     iterate 8
       all_goals step*
       all_goals simp_all [core.result.Result.Insts.CoreOpsTry.branch,
@@ -36,6 +38,8 @@ theorem surrogate_sequence_rejected : module.utf8_sequence_len surrogate 0#usize
     have hmax : 4 ≤ Usize.max := by scalar_tac
     simp only [surrogate, bytes, alloc.vec.Vec.deref]
     unfold module.utf8_sequence_len module.utf8_cont
+    step
+    simp_all
     iterate 4
       all_goals step*
       all_goals simp_all [core.result.Result.Insts.CoreOpsTry.branch,
@@ -49,6 +53,8 @@ theorem beyond_unicode_sequence_rejected : module.utf8_sequence_len beyondUnicod
     have hmax : 4 ≤ Usize.max := by scalar_tac
     simp only [beyondUnicode, bytes, alloc.vec.Vec.deref]
     unfold module.utf8_sequence_len module.utf8_cont
+    step
+    simp_all
     iterate 4
       all_goals step*
       all_goals simp_all [core.result.Result.Insts.CoreOpsTry.branch,

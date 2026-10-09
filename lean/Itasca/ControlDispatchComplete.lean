@@ -61,7 +61,7 @@ theorem step_br_if {st : code.OpIterState} (f : Frame st) (data : Slice U8)
         (by simpa [f.poly_eq, htypes, List.append_assoc] using ht))
     dsimp only at hc hp hv hl ht'
     refine ⟨s, ?_, hp, f.output_of_same_ctrls hc hv (by simpa [htypes] using ht'), ?_⟩
-    · simp [code.step, global_simps, hr, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
+    · simp [global_simps, hr, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
         code.OpVisitor.on_br_if.default]
     · simp only [hv, f.vals, List.length_append]
       omega
@@ -83,7 +83,7 @@ theorem step_return {st : code.OpIterState} (f : Frame st) (data : Slice U8)
         f.ctrls f.vals f.base (by simpa [htypes, List.append_assoc] using ht))
     dsimp only at hv hc hp
     refine ⟨s, ?_, hp.trans hbytes.empty.symm, f.output_unreachable hc hv _, ?_⟩
-    · simp [code.step, global_simps, hr, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
+    · simp [global_simps, hr, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
         code.OpVisitor.on_return.default]
     · simp only [hv, f.vals, List.length_append]
       omega

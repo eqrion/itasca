@@ -172,7 +172,7 @@ private theorem dispatch_block {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_BLOCK v =
       CoreVisitor.run (code.read_block st data) visitor.on_block v := by
-  simp [code.step, global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
+  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
   funext x
@@ -185,7 +185,7 @@ private theorem dispatch_loop {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_LOOP v =
       CoreVisitor.run (code.read_loop st data) visitor.on_loop v := by
-  simp [code.step, global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
+  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
   funext x
@@ -198,7 +198,7 @@ private theorem dispatch_if {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_IF v =
       CoreVisitor.run (code.read_if st data) visitor.on_if v := by
-  simp [code.step, global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
+  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
   funext x
@@ -211,7 +211,7 @@ private theorem dispatch_else {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_ELSE v =
       CoreVisitor.run (code.read_else st) visitor.on_else v := by
-  simp [code.step, global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
+  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
   funext x
@@ -224,7 +224,7 @@ private theorem dispatch_end {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_END v =
       CoreVisitor.run (code.read_end st) (fun v s arg => visitor.on_end v s arg.1 arg.2) v := by
-  simp [code.step, global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
+  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
   funext x
@@ -237,7 +237,7 @@ private theorem dispatch_br {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_BR v =
       CoreVisitor.run (code.read_br st data) (fun v s arg => visitor.on_br v s arg.1 arg.2) v := by
-  simp [code.step, global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
+  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
   funext x
@@ -250,7 +250,7 @@ private theorem dispatch_br_if {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_BR_IF v =
       CoreVisitor.run (code.read_br_if st data) (fun v s arg => visitor.on_br_if v s arg.1 arg.2) v := by
-  simp [code.step, global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
+  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
   funext x
@@ -263,7 +263,7 @@ private theorem dispatch_return {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_RETURN v =
       CoreVisitor.run (code.read_return st ctx) (fun v s _ => visitor.on_return v s) v := by
-  simp [code.step, global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
+  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
   funext x
@@ -276,7 +276,7 @@ private theorem dispatch_i32_const {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_I32_CONST v =
       CoreVisitor.run (code.read_i32_const st data) visitor.on_i32_const v := by
-  simp [code.step, global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
+  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
   funext x
@@ -289,7 +289,7 @@ private theorem dispatch_drop {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_DROP v =
       CoreVisitor.run (code.read_drop st) visitor.on_drop v := by
-  simp [code.step, global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
+  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
   funext x
@@ -302,7 +302,7 @@ private theorem dispatch_unreachable {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_UNREACHABLE v =
       CoreVisitor.run (code.read_unreachable st) (fun v s _ => visitor.on_unreachable v s) v := by
-  simp [code.step, global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
+  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
   funext x
@@ -315,7 +315,7 @@ private theorem dispatch_i64_const {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_I64_CONST v =
       CoreVisitor.run (code.read_i64_const st data) visitor.on_i64_const v := by
-  simp [code.step, global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
+  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
   funext x
@@ -328,7 +328,7 @@ private theorem dispatch_f32_const {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_F32_CONST v =
       CoreVisitor.run (code.read_f32_const st data) visitor.on_f32_const v := by
-  simp [code.step, global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
+  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
   funext x
@@ -341,7 +341,7 @@ private theorem dispatch_f64_const {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_F64_CONST v =
       CoreVisitor.run (code.read_f64_const st data) visitor.on_f64_const v := by
-  simp [code.step, global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
+  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
   funext x
@@ -353,7 +353,7 @@ private theorem dispatch_nop {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_NOP v =
       CoreVisitor.run (.ok (.Ok (), st)) (fun v st (_ : Unit) => visitor.on_nop v st) v := by
-  simp [code.step, global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
+  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
 
@@ -410,9 +410,11 @@ theorem code.step_br_table.accepted_lift {V : Type} (visitor : code.OpVisitor V)
   subst s
   obtain ⟨v1, hlift⟩ := code.read_br_table.accepted_lift visitor haccept st data v args st' hr
   obtain ⟨v2, hv⟩ := haccept.on_br_table v1 st' args.1 args.2
-  exact ⟨v2, by simp [code.step_br_table.dispatch, hlift, CoreVisitor.run, hv, code.visit,
-    core.result.Result.Insts.CoreOpsTry.branch]⟩
+  refine ⟨v2, ?_⟩
+  rw [code.step_br_table.dispatch]
+  simp [hlift, CoreVisitor.run, hv, code.visit, core.result.Result.Insts.CoreOpsTry.branch]
 
+set_option maxHeartbeats 1000000 in
 /-- Successful validation transfers to any visitor whose hooks always accept,
 with precisely the same validator state and an unconstrained new visitor state. -/
 theorem code.step.accepted_lift {V : Type} (visitor : code.OpVisitor V)
@@ -582,7 +584,14 @@ theorem code.step.accepted_lift {V : Type} (visitor : code.OpVisitor V)
       rw [code.step_memory_grow.dispatch visitor st data env ctx v]
       exact CoreVisitor.run.accepted_lift _ _ _ () v st' () h
         (fun _ => haccept.on_memory_grow v st')
-    simp only [code.step, h_nop, h_unreachable, h_i32_const, h_i64_const, h_f32_const, h_f64_const, h_drop, h_select, h_block, h_loop, h_if, h_else, h_end, h_br, h_br_if, h_br_table, h_return, h_call, h_call_indirect, h_local_get, h_local_set, h_local_tee, h_global_get, h_global_set, if_false] at h ⊢
+    have heqval (a b : U8) : a = b ↔ a.val = b.val :=
+      ⟨fun h => congrArg UScalar.val h, UScalar.eq_of_val_eq⟩
+    have hdispatch {W : Type} (hooks : code.OpVisitor W) (w : W) :
+        code.step hooks st data env ctx opcode w = code.step_memory hooks st data env opcode w := by
+      unfold code.step
+      split <;> simp_all [global_simps, heqval, U8.ofNat, UScalar.ofNat, UScalar.ofNatCore]
+    rw [hdispatch _ ()] at h
+    rw [hdispatch visitor v]
     rw [VisitorComplete.memory_fallback _ st data env opcode () hm h_memory_size h_memory_grow] at h
     rw [VisitorComplete.memory_fallback visitor st data env opcode v hm h_memory_size h_memory_grow]
     exact code.step_numeric.accepted_lift visitor haccept st st' opcode v h

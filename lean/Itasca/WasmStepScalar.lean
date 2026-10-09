@@ -280,6 +280,6 @@ theorem code.step.reserved {V : Type} (visitor : code.OpVisitor V)
     (28 ≤ n ∧ n ≤ 31) ∨ (37 ≤ n ∧ n ≤ 39) at hreserved
   rcases hreserved with ⟨hl, hu⟩ | ⟨hl, hu⟩ | ⟨hl, hu⟩ | ⟨hl, hu⟩ <;>
     interval_cases n <;>
-      simp [code.step, code.step_memory, code.step_numeric, code.convert_types, code.binary_types, global_simps, opcode_eq, UScalar.val]
+      simp [code.step_numeric, global_simps, opcode_eq, UScalar.val]
 
 end Itasca

@@ -327,22 +327,14 @@ pub const OP_F64_REINTERPRET_I64: u8 = 0xbf;
 
 fn read_block_type(data: &[u8], pos: usize) -> Result<(BlockType, usize)> {
     let (b, p) = read_byte(data, pos)?;
-    if b == 0x40 {
-        return Ok((BlockType::Empty, p));
+    match b {
+        0x40 => Ok((BlockType::Empty, p)),
+        0x7f => Ok((BlockType::Value(ValueType::I32), p)),
+        0x7e => Ok((BlockType::Value(ValueType::I64), p)),
+        0x7d => Ok((BlockType::Value(ValueType::F32), p)),
+        0x7c => Ok((BlockType::Value(ValueType::F64), p)),
+        _ => Err(OpError::InvalidBlockType),
     }
-    if b == 0x7f {
-        return Ok((BlockType::Value(ValueType::I32), p));
-    }
-    if b == 0x7e {
-        return Ok((BlockType::Value(ValueType::I64), p));
-    }
-    if b == 0x7d {
-        return Ok((BlockType::Value(ValueType::F32), p));
-    }
-    if b == 0x7c {
-        return Ok((BlockType::Value(ValueType::F64), p));
-    }
-    Err(OpError::InvalidBlockType)
 }
 
 // --- Operand and control stack ---
@@ -1054,85 +1046,37 @@ fn check_memory_and_alignment(env: &Env, memarg: &MemArg, natural_align: u32) ->
 /// Grouped by shared `(from, to)` pair rather than one arm per opcode. Every
 /// opcode still appears exactly once, under the pair it has.
 pub(crate) fn convert_types(opcode: u8) -> Option<(ValueType, ValueType)> {
-    if opcode == OP_I32_EQZ
-        || opcode == OP_I32_CLZ
-        || opcode == OP_I32_CTZ
-        || opcode == OP_I32_POPCNT
-    {
-        return Some((ValueType::I32, ValueType::I32));
+    match opcode {
+        OP_I32_EQZ | OP_I32_CLZ | OP_I32_CTZ | OP_I32_POPCNT => {
+            Some((ValueType::I32, ValueType::I32))
+        }
+        OP_I64_CLZ | OP_I64_CTZ | OP_I64_POPCNT => Some((ValueType::I64, ValueType::I64)),
+        OP_F32_ABS | OP_F32_NEG | OP_F32_CEIL | OP_F32_FLOOR | OP_F32_TRUNC | OP_F32_NEAREST
+        | OP_F32_SQRT => Some((ValueType::F32, ValueType::F32)),
+        OP_F64_ABS | OP_F64_NEG | OP_F64_CEIL | OP_F64_FLOOR | OP_F64_TRUNC | OP_F64_NEAREST
+        | OP_F64_SQRT => Some((ValueType::F64, ValueType::F64)),
+        OP_I64_EQZ | OP_I32_WRAP_I64 => Some((ValueType::I64, ValueType::I32)),
+        OP_I32_TRUNC_F32_S | OP_I32_TRUNC_F32_U | OP_I32_REINTERPRET_F32 => {
+            Some((ValueType::F32, ValueType::I32))
+        }
+        OP_I32_TRUNC_F64_S | OP_I32_TRUNC_F64_U => Some((ValueType::F64, ValueType::I32)),
+        OP_I64_EXTEND_I32_S | OP_I64_EXTEND_I32_U => Some((ValueType::I32, ValueType::I64)),
+        OP_I64_TRUNC_F32_S | OP_I64_TRUNC_F32_U => Some((ValueType::F32, ValueType::I64)),
+        OP_I64_TRUNC_F64_S | OP_I64_TRUNC_F64_U | OP_I64_REINTERPRET_F64 => {
+            Some((ValueType::F64, ValueType::I64))
+        }
+        OP_F32_CONVERT_I32_S | OP_F32_CONVERT_I32_U | OP_F32_REINTERPRET_I32 => {
+            Some((ValueType::I32, ValueType::F32))
+        }
+        OP_F32_CONVERT_I64_S | OP_F32_CONVERT_I64_U => Some((ValueType::I64, ValueType::F32)),
+        OP_F32_DEMOTE_F64 => Some((ValueType::F64, ValueType::F32)),
+        OP_F64_CONVERT_I32_S | OP_F64_CONVERT_I32_U => Some((ValueType::I32, ValueType::F64)),
+        OP_F64_CONVERT_I64_S | OP_F64_CONVERT_I64_U | OP_F64_REINTERPRET_I64 => {
+            Some((ValueType::I64, ValueType::F64))
+        }
+        OP_F64_PROMOTE_F32 => Some((ValueType::F32, ValueType::F64)),
+        _ => None,
     }
-    if opcode == OP_I64_CLZ || opcode == OP_I64_CTZ || opcode == OP_I64_POPCNT {
-        return Some((ValueType::I64, ValueType::I64));
-    }
-    if opcode == OP_F32_ABS
-        || opcode == OP_F32_NEG
-        || opcode == OP_F32_CEIL
-        || opcode == OP_F32_FLOOR
-        || opcode == OP_F32_TRUNC
-        || opcode == OP_F32_NEAREST
-        || opcode == OP_F32_SQRT
-    {
-        return Some((ValueType::F32, ValueType::F32));
-    }
-    if opcode == OP_F64_ABS
-        || opcode == OP_F64_NEG
-        || opcode == OP_F64_CEIL
-        || opcode == OP_F64_FLOOR
-        || opcode == OP_F64_TRUNC
-        || opcode == OP_F64_NEAREST
-        || opcode == OP_F64_SQRT
-    {
-        return Some((ValueType::F64, ValueType::F64));
-    }
-    if opcode == OP_I64_EQZ || opcode == OP_I32_WRAP_I64 {
-        return Some((ValueType::I64, ValueType::I32));
-    }
-    if opcode == OP_I32_TRUNC_F32_S
-        || opcode == OP_I32_TRUNC_F32_U
-        || opcode == OP_I32_REINTERPRET_F32
-    {
-        return Some((ValueType::F32, ValueType::I32));
-    }
-    if opcode == OP_I32_TRUNC_F64_S || opcode == OP_I32_TRUNC_F64_U {
-        return Some((ValueType::F64, ValueType::I32));
-    }
-    if opcode == OP_I64_EXTEND_I32_S || opcode == OP_I64_EXTEND_I32_U {
-        return Some((ValueType::I32, ValueType::I64));
-    }
-    if opcode == OP_I64_TRUNC_F32_S || opcode == OP_I64_TRUNC_F32_U {
-        return Some((ValueType::F32, ValueType::I64));
-    }
-    if opcode == OP_I64_TRUNC_F64_S
-        || opcode == OP_I64_TRUNC_F64_U
-        || opcode == OP_I64_REINTERPRET_F64
-    {
-        return Some((ValueType::F64, ValueType::I64));
-    }
-    if opcode == OP_F32_CONVERT_I32_S
-        || opcode == OP_F32_CONVERT_I32_U
-        || opcode == OP_F32_REINTERPRET_I32
-    {
-        return Some((ValueType::I32, ValueType::F32));
-    }
-    if opcode == OP_F32_CONVERT_I64_S || opcode == OP_F32_CONVERT_I64_U {
-        return Some((ValueType::I64, ValueType::F32));
-    }
-    if opcode == OP_F32_DEMOTE_F64 {
-        return Some((ValueType::F64, ValueType::F32));
-    }
-    if opcode == OP_F64_CONVERT_I32_S || opcode == OP_F64_CONVERT_I32_U {
-        return Some((ValueType::I32, ValueType::F64));
-    }
-    if opcode == OP_F64_CONVERT_I64_S
-        || opcode == OP_F64_CONVERT_I64_U
-        || opcode == OP_F64_REINTERPRET_I64
-    {
-        return Some((ValueType::I64, ValueType::F64));
-    }
-    if opcode == OP_F64_PROMOTE_F32 {
-        return Some((ValueType::F32, ValueType::F64));
-    }
-    None
 }
 
 /// `[ty ty] -> [result]`: the binary operators (`result == ty`) and the
@@ -1142,104 +1086,31 @@ pub(crate) fn convert_types(opcode: u8) -> Option<(ValueType, ValueType)> {
 /// and `0x61`-`0x66` comparisons, `0x6A`-`0x78`, `0x7C`-`0x8A`, `0x92`-`0x98`
 /// and `0xA0`-`0xA6` binary.
 pub(crate) fn binary_types(opcode: u8) -> Option<(ValueType, ValueType)> {
-    if opcode == OP_I32_EQ
-        || opcode == OP_I32_NE
-        || opcode == OP_I32_LT_S
-        || opcode == OP_I32_LT_U
-        || opcode == OP_I32_GT_S
-        || opcode == OP_I32_GT_U
-        || opcode == OP_I32_LE_S
-        || opcode == OP_I32_LE_U
-        || opcode == OP_I32_GE_S
-        || opcode == OP_I32_GE_U
-        || opcode == OP_I32_ADD
-        || opcode == OP_I32_SUB
-        || opcode == OP_I32_MUL
-        || opcode == OP_I32_DIV_S
-        || opcode == OP_I32_DIV_U
-        || opcode == OP_I32_REM_S
-        || opcode == OP_I32_REM_U
-        || opcode == OP_I32_AND
-        || opcode == OP_I32_OR
-        || opcode == OP_I32_XOR
-        || opcode == OP_I32_SHL
-        || opcode == OP_I32_SHR_S
-        || opcode == OP_I32_SHR_U
-        || opcode == OP_I32_ROTL
-        || opcode == OP_I32_ROTR
-    {
-        return Some((ValueType::I32, ValueType::I32));
+    match opcode {
+        OP_I32_EQ | OP_I32_NE | OP_I32_LT_S | OP_I32_LT_U | OP_I32_GT_S | OP_I32_GT_U
+        | OP_I32_LE_S | OP_I32_LE_U | OP_I32_GE_S | OP_I32_GE_U | OP_I32_ADD | OP_I32_SUB
+        | OP_I32_MUL | OP_I32_DIV_S | OP_I32_DIV_U | OP_I32_REM_S | OP_I32_REM_U | OP_I32_AND
+        | OP_I32_OR | OP_I32_XOR | OP_I32_SHL | OP_I32_SHR_S | OP_I32_SHR_U | OP_I32_ROTL
+        | OP_I32_ROTR => Some((ValueType::I32, ValueType::I32)),
+        OP_I64_EQ | OP_I64_NE | OP_I64_LT_S | OP_I64_LT_U | OP_I64_GT_S | OP_I64_GT_U
+        | OP_I64_LE_S | OP_I64_LE_U | OP_I64_GE_S | OP_I64_GE_U => {
+            Some((ValueType::I64, ValueType::I32))
+        }
+        OP_F32_EQ | OP_F32_NE | OP_F32_LT | OP_F32_GT | OP_F32_LE | OP_F32_GE => {
+            Some((ValueType::F32, ValueType::I32))
+        }
+        OP_F64_EQ | OP_F64_NE | OP_F64_LT | OP_F64_GT | OP_F64_LE | OP_F64_GE => {
+            Some((ValueType::F64, ValueType::I32))
+        }
+        OP_I64_ADD | OP_I64_SUB | OP_I64_MUL | OP_I64_DIV_S | OP_I64_DIV_U | OP_I64_REM_S
+        | OP_I64_REM_U | OP_I64_AND | OP_I64_OR | OP_I64_XOR | OP_I64_SHL | OP_I64_SHR_S
+        | OP_I64_SHR_U | OP_I64_ROTL | OP_I64_ROTR => Some((ValueType::I64, ValueType::I64)),
+        OP_F32_ADD | OP_F32_SUB | OP_F32_MUL | OP_F32_DIV | OP_F32_MIN | OP_F32_MAX
+        | OP_F32_COPYSIGN => Some((ValueType::F32, ValueType::F32)),
+        OP_F64_ADD | OP_F64_SUB | OP_F64_MUL | OP_F64_DIV | OP_F64_MIN | OP_F64_MAX
+        | OP_F64_COPYSIGN => Some((ValueType::F64, ValueType::F64)),
+        _ => None,
     }
-    if opcode == OP_I64_EQ
-        || opcode == OP_I64_NE
-        || opcode == OP_I64_LT_S
-        || opcode == OP_I64_LT_U
-        || opcode == OP_I64_GT_S
-        || opcode == OP_I64_GT_U
-        || opcode == OP_I64_LE_S
-        || opcode == OP_I64_LE_U
-        || opcode == OP_I64_GE_S
-        || opcode == OP_I64_GE_U
-    {
-        return Some((ValueType::I64, ValueType::I32));
-    }
-    if opcode == OP_F32_EQ
-        || opcode == OP_F32_NE
-        || opcode == OP_F32_LT
-        || opcode == OP_F32_GT
-        || opcode == OP_F32_LE
-        || opcode == OP_F32_GE
-    {
-        return Some((ValueType::F32, ValueType::I32));
-    }
-    if opcode == OP_F64_EQ
-        || opcode == OP_F64_NE
-        || opcode == OP_F64_LT
-        || opcode == OP_F64_GT
-        || opcode == OP_F64_LE
-        || opcode == OP_F64_GE
-    {
-        return Some((ValueType::F64, ValueType::I32));
-    }
-    if opcode == OP_I64_ADD
-        || opcode == OP_I64_SUB
-        || opcode == OP_I64_MUL
-        || opcode == OP_I64_DIV_S
-        || opcode == OP_I64_DIV_U
-        || opcode == OP_I64_REM_S
-        || opcode == OP_I64_REM_U
-        || opcode == OP_I64_AND
-        || opcode == OP_I64_OR
-        || opcode == OP_I64_XOR
-        || opcode == OP_I64_SHL
-        || opcode == OP_I64_SHR_S
-        || opcode == OP_I64_SHR_U
-        || opcode == OP_I64_ROTL
-        || opcode == OP_I64_ROTR
-    {
-        return Some((ValueType::I64, ValueType::I64));
-    }
-    if opcode == OP_F32_ADD
-        || opcode == OP_F32_SUB
-        || opcode == OP_F32_MUL
-        || opcode == OP_F32_DIV
-        || opcode == OP_F32_MIN
-        || opcode == OP_F32_MAX
-        || opcode == OP_F32_COPYSIGN
-    {
-        return Some((ValueType::F32, ValueType::F32));
-    }
-    if opcode == OP_F64_ADD
-        || opcode == OP_F64_SUB
-        || opcode == OP_F64_MUL
-        || opcode == OP_F64_DIV
-        || opcode == OP_F64_MIN
-        || opcode == OP_F64_MAX
-        || opcode == OP_F64_COPYSIGN
-    {
-        return Some((ValueType::F64, ValueType::F64));
-    }
-    None
 }
 
 // --- Dispatch ---
@@ -1257,126 +1128,128 @@ fn step<V: OpVisitor>(
     opcode: u8,
     v: &mut V,
 ) -> Result<()> {
-    if opcode == OP_NOP {
-        visit(v.on_nop(st))?;
-        return Ok(());
+    match opcode {
+        OP_NOP => {
+            visit(v.on_nop(st))?;
+            Ok(())
+        }
+        OP_UNREACHABLE => {
+            read_unreachable(st)?;
+            visit(v.on_unreachable(st))?;
+            Ok(())
+        }
+        OP_I32_CONST => {
+            let imm = read_i32_const(st, data)?;
+            visit(v.on_i32_const(st, imm))?;
+            Ok(())
+        }
+        OP_I64_CONST => {
+            let imm = read_i64_const(st, data)?;
+            visit(v.on_i64_const(st, imm))?;
+            Ok(())
+        }
+        OP_F32_CONST => {
+            let bits = read_f32_const(st, data)?;
+            visit(v.on_f32_const(st, bits))?;
+            Ok(())
+        }
+        OP_F64_CONST => {
+            let bits = read_f64_const(st, data)?;
+            visit(v.on_f64_const(st, bits))?;
+            Ok(())
+        }
+        OP_DROP => {
+            let ty = read_drop(st)?;
+            visit(v.on_drop(st, ty))?;
+            Ok(())
+        }
+        OP_SELECT => {
+            let ty = read_select(st)?;
+            visit(v.on_select(st, ty))?;
+            Ok(())
+        }
+        OP_BLOCK => {
+            let bt = read_block(st, data)?;
+            visit(v.on_block(st, bt))?;
+            Ok(())
+        }
+        OP_LOOP => {
+            let bt = read_loop(st, data)?;
+            visit(v.on_loop(st, bt))?;
+            Ok(())
+        }
+        OP_IF => {
+            let bt = read_if(st, data)?;
+            visit(v.on_if(st, bt))?;
+            Ok(())
+        }
+        OP_ELSE => {
+            let bt = read_else(st)?;
+            visit(v.on_else(st, bt))?;
+            Ok(())
+        }
+        OP_END => {
+            let (kind, bt) = read_end(st)?;
+            visit(v.on_end(st, kind, bt))?;
+            Ok(())
+        }
+        OP_BR => {
+            let (depth, bt) = read_br(st, data)?;
+            visit(v.on_br(st, depth, bt))?;
+            Ok(())
+        }
+        OP_BR_IF => {
+            let (depth, bt) = read_br_if(st, data)?;
+            visit(v.on_br_if(st, depth, bt))?;
+            Ok(())
+        }
+        OP_BR_TABLE => {
+            let (default, common) = read_br_table(st, data, v)?;
+            visit(v.on_br_table(st, default, common))?;
+            Ok(())
+        }
+        OP_RETURN => {
+            read_return(st, ctx)?;
+            visit(v.on_return(st))?;
+            Ok(())
+        }
+        OP_CALL => {
+            let idx = read_call(st, data, env)?;
+            visit(v.on_call(st, idx))?;
+            Ok(())
+        }
+        OP_CALL_INDIRECT => {
+            let idx = read_call_indirect(st, data, env)?;
+            visit(v.on_call_indirect(st, idx))?;
+            Ok(())
+        }
+        OP_LOCAL_GET => {
+            let idx = read_local_get(st, data, ctx)?;
+            visit(v.on_local_get(st, idx))?;
+            Ok(())
+        }
+        OP_LOCAL_SET => {
+            let idx = read_local_set(st, data, ctx)?;
+            visit(v.on_local_set(st, idx))?;
+            Ok(())
+        }
+        OP_LOCAL_TEE => {
+            let idx = read_local_tee(st, data, ctx)?;
+            visit(v.on_local_tee(st, idx))?;
+            Ok(())
+        }
+        OP_GLOBAL_GET => {
+            let idx = read_global_get(st, data, env)?;
+            visit(v.on_global_get(st, idx))?;
+            Ok(())
+        }
+        OP_GLOBAL_SET => {
+            let idx = read_global_set(st, data, env)?;
+            visit(v.on_global_set(st, idx))?;
+            Ok(())
+        }
+        _ => step_memory(st, data, env, opcode, v),
     }
-    if opcode == OP_UNREACHABLE {
-        read_unreachable(st)?;
-        visit(v.on_unreachable(st))?;
-        return Ok(());
-    }
-    if opcode == OP_I32_CONST {
-        let imm = read_i32_const(st, data)?;
-        visit(v.on_i32_const(st, imm))?;
-        return Ok(());
-    }
-    if opcode == OP_I64_CONST {
-        let imm = read_i64_const(st, data)?;
-        visit(v.on_i64_const(st, imm))?;
-        return Ok(());
-    }
-    if opcode == OP_F32_CONST {
-        let bits = read_f32_const(st, data)?;
-        visit(v.on_f32_const(st, bits))?;
-        return Ok(());
-    }
-    if opcode == OP_F64_CONST {
-        let bits = read_f64_const(st, data)?;
-        visit(v.on_f64_const(st, bits))?;
-        return Ok(());
-    }
-    if opcode == OP_DROP {
-        let ty = read_drop(st)?;
-        visit(v.on_drop(st, ty))?;
-        return Ok(());
-    }
-    if opcode == OP_SELECT {
-        let ty = read_select(st)?;
-        visit(v.on_select(st, ty))?;
-        return Ok(());
-    }
-    if opcode == OP_BLOCK {
-        let bt = read_block(st, data)?;
-        visit(v.on_block(st, bt))?;
-        return Ok(());
-    }
-    if opcode == OP_LOOP {
-        let bt = read_loop(st, data)?;
-        visit(v.on_loop(st, bt))?;
-        return Ok(());
-    }
-    if opcode == OP_IF {
-        let bt = read_if(st, data)?;
-        visit(v.on_if(st, bt))?;
-        return Ok(());
-    }
-    if opcode == OP_ELSE {
-        let bt = read_else(st)?;
-        visit(v.on_else(st, bt))?;
-        return Ok(());
-    }
-    if opcode == OP_END {
-        let (kind, bt) = read_end(st)?;
-        visit(v.on_end(st, kind, bt))?;
-        return Ok(());
-    }
-    if opcode == OP_BR {
-        let (depth, bt) = read_br(st, data)?;
-        visit(v.on_br(st, depth, bt))?;
-        return Ok(());
-    }
-    if opcode == OP_BR_IF {
-        let (depth, bt) = read_br_if(st, data)?;
-        visit(v.on_br_if(st, depth, bt))?;
-        return Ok(());
-    }
-    if opcode == OP_BR_TABLE {
-        let (default, common) = read_br_table(st, data, v)?;
-        visit(v.on_br_table(st, default, common))?;
-        return Ok(());
-    }
-    if opcode == OP_RETURN {
-        read_return(st, ctx)?;
-        visit(v.on_return(st))?;
-        return Ok(());
-    }
-    if opcode == OP_CALL {
-        let idx = read_call(st, data, env)?;
-        visit(v.on_call(st, idx))?;
-        return Ok(());
-    }
-    if opcode == OP_CALL_INDIRECT {
-        let idx = read_call_indirect(st, data, env)?;
-        visit(v.on_call_indirect(st, idx))?;
-        return Ok(());
-    }
-    if opcode == OP_LOCAL_GET {
-        let idx = read_local_get(st, data, ctx)?;
-        visit(v.on_local_get(st, idx))?;
-        return Ok(());
-    }
-    if opcode == OP_LOCAL_SET {
-        let idx = read_local_set(st, data, ctx)?;
-        visit(v.on_local_set(st, idx))?;
-        return Ok(());
-    }
-    if opcode == OP_LOCAL_TEE {
-        let idx = read_local_tee(st, data, ctx)?;
-        visit(v.on_local_tee(st, idx))?;
-        return Ok(());
-    }
-    if opcode == OP_GLOBAL_GET {
-        let idx = read_global_get(st, data, env)?;
-        visit(v.on_global_get(st, idx))?;
-        return Ok(());
-    }
-    if opcode == OP_GLOBAL_SET {
-        let idx = read_global_set(st, data, env)?;
-        visit(v.on_global_set(st, idx))?;
-        return Ok(());
-    }
-    step_memory(st, data, env, opcode, v)
 }
 
 fn step_memory<V: OpVisitor>(
@@ -1386,132 +1259,109 @@ fn step_memory<V: OpVisitor>(
     opcode: u8,
     v: &mut V,
 ) -> Result<()> {
-    if opcode == OP_I32_LOAD {
-        let memarg = read_load(st, data, env, ValueType::I32, 2)?;
-        visit(visit_memory(v, st, opcode, memarg))?;
-        return Ok(());
+    match opcode {
+        OP_I32_LOAD => {
+            let memarg = read_load(st, data, env, ValueType::I32, 2)?;
+            visit(visit_memory(v, st, opcode, memarg))?;
+            Ok(())
+        }
+        OP_I64_LOAD => {
+            let memarg = read_load(st, data, env, ValueType::I64, 3)?;
+            visit(visit_memory(v, st, opcode, memarg))?;
+            Ok(())
+        }
+        OP_F32_LOAD => {
+            let memarg = read_load(st, data, env, ValueType::F32, 2)?;
+            visit(visit_memory(v, st, opcode, memarg))?;
+            Ok(())
+        }
+        OP_F64_LOAD => {
+            let memarg = read_load(st, data, env, ValueType::F64, 3)?;
+            visit(visit_memory(v, st, opcode, memarg))?;
+            Ok(())
+        }
+        OP_I32_LOAD8_S | OP_I32_LOAD8_U => {
+            let memarg = read_load(st, data, env, ValueType::I32, 0)?;
+            visit(visit_memory(v, st, opcode, memarg))?;
+            Ok(())
+        }
+        OP_I32_LOAD16_S | OP_I32_LOAD16_U => {
+            let memarg = read_load(st, data, env, ValueType::I32, 1)?;
+            visit(visit_memory(v, st, opcode, memarg))?;
+            Ok(())
+        }
+        OP_I64_LOAD8_S | OP_I64_LOAD8_U => {
+            let memarg = read_load(st, data, env, ValueType::I64, 0)?;
+            visit(visit_memory(v, st, opcode, memarg))?;
+            Ok(())
+        }
+        OP_I64_LOAD16_S | OP_I64_LOAD16_U => {
+            let memarg = read_load(st, data, env, ValueType::I64, 1)?;
+            visit(visit_memory(v, st, opcode, memarg))?;
+            Ok(())
+        }
+        OP_I64_LOAD32_S | OP_I64_LOAD32_U => {
+            let memarg = read_load(st, data, env, ValueType::I64, 2)?;
+            visit(visit_memory(v, st, opcode, memarg))?;
+            Ok(())
+        }
+        OP_I32_STORE => {
+            let memarg = read_store(st, data, env, ValueType::I32, 2)?;
+            visit(visit_memory(v, st, opcode, memarg))?;
+            Ok(())
+        }
+        OP_I64_STORE => {
+            let memarg = read_store(st, data, env, ValueType::I64, 3)?;
+            visit(visit_memory(v, st, opcode, memarg))?;
+            Ok(())
+        }
+        OP_F32_STORE => {
+            let memarg = read_store(st, data, env, ValueType::F32, 2)?;
+            visit(visit_memory(v, st, opcode, memarg))?;
+            Ok(())
+        }
+        OP_F64_STORE => {
+            let memarg = read_store(st, data, env, ValueType::F64, 3)?;
+            visit(visit_memory(v, st, opcode, memarg))?;
+            Ok(())
+        }
+        OP_I32_STORE8 => {
+            let memarg = read_store(st, data, env, ValueType::I32, 0)?;
+            visit(visit_memory(v, st, opcode, memarg))?;
+            Ok(())
+        }
+        OP_I32_STORE16 => {
+            let memarg = read_store(st, data, env, ValueType::I32, 1)?;
+            visit(visit_memory(v, st, opcode, memarg))?;
+            Ok(())
+        }
+        OP_I64_STORE8 => {
+            let memarg = read_store(st, data, env, ValueType::I64, 0)?;
+            visit(visit_memory(v, st, opcode, memarg))?;
+            Ok(())
+        }
+        OP_I64_STORE16 => {
+            let memarg = read_store(st, data, env, ValueType::I64, 1)?;
+            visit(visit_memory(v, st, opcode, memarg))?;
+            Ok(())
+        }
+        OP_I64_STORE32 => {
+            let memarg = read_store(st, data, env, ValueType::I64, 2)?;
+            visit(visit_memory(v, st, opcode, memarg))?;
+            Ok(())
+        }
+        OP_MEMORY_SIZE => {
+            read_memory_size(st, data, env)?;
+            visit(v.on_memory_size(st))?;
+            Ok(())
+        }
+        OP_MEMORY_GROW => {
+            read_memory_grow(st, data, env)?;
+            visit(v.on_memory_grow(st))?;
+            Ok(())
+        }
+        _ => step_numeric(st, opcode, v),
     }
-    if opcode == OP_I64_LOAD {
-        let memarg = read_load(st, data, env, ValueType::I64, 3)?;
-        visit(visit_memory(v, st, opcode, memarg))?;
-        return Ok(());
-    }
-    if opcode == OP_F32_LOAD {
-        let memarg = read_load(st, data, env, ValueType::F32, 2)?;
-        visit(visit_memory(v, st, opcode, memarg))?;
-        return Ok(());
-    }
-    if opcode == OP_F64_LOAD {
-        let memarg = read_load(st, data, env, ValueType::F64, 3)?;
-        visit(visit_memory(v, st, opcode, memarg))?;
-        return Ok(());
-    }
-    if opcode == OP_I32_LOAD8_S {
-        let memarg = read_load(st, data, env, ValueType::I32, 0)?;
-        visit(visit_memory(v, st, opcode, memarg))?;
-        return Ok(());
-    }
-    if opcode == OP_I32_LOAD8_U {
-        let memarg = read_load(st, data, env, ValueType::I32, 0)?;
-        visit(visit_memory(v, st, opcode, memarg))?;
-        return Ok(());
-    }
-    if opcode == OP_I32_LOAD16_S {
-        let memarg = read_load(st, data, env, ValueType::I32, 1)?;
-        visit(visit_memory(v, st, opcode, memarg))?;
-        return Ok(());
-    }
-    if opcode == OP_I32_LOAD16_U {
-        let memarg = read_load(st, data, env, ValueType::I32, 1)?;
-        visit(visit_memory(v, st, opcode, memarg))?;
-        return Ok(());
-    }
-    if opcode == OP_I64_LOAD8_S {
-        let memarg = read_load(st, data, env, ValueType::I64, 0)?;
-        visit(visit_memory(v, st, opcode, memarg))?;
-        return Ok(());
-    }
-    if opcode == OP_I64_LOAD8_U {
-        let memarg = read_load(st, data, env, ValueType::I64, 0)?;
-        visit(visit_memory(v, st, opcode, memarg))?;
-        return Ok(());
-    }
-    if opcode == OP_I64_LOAD16_S {
-        let memarg = read_load(st, data, env, ValueType::I64, 1)?;
-        visit(visit_memory(v, st, opcode, memarg))?;
-        return Ok(());
-    }
-    if opcode == OP_I64_LOAD16_U {
-        let memarg = read_load(st, data, env, ValueType::I64, 1)?;
-        visit(visit_memory(v, st, opcode, memarg))?;
-        return Ok(());
-    }
-    if opcode == OP_I64_LOAD32_S {
-        let memarg = read_load(st, data, env, ValueType::I64, 2)?;
-        visit(visit_memory(v, st, opcode, memarg))?;
-        return Ok(());
-    }
-    if opcode == OP_I64_LOAD32_U {
-        let memarg = read_load(st, data, env, ValueType::I64, 2)?;
-        visit(visit_memory(v, st, opcode, memarg))?;
-        return Ok(());
-    }
-    if opcode == OP_I32_STORE {
-        let memarg = read_store(st, data, env, ValueType::I32, 2)?;
-        visit(visit_memory(v, st, opcode, memarg))?;
-        return Ok(());
-    }
-    if opcode == OP_I64_STORE {
-        let memarg = read_store(st, data, env, ValueType::I64, 3)?;
-        visit(visit_memory(v, st, opcode, memarg))?;
-        return Ok(());
-    }
-    if opcode == OP_F32_STORE {
-        let memarg = read_store(st, data, env, ValueType::F32, 2)?;
-        visit(visit_memory(v, st, opcode, memarg))?;
-        return Ok(());
-    }
-    if opcode == OP_F64_STORE {
-        let memarg = read_store(st, data, env, ValueType::F64, 3)?;
-        visit(visit_memory(v, st, opcode, memarg))?;
-        return Ok(());
-    }
-    if opcode == OP_I32_STORE8 {
-        let memarg = read_store(st, data, env, ValueType::I32, 0)?;
-        visit(visit_memory(v, st, opcode, memarg))?;
-        return Ok(());
-    }
-    if opcode == OP_I32_STORE16 {
-        let memarg = read_store(st, data, env, ValueType::I32, 1)?;
-        visit(visit_memory(v, st, opcode, memarg))?;
-        return Ok(());
-    }
-    if opcode == OP_I64_STORE8 {
-        let memarg = read_store(st, data, env, ValueType::I64, 0)?;
-        visit(visit_memory(v, st, opcode, memarg))?;
-        return Ok(());
-    }
-    if opcode == OP_I64_STORE16 {
-        let memarg = read_store(st, data, env, ValueType::I64, 1)?;
-        visit(visit_memory(v, st, opcode, memarg))?;
-        return Ok(());
-    }
-    if opcode == OP_I64_STORE32 {
-        let memarg = read_store(st, data, env, ValueType::I64, 2)?;
-        visit(visit_memory(v, st, opcode, memarg))?;
-        return Ok(());
-    }
-    if opcode == OP_MEMORY_SIZE {
-        read_memory_size(st, data, env)?;
-        visit(v.on_memory_size(st))?;
-        return Ok(());
-    }
-    if opcode == OP_MEMORY_GROW {
-        read_memory_grow(st, data, env)?;
-        visit(v.on_memory_grow(st))?;
-        return Ok(());
-    }
-    step_numeric(st, opcode, v)
 }
 
 /// The numeric operators, dispatched through the opcode table rather than
@@ -1996,10 +1846,10 @@ macro_rules! numeric_fanout {
             st: &OpIterState,
             opcode: u8,
         ) -> VisitResult {
-            $(if opcode == $op {
-                return v.$hook(st);
-            })*
-            Ok(())
+            match opcode {
+                $($op => v.$hook(st),)*
+                _ => Ok(()),
+            }
         }
     };
 }
@@ -2013,10 +1863,10 @@ macro_rules! memory_fanout {
             opcode: u8,
             memarg: MemArg,
         ) -> VisitResult {
-            $(if opcode == $op {
-                return v.$hook(st, memarg);
-            })*
-            Ok(())
+            match opcode {
+                $($op => v.$hook(st, memarg),)*
+                _ => Ok(()),
+            }
         }
     };
 }

@@ -80,6 +80,7 @@ theorem code.read_block_type.invalid (data : Slice U8) (pos : Usize)
   simp only [Control.blockByte] at h0 h1 h2 h3 h4
   simp [code.read_block_type, hr, core.result.Result.Insts.CoreOpsTry.branch,
     h0, h1, h2, h3, h4]
+  split <;> simp_all [U8.ofNat, UScalar.ofNat, UScalar.ofNatCore]
 
 @[step]
 theorem code.read_block.spec (st : code.OpIterState) (data : Slice U8) (bt : code.BlockType)

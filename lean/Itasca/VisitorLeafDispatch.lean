@@ -11,7 +11,7 @@ theorem dispatch_nop {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_NOP v =
       CoreVisitor.run (.ok (.Ok (), st)) (fun v s _ => invoke visitor v (.op s (.nop))) v := by
-  simp [code.step, global_simps, CoreVisitor.run, invoke, core.result.Result.Insts.CoreOpsTry.branch,
+  simp [global_simps, CoreVisitor.run, invoke, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
 
@@ -19,7 +19,7 @@ theorem dispatch_unreachable {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_UNREACHABLE v =
       CoreVisitor.run (code.read_unreachable st) (fun v s _ => invoke visitor v (.op s (.unreachable))) v := by
-  simp [code.step, global_simps, CoreVisitor.run, invoke, core.result.Result.Insts.CoreOpsTry.branch,
+  simp [global_simps, CoreVisitor.run, invoke, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
   funext x
@@ -31,7 +31,7 @@ theorem dispatch_drop {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_DROP v =
       CoreVisitor.run (code.read_drop st) (fun v s a => invoke visitor v (.op s (.drop a))) v := by
-  simp [code.step, global_simps, CoreVisitor.run, invoke, core.result.Result.Insts.CoreOpsTry.branch,
+  simp [global_simps, CoreVisitor.run, invoke, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
   funext x
@@ -43,7 +43,7 @@ theorem dispatch_i32_const {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_I32_CONST v =
       CoreVisitor.run (code.read_i32_const st data) (fun v s a => invoke visitor v (.op s (.i32_const a))) v := by
-  simp [code.step, global_simps, CoreVisitor.run, invoke, core.result.Result.Insts.CoreOpsTry.branch,
+  simp [global_simps, CoreVisitor.run, invoke, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
   funext x
@@ -55,7 +55,7 @@ theorem dispatch_i64_const {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_I64_CONST v =
       CoreVisitor.run (code.read_i64_const st data) (fun v s a => invoke visitor v (.op s (.i64_const a))) v := by
-  simp [code.step, global_simps, CoreVisitor.run, invoke, core.result.Result.Insts.CoreOpsTry.branch,
+  simp [global_simps, CoreVisitor.run, invoke, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
   funext x
@@ -67,7 +67,7 @@ theorem dispatch_f32_const {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_F32_CONST v =
       CoreVisitor.run (code.read_f32_const st data) (fun v s a => invoke visitor v (.op s (.f32_const a))) v := by
-  simp [code.step, global_simps, CoreVisitor.run, invoke, core.result.Result.Insts.CoreOpsTry.branch,
+  simp [global_simps, CoreVisitor.run, invoke, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
   funext x
@@ -79,7 +79,7 @@ theorem dispatch_f64_const {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_F64_CONST v =
       CoreVisitor.run (code.read_f64_const st data) (fun v s a => invoke visitor v (.op s (.f64_const a))) v := by
-  simp [code.step, global_simps, CoreVisitor.run, invoke, core.result.Result.Insts.CoreOpsTry.branch,
+  simp [global_simps, CoreVisitor.run, invoke, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
   funext x

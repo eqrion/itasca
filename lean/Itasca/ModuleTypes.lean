@@ -55,6 +55,7 @@ theorem module.decode_limits.spec (data : Slice U8) (start : Usize) :
                   simpa [hone] using (At.byte hp).append
                     ((show Wasm.BytesAt data pos first middle from ⟨hs, hl, hb⟩).append ⟨hs', hl', hb'⟩)
         · simp [module.decode_limits, hr, hzero, hone, core.result.Result.Insts.CoreOpsTry.branch, ParserPost]
+          split <;> simp_all [U8.ofNat, UScalar.ofNat, UScalar.ofNatCore]
 
 @[step]
 theorem module.decode_global_type.spec (data : Slice U8) (start : Usize) :
@@ -84,6 +85,7 @@ theorem module.decode_global_type.spec (data : Slice U8) (start : Usize) :
             · simp [module.decode_global_type, ht, hr, hzero, hone, core.result.Result.Insts.CoreOpsTry.branch, ParserPost]
               exact ⟨_, rfl, by simpa [hone, mutByte] using hs.append (At.byte hp)⟩
             · simp [module.decode_global_type, ht, hr, hzero, hone, core.result.Result.Insts.CoreOpsTry.branch, ParserPost]
+              split <;> simp_all [U8.ofNat, UScalar.ofNat, UScalar.ofNatCore]
 
 @[step]
 theorem module.decode_mem_type.spec (data : Slice U8) (start : Usize) :

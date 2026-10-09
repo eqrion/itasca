@@ -161,7 +161,9 @@ theorem module.export_desc.spec (env : module.Env) (kind : U8) (idx : U32) :
       | .Ok desc => kind = descByte desc ∧ idx = descIndex desc ∧ ExportDescValid env desc
       | .Err _ => True ⦄ := by
   unfold module.export_desc
-  step* <;> simp_all [descByte, descIndex, ExportDescValid]
+  step
+  split <;> step* <;> simp_all [descByte, descIndex, ExportDescValid]
+  all_goals with_unfolding_all rfl
 
 /-- A successful start declaration names a nullary function with no result. -/
 @[step]

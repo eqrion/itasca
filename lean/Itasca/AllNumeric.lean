@@ -157,66 +157,17 @@ theorem code.step_numeric.prefix {V : Type} (visitor : code.OpVisitor V)
       simp [CoreVisitor.run, hr, hvst, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
+set_option maxRecDepth 4096 in
+set_option maxHeartbeats 1000000 in
 /-- All scalar numeric bytes bypass the nonnumeric and memory dispatchers. -/
 theorem code.step.numeric_dispatch {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (opcode : U8) (v : V) (hlow : 0x45 ≤ opcode.val) :
     code.step visitor st data env ctx opcode v = code.step_numeric visitor st opcode v := by
-  have hn (x : U8) (hx : x.val < 0x45) : opcode ≠ x := by
-    intro heq
-    have hv := congrArg UScalar.val heq
-    omega
-  unfold code.step
-  rw [if_neg (hn code.OP_NOP (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_UNREACHABLE (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_I32_CONST (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_I64_CONST (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_F32_CONST (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_F64_CONST (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_DROP (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_SELECT (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_BLOCK (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_LOOP (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_IF (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_ELSE (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_END (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_BR (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_BR_IF (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_BR_TABLE (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_RETURN (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_CALL (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_CALL_INDIRECT (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_LOCAL_GET (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_LOCAL_SET (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_LOCAL_TEE (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_GLOBAL_GET (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_GLOBAL_SET (by norm_num [global_simps]))]
-  unfold code.step_memory
-  rw [if_neg (hn code.OP_I32_LOAD (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_I64_LOAD (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_F32_LOAD (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_F64_LOAD (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_I32_LOAD8_S (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_I32_LOAD8_U (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_I32_LOAD16_S (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_I32_LOAD16_U (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_I64_LOAD8_S (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_I64_LOAD8_U (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_I64_LOAD16_S (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_I64_LOAD16_U (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_I64_LOAD32_S (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_I64_LOAD32_U (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_I32_STORE (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_I64_STORE (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_F32_STORE (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_F64_STORE (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_I32_STORE8 (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_I32_STORE16 (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_I64_STORE8 (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_I64_STORE16 (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_I64_STORE32 (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_MEMORY_SIZE (by norm_num [global_simps]))]
-  rw [if_neg (hn code.OP_MEMORY_GROW (by norm_num [global_simps]))]
+  rcases opcode with ⟨⟨n, hn⟩⟩
+  change n < 256 at hn
+  change 0x45 ≤ n at hlow
+  interval_cases n <;> with_unfolding_all rfl
 
 /-- The public dispatcher implements every mapped scalar instruction, preserving hook rejection as OpError. -/
 theorem code.step.numeric_prefix {V : Type} (visitor : code.OpVisitor V)

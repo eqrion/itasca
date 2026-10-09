@@ -294,7 +294,7 @@ private theorem i64_const_dispatch {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_I64_CONST v =
       CoreVisitor.run (code.read_i64_const st data) visitor.on_i64_const v := by
-  simp [code.step, global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
+  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
   funext x
@@ -317,7 +317,7 @@ private theorem f32_const_dispatch {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_F32_CONST v =
       CoreVisitor.run (code.read_f32_const st data) visitor.on_f32_const v := by
-  simp [code.step, global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
+  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
   funext x
@@ -340,7 +340,7 @@ private theorem f64_const_dispatch {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_F64_CONST v =
       CoreVisitor.run (code.read_f64_const st data) visitor.on_f64_const v := by
-  simp [code.step, global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
+  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
   funext x

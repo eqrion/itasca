@@ -200,7 +200,14 @@ theorem code.step.refines {V W : Type}
         rw [dispatch_memory_grow visitor st data env ctx v] at h
         rw [dispatch_memory_grow replacement st data env ctx w]
         exact CoreVisitor.run.refines _ visitor replacement related hrefines _ v w hrelated res st' v' h
-      simp only [code.step, h_nop, h_unreachable, h_i32_const, h_i64_const, h_f32_const, h_f64_const, h_drop, h_select, h_block, h_loop, h_if, h_else, h_end, h_br, h_br_if, h_br_table, h_return, h_call, h_call_indirect, h_local_get, h_local_set, h_local_tee, h_global_get, h_global_set, if_false] at h ⊢
+      have heqval (a b : U8) : a = b ↔ a.val = b.val :=
+        ⟨fun h => congrArg UScalar.val h, UScalar.eq_of_val_eq⟩
+      have hdispatch {W : Type} (hooks : code.OpVisitor W) (w : W) :
+          code.step hooks st data env ctx opcode w = code.step_memory hooks st data env opcode w := by
+        unfold code.step
+        split <;> simp_all [global_simps, heqval, U8.ofNat, UScalar.ofNat, UScalar.ofNatCore]
+      rw [hdispatch visitor v] at h
+      rw [hdispatch replacement w]
       rw [memory_fallback visitor st data env opcode v hm h_memory_size h_memory_grow,
         code.step_numeric.unrecognized visitor st opcode v hn] at h
       rw [memory_fallback replacement st data env opcode w hm h_memory_size h_memory_grow,

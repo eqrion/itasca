@@ -152,8 +152,7 @@ theorem code.step_i32_add.prefix {V : Type} (visitor : code.OpVisitor V)
   | Err e =>
     rw [WP.spec_equiv_exists]
     refine ⟨(.Err e, s, v), ?_, hc, hp, rest, hv, hlen, by simp⟩
-    simp [code.step, code.step_memory, code.step_numeric, code.convert_types, code.binary_types,
-      global_simps, hr, core.result.Result.Insts.CoreOpsTry.branch,
+    simp [code.step_numeric, global_simps, hr, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok u =>
     have hprefix := hout.prefix C hC ops Numeric.i32Add htyped Numeric.i32Add_wf
@@ -163,14 +162,12 @@ theorem code.step_i32_add.prefix {V : Type} (visitor : code.OpVisitor V)
     | Ok u =>
       rw [WP.spec_equiv_exists]
       refine ⟨(.Ok (), s, v'), ?_, hc, hp, rest, hv, hlen, fun _ => hprefix⟩
-      simp [code.step, code.step_memory, code.step_numeric, code.convert_types, code.binary_types,
-        code.visit_numeric, global_simps, hr, hvst, code.visit,
+      simp [code.step_numeric, global_simps, hr, hvst, code.visit,
         core.result.Result.Insts.CoreOpsTry.branch]
     | Err e =>
       rw [WP.spec_equiv_exists]
       refine ⟨(.Err (.Visitor e), s, v'), ?_, hc, hp, rest, hv, hlen, by simp⟩
-      simp [code.step, code.step_memory, code.step_numeric, code.convert_types, code.binary_types,
-        code.visit_numeric, global_simps, hr, hvst, code.visit,
+      simp [code.step_numeric, global_simps, hr, hvst, code.visit,
         core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
@@ -195,7 +192,7 @@ theorem code.step_drop.prefix {V : Type} (visitor : code.OpVisitor V)
   | Err e =>
     rw [WP.spec_equiv_exists]
     refine ⟨(.Err e, s, v), ?_, hc, hp, rest, hv, hlen, by simp⟩
-    simp [code.step, global_simps, code.read_drop, hr, core.result.Result.Insts.CoreOpsTry.branch,
+    simp [global_simps, code.read_drop, hr, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok t =>
     have hprefix := StackSemantics.Popped.prefix_drop hout C hC ops htyped
@@ -204,12 +201,12 @@ theorem code.step_drop.prefix {V : Type} (visitor : code.OpVisitor V)
     | Ok u =>
       rw [WP.spec_equiv_exists]
       refine ⟨(.Ok (), s, v'), ?_, hc, hp, rest, hv, hlen, fun _ => hprefix⟩
-      simp [code.step, global_simps, code.read_drop, hr, hvst, code.visit,
+      simp [global_simps, code.read_drop, hr, hvst, code.visit,
         core.result.Result.Insts.CoreOpsTry.branch]
     | Err e =>
       rw [WP.spec_equiv_exists]
       refine ⟨(.Err (.Visitor e), s, v'), ?_, hc, hp, rest, hv, hlen, by simp⟩
-      simp [code.step, global_simps, code.read_drop, hr, hvst, code.visit,
+      simp [global_simps, code.read_drop, hr, hvst, code.visit,
         core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
@@ -227,11 +224,11 @@ theorem code.step_nop.prefix {V : Type} (visitor : code.OpVisitor V)
   | Ok u =>
     rw [WP.spec_equiv_exists]
     refine ⟨(.Ok (), st, v'), ?_, rfl, fun _ => htyped.nop hC⟩
-    simp [code.step, hv, code.visit, core.result.Result.Insts.CoreOpsTry.branch]
+    simp [hv, code.visit, core.result.Result.Insts.CoreOpsTry.branch]
   | Err e =>
     rw [WP.spec_equiv_exists]
     refine ⟨(.Err (.Visitor e), st, v'), ?_, rfl, by simp⟩
-    simp [code.step, hv, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
+    simp [hv, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
 /-- UNREACHABLE clears just the current segment and changes just the current polymorphic flag. -/
@@ -254,12 +251,12 @@ theorem code.step_unreachable.prefix {V : Type} (visitor : code.OpVisitor V)
   | Ok u =>
     rw [WP.spec_equiv_exists]
     refine ⟨(.Ok (), s, v'), ?_, hc, hp, hv, fun _ => hprefix⟩
-    simp [code.step, global_simps, hr, hvst, code.visit,
+    simp [global_simps, hr, hvst, code.visit,
       core.result.Result.Insts.CoreOpsTry.branch]
   | Err e =>
     rw [WP.spec_equiv_exists]
     refine ⟨(.Err (.Visitor e), s, v'), ?_, hc, hp, hv, by simp⟩
-    simp [code.step, global_simps, hr, hvst, code.visit,
+    simp [global_simps, hr, hvst, code.visit,
       core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 

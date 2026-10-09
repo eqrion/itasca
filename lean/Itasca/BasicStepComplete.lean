@@ -14,7 +14,7 @@ theorem nop {st data env ctx C next front ins outs}
   have he : next = st.pos := hb.empty
   subst next
   refine ⟨st, ?_, rfl, f.output_self ht, by omega⟩
-  simp [code.step, global_simps, code.OpVisitor.on_nop.default, code.visit,
+  simp [global_simps, code.OpVisitor.on_nop.default, code.visit,
     core.result.Result.Insts.CoreOpsTry.branch]
 
 theorem unreachable {st data env ctx C next front ins outs}
@@ -29,7 +29,7 @@ theorem unreachable {st data env ctx C next front ins outs}
   have hv' : s.vals.val = f.outer := by simpa [f.vals, f.base] using hv
   refine ⟨s, ?_, hp, ⟨true, [], hc, by simpa using hv',
     Sequence.realizes_polymorphic_empty _⟩, ?_⟩
-  · simp [code.step, global_simps, code.read_unreachable, hr,
+  · simp [global_simps, code.read_unreachable, hr,
       code.OpVisitor.on_unreachable.default, code.visit,
       core.result.Result.Insts.CoreOpsTry.branch]
   · simp only [hv', f.vals, List.length_append]

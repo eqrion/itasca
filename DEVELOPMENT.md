@@ -70,6 +70,9 @@ extraction experiment and corresponding proofs.
 - Thread `data` and cursors explicitly instead of storing borrows in structures.
   Prefer an end position to a new slice unless its exact extent is part of a
   theorem.
+- Use `match` for opcode and binary-tag dispatch, including grouped literal
+  patterns and byte ranges. The Lean backend supports these; the archived Rocq
+  backend's dispatch chains are no longer required.
 - Use explicit loop counters; avoid iterators, closures, labeled control flow,
   and returns from nested loops.
 - Preserve the arithmetic LEB128 implementation. New bitwise operations change

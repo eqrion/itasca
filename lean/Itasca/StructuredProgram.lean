@@ -130,7 +130,7 @@ theorem execute_end {st : code.OpIterState} (f : Frame st) (data : Slice U8)
   dsimp only at hc hv hp
   have hstep : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       {st with pos := pos} data env ctx code.OP_END () = .ok (.Ok (), s, ()) := by
-    simp [code.step, global_simps, hr, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
+    simp [global_simps, hr, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
       code.OpVisitor.on_end.default]
   have hp' : s.pos = next := hp.trans hnext.symm
   refine ⟨s, .single f.nonempty hread (by simpa [global_simps] using hstep), hp', hc, hv, ?_⟩
@@ -159,7 +159,7 @@ theorem execute_else {st : code.OpIterState} (f : Frame st) (data : Slice U8)
   dsimp only at hc hv hp
   have hstep : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       {st with pos := pos} data env ctx code.OP_ELSE () = .ok (.Ok (), s, ()) := by
-    simp [code.step, global_simps, hr, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
+    simp [global_simps, hr, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
       code.OpVisitor.on_else.default]
   have hp' : s.pos = next := hp.trans hnext.symm
   refine ⟨s, .single f.nonempty hread (by simpa [global_simps] using hstep), hp', hc, hv, ?_⟩
@@ -182,7 +182,7 @@ theorem execute_block {st : code.OpIterState} (f : Frame st) (data : Slice U8)
   dsimp only at hp hv hc
   have hstep : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       {st with pos := pos} data env ctx code.OP_BLOCK () = .ok (.Ok (), s, ()) := by
-    simp [code.step, global_simps, hr, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
+    simp [global_simps, hr, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
       code.OpVisitor.on_block.default]
   exact ⟨s, .single f.nonempty hread (by simpa [global_simps] using hstep), hp, hv, hc,
     bounds_after_token hb hat hp (by simp [hv]) (by simp [hc])⟩
@@ -202,7 +202,7 @@ theorem execute_loop {st : code.OpIterState} (f : Frame st) (data : Slice U8)
   dsimp only at hp hv hc
   have hstep : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       {st with pos := pos} data env ctx code.OP_LOOP () = .ok (.Ok (), s, ()) := by
-    simp [code.step, global_simps, hr, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
+    simp [global_simps, hr, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
       code.OpVisitor.on_loop.default]
   exact ⟨s, .single f.nonempty hread (by simpa [global_simps] using hstep), hp, hv, hc,
     bounds_after_token hb hat hp (by simp [hv]) (by simp [hc])⟩
@@ -227,7 +227,7 @@ theorem execute_if {st : code.OpIterState} (f : Frame st) (data : Slice U8)
   dsimp only at hp hv hl hc ht'
   have hstep : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       {st with pos := pos} data env ctx code.OP_IF () = .ok (.Ok (), s, ()) := by
-    simp [code.step, global_simps, hr, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
+    simp [global_simps, hr, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
       code.OpVisitor.on_if.default]
   refine ⟨s, rest, .single f.nonempty hread (by simpa [global_simps] using hstep), hp, hv, hc, ?_, ?_⟩
   · simpa [Control.polymorphic, f.ctrls] using ht'
