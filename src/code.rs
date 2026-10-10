@@ -1451,7 +1451,7 @@ pub type VisitResult = core::result::Result<(), VisitError>;
 /// The numeric operators: 123 rows, no immediates. One table, used twice.
 ///
 /// `#[macro_export]`ed so a consumer building a C ABI on top of this crate
-/// -- SpiderMonkey's `veriwasm_glue` is one -- can build its vtable from
+/// -- SpiderMonkey's `itasca_glue` is one -- can build its vtable from
 /// this table rather than transcribing it by hand. This is the only place
 /// the opcode-to-hook mapping lives; a hand-transcribed second copy could
 /// drift out of sync with it.
@@ -1875,7 +1875,7 @@ numeric_table!(numeric_fanout);
 memory_table!(memory_fanout);
 
 // Public so a consumer building a C ABI on top of this crate -- SpiderMonkey's
-// veriwasm_glue, for instance -- can build its vtable from these two tables
+// itasca_glue, for instance -- can build its vtable from these two tables
 // rather than transcribing them. They are the only place the opcode-to-hook
 // mapping lives and Lean's visitor trace proofs check their dispatch, so
 // a second copy would be a copy that proof does not cover.
