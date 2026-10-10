@@ -140,11 +140,12 @@ until the proof lands.
 Start an audit with `src/stream.rs`; its rustdoc states each contract. The
 driver owns phase order and acceptance:
 
-1. Decode the environment from `Source::prefix` into caller-provided storage.
+1. Decode the environment from `Source::environment` into caller-provided
+   storage.
 2. Read the code section header, then frame its entries into `CodeBatch`es of
    about `Config::batch_bytes` body bytes and submit each to the
    `StreamingVisitor`.
-3. Validate the tail from `Source::suffix` at EOF.
+3. Validate the tail from `Source::tail` at EOF.
 4. Retire every outstanding batch, accepting each exactly once.
 
 The visitor schedules work and may return batches in any order, but cannot skip
@@ -156,23 +157,27 @@ per-function ledger, reference counts, or code copies. A visitor that returns a
 foreign, duplicate or unfinished batch, or requests no batches, gets
 `Error::Host`.
 
-`validate_module_slice` uses `SliceSource` over the original bytes and a
+`validate_module_slice` splits the buffer by framing section headers and uses a
 private `SyncVisitor` that validates each batch as it is submitted. It holds at
 most one batch and never shares it, so a constant module ID suffices. The
 decomposed APIs remain and serve as a differential test oracle.
 
 ### Embedding obligations
 
-The driver reads every byte it validates through exactly one view: the
-environment from `prefix`, the code header and each batch from one `read`
-each, and the tail from `suffix`. Reads that only locate batch boundaries are
-revalidated by the batch. So soundness can be stated over the bytes the driver
-was served, and source coherence is only a completeness hypothesis: views that
-disagree can cause a rejection but not an acceptance. The embedding still
-owes:
+A `Source` serves the module as three regions, split at its first section
+whose id is not below the code section's: the environment, the code region
+(that section if it is the code section, otherwise empty), and the tail. The
+embedding states the code region's length up front, and every code read is an
+exact range inside it. The driver checks the split: the environment must
+decode to its end, the code section header must span exactly the code region,
+and the tail must hold only data and custom sections. Reads that only locate
+batch boundaries are revalidated by the batch. So soundness can be stated over
+the concatenated regions, and a split matching the module is only a
+completeness hypothesis: a wrong split can cause a rejection but not an
+acceptance. The embedding still owes:
 
-- Published bytes stay unchanged while a batch borrows them. Rust borrows
-  enforce this; an FFI must uphold it.
+- Every view of a region shows the same bytes, which stay unchanged while a
+  batch borrows them. Rust borrows enforce this; an FFI must uphold it.
 - `module_id` is unique among invocations whose batches can reach the same
   visitor.
 - The environment and source outlive every worker, including after an error.
@@ -186,10 +191,8 @@ The Firefox adapter allocates the environment at a stable address before
 calling the driver, and its `finish` callback joins and releases outstanding
 jobs before that storage is freed. On success the same allocation transfers to
 SpiderMonkey for tier-2 compilation. Module IDs come from a relaxed atomic
-counter that rejects exhaustion instead of wrapping. The adapter maps absolute
-reads onto its environment, code, and tail allocations, and checks that the
-code range the driver found matches the code allocation. A module without code
-lives entirely in the environment allocation.
+counter that rejects exhaustion instead of wrapping. Its environment, code, and
+tail allocations are the `Source` regions directly.
 
 ### Proof plan
 
@@ -202,11 +205,13 @@ reopen the original gap. Private Rust fields do not constrain arbitrary
 extracted Lean callbacks, so the contracts must be explicit.
 
 The driver proof composes the existing environment, entry, tail and
-module-region theorems, stated over the views the driver observed. The
-contiguous theorem then discharges the source and visitor contracts for
-`SliceSource` and `SyncVisitor`, exposing no scheduler assumptions to callers.
-Termination additionally needs returning callbacks; completeness needs
-coherent, available bytes and accepting callbacks. Function-body and
+module-region theorems, stated over the concatenated regions of a coherent
+source, one whose code reads are slices of a single code region. The
+contiguous theorem then discharges the source and visitor contracts for the
+slice split and `SyncVisitor`, exposing no scheduler assumptions to callers.
+Termination additionally needs returning callbacks; completeness needs a
+coherent source split as `Source` describes, available bytes, and accepting
+callbacks. Function-body and
 opcode-visitor proofs are reused. Once this covers the driver, `validate_module`
 can switch to it and the old whole-module orchestration can go.
 
@@ -215,7 +220,7 @@ can switch to it and the old whole-module orchestration can go.
 `tests/stream.rs` compares the specification corpus against the existing
 validator over both a contiguous and a split source, and exercises bounded
 out-of-order completion, parallel workers, foreign batches, sticky errors,
-truncation and region boundaries.
+truncation, region boundaries and misplaced splits.
 
 Firefox's `testWasmEncodeBasic` JSAPI test is not adapted yet: it calls
 `ModuleGenerator` directly without an environment or framed code bytes, so
