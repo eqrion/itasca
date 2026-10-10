@@ -1,6 +1,4 @@
-use itasca::stream::{
-    self, CodeBatch, CodeRange, Config, Region, Result, Source, StreamingVisitor,
-};
+use itasca::stream::{self, CodeBatch, Config, Region, Result, Source, StreamingVisitor};
 use itasca::{module, CustomSection, EmptyOpVisitor, Env, Error, OpError, Tail, VisitError};
 use std::cell::Cell;
 use std::thread::{Scope, ScopedJoinHandle};
@@ -18,10 +16,11 @@ struct SplitSource {
 }
 
 impl SplitSource {
-    /// Splits at the code section, which may be truncated. A module whose
-    /// environment does not validate stays in `env`.
+    /// Splits at the first section whose id is not below the code section's,
+    /// clamping a truncated code section. A module whose environment does not
+    /// validate stays in `env`.
     fn new(bytes: &[u8]) -> Self {
-        let (start, end) = code_section_extent(bytes).unwrap_or((bytes.len(), bytes.len()));
+        let (start, end) = code_region(bytes).unwrap_or((bytes.len(), bytes.len()));
         SplitSource {
             env: bytes[..start].to_vec(),
             code: bytes[start..end].to_vec(),
@@ -31,10 +30,10 @@ impl SplitSource {
     }
 }
 
-fn code_section_extent(bytes: &[u8]) -> Option<(usize, usize)> {
+fn code_region(bytes: &[u8]) -> Option<(usize, usize)> {
     let (_, start) = module::validate_env(bytes).ok()?;
     if bytes.get(start) != Some(&10) {
-        return None;
+        return Some((start, start));
     }
     let mut pos = start + 1;
     let mut len = 0;
@@ -51,42 +50,24 @@ fn code_section_extent(bytes: &[u8]) -> Option<(usize, usize)> {
 }
 
 impl Source for SplitSource {
-    fn prefix(&self) -> Result<&[u8]> {
+    fn environment(&self) -> Result<&[u8]> {
         Ok(&self.env)
     }
 
-    fn read(&self, start: usize, end: usize) -> Result<&[u8]> {
-        if self.code.is_empty() {
-            return self
-                .env
-                .get(start..end.min(self.env.len()))
-                .ok_or(Error::UnexpectedEof);
-        }
-        let start = start
-            .checked_sub(self.env.len())
-            .ok_or(Error::UnexpectedEof)?;
-        let end = (end - self.env.len()).min(self.code.len());
+    fn code_len(&self) -> usize {
+        self.code.len()
+    }
+
+    fn code(&self, start: usize, end: usize) -> Result<&[u8]> {
+        assert!(start <= end && end <= self.code.len());
         if self.early_eof.is_some_and(|n| end > n) {
             return Err(Error::UnexpectedEof);
         }
-        self.code.get(start..end).ok_or(Error::UnexpectedEof)
+        Ok(&self.code[start..end])
     }
 
-    fn suffix(&self, start: usize) -> Result<&[u8]> {
+    fn tail(&self) -> Result<&[u8]> {
         self.tail_seen.set(true);
-        if self.code.is_empty() {
-            if !self.tail.is_empty() {
-                return Err(Error::SectionSizeMismatch);
-            }
-            return self.env.get(start..).ok_or(Error::UnexpectedEof);
-        }
-        let expected = self.env.len() + self.code.len();
-        if start > expected {
-            return Err(Error::UnexpectedEof);
-        }
-        if start != expected {
-            return Err(Error::SectionSizeMismatch);
-        }
         Ok(&self.tail)
     }
 }
@@ -106,6 +87,7 @@ struct Harness {
     submitted: usize,
     polled: usize,
     custom_base: usize,
+    tail_base: usize,
     custom_offsets: Vec<(usize, usize)>,
     decoded_tail: Option<Tail>,
 }
@@ -120,6 +102,7 @@ impl Harness {
 
     fn validate(&mut self) -> Result<Env> {
         let source = std::mem::take(&mut self.source);
+        self.tail_base = source.env.len() + source.code.len();
         let mut env = Env::new();
         let result = std::thread::scope(|threads| {
             let mut scheduler = TestScheduler::new(self, threads);
@@ -129,8 +112,12 @@ impl Harness {
         result.map(|()| env)
     }
 
-    fn custom_region(&mut self, _: Region, base: usize) {
-        self.custom_base = base;
+    /// Records custom section offsets as absolute module offsets.
+    fn custom_region(&mut self, region: Region) {
+        self.custom_base = match region {
+            Region::Environment => 0,
+            Region::Tail => self.tail_base,
+        };
     }
 }
 
@@ -175,11 +162,11 @@ impl module::ModuleVisitor for TestScheduler<'_, '_, '_> {
 }
 
 impl<'a> StreamingVisitor<'a> for TestScheduler<'_, '_, 'a> {
-    fn custom_region(&mut self, region: Region, base: usize) {
-        self.harness.custom_region(region, base);
+    fn custom_region(&mut self, region: Region) {
+        self.harness.custom_region(region);
     }
 
-    fn environment_ready(&mut self, _: &Env, _: Option<CodeRange>) -> Result<Config> {
+    fn environment_ready(&mut self, _: &Env) -> Result<Config> {
         Ok(Config {
             batch_bytes: 4,
             max_batches: 2,
@@ -434,7 +421,7 @@ fn modules_with_custom_sections() -> Vec<Vec<u8>> {
 }
 
 #[test]
-fn custom_section_offsets_are_absolute() {
+fn custom_section_offsets_are_region_relative() {
     for bytes in modules_with_custom_sections() {
         let mut expected = Harness::default();
         let decoded = module::validate_module_with(&bytes, &mut expected).unwrap();
@@ -442,19 +429,28 @@ fn custom_section_offsets_are_absolute() {
 
         let mut split = Harness::new(&bytes);
         assert_eq!(split.validate().unwrap(), decoded.env);
+        assert_eq!(split.decoded_tail.unwrap(), decoded.tail);
         assert_eq!(split.custom_offsets, expected.custom_offsets);
-
-        let mut sliced = Harness::default();
-        let source = stream::SliceSource { bytes: &bytes };
-        let mut env = Env::new();
-        std::thread::scope(|threads| {
-            let mut scheduler = TestScheduler::new(&mut sliced, threads);
-            stream::validate_streaming(1, &source, &mut scheduler, &mut env).unwrap();
-        });
-        assert_eq!(env, decoded.env);
-        assert_eq!(sliced.decoded_tail.unwrap(), decoded.tail);
-        assert_eq!(sliced.custom_offsets, expected.custom_offsets);
     }
+}
+
+#[test]
+fn misplaced_split_rejects() {
+    let mut harness = Harness::new(&functions(1, 1));
+    let code = std::mem::take(&mut harness.source.code);
+    harness.source.env.extend(code);
+    assert_eq!(harness.validate().unwrap_err(), Error::Host);
+
+    let no_code = &modules_with_custom_sections()[0];
+    let mut harness = Harness::new(no_code);
+    assert!(!harness.source.tail.is_empty());
+    harness.source.code = std::mem::take(&mut harness.source.tail);
+    assert_eq!(harness.validate().unwrap_err(), Error::Host);
+
+    let mut harness = Harness::new(no_code);
+    let tail = std::mem::take(&mut harness.source.tail);
+    harness.source.env.extend(tail);
+    assert_eq!(harness.validate().unwrap_err(), Error::Host);
 }
 
 #[test]

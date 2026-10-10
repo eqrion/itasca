@@ -3,20 +3,18 @@
 //! [`validate_streaming`] owns the whole module. It decodes the environment,
 //! frames the code section into [`CodeBatch`]es as the bytes arrive, validates
 //! the tail at EOF, and accepts only after every batch it issued has come back
-//! fully validated. The embedding supplies the bytes through a [`Source`] and
-//! schedules function validation through a [`StreamingVisitor`], but neither
-//! can replace a phase or certify success: only an `Ok` from
-//! [`validate_streaming`] does.
+//! fully validated. The embedding supplies the module split into three regions
+//! through a [`Source`] and schedules function validation through a
+//! [`StreamingVisitor`], but neither can replace a phase or certify success:
+//! only an `Ok` from [`validate_streaming`] does.
 //!
-//! The driver reads each byte it validates through exactly one view: the
-//! environment from [`Source::prefix`], the code section header and each batch
-//! from one [`Source::read`] each, and the tail from [`Source::suffix`]. Reads
-//! that only locate batch boundaries are revalidated by the batch itself. So
-//! acceptance is a statement about the bytes the driver was served, whatever
-//! the source does. The embedding still owes:
+//! The driver checks that the regions are split where [`Source`] says, so an
+//! `Ok` means the environment, the code section and the tail, concatenated, are
+//! a valid module. A wrong split can only cause a rejection. The embedding
+//! still owes:
 //!
-//! - Published bytes stay unchanged while a batch borrows them. Rust borrows
-//!   enforce this; an FFI must uphold it.
+//! - Every view of a region shows the same bytes, which stay unchanged while a
+//!   batch borrows them. Rust borrows enforce this; an FFI must uphold it.
 //! - `module_id` is unique among invocations whose batches can reach the same
 //!   visitor, so a batch from one module cannot be returned to another.
 //! - The environment and source outlive every worker holding a batch,
@@ -37,14 +35,6 @@ pub enum Region {
     Tail,
 }
 
-/// The code section's extent in the module, from its id byte to its end.
-#[cfg_attr(not(charon), derive(Debug))]
-#[derive(Clone, Copy)]
-pub struct CodeRange {
-    pub start: usize,
-    pub len: usize,
-}
-
 /// How the visitor wants the code section divided.
 pub struct Config {
     /// Target body bytes per batch. A single body may exceed it.
@@ -54,58 +44,36 @@ pub struct Config {
     pub max_batches: usize,
 }
 
-/// The bytes of one module, addressed by absolute module offset.
+/// One module, split into three regions at its first section whose id is not
+/// below the code section's.
 ///
-/// A source may hand out separate allocations for each region. Views that
-/// disagree with each other can only cause a rejection.
+/// The environment is every byte before that section. The code region is that
+/// section if it is the code section, from its id byte to its end, and empty
+/// otherwise. The tail is every byte after the code region. A module without
+/// such a section is entirely environment. Each region may be a separate
+/// allocation.
 pub trait Source {
-    /// Bytes from offset 0 that include at least every section before the
-    /// code section. They may include more: [`SliceSource`] returns the whole
-    /// module, and the driver finds the code section itself.
-    fn prefix(&self) -> Result<&[u8]>;
+    fn environment(&self) -> Result<&[u8]>;
 
-    /// Waits for and returns `start..end`. A read of the code section header
-    /// may return fewer bytes when the module or the code section ends first.
-    /// Every other read must return exactly the requested range.
-    fn read(&self, start: usize, end: usize) -> Result<&[u8]>;
+    /// The code region's length, known before any of it arrives.
+    fn code_len(&self) -> usize;
 
-    /// Waits for EOF and returns every byte from `start` to the end.
-    fn suffix(&self, start: usize) -> Result<&[u8]>;
-}
+    /// Waits for and returns exactly `start..end` of the code region, where
+    /// `start <= end <= code_len()`.
+    fn code(&self, start: usize, end: usize) -> Result<&[u8]>;
 
-/// A complete module in one contiguous buffer.
-pub struct SliceSource<'a> {
-    pub bytes: &'a [u8],
-}
-
-impl Source for SliceSource<'_> {
-    fn prefix(&self) -> Result<&[u8]> {
-        Ok(self.bytes)
-    }
-
-    fn read(&self, start: usize, end: usize) -> Result<&[u8]> {
-        if start > self.bytes.len() || end < start {
-            return Err(Error::UnexpectedEof);
-        }
-        Ok(&self.bytes[start..end.min(self.bytes.len())])
-    }
-
-    fn suffix(&self, start: usize) -> Result<&[u8]> {
-        if start > self.bytes.len() {
-            return Err(Error::UnexpectedEof);
-        }
-        Ok(&self.bytes[start..])
-    }
+    /// Waits for EOF and returns the tail.
+    fn tail(&self) -> Result<&[u8]>;
 }
 
 /// The embedding's side of [`validate_streaming`], called in this order:
 ///
-/// 1. `custom_region(Environment, 0)`, then custom sections before the code.
+/// 1. `custom_region(Environment)`, then custom sections before the code.
 /// 2. `environment_ready` once, with the decoded environment.
 /// 3. `submit_code_batch` for each batch, in module order, interleaved with
 ///    `poll_code_batch` whenever [`Config::max_batches`] are outstanding.
 /// 4. `code_end` once every batch has been submitted.
-/// 5. `custom_region(Tail, base)`, custom sections after the code, then
+/// 5. `custom_region(Tail)`, custom sections after the code, then
 ///    `tail_ready` with the decoded tail.
 /// 6. `poll_code_batch` until every outstanding batch has returned.
 ///
@@ -113,12 +81,11 @@ impl Source for SliceSource<'_> {
 /// still hold batches at that point and must release them before the
 /// environment and source storage they borrow.
 pub trait StreamingVisitor<'a>: module::ModuleVisitor {
-    /// Later `on_custom_section` offsets are relative to `base`, the region's
-    /// absolute module offset.
-    fn custom_region(&mut self, region: Region, base: usize);
+    /// Later `on_custom_section` offsets are relative to `region`'s bytes.
+    fn custom_region(&mut self, region: Region);
 
-    /// The environment is decoded and the code section, if any, is located.
-    fn environment_ready(&mut self, env: &Env, code: Option<CodeRange>) -> Result<Config>;
+    /// The environment is decoded and the code section header checked.
+    fn environment_ready(&mut self, env: &Env) -> Result<Config>;
 
     /// Takes ownership of a batch to validate with
     /// [`CodeBatch::validate_func`].
@@ -133,7 +100,7 @@ pub trait StreamingVisitor<'a>: module::ModuleVisitor {
     fn tail_ready(&mut self, tail: Tail) -> Result<()>;
 }
 
-/// One code section entry, as offsets relative to the code section's id byte.
+/// One code section entry, as offsets into the code region.
 #[cfg_attr(not(charon), derive(Debug))]
 #[derive(Clone, Copy)]
 pub struct CodeEntry {
@@ -163,7 +130,7 @@ pub struct CodeBatch<'a> {
     env: &'a Env,
     /// The batch's entries, framed back to back.
     code: &'a [u8],
-    /// Offset of `code` within the code section.
+    /// Offset of `code` within the code region.
     code_offset: usize,
     /// Defined-function index of the first entry.
     first_func: usize,
@@ -196,7 +163,7 @@ impl CodeBatch<'_> {
         self.code
     }
 
-    /// Offset of [`CodeBatch::code`] within the code section.
+    /// Offset of [`CodeBatch::code`] within the code region.
     pub fn code_offset(&self) -> usize {
         self.code_offset
     }
@@ -277,12 +244,15 @@ pub fn validate_streaming<'visitor, 'data: 'visitor, S: Source, V: StreamingVisi
     visitor: &'visitor mut V,
     env: &'data mut Env,
 ) -> Result<()> {
-    let prefix = source.prefix()?;
-    add_offset(0, prefix.len())?;
-    visitor.custom_region(Region::Environment, 0);
-    let (decoded, env_end) = module::validate_env_with(prefix, visitor)?;
+    let bytes = source.environment()?;
+    let env_len = add_offset(0, bytes.len())?;
+    visitor.custom_region(Region::Environment);
+    let (decoded, env_end) = module::validate_env_with(bytes, visitor)?;
+    if env_end != env_len {
+        return Err(Error::Host);
+    }
     *env = decoded;
-    validate_remaining(module_id, source, env, env_end, visitor)
+    validate_remaining(module_id, source, env, env_len, visitor)
 }
 
 /// The code section and tail, once `env` is decoded and immutable.
@@ -290,65 +260,66 @@ fn validate_remaining<'a, S: Source, V: StreamingVisitor<'a>>(
     module_id: u64,
     source: &'a S,
     env: &'a Env,
-    env_end: usize,
+    env_len: usize,
     visitor: &mut V,
 ) -> Result<()> {
-    let (entries, code_end) = read_code_header(source, env_end, env)?;
-    let code = CodeRange {
-        start: env_end,
-        len: code_end - env_end,
-    };
-    let config = visitor.environment_ready(env, if code.len == 0 { None } else { Some(code) })?;
+    let code_len = source.code_len();
+    let code_end = add_offset(env_len, code_len)?;
+    let entries = read_code_header(source, code_len, env)?;
+    let config = visitor.environment_ready(env)?;
     if config.batch_bytes == 0 || config.max_batches == 0 {
         return Err(Error::Host);
     }
     let mut pending =
-        submit_code_batches(module_id, source, env, &code, entries, &config, visitor)?;
+        submit_code_batches(module_id, source, env, code_len, entries, &config, visitor)?;
     visitor.code_end()?;
 
-    let tail_bytes = source.suffix(code_end)?;
+    let tail_bytes = source.tail()?;
     add_offset(code_end, tail_bytes.len())?;
-    visitor.custom_region(Region::Tail, code_end);
+    visitor.custom_region(Region::Tail);
     let tail = module::validate_tail_with(tail_bytes, 0, env, visitor)?;
     visitor.tail_ready(tail)?;
     retire_all_code_batches(module_id, visitor, &mut pending)
 }
 
-/// Reads the code section header at `start`, returning where its entries
-/// begin and where it ends. Both are `start` when there is no code section.
-fn read_code_header<S: Source>(source: &S, start: usize, env: &Env) -> Result<(usize, usize)> {
-    let header = source.read(start, start + MAX_CODE_HEADER_BYTES)?;
-    if header.len() > MAX_CODE_HEADER_BYTES {
-        return Err(Error::Host);
-    }
-    if header.is_empty() || header[0] != SECTION_CODE {
+/// Checks the code section header against the code region and `env`,
+/// returning where its entries begin.
+fn read_code_header<S: Source>(source: &S, code_len: usize, env: &Env) -> Result<usize> {
+    if code_len == 0 {
         if !env.func_type_indices.is_empty() {
             return Err(Error::MissingCodeSection);
         }
-        return Ok((start, start));
+        return Ok(0);
+    }
+    let header = read_exact(source, 0, code_len.min(MAX_CODE_HEADER_BYTES))?;
+    if header[0] != SECTION_CODE {
+        return Err(Error::Host);
     }
     let (len, contents) = read_len(header, 1)?;
-    let relative_end = add_offset(contents, len)?;
+    let end = add_offset(contents, len)?;
+    if end > code_len {
+        return Err(Error::UnexpectedEof);
+    }
+    if end < code_len {
+        return Err(Error::SectionSizeMismatch);
+    }
     let (count, entries) = read_len(header, contents)?;
-    if entries > relative_end {
+    if entries > end {
         return Err(Error::SectionSizeMismatch);
     }
     if count != env.func_type_indices.len() {
         return Err(Error::FuncCodeMismatch);
     }
-    Ok((
-        add_offset(start, entries)?,
-        add_offset(start, relative_end)?,
-    ))
+    Ok(entries)
 }
 
-/// Submits every entry from `pos` to the end of the code section, returning
+/// Submits every entry from `pos` to the end of the code region, returning
 /// the IDs of the batches still outstanding.
 fn submit_code_batches<'a, S: Source, V: StreamingVisitor<'a>>(
     module_id: u64,
     source: &'a S,
     env: &'a Env,
-    code: &CodeRange,
+    code_len: usize,
     pos: usize,
     config: &Config,
     visitor: &mut V,
@@ -358,13 +329,12 @@ fn submit_code_batches<'a, S: Source, V: StreamingVisitor<'a>>(
     let mut func = 0;
     let mut batch_id = 0;
     let num_funcs = env.func_type_indices.len();
-    let code_end = code.start + code.len;
     while func < num_funcs {
         if pending.len() >= config.max_batches {
             retire_code_batch(module_id, visitor, &mut pending)?;
         }
         let (end, next_func) =
-            get_next_batch(source, code_end, pos, func, num_funcs, config.batch_bytes)?;
+            get_next_batch(source, code_len, pos, func, num_funcs, config.batch_bytes)?;
         let bytes = read_exact(source, pos, end)?;
         pending.push(batch_id);
         visitor.submit_code_batch(CodeBatch {
@@ -372,7 +342,7 @@ fn submit_code_batches<'a, S: Source, V: StreamingVisitor<'a>>(
             batch_id,
             env,
             code: bytes,
-            code_offset: pos - code.start,
+            code_offset: pos,
             first_func: func,
             num_funcs: next_func - func,
             num_dispatched: 0,
@@ -385,7 +355,7 @@ fn submit_code_batches<'a, S: Source, V: StreamingVisitor<'a>>(
         func = next_func;
         batch_id += 1;
     }
-    if pos != code_end {
+    if pos != code_len {
         return Err(Error::SectionSizeMismatch);
     }
     Ok(pending)
@@ -397,7 +367,7 @@ fn submit_code_batches<'a, S: Source, V: StreamingVisitor<'a>>(
 /// its own framing.
 fn get_next_batch<S: Source>(
     source: &S,
-    code_end: usize,
+    code_len: usize,
     start: usize,
     first_func: usize,
     num_funcs: usize,
@@ -408,13 +378,13 @@ fn get_next_batch<S: Source>(
     let mut batch_bytes = 0;
     let mut done = false;
     while func < num_funcs && !done {
-        let prefix = read_exact(source, pos, code_end.min(pos + MAX_LEB_BYTES))?;
+        let prefix = read_exact(source, pos, code_len.min(pos + MAX_LEB_BYTES))?;
         let (len, prefix_len) = read_len(prefix, 0)?;
         if func != first_func && len > threshold - batch_bytes {
             done = true;
         } else {
             let end = add_offset(add_offset(pos, prefix_len)?, len)?;
-            if end > code_end {
+            if end > code_len {
                 return Err(Error::UnexpectedEof);
             }
             batch_bytes += len;
@@ -463,8 +433,8 @@ fn retire_all_code_batches<'a, V: StreamingVisitor<'a>>(
     Ok(())
 }
 
-/// The entry whose size prefix is at `pos` in `code`, which starts at code
-/// section offset `code_offset`.
+/// The entry whose size prefix is at `pos` in `code`, which starts at
+/// `code_offset` in the code region.
 fn frame_entry(code: &[u8], pos: usize, index: usize, code_offset: usize) -> Result<CodeEntry> {
     let (contents, end) = module::code_entry_extent(code, pos)?;
     Ok(CodeEntry {
@@ -486,7 +456,7 @@ fn read_len(data: &[u8], pos: usize) -> Result<(usize, usize)> {
 }
 
 fn read_exact<S: Source>(source: &S, start: usize, end: usize) -> Result<&[u8]> {
-    let bytes = source.read(start, end)?;
+    let bytes = source.code(start, end)?;
     if bytes.len() != end - start {
         return Err(Error::UnexpectedEof);
     }
@@ -499,7 +469,12 @@ fn read_exact<S: Source>(source: &S, start: usize, end: usize) -> Result<&[u8]> 
 /// submitted. Not yet proved; [`module::validate_module`] is the proved
 /// equivalent.
 pub fn validate_module_slice(bytes: &[u8]) -> Result<module::Module> {
-    let source = SliceSource { bytes };
+    let (code_start, code_end) = find_code_region(bytes);
+    let source = SliceSource {
+        env: &bytes[0..code_start],
+        code: &bytes[code_start..code_end],
+        tail: &bytes[code_end..bytes.len()],
+    };
     let mut env = Env::new();
     let mut visitor = SyncVisitor {
         completed: None,
@@ -509,6 +484,62 @@ pub fn validate_module_slice(bytes: &[u8]) -> Result<module::Module> {
     match visitor.tail {
         Some(tail) => Ok(module::Module { env, tail }),
         None => Err(Error::Host),
+    }
+}
+
+/// Where the [`Source`] code region begins and ends in `bytes`. Only frames
+/// section headers, and leaves malformed or truncated sections in a region
+/// whose validation reports them.
+fn find_code_region(bytes: &[u8]) -> (usize, usize) {
+    let len = bytes.len();
+    let mut pos = 8;
+    loop {
+        if pos >= len {
+            return (len, len);
+        }
+        let id = bytes[pos];
+        if id > SECTION_CODE {
+            return (pos, pos);
+        }
+        let end = match read_len(bytes, pos + 1) {
+            Ok((size, contents)) => contents + size.min(len - contents),
+            Err(_) => len,
+        };
+        if id == SECTION_CODE {
+            return (pos, end);
+        }
+        if end == len {
+            return (len, len);
+        }
+        pos = end;
+    }
+}
+
+/// A complete module, split into its regions.
+struct SliceSource<'a> {
+    env: &'a [u8],
+    code: &'a [u8],
+    tail: &'a [u8],
+}
+
+impl Source for SliceSource<'_> {
+    fn environment(&self) -> Result<&[u8]> {
+        Ok(self.env)
+    }
+
+    fn code_len(&self) -> usize {
+        self.code.len()
+    }
+
+    fn code(&self, start: usize, end: usize) -> Result<&[u8]> {
+        if start > end || end > self.code.len() {
+            return Err(Error::Host);
+        }
+        Ok(&self.code[start..end])
+    }
+
+    fn tail(&self) -> Result<&[u8]> {
+        Ok(self.tail)
     }
 }
 
@@ -522,9 +553,9 @@ struct SyncVisitor<'a> {
 impl module::ModuleVisitor for SyncVisitor<'_> {}
 
 impl<'a> StreamingVisitor<'a> for SyncVisitor<'a> {
-    fn custom_region(&mut self, _region: Region, _base: usize) {}
+    fn custom_region(&mut self, _region: Region) {}
 
-    fn environment_ready(&mut self, _env: &Env, _code: Option<CodeRange>) -> Result<Config> {
+    fn environment_ready(&mut self, _env: &Env) -> Result<Config> {
         Ok(Config {
             batch_bytes: 25000,
             max_batches: 1,
