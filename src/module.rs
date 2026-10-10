@@ -227,6 +227,9 @@ pub fn validate_module_with<V: ModuleVisitor + CodeVisitor>(
 /// No preconditions: any byte string is a valid argument, and the size
 /// check is done internally. Returns `Ok` with the decoded module for a
 /// well-typed Wasm 1.0 binary, and `Err` otherwise.
+/// With the experimental `stream` feature, this uses the shared streaming
+/// driver, whose correctness proofs are still pending.
+#[cfg(not(feature = "stream"))]
 pub fn validate_module(data: &[u8]) -> Result<Module> {
     if data.len() > MAX_MODULE_BYTES {
         return Err(Error::ModuleTooLarge);
@@ -235,6 +238,13 @@ pub fn validate_module(data: &[u8]) -> Result<Module> {
     let tail_pos = validate_code(data, code_pos, &env)?;
     let tail = validate_tail(data, tail_pos, &env)?;
     Ok(Module { env, tail })
+}
+
+/// Synchronous adapter for the experimental streaming driver.
+/// Not yet covered by the whole-module correctness proofs.
+#[cfg(feature = "stream")]
+pub fn validate_module(data: &[u8]) -> Result<Module> {
+    crate::stream::validate_slice(data)
 }
 
 // --- The module's external types ---

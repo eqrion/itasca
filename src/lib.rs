@@ -9,7 +9,13 @@
 //! Decoding and validation are one streaming pass, split into three parts:
 //! the environment, the code section, and the tail. `module` exposes all
 //! three entry points for a caller that wants to drive them itself, which is
-//! what a compiler consumer does.
+//! supported by the existing decomposed API.
+//!
+//! With the experimental `stream` feature, [`validate_module`] uses the same
+//! driver as parallel streaming consumers. That driver discovers the section
+//! boundaries and checks all submitted validation batches before accepting.
+//! Its whole-module proofs are pending; the current whole-module guarantees
+//! apply to builds without the feature.
 //!
 //! A compiler gets at function bodies through [`code::validate_body_with`]
 //! and an [`OpVisitor`]: validation calls one hook per operator, with its
@@ -69,3 +75,7 @@ pub use code::*;
 pub use error::*;
 pub use module::*;
 pub use types::*;
+
+/// Experimental single-entry streaming API; not yet covered by the proofs.
+#[cfg(feature = "stream")]
+pub mod stream;

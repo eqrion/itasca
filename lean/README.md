@@ -6,6 +6,11 @@ This is itasca's active verification pipeline, implementing the
 [final validation record](baseline/VALIDATION.md), and
 [upstream change tracker](../UPSTREAM.md).
 
+The whole-module claims below cover builds without the experimental `stream`
+feature. With that feature, `validate_module` uses the shared streaming driver,
+which is extracted separately but not yet proved. See the
+[shared-driver migration](../DEVELOPMENT.md#experimental-streaming-api).
+
 The full Rust extraction and freshly regenerated SpecTec definitions compile
 together. Local source patches fix Aeneas naming and indentation bugs and work
 around SpecTec's loss of optional mutability and ambiguous import projections,

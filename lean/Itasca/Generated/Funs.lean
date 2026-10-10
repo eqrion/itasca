@@ -6603,7 +6603,7 @@ impl_def types.Mut.Insts.CoreCmpPartialEqMut : core.cmp.PartialEq
 }
 
 /-- [itasca::module::const_global]:
-    Source: 'src/module.rs', lines 616:0-629:1 -/
+    Source: 'src/module.rs', lines 626:0-639:1 -/
 def module.const_global
   (env : _root_.Itasca.module.Env) (idx : Std.U32) :
   Result (core.result.Result _root_.Itasca.types.GlobalType
@@ -6627,7 +6627,7 @@ def module.const_global
     else ok (core.result.Result.Ok gt)
 
 /-- [itasca::module::read_expr_end]:
-    Source: 'src/module.rs', lines 606:0-612:1 -/
+    Source: 'src/module.rs', lines 616:0-622:1 -/
 def module.read_expr_end
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result Std.Usize _root_.Itasca.error.Error)
@@ -6645,7 +6645,7 @@ def module.read_expr_end
       Std.Usize error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::module::expect_const_type]:
-    Source: 'src/module.rs', lines 599:0-604:1 -/
+    Source: 'src/module.rs', lines 609:0-614:1 -/
 def module.expect_const_type
   (actual : _root_.Itasca.types.ValueType)
   (expected : _root_.Itasca.types.ValueType) :
@@ -6659,7 +6659,7 @@ def module.expect_const_type
   else ok (core.result.Result.Ok ())
 
 /-- [itasca::module::decode_const_expr]:
-    Source: 'src/module.rs', lines 633:0-674:1 -/
+    Source: 'src/module.rs', lines 643:0-684:1 -/
 def module.decode_const_expr
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env)
   (expected : _root_.Itasca.types.ValueType) :
@@ -6822,7 +6822,7 @@ def module.decode_const_expr
       error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::module::have_bytes]:
-    Source: 'src/module.rs', lines 339:0-344:1 -/
+    Source: 'src/module.rs', lines 349:0-354:1 -/
 def module.have_bytes
   (data : Slice Std.U8) (pos : Std.Usize) (n : Std.Usize) :
   Result (core.result.Result Unit _root_.Itasca.error.Error)
@@ -6834,7 +6834,7 @@ def module.have_bytes
   else ok (core.result.Result.Ok ())
 
 /-- [itasca::module::copy_bytes]: loop body 0:
-    Source: 'src/module.rs', lines 328:4-334:5 -/
+    Source: 'src/module.rs', lines 338:4-344:5 -/
 @[rust_loop_body]
 def module.copy_bytes_loop.body
   (data : Slice Std.U8) («to» : Std.Usize) (out : alloc.vec.Vec Std.U8)
@@ -6851,7 +6851,7 @@ def module.copy_bytes_loop.body
     ok (cont (out1, i2))
 
 /-- [itasca::module::copy_bytes]: loop 0:
-    Source: 'src/module.rs', lines 328:4-334:5 -/
+    Source: 'src/module.rs', lines 338:4-344:5 -/
 @[rust_loop]
 def module.copy_bytes_loop
   (data : Slice Std.U8) («to» : Std.Usize) (out : alloc.vec.Vec Std.U8)
@@ -6863,7 +6863,7 @@ def module.copy_bytes_loop
     (out, i)
 
 /-- [itasca::module::copy_bytes]:
-    Source: 'src/module.rs', lines 325:0-335:1 -/
+    Source: 'src/module.rs', lines 335:0-345:1 -/
 @[reducible]
 def module.copy_bytes
   (data : Slice Std.U8) («from» : Std.Usize) («to» : Std.Usize) :
@@ -6872,7 +6872,7 @@ def module.copy_bytes
   module.copy_bytes_loop data «to» (alloc.vec.Vec.new Std.U8) «from»
 
 /-- [itasca::module::decode_data_segment]:
-    Source: 'src/module.rs', lines 1326:0-1344:1 -/
+    Source: 'src/module.rs', lines 1336:0-1354:1 -/
 def module.decode_data_segment
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
   Result (core.result.Result (_root_.Itasca.module.Data × Std.Usize)
@@ -6924,7 +6924,7 @@ def module.decode_data_segment
       error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::module::decode_data_section]: loop body 0:
-    Source: 'src/module.rs', lines 1351:4-1359:5 -/
+    Source: 'src/module.rs', lines 1361:4-1369:5 -/
 @[rust_loop_body]
 def module.decode_data_section_loop.body
   (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
@@ -6953,7 +6953,7 @@ def module.decode_data_section_loop.body
       ok (done r1)
 
 /-- [itasca::module::decode_data_section]: loop 0:
-    Source: 'src/module.rs', lines 1351:4-1359:5 -/
+    Source: 'src/module.rs', lines 1361:4-1369:5 -/
 @[rust_loop]
 def module.decode_data_section_loop
   (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
@@ -6968,7 +6968,7 @@ def module.decode_data_section_loop
     (out, q, i)
 
 /-- [itasca::module::decode_data_section]:
-    Source: 'src/module.rs', lines 1346:0-1360:1 -/
+    Source: 'src/module.rs', lines 1356:0-1370:1 -/
 def module.decode_data_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
   Result (core.result.Result ((alloc.vec.Vec _root_.Itasca.module.Data) ×
@@ -6987,7 +6987,7 @@ def module.decode_data_section
       error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::module::utf8_cont]:
-    Source: 'src/module.rs', lines 495:0-504:1 -/
+    Source: 'src/module.rs', lines 505:0-514:1 -/
 def module.utf8_cont
   (bytes : Slice Std.U8) (i : Std.Usize) (lo : Std.U8) (hi : Std.U8) :
   Result (core.result.Result Unit _root_.Itasca.error.Error)
@@ -7004,7 +7004,7 @@ def module.utf8_cont
     else ok (core.result.Result.Ok ())
 
 /-- [itasca::module::utf8_sequence_len]:
-    Source: 'src/module.rs', lines 510:0-553:1 -/
+    Source: 'src/module.rs', lines 520:0-563:1 -/
 def module.utf8_sequence_len
   (bytes : Slice Std.U8) (i : Std.Usize) :
   Result (core.result.Result Std.Usize _root_.Itasca.error.Error)
@@ -7302,7 +7302,7 @@ def module.utf8_sequence_len
     else ok (core.result.Result.Err error.Error.InvalidUtf8)
 
 /-- [itasca::module::validate_utf8]: loop body 0:
-    Source: 'src/module.rs', lines 557:4-564:1 -/
+    Source: 'src/module.rs', lines 567:4-574:1 -/
 @[rust_loop_body]
 def module.validate_utf8_loop.body
   (bytes : Slice Std.U8) (i : Std.Usize) :
@@ -7326,7 +7326,7 @@ def module.validate_utf8_loop.body
       ok (done r1)
 
 /-- [itasca::module::validate_utf8]: loop 0:
-    Source: 'src/module.rs', lines 557:4-564:1 -/
+    Source: 'src/module.rs', lines 567:4-574:1 -/
 @[rust_loop]
 def module.validate_utf8_loop
   (bytes : Slice Std.U8) (i : Std.Usize) :
@@ -7337,7 +7337,7 @@ def module.validate_utf8_loop
     i
 
 /-- [itasca::module::validate_utf8]:
-    Source: 'src/module.rs', lines 555:0-564:1 -/
+    Source: 'src/module.rs', lines 565:0-574:1 -/
 @[reducible]
 def module.validate_utf8
   (bytes : Slice Std.U8) :
@@ -7346,7 +7346,7 @@ def module.validate_utf8
   module.validate_utf8_loop bytes 0#usize
 
 /-- [itasca::module::decode_name]:
-    Source: 'src/module.rs', lines 567:0-574:1 -/
+    Source: 'src/module.rs', lines 577:0-584:1 -/
 def module.decode_name
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result ((alloc.vec.Vec Std.U8) × Std.Usize)
@@ -7384,7 +7384,7 @@ def module.decode_name
       error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::module::decode_custom_section]:
-    Source: 'src/module.rs', lines 585:0-595:1 -/
+    Source: 'src/module.rs', lines 595:0-605:1 -/
 def module.decode_custom_section
   (data : Slice Std.U8) (pos : Std.Usize) («end» : Std.Usize) :
   Result (core.result.Result _root_.Itasca.types.CustomSection
@@ -7407,7 +7407,7 @@ def module.decode_custom_section
       _root_.Itasca.error.Error) residual
 
 /-- [itasca::module::read_section_header]:
-    Source: 'src/module.rs', lines 369:0-375:1 -/
+    Source: 'src/module.rs', lines 379:0-385:1 -/
 def module.read_section_header
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result (Std.U8 × Std.Usize × Std.Usize)
@@ -7444,7 +7444,7 @@ def module.read_section_header
       error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::module::validate_tail_with]: loop body 0:
-    Source: 'src/module.rs', lines 1383:4-1406:5
+    Source: 'src/module.rs', lines 1393:4-1416:5
     Visibility: public -/
 @[rust_loop_body]
 def module.validate_tail_with_loop.body
@@ -7512,7 +7512,7 @@ def module.validate_tail_with_loop.body
       ok (done (r1, v))
 
 /-- [itasca::module::validate_tail_with]: loop 0:
-    Source: 'src/module.rs', lines 1383:4-1406:5
+    Source: 'src/module.rs', lines 1393:4-1416:5
     Visibility: public -/
 @[rust_loop]
 def module.validate_tail_with_loop
@@ -7529,7 +7529,7 @@ def module.validate_tail_with_loop
     (v, segments, q, seen_data)
 
 /-- [itasca::module::validate_tail_with]:
-    Source: 'src/module.rs', lines 1374:0-1407:1
+    Source: 'src/module.rs', lines 1384:0-1417:1
     Visibility: public -/
 @[reducible]
 def module.validate_tail_with
@@ -7542,7 +7542,7 @@ def module.validate_tail_with
     (alloc.vec.Vec.new _root_.Itasca.module.Data) pos false
 
 /-- [itasca::module::no_code_section]:
-    Source: 'src/module.rs', lines 1276:0-1281:1 -/
+    Source: 'src/module.rs', lines 1286:0-1291:1 -/
 def module.no_code_section
   (env : _root_.Itasca.module.Env) :
   Result (core.result.Result (Option _root_.Itasca.module.CodeSection)
@@ -7554,7 +7554,7 @@ def module.no_code_section
   else ok (core.result.Result.Err error.Error.MissingCodeSection)
 
 /-- [itasca::module::code_section]:
-    Source: 'src/module.rs', lines 1255:0-1272:1
+    Source: 'src/module.rs', lines 1265:0-1282:1
     Visibility: public -/
 def module.code_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
@@ -7594,7 +7594,7 @@ def module.code_section
         _root_.Itasca.error.Error) residual
 
 /-- [itasca::module::code_entry_extent]:
-    Source: 'src/module.rs', lines 1418:0-1423:1 -/
+    Source: 'src/module.rs', lines 1428:0-1433:1 -/
 def module.code_entry_extent
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result (Std.Usize × Std.Usize)
@@ -7622,7 +7622,7 @@ def module.code_entry_extent
       residual
 
 /-- [itasca::module::validate_code_entries_with]: loop body 0:
-    Source: 'src/module.rs', lines 1207:4-1220:1 -/
+    Source: 'src/module.rs', lines 1217:4-1230:1 -/
 @[rust_loop_body]
 def module.validate_code_entries_with_loop.body
   {V : Type} (CodeVisitorInst : module.CodeVisitor V) (data : Slice Std.U8)
@@ -7680,7 +7680,7 @@ def module.validate_code_entries_with_loop.body
       ok (done (r1, v1))
 
 /-- [itasca::module::validate_code_entries_with]: loop 0:
-    Source: 'src/module.rs', lines 1207:4-1220:1 -/
+    Source: 'src/module.rs', lines 1217:4-1230:1 -/
 @[rust_loop]
 def module.validate_code_entries_with_loop
   {V : Type} (CodeVisitorInst : module.CodeVisitor V) (data : Slice Std.U8)
@@ -7693,7 +7693,7 @@ def module.validate_code_entries_with_loop
     (v, q, i)
 
 /-- [itasca::module::validate_code_entries_with]:
-    Source: 'src/module.rs', lines 1199:0-1220:1 -/
+    Source: 'src/module.rs', lines 1209:0-1230:1 -/
 @[reducible]
 def module.validate_code_entries_with
   {V : Type} (CodeVisitorInst : module.CodeVisitor V) (data : Slice Std.U8)
@@ -7703,7 +7703,7 @@ def module.validate_code_entries_with
   module.validate_code_entries_with_loop CodeVisitorInst data env v pos 0#usize
 
 /-- [itasca::module::validate_code_with]:
-    Source: 'src/module.rs', lines 1296:0-1315:1
+    Source: 'src/module.rs', lines 1306:0-1325:1
     Visibility: public -/
 def module.validate_code_with
   {V : Type} (CodeVisitorInst : module.CodeVisitor V) (data : Slice Std.U8)
@@ -7750,7 +7750,7 @@ def module.validate_code_with
     ok (r1, v1)
 
 /-- [itasca::module::decode_func_indices]: loop body 0:
-    Source: 'src/module.rs', lines 967:4-978:5 -/
+    Source: 'src/module.rs', lines 977:4-988:5 -/
 @[rust_loop_body]
 def module.decode_func_indices_loop.body
   (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
@@ -7783,7 +7783,7 @@ def module.decode_func_indices_loop.body
       ok (done r1)
 
 /-- [itasca::module::decode_func_indices]: loop 0:
-    Source: 'src/module.rs', lines 967:4-978:5 -/
+    Source: 'src/module.rs', lines 977:4-988:5 -/
 @[rust_loop]
 def module.decode_func_indices_loop
   (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
@@ -7797,7 +7797,7 @@ def module.decode_func_indices_loop
     (out, q, i)
 
 /-- [itasca::module::decode_func_indices]:
-    Source: 'src/module.rs', lines 962:0-979:1 -/
+    Source: 'src/module.rs', lines 972:0-989:1 -/
 def module.decode_func_indices
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
   Result (core.result.Result ((alloc.vec.Vec Std.U32) × Std.Usize)
@@ -7816,7 +7816,7 @@ def module.decode_func_indices
       error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::module::decode_element_section]: loop body 0:
-    Source: 'src/module.rs', lines 985:4-1002:5 -/
+    Source: 'src/module.rs', lines 995:4-1012:5 -/
 @[rust_loop_body]
 def module.decode_element_section_loop.body
   (data : Slice Std.U8) (count : Std.U32) (env : _root_.Itasca.module.Env)
@@ -7874,7 +7874,7 @@ def module.decode_element_section_loop.body
       ok (done (r1, env))
 
 /-- [itasca::module::decode_element_section]: loop 0:
-    Source: 'src/module.rs', lines 985:4-1002:5 -/
+    Source: 'src/module.rs', lines 995:4-1012:5 -/
 @[rust_loop]
 def module.decode_element_section_loop
   (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
@@ -7888,7 +7888,7 @@ def module.decode_element_section_loop
     (env, q, i)
 
 /-- [itasca::module::decode_element_section]:
-    Source: 'src/module.rs', lines 981:0-1003:1 -/
+    Source: 'src/module.rs', lines 991:0-1013:1 -/
 def module.decode_element_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
   Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
@@ -7907,7 +7907,7 @@ def module.decode_element_section
     ok (r1, env)
 
 /-- [itasca::module::decode_start_section]:
-    Source: 'src/module.rs', lines 949:0-960:1 -/
+    Source: 'src/module.rs', lines 959:0-970:1 -/
 def module.decode_start_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
   Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
@@ -7941,7 +7941,7 @@ def module.decode_start_section
     ok (r1, env)
 
 /-- [itasca::module::export_desc]:
-    Source: 'src/module.rs', lines 896:0-925:1 -/
+    Source: 'src/module.rs', lines 906:0-935:1 -/
 def module.export_desc
   (env : _root_.Itasca.module.Env) (kind : Std.U8) (idx : Std.U32) :
   Result (core.result.Result _root_.Itasca.module.ExportDesc
@@ -7972,7 +7972,7 @@ def module.export_desc
   | _ => ok (core.result.Result.Err (error.Error.InvalidType kind))
 
 /-- [itasca::module::names_equal]: loop body 0:
-    Source: 'src/module.rs', lines 870:4-878:5 -/
+    Source: 'src/module.rs', lines 880:4-888:5 -/
 @[rust_loop_body]
 def module.names_equal_loop.body
   (a : Slice Std.U8) (b : Slice Std.U8) (i : Std.Usize) :
@@ -7990,7 +7990,7 @@ def module.names_equal_loop.body
          ok (cont i4)
 
 /-- [itasca::module::names_equal]: loop 0:
-    Source: 'src/module.rs', lines 870:4-878:5 -/
+    Source: 'src/module.rs', lines 880:4-888:5 -/
 @[rust_loop]
 def module.names_equal_loop
   (a : Slice Std.U8) (b : Slice Std.U8) (i : Std.Usize) : Result Bool := do
@@ -7999,7 +7999,7 @@ def module.names_equal_loop
     i
 
 /-- [itasca::module::names_equal]:
-    Source: 'src/module.rs', lines 865:0-879:1 -/
+    Source: 'src/module.rs', lines 875:0-889:1 -/
 def module.names_equal
   (a : Slice Std.U8) (b : Slice Std.U8) : Result Bool := do
   let i := Slice.len a
@@ -8009,7 +8009,7 @@ def module.names_equal
   else module.names_equal_loop a b 0#usize
 
 /-- [itasca::module::export_name_taken]: loop body 0:
-    Source: 'src/module.rs', lines 885:4-894:1 -/
+    Source: 'src/module.rs', lines 895:4-904:1 -/
 @[rust_loop_body]
 def module.export_name_taken_loop.body
   (env : _root_.Itasca.module.Env) («name» : Slice Std.U8) (i : Std.Usize) :
@@ -8030,7 +8030,7 @@ def module.export_name_taken_loop.body
          ok (cont i2)
 
 /-- [itasca::module::export_name_taken]: loop 0:
-    Source: 'src/module.rs', lines 885:4-894:1 -/
+    Source: 'src/module.rs', lines 895:4-904:1 -/
 @[rust_loop]
 def module.export_name_taken_loop
   (env : _root_.Itasca.module.Env) («name» : Slice Std.U8) (i : Std.Usize) :
@@ -8041,7 +8041,7 @@ def module.export_name_taken_loop
     i
 
 /-- [itasca::module::export_name_taken]:
-    Source: 'src/module.rs', lines 883:0-894:1 -/
+    Source: 'src/module.rs', lines 893:0-904:1 -/
 @[reducible]
 def module.export_name_taken
   (env : _root_.Itasca.module.Env) («name» : Slice Std.U8) :
@@ -8050,7 +8050,7 @@ def module.export_name_taken
   module.export_name_taken_loop env «name» 0#usize
 
 /-- [itasca::module::decode_export_section]: loop body 0:
-    Source: 'src/module.rs', lines 931:4-945:5 -/
+    Source: 'src/module.rs', lines 941:4-955:5 -/
 @[rust_loop_body]
 def module.decode_export_section_loop.body
   (data : Slice Std.U8) (count : Std.U32) (env : _root_.Itasca.module.Env)
@@ -8115,7 +8115,7 @@ def module.decode_export_section_loop.body
       ok (done (r1, env))
 
 /-- [itasca::module::decode_export_section]: loop 0:
-    Source: 'src/module.rs', lines 931:4-945:5 -/
+    Source: 'src/module.rs', lines 941:4-955:5 -/
 @[rust_loop]
 def module.decode_export_section_loop
   (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
@@ -8129,7 +8129,7 @@ def module.decode_export_section_loop
     (env, q, i)
 
 /-- [itasca::module::decode_export_section]:
-    Source: 'src/module.rs', lines 927:0-946:1 -/
+    Source: 'src/module.rs', lines 937:0-956:1 -/
 def module.decode_export_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
   Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
@@ -8148,7 +8148,7 @@ def module.decode_export_section
     ok (r1, env)
 
 /-- [itasca::module::decode_value_type]:
-    Source: 'src/module.rs', lines 379:0-388:1 -/
+    Source: 'src/module.rs', lines 389:0-398:1 -/
 def module.decode_value_type
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result (_root_.Itasca.types.ValueType × Std.Usize)
@@ -8171,7 +8171,7 @@ def module.decode_value_type
       error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::module::decode_global_type]:
-    Source: 'src/module.rs', lines 470:0-490:1 -/
+    Source: 'src/module.rs', lines 480:0-500:1 -/
 def module.decode_global_type
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result (_root_.Itasca.types.GlobalType × Std.Usize)
@@ -8205,7 +8205,7 @@ def module.decode_global_type
       _root_.Itasca.error.Error) residual
 
 /-- [itasca::module::decode_global_section]: loop body 0:
-    Source: 'src/module.rs', lines 852:4-862:5 -/
+    Source: 'src/module.rs', lines 862:4-872:5 -/
 @[rust_loop_body]
 def module.decode_global_section_loop.body
   (data : Slice Std.U8) (count : Std.U32) (env : _root_.Itasca.module.Env)
@@ -8246,7 +8246,7 @@ def module.decode_global_section_loop.body
       ok (done (r1, env))
 
 /-- [itasca::module::decode_global_section]: loop 0:
-    Source: 'src/module.rs', lines 852:4-862:5 -/
+    Source: 'src/module.rs', lines 862:4-872:5 -/
 @[rust_loop]
 def module.decode_global_section_loop
   (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
@@ -8260,7 +8260,7 @@ def module.decode_global_section_loop
     (env, q, i)
 
 /-- [itasca::module::decode_global_section]:
-    Source: 'src/module.rs', lines 848:0-863:1 -/
+    Source: 'src/module.rs', lines 858:0-873:1 -/
 def module.decode_global_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
   Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
@@ -8279,7 +8279,7 @@ def module.decode_global_section
     ok (r1, env)
 
 /-- [itasca::module::decode_limits]:
-    Source: 'src/module.rs', lines 423:0-443:1 -/
+    Source: 'src/module.rs', lines 433:0-453:1 -/
 def module.decode_limits
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result (_root_.Itasca.types.Limits × Std.Usize)
@@ -8329,7 +8329,7 @@ def module.decode_limits
       error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::module::decode_mem_type]:
-    Source: 'src/module.rs', lines 463:0-467:1 -/
+    Source: 'src/module.rs', lines 473:0-477:1 -/
 def module.decode_mem_type
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result (_root_.Itasca.types.MemType × Std.Usize)
@@ -8355,7 +8355,7 @@ def module.decode_mem_type
       _root_.Itasca.error.Error) residual
 
 /-- [itasca::module::decode_memory_section]: loop body 0:
-    Source: 'src/module.rs', lines 834:4-845:5 -/
+    Source: 'src/module.rs', lines 844:4-855:5 -/
 @[rust_loop_body]
 def module.decode_memory_section_loop.body
   (data : Slice Std.U8) (count : Std.U32) (env : _root_.Itasca.module.Env)
@@ -8387,7 +8387,7 @@ def module.decode_memory_section_loop.body
       ok (done (r1, env))
 
 /-- [itasca::module::decode_memory_section]: loop 0:
-    Source: 'src/module.rs', lines 834:4-845:5 -/
+    Source: 'src/module.rs', lines 844:4-855:5 -/
 @[rust_loop]
 def module.decode_memory_section_loop
   (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
@@ -8401,7 +8401,7 @@ def module.decode_memory_section_loop
     (env, q, i)
 
 /-- [itasca::module::decode_memory_section]:
-    Source: 'src/module.rs', lines 830:0-846:1 -/
+    Source: 'src/module.rs', lines 840:0-856:1 -/
 def module.decode_memory_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
   Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
@@ -8420,7 +8420,7 @@ def module.decode_memory_section
     ok (r1, env)
 
 /-- [itasca::module::decode_table_type]:
-    Source: 'src/module.rs', lines 446:0-460:1 -/
+    Source: 'src/module.rs', lines 456:0-470:1 -/
 def module.decode_table_type
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result (_root_.Itasca.types.TableType × Std.Usize)
@@ -8459,7 +8459,7 @@ def module.decode_table_type
       error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::module::decode_table_section]: loop body 0:
-    Source: 'src/module.rs', lines 816:4-827:5 -/
+    Source: 'src/module.rs', lines 826:4-837:5 -/
 @[rust_loop_body]
 def module.decode_table_section_loop.body
   (data : Slice Std.U8) (count : Std.U32) (env : _root_.Itasca.module.Env)
@@ -8492,7 +8492,7 @@ def module.decode_table_section_loop.body
       ok (done (r1, env))
 
 /-- [itasca::module::decode_table_section]: loop 0:
-    Source: 'src/module.rs', lines 816:4-827:5 -/
+    Source: 'src/module.rs', lines 826:4-837:5 -/
 @[rust_loop]
 def module.decode_table_section_loop
   (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
@@ -8506,7 +8506,7 @@ def module.decode_table_section_loop
     (env, q, i)
 
 /-- [itasca::module::decode_table_section]:
-    Source: 'src/module.rs', lines 812:0-828:1 -/
+    Source: 'src/module.rs', lines 822:0-838:1 -/
 def module.decode_table_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
   Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
@@ -8525,7 +8525,7 @@ def module.decode_table_section
     ok (r1, env)
 
 /-- [itasca::module::copy_value_types]: loop body 0:
-    Source: 'src/module.rs', lines 681:4-687:5 -/
+    Source: 'src/module.rs', lines 691:4-697:5 -/
 @[rust_loop_body]
 def module.copy_value_types_loop.body
   (src : Slice _root_.Itasca.types.ValueType)
@@ -8543,7 +8543,7 @@ def module.copy_value_types_loop.body
     ok (cont (out1, i2))
 
 /-- [itasca::module::copy_value_types]: loop 0:
-    Source: 'src/module.rs', lines 681:4-687:5 -/
+    Source: 'src/module.rs', lines 691:4-697:5 -/
 @[rust_loop]
 def module.copy_value_types_loop
   (src : Slice _root_.Itasca.types.ValueType)
@@ -8555,7 +8555,7 @@ def module.copy_value_types_loop
     (out, i)
 
 /-- [itasca::module::copy_value_types]:
-    Source: 'src/module.rs', lines 678:0-688:1 -/
+    Source: 'src/module.rs', lines 688:0-698:1 -/
 @[reducible]
 def module.copy_value_types
   (src : Slice _root_.Itasca.types.ValueType) :
@@ -8565,7 +8565,7 @@ def module.copy_value_types
     _root_.Itasca.types.ValueType) 0#usize
 
 /-- [itasca::module::copy_func_type]:
-    Source: 'src/module.rs', lines 690:0-695:1 -/
+    Source: 'src/module.rs', lines 700:0-705:1 -/
 def module.copy_func_type
   (ft : _root_.Itasca.types.FuncType) :
   Result _root_.Itasca.types.FuncType
@@ -8577,7 +8577,7 @@ def module.copy_func_type
   ok { params := v, results := v1 }
 
 /-- [itasca::module::lookup_type]:
-    Source: 'src/module.rs', lines 698:0-704:1 -/
+    Source: 'src/module.rs', lines 708:0-714:1 -/
 def module.lookup_type
   (env : _root_.Itasca.module.Env) (idx : Std.U32) :
   Result (core.result.Result _root_.Itasca.types.FuncType
@@ -8595,7 +8595,7 @@ def module.lookup_type
     ok (core.result.Result.Ok ft1)
 
 /-- [itasca::module::decode_function_section]: loop body 0:
-    Source: 'src/module.rs', lines 799:4-809:5 -/
+    Source: 'src/module.rs', lines 809:4-819:5 -/
 @[rust_loop_body]
 def module.decode_function_section_loop.body
   (data : Slice Std.U8) (count : Std.U32) (env : _root_.Itasca.module.Env)
@@ -8634,7 +8634,7 @@ def module.decode_function_section_loop.body
       ok (done (r1, env))
 
 /-- [itasca::module::decode_function_section]: loop 0:
-    Source: 'src/module.rs', lines 799:4-809:5 -/
+    Source: 'src/module.rs', lines 809:4-819:5 -/
 @[rust_loop]
 def module.decode_function_section_loop
   (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
@@ -8648,7 +8648,7 @@ def module.decode_function_section_loop
     (env, q, i)
 
 /-- [itasca::module::decode_function_section]:
-    Source: 'src/module.rs', lines 795:0-810:1 -/
+    Source: 'src/module.rs', lines 805:0-820:1 -/
 def module.decode_function_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
   Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
@@ -8667,7 +8667,7 @@ def module.decode_function_section
     ok (r1, env)
 
 /-- [itasca::module::decode_import]:
-    Source: 'src/module.rs', lines 724:0-780:1 -/
+    Source: 'src/module.rs', lines 734:0-790:1 -/
 def module.decode_import
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
   Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
@@ -8826,7 +8826,7 @@ def module.decode_import
     ok (r1, env)
 
 /-- [itasca::module::decode_import_section]: loop body 0:
-    Source: 'src/module.rs', lines 786:4-792:5 -/
+    Source: 'src/module.rs', lines 796:4-802:5 -/
 @[rust_loop_body]
 def module.decode_import_section_loop.body
   (data : Slice Std.U8) (count : Std.U32) (env : _root_.Itasca.module.Env)
@@ -8851,7 +8851,7 @@ def module.decode_import_section_loop.body
       ok (done (r1, env1))
 
 /-- [itasca::module::decode_import_section]: loop 0:
-    Source: 'src/module.rs', lines 786:4-792:5 -/
+    Source: 'src/module.rs', lines 796:4-802:5 -/
 @[rust_loop]
 def module.decode_import_section_loop
   (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
@@ -8865,7 +8865,7 @@ def module.decode_import_section_loop
     (env, q, i)
 
 /-- [itasca::module::decode_import_section]:
-    Source: 'src/module.rs', lines 782:0-793:1 -/
+    Source: 'src/module.rs', lines 792:0-803:1 -/
 def module.decode_import_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
   Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
@@ -8884,7 +8884,7 @@ def module.decode_import_section
     ok (r1, env)
 
 /-- [itasca::module::decode_value_types]: loop body 0:
-    Source: 'src/module.rs', lines 395:4-403:5 -/
+    Source: 'src/module.rs', lines 405:4-413:5 -/
 @[rust_loop_body]
 def module.decode_value_types_loop.body
   (data : Slice Std.U8) (count : Std.U32)
@@ -8913,7 +8913,7 @@ def module.decode_value_types_loop.body
       ok (done r1)
 
 /-- [itasca::module::decode_value_types]: loop 0:
-    Source: 'src/module.rs', lines 395:4-403:5 -/
+    Source: 'src/module.rs', lines 405:4-413:5 -/
 @[rust_loop]
 def module.decode_value_types_loop
   (data : Slice Std.U8) (count : Std.U32)
@@ -8928,7 +8928,7 @@ def module.decode_value_types_loop
     (out, q, i)
 
 /-- [itasca::module::decode_value_types]:
-    Source: 'src/module.rs', lines 390:0-404:1 -/
+    Source: 'src/module.rs', lines 400:0-414:1 -/
 def module.decode_value_types
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result ((alloc.vec.Vec _root_.Itasca.types.ValueType) ×
@@ -8947,7 +8947,7 @@ def module.decode_value_types
       error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::module::decode_func_type]:
-    Source: 'src/module.rs', lines 409:0-420:1 -/
+    Source: 'src/module.rs', lines 419:0-430:1 -/
 def module.decode_func_type
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result (_root_.Itasca.types.FuncType × Std.Usize)
@@ -8989,7 +8989,7 @@ def module.decode_func_type
       error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::module::decode_type_section]: loop body 0:
-    Source: 'src/module.rs', lines 712:4-720:5 -/
+    Source: 'src/module.rs', lines 722:4-730:5 -/
 @[rust_loop_body]
 def module.decode_type_section_loop.body
   (data : Slice Std.U8) (count : Std.U32) (env : _root_.Itasca.module.Env)
@@ -9016,7 +9016,7 @@ def module.decode_type_section_loop.body
       ok (done (r1, env))
 
 /-- [itasca::module::decode_type_section]: loop 0:
-    Source: 'src/module.rs', lines 712:4-720:5 -/
+    Source: 'src/module.rs', lines 722:4-730:5 -/
 @[rust_loop]
 def module.decode_type_section_loop
   (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
@@ -9030,7 +9030,7 @@ def module.decode_type_section_loop
     (env, q, i)
 
 /-- [itasca::module::decode_type_section]:
-    Source: 'src/module.rs', lines 708:0-721:1 -/
+    Source: 'src/module.rs', lines 718:0-731:1 -/
 def module.decode_type_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
   Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
@@ -9049,7 +9049,7 @@ def module.decode_type_section
     ok (r1, env)
 
 /-- [itasca::module::decode_env_section]:
-    Source: 'src/module.rs', lines 1005:0-1018:1 -/
+    Source: 'src/module.rs', lines 1015:0-1028:1 -/
 def module.decode_env_section
   (data : Slice Std.U8) (pos : Std.Usize) (id : Std.U8)
   (env : _root_.Itasca.module.Env) :
@@ -9069,7 +9069,7 @@ def module.decode_env_section
   | _ => ok (core.result.Result.Err (error.Error.UnknownSection id), env)
 
 /-- [itasca::module::read_header]:
-    Source: 'src/module.rs', lines 349:0-365:1 -/
+    Source: 'src/module.rs', lines 359:0-375:1 -/
 def module.read_header
   (data : Slice Std.U8) :
   Result (core.result.Result Std.Usize _root_.Itasca.error.Error)
@@ -9159,7 +9159,7 @@ def module.read_header
       Std.Usize error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::module::validate_env_with]: loop body 0:
-    Source: 'src/module.rs', lines 1041:4-1067:5
+    Source: 'src/module.rs', lines 1051:4-1077:5
     Visibility: public -/
 @[rust_loop_body]
 def module.validate_env_with_loop.body
@@ -9223,7 +9223,7 @@ def module.validate_env_with_loop.body
       ok (done (r1, v))
 
 /-- [itasca::module::validate_env_with]: loop 0:
-    Source: 'src/module.rs', lines 1041:4-1067:5
+    Source: 'src/module.rs', lines 1051:4-1077:5
     Visibility: public -/
 @[rust_loop]
 def module.validate_env_with_loop
@@ -9238,7 +9238,7 @@ def module.validate_env_with_loop
     (v, env, q, last_id)
 
 /-- [itasca::module::validate_env_with]:
-    Source: 'src/module.rs', lines 1037:0-1068:1
+    Source: 'src/module.rs', lines 1047:0-1078:1
     Visibility: public -/
 def module.validate_env_with
   {V : Type} (ModuleVisitorInst : module.ModuleVisitor V) (data : Slice Std.U8)
@@ -9308,7 +9308,7 @@ def module.validate_module_with
       ok (r1, v1)
 
 /-- [itasca::module::ModuleVisitor::on_custom_section]:
-    Source: 'src/module.rs', lines 1457:4-1459:5
+    Source: 'src/module.rs', lines 1467:4-1469:5
     Visibility: public -/
 @[trait_default]
 def module.ModuleVisitor.on_custom_section.default
@@ -9318,7 +9318,7 @@ def module.ModuleVisitor.on_custom_section.default
   ok (core.result.Result.Ok (), self)
 
 /-- Trait implementation: [itasca::module::{impl itasca::module::ModuleVisitor for itasca::module::EmptyModuleVisitor}]
-    Source: 'src/module.rs', lines 1465:0-1465:44 -/
+    Source: 'src/module.rs', lines 1475:0-1475:44 -/
 @[reducible]
 def module.EmptyModuleVisitor.Insts.ItascaModuleModuleVisitor :
   module.ModuleVisitor _root_.Itasca.module.EmptyModuleVisitor := {
@@ -9326,7 +9326,7 @@ def module.EmptyModuleVisitor.Insts.ItascaModuleModuleVisitor :
 }
 
 /-- [itasca::module::validate_tail]:
-    Source: 'src/module.rs', lines 1363:0-1366:1
+    Source: 'src/module.rs', lines 1373:0-1376:1
     Visibility: public -/
 def module.validate_tail
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
@@ -9339,7 +9339,7 @@ def module.validate_tail
   ok r
 
 /-- [itasca::module::build_func_locals]: loop body 0:
-    Source: 'src/module.rs', lines 1109:4-1115:5 -/
+    Source: 'src/module.rs', lines 1119:4-1125:5 -/
 @[rust_loop_body]
 def module.build_func_locals_loop.body
   (declared : Slice _root_.Itasca.types.ValueType)
@@ -9357,7 +9357,7 @@ def module.build_func_locals_loop.body
     ok (cont (locals1, i2))
 
 /-- [itasca::module::build_func_locals]: loop 0:
-    Source: 'src/module.rs', lines 1109:4-1115:5 -/
+    Source: 'src/module.rs', lines 1119:4-1125:5 -/
 @[rust_loop]
 def module.build_func_locals_loop
   (declared : Slice _root_.Itasca.types.ValueType)
@@ -9370,7 +9370,7 @@ def module.build_func_locals_loop
     (locals, i)
 
 /-- [itasca::module::build_func_locals]:
-    Source: 'src/module.rs', lines 1106:0-1116:1 -/
+    Source: 'src/module.rs', lines 1116:0-1126:1 -/
 def module.build_func_locals
   (params : Slice _root_.Itasca.types.ValueType)
   (declared : Slice _root_.Itasca.types.ValueType) :
@@ -9380,7 +9380,7 @@ def module.build_func_locals
   module.build_func_locals_loop declared locals 0#usize
 
 /-- [itasca::module::push_locals]: loop body 0:
-    Source: 'src/module.rs', lines 1074:4-1080:5 -/
+    Source: 'src/module.rs', lines 1084:4-1090:5 -/
 @[rust_loop_body]
 def module.push_locals_loop.body
   (count : Std.U32) (vt : _root_.Itasca.types.ValueType)
@@ -9396,7 +9396,7 @@ def module.push_locals_loop.body
     ok (cont (out1, i1))
 
 /-- [itasca::module::push_locals]: loop 0:
-    Source: 'src/module.rs', lines 1074:4-1080:5 -/
+    Source: 'src/module.rs', lines 1084:4-1090:5 -/
 @[rust_loop]
 def module.push_locals_loop
   (out : alloc.vec.Vec _root_.Itasca.types.ValueType) (count : Std.U32)
@@ -9408,7 +9408,7 @@ def module.push_locals_loop
     (out, i)
 
 /-- [itasca::module::push_locals]:
-    Source: 'src/module.rs', lines 1072:0-1081:1 -/
+    Source: 'src/module.rs', lines 1082:0-1091:1 -/
 @[reducible]
 def module.push_locals
   (out : alloc.vec.Vec _root_.Itasca.types.ValueType) (count : Std.U32)
@@ -9418,7 +9418,7 @@ def module.push_locals
   module.push_locals_loop out count vt 0#u32
 
 /-- [itasca::module::decode_locals]: loop body 0:
-    Source: 'src/module.rs', lines 1089:4-1103:5 -/
+    Source: 'src/module.rs', lines 1099:4-1113:5 -/
 @[rust_loop_body]
 def module.decode_locals_loop.body
   (data : Slice Std.U8) (groups : Std.U32)
@@ -9464,7 +9464,7 @@ def module.decode_locals_loop.body
       ok (done r1)
 
 /-- [itasca::module::decode_locals]: loop 0:
-    Source: 'src/module.rs', lines 1089:4-1103:5 -/
+    Source: 'src/module.rs', lines 1099:4-1113:5 -/
 @[rust_loop]
 def module.decode_locals_loop
   (data : Slice Std.U8) (groups : Std.U32)
@@ -9479,7 +9479,7 @@ def module.decode_locals_loop
     (out, q, i)
 
 /-- [itasca::module::decode_locals]:
-    Source: 'src/module.rs', lines 1084:0-1104:1 -/
+    Source: 'src/module.rs', lines 1094:0-1114:1 -/
 def module.decode_locals
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result ((alloc.vec.Vec _root_.Itasca.types.ValueType) ×
@@ -9498,7 +9498,7 @@ def module.decode_locals
       error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::module::validate_code_entry_with]:
-    Source: 'src/module.rs', lines 1136:0-1179:1
+    Source: 'src/module.rs', lines 1146:0-1189:1
     Visibility: public -/
 def module.validate_code_entry_with
   {V : Type} (codeOpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
@@ -9585,7 +9585,7 @@ def module.validate_code_entry_with
       ok (r1, v)
 
 /-- [itasca::module::validate_code_entry]:
-    Source: 'src/module.rs', lines 1185:0-1193:1
+    Source: 'src/module.rs', lines 1195:0-1203:1
     Visibility: public -/
 def module.validate_code_entry
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env)
@@ -9598,7 +9598,7 @@ def module.validate_code_entry
   ok r
 
 /-- [itasca::module::CodeVisitor::on_code_entry]:
-    Source: 'src/module.rs', lines 1514:4-1525:5
+    Source: 'src/module.rs', lines 1524:4-1535:5
     Visibility: public -/
 @[trait_default]
 def module.CodeVisitor.on_code_entry.default
@@ -9619,7 +9619,7 @@ def module.CodeVisitor.on_code_entry.default
     ok (r1, self)
 
 /-- [itasca::module::CodeVisitor::on_need_bytes]:
-    Source: 'src/module.rs', lines 1501:4-1503:5
+    Source: 'src/module.rs', lines 1511:4-1513:5
     Visibility: public -/
 @[trait_default]
 def module.CodeVisitor.on_need_bytes.default
@@ -9629,7 +9629,7 @@ def module.CodeVisitor.on_need_bytes.default
   ok (core.result.Result.Ok (), self)
 
 /-- Trait implementation: [itasca::module::{impl itasca::module::CodeVisitor for itasca::module::ValidatingCodeVisitor}]
-    Source: 'src/module.rs', lines 1532:0-1532:45 -/
+    Source: 'src/module.rs', lines 1542:0-1542:45 -/
 @[reducible]
 def module.ValidatingCodeVisitor.Insts.ItascaModuleCodeVisitor :
   module.CodeVisitor _root_.Itasca.module.ValidatingCodeVisitor := {
@@ -9638,7 +9638,7 @@ def module.ValidatingCodeVisitor.Insts.ItascaModuleCodeVisitor :
 }
 
 /-- [itasca::module::validate_code]:
-    Source: 'src/module.rs', lines 1319:0-1322:1
+    Source: 'src/module.rs', lines 1329:0-1332:1
     Visibility: public -/
 def module.validate_code
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
@@ -9651,7 +9651,7 @@ def module.validate_code
   ok r
 
 /-- [itasca::module::validate_env]:
-    Source: 'src/module.rs', lines 1021:0-1024:1
+    Source: 'src/module.rs', lines 1031:0-1034:1
     Visibility: public -/
 def module.validate_env
   (data : Slice Std.U8) :
@@ -9664,7 +9664,7 @@ def module.validate_env
   ok r
 
 /-- [itasca::module::validate_module]:
-    Source: 'src/module.rs', lines 230:0-238:1
+    Source: 'src/module.rs', lines 233:0-241:1
     Visibility: public -/
 def module.validate_module
   (data : Slice Std.U8) :
@@ -9703,7 +9703,7 @@ def module.validate_module
         _root_.Itasca.error.Error) residual
 
 /-- [itasca::module::import_types]: loop body 0:
-    Source: 'src/module.rs', lines 253:4-268:5
+    Source: 'src/module.rs', lines 263:4-278:5
     Visibility: public -/
 @[rust_loop_body]
 def module.import_types_loop.body
@@ -9749,7 +9749,7 @@ def module.import_types_loop.body
       ok (cont (out1, i3))
 
 /-- [itasca::module::import_types]: loop 0:
-    Source: 'src/module.rs', lines 253:4-268:5
+    Source: 'src/module.rs', lines 263:4-278:5
     Visibility: public -/
 @[rust_loop]
 def module.import_types_loop
@@ -9763,7 +9763,7 @@ def module.import_types_loop
     (out, i)
 
 /-- [itasca::module::import_types]:
-    Source: 'src/module.rs', lines 250:0-269:1
+    Source: 'src/module.rs', lines 260:0-279:1
     Visibility: public -/
 @[reducible]
 def module.import_types
@@ -9775,7 +9775,7 @@ def module.import_types
     _root_.Itasca.types.ExternType) 0#usize
 
 /-- [itasca::module::export_types]: loop body 0:
-    Source: 'src/module.rs', lines 281:4-317:5
+    Source: 'src/module.rs', lines 291:4-327:5
     Visibility: public -/
 @[rust_loop_body]
 def module.export_types_loop.body
@@ -9844,7 +9844,7 @@ def module.export_types_loop.body
         ok (cont (out1, i3))
 
 /-- [itasca::module::export_types]: loop 0:
-    Source: 'src/module.rs', lines 281:4-317:5
+    Source: 'src/module.rs', lines 291:4-327:5
     Visibility: public -/
 @[rust_loop]
 def module.export_types_loop
@@ -9858,7 +9858,7 @@ def module.export_types_loop
     (out, i)
 
 /-- [itasca::module::export_types]:
-    Source: 'src/module.rs', lines 278:0-318:1
+    Source: 'src/module.rs', lines 288:0-328:1
     Visibility: public -/
 @[reducible]
 def module.export_types

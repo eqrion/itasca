@@ -698,7 +698,7 @@ structure module.Module where
   tail : _root_.Itasca.module.Tail
 
 /-- Trait declaration: [itasca::module::CodeVisitor]
-    Source: 'src/module.rs', lines 1494:0-1526:1
+    Source: 'src/module.rs', lines 1504:0-1536:1
     Visibility: public -/
 structure module.CodeVisitor (Self : Type) where
   on_need_bytes : Self → Std.Usize → Result ((core.result.Result Unit
@@ -716,14 +716,14 @@ structure types.CustomSection where
   payload_end : Std.Usize
 
 /-- Trait declaration: [itasca::module::ModuleVisitor]
-    Source: 'src/module.rs', lines 1450:0-1460:1
+    Source: 'src/module.rs', lines 1460:0-1470:1
     Visibility: public -/
 structure module.ModuleVisitor (Self : Type) where
   on_custom_section : Self → _root_.Itasca.types.CustomSection → Result
     ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
 
 /-- [itasca::module::CodeSection]
-    Source: 'src/module.rs', lines 1226:0-1235:1
+    Source: 'src/module.rs', lines 1236:0-1245:1
     Visibility: public -/
 structure module.CodeSection where
   count : Std.U32
@@ -731,13 +731,13 @@ structure module.CodeSection where
   «end» : Std.Usize
 
 /-- [itasca::module::EmptyModuleVisitor]
-    Source: 'src/module.rs', lines 1464:0-1464:30
+    Source: 'src/module.rs', lines 1474:0-1474:30
     Visibility: public -/
 @[reducible]
 def module.EmptyModuleVisitor := Unit
 
 /-- [itasca::module::ValidatingCodeVisitor]
-    Source: 'src/module.rs', lines 1531:0-1531:33
+    Source: 'src/module.rs', lines 1541:0-1541:33
     Visibility: public -/
 @[reducible]
 def module.ValidatingCodeVisitor := Unit
