@@ -214,8 +214,9 @@ impl CodeBatch<'_> {
     }
 
     /// Validates the next entry, which must be function `index`, reporting
-    /// its operators to `visitor`. After a failure every call returns the
-    /// first error.
+    /// its operators to `visitor` with positions relative to
+    /// [`CodeBatch::code`]. After a failure every call returns the first
+    /// error.
     pub fn validate_func<V: OpVisitor>(&mut self, index: usize, visitor: &mut V) -> Result<()> {
         if self.error.is_none() {
             match self.validate_next(index, visitor) {
@@ -246,14 +247,7 @@ impl CodeBatch<'_> {
         if self.num_validated >= self.num_funcs || index != self.first_func + self.num_validated {
             return Err(Error::Host);
         }
-        let entry = frame_entry(self.code, self.validated_end, index, self.code_offset)?;
-        let end = entry.end - self.code_offset;
-        let bytes = &self.code[self.validated_end..end];
-        let entry_end = module::validate_code_entry_with(bytes, 0, self.env, index, visitor)?;
-        if entry_end != bytes.len() {
-            return Err(Error::SectionSizeMismatch);
-        }
-        Ok(end)
+        module::validate_code_entry_with(self.code, self.validated_end, self.env, index, visitor)
     }
 
     fn finish(self) -> Result<()> {

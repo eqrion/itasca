@@ -9979,7 +9979,7 @@ def stream.CodeBatch.impl.code_offset
   ok self.code_offset
 
 /-- [itasca::stream::frame_entry]:
-    Source: 'src/stream.rs', lines 474:0-482:1 -/
+    Source: 'src/stream.rs', lines 468:0-476:1 -/
 def stream.frame_entry
   (code1 : Slice Std.U8) (pos : Std.Usize) (index : Std.Usize)
   (code_offset : Std.Usize) :
@@ -10051,7 +10051,7 @@ def stream.CodeBatch.next_entry
       ok (r1, self)
 
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::validate_next]:
-    Source: 'src/stream.rs', lines 245:4-257:5 -/
+    Source: 'src/stream.rs', lines 246:4-251:5 -/
 def stream.CodeBatch.validate_next
   {V : Type} (codeOpVisitorInst : code.OpVisitor V)
   (self : _root_.Itasca.stream.CodeBatch) (index : Std.Usize) (visitor : V) :
@@ -10064,43 +10064,11 @@ def stream.CodeBatch.validate_next
     if index != i
     then ok (core.result.Result.Err error.Error.Host, visitor)
     else
-      let r ←
-        stream.frame_entry self.code self.validated_end index self.code_offset
-      let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-      match cf with
-      | core.ops.control_flow.ControlFlow.Continue val =>
-        let «end» ← val.end - self.code_offset
-        let bytes ←
-          core.slice.index.Slice.index
-            (core.slice.index.SliceIndexRangeUsizeSlice Std.U8) self.code
-            { start := self.validated_end, «end» }
-        let (r1, visitor1) ←
-          module.validate_code_entry_with codeOpVisitorInst bytes 0#usize
-            self.env index visitor
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue val1 =>
-          let i1 := Slice.len bytes
-          if val1 != i1
-          then
-            ok (core.result.Result.Err error.Error.SectionSizeMismatch,
-              visitor1)
-          else ok (core.result.Result.Ok «end», visitor1)
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Std.Usize (core.convert.FromSame _root_.Itasca.error.Error)
-              residual
-          ok (r2, visitor1)
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r1 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Std.Usize (core.convert.FromSame _root_.Itasca.error.Error)
-            residual
-        ok (r1, visitor)
+      module.validate_code_entry_with codeOpVisitorInst self.code
+        self.validated_end self.env index visitor
 
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::validate_func]:
-    Source: 'src/stream.rs', lines 219:4-233:5
+    Source: 'src/stream.rs', lines 220:4-234:5
     Visibility: public -/
 def stream.CodeBatch.validate_func
   {V : Type} (codeOpVisitorInst : code.OpVisitor V)
@@ -10136,7 +10104,7 @@ def stream.CodeBatch.validate_func
       visitor1)
 
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::validate_all]: loop body 0:
-    Source: 'src/stream.rs', lines 237:8-242:9 -/
+    Source: 'src/stream.rs', lines 238:8-243:9 -/
 @[rust_loop_body]
 def stream.CodeBatch.validate_all_loop.body
   (self : _root_.Itasca.stream.CodeBatch) (ok1 : Bool) :
@@ -10165,7 +10133,7 @@ def stream.CodeBatch.validate_all_loop.body
       self.dispatch_end, self.num_validated, self.validated_end, self.error))
 
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::validate_all]: loop 0:
-    Source: 'src/stream.rs', lines 237:8-242:9 -/
+    Source: 'src/stream.rs', lines 238:8-243:9 -/
 @[rust_loop]
 def stream.CodeBatch.validate_all_loop
   (self : _root_.Itasca.stream.CodeBatch) (ok1 : Bool) :
@@ -10178,7 +10146,7 @@ def stream.CodeBatch.validate_all_loop
     (self, ok1)
 
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::validate_all]:
-    Source: 'src/stream.rs', lines 235:4-243:5 -/
+    Source: 'src/stream.rs', lines 236:4-244:5 -/
 def stream.CodeBatch.validate_all
   (self : _root_.Itasca.stream.CodeBatch) :
   Result _root_.Itasca.stream.CodeBatch
@@ -10202,7 +10170,7 @@ def stream.CodeBatch.validate_all
     }
 
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::finish]:
-    Source: 'src/stream.rs', lines 259:4-269:5 -/
+    Source: 'src/stream.rs', lines 253:4-263:5 -/
 def stream.CodeBatch.finish
   (self : _root_.Itasca.stream.CodeBatch) :
   Result (core.result.Result Unit _root_.Itasca.error.Error)
@@ -10219,7 +10187,7 @@ def stream.CodeBatch.finish
   | some e => ok (core.result.Result.Err e)
 
 /-- [itasca::stream::retire_code_batch]: loop body 0:
-    Source: 'src/stream.rs', lines 447:4-449:5 -/
+    Source: 'src/stream.rs', lines 441:4-443:5 -/
 @[rust_loop_body]
 def stream.retire_code_batch_loop.body
   (pending : alloc.vec.Vec Std.Usize) (i : Std.Usize) (i1 : Std.Usize) :
@@ -10238,7 +10206,7 @@ def stream.retire_code_batch_loop.body
   else ok (done i1)
 
 /-- [itasca::stream::retire_code_batch]: loop 0:
-    Source: 'src/stream.rs', lines 447:4-449:5 -/
+    Source: 'src/stream.rs', lines 441:4-443:5 -/
 @[rust_loop]
 def stream.retire_code_batch_loop
   (pending : alloc.vec.Vec Std.Usize) (i : Std.Usize) (i1 : Std.Usize) :
@@ -10249,7 +10217,7 @@ def stream.retire_code_batch_loop
     i1
 
 /-- [itasca::stream::retire_code_batch]:
-    Source: 'src/stream.rs', lines 437:0-457:1 -/
+    Source: 'src/stream.rs', lines 431:0-451:1 -/
 def stream.retire_code_batch
   {V : Type} (StreamingVisitorInst : stream.StreamingVisitor V)
   (module_id : Std.U64) (visitor : V) (pending : alloc.vec.Vec Std.Usize) :
@@ -10287,7 +10255,7 @@ def stream.retire_code_batch
     ok (r1, visitor1, pending)
 
 /-- [itasca::stream::retire_all_code_batches]: loop body 0:
-    Source: 'src/stream.rs', lines 466:4-470:1 -/
+    Source: 'src/stream.rs', lines 460:4-464:1 -/
 @[rust_loop_body]
 def stream.retire_all_code_batches_loop.body
   {V : Type} (StreamingVisitorInst : stream.StreamingVisitor V)
@@ -10312,7 +10280,7 @@ def stream.retire_all_code_batches_loop.body
       ok (done (r1, visitor1, pending1))
 
 /-- [itasca::stream::retire_all_code_batches]: loop 0:
-    Source: 'src/stream.rs', lines 466:4-470:1 -/
+    Source: 'src/stream.rs', lines 460:4-464:1 -/
 @[rust_loop]
 def stream.retire_all_code_batches_loop
   {V : Type} (StreamingVisitorInst : stream.StreamingVisitor V)
@@ -10326,7 +10294,7 @@ def stream.retire_all_code_batches_loop
     (visitor, pending)
 
 /-- [itasca::stream::retire_all_code_batches]:
-    Source: 'src/stream.rs', lines 461:0-470:1 -/
+    Source: 'src/stream.rs', lines 455:0-464:1 -/
 @[reducible]
 def stream.retire_all_code_batches
   {V : Type} (StreamingVisitorInst : stream.StreamingVisitor V)
@@ -10338,7 +10306,7 @@ def stream.retire_all_code_batches
     pending
 
 /-- [itasca::stream::read_exact]:
-    Source: 'src/stream.rs', lines 494:0-500:1 -/
+    Source: 'src/stream.rs', lines 488:0-494:1 -/
 def stream.read_exact
   {S : Type} (SourceInst : stream.Source S) (source : S) (start : Std.Usize)
   («end» : Std.Usize) :
@@ -10358,7 +10326,7 @@ def stream.read_exact
       (Slice Std.U8) (core.convert.FromSame _root_.Itasca.error.Error) residual
 
 /-- [itasca::stream::read_len]:
-    Source: 'src/stream.rs', lines 486:0-492:1 -/
+    Source: 'src/stream.rs', lines 480:0-486:1 -/
 def stream.read_len
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result (Std.Usize × Std.Usize)
@@ -10426,7 +10394,7 @@ def stream.read_len
       ok (core.result.Result.Err (error.Error.Read oe))
 
 /-- [itasca::stream::get_next_batch]: loop body 0:
-    Source: 'src/stream.rs', lines 416:4-433:1 -/
+    Source: 'src/stream.rs', lines 410:4-427:1 -/
 @[rust_loop_body]
 def stream.get_next_batch_loop.body
   {S : Type} (SourceInst : stream.Source S) (source : S) (code_end : Std.Usize)
@@ -10531,7 +10499,7 @@ def stream.get_next_batch_loop.body
   else ok (done (core.result.Result.Ok (pos, func)))
 
 /-- [itasca::stream::get_next_batch]: loop 0:
-    Source: 'src/stream.rs', lines 416:4-433:1 -/
+    Source: 'src/stream.rs', lines 410:4-427:1 -/
 @[rust_loop]
 def stream.get_next_batch_loop
   {S : Type} (SourceInst : stream.Source S) (source : S) (code_end : Std.Usize)
@@ -10548,7 +10516,7 @@ def stream.get_next_batch_loop
     (pos, func, batch_bytes, done1)
 
 /-- [itasca::stream::get_next_batch]:
-    Source: 'src/stream.rs', lines 404:0-433:1 -/
+    Source: 'src/stream.rs', lines 398:0-427:1 -/
 @[reducible]
 def stream.get_next_batch
   {S : Type} (SourceInst : stream.Source S) (source : S) (code_end : Std.Usize)
@@ -10561,7 +10529,7 @@ def stream.get_next_batch
     threshold start first_func 0#usize false
 
 /-- [itasca::stream::submit_code_batches]: loop body 0:
-    Source: 'src/stream.rs', lines 368:4-398:1 -/
+    Source: 'src/stream.rs', lines 362:4-392:1 -/
 @[rust_loop_body]
 def stream.submit_code_batches_loop.body
   {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
@@ -10743,7 +10711,7 @@ def stream.submit_code_batches_loop.body
   else ok (done (core.result.Result.Ok pending, visitor))
 
 /-- [itasca::stream::submit_code_batches]: loop 0:
-    Source: 'src/stream.rs', lines 368:4-398:1 -/
+    Source: 'src/stream.rs', lines 362:4-392:1 -/
 @[rust_loop]
 def stream.submit_code_batches_loop
   {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
@@ -10773,7 +10741,7 @@ def stream.submit_code_batches_loop
     (visitor, pending, pos, func, batch_id)
 
 /-- [itasca::stream::submit_code_batches]:
-    Source: 'src/stream.rs', lines 353:0-398:1 -/
+    Source: 'src/stream.rs', lines 347:0-392:1 -/
 def stream.submit_code_batches
   {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
   stream.StreamingVisitor V) (module_id : Std.U64) (source : S)
@@ -10792,7 +10760,7 @@ def stream.submit_code_batches
     Std.Usize) pos 0#usize 0#usize num_funcs code_end
 
 /-- [itasca::stream::read_code_header]:
-    Source: 'src/stream.rs', lines 325:0-349:1 -/
+    Source: 'src/stream.rs', lines 319:0-343:1 -/
 def stream.read_code_header
   {S : Type} (SourceInst : stream.Source S) (source : S) (start : Std.Usize)
   (env : _root_.Itasca.module.Env) :
@@ -10882,7 +10850,7 @@ def stream.read_code_header
       _root_.Itasca.error.Error) residual
 
 /-- [itasca::stream::validate_remaining]:
-    Source: 'src/stream.rs', lines 295:0-321:1 -/
+    Source: 'src/stream.rs', lines 289:0-315:1 -/
 def stream.validate_remaining
   {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
   stream.StreamingVisitor V) (module_id : Std.U64) (source : S)
@@ -11084,7 +11052,7 @@ def stream.validate_remaining
     ok (r1, visitor)
 
 /-- [itasca::stream::validate_streaming]:
-    Source: 'src/stream.rs', lines 280:0-292:1
+    Source: 'src/stream.rs', lines 274:0-286:1
     Visibility: public -/
 def stream.validate_streaming
   {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
@@ -11133,7 +11101,7 @@ def stream.validate_streaming
     ok (r1, visitor, env)
 
 /-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::tail_ready]:
-    Source: 'src/stream.rs', lines 557:4-560:5
+    Source: 'src/stream.rs', lines 551:4-554:5
     Visibility: public -/
 def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.tail_ready
   (self : _root_.Itasca.stream.SyncVisitor) (tail : _root_.Itasca.module.Tail)
@@ -11144,7 +11112,7 @@ def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.tail_ready
   ok (core.result.Result.Ok (), { self with tail := (some tail) })
 
 /-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::code_end]:
-    Source: 'src/stream.rs', lines 553:4-555:5
+    Source: 'src/stream.rs', lines 547:4-549:5
     Visibility: public -/
 def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.code_end
   (self : _root_.Itasca.stream.SyncVisitor) :
@@ -11154,7 +11122,7 @@ def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.code_end
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::poll_code_batch]:
-    Source: 'src/stream.rs', lines 546:4-551:5
+    Source: 'src/stream.rs', lines 540:4-545:5
     Visibility: public -/
 def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.poll_code_batch
   (self : _root_.Itasca.stream.SyncVisitor) :
@@ -11168,7 +11136,7 @@ def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.poll_code_batch
   | some cb => ok (core.result.Result.Ok cb, { self with completed := o1 })
 
 /-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::submit_code_batch]:
-    Source: 'src/stream.rs', lines 540:4-544:5
+    Source: 'src/stream.rs', lines 534:4-538:5
     Visibility: public -/
 def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.submit_code_batch
   (self : _root_.Itasca.stream.SyncVisitor)
@@ -11180,7 +11148,7 @@ def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.submit_code_batch
   ok (core.result.Result.Ok (), { self with completed := (some batch1) })
 
 /-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::environment_ready]:
-    Source: 'src/stream.rs', lines 533:4-538:5
+    Source: 'src/stream.rs', lines 527:4-532:5
     Visibility: public -/
 def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.environment_ready
   (self : _root_.Itasca.stream.SyncVisitor) (_env : _root_.Itasca.module.Env)
@@ -11192,7 +11160,7 @@ def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.environment_ready
     { batch_bytes := 25000#usize, max_batches := 1#usize }, self)
 
 /-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::custom_region]:
-    Source: 'src/stream.rs', lines 531:4-531:65
+    Source: 'src/stream.rs', lines 525:4-525:65
     Visibility: public -/
 def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.custom_region
   (self : _root_.Itasca.stream.SyncVisitor)
@@ -11202,7 +11170,7 @@ def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.custom_region
   ok self
 
 /-- Trait implementation: [itasca::stream::{impl itasca::module::ModuleVisitor for itasca::stream::SyncVisitor<'_0>}]
-    Source: 'src/stream.rs', lines 528:0-528:49 -/
+    Source: 'src/stream.rs', lines 522:0-522:49 -/
 @[reducible]
 def stream.SyncVisitor.Insts.ItascaModuleModuleVisitor : module.ModuleVisitor
   _root_.Itasca.stream.SyncVisitor := {
@@ -11210,7 +11178,7 @@ def stream.SyncVisitor.Insts.ItascaModuleModuleVisitor : module.ModuleVisitor
 }
 
 /-- Trait implementation: [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}]
-    Source: 'src/stream.rs', lines 530:0-561:1 -/
+    Source: 'src/stream.rs', lines 524:0-555:1 -/
 @[reducible]
 def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor :
   stream.StreamingVisitor _root_.Itasca.stream.SyncVisitor := {
@@ -11229,7 +11197,7 @@ def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor :
 }
 
 /-- [itasca::stream::validate_module_slice]:
-    Source: 'src/stream.rs', lines 507:0-519:1
+    Source: 'src/stream.rs', lines 501:0-513:1
     Visibility: public -/
 def stream.validate_module_slice
   (bytes : Slice Std.U8) :

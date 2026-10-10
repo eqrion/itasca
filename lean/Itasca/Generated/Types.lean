@@ -838,7 +838,7 @@ structure stream.CodeEntry where
   «end» : Std.Usize
 
 /-- [itasca::stream::SyncVisitor]
-    Source: 'src/stream.rs', lines 523:0-526:1 -/
+    Source: 'src/stream.rs', lines 517:0-520:1 -/
 structure stream.SyncVisitor where
   completed : Option _root_.Itasca.stream.CodeBatch
   tail : Option _root_.Itasca.module.Tail
