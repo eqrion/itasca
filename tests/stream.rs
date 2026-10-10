@@ -1,5 +1,3 @@
-#![cfg(feature = "stream")]
-
 use itasca::stream::{
     self, CodeBatch, CodeRange, Config, Region, Result, Source, StreamingVisitor,
 };

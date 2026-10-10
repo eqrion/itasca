@@ -753,4 +753,94 @@ inductive types.ExternType where
 | Memory : _root_.Itasca.types.MemType → types.ExternType
 | Global : _root_.Itasca.types.GlobalType → types.ExternType
 
+/-- [itasca::stream::Region]
+    Source: 'src/stream.rs', lines 35:0-38:1
+    Visibility: public -/
+@[discriminant isize]
+inductive stream.Region where
+| Environment : stream.Region
+| Tail : stream.Region
+
+/-- [itasca::stream::CodeRange]
+    Source: 'src/stream.rs', lines 43:0-46:1
+    Visibility: public -/
+structure stream.CodeRange where
+  start : Std.Usize
+  len : Std.Usize
+
+/-- [itasca::stream::Config]
+    Source: 'src/stream.rs', lines 49:0-55:1
+    Visibility: public -/
+structure stream.Config where
+  batch_bytes : Std.Usize
+  max_batches : Std.Usize
+
+/-- Trait declaration: [itasca::stream::Source]
+    Source: 'src/stream.rs', lines 61:0-74:1
+    Visibility: public -/
+structure stream.Source (Self : Type) where
+  «prefix» : Self → Result (core.result.Result (Slice Std.U8)
+    _root_.Itasca.error.Error)
+  read : Self → Std.Usize → Std.Usize → Result (core.result.Result (Slice
+    Std.U8) _root_.Itasca.error.Error)
+  suffix : Self → Std.Usize → Result (core.result.Result (Slice Std.U8)
+    _root_.Itasca.error.Error)
+
+/-- [itasca::stream::SliceSource]
+    Source: 'src/stream.rs', lines 77:0-79:1
+    Visibility: public -/
+structure stream.SliceSource where
+  bytes : Slice Std.U8
+
+/-- [itasca::stream::CodeBatch]
+    Source: 'src/stream.rs', lines 158:0-178:1
+    Visibility: public -/
+structure stream.CodeBatch where
+  module_id : Std.U64
+  batch_id : Std.Usize
+  env : _root_.Itasca.module.Env
+  code : Slice Std.U8
+  code_offset : Std.Usize
+  first_func : Std.Usize
+  num_funcs : Std.Usize
+  num_dispatched : Std.Usize
+  dispatch_end : Std.Usize
+  num_validated : Std.Usize
+  validated_end : Std.Usize
+  error : Option _root_.Itasca.error.Error
+
+/-- Trait declaration: [itasca::stream::StreamingVisitor]
+    Source: 'src/stream.rs', lines 115:0-134:1
+    Visibility: public -/
+structure stream.StreamingVisitor (Self : Type) where
+  moduleModuleVisitorInst : module.ModuleVisitor Self
+  custom_region : Self → _root_.Itasca.stream.Region → Std.Usize → Result
+    Self
+  environment_ready : Self → _root_.Itasca.module.Env → Option
+    _root_.Itasca.stream.CodeRange → Result ((core.result.Result
+    _root_.Itasca.stream.Config _root_.Itasca.error.Error) × Self)
+  submit_code_batch : Self → _root_.Itasca.stream.CodeBatch → Result
+    ((core.result.Result Unit _root_.Itasca.error.Error) × Self)
+  poll_code_batch : Self → Result ((core.result.Result
+    _root_.Itasca.stream.CodeBatch _root_.Itasca.error.Error) × Self)
+  code_end : Self → Result ((core.result.Result Unit
+    _root_.Itasca.error.Error) × Self)
+  tail_ready : Self → _root_.Itasca.module.Tail → Result
+    ((core.result.Result Unit _root_.Itasca.error.Error) × Self)
+
+/-- [itasca::stream::CodeEntry]
+    Source: 'src/stream.rs', lines 139:0-147:1
+    Visibility: public -/
+structure stream.CodeEntry where
+  index : Std.Usize
+  start : Std.Usize
+  contents : Std.Usize
+  «end» : Std.Usize
+
+/-- [itasca::stream::SyncVisitor]
+    Source: 'src/stream.rs', lines 523:0-526:1 -/
+structure stream.SyncVisitor where
+  completed : Option _root_.Itasca.stream.CodeBatch
+  tail : Option _root_.Itasca.module.Tail
+
 end Itasca

@@ -19,10 +19,6 @@ extract:
 extract-check:
     @make extract-check
 
-# Compile the experimental feature's complete model outside the proof tree.
-extract-stream:
-    @python3 lean/scripts/check_stream.py
-
 prove:
     @make prove
 

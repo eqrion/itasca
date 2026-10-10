@@ -16,8 +16,6 @@ include = [
 [features]
 default = ["std"]
 std = []
-# Experimental streaming API, extracted separately while its proofs are deferred.
-stream = []
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(charon)'] }
