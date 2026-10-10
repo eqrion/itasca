@@ -1,6 +1,8 @@
 #![cfg(feature = "stream")]
 
-use itasca::stream::{self, Batch, CodeRange, Config, Host, Region, Result, Source, Visitor};
+use itasca::stream::{
+    self, CodeBatch, CodeRange, Config, Region, Result, Source, StreamingVisitor,
+};
 use itasca::{module, CustomSection, EmptyOpVisitor, Env, Error, OpError, Tail, VisitError};
 use std::cell::Cell;
 use std::thread::{Scope, ScopedJoinHandle};
@@ -91,28 +93,28 @@ impl Source for SplitSource {
     }
 }
 
-// --- A host that records what it saw, and how to misbehave ---
+// --- A harness that records what it saw, and how to misbehave ---
 
 #[derive(Default)]
-struct TestHost {
+struct Harness {
     source: SplitSource,
     parallel: bool,
     /// Return batches without validating them.
     skip: bool,
     /// Validate each function twice.
     repeat: bool,
-    fail_complete: bool,
+    fail_poll: bool,
     peak: usize,
     submitted: usize,
-    completed: usize,
+    polled: usize,
     custom_base: usize,
     custom_offsets: Vec<(usize, usize)>,
     decoded_tail: Option<Tail>,
 }
 
-impl TestHost {
+impl Harness {
     fn new(bytes: &[u8]) -> Self {
-        TestHost {
+        Harness {
             source: SplitSource::new(bytes),
             ..Default::default()
         }
@@ -122,14 +124,19 @@ impl TestHost {
         let source = std::mem::take(&mut self.source);
         let mut env = Env::new();
         let result = std::thread::scope(|threads| {
-            stream::validate(1, &source, &mut TestScheduler::new(self, threads), &mut env)
+            let mut scheduler = TestScheduler::new(self, threads);
+            stream::validate_streaming(1, &source, &mut scheduler, &mut env)
         });
         self.source = source;
         result.map(|()| env)
     }
+
+    fn custom_region(&mut self, _: Region, base: usize) {
+        self.custom_base = base;
+    }
 }
 
-impl module::ModuleVisitor for TestHost {
+impl module::ModuleVisitor for Harness {
     fn on_custom_section(&mut self, s: CustomSection) -> core::result::Result<(), VisitError> {
         self.custom_offsets.push((
             self.custom_base + s.payload_start,
@@ -139,28 +146,22 @@ impl module::ModuleVisitor for TestHost {
     }
 }
 
-impl module::CodeVisitor for TestHost {}
+impl module::CodeVisitor for Harness {}
 
-impl Visitor for TestHost {
-    fn custom_region(&mut self, _: Region, base: usize) {
-        self.custom_base = base;
-    }
-}
-
-/// Runs batches inline or on scoped threads, completing the newest first.
+/// Runs batches inline or on scoped threads, returning the newest first.
 struct TestScheduler<'h, 'jobs, 'env> {
-    host: &'h mut TestHost,
+    harness: &'h mut Harness,
     threads: &'jobs Scope<'jobs, 'env>,
-    pending: Vec<Batch<'env>>,
-    workers: Vec<ScopedJoinHandle<'jobs, Batch<'env>>>,
-    /// Returned by the next `complete` instead of any submitted batch.
-    foreign: Option<Batch<'env>>,
+    pending: Vec<CodeBatch<'env>>,
+    workers: Vec<ScopedJoinHandle<'jobs, CodeBatch<'env>>>,
+    /// Returned by the next `poll_code_batch` instead of any submitted batch.
+    foreign: Option<CodeBatch<'env>>,
 }
 
 impl<'h, 'jobs, 'env> TestScheduler<'h, 'jobs, 'env> {
-    fn new(host: &'h mut TestHost, threads: &'jobs Scope<'jobs, 'env>) -> Self {
+    fn new(harness: &'h mut Harness, threads: &'jobs Scope<'jobs, 'env>) -> Self {
         TestScheduler {
-            host,
+            harness,
             threads,
             pending: Vec::new(),
             workers: Vec::new(),
@@ -171,17 +172,15 @@ impl<'h, 'jobs, 'env> TestScheduler<'h, 'jobs, 'env> {
 
 impl module::ModuleVisitor for TestScheduler<'_, '_, '_> {
     fn on_custom_section(&mut self, s: CustomSection) -> core::result::Result<(), VisitError> {
-        self.host.on_custom_section(s)
+        self.harness.on_custom_section(s)
     }
 }
 
-impl Visitor for TestScheduler<'_, '_, '_> {
+impl<'a> StreamingVisitor<'a> for TestScheduler<'_, '_, 'a> {
     fn custom_region(&mut self, region: Region, base: usize) {
-        self.host.custom_region(region, base);
+        self.harness.custom_region(region, base);
     }
-}
 
-impl<'a> Host<'a> for TestScheduler<'_, '_, 'a> {
     fn environment_ready(&mut self, _: &Env, _: Option<CodeRange>) -> Result<Config> {
         Ok(Config {
             batch_bytes: 4,
@@ -189,9 +188,9 @@ impl<'a> Host<'a> for TestScheduler<'_, '_, 'a> {
         })
     }
 
-    fn submit(&mut self, mut batch: Batch<'a>) -> Result<()> {
-        let skip = self.host.skip;
-        let repeat = self.host.repeat;
+    fn submit_code_batch(&mut self, mut batch: CodeBatch<'a>) -> Result<()> {
+        let skip = self.harness.skip;
+        let repeat = self.harness.repeat;
         let validate = move || {
             if !skip {
                 for _ in 0..batch.len() {
@@ -206,25 +205,28 @@ impl<'a> Host<'a> for TestScheduler<'_, '_, 'a> {
             }
             batch
         };
-        if self.host.parallel {
+        if self.harness.parallel {
             self.workers.push(self.threads.spawn(validate));
         } else {
             self.pending.push(validate());
         }
-        self.host.submitted += 1;
-        self.host.peak = self.host.peak.max(self.pending.len() + self.workers.len());
+        self.harness.submitted += 1;
+        self.harness.peak = self
+            .harness
+            .peak
+            .max(self.pending.len() + self.workers.len());
         Ok(())
     }
 
-    fn complete(&mut self) -> Result<Batch<'a>> {
-        if self.host.fail_complete {
+    fn poll_code_batch(&mut self) -> Result<CodeBatch<'a>> {
+        if self.harness.fail_poll {
             return Err(Error::Host);
         }
-        self.host.completed += 1;
+        self.harness.polled += 1;
         if let Some(batch) = self.foreign.take() {
             return Ok(batch);
         }
-        if self.host.parallel {
+        if self.harness.parallel {
             return Ok(self.workers.pop().unwrap().join().unwrap());
         }
         self.pending.pop().ok_or(Error::Host)
@@ -235,7 +237,7 @@ impl<'a> Host<'a> for TestScheduler<'_, '_, 'a> {
     }
 
     fn tail_ready(&mut self, tail: Tail) -> Result<()> {
-        self.host.decoded_tail = Some(tail);
+        self.harness.decoded_tail = Some(tail);
         Ok(())
     }
 }
@@ -275,7 +277,7 @@ fn corpus_agrees_with_existing_validator() {
             let bytes = std::fs::read(&path).unwrap();
             let expected = module::validate_module_with(&bytes, &mut LegacyVisitor);
 
-            let contiguous = module::validate_module(&bytes);
+            let contiguous = stream::validate_module_slice(&bytes);
             assert_eq!(
                 contiguous.is_ok(),
                 expected.is_ok(),
@@ -286,8 +288,8 @@ fn corpus_agrees_with_existing_validator() {
                 assert_eq!(actual, expected);
             }
 
-            let mut host = TestHost::new(&bytes);
-            let split = host.validate();
+            let mut harness = Harness::new(&bytes);
+            let split = harness.validate();
             assert_eq!(
                 split.is_ok(),
                 expected.is_ok(),
@@ -296,7 +298,7 @@ fn corpus_agrees_with_existing_validator() {
             );
             if let (Ok(actual), Ok(expected)) = (split, expected) {
                 assert_eq!(actual, expected.env);
-                assert_eq!(host.decoded_tail.take().unwrap(), expected.tail);
+                assert_eq!(harness.decoded_tail.take().unwrap(), expected.tail);
             }
             checked += 1;
         }
@@ -306,40 +308,40 @@ fn corpus_agrees_with_existing_validator() {
 
 #[test]
 fn bounded_out_of_order_completion() {
-    let mut host = TestHost::new(&functions(20, 1));
-    host.validate().unwrap();
-    assert_eq!(host.peak, 2);
-    assert_eq!(host.completed, host.submitted);
-    assert!(host.source.tail_seen.get());
+    let mut harness = Harness::new(&functions(20, 1));
+    harness.validate().unwrap();
+    assert_eq!(harness.peak, 2);
+    assert_eq!(harness.polled, harness.submitted);
+    assert!(harness.source.tail_seen.get());
 }
 
 #[test]
 fn parallel_batches_are_consumed_before_acceptance() {
-    let mut host = TestHost::new(&functions(20, 1));
-    host.parallel = true;
-    host.validate().unwrap();
-    assert_eq!(host.completed, host.submitted);
-    assert_eq!(host.peak, 2);
+    let mut harness = Harness::new(&functions(20, 1));
+    harness.parallel = true;
+    harness.validate().unwrap();
+    assert_eq!(harness.polled, harness.submitted);
+    assert_eq!(harness.peak, 2);
 }
 
 #[test]
 fn ignored_worker_failure_remains_in_batch() {
-    let mut host = TestHost::new(&functions(1, 0xff));
+    let mut harness = Harness::new(&functions(1, 0xff));
     assert_eq!(
-        host.validate().unwrap_err(),
+        harness.validate().unwrap_err(),
         Error::Body(OpError::UnrecognizedOpcode)
     );
-    assert!(host.source.tail_seen.get());
+    assert!(harness.source.tail_seen.get());
 }
 
 #[test]
 fn missing_and_repeated_validation_reject() {
-    let mut host = TestHost::new(&functions(2, 1));
-    host.skip = true;
-    assert_eq!(host.validate().unwrap_err(), Error::Host);
-    let mut host = TestHost::new(&functions(2, 1));
-    host.repeat = true;
-    assert_eq!(host.validate().unwrap_err(), Error::Host);
+    let mut harness = Harness::new(&functions(2, 1));
+    harness.skip = true;
+    assert_eq!(harness.validate().unwrap_err(), Error::Host);
+    let mut harness = Harness::new(&functions(2, 1));
+    harness.repeat = true;
+    assert_eq!(harness.validate().unwrap_err(), Error::Host);
 }
 
 #[test]
@@ -348,21 +350,21 @@ fn completion_from_another_module_rejects() {
     let bad = SplitSource::new(&functions(1, 0xff));
     let mut good_env = Env::new();
     let mut bad_env = Env::new();
-    let mut host = TestHost {
-        fail_complete: true,
+    let mut harness = Harness {
+        fail_poll: true,
         ..Default::default()
     };
     std::thread::scope(|threads| {
-        let mut scheduler = TestScheduler::new(&mut host, threads);
+        let mut scheduler = TestScheduler::new(&mut harness, threads);
         // Keep a genuinely validated batch from an earlier invocation.
-        assert!(stream::validate(1, &good, &mut scheduler, &mut good_env).is_err());
+        assert!(stream::validate_streaming(1, &good, &mut scheduler, &mut good_env).is_err());
         scheduler.foreign = scheduler.pending.pop();
         assert!(scheduler.foreign.is_some());
-        scheduler.host.fail_complete = false;
+        scheduler.harness.fail_poll = false;
         // Both batches have serial zero and the same function and byte ranges,
         // so only the module ID tells them apart.
         assert_eq!(
-            stream::validate(2, &bad, &mut scheduler, &mut bad_env),
+            stream::validate_streaming(2, &bad, &mut scheduler, &mut bad_env),
             Err(Error::Host)
         );
     });
@@ -373,50 +375,50 @@ fn every_truncated_arrival_rejects() {
     let bytes = functions(5, 1);
     let len = SplitSource::new(&bytes).code.len();
     for end in 0..len {
-        let mut host = TestHost::new(&bytes);
-        host.source.early_eof = Some(end);
-        assert!(host.validate().is_err(), "end={end}");
+        let mut harness = Harness::new(&bytes);
+        harness.source.early_eof = Some(end);
+        assert!(harness.validate().is_err(), "end={end}");
     }
 }
 
 #[test]
 fn truncated_code_allocation_reports_eof() {
-    let mut host = TestHost::new(&functions(1, 1));
-    host.source.code.pop();
-    assert_eq!(host.validate().unwrap_err(), Error::UnexpectedEof);
+    let mut harness = Harness::new(&functions(1, 1));
+    harness.source.code.pop();
+    assert_eq!(harness.validate().unwrap_err(), Error::UnexpectedEof);
 }
 
 #[test]
 fn section_boundaries_and_tail_are_checked() {
     let bytes = functions(1, 1);
-    let mut host = TestHost::new(&bytes);
-    host.source.code.push(0);
-    assert_eq!(host.validate().unwrap_err(), Error::SectionSizeMismatch);
-    let mut host = TestHost::new(&bytes);
-    host.source.tail = vec![1, 0];
-    assert_eq!(host.validate().unwrap_err(), Error::SectionOutOfOrder);
-    assert_eq!(host.submitted, 1);
+    let mut harness = Harness::new(&bytes);
+    harness.source.code.push(0);
+    assert_eq!(harness.validate().unwrap_err(), Error::SectionSizeMismatch);
+    let mut harness = Harness::new(&bytes);
+    harness.source.tail = vec![1, 0];
+    assert_eq!(harness.validate().unwrap_err(), Error::SectionOutOfOrder);
+    assert_eq!(harness.submitted, 1);
 }
 
 #[test]
 fn caller_joins_workers_when_tail_or_input_rejects() {
     let bytes = functions(20, 1);
-    let mut host = TestHost::new(&bytes);
-    host.parallel = true;
-    host.source.tail = vec![0xff];
-    assert!(host.validate().is_err());
-    assert!(host.submitted > host.completed);
-    // The scoped workers have all joined, so the same host can validate again.
-    host.source.tail.clear();
-    assert!(host.validate().is_ok());
+    let mut harness = Harness::new(&bytes);
+    harness.parallel = true;
+    harness.source.tail = vec![0xff];
+    assert!(harness.validate().is_err());
+    assert!(harness.submitted > harness.polled);
+    // The scoped workers have all joined, so the same harness can validate again.
+    harness.source.tail.clear();
+    assert!(harness.validate().is_ok());
 
-    let mut host = TestHost::new(&bytes);
-    host.parallel = true;
-    host.source.early_eof = Some(15);
-    assert!(host.validate().is_err());
-    assert!(host.submitted > 0);
-    host.source.early_eof = None;
-    assert!(host.validate().is_ok());
+    let mut harness = Harness::new(&bytes);
+    harness.parallel = true;
+    harness.source.early_eof = Some(15);
+    assert!(harness.validate().is_err());
+    assert!(harness.submitted > 0);
+    harness.source.early_eof = None;
+    assert!(harness.validate().is_ok());
 }
 
 /// Modules with no code section, an empty one, and two functions, each with a
@@ -436,20 +438,20 @@ fn modules_with_custom_sections() -> Vec<Vec<u8>> {
 #[test]
 fn custom_section_offsets_are_absolute() {
     for bytes in modules_with_custom_sections() {
-        let mut expected = TestHost::default();
+        let mut expected = Harness::default();
         let decoded = module::validate_module_with(&bytes, &mut expected).unwrap();
         assert_eq!(expected.custom_offsets.len(), 2);
 
-        let mut split = TestHost::new(&bytes);
+        let mut split = Harness::new(&bytes);
         assert_eq!(split.validate().unwrap(), decoded.env);
         assert_eq!(split.custom_offsets, expected.custom_offsets);
 
-        let mut sliced = TestHost::default();
+        let mut sliced = Harness::default();
         let source = stream::SliceSource { bytes: &bytes };
         let mut env = Env::new();
         std::thread::scope(|threads| {
             let mut scheduler = TestScheduler::new(&mut sliced, threads);
-            stream::validate(1, &source, &mut scheduler, &mut env).unwrap();
+            stream::validate_streaming(1, &source, &mut scheduler, &mut env).unwrap();
         });
         assert_eq!(env, decoded.env);
         assert_eq!(sliced.decoded_tail.unwrap(), decoded.tail);
@@ -463,7 +465,7 @@ fn every_truncated_slice_agrees_with_existing_validator() {
         for end in 0..bytes.len() {
             let prefix = &bytes[..end];
             assert_eq!(
-                module::validate_module(prefix).is_ok(),
+                stream::validate_module_slice(prefix).is_ok(),
                 module::validate_module_with(prefix, &mut LegacyVisitor).is_ok(),
                 "truncated at {end}: {prefix:?}",
             );

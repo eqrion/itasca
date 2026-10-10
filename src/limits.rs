@@ -66,3 +66,11 @@ pub(crate) fn validate_limits(limits: &Limits, range: u32) -> Result<(), Error> 
     }
     Ok(())
 }
+
+/// `a + b` as a module offset, rejecting any offset beyond the largest module.
+pub(crate) fn add_offset(a: usize, b: usize) -> Result<usize, Error> {
+    if a > MAX_MODULE_BYTES || b > MAX_MODULE_BYTES - a {
+        return Err(Error::ModuleTooLarge);
+    }
+    Ok(a + b)
+}
