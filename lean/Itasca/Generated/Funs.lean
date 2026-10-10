@@ -6548,7 +6548,7 @@ def limits.validate_limits
 @[global_simps, irreducible] def module.SECTION_ELEMENT : Std.U8 := 9#u8
 
 /-- [itasca::module::SECTION_CODE]
-    Source: 'src/module.rs', lines 49:0-49:28 -/
+    Source: 'src/module.rs', lines 49:0-49:39 -/
 @[global_simps, irreducible] def module.SECTION_CODE : Std.U8 := 10#u8
 
 /-- [itasca::module::SECTION_DATA]

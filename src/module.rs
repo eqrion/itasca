@@ -46,7 +46,7 @@ const SECTION_GLOBAL: u8 = 6;
 const SECTION_EXPORT: u8 = 7;
 const SECTION_START: u8 = 8;
 const SECTION_ELEMENT: u8 = 9;
-const SECTION_CODE: u8 = 10;
+pub(crate) const SECTION_CODE: u8 = 10;
 const SECTION_DATA: u8 = 11;
 
 // --- The environment: everything before the code section ---
@@ -1425,7 +1425,7 @@ pub fn validate_tail_with<V: ModuleVisitor>(
 /// before entry `k - 1` has been validated, which is what lets a consumer
 /// dispatch entries to separate threads. Private: only sound to act on as
 /// part of a walk that goes on to check the extents tile the section.
-fn code_entry_extent(data: &[u8], pos: usize) -> Result<(usize, usize)> {
+pub(crate) fn code_entry_extent(data: &[u8], pos: usize) -> Result<(usize, usize)> {
     let (size, p) = read_u32_leb(data, pos)?;
     let n = size as usize;
     have_bytes(data, p, n)?;
