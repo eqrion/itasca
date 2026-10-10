@@ -1,7 +1,8 @@
 use itasca::stream::{self, CodeBatch, Config, Region, Result, Source, StreamingVisitor};
 use itasca::{module, CustomSection, EmptyOpVisitor, Env, Error, OpError, Tail, VisitError};
-use std::cell::Cell;
+use std::cell::{Cell, RefCell};
 use std::thread::{Scope, ScopedJoinHandle};
+use wasmparser::{Validator, WasmFeatures};
 
 // --- A module split into three allocations, as a streaming embedding sees it ---
 
@@ -13,6 +14,7 @@ struct SplitSource {
     /// Code section bytes past this offset never arrive.
     early_eof: Option<usize>,
     tail_seen: Cell<bool>,
+    reads: RefCell<Vec<(usize, usize)>>,
 }
 
 impl SplitSource {
@@ -60,6 +62,7 @@ impl Source for SplitSource {
 
     fn code(&self, start: usize, end: usize) -> Result<&[u8]> {
         assert!(start <= end && end <= self.code.len());
+        self.reads.borrow_mut().push((start, end));
         if self.early_eof.is_some_and(|n| end > n) {
             return Err(Error::UnexpectedEof);
         }
@@ -83,12 +86,20 @@ struct Harness {
     /// Validate each function twice.
     repeat: bool,
     fail_poll: bool,
+    refuse_submit: bool,
+    refuse_worker: bool,
+    refuse_custom: bool,
+    batch_bytes: Option<usize>,
+    max_batches: Option<usize>,
     peak: usize,
     submitted: usize,
     polled: usize,
     custom_base: usize,
     tail_base: usize,
     custom_offsets: Vec<(usize, usize)>,
+    events: Vec<&'static str>,
+    entries: Vec<(usize, usize, usize, usize)>,
+    batches: Vec<(usize, Vec<u8>, usize, bool)>,
     decoded_tail: Option<Tail>,
 }
 
@@ -114,6 +125,10 @@ impl Harness {
 
     /// Records custom section offsets as absolute module offsets.
     fn custom_region(&mut self, region: Region) {
+        self.events.push(match region {
+            Region::Environment => "environment",
+            Region::Tail => "tail",
+        });
         self.custom_base = match region {
             Region::Environment => 0,
             Region::Tail => self.tail_base,
@@ -123,6 +138,10 @@ impl Harness {
 
 impl module::ModuleVisitor for Harness {
     fn on_custom_section(&mut self, s: CustomSection) -> core::result::Result<(), VisitError> {
+        self.events.push("custom");
+        if self.refuse_custom {
+            return Err(VisitError::OutOfMemory);
+        }
         self.custom_offsets.push((
             self.custom_base + s.payload_start,
             self.custom_base + s.payload_end,
@@ -131,7 +150,19 @@ impl module::ModuleVisitor for Harness {
     }
 }
 
-impl module::CodeVisitor for Harness {}
+struct RefusingWorker;
+
+impl itasca::OpVisitor for RefusingWorker {
+    fn on_function_start(
+        &mut self,
+        _ctx: &itasca::Context,
+        _type_idx: u32,
+        _body_begin: usize,
+        _body_end: usize,
+    ) -> itasca::VisitResult {
+        Err(VisitError::OutOfMemory)
+    }
+}
 
 /// Runs batches inline or on scoped threads, returning the newest first.
 struct TestScheduler<'h, 'jobs, 'env> {
@@ -167,20 +198,47 @@ impl<'a> StreamingVisitor<'a> for TestScheduler<'_, '_, 'a> {
     }
 
     fn environment_ready(&mut self, _: &Env) -> Result<Config> {
+        self.harness.events.push("ready");
         Ok(Config {
-            batch_bytes: 4,
-            max_batches: 2,
+            batch_bytes: self.harness.batch_bytes.unwrap_or(4),
+            max_batches: self.harness.max_batches.unwrap_or(2),
         })
     }
 
     fn submit_code_batch(&mut self, mut batch: CodeBatch<'a>) -> Result<()> {
+        self.harness.events.push("submit");
+        if self.harness.refuse_submit {
+            return Err(Error::Visitor(VisitError::OutOfMemory));
+        }
+        assert!(!batch.is_empty());
+        self.harness.batches.push((
+            batch.code_offset(),
+            batch.code().to_vec(),
+            batch.len(),
+            batch.is_last(),
+        ));
+        let mut indices = Vec::new();
+        for _ in 0..batch.len() {
+            let entry = batch.next_entry()?;
+            self.harness
+                .entries
+                .push((entry.index, entry.start, entry.contents, entry.end));
+            indices.push(entry.index);
+        }
         let skip = self.harness.skip;
         let repeat = self.harness.repeat;
+        let refuse = self.harness.refuse_worker;
         let validate = move || {
             if !skip {
-                for _ in 0..batch.len() {
-                    let index = batch.next_entry().unwrap().index;
-                    if batch.validate_func(index, &mut EmptyOpVisitor).is_err() {
+                for index in indices {
+                    let result = if refuse {
+                        batch.validate_func(index, &mut RefusingWorker)
+                    } else {
+                        batch.validate_func(index, &mut EmptyOpVisitor)
+                    };
+                    if let Err(error) = result {
+                        // A later accepting worker cannot erase the first failure.
+                        assert_eq!(batch.validate_func(index, &mut EmptyOpVisitor), Err(error));
                         break;
                     }
                     if repeat {
@@ -204,6 +262,7 @@ impl<'a> StreamingVisitor<'a> for TestScheduler<'_, '_, 'a> {
     }
 
     fn poll_code_batch(&mut self) -> Result<CodeBatch<'a>> {
+        self.harness.events.push("poll");
         if self.harness.fail_poll {
             return Err(Error::Host);
         }
@@ -218,19 +277,16 @@ impl<'a> StreamingVisitor<'a> for TestScheduler<'_, '_, 'a> {
     }
 
     fn code_end(&mut self) -> Result<()> {
+        self.harness.events.push("code_end");
         Ok(())
     }
 
     fn tail_ready(&mut self, tail: Tail) -> Result<()> {
+        self.harness.events.push("tail_ready");
         self.harness.decoded_tail = Some(tail);
         Ok(())
     }
 }
-
-/// The existing whole-module orchestration, kept as an independent oracle.
-struct LegacyVisitor;
-impl module::ModuleVisitor for LegacyVisitor {}
-impl module::CodeVisitor for LegacyVisitor {}
 
 /// `n` functions of type `[] -> []`, each with the single instruction `op`.
 fn functions(n: u8, op: u8) -> Vec<u8> {
@@ -247,7 +303,7 @@ fn functions(n: u8, op: u8) -> Vec<u8> {
 // --- Tests ---
 
 #[test]
-fn corpus_agrees_with_existing_validator() {
+fn corpus_matches_spec_expectations() {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/spec");
     let mut checked = 0;
     for kind in ["valid", "invalid", "malformed"] {
@@ -260,28 +316,26 @@ fn corpus_agrees_with_existing_validator() {
                 continue;
             }
             let bytes = std::fs::read(&path).unwrap();
-            let expected = module::validate_module_with(&bytes, &mut LegacyVisitor);
+            let expected = kind == "valid";
 
-            let contiguous = stream::validate_module_slice(&bytes);
+            let contiguous = itasca::validate_module(&bytes);
             assert_eq!(
                 contiguous.is_ok(),
-                expected.is_ok(),
-                "slice {}: {contiguous:?} vs {expected:?}",
+                expected,
+                "slice {}: {contiguous:?}; expected {kind}",
                 path.display()
             );
-            if let (Ok(actual), Ok(expected)) = (&contiguous, &expected) {
-                assert_eq!(actual, expected);
-            }
-
             let mut harness = Harness::new(&bytes);
             let split = harness.validate();
             assert_eq!(
                 split.is_ok(),
-                expected.is_ok(),
-                "split {}: {split:?} vs {expected:?}",
+                expected,
+                "split {}: {split:?}; expected {kind}",
                 path.display()
             );
-            if let (Ok(actual), Ok(expected)) = (split, expected) {
+            // Check metadata transport across separate allocations. Verdicts
+            // above come from the corpus, independently of either adapter.
+            if let (Ok(actual), Ok(expected)) = (split, contiguous) {
                 assert_eq!(actual, expected.env);
                 assert_eq!(harness.decoded_tail.take().unwrap(), expected.tail);
             }
@@ -289,6 +343,140 @@ fn corpus_agrees_with_existing_validator() {
         }
     }
     assert!(checked > 1000);
+}
+
+#[test]
+fn dispatched_entries_tile_the_code_region() {
+    // Three entry shapes: no locals, an i64 local with an i32 parameter,
+    // and a nop. The middle entry exceeds the four-byte batch target.
+    let mut bytes = b"\0asm\x01\0\0\0".to_vec();
+    bytes.extend([1, 9, 2, 0x60, 0, 0, 0x60, 1, 0x7f, 1, 0x7f]);
+    bytes.extend([3, 4, 3, 0, 1, 0]);
+    bytes.extend([
+        10, 15, 3, 2, 0, 0x0b, 6, 1, 1, 0x7e, 0x20, 0, 0x0b, 3, 0, 1, 0x0b,
+    ]);
+
+    let mut harness = Harness::new(&bytes);
+    let env = harness.validate().unwrap();
+    assert_eq!(env.func_type_indices, vec![0, 1, 0]);
+    assert_eq!(env.types.len(), 2);
+    assert!(harness.decoded_tail.as_ref().unwrap().data.is_empty());
+    assert_eq!(
+        harness.entries,
+        vec![(0, 3, 4, 6), (1, 6, 7, 13), (2, 13, 14, 17)]
+    );
+    assert_eq!(harness.batches.len(), 3);
+    for (i, (offset, view, count, last)) in harness.batches.iter().enumerate() {
+        let (_, start, _, end) = harness.entries[i];
+        assert_eq!(
+            (*offset, view.len(), *count, *last),
+            (start, end - start, 1, i == 2)
+        );
+        assert_eq!(view, &harness.source.code[start..end]);
+        assert!(harness.source.reads.borrow().contains(&(start, end)));
+    }
+    assert_eq!(
+        harness.events,
+        vec![
+            "environment",
+            "ready",
+            "submit",
+            "submit",
+            "poll",
+            "submit",
+            "code_end",
+            "tail",
+            "tail_ready",
+            "poll",
+            "poll",
+        ]
+    );
+}
+
+#[test]
+fn batch_targets_count_contents_and_allow_one_oversized_entry() {
+    for (target, counts) in [
+        (1, vec![1, 1, 1, 1, 1]),
+        (3, vec![1, 1, 1, 1, 1]),
+        (6, vec![2, 2, 1]),
+        (usize::MAX, vec![5]),
+    ] {
+        let mut harness = Harness::new(&functions(5, 1));
+        harness.batch_bytes = Some(target);
+        harness.validate().unwrap();
+        assert_eq!(
+            harness
+                .batches
+                .iter()
+                .map(|batch| batch.2)
+                .collect::<Vec<_>>(),
+            counts
+        );
+        assert_eq!(harness.entries.len(), 5);
+        assert_eq!(harness.polled, harness.submitted);
+    }
+}
+
+#[test]
+fn zero_batch_configuration_rejects_before_submission() {
+    for (batch_bytes, max_batches) in [(0, 1), (1, 0)] {
+        let mut harness = Harness::new(&functions(1, 1));
+        harness.batch_bytes = Some(batch_bytes);
+        harness.max_batches = Some(max_batches);
+        assert_eq!(harness.validate(), Err(Error::Host));
+        assert_eq!(harness.submitted, 0);
+        assert!(!harness.source.tail_seen.get());
+    }
+}
+
+#[test]
+fn declining_submission_stops_the_driver() {
+    let bytes = functions(1, 1);
+    assert!(itasca::validate_module(&bytes).is_ok());
+    let mut harness = Harness::new(&bytes);
+    harness.refuse_submit = true;
+    assert_eq!(
+        harness.validate(),
+        Err(Error::Visitor(VisitError::OutOfMemory))
+    );
+    assert_eq!(harness.events, vec!["environment", "ready", "submit"]);
+    assert!(harness.decoded_tail.is_none());
+}
+
+#[test]
+fn declining_worker_cannot_be_overridden_by_the_scheduler() {
+    let bytes = functions(1, 1);
+    assert!(itasca::validate_module(&bytes).is_ok());
+    let mut harness = Harness::new(&bytes);
+    harness.refuse_worker = true;
+    assert_eq!(
+        harness.validate(),
+        Err(Error::Body(OpError::Visitor(VisitError::OutOfMemory)))
+    );
+    assert_eq!((harness.submitted, harness.polled), (1, 1));
+    assert!(harness.decoded_tail.is_some());
+}
+
+#[test]
+fn declining_custom_hook_stops_either_region() {
+    for before_code in [true, false] {
+        let mut bytes = functions(1, 1);
+        if before_code {
+            bytes.splice(8..8, [0, 1, 0]);
+        } else {
+            bytes.extend([0, 1, 0]);
+        }
+        assert!(itasca::validate_module(&bytes).is_ok());
+        let mut harness = Harness::new(&bytes);
+        harness.refuse_custom = true;
+        assert_eq!(
+            harness.validate(),
+            Err(Error::Visitor(VisitError::OutOfMemory))
+        );
+        assert_eq!(harness.submitted, usize::from(!before_code));
+        assert_eq!(harness.events.last(), Some(&"custom"));
+        assert!(harness.decoded_tail.is_none());
+    }
 }
 
 #[test]
@@ -423,14 +611,28 @@ fn modules_with_custom_sections() -> Vec<Vec<u8>> {
 #[test]
 fn custom_section_offsets_are_region_relative() {
     for bytes in modules_with_custom_sections() {
-        let mut expected = Harness::default();
-        let decoded = module::validate_module_with(&bytes, &mut expected).unwrap();
-        assert_eq!(expected.custom_offsets.len(), 2);
-
         let mut split = Harness::new(&bytes);
-        assert_eq!(split.validate().unwrap(), decoded.env);
-        assert_eq!(split.decoded_tail.unwrap(), decoded.tail);
-        assert_eq!(split.custom_offsets, expected.custom_offsets);
+        split.validate().unwrap();
+        assert_eq!(
+            split.custom_offsets,
+            vec![(12, 14), (bytes.len() - 2, bytes.len())]
+        );
+        for &(start, end) in &split.custom_offsets {
+            assert_eq!(&bytes[start - 1..start], b"x");
+            assert_eq!(&bytes[start..end], b"yz");
+        }
+        let events = &split.events;
+        assert_eq!(&events[..3], &["environment", "custom", "ready"]);
+        let code_end = events
+            .iter()
+            .position(|&event| event == "code_end")
+            .unwrap();
+        assert_eq!(
+            &events[code_end..code_end + 4],
+            &["code_end", "tail", "custom", "tail_ready"]
+        );
+        assert!(events[code_end + 4..].iter().all(|&event| event == "poll"));
+        assert_eq!(split.polled, split.submitted);
     }
 }
 
@@ -454,13 +656,15 @@ fn misplaced_split_rejects() {
 }
 
 #[test]
-fn every_truncated_slice_agrees_with_existing_validator() {
+fn every_truncated_slice_matches_independent_validator() {
     for bytes in modules_with_custom_sections() {
         for end in 0..bytes.len() {
             let prefix = &bytes[..end];
             assert_eq!(
-                stream::validate_module_slice(prefix).is_ok(),
-                module::validate_module_with(prefix, &mut LegacyVisitor).is_ok(),
+                itasca::validate_module(prefix).is_ok(),
+                Validator::new_with_features(WasmFeatures::WASM1)
+                    .validate_all(prefix)
+                    .is_ok(),
                 "truncated at {end}: {prefix:?}",
             );
         }

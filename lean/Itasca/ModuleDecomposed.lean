@@ -1,4 +1,4 @@
-import Itasca.ModuleRegions
+import Itasca.ModuleEnvSemantics
 import Itasca.ModuleEntryVisitor
 
 open Aeneas Aeneas.Std

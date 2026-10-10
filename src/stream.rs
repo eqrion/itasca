@@ -1,4 +1,4 @@
-//! Streaming, parallel module validation. Extracted to Lean, not yet proved.
+//! Streaming and parallel module validation, verified in Lean.
 //!
 //! [`validate_streaming`] owns the whole module. It decodes the environment,
 //! frames the code section into [`CodeBatch`]es as the bytes arrive, validates
@@ -13,10 +13,16 @@
 //! a valid module. A wrong split can only cause a rejection. The embedding
 //! still owes:
 //!
-//! - Every view of a region shows the same bytes, which stay unchanged while a
-//!   batch borrows them. Rust borrows enforce this; an FFI must uphold it.
+//! - Successful calls expose coherent views of fixed environment, code and tail
+//!   bytes. Rust borrows protect each immutable view; they do not force separate
+//!   calls to return matching ranges. The source implementation owes coherence.
 //! - `module_id` is unique among invocations whose batches can reach the same
 //!   visitor, so a batch from one module cannot be returned to another.
+//! - Returned batches come from the corresponding submissions and are advanced
+//!   only through their batch operations. The driver checks pending IDs and
+//!   successful completion; submission alone does not establish validation.
+//! - Callbacks return normally for totality. Acceptance soundness does not
+//!   require unexecuted callbacks to return or accept.
 //! - The environment and source outlive every worker holding a batch,
 //!   including after `validate_streaming` returns an error.
 
@@ -37,7 +43,7 @@ pub enum Region {
 
 /// How the visitor wants the code section divided.
 pub struct Config {
-    /// Target body bytes per batch. A single body may exceed it.
+    /// Target entry-content bytes, including locals. One entry may exceed it.
     pub batch_bytes: usize,
     /// Most batches submitted and not yet returned by
     /// [`StreamingVisitor::poll_code_batch`].
@@ -466,9 +472,8 @@ fn read_exact<S: Source>(source: &S, start: usize, end: usize) -> Result<&[u8]> 
 // --- Contiguous validation ---
 
 /// [`validate_streaming`] over one buffer, validating each batch as it is
-/// submitted. Not yet proved; [`module::validate_module`] is the proved
-/// equivalent.
-pub fn validate_module_slice(bytes: &[u8]) -> Result<module::Module> {
+/// submitted. This internal adapter implements [`module::validate_module`].
+pub(crate) fn validate_module_slice(bytes: &[u8]) -> Result<module::Module> {
     let (code_start, code_end) = find_code_region(bytes);
     let source = SliceSource {
         env: &bytes[0..code_start],

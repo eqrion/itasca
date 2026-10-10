@@ -193,8 +193,13 @@ theorem defined_global_initializer_rejected : module.validate_module definedGlob
       module.SECTION_MEMORY, module.SECTION_GLOBAL,
       core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  have hsplit : stream.find_code_region data = .ok (Slice.len data, Slice.len data) := by
+    unfold stream.find_code_region
+    rw [split_skip_section data 8#usize 10#usize 21#usize 6#u8 hh (by decide)]
+    have hlen : Slice.len data = 21#usize := UScalar.eq_of_val_eq rfl
+    simpa [hlen] using split_loop_eof data
   apply ModuleExamples.environment_error data _
-    (by simp [data, definedGlobalInput, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion, limits.MAX_MODULE_BYTES])
+    (by simp [data, definedGlobalInput, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion, limits.MAX_MODULE_BYTES]) hsplit
   simp [module.validate_env, module.validate_env_with, module.Env.new, hheader,
     core.result.Result.Insts.CoreOpsTry.branch, initial, ModuleExamples.emptyEnv,
     parseLoop] at hloop ⊢

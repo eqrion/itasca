@@ -2,6 +2,7 @@ import Itasca.ModuleExamples
 import Itasca.ModuleExportsComplete
 import Itasca.ModuleMemorySectionComplete
 import Itasca.ModuleEnvReplay
+import Itasca.StreamSliceComplete
 
 open Aeneas Aeneas.Std
 
@@ -136,9 +137,14 @@ theorem duplicate_unicode_exports_rejected : module.validate_module duplicateUni
     simp [module.validate_env_with_loop.body, hmore, hheader, global_simps,
       module.decode_env_section, hexport, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  have hsplit : stream.find_code_region data = .ok (Slice.len data, Slice.len data) := by
+    unfold stream.find_code_region
+    rw [split_skip_section data 8#usize 10#usize 13#usize 5#u8 hhmem (by decide),
+      split_skip_section data 13#usize 15#usize 30#usize 7#u8 hhexport (by decide)]
+    exact split_loop_eof data
   apply ModuleExamples.environment_error data _
     (by simp [data, duplicateUnicodeExports, ModuleExamples.bytes, alloc.vec.Vec.deref,
-      magicVersion, limits.MAX_MODULE_BYTES])
+      magicVersion, limits.MAX_MODULE_BYTES]) hsplit
   apply env_from_loop data (by constructor <;> simp [data, duplicateUnicodeExports, ModuleExamples.bytes,
     alloc.vec.Vec.deref, magicVersion]) _
   rw [hstep]
@@ -148,11 +154,16 @@ private theorem first_section_error (data : Slice U8)
     (hbytes : Wasm.BytesAt data 0#usize magicVersion 8#usize) (id : U8) (first last : Usize)
     (e : error.Error) (updated : module.Env) (hmore : 8 < data.length)
     (hlo : 0 < id.val) (hhi : id.val < 10)
-    (hheader : module.read_section_header data 8#usize = .ok (.Ok (id, first, last)))
+    (hsection : SectionHeader data 8#usize id first last)
+    (hfinish : last = Slice.len data)
     (hread : module.decode_env_section data first id ModuleExamples.emptyEnv = .ok (.Err e, updated))
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val) :
     module.validate_module data = .ok (.Err e) := by
-  apply ModuleExamples.environment_error data e hsize
+  have hsplit : stream.find_code_region data = .ok (Slice.len data, Slice.len data) := by
+    unfold stream.find_code_region
+    rw [split_skip_section data 8#usize first last id hsection hhi, hfinish, split_loop_eof]
+  have hheader := module.read_section_header.complete data 8#usize id first last hsection
+  apply ModuleExamples.environment_error data e hsize hsplit
   apply env_from_loop data hbytes e
   have hstop : ¬ 8#usize ≥ Slice.len data := by scalar_tac
   have hcustom : id ≠ module.SECTION_CUSTOM := by
@@ -193,7 +204,7 @@ theorem invalid_start_index_rejected : module.validate_module (shortSection 8#u8
   apply first_section_error data (by constructor <;> simp [data, shortSection, ModuleExamples.bytes,
     alloc.vec.Vec.deref, magicVersion]) 8#u8 10#usize 11#usize _ ModuleExamples.emptyEnv
     (by simp [data, shortSection, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion])
-    (by decide) (by decide) (module.read_section_header.complete _ _ _ _ _ hh)
+    (by decide) (by decide) hh rfl
   · simp [module.decode_env_section, module.decode_start_section, global_simps, hr, lift,
       ModuleExamples.emptyEnv, core.result.Result.Insts.CoreOpsTry.branch]
   · simp [data, shortSection, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion,
@@ -223,7 +234,7 @@ theorem invalid_function_type_rejected : module.validate_module invalidType =
   apply first_section_error data (by constructor <;> simp [data, invalidType, ModuleExamples.bytes,
     alloc.vec.Vec.deref, magicVersion]) 1#u8 10#usize 12#usize _ ModuleExamples.emptyEnv
     (by simp [data, invalidType, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion])
-    (by decide) (by decide) (module.read_section_header.complete _ _ _ _ _ hh)
+    (by decide) (by decide) hh rfl
   · simpa [module.decode_env_section, global_simps] using hd
   · simp [data, invalidType, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion,
       limits.MAX_MODULE_BYTES]
@@ -238,7 +249,7 @@ theorem truncated_type_count_rejected : module.validate_module (emptySection 1#u
     alloc.vec.Vec.deref, magicVersion]) 1#u8 10#usize 10#usize _ ModuleExamples.emptyEnv
     (by simp [data, emptySection, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion])
     (by decide) (by decide)
-    (module.read_section_header.complete _ _ _ _ _ (empty_section_header 1#u8))
+    (empty_section_header 1#u8) rfl
   · simp [module.decode_env_section, module.decode_type_section, global_simps, heof,
       core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
@@ -265,9 +276,43 @@ theorem truncated_section_payload_rejected : module.validate_module (shortSectio
     simp [module.read_section_header, hid, hsize, hr, lift,
       core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  have hsplit : stream.find_code_region data = .ok (Slice.len data, Slice.len data) := by
+    have hlen : stream.read_len data 9#usize = .ok (.Ok (2#usize,10#usize)) := by
+      have hs : stream.read_len data 9#usize ⦃ r => r = .Ok (2#usize,10#usize) ⦄ := by
+        simp [stream.read_len,hsize]
+        step*
+        have hi : i = 2#usize := by
+          apply UScalar.eq_of_val_eq
+          scalar_tac
+        simp [hi]
+      obtain ⟨_, hr, rfl⟩ := WP.spec_imp_exists hs
+      exact hr
+    have hb : stream.find_code_region_loop.body data 11#usize 8#usize = .ok (.done (11#usize,11#usize)) := by
+      have hs : stream.find_code_region_loop.body data 11#usize 8#usize ⦃ r => r = .done (11#usize,11#usize) ⦄ := by
+        unfold stream.find_code_region_loop.body
+        simp only [show ¬ 8#usize ≥ 11#usize by decide, ↓reduceIte]
+        step
+        · simp [data,shortSection,ModuleExamples.bytes,alloc.vec.Vec.deref,magicVersion]
+        have hi : id = 1#u8 := by simpa [data,shortSection,ModuleExamples.bytes,alloc.vec.Vec.deref,magicVersion] using id_post
+        subst id
+        rw [hi]
+        simp only [module.SECTION_CODE]
+        simp only [show ¬ 1#u8 > 10#u8 by decide, ↓reduceIte]
+        step
+        have hi : i = 9#usize := by scalar_tac
+        subst i
+        simp only [hlen,bind_ok]
+        step*
+      obtain ⟨_,hr,rfl⟩ := WP.spec_imp_exists hs
+      exact hr
+    unfold stream.find_code_region stream.find_code_region_loop
+    rw [loop]
+    have hl : Slice.len data = 11#usize := rfl
+    rw [hl,hb]
+    simp
   apply ModuleExamples.environment_error data _
     (by simp [data, shortSection, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion,
-      limits.MAX_MODULE_BYTES])
+      limits.MAX_MODULE_BYTES]) hsplit
   apply env_from_loop data (by constructor <;> simp [data, shortSection,
     ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion]) _
   have hmore : ¬ 8#usize ≥ Slice.len data := by
@@ -310,9 +355,14 @@ theorem repeated_type_section_rejected : module.validate_module repeatedTypeSect
     ModuleExamples.emptyEnv 8#usize 10#usize 11#usize 0#u8 1#u8 hfirst
     (by decide) (by decide) (by decide) hread
   have hheader := module.read_section_header.complete data 11#usize 1#u8 13#usize 14#usize hsecond
+  have hsplit : stream.find_code_region data = .ok (Slice.len data, Slice.len data) := by
+    unfold stream.find_code_region
+    rw [split_skip_section data 8#usize 10#usize 11#usize 1#u8 hfirst (by decide),
+      split_skip_section data 11#usize 13#usize 14#usize 1#u8 hsecond (by decide)]
+    exact split_loop_eof data
   apply ModuleExamples.environment_error data _
     (by simp [data, repeatedTypeSection, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion,
-      limits.MAX_MODULE_BYTES])
+      limits.MAX_MODULE_BYTES]) hsplit
   apply env_from_loop data (by constructor <;> simp [data, repeatedTypeSection,
     ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion]) _
   rw [hstep]
@@ -323,49 +373,64 @@ theorem repeated_type_section_rejected : module.validate_module repeatedTypeSect
   simp [module.validate_env_with_loop.body, hmore, hheader, global_simps,
     core.result.Result.Insts.CoreOpsTry.branch]
 
+/-- Code framing reports its streaming EOF variant for a missing count. -/
 theorem truncated_code_count_rejected : module.validate_module (emptySection 10#u8) =
-    .ok (.Err (.Read .UnexpectedEof)) := by
+    .ok (.Err .UnexpectedEof) := by
   let data := emptySection 10#u8
-  have hh := empty_section_header 10#u8
-  have hheader := module.read_section_header.complete data 8#usize 10#u8 10#usize 10#usize hh
-  have hreadHeader := module.read_header.complete data 8#usize
-    (by constructor <;> simp [data, emptySection, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion])
-  have hloop := module.validate_env_with_loop.complete_stop data ModuleExamples.emptyEnv 8#usize 0#u8
-    (.inr ⟨10#u8, 10#usize, 10#usize, hh, by decide⟩)
-  have henv : module.validate_env data = .ok (.Ok (ModuleExamples.emptyEnv, 8#usize)) := by
-    simp only [parseLoop, ModuleExamples.emptyEnv] at hloop
-    simp [module.validate_env, module.validate_env_with, module.Env.new, hreadHeader,
-      core.result.Result.Insts.CoreOpsTry.branch, hloop, ModuleExamples.emptyEnv]
-  have heof := reader.read_u32_leb.reject_complete data 10#usize .UnexpectedEof
-    (.eof [] (by simp [data, emptySection, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion])
-      (by simp) (by simp))
-  have hmore : ¬ 8#usize ≥ Slice.len data := by
-    simp [data, emptySection, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion]
-  have hsection : module.code_section data 8#usize ModuleExamples.emptyEnv =
-      .ok (.Err (.Read .UnexpectedEof)) := by
-    simp [module.code_section, hmore, hheader, heof, global_simps,
-      core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-      error.Error.Insts.CoreConvertFromOpError.from]
-  have hcap : limits.MAX_CODE_HEADER_BYTES = .ok 11#usize := by
-    have hs : limits.MAX_CODE_HEADER_BYTES ⦃ n => n = 11#usize ⦄ := by
-      unfold limits.MAX_CODE_HEADER_BYTES limits.MAX_LEB_BYTES
-      step*
-    obtain ⟨_, hr, rfl⟩ := WP.spec_imp_exists hs
-    exact hr
-  obtain ⟨needed, hneeded, _⟩ := WP.spec_imp_exists
-    (Usize.add_spec (x := 8#usize) (y := 11#usize) (by scalar_tac))
-  have hcode : module.validate_code data 8#usize ModuleExamples.emptyEnv =
-      .ok (.Err (.Read .UnexpectedEof)) := by
-    simp [module.validate_code, module.validate_code_with, hcap, hneeded,
-      module.CodeVisitor.on_need_bytes.default, hsection,
-      core.result.Result.Insts.CoreOpsTry.branch,
+  let code := ModuleExamples.bytes [10#u8,0#u8]
+  let empty := ModuleExamples.bytes []
+  let regions : stream.SliceSource := ⟨ModuleExamples.emptyBytes, code, empty⟩
+  have hsplit : StreamCompleteRegions.Split data regions := by
+    refine ⟨8#usize, 10#usize, ?_, ?_, ?_, ?_⟩
+    · rw [stream.find_code_region, stream.find_code_region_loop, loop,
+        split_body_section data 8#usize 10#usize 10#usize 10#u8
+          (empty_section_header 10#u8) (by decide)]
+      simp
+    all_goals simp [regions, code, empty, data, emptySection, ModuleExamples.emptyBytes,
+      ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion,
+      Slice.index_SliceIndexRangeUsizeSliceInst, core.slice.index.SliceIndexRangeUsizeSlice.index,
+      List.slice]
+  apply StreamSliceRejection.code_header_error data regions ModuleExamples.emptyEnv .UnexpectedEof
+    (by simp [data, emptySection, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion,
+      limits.MAX_MODULE_BYTES]) hsplit ModuleExamples.empty_env
+  have hview : stream.read_exact stream.SliceSource.Insts.ItascaStreamSource regions 0#usize 2#usize =
+      .ok (.Ok code) := by
+    obtain ⟨view, hr, hv⟩ := (stream.SliceSource.available regions).code_read
+      0#usize 2#usize (by decide) (by rfl)
+    have he : view = code := by
+      apply Slice.ext
+      simpa [regions, code, ModuleExamples.bytes, alloc.vec.Vec.deref, List.slice] using hv
+    subst view
+    exact stream.read_exact.complete _ _ _ _ _ (by decide) hr rfl
+  have hzero : stream.read_len code 1#usize = .ok (.Ok (0#usize, 2#usize)) := by
+    have hd : Leb128.Decoded code 1#usize 0#u32 2#usize :=
+      (show Wasm.BytesAt code 1#usize [0#u8] 2#usize from by
+        constructor <;> simp [code, ModuleExamples.bytes, alloc.vec.Vec.deref]).u32_decoded _ (leb 0#u8)
+    obtain ⟨n, hr, hn⟩ := stream.read_len.complete code 1#usize 2#usize 0#u32 hd
+    have he : n = 0#usize := UScalar.eq_of_val_eq hn
+    simpa [he] using hr
+  have heof : stream.read_len code 2#usize = .ok (.Err .UnexpectedEof) := by
+    have hr := reader.read_u32_leb.reject_complete code 2#usize .UnexpectedEof
+      (.eof [] (by simp [code, ModuleExamples.bytes, alloc.vec.Vec.deref]) (by simp) (by simp))
+    simp [stream.read_len, hr]
+  have hadd : limits.add_offset 2#usize 0#usize = .ok (.Ok 2#usize) := by
+    obtain ⟨n, hr, hn⟩ := limits.add_offset.complete 2#usize 0#usize (by simp [limits.MAX_MODULE_BYTES])
+    have he : n = 2#usize := by apply UScalar.eq_of_val_eq; simpa using hn
+    simpa [he] using hr
+  have hmin : core.cmp.impls.OrdUsize.min 2#usize 11#usize = 2#usize := by
+    simp [core.cmp.impls.OrdUsize.min]
+  have hlen : Slice.len regions.code = 2#usize := rfl
+  have hs : stream.read_code_header stream.SliceSource.Insts.ItascaStreamSource
+      regions (Slice.len regions.code) ModuleExamples.emptyEnv ⦃ r => r = .Err .UnexpectedEof ⦄ := by
+    simp only [stream.read_code_header, hlen, show (2#usize ≠ 0#usize) by decide,
+      ↓reduceIte, StreamFraming.header_limit, bind_ok, lift, hmin, hview,
+      core.result.Result.Insts.CoreOpsTry.branch]
+    step
+    have hi : i2 = 10#u8 := by simpa [code, ModuleExamples.bytes, alloc.vec.Vec.deref] using i2_post
+    simp [hi, module.SECTION_CODE, hzero, hadd, heof,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  have hsize : ¬ Slice.len data > limits.MAX_MODULE_BYTES := by
-    simp [data, emptySection, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion, limits.MAX_MODULE_BYTES]
-  change module.validate_module data = _
-  simp [module.validate_module, hsize, henv, hcode, core.result.Result.Insts.CoreOpsTry.branch,
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  obtain ⟨_, hr, rfl⟩ := WP.spec_imp_exists hs
+  exact hr
 
 def invalidTypeIndex : Slice U8 :=
   ModuleExamples.bytes (magicVersion ++ [3#u8,2#u8,1#u8,0#u8])
@@ -395,7 +460,7 @@ theorem invalid_type_index_rejected : module.validate_module invalidTypeIndex =
   apply first_section_error data (by constructor <;> simp [data, invalidTypeIndex, ModuleExamples.bytes,
     alloc.vec.Vec.deref, magicVersion]) 3#u8 10#usize 12#usize _ ModuleExamples.emptyEnv
     (by simp [data, invalidTypeIndex, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion])
-    (by decide) (by decide) (module.read_section_header.complete _ _ _ _ _ hh)
+    (by decide) (by decide) hh rfl
   · simpa [module.decode_env_section, global_simps] using hd
   · simp [data, invalidTypeIndex, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion,
       limits.MAX_MODULE_BYTES]
@@ -423,9 +488,13 @@ theorem section_size_mismatch_rejected : module.validate_module longEmptyTypeSec
     unfold module.decode_type_section_loop
     rw [loop]
     simp [module.decode_type_section_loop.body]
+  have hsplit : stream.find_code_region data = .ok (Slice.len data, Slice.len data) := by
+    unfold stream.find_code_region
+    rw [split_skip_section data 8#usize 10#usize 12#usize 1#u8 hh (by decide)]
+    exact split_loop_eof data
   apply ModuleExamples.environment_error data _
     (by simp [data, longEmptyTypeSection, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion,
-      limits.MAX_MODULE_BYTES])
+      limits.MAX_MODULE_BYTES]) hsplit
   apply env_from_loop data (by constructor <;> simp [data, longEmptyTypeSection,
     ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion]) _
   have hmore : ¬ 8#usize ≥ Slice.len data := by

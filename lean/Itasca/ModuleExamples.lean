@@ -1,4 +1,6 @@
 import Itasca.ModuleValidation
+import Itasca.StreamSliceExamplesSupport
+import Itasca.StreamSliceRejection
 
 open Aeneas Aeneas.Std
 
@@ -41,7 +43,7 @@ theorem header (data : Slice U8) (rest : List U8)
   simp [module.read_header, h0, h1, h2, h3, h4, h5, h6, h7,
     core.result.Result.Insts.CoreOpsTry.branch]
 
-private theorem empty_env : module.validate_env emptyBytes = .ok (.Ok (emptyEnv, 8#usize)) := by
+theorem empty_env : module.validate_env emptyBytes = .ok (.Ok (emptyEnv, 8#usize)) := by
   have hh := header emptyBytes [] (by simp [emptyBytes, bytes, alloc.vec.Vec.deref])
   simp [module.validate_env, module.validate_env_with, module.Env.new, hh,
     core.result.Result.Insts.CoreOpsTry.branch, emptyEnv]
@@ -50,70 +52,44 @@ private theorem empty_env : module.validate_env emptyBytes = .ok (.Ok (emptyEnv,
   simp [module.validate_env_with_loop.body, emptyBytes, bytes,
     alloc.vec.Vec.deref, ModuleBinary.magicVersion]
 
-private theorem no_code_at_end (data : Slice U8) (env : module.Env)
-    (hsize : data.length + 11 ≤ Usize.max) (hfuncs : env.func_type_indices.val = []) :
-    module.validate_code data (Slice.len data) env = .ok (.Ok (Slice.len data)) := by
-  have hheader : limits.MAX_CODE_HEADER_BYTES = .ok 11#usize := by
-    have hs : limits.MAX_CODE_HEADER_BYTES ⦃ x => x = 11#usize ⦄ := by
-      unfold limits.MAX_CODE_HEADER_BYTES limits.MAX_LEB_BYTES
-      step*
-    obtain ⟨x, hx, rfl⟩ := WP.spec_imp_exists hs
-    exact hx
-  obtain ⟨next, hn, _⟩ := WP.spec_imp_exists
-    (Usize.add_spec (x := Slice.len data) (y := 11#usize) (by simpa using hsize))
-  simp [module.validate_code, module.validate_code_with, hheader, hn,
-    module.CodeVisitor.on_need_bytes.default, core.result.Result.Insts.CoreOpsTry.branch,
-    module.code_section, module.no_code_section, alloc.vec.Vec.is_empty, hfuncs]
-
-private theorem no_tail_at_end (data : Slice U8) (env : module.Env) :
-    module.validate_tail data (Slice.len data) env = .ok (.Ok ⟨alloc.vec.Vec.new _⟩) := by
-  unfold module.validate_tail module.validate_tail_with module.validate_tail_with_loop
-  rw [loop]
-  simp [module.validate_tail_with_loop.body]
-
 /-- A header-only module is accepted by the actual public validator. -/
 theorem empty_accepted : module.validate_module emptyBytes = .ok (.Ok emptyModule) := by
+  apply StreamSliceExamplesSupport.accepted_at_end emptyBytes emptyEnv
+    (by simp [emptyBytes, bytes, ModuleBinary.magicVersion, alloc.vec.Vec.deref, limits.MAX_MODULE_BYTES]) rfl
   have hlen : Slice.len emptyBytes = 8#usize := UScalar.eq_of_val_eq rfl
-  apply ModulePipeline.accepted_of_parts emptyBytes emptyEnv ⟨alloc.vec.Vec.new _⟩ 8#usize 8#usize
-  · simp [emptyBytes, bytes, ModuleBinary.magicVersion, alloc.vec.Vec.deref, limits.MAX_MODULE_BYTES]
-  · exact empty_env
-  · simpa only [hlen] using
-      no_code_at_end emptyBytes emptyEnv (by simp [emptyBytes, bytes, ModuleBinary.magicVersion, alloc.vec.Vec.deref]; scalar_tac) rfl
-  · simpa only [hlen] using
-      no_tail_at_end emptyBytes emptyEnv
+  simpa [hlen] using empty_env
 
 /-- Acceptance provides a certificate for these exact bytes, including external
 metadata and the explicit Wasm 1.0 restrictions. -/
 theorem empty_validated : ModuleSound.Validated emptyBytes emptyModule :=
   module.validate_module.wasm_sound _ _ empty_accepted
 
-/-- Once declarations consume all bytes and there are no defined functions,
-public code and tail validation perform their actual empty-section paths. -/
+/-- With no declared functions and no remaining bytes, the synchronous
+streaming driver returns the exact decoded environment and empty tail. -/
 theorem accepted_at_end (data : Slice U8) (env : module.Env)
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (hfuncs : env.func_type_indices.val = [])
     (henv : module.validate_env data = .ok (.Ok (env, Slice.len data))) :
-    module.validate_module data = .ok (.Ok ⟨env, ⟨alloc.vec.Vec.new _⟩⟩) := by
-  have hroom : data.length + 11 ≤ Usize.max := by
-    have := ModuleCode.module_room
-    scalar_tac
-  exact ModulePipeline.accepted_of_parts data env ⟨alloc.vec.Vec.new _⟩
-    (Slice.len data) (Slice.len data) hsize henv
-    (no_code_at_end data env hroom hfuncs) (no_tail_at_end data env)
+    module.validate_module data = .ok (.Ok ⟨env, ⟨alloc.vec.Vec.new _⟩⟩) :=
+  StreamSliceExamplesSupport.accepted_at_end data env hsize hfuncs henv
 
 theorem environment_error (data : Slice U8) (e : error.Error)
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
+    (hsplit : stream.find_code_region data = .ok (Slice.len data, Slice.len data))
     (herror : module.validate_env data = .ok (.Err e)) :
-    module.validate_module data = .ok (.Err e) := by
-  have hs : ¬ Slice.len data > limits.MAX_MODULE_BYTES := by scalar_tac
-  simp [module.validate_module, hs, herror, core.result.Result.Insts.CoreOpsTry.branch,
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+    module.validate_module data = .ok (.Err e) :=
+  StreamSliceRejection.environment_error data e hsize hsplit herror
 
 theorem header_error (data : Slice U8) (e : error.Error)
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
+    (hshort : data.length ≤ 8)
     (herror : module.read_header data = .ok (.Err e)) :
     module.validate_module data = .ok (.Err e) := by
-  apply environment_error data e hsize
+  have hsplit : stream.find_code_region data = .ok (Slice.len data, Slice.len data) := by
+    rw [stream.find_code_region, stream.find_code_region_loop, loop]
+    have hstop : 8#usize ≥ Slice.len data := by scalar_tac
+    simp [stream.find_code_region_loop.body, hstop]
+  apply environment_error data e hsize hsplit
   simp [module.validate_env, module.validate_env_with, module.Env.new, herror,
     core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -121,7 +97,7 @@ theorem header_error (data : Slice U8) (e : error.Error)
 /-- Empty input is an ordinary EOF error at the public module entry point. -/
 theorem missing_header_rejected : module.validate_module (bytes []) =
     .ok (.Err (.Read .UnexpectedEof)) := by
-  apply header_error _ _ (by simp [bytes, alloc.vec.Vec.deref, limits.MAX_MODULE_BYTES])
+  apply header_error _ _ (by simp [bytes, alloc.vec.Vec.deref, limits.MAX_MODULE_BYTES]) (by decide)
   simp [module.read_header, reader.read_byte.eof (bytes []) 0#usize (by simp [bytes, alloc.vec.Vec.deref]),
     core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
@@ -135,7 +111,7 @@ theorem invalid_magic_rejected : module.validate_module (bytes [1#u8, 0x61#u8, 0
   have h1 := read_at data 1#usize 2#usize 0x61#u8 (by decide) rfl rfl
   have h2 := read_at data 2#usize 3#usize 0x73#u8 (by decide) rfl rfl
   have h3 := read_at data 3#usize 4#usize 0x6D#u8 (by decide) rfl rfl
-  apply header_error data _ (by simp [data, bytes, alloc.vec.Vec.deref, limits.MAX_MODULE_BYTES])
+  apply header_error data _ (by simp [data, bytes, alloc.vec.Vec.deref, limits.MAX_MODULE_BYTES]) (by decide)
   simp [module.read_header, h0, h1, h2, h3, core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Nonzero version padding cannot be mistaken for an accepted 1.0 header. -/
@@ -151,7 +127,7 @@ theorem invalid_version_rejected : module.validate_module
   have h5 := read_at data 5#usize 6#usize 0#u8 (by decide) rfl rfl
   have h6 := read_at data 6#usize 7#usize 0#u8 (by decide) rfl rfl
   have h7 := read_at data 7#usize 8#usize 1#u8 (by decide) rfl rfl
-  apply header_error data _ (by simp [data, bytes, alloc.vec.Vec.deref, limits.MAX_MODULE_BYTES])
+  apply header_error data _ (by simp [data, bytes, alloc.vec.Vec.deref, limits.MAX_MODULE_BYTES]) (by decide)
   simp [module.read_header, h0, h1, h2, h3, h4, h5, h6, h7,
     core.result.Result.Insts.CoreOpsTry.branch]
 

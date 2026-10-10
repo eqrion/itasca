@@ -8,11 +8,13 @@ baseline is `e7a6ce602de0716de89f955300f711b23bc1403e`, preserved by the
 a statement and trust-boundary review, not an inference from theorem names or
 successful builds.
 
-The Lean results cover the documented whole-module, body, visiting, decomposed,
-and deferred-worker workflows for supported modules. Some results cover more
-than the baseline; some helper statements have different premises. **Literal
-theorem parity and equivalence of the two complete specifications have not been
-proved.** In particular:
+The Lean results cover whole-module validation, body and entry visitors, and
+streaming workers for supported modules. The ordinary module API now wraps the
+single streaming driver. The old module/code visitor and deferred-worklist APIs
+were retired; their streaming successors have different interfaces and contracts.
+Some results cover more than the baseline; some helper statements have different
+premises. **Literal theorem parity and equivalence of the two complete
+specifications have not been proved.** In particular:
 
 - The old independent expression and module binary-determinism theorems have
   no full Lean counterparts yet. Lean proves flat instruction/immediate decoding
@@ -20,18 +22,21 @@ proved.** In particular:
 - Accepted-entry soundness for an arbitrary supplied `Env` has an additional
   parameter-vector bound in Lean. Successful environment parsing derives it
   for the documented consumer workflow.
-- Separate-buffer module soundness in Lean requires the concatenated module
-  to fit `MAX_MODULE_BYTES`; the old region theorems themselves did not.
-  Lean also permits an empty code region when there are no defined functions.
+- Streaming soundness for separate buffers derives the combined
+  `MAX_MODULE_BYTES` bound from the accepted driver run. The independent
+  semantic region-composition theorem has no module-size premise. The old region
+  theorems themselves did not require a combined bound. Lean also permits an
+  empty code region when there are no defined functions.
 - Completeness now targets generated declarative typing plus an explicit Wasm
   1.0 profile. This is a different specification, not a proved replacement of
   every WasmCert judgment by an equivalent SpecTec judgment.
 
-These differences do not exclude accepted supported modules or the documented
-SpiderMonkey-style decomposition within the combined module-size cap, using an
-environment obtained from `validate_env`. They matter when quoting the stronger
-old helper statements for fabricated environments, oversized concatenations,
-or independent AST uniqueness.
+The streaming interface supports decomposition within the combined module-size
+cap, with coherent source views and actual-operation worker provenance. These
+contracts replace the old module visitor's callback and final-worklist premises;
+they do not establish compatibility of an external embedding. The differences
+also matter when quoting old helper statements for fabricated environments,
+oversized concatenations, or independent AST uniqueness.
 
 ## Meaning of the new certificate
 
@@ -66,9 +71,9 @@ formal cross-specification equivalence theorem.
 | [`validate_module_no_panic`](https://github.com/eqrion/itasca/blob/e7a6ce602de0716de89f955300f711b23bc1403e/theories/Module_NoPanic.v#L3125) | [`module.validate_module.wasm_total`](Itasca/ModuleValidation.lean): same unconditional ordinary-return contract for arbitrary input bytes. No valid-input or environment premise. |
 | [`validate_module_typed`](https://github.com/eqrion/itasca/blob/e7a6ce602de0716de89f955300f711b23bc1403e/theories/Module_Typing.v#L1037) | [`module.validate_module.wasm_sound`](Itasca/ModuleValidation.lean): acceptance implies the full `Validated` certificate, including exact bytes and actual accessor results. Lean additionally exposes the explicit 1.0 profile and cache correspondence in that certificate. |
 | [`validate_module_typechecked`](https://github.com/eqrion/itasca/blob/e7a6ce602de0716de89f955300f711b23bc1403e/theories/Module_Wasm10.v#L1088) | [`wasm_complete` / `wasm_complete_with_metadata`](Itasca/ModuleCompleteness.lean): independent bounded encoding, `Elaborates`, generated `Module_ok`, and `Profile` imply actual acceptance and matching metadata for the specified raw module. Rocq assumed success of WasmCert's executable module checker, whose completeness against declarative module typing was not available. Lean reaches a declarative target directly, without a parser-success or cache-coherence hypothesis. This strengthening of the target is within the new formalization. |
-| [`validate_module_with_no_panic`](https://github.com/eqrion/itasca/blob/e7a6ce602de0716de89f955300f711b23bc1403e/theories/Module_Driven.v#L810) | [`module.validate_module_with.total_with_hooks`](Itasca/ModuleVisitorValidation.lean): custom hooks and code hooks must return. The code-hook contract is needed for environments satisfying bounds and validity derived by the parser. Entry overrides may defer validation; termination does not imply entry correctness. The precise hook-bound predicates differ from Rocq's `env_small` formulation. |
-| [`validate_module_driven`](https://github.com/eqrion/itasca/blob/e7a6ce602de0716de89f955300f711b23bc1403e/theories/Module_Sound.v#L6818) | [`module.validate_module_with.accepted_erase`](Itasca/ModuleVisitorTransfer.lean): visiting acceptance transfers to default acceptance with the same returned module. `Validates` requires accepted entry overrides to imply default entry acceptance. It is needed only for the decoded environment, rather than Rocq's universally quantified environments. No hook-totality premise is needed. |
-| [`validate_module_with_complete`](https://github.com/eqrion/itasca/blob/e7a6ce602de0716de89f955300f711b23bc1403e/theories/Module_Driven.v#L840) | [`accepted_lift` and `wasm_complete`](Itasca/ModuleVisitorTransfer.lean): accepting custom hooks and code hooks lift every actual default acceptance; a declarative completeness corollary is also provided. The old named theorem took encoded/typed input premises; Lean provides the direct acceptance-transfer statement as well. An entry hook need only accept when default entry validation accepts. |
+| [`validate_module_with_no_panic`](https://github.com/eqrion/itasca/blob/e7a6ce602de0716de89f955300f711b23bc1403e/theories/Module_Driven.v#L810) | Successor: [`stream.validate_streaming.wasm_total`](Itasca/StreamDriverTotal.lean), under separate source and scheduler callback-return contracts. Submission callbacks need return only for legitimate bounded seeds with environment bounds derived by parsing. Polls may return arbitrary malformed or unfinished batches. No source coherence, worker provenance, or worker-success premise is needed. The old `validate_module_with` API is retired. |
+| [`validate_module_driven`](https://github.com/eqrion/itasca/blob/e7a6ce602de0716de89f955300f711b23bc1403e/theories/Module_Sound.v#L6818) | Successor: [`stream.validate_streaming.wasm_sound`](Itasca/StreamValidation.lean). Accepted execution, coherent source views, and [`Provenance`](Itasca/StreamScheduler.lean) yield `Validated` for the returned environment and the exact delivered tail. Provenance records actual batch-method reachability; it does not assume successful workers or finish checks. No callback-totality premise is needed. The old module-visitor erasure API is retired. |
+| [`validate_module_with_complete`](https://github.com/eqrion/itasca/blob/e7a6ce602de0716de89f955300f711b23bc1403e/theories/Module_Driven.v#L840) | Successor: [`stream.validate_streaming.wasm_complete`](Itasca/StreamDriverComplete.lean), from independent bounded encoding, elaboration, generated typing, and profile, plus canonical source availability and an [`accepting scheduler`](Itasca/StreamAcceptingScheduler.lean). This sufficient worker policy uses actual `validate_all` execution, supports any positive fixed batching configuration and arbitrary completion order, and derives successful finish checks. Metadata and the actual delivered tail match the same specified raw module. The old module-visitor acceptance-lifting API is retired. |
 
 ## Function bodies and opcode visitors
 
@@ -108,18 +113,20 @@ beyond the old accepted-body trace statements.
 The archived README's documented consumer contract required bounded buffers and
 environments/positions obtained from earlier phases. Several underlying Rocq
 theorems were more general than that prose; the distinctions below are material
-when comparing the literal statements.
+when comparing the literal statements. Current entry validators remain public;
+the old module/code visitor traversal and deferred-worklist contracts have been
+replaced by streaming submission, checked retirement, and final draining.
 
 | Archived Rocq theorem | Lean theorem and comparison |
 | --- | --- |
-| [`validate_module_of_parts`](https://github.com/eqrion/itasca/blob/e7a6ce602de0716de89f955300f711b23bc1403e/theories/Module_Driven.v#L747) | [`ModulePipeline.accepted_of_parts`](Itasca/ModulePipeline.lean) and [`wasm_sound_of_parts`](Itasca/ModuleRegions.lean): same accepted adjacent-phase composition with the module-size bound and exact returned environment/tail. |
+| [`validate_module_of_parts`](https://github.com/eqrion/itasca/blob/e7a6ce602de0716de89f955300f711b23bc1403e/theories/Module_Driven.v#L747) | [`ModuleSound.assembled_regions`](Itasca/ModuleSoundness.lean) composes independent environment, code, and tail certificates with exact byte tiling into one `Validated` witness. Actual execution is covered by [`stream.validate_streaming.wasm_sound`](Itasca/StreamValidation.lean). The old adjacent-phase execution-composition helper is retired. |
 | [`validate_code_entry_ok`](https://github.com/eqrion/itasca/blob/e7a6ce602de0716de89f955300f711b23bc1403e/theories/Module_NoPanic.v#L2562) | [`module.validate_code_entry.spec_of_env`](Itasca/ModuleDecomposed.lean) derives entry return, byte provenance, and bounds from an actual accepted bounded environment decode. Lower-level [`ModuleCodeEntry`](Itasca/ModuleCodeEntry.lean) uses `CodeEntry.Bounds`; this is not the old `env_small` record of all vector/counter bounds. |
 | [`validate_code_entry_with_sound`](https://github.com/eqrion/itasca/blob/e7a6ce602de0716de89f955300f711b23bc1403e/theories/Module_Sound.v#L5660) | [`module.validate_code_entry_with.wasm_sound`](Itasca/ModuleEntryVisitor.lean) and [`.trace_sound`](Itasca/ModuleEntryTrace.lean) give exact entry bytes, declared type, typed body, and original callback observations. **Additional helper premise:** `CodeEntry.Bounds env`. Both versions require stored type result arity at most one. [`.wasm_sound_of_env`](Itasca/ModuleDecomposed.lean) discharges the environment premises for parsed environments. |
 | [`validate_code_entry_complete`](https://github.com/eqrion/itasca/blob/e7a6ce602de0716de89f955300f711b23bc1403e/theories/Module_Complete.v#L3997) | [`module.validate_code_entry.complete`](Itasca/ModuleCodeEntryComplete.lean): independently encoded, declaratively typed entries within the actual body/local caps succeed, under index validity, `Wasm1.Environment`, and `CodeEntry.Bounds`. Unlike the old statement, no already-returned evaluation is assumed. The cap covers body bytes, not the entire size-prefixed entry; see below. |
 | [`validate_code_entry_driven`](https://github.com/eqrion/itasca/blob/e7a6ce602de0716de89f955300f711b23bc1403e/theories/Module_Driven.v#L153) | [`module.validate_code_entry_with.accepted_erase`](Itasca/ModuleEntryVisitor.lean): accepted visiting entry validation transfers to default validation at exactly the same end cursor, without assumptions on unrelated callback runs or on environment bounds. |
-| [`validate_code_with_deferred`](https://github.com/eqrion/itasca/blob/e7a6ce602de0716de89f955300f711b23bc1403e/theories/Module_Driven.v#L662) | [`module.validate_code_with.deferred_erase`](Itasca/ModuleDeferred.lean): accepted recording code traversal plus successful validation of every pair in the final work observation implies default code acceptance. [`ModuleEntryOrder`](Itasca/ModuleEntryOrder.lean) additionally identifies the exact sequence of defined-function indices. |
-| [`validate_module_regions_typed`](https://github.com/eqrion/itasca/blob/e7a6ce602de0716de89f955300f711b23bc1403e/theories/Module_Typing.v#L1086) | [`module.validate_module.regions_wasm_sound`](Itasca/ModuleRegions.lean): exact environment/code consumption and accepted tail validation on separate buffers yield the full module certificate for their concatenation. **Different premises:** Lean requires a representing concatenated slice and a combined module-size bound; Rocq concluded typing of a concatenated list without that bound, but required the code buffer to begin with a code-section header. Lean permits an empty code region. |
-| [`validate_module_regions_deferred_typed`](https://github.com/eqrion/itasca/blob/e7a6ce602de0716de89f955300f711b23bc1403e/theories/Module_Driven.v#L922) | [`module.validate_module.regions_deferred_wasm_sound`](Itasca/ModuleDeferredValidation.lean): same separate-buffer/deferred composition, with the region differences above. Worker obligations refer to the code buffer actually handed to the workers. |
+| [`validate_code_with_deferred`](https://github.com/eqrion/itasca/blob/e7a6ce602de0716de89f955300f711b23bc1403e/theories/Module_Driven.v#L662) | Successors: [`StreamBatch.Reachable.finished`](Itasca/StreamBatch.lean) derives exact typed entries from actual worker operations and successful finish; [`StreamScheduler.Partition.code`](Itasca/StreamPartition.lean) assembles their exact byte coverage and ordered function indices. [Submission](Itasca/StreamSubmission.lean) and [draining](Itasca/StreamDrain.lean) derive the completed obligations from accepted execution. No assumed validation of a final recorded worklist is used. The old code-visitor walk is retired. |
+| [`validate_module_regions_typed`](https://github.com/eqrion/itasca/blob/e7a6ce602de0716de89f955300f711b23bc1403e/theories/Module_Typing.v#L1086) | Successor: [`stream.validate_streaming.wasm_sound`](Itasca/StreamValidation.lean), with coherent separate environment/code/tail views, worker provenance, and a slice representing their concatenation. Acceptance yields the full certificate and the checked combined module-size bound. Rocq concluded typing of a concatenated list without that bound, but required a code-section header. Lean permits an empty code region for no defined functions. Independent [`assembled_regions`](Itasca/ModuleSoundness.lean) has no combined-size premise. |
+| [`validate_module_regions_deferred_typed`](https://github.com/eqrion/itasca/blob/e7a6ce602de0716de89f955300f711b23bc1403e/theories/Module_Driven.v#L922) | The same [`stream.validate_streaming.wasm_sound`](Itasca/StreamValidation.lean) covers deferred workers under [`Provenance`](Itasca/StreamScheduler.lean), with the region differences above. Worker reachability starts from the exact submitted batch and bytes, and every callback preserves issued history. Successful worker validation is derived at checked retirement. The old separate-buffer/deferred execution API is retired. |
 
 `CodeEntry.Bounds env` says that each stored type's parameter count plus
 `MAX_LOCALS` fits `Usize.max`. It is a sufficient allocation/arithmetic bound,
@@ -139,13 +146,16 @@ entry's size prefix are not counted toward those respective limits. Whole-module
 completeness additionally bounds all module bytes by 1,073,741,824 through
 [`ModuleEncodingWithinLimits`](Itasca/ModuleLimits.lean).
 
-For a whole visiting module with deferred workers,
-[`deferred_wasm_sound`](Itasca/ModuleDeferredValidation.lean) uses the **final**
-visitor work observation. Custom callbacks must preserve that observation so
-tail processing cannot erase an outstanding obligation. Worker completion means
-successful actual entry validation, not merely dispatch or worker termination.
-No worker scheduling, memory sharing, or foreign-interface pointer safety is
-proved.
+For streaming workers, [`Provenance`](Itasca/StreamScheduler.lean) preserves
+issued history through every callback, including environment/tail custom hooks.
+Matching polled batches must be reachable from their submitted seed through
+actual batch methods, which may use arbitrary opcode visitors. The driver checks
+pending identities and successful finish, so foreign, replayed, and unfinished
+batches cannot discharge an obligation. The proof derives complete typed entries
+from those checks; dispatch or worker termination alone is insufficient.
+[Source contracts](Itasca/StreamSource.lean) separate coherence of successful
+views, availability of valid requests, and ordinary callback return. No worker
+scheduling, memory sharing, or foreign-interface pointer safety is proved.
 
 ## Binary determinism: an explicit remaining difference
 
@@ -162,13 +172,15 @@ it does not fill the independent AST/module-determinism gap.
 
 ## Additional guarantees and changed specification boundary
 
-The old README explicitly left custom-section ranges unverified. Lean now has
-[accepted module traces](Itasca/ModuleTraceValidation.lean), including ordered
-custom-section callbacks, byte requests, and entry handoffs, with independent
-section/code framing. [Custom range proofs](Itasca/ModuleCustomRanges.lean)
-recover the exact strict-UTF-8 name bytes immediately preceding the payload and
-prove the payload bounds. A `need_bytes` request is a requested boundary, not a
-claim that those bytes are already present; lookahead requests may exceed EOF.
+The old README explicitly left custom-section ranges unverified. Retained
+[custom trace proofs](Itasca/ModuleCustomTrace.lean) describe accepted environment
+and tail callbacks against independent section framing.
+[Custom range proofs](Itasca/ModuleCustomRanges.lean) recover the exact strict-UTF-8
+name bytes immediately preceding the payload and prove the payload bounds.
+The old module-wide callback trace, `need_bytes`, and code-entry handoff contracts
+were retired with their APIs. [`StreamRun.Accepted`](Itasca/StreamRun.lean) instead
+records the actual streaming phases, submission, tail delivery, and draining;
+it is not a replacement theorem for that entire former callback-event trace.
 
 [Entry traces](Itasca/ModuleEntryTrace.lean) additionally preserve the actual
 `functionStart` event, signature, size prefix, grouped-local span, and exact
@@ -232,8 +244,9 @@ general equivalence between the two specification developments.
   counts are not comparable. The archived [trust report](baseline/rocq-trust.txt)
   and [revision pins](baseline/revisions.json) preserve the baseline evidence.
 
-The remaining general exclusions are execution semantics, allocation failure,
-and a complete classification of which error every malformed input returns.
+The streaming consolidation does not add trusted axioms or change these trust
+boundaries. The remaining general exclusions are execution semantics, allocation
+failure, and a complete classification of which error every malformed input returns.
 Specific negative examples and body rejection-trace properties do not claim
 that last classification. Neither a full build nor passing Rust/specification
 tests proves equivalence between WasmCert, SpecTec, and the prose WebAssembly

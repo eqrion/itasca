@@ -10,14 +10,15 @@ grammar and explicit Wasm 1.0 restrictions. Read the
 
 | Path | Purpose |
 | --- | --- |
-| `src/module.rs` | Environment, code-entry/section, tail and whole-module validation; visitors. |
+| `src/module.rs` | Shared environment, entry and tail validation, custom visitor, and whole-module wrapper. |
 | `src/code.rs` | Streaming body validator and opcode dispatch. |
-| `src/stream.rs` | Streaming and parallel module driver; extracted, not yet proved. |
+| `src/stream.rs` | Sole module driver, batches, source protocol, and private synchronous slice adapter. |
 | `src/reader.rs`, `types.rs`, `limits.rs`, `error.rs` | Byte readers, API types, implementation bounds and errors. |
 | `lean/Itasca/Generated/Types.lean`, `Funs.lean` | Committed Aeneas extraction; never edit by hand. |
 | `lean/Itasca/Generated/FunsExternal.lean` | Handwritten concrete models of `Vec.pop` and `Vec.is_empty`. |
 | `lean/Itasca/Wasm*.lean`, `Visitor*.lean` | Body grammar, typing, completeness and callback proofs. |
-| `lean/Itasca/Module*.lean` | Module parsing/typing, metadata, completeness and consumer APIs. |
+| `lean/Itasca/Module*.lean` | Shared parsing/typing, independent module certificates, metadata, and whole-module corollaries. |
+| `lean/Itasca/Stream*.lean` | Source contracts, actual worker/driver proofs, and concrete adapter proofs. |
 | `lean/Itasca/Audit.lean` | Transitive theorem/adapter axiom audit. |
 | `lean/SpecTec/wasm2.0.lean` | Specification regenerated from pinned sources and patches. |
 | `lean/Makefile`, `lake-manifest.json`, `lean-toolchain` | Extraction, generation and pinned Lean dependencies. |
@@ -98,12 +99,15 @@ proofs. A new dispatch shape also needs step/trace handling. Callback meanings
 must be transcribed from hook names independently of opcode dispatch; the
 concrete recorder and audit check the resulting correspondence.
 
-A module/custom hook changes `ModuleTail.HooksTotal`, `HooksAccept`, custom
-visitor transfers and `ModuleTrace.RecordsCustom`. For code hooks, also review
-`ModuleCode.HooksTotal`, `ModuleCodeVisitor.Accepts`, `Validates`, `Records`,
-deferred composition and `ModuleTrace.RecordsCode`. Termination and entry
-correctness are separate: dispatch-only callbacks can return before workers
-validate bodies. Custom callbacks after code must preserve the work observation.
+A module/custom hook changes `ModuleTail.HooksTotal`, `HooksAccept`, visitor
+transfers, and preservation of scheduler invariants. A streaming callback changes
+`StreamScheduler.CallbacksTotal`, `Provenance`, and
+`StreamAcceptingScheduler.Accepts`, together with its concrete adapter proofs.
+Termination, provenance, and acceptance are separate obligations: a submitted
+batch may remain outstanding while tail or custom callbacks run. Every callback
+must preserve the scheduler relation used by the soundness theorem. Keep actual
+`next_entry`/`validate_func` histories as the basis of worker provenance; do not
+replace them with assumed validation counters or successful finish checks.
 
 New `Env` fields need exact representation/cache correspondence. Preserve
 imported and defined index spaces and original byte provenance, including when
@@ -129,11 +133,11 @@ Consumer allocation and execution are outside these proofs.
 
 ## Streaming API
 
-`stream::validate_streaming` is one entry point for streaming and parallel
-validation, and `stream::validate_module_slice` is a synchronous adapter over
-it for one contiguous buffer. Both are part of the normal extraction but have
-no whole-module proof yet. `validate_module` keeps the proved implementation
-until the proof lands.
+`stream::validate_streaming` is the sole module orchestrator for streaming and
+parallel validation. `validate_module(bytes)` calls it through a private
+contiguous slice adapter and synchronous worker. The generic driver and adapter
+have soundness, totality, and independent completeness proofs; the existing
+public whole-module theorem statements are corollaries of that adapter.
 
 ### Design
 
@@ -143,7 +147,7 @@ driver owns phase order and acceptance:
 1. Decode the environment from `Source::environment` into caller-provided
    storage.
 2. Read the code section header, then frame its entries into `CodeBatch`es of
-   about `Config::batch_bytes` body bytes and submit each to the
+   about `Config::batch_bytes` entry-content bytes (including locals) and submit each to the
    `StreamingVisitor`.
 3. Validate the tail from `Source::tail` at EOF.
 4. Retire every outstanding batch, accepting each exactly once.
@@ -157,10 +161,12 @@ per-function ledger, reference counts, or code copies. A visitor that returns a
 foreign, duplicate or unfinished batch, or requests no batches, gets
 `Error::Host`.
 
-`validate_module_slice` splits the buffer by framing section headers and uses a
-private `SyncVisitor` that validates each batch as it is submitted. It holds at
-most one batch and never shares it, so a constant module ID suffices. The
-decomposed APIs remain and serve as a differential test oracle.
+The private slice adapter splits the buffer by framing section headers and
+uses `SyncVisitor` to validate each batch as it is submitted. It holds at most
+one batch and never shares it, so a constant module ID suffices. Environment,
+entry, body, and tail functions remain shared components. Running one component
+alone does not establish whole-module validity or advance a batch validation
+cursor.
 
 ### Embedding obligations
 
@@ -190,42 +196,56 @@ acceptance. The embedding still owes:
 A worker's compiler failure also rejects the module, even if the bytes are
 valid.
 
-The Firefox adapter allocates the environment at a stable address before
-calling the driver, and its `finish` callback joins and releases outstanding
-jobs before that storage is freed. On success the same allocation transfers to
-SpiderMonkey for tier-2 compilation. Module IDs come from a relaxed atomic
-counter that rejects exhaustion instead of wrapping. Its environment, code, and
-tail allocations are the `Source` regions directly.
+An external engine adapter must arrange stable environment storage, join or
+cancel workers before releasing their borrows, and avoid reusing module IDs
+while old batches can reach its scheduler. The experimental Firefox integration
+is maintained separately; this repository's API migration does not update or
+verify that external checkout.
 
-### Proof and consolidation plan
+### Proof contracts and API migration
 
-[STREAMING_PROOF_PLAN.md](STREAMING_PROOF_PLAN.md) is the detailed handoff for
-proving the extracted driver and consolidating the public APIs. It records the
-source and scheduler contracts, batch/driver invariants, existing proof reuse,
-dependency refactoring, ordered milestones, and verification gates.
+The [streaming proof plan](STREAMING_PROOF_PLAN.md) records the implementation
+sequence and verification gates. The proof hierarchy now composes shared
+semantic certificates directly; streaming correctness does not replay the
+removed module/code-section driver.
 
-The target is one module driver, `validate_streaming`, with `validate_module`
-as its synchronous contiguous-buffer adapter. After the streaming slice API
-has soundness, totality, completeness, and metadata proofs, retire the legacy
-`validate_module_with`, `CodeVisitor`, and separate code-section walk. Keep the
-shared environment, entry, body, and tail components and their visitor proofs.
+| Contract | Obligation |
+| --- | --- |
+| `StreamSource.Coherent` | Successful views and code length agree with fixed logical environment/code/tail bytes; bounded code views are exact slices. Soundness allows read errors and does not require a canonical split. |
+| `StreamSource.CallbacksTotal` and `StreamScheduler.CallbacksTotal` | Source and visitor calls return ordinary modeled results. Submit totality is required for legitimate bounded seeds. Polls may return malformed or unfinished workers. |
+| `StreamScheduler.Provenance` | Every historical matching worker is reachable from its issued seed through actual batch operations, and every callback preserves that relation. Successful finish and pending membership are checked by the driver. |
+| `StreamSource.CanonicalAvailable` | The canonical split of independent input bytes is available to all needed source reads; this is a completeness premise. |
+| `StreamAcceptingScheduler.Accepts` | Callbacks accept and preserve the queue, positive configuration bounds outstanding work, and polls return queued results of actual `validate_all` executions in any order. Independent typed byte encodings imply those workers finish successfully. |
 
-Build the new proofs on driver-independent semantic assembly and component
-certificates. Batch provenance must connect every returned batch to its actual
-submission through batch operations; successful completion is derived from
-those operations and the driver's checks. Discharge source and scheduler
-assumptions for the concrete slice adapter. No trust-base extension is planned.
+The concrete `SliceSource` and private `SyncVisitor` discharge these obligations
+for `validate_module`. Its completeness premises remain independent module
+encoding within limits, elaboration, generated typing, and the Wasm 1.0 profile.
+No parser-success or prevalidated-body assumptions were added, and the trust
+base is unchanged.
+
+Removed public APIs are `validate_module_with`, `validate_code_with`,
+`validate_code`, `CodeVisitor`, `ValidatingCodeVisitor`, and
+`code_section`/`CodeSection`; the internal legacy code-entry walk is gone too.
+Callers use `StreamingVisitor` or the synchronous `validate_module` wrapper.
+`ModuleVisitor` remains the custom-section hook and `OpVisitor` remains the
+entry/body hook. Old deferred-code and whole-module callback-trace contracts
+were retired with the old APIs. Preserve the retained body/entry trace theorems
+when changing their shared implementation; old module callback order and byte
+requests are not compatibility requirements of the streaming API.
 
 ### Tests
 
-`tests/stream.rs` compares the specification corpus against the existing
-validator over both a contiguous and a split source, and exercises bounded
-out-of-order completion, parallel workers, foreign batches, sticky errors,
-truncation, region boundaries and misplaced splits.
+`tests/stream.rs` checks contiguous and split sources against specification corpus
+expectations, and exercises bounded out-of-order completion, parallel workers,
+foreign and unfinished batches, repeated validation, sticky errors, truncation,
+and region boundaries. The kernel-checked `StreamExamples.replay_rejected`
+regression covers rejection of a batch whose ID is no longer pending. `validate_module` and its slice adapter share a driver, so agreement
+between them is not independent differential coverage. The wasmparser fuzz
+oracle remains independent.
 
-Firefox's `testWasmEncodeBasic` JSAPI test is not adapted yet: it calls
-`ModuleGenerator` directly without an environment or framed code bytes, so
-passing the Wasm jit-tests does not mean the whole JSAPI suite passes.
+External Firefox tests and API migration are outside this repository's proof
+and test results. In particular, passing a subset of engine tests does not
+certify an external adapter's lifetime, scheduling, or FFI obligations.
 
 ## Archived Rocq version
 

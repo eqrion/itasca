@@ -6,9 +6,11 @@ This is itasca's active verification pipeline, implementing the
 [final validation record](baseline/VALIDATION.md), and
 [upstream change tracker](../UPSTREAM.md).
 
-The whole-module claims below cover `validate_module` and the decomposed APIs.
-The streaming driver in `stream` is part of the extraction but not yet proved.
-See the [streaming proof plan](../DEVELOPMENT.md#streaming-api).
+The whole-module claims cover the actual streaming driver and its synchronous
+`validate_module` wrapper, with shared environment, entry, body, and tail
+components. Generic streaming theorems separate source coherence, callback
+returning behavior, worker provenance, and accepting scheduler premises. See the
+[embedding obligations](../DEVELOPMENT.md#embedding-obligations).
 
 The full Rust extraction and freshly regenerated SpecTec definitions compile
 together. Local source patches fix Aeneas naming and indentation bugs and work
@@ -101,14 +103,19 @@ generated 2.0 typing and actual `TypeMismatch` rejection for the same 11 bytes.
 The profile preserves existing Wasm 1.0 behavior without changing Rust or the
 upstream specification.
 
-Whole-module soundness and arbitrary-byte termination now cover the actual
-public API in [`ModuleValidation`](Itasca/ModuleValidation.lean):
+The public whole-module API is a synchronous wrapper over the sole module
+driver, `stream.validate_streaming`. Its preserved theorem statements are
+corollaries of the concrete slice and synchronous-worker proofs:
 
 | Theorem | Checked claim |
 | --- | --- |
-| `module.validate_module.wasm_spec` | Every input returns an ordinary result; successful results satisfy the complete module certificate. |
-| `module.validate_module.wasm_total` | No input bytes cause modeled panic or divergence. |
-| `module.validate_module.wasm_sound` | Acceptance establishes `ModuleSound.Validated` without abstract parser, environment, or body-validation assumptions. |
+| [`module.validate_module.wasm_spec`, `wasm_total`, `wasm_sound`](Itasca/ModuleValidation.lean) | Every input returns an ordinary result; acceptance establishes the complete module certificate without source, scheduler, or body-validation assumptions. |
+| [`module.validate_module.wasm_complete`, `wasm_complete_with_metadata`](Itasca/ModuleCompleteness.lean) | Independent module encoding within limits, elaboration, generated typing, and the Wasm 1.0 profile imply acceptance and exact returned metadata. |
+| [`stream.validate_streaming.wasm_sound`](Itasca/StreamValidation.lean) | An accepted run, coherent source views, and worker provenance establish `ModuleSound.Validated` for the concatenated bytes, returned environment, and exact tail from the actual `tail_ready` call. |
+| [`stream.validate_streaming.wasm_total`](Itasca/StreamDriverTotal.lean) | Returning source and scheduler callbacks imply an ordinary result on arbitrary bytes. Unfinished or malformed returned batches need no provenance premise. |
+| [`stream.validate_streaming.wasm_complete`](Itasca/StreamDriverComplete.lean) | The same independent valid-module premises, canonical available source regions, and an accepting scheduler policy imply actual acceptance and metadata for that same raw module. |
+| [`stream.validate_module_slice.wasm_total`, `wasm_sound`, `wasm_spec`](Itasca/StreamSlice.lean) | The private contiguous adapter discharges source coherence, callback totality, and worker provenance. |
+| [`stream.validate_module_slice.wasm_complete`, `wasm_complete_with_metadata`](Itasca/StreamSliceCompleteness.lean) | The concrete source and synchronous worker discharge generic completeness obligations, returning the exact environment/tail pair. |
 
 `ModuleSound.Validated` supplies one raw module whose independent
 `ModuleBinary.ModuleEncoding` accounts for the whole input. `Elaborates`
@@ -118,87 +125,88 @@ function-type fallback and truncated function/code pairing. The generated
 order. `Profile` additionally establishes unique decoded export names,
 Wasm 1.0 table/memory/result limits, and the recursive body profile.
 
-The certificate also identifies the returned environment and data segments,
-proves cache coherence, and proves that the actual `import_types` and
-`export_types` functions succeed and report the same module's types in order.
-Names retain strict Unicode scalar encoding, including four-byte scalars.
-Initializers see only immutable imported globals; bodies see the full global
-space. Element/data segments and start functions are covered. There is no
-executable-specification-checker premise.
+The certificate identifies the decoded environment and data segments, proves
+cache coherence, and proves that the actual `import_types` and `export_types`
+functions succeed and report the same module's types in order. Names retain
+strict Unicode scalar encoding, including four-byte scalars. Initializers see
+only immutable imported globals; bodies see the full global space. Element/data
+segments and start functions are covered. The generic API returns an environment
+and `()`, so its `StreamRun.Accepted` witness records the actual delivered tail;
+it does not assume arbitrary visitor state stores that tail. The concrete
+synchronous adapter proves its returned `Module` contains exactly that pair.
 
-Whole-module completeness is checked in
-[`ModuleCompleteness`](Itasca/ModuleCompleteness.lean).
-`module.validate_module.wasm_complete` starts from the same independent raw
-module, generated `Module_ok`, `Elaborates`, `Profile`, and
-`ModuleEncodingWithinLimits`. It proves actual public acceptance and exact
-correspondence with returned declarations/data. The metadata variant also
-proves success and correspondence of the public import/export type accessors.
-No parser-success, decoded-cache, or prevalidated-entry premise is exposed.
-The limits constrain the actual module bytes, the encoded instruction body
-including its final `end`, and declared locals excluding parameters.
+Completeness starts from `ModuleEncodingWithinLimits`, `Elaborates`, generated
+`Module_ok`, and `Profile` for the same independent raw module. No parser-success,
+decoded-cache, local checker, or prevalidated-entry premise is exposed. Limits
+constrain actual module bytes, encoded instruction bodies including their final
+`end`, and declared locals excluding parameters. Nonminimal valid LEB encodings,
+empty/absent code sections, strict UTF-8, and exact input consumption remain part
+of the binary grammar and framing proofs.
 
-`ModuleCodeEntry`, `ModuleCode`, `ModuleEnvSemantics`, and `ModuleTail` expose
-the component contracts used in this composition. `ModuleRegions` proves the
-complete module certificate for both adjacent calls on one buffer and exact
-concatenations of independently validated environment/code/tail buffers.
-`ModuleDecomposed` derives per-entry bounds and arity from an actual accepted
-environment decode, including when the entry bytes are in another buffer.
-`ModuleEntryVisitor`, `ModuleCustomVisitor`, and `ModuleVisitorTransfer`
-preserve acceptance under callback replacement. Accepted custom/opcode
-visitors need no termination premise for erasure; overriding a code-entry
-callback requires its own validation guarantee. Accepting callbacks preserve
-module completeness. `ModuleCodeTotal` and `ModuleVisitorValidation` prove
-termination separately, even for callbacks that defer entry validation.
-`ModuleDeferredValidation` composes the recorded worker obligations with both
-same-buffer and separate-buffer modules. For a whole-module visitor's final
-state, custom callbacks must preserve the work observation; this prevents the
-tail from erasing an unvalidated entry. `ModuleEntryOrder` proves exactly one
-recorded obligation per defined function, in index order. The concrete recorder
-only dispatches work; its successful return alone does not certify a body.
+The streaming assumptions deliberately separate three claims:
 
-| Consumer interface | Main theorem |
+- `StreamSource.Coherent` relates successful environment/tail views, code length,
+  and bounded code reads to fixed logical bytes. Soundness permits read errors
+  and does not assume a canonical split or valid bytes.
+- `StreamSource.CallbacksTotal` and `StreamScheduler.CallbacksTotal` require
+  ordinary callback results. They do not require source coherence, worker
+  provenance, successful finish, or rejection of every malformed worker.
+- Completeness uses `StreamSource.CanonicalAvailable` and
+  `StreamAcceptingScheduler.Accepts`: positive batch settings, accepting hooks,
+  preserved queue state, and returned queued results of actual `validate_all`
+  executions, in any order. `StreamBatchComplete` derives their successful finish
+  from independent typed entry encodings. This is one sufficient accepting worker
+  policy, not an exhaustive classification of worker implementations.
+
+`StreamScheduler.Provenance` connects historical issued descriptors to worker
+states through `StreamBatch.Reachable`, the closure of actual `next_entry` and
+`validate_func` calls. Dispatch and validation have independent cursors. Stored
+errors remain sticky. A successful `finish` derives ordered typed entry encoding
+and exact byte coverage; it is not a provenance premise. The driver validates
+module IDs, pending IDs, and finish results, removes each accepted pending ID,
+and drains all remaining work. Every callback preserves the scheduler relation,
+including custom sections and tail delivery. Actual OS scheduling, network
+progress, FFI safety, and compiler IR correctness remain embedding obligations.
+
+`ModuleCodeEntry`, `ModuleEnvSemantics`, `ModuleTail`, `ModuleCodeSemantic`, and
+`ModuleSoundness` provide shared component facts and driver-independent certificate
+assembly. `ModuleDecomposed` derives per-entry bounds and arity from an actual
+accepted environment decode, including entries in another buffer.
+`ModuleEntryVisitor` and `ModuleCustomVisitor` preserve acceptance under callback
+replacement. Successful custom/opcode visitor erasure has no termination premise
+for unrelated callback executions. `ModuleCodeEntryComplete` derives actual
+entry acceptance from independent typed bounded encodings.
+
+The legacy `validate_module_with`, `validate_code_with`, `validate_code`,
+`CodeVisitor`, `ValidatingCodeVisitor`, and `code_section`/`CodeSection` APIs and
+their orchestration-specific proofs have been removed. Their deferred-code and
+whole-module callback-trace contracts were retired; they are not claims about
+`StreamingVisitor`. The shared `ModuleVisitor` custom hooks and `OpVisitor`
+entry/body hooks remain. Body and entry callback traces retain their guarantees:
+
+| Consumer interface | Retained theorem |
 | --- | --- |
 | Separate entry after decoding the environment | `module.validate_code_entry.spec_of_env` |
 | Accepted entry with original callback trace | `module.validate_code_entry_with.trace_sound` |
-| Accepted validating whole-module visitor | `module.validate_module_with.wasm_sound` |
-| Accepted whole-module callback trace | `module.validate_module_with.trace` / `trace_sound` |
-| Whole-module trace after deferred workers finish | `module.validate_module_with.deferred_trace_sound` |
-| Independently valid module with accepting recording callbacks | `module.validate_module_with.trace_complete` |
-| Concrete validating recorder for any accepted module | `module.validate_module.recorded` |
-| Whole-module callback termination | `module.validate_module_with.total_with_hooks` |
-| Deferred code walk after workers finish | `module.validate_code_with.deferred_erase` |
-| Deferred whole-module visitor with preserved final work list | `module.validate_module_with.deferred_wasm_sound` |
-| Separate buffers with deferred workers | `module.validate_module.regions_deferred_wasm_sound` |
+| Arbitrary accepted opcode visitor | `code.validate_body_with.wasm_sound` |
+| Accepted body with exact callbacks | `code.validate_body_with.trace_sound` |
+| Independently valid body with accepting callbacks | `code.validate_body_with.trace_complete` |
+| Rejecting body callback is last and matches the result | `code.validate_body_with.trace_rejection_last` |
 
-Entry traces cover accepted entries and include the function-start event and
-exact body operators, with the body start tied to that entry's encoded locals.
-[`ModuleTraceValidation`](Itasca/ModuleTraceValidation.lean) certifies accepted
-whole-module callbacks against independent section framing: custom-section
-metadata, byte-readiness requests, and each code-entry handoff with its index
-and offsets. [`ModuleCustomRanges`](Itasca/ModuleCustomRanges.lean) identifies
-the exact UTF-8 name bytes before `payload_start` and bounds both name and
-payload intervals in the original buffer. Readiness requests may extend beyond
-EOF; the trace records the requested position rather than asserting its
-availability. A trace alone does not certify overridden entry validation;
-`trace_sound` requires validating hooks, while `deferred_trace_sound` discharges
-the recorded entries through completed workers. General module/entry rejection
-traces are not claimed; the body API separately covers rejection traces.
-These results are validation guarantees, not execution semantics. Production
-Rust behavior is unchanged; the archived Rocq baseline remains reproducible.
+[Entry traces](Itasca/ModuleEntryTrace.lean) include the function-start event and
+exact body operators, with the body start tied to the entry's encoded locals.
+[Custom ranges](Itasca/ModuleCustomRanges.lean) identify exact UTF-8 name bytes
+before `payload_start` and bound both name and payload intervals in their input
+buffer. A general trace specification for rejected module/entry runs is not
+claimed; the body API separately covers rejection traces.
 
-Kernel-checked module regressions cover imported and defined functions,
-locals/calls, imported immutable globals, initializers, exports/start, active
-element/data segments, Unicode/custom sections, and malformed modules.
-Consumer regressions exercise separate buffers, work-list preservation, exact
-custom/readiness callbacks, and a deferred walk that dispatches an invalid body
-whose worker then rejects it.
-The final 2026-10-05 overnight integration passed `just lean-prove` with 1,981
-build jobs and audited 7,312 Itasca theorem declarations plus 55 adapters.
-Only `propext`, `Classical.choice`, and `Quot.sound` are permitted. All 266
-handwritten/generated implementation proof modules are reachable from the
-audit; the unused external-model template is intentionally excluded.
-The earlier `CoreSoundness` theorem family remains checked as a smaller
-proof checkpoint.
+Kernel-checked regressions retain shared body/module acceptance, metadata, and
+malformed-input examples and add actual batch protocol and streaming cases.
+The audit permits only `propext`, `Classical.choice`, and `Quot.sound`; no
+project-specific axioms or kernel bypasses were added. New proof modules and
+proof-bearing adapters are reachable from `Audit`. Run `just prove` for current
+coverage and dependency counts. The earlier `CoreSoundness` family remains
+checked as a smaller proof checkpoint.
 
 `VisitorTrace.Event` identifies all 174 hooks by name and retains the actual
 state snapshot and arguments, including signed integer values, raw floating
@@ -273,7 +281,14 @@ Rocq baseline was reused.
 | `VisitorTraceExamples`, `BrTableTraceExamples` | Public recording-visitor regressions for raw bits, nested control, branch-table ordering, and callback rejection. |
 | `CoreExamples`, `WasmExamples`, `WasmScalarExamples`, `BrTableExamples` | Kernel-checked public acceptance/rejection examples and applications of soundness. |
 | `CompletenessExamples` | Independent encoding/typing/profile derivations imply actual acceptance for nested control, result-carrying branch tables, and memory/calls. |
-| `Audit` | Transitive axiom checks for every imported public Itasca theorem, including generated auxiliary declarations. |
+| `ModuleCodeSemantic`, `ModuleLayout`, `ModuleSoundness` | Driver-independent framing, typed entry certificates, normalized regions, and complete module assembly. |
+| `StreamSource`, `StreamHeader*`, `StreamBatchFraming*` | Coherent/available/returning reads, bounded prefix transport, actual code-header and batch framing. |
+| `StreamBatch`, `StreamBatchSteps`, `StreamBatchTotal`, `StreamBatchComplete` | Actual worker reachability, independent cursors, sticky errors, typed coverage, totality and completeness. |
+| `StreamScheduler`, `StreamRetirement`, `StreamDrain`, `StreamSubmission` | Provenance through every callback, pending-ID checks/removal, and exact submitted code coverage. |
+| `StreamAcceptingScheduler`, `StreamSubmissionComplete`, `StreamCompleteRegions` | Accepting queue policy, actual worker/submission completeness, and certificates from independent module assumptions. |
+| `StreamDriverTotal`, `StreamRun`, `StreamValidation`, `StreamDriverComplete` | Generic driver's ordinary return, exact accepted phase/tail witnesses, soundness, and completeness. |
+| `StreamSliceSplit`, `StreamSliceComplete`, `StreamSync*`, `StreamSlice`, `StreamSliceCompleteness` | Actual contiguous splitting and concrete source/worker discharge; public whole-module corollaries. |
+| `Audit` | Transitive axiom checks for every imported public Itasca theorem, including generated auxiliary declarations and explicitly listed proof-bearing adapters. |
 
 ## Dependencies
 

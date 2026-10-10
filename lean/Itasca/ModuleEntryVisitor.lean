@@ -101,8 +101,8 @@ theorem module.validate_code_entry_with.accepted_transfer {V W : Type}
               (code.validate_body_with.accepted_erase visitor body env ⟨locals, results⟩ started ended hrun)
             exact ⟨ended', by simp [hrun', he.1]⟩
 
-/-- A compiler's accepted visiting entry discharges the default CodeVisitor's
-validation obligation, without requiring its other callback runs to terminate. -/
+/-- A compiler's accepted visiting entry certifies the default entry validator,
+without requiring its other callback runs to terminate. -/
 theorem module.validate_code_entry_with.accepted_erase {V : Type}
     (visitor : code.OpVisitor V) (data : Slice U8) (pos : Usize) (env : module.Env)
     (index finish : Usize) (v v' : V)

@@ -5,10 +5,12 @@ API a synchronous wrapper over it, and remove the legacy module/code-section
 drivers. The final implementation and proof hierarchy must share one module
 orchestrator and the existing environment, entry, body, and tail validation core.
 
-This handoff contains the decisions and implementation sequence for a fresh
-session. The streaming implementation exists and is extracted, but the new
-proofs and API migration remain to be implemented. Proposed Lean module names
-and predicates below are design names, not declarations already available.
+Completed on 2026-10-10. The streaming driver and concrete slice adapter now
+have soundness, totality, completeness, and exact metadata proofs. The public
+whole-module API delegates to that driver, and duplicate orchestration is removed.
+Final `just verify` passed (2,004 integrated Lean jobs; 7,829 audited theorem
+declarations), with no trust-base change. The verification record below tracks
+the implementation; the design and original snapshot are retained for context.
 
 ## Decisions and scope
 
@@ -77,9 +79,9 @@ Inspect these source groups before choosing the first proof edit:
 | [src/stream.rs](src/stream.rs) | The actual driver, batch operations, source trait, slice splitter, and synchronous visitor. |
 | [src/module.rs](src/module.rs), [src/code.rs](src/code.rs), [src/limits.rs](src/limits.rs) | Shared components, legacy APIs to retire, body callbacks, and enforced bounds. |
 | [Generated Types](lean/Itasca/Generated/Types.lean), [Generated Funs](lean/Itasca/Generated/Funs.lean) | Exact extracted signatures, callback records, loop states, and returned environment/visitor values. Read only; regenerate after Rust edits. |
-| [ModuleRegions](lean/Itasca/ModuleRegions.lean), [ModuleSoundness](lean/Itasca/ModuleSoundness.lean), [ModuleCompleteness](lean/Itasca/ModuleCompleteness.lean) | Existing public certificate, semantic assembly, and independent completeness premises. |
+| `ModuleRegions` (retired), [ModuleSoundness](lean/Itasca/ModuleSoundness.lean), [ModuleCompleteness](lean/Itasca/ModuleCompleteness.lean) | Existing public certificate, semantic assembly, and independent completeness premises. |
 | [ModuleDecomposed](lean/Itasca/ModuleDecomposed.lean), [ModuleEntryVisitor](lean/Itasca/ModuleEntryVisitor.lean), [ModuleCodeEntryComplete](lean/Itasca/ModuleCodeEntryComplete.lean) | Environment-derived entry conditions, visitor erasure, and entry completeness. |
-| [ModuleCodeSection](lean/Itasca/ModuleCodeSection.lean), [ModuleCodeEntries](lean/Itasca/ModuleCodeEntries.lean), [ModuleCode](lean/Itasca/ModuleCode.lean), [ModuleLayout](lean/Itasca/ModuleLayout.lean) | Reusable framing/typing/layout facts currently mixed with legacy driver proofs. |
+| `ModuleCodeSection` (retired), `ModuleCodeEntries` (retired), `ModuleCode` (retired), [ModuleLayout](lean/Itasca/ModuleLayout.lean) | Reusable framing/typing/layout facts currently mixed with legacy driver proofs. |
 | [ModuleCustomVisitor](lean/Itasca/ModuleCustomVisitor.lean), [ModuleCustomObservation](lean/Itasca/ModuleCustomObservation.lean) | Custom-hook erasure and preserving observations through environment/tail callbacks. |
 | [tests/stream.rs](tests/stream.rs), [tests/wasm_tests.rs](tests/wasm_tests.rs) | Current protocol regressions and legacy API callers to migrate. |
 | [Audit](lean/Itasca/Audit.lean), [audit coverage checker](lean/scripts/check_audit.py) | Import coverage and transitive axiom checks. |
@@ -158,7 +160,7 @@ vector, and extracted helper boundaries. In particular, preserve the
 already solve extraction constraints.
 
 The main simplification is to assemble semantic certificates directly with
-[`ModuleSound.assembled_regions`](lean/Itasca/ModuleRegions.lean). Do not first
+[`ModuleSound.assembled_regions`](lean/Itasca/ModuleSoundness.lean). Do not first
 prove that the streaming execution replays the old `validate_code_with` loop.
 That would introduce unnecessary equivalence proofs between different buffer
 offsets, framing reads, and callback schedules. The new proof should survive
@@ -218,7 +220,7 @@ Prove the following invariant by induction over reachability:
 From reachability and successful `finish`, derive exact byte consumption and
 exactly `num_funcs` successful entry validations. Then apply
 [`ModuleDecomposed`](lean/Itasca/ModuleDecomposed.lean) and
-[`ModuleCodeEntries`](lean/Itasca/ModuleCodeEntries.lean) to obtain a batch-local
+``ModuleCodeEntries`` (retired) to obtain a batch-local
 `Rep CodeEncoding` and `EntriesTyped env first_func`. Environment bounds and
 result arities come from the driver's actual environment decode.
 
@@ -631,33 +633,133 @@ patterns without evaluating extraction and proof impact. In particular, retain
 `validate_remaining` and the separate final-retirement helper unless a tested
 extraction change demonstrates that their lifetime/loop constraints are solved.
 
+## Implementation verification record
+
+### 2026-10-10: baseline and semantic foundations
+
+- Initial working tree was clean. Preserved dependency/build caches.
+- Baseline `just extract-check` passed; generated types/functions match Rust.
+- Baseline `just prove` passed (1,982 jobs; 7,329 theorem declarations audited).
+- Milestone 1 completed: `ModuleSoundness` now owns both `Validated` and
+  `assembled_regions` without legacy driver imports; `ModuleDecomposed` derives
+  its prerequisites directly from environment and entry proofs.
+- `ModuleCodeSemantic` owns semantic extents, handwritten `Header`/`Section`,
+  ordered entry typing and encoding composition; `ModuleCodeFraming` retains
+  the shared extent-reader contracts. `ModuleLayout` and `ModuleCodeTyped` are
+  independent of old code execution; `ModuleLayoutComplete` holds the legacy
+  execution theorem. Existing public theorem names/statements are preserved.
+- Focused foundation checks passed. Transitive import inspection confirms that
+  `ModuleSoundness`, `ModuleDecomposed`, `ModuleCodeSemantic`, `ModuleLayout`,
+  and `ModuleCodeTyped` do not import legacy module/code driver proof modules.
+- Integrated `just prove` passed (1,989 jobs; 7,475 theorem declarations),
+  including initial `StreamSource`, `StreamFraming`, and `StreamSliceSplit`.
+  Explicit semantic/source adapter checks were added. No trust-base change.
+- Initial streaming leaves proved: source coherence/availability/callback
+  totality; `limits.add_offset.spec/total/complete`; `stream.read_len` and
+  `stream.read_exact` contracts; concrete `SliceSource` source contracts;
+  byte-span/LEB slice transport; `stream.frame_entry` contracts;
+  `stream.find_code_region.spec/total/bounds/slices` on arbitrary bytes.
+- The remaining milestones are still in progress. In particular this record
+  does not establish streaming driver soundness, totality, or completeness,
+  and does not authorize the API cutover before milestone 6 is proved.
+
+### 2026-10-10: streaming proof composition
+
+- Focused checks passed for source/header/batch framing soundness, totality and
+  completeness, batch reachability and exact successful-finish certificates,
+  actual submission/retirement soundness, and ordered byte/function partitioning.
+- `stream.validate_streaming.wasm_total` now proves ordinary return on arbitrary
+  bytes under returning callbacks, without source coherence or batch provenance.
+- `stream.validate_streaming.wasm_sound` now assembles `ModuleSound.Validated`
+  directly from accepted execution, coherent source views and callback provenance.
+  It retains `StreamRun.Accepted` with the actual `tail_ready` call and proves the
+  concatenated module size bound. No worker-success or unused-callback totality
+  premise was introduced.
+- `stream.validate_module_slice.wasm_total`, `.wasm_sound` and `.wasm_spec`
+  compile. `StreamSync` discharges provenance, callback totality and exact tail
+  storage. `StreamSyncComplete.accepts` (declared as `StreamSync.accepts`)
+  discharges the accepting policy using its one-slot queue and actual worker run.
+- `StreamCompleteRegions.prepare` derives canonical regions, independent bounded
+  typed entries, actual regional parsing, `Matches` and `AccessorTypes` from the
+  ordinary encoding/elaboration/generated-typing/profile premises.
+- Import inspection confirms `StreamValidation`, `StreamSlice`,
+  `StreamCompleteRegions` and `StreamSyncComplete` have no legacy module/code
+  driver proof dependencies. Generic and slice completeness remain in progress;
+  Rust/API cutover has not begun. These focused results await the next integrated
+  `just prove` checkpoint.
+
+### 2026-10-10: proof gate and API migration
+
+- Milestones 2–6 passed the integrated gate: `just prove` completed 2,019 jobs
+  and audited 8,017 theorem declarations. No nonstandard axiom was introduced.
+- Generic completeness is `stream.validate_streaming.wasm_complete`, under
+  independent encoding/elaboration/typing/profile premises, canonical available
+  reads and `StreamAcceptingScheduler.Accepts`. The policy executes actual
+  `validate_all` workers on independently typed bounded seeds and permits
+  arbitrary positive configuration and completion order. It is one sufficient
+  accepting policy, not a characterization of every worker strategy.
+- `stream.validate_module_slice.wasm_complete` and
+  `.wasm_complete_with_metadata` discharge all source/scheduler premises, with
+  the actual delivered tail retained through concrete final draining.
+- Kernel-checked `StreamExamples` cover forged finished records and their
+  unreachability, incoherent overlapping views despite successful exact-length
+  reads, one-slot polling, replay/foreign rejection, and empty-buffer rejection.
+- After the gate, `validate_module` was switched to the internal synchronous
+  streaming adapter; duplicate module/code drivers and traits were removed from
+  Rust. `just extract` passed, regenerating the committed model normally.
+  Public ordinary theorem statements are now slice corollaries. Legacy proof,
+  test and documentation migration and final required checks remain in progress.
+
+### 2026-10-10: consolidation and regression migration
+
+- `validate_module` now delegates to the private synchronous streaming adapter.
+  Removed the legacy whole-module visitor, code-section walk, their traits and
+  header type, and 17 proof modules tied to their execution. Retained independent
+  semantic/layout, body, entry, custom-section, and metadata facts.
+- Public `wasm_spec`, `wasm_total`, `wasm_sound`, `wasm_complete`, and
+  `wasm_complete_with_metadata` statements are unchanged and compile as slice
+  corollaries against the regenerated extraction.
+- Migrated module/consumer/custom-trace examples compile through the actual new
+  driver. The concrete truncated-code-count regression now records streaming's
+  `UnexpectedEof` variant rather than the legacy reader-wrapped variant; the
+  public acceptance and metadata guarantees are unchanged.
+- `cargo test` and `cargo test --no-default-features` passed, including 19 stream
+  protocol regressions, 114 module tests, and independent wasmparser corpus and
+  metadata checks. Legacy same-driver differential comparisons were replaced
+  with independent verdicts, exact fixture bounds and protocol assertions.
+- `just extract`, `just extract-check`, `cargo doc --no-deps`, focused migrated
+  proof checks, import coverage (289 modules), local documentation
+  links, and `git diff --check` passed. Every retained proof module is reachable
+  from Audit. Final `just verify` subsequently passed, as recorded below; the trust base is unchanged.
+
 ## Completion checklist
 
-- [ ] Driver-independent assembly, layout, and entry facts are separated from legacy execution proofs.
-- [ ] Source/framing proofs cover exact bytes, malformed inputs, and arithmetic bounds.
-- [ ] Batch reachability derives validation and sticky-error behavior from actual methods.
-- [ ] Scheduler contracts preserve provenance across every relevant callback.
-- [ ] Driver soundness proves complete byte/function coverage before acceptance.
-- [ ] Driver totality covers arbitrary bytes under returning callbacks.
-- [ ] Driver completeness starts from independent specification premises.
-- [ ] Concrete slice soundness, totality, completeness, and metadata are proved.
-- [ ] `validate_module` delegates to the streaming core and retains its public guarantees.
-- [ ] Legacy module/code-section orchestration and its obsolete proof-only dependencies are removed.
-- [ ] Tests, examples, public documentation, audit imports, and adapter checks are updated.
-- [ ] Required verification passes and trust-base status is reported.
+- [x] Driver-independent assembly, layout, and entry facts are separated from legacy execution proofs.
+- [x] Source/framing proofs cover exact bytes, malformed inputs, and arithmetic bounds.
+- [x] Batch reachability derives validation and sticky-error behavior from actual methods.
+- [x] Scheduler contracts preserve provenance across every relevant callback.
+- [x] Driver soundness proves complete byte/function coverage before acceptance.
+- [x] Driver totality covers arbitrary bytes under returning callbacks.
+- [x] Driver completeness starts from independent specification premises.
+- [x] Concrete slice soundness, totality, completeness, and metadata are proved.
+- [x] `validate_module` delegates to the streaming core and retains its public guarantees.
+- [x] Legacy module/code-section orchestration and its obsolete proof-only dependencies are removed.
+- [x] Tests, examples, public documentation, audit imports, and adapter checks are updated.
+- [x] Required verification passes and trust-base status is reported.
 
-## Starting instruction for a fresh session
+## Final verification
 
-Use this prompt with the repository open:
-
-> Read AGENTS.md and STREAMING_PROOF_PLAN.md. Implement the streaming
-> verification and core-consolidation plan, beginning with the first incomplete
-> milestone. Preserve existing working-tree changes and build caches. Establish
-> the current baseline, then separate the driver-independent semantic
-> foundations before building the streaming proofs. Do not switch or delete the
-> old module driver until the concrete streaming slice adapter has soundness,
-> totality, completeness, and metadata coverage. Keep this plan's checklist and
-> verification record current as you work.
-
-The first substantive edit should be the semantic dependency separation in
-milestone 1, after baseline checks. Rust API deletion is a later milestone.
+- `just verify` passed after the API migration: both Rust test configurations,
+  regenerated Rust and specification consistency checks, toolchain regressions,
+  and the integrated Lean build and transitive axiom audit.
+- The integrated build completed 2,004 jobs and audited 7,829 theorem declarations
+  plus explicit semantic, source, batch, scheduler and execution-witness adapters.
+  Only `propext`, `Classical.choice`, and `Quot.sound` occur in the allowed trust
+  base. No generated model or specification was edited by hand.
+- Final documentation clarifies that the batch target counts entry contents,
+  including locals; it remains distinct from the instruction-body limit.
+  `cargo doc --no-deps`, local documentation file links, and `git diff --check`
+  passed. The post-documentation `just extract-check` reconfirms model consistency.
+- All milestones are complete. Thread scheduling, network progress, compiler IR,
+  FFI memory safety and external Firefox migration remain outside this task,
+  as scoped above.

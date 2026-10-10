@@ -1742,7 +1742,7 @@ fn test_multibyte_names_are_accepted() {
 // ---- Driving the code section one entry at a time ----
 
 #[test]
-fn test_validate_code_entry_matches_validate_code() {
+fn test_validate_code_entries_consume_the_fixture() {
     let mut b = ModuleBuilder::new();
     b.section(1, &type_section(&[(&[], &[I32])]));
     b.section(3, &func_section(&[0, 0]));
@@ -1766,8 +1766,8 @@ fn test_validate_code_entry_matches_validate_code() {
         i += 1;
     }
 
-    // The same position validate_code would have stopped at.
-    assert_eq!(pos, itasca::module::validate_code(&bytes, code_pos, &env).unwrap());
+    // The code section is the fixture's final section.
+    assert_eq!(pos, bytes.len());
     assert!(itasca::module::validate_tail(&bytes, pos, &env).unwrap().data.is_empty());
 }
 
@@ -1897,21 +1897,19 @@ fn test_custom_sections_are_split_across_the_code_section() {
     b.section(1, &type_section(&[(&[], &[])]));
     b.section(3, &func_section(&[0]));
     b.section(0, &custom_section("before.code", b"x"));
+    let code_pos = b.bytes.len();
     b.section(10, &code_section(&[(&[], &[])]));
+    let tail_pos = b.bytes.len();
     b.section(0, &custom_section("after.code", b"y"));
     let bytes = b.build();
 
     let mut seen = Customs::default();
-    let (env, code_pos) = itasca::module::validate_env_with(&bytes, &mut seen).unwrap();
+    let (env, decoded_end) = itasca::module::validate_env_with(&bytes, &mut seen).unwrap();
+    assert_eq!(decoded_end, code_pos);
     assert_eq!(
         seen.0.iter().map(|c| custom_name(&bytes, c)).collect::<Vec<_>>(),
         vec![&b"before.code"[..]]
     );
-
-    let tail_pos = itasca::module::code_section(&bytes, code_pos, &env)
-        .unwrap()
-        .unwrap()
-        .end;
 
     // Carrying on with the same visitor gives the module's customs in order.
     itasca::module::validate_tail_with(&bytes, tail_pos, &env, &mut seen).unwrap();
@@ -1969,206 +1967,4 @@ fn test_a_module_with_no_custom_sections_reports_none() {
     let mut seen = Customs::default();
     itasca::module::validate_env_with(&bytes, &mut seen).unwrap();
     assert!(seen.0.is_empty());
-}
-
-/// A consumer that records each entry it is shown and validates it where it
-/// stands, which is what a compiler does except for the compiling.
-#[derive(Default)]
-struct Entries {
-    seen: Vec<(usize, usize, usize, usize)>,
-    waits: Vec<usize>,
-}
-
-impl itasca::module::CodeVisitor for Entries {
-    fn on_need_bytes(&mut self, end: usize) -> Result<(), Error> {
-        self.waits.push(end);
-        Ok(())
-    }
-
-    fn on_code_entry(
-        &mut self,
-        data: &[u8],
-        env: &itasca::module::Env,
-        index: usize,
-        entry_pos: usize,
-        contents_start: usize,
-        entry_end: usize,
-    ) -> Result<(), Error> {
-        self.seen.push((index, entry_pos, contents_start, entry_end));
-        itasca::module::validate_code_entry(data, entry_pos, env, index)?;
-        Ok(())
-    }
-}
-
-/// The driven walk and `validate_code` accept the same bytes and land on the
-/// same position, and the entries the consumer was shown tile the section.
-#[test]
-fn test_validate_code_with_agrees_with_validate_code() {
-    let mut b = ModuleBuilder::new();
-    b.section(1, &type_section(&[(&[], &[]), (&[I32], &[I32])]));
-    b.section(3, &func_section(&[0, 1, 0]));
-    b.section(
-        10,
-        &code_section(&[
-            (&[], &[]),
-            (&[(1, I64)], &[0x20, 0x00]),
-            (&[], &[0x01]),
-        ]),
-    );
-    let bytes = b.build();
-
-    let (env, code_pos) = itasca::module::validate_env(&bytes).unwrap();
-    let cs = itasca::module::code_section(&bytes, code_pos, &env)
-        .unwrap()
-        .unwrap();
-
-    let mut seen = Entries::default();
-    let next =
-        itasca::module::validate_code_with(&bytes, code_pos, &env, &mut seen).unwrap();
-    assert_eq!(next, itasca::module::validate_code(&bytes, code_pos, &env).unwrap());
-    assert_eq!(next, cs.end);
-
-    // Three entries, in order, and their extents tile the section exactly.
-    assert_eq!(seen.seen.len(), 3);
-    let mut q = cs.entries;
-    for (i, &(index, entry_pos, contents, end)) in seen.seen.iter().enumerate() {
-        assert_eq!(index, i);
-        assert_eq!(entry_pos, q);
-        assert!(entry_pos < contents && contents <= end);
-        q = end;
-    }
-    assert_eq!(q, cs.end);
-
-    // Every read was waited for first, and never past the section's end.
-    assert!(!seen.waits.is_empty());
-    assert!(seen.waits.iter().all(|&w| w >= code_pos));
-}
-
-/// A consumer that declines stops the walk. Nothing about the bytes changed:
-/// the same section is fine when validated in place.
-#[test]
-fn test_a_declining_code_consumer_stops_the_walk() {
-    struct Refuser;
-    impl itasca::module::CodeVisitor for Refuser {
-        fn on_code_entry(
-            &mut self,
-            _data: &[u8],
-            _env: &itasca::module::Env,
-            _index: usize,
-            _entry_pos: usize,
-            _contents_start: usize,
-            _entry_end: usize,
-        ) -> Result<(), Error> {
-            Err(Error::Visitor(itasca::VisitError::OutOfMemory))
-        }
-    }
-
-    let mut b = ModuleBuilder::new();
-    b.section(1, &type_section(&[(&[], &[])]));
-    b.section(3, &func_section(&[0]));
-    b.section(10, &code_section(&[(&[], &[])]));
-    let bytes = b.build();
-
-    let (env, code_pos) = itasca::module::validate_env(&bytes).unwrap();
-    assert!(itasca::module::validate_code(&bytes, code_pos, &env).is_ok());
-    assert_eq!(
-        itasca::module::validate_code_with(&bytes, code_pos, &env, &mut Refuser)
-            .unwrap_err(),
-        Error::Visitor(itasca::VisitError::OutOfMemory)
-    );
-}
-
-/// One consumer for a whole module: it hears the custom sections on both sides
-/// of the code section and validates every entry it is shown, which is the
-/// shape a compiler drives.
-#[derive(Default)]
-struct Driver {
-    customs: Vec<itasca::types::CustomSection>,
-    entries: Vec<(usize, usize)>,
-}
-
-impl itasca::module::ModuleVisitor for Driver {
-    fn on_custom_section(
-        &mut self,
-        s: itasca::types::CustomSection,
-    ) -> itasca::VisitResult {
-        self.customs.push(s);
-        Ok(())
-    }
-}
-
-impl itasca::module::CodeVisitor for Driver {
-    fn on_code_entry(
-        &mut self,
-        data: &[u8],
-        env: &itasca::module::Env,
-        index: usize,
-        entry_pos: usize,
-        _contents_start: usize,
-        entry_end: usize,
-    ) -> Result<(), Error> {
-        self.entries.push((entry_pos, entry_end));
-        itasca::module::validate_code_entry(data, entry_pos, env, index)?;
-        Ok(())
-    }
-}
-
-/// The driven whole-module run is the plain one: same verdict, same module,
-/// and the consumer saw the sections in module order.
-#[test]
-fn test_validate_module_with_agrees_with_validate_module() {
-    let mut b = ModuleBuilder::new();
-    b.section(0, &custom_section("before", b"a"));
-    b.section(1, &type_section(&[(&[], &[])]));
-    b.section(3, &func_section(&[0]));
-    b.section(10, &code_section(&[(&[], &[])]));
-    b.section(0, &custom_section("after", b"b"));
-    let bytes = b.build();
-
-    let mut d = Driver::default();
-    let driven = itasca::module::validate_module_with(&bytes, &mut d).unwrap();
-    let plain = itasca::validate_module(&bytes).unwrap();
-    assert_eq!(driven, plain);
-
-    // Both sides of the code section, in module order.
-    let names: Vec<&[u8]> = d
-        .customs
-        .iter()
-        .map(|c| &bytes[c.payload_start - c.name_len..c.payload_start])
-        .collect();
-    assert_eq!(names, vec![&b"before"[..], &b"after"[..]]);
-    assert_eq!(d.entries.len(), 1);
-}
-
-/// A consumer that refuses an entry stops the whole module, and says so as a
-/// decline rather than as a verdict about the bytes.
-#[test]
-fn test_a_declining_driver_stops_the_module() {
-    struct Refuser;
-    impl itasca::module::ModuleVisitor for Refuser {}
-    impl itasca::module::CodeVisitor for Refuser {
-        fn on_code_entry(
-            &mut self,
-            _data: &[u8],
-            _env: &itasca::module::Env,
-            _index: usize,
-            _entry_pos: usize,
-            _contents_start: usize,
-            _entry_end: usize,
-        ) -> Result<(), Error> {
-            Err(Error::Visitor(itasca::VisitError::OutOfMemory))
-        }
-    }
-
-    let mut b = ModuleBuilder::new();
-    b.section(1, &type_section(&[(&[], &[])]));
-    b.section(3, &func_section(&[0]));
-    b.section(10, &code_section(&[(&[], &[])]));
-    let bytes = b.build();
-
-    assert!(itasca::validate_module(&bytes).is_ok());
-    assert_eq!(
-        itasca::module::validate_module_with(&bytes, &mut Refuser).unwrap_err(),
-        Error::Visitor(itasca::VisitError::OutOfMemory)
-    );
 }

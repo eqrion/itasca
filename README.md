@@ -12,13 +12,13 @@ Written by Ryan Hunt, who is learning formal verification but is a newbie.
 
 With formal verification it is very easy to be mistaken about what you have proved. I've tried to be as rigorous as I can, but be warned.
 
-The proof statements and their limits are documented below, including the obligations on decomposed and deferred validation consumers.
+The proof statements and their limits are documented below, including the obligations on streaming sources and workers.
 
 ## Overview
 
 This is a Rust library that implements the Wasm 1.0 decoding and validation algorithm. You can view the [docs here](https://docs.rs/itasca/latest/itasca/).
 
-It implements both a 'whole module' validator, and also a 'decomposed' streaming validator. The interface is compatible with SpiderMonkey's WebAssembly engine and a branch with it integrated is [here](https://github.com/eqrion/firefox/tree/itasca).
+`validate_streaming` is the module driver. `validate_module(bytes)` supplies a contiguous source and a synchronous worker to that same driver. Component entry points support compilers that consume validated operators. An experimental SpiderMonkey integration is available [here](https://github.com/eqrion/firefox/tree/itasca); external consumers must migrate separately when APIs change.
 
 The library is verified in Lean against declarative judgments generated from the [SpecTec](https://github.com/zilinc/spectec/tree/lean-backend) WebAssembly specification. It implements Wasm 1.0, with an explicit profile of the generated Wasm 2.0 specification. See [formal verification](#formal-verification) for the exact claims.
 
@@ -39,47 +39,44 @@ just prove          # Check all Lean proofs and the axiom audit
 
 See [DEVELOPMENT.md](DEVELOPMENT.md) for the complete workflow and checks required after each kind of change.
 
-## Decomposed module validation
+## Streaming and component validation
 
-In order to be useful in a real production Wasm engine, we can't just expose a single 'validate module' entry point.
+The streaming API supports discontiguous input, parallel function validation,
+and compiler callbacks that build IR while validation runs. The driver owns
+phase order, framing, pending batch identities, and final acceptance:
 
-For example SpiderMonkey does the following:
-  - It fuses decoding and validation to minimize the size of AST it builds.
-  - It validates functions in parallel on other threads.
-  - It validates function bodies while building internal compiler IRs.
-  - It can validate while bytes are streaming off the network, and are discontiguous.
-
-This library was designed to expose an API compatible with all of the above.
-
-This complicates the proofs and leaves preconditions that the user must follow (these are hypotheses that must be met for the proofs to apply).
-
-The goal is that the preconditions are straightforward to follow and don't require reasoning over the contents of the Wasm module.
-
-The overall sequence of calls must roughly be:
-```
-// Validate everything all at once.
-validate_module() {
-  // Validate all sections until the code section.
-  validate_env()
-
-  // Validate the code section and call a hook for each entry.
-  // Must be called after validate_env, and the hook must call
-  // validate_code_entry.
-  validate_code() {
-    // Validate a single code section entry (i.e. function body).
-    validate_code_entry()
-  }
-
-  // Validate everything after the code section.
-  validate_tail()
-}
+```text
+validate_module(bytes)
+  -> contiguous source + synchronous worker
+     -> validate_streaming
+        -> validate_env_with(ModuleVisitor)
+        -> frame and submit CodeBatch work
+           -> CodeBatch::validate_func(OpVisitor)
+              -> validate_code_entry_with
+                 -> validate_body_with
+        -> validate_tail_with(ModuleVisitor)
+        -> retire every pending batch
 ```
 
-The `validate_code` hook allows for each function to be dispatched to worker threads for parallel validation and compilation. The caller is obligated to just ensure `validate_code_entry` is eventually called and the result reported.
+Workers may complete in any order. A batch has independent dispatch and
+validation cursors; dispatching an entry does not validate it. Workers advance
+validation through `CodeBatch::validate_func`, or use `validate_all`. The driver
+checks each returned batch's module ID, pending batch ID, and successful finish.
+Only a successful driver result certifies a module.
 
-`validate_code_entry` has a hook per-opcode to allow it to be used by a compiler to build an IR. Importantly `validate_code_entry` drives all the validation and the compiler just listens to the results.
+`ModuleVisitor` reports custom sections from the environment and tail parsers.
+`OpVisitor` reports validated function context and body operators. The component
+APIs remain available, but calling one alone does not certify a whole module or
+discharge a pending batch. Sources must present coherent bytes, and environments
+and input buffers must outlive workers, including after an error. See the
+[embedding obligations](DEVELOPMENT.md#embedding-obligations).
 
-Custom sections are reported via hooks on `validate_env/tail`
+The old `validate_module_with`, `validate_code`, `validate_code_with`,
+`CodeVisitor`, `ValidatingCodeVisitor`, and `code_section`/`CodeSection` APIs have
+been removed. Streaming consumers use `StreamingVisitor`; synchronous consumers
+use `validate_module`. The old deferred code-walk and whole-module callback-trace
+contracts were retired with those APIs. Body and entry callback traces remain
+proved; the new streaming protocol has its own batch and phase contracts.
 
 ## Testing
 
@@ -95,9 +92,9 @@ API, verification status, and limitations.
 
 ## Formal verification
 
-The streaming and parallel driver, `stream::validate_streaming`, is extracted
-but **not yet proved**; the whole-module guarantees below do not cover it. See
-the [streaming design and proof plan](DEVELOPMENT.md#streaming-api).
+The proofs cover `stream::validate_streaming` and its synchronous whole-module
+wrapper. The generic driver has explicit source and scheduler contracts; the
+contiguous wrapper discharges them for its concrete adapters.
 
 The proofs cover the actual extracted public Rust validator, including malformed
 input, size guards, streaming loops, visitor dispatch, and final byte-consumption
@@ -125,12 +122,28 @@ outside this model. “Decodes to” uses the independent handwritten binary gra
 
 | Entry point | Checked guarantees and proof sources |
 | --- | --- |
-| Whole module | [`module.validate_module.wasm_total` and `wasm_sound`](lean/Itasca/ModuleValidation.lean) prove arbitrary-byte termination and acceptance soundness. The certificate includes the full binary encoding, generated `Module_ok`, the Wasm 1.0 profile, coherent index spaces, and exact public import/export metadata. [`wasm_complete` and `wasm_complete_with_metadata`](lean/Itasca/ModuleCompleteness.lean) derive acceptance directly from independent encoding and declarative typing, within the implementation limits. |
+| Whole module | [`module.validate_module.wasm_total` and `wasm_sound`](lean/Itasca/ModuleValidation.lean) prove arbitrary-byte termination and acceptance soundness through the synchronous streaming adapter. The certificate includes full binary encoding, generated `Module_ok`, the Wasm 1.0 profile, coherent index spaces, and exact public import/export metadata. [`wasm_complete` and `wasm_complete_with_metadata`](lean/Itasca/ModuleCompleteness.lean) derive acceptance from independent encoding and declarative typing within the implementation limits. |
+| Generic streaming | [`stream.validate_streaming.wasm_sound`](lean/Itasca/StreamValidation.lean) requires coherent source views and provenance linking returned workers to issued batches. [`wasm_total`](lean/Itasca/StreamDriverTotal.lean) requires returning callbacks, even when returned batches are malformed or unfinished. [`wasm_complete`](lean/Itasca/StreamDriverComplete.lean) requires independent valid module bytes, available canonical regions, and an accepting scheduler policy. Its execution witness identifies the exact delivered tail. |
+| Batches and scheduling | [Actual batch reachability and successful finish](lean/Itasca/StreamBatch.lean) derive ordered entry validation and exact byte coverage. [Submission](lean/Itasca/StreamSubmission.lean) and [retirement](lean/Itasca/StreamRetirement.lean) connect this evidence to the actual pending IDs and driver checks, permitting arbitrary completion order. [Worker completeness](lean/Itasca/StreamBatchComplete.lean) runs the real validation loop on independently typed entry encodings. |
 | Function body | [`code.validate_body.wasm_total` and `wasm_sound`](lean/Itasca/WasmSoundness.lean) cover every Wasm 1.0 opcode and arbitrary bytes. [`wasm1_sound`](lean/Itasca/Wasm1Soundness.lean) also establishes the recursive 1.0 profile. [`wasm_complete`](lean/Itasca/WasmComplete.lean) proves completeness from encoding, declarative typing, and that profile. |
-| Visiting APIs | [Body acceptance soundness](lean/Itasca/VisitorBodyErasure.lean) holds for arbitrary opcode visitors. [Module acceptance soundness](lean/Itasca/ModuleVisitorTransfer.lean) additionally requires an overridden code-entry hook to accept only entries the validator accepts. [Module termination](lean/Itasca/ModuleVisitorValidation.lean) and [body termination](lean/Itasca/WasmSoundness.lean) require terminating hooks; completeness requires accepting hooks. Acceptance-only theorems do not assume termination of unrelated callback runs. |
-| Decomposed APIs | [Entry contracts](lean/Itasca/ModuleDecomposed.lean) derive their environment obligations from an actual accepted environment decode. [Entry completeness](lean/Itasca/ModuleCodeEntryComplete.lean) covers typed entries within the limits. [Composition](lean/Itasca/ModuleRegions.lean) covers adjacent phases on one buffer and exact concatenations of separate environment/code/tail buffers. |
-| Deferred workers | [Deferred soundness](lean/Itasca/ModuleDeferredValidation.lean) permits code-entry callbacks to return before validation, provided every recorded entry later validates. [Entry ordering](lean/Itasca/ModuleEntryOrder.lean) proves exactly one obligation per defined function, in index order. Custom callbacks must preserve the work observation when obligations are read from the final visitor state. |
-| Callback traces | [Body traces](lean/Itasca/VisitorBodyTrace.lean) identify hook names, order, and original immediates, including float bits and branch-table labels. [Entry traces](lean/Itasca/ModuleEntryTrace.lean) add the function-start context and precise body/local boundaries. [Accepted module traces](lean/Itasca/ModuleTraceValidation.lean) identify custom-section ranges, byte requests, and ordered entry handoffs. [Rejection properties](lean/Itasca/VisitorTraceCorollaries.lean) prove an observed rejecting body callback is last and matches the returned visitor error. |
+| Visiting components | [Body acceptance soundness](lean/Itasca/VisitorBodyErasure.lean) and [entry acceptance transfer](lean/Itasca/ModuleEntryVisitor.lean) hold for arbitrary opcode visitors. Termination requires returning hooks; completeness requires accepting hooks. [Entry contracts](lean/Itasca/ModuleDecomposed.lean) derive environment obligations from an actual environment decode, and [entry completeness](lean/Itasca/ModuleCodeEntryComplete.lean) covers independently typed entries within the limits. |
+| Callback traces | [Body traces](lean/Itasca/VisitorBodyTrace.lean) identify hook names, order, and original immediates, including float bits and branch-table labels. [Entry traces](lean/Itasca/ModuleEntryTrace.lean) add the function-start context and precise body/local boundaries. [Rejection properties](lean/Itasca/VisitorTraceCorollaries.lean) prove an observed rejecting body callback is last and matches the returned visitor error. |
+
+Soundness, totality, and completeness have separate streaming premises.
+[Source coherence](lean/Itasca/StreamSource.lean) fixes logical environment,
+code, and tail bytes and relates successful range reads to those bytes; it does
+not assume valid input or available reads. [Scheduler provenance](lean/Itasca/StreamScheduler.lean)
+relates worker states to actual batch operations and is preserved through every
+callback. It does not assume a polled batch is finished: the driver checks that.
+Returning callbacks suffice for totality without either soundness premise.
+
+Completeness additionally uses available regions from the canonical split and
+an [accepting scheduler policy](lean/Itasca/StreamAcceptingScheduler.lean).
+The checked policy permits any positive batch settings and arbitrary return
+order, with returned workers produced by actual `validate_all` executions.
+Their successful finish is derived from independent byte encoding and typing.
+This is one sufficient worker policy, not a characterization of every possible
+worker strategy. The private synchronous worker discharges these obligations.
 
 Body soundness assumes the function's result vector has the API's zero-or-one
 result shape. Body termination permits arbitrary caller-supplied environments
@@ -210,13 +223,14 @@ Run `just trust` to check the current dependency report.
 ### Scope and retained baseline
 
 These are validation and decoding proofs, not proofs of WebAssembly execution,
-compiler correctness, a consumer's generated IR, or actual thread scheduling.
-Deferred soundness is conditional on completing all recorded validation work.
-Body callback rejection is characterized; a complete trace specification for
+compiler correctness, a consumer's generated IR, actual thread scheduling,
+network progress, or FFI memory safety. Generic streaming soundness depends on
+the source and worker provenance contracts; generic totality depends on ordinary
+callback returns. A worker or compiler callback may reject an otherwise valid
+module. Body callback rejection is characterized; a complete callback trace for
 rejected whole-module runs and a general specification of which validation error
 must be selected are not claimed. Individual rejection regressions do check exact
-errors. An arbitrary overriding code-entry callback can accept invalid code;
-typing follows only under its validation contract or completed worker obligations.
+errors. The API consolidation changes no trust-base assumptions.
 
 The [comparison](lean/PARITY.md) records narrower premises for some
 arbitrary-environment and oversized-region helper statements. Full uniqueness

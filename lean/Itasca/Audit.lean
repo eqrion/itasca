@@ -39,7 +39,6 @@ import Itasca.ModuleBinary
 import Itasca.ModuleCopies
 import Itasca.ModuleTranslation
 import Itasca.BodyContext
-import Itasca.ModulePipeline
 import Itasca.ModuleExternals
 import Itasca.ModuleDataTyping
 import Itasca.ModuleTail
@@ -50,14 +49,10 @@ import Itasca.ModuleCodeEntry
 import Itasca.ModuleValidation
 import Itasca.ModuleCompleteness
 import Itasca.ModuleDecomposed
-import Itasca.ModuleCodeTotal
 import Itasca.ModuleCustomVisitor
-import Itasca.ModuleVisitorValidation
-import Itasca.ModuleVisitorTransfer
-import Itasca.ModuleDeferredValidation
-import Itasca.ModuleEntryOrder
-import Itasca.ModuleTraceValidation
 import Itasca.ModuleCustomRanges
+import Itasca.ModuleCustomTrace
+import Itasca.ModuleTraceRecorders
 import Itasca.ModuleTraceExamples
 import Itasca.ModuleEntryTrace
 import Itasca.ModuleSectionExamples
@@ -67,6 +62,24 @@ import Itasca.ModuleConsumerExamples
 import Itasca.ModuleImportedGlobalExamples
 import Itasca.ModuleExamples
 import Itasca.ModuleUnicodeExamples
+import Itasca.StreamSource
+import Itasca.StreamSliceComplete
+import Itasca.StreamHeaderComplete
+import Itasca.StreamBatchSound
+import Itasca.StreamBatchBounds
+import Itasca.StreamBatchComplete
+import Itasca.StreamDrain
+import Itasca.StreamPartition
+import Itasca.StreamSync
+import Itasca.StreamRun
+import Itasca.StreamSlice
+import Itasca.StreamValidation
+import Itasca.StreamCompleteRegions
+import Itasca.StreamBatchFramingComplete
+import Itasca.StreamSyncComplete
+import Itasca.StreamSubmissionComplete
+import Itasca.StreamExamples
+import Itasca.StreamSliceCompleteness
 import Lean.Util.CollectAxioms
 import Lean.Elab.Command
 
@@ -99,17 +112,40 @@ run_cmd do
       ``Itasca.ModuleElaboration.Elaborates, ``Itasca.ModuleElaboration.Profile,
       ``Itasca.ModuleElaboration.contextOf, ``Itasca.ModuleElaboration.Matches,
       ``Itasca.ModuleElaboration.AccessorTypes, ``Itasca.ModuleSound.Validated,
+      ``Itasca.ModuleCode.Extent, ``Itasca.ModuleCode.Section,
+      ``Itasca.ModuleCode.EntryAt, ``Itasca.ModuleCode.EntriesTyped,
+      ``Itasca.ModuleCode.Encoding, ``Itasca.ModuleCode.Validated, ``Itasca.ModuleCode.AbsentAt,
+      ``Itasca.ModuleLayout.CodeAt, ``Itasca.ModuleLayout.Layout,
+      ``Itasca.StreamSource.Coherent, ``Itasca.StreamSource.Available,
+      ``Itasca.StreamSource.CallbacksTotal, ``Itasca.StreamSource.LenPost,
+      ``Itasca.StreamSource.CanonicalAvailable,
+      ``Itasca.stream.SliceSource.Insts.ItascaStreamSource,
+      ``Itasca.StreamFraming.EntryFrame, ``Itasca.StreamFraming.HeaderChecked,
+      ``Itasca.StreamFraming.HeaderAt, ``Itasca.StreamFraming.BatchInvariant,
+      ``Itasca.StreamFraming.FrameStep, ``Itasca.StreamFraming.BatchStepPost,
+      ``Itasca.StreamFraming.EntryFrames, ``Itasca.StreamFraming.BatchPost, ``Itasca.StreamSync.Tracks,
+      ``Itasca.StreamScheduler.Partition,
+      ``Itasca.StreamSubmission.Invariant, ``Itasca.StreamSubmission.Post,
+      ``Itasca.StreamSubmission.SoundInvariant, ``Itasca.StreamSubmission.SoundPost,
+      ``Itasca.StreamSubmission.CompleteInvariant, ``Itasca.StreamSubmission.CompletePost,
+      ``Itasca.StreamCompleteRegions.Split, ``Itasca.StreamCompleteRegions.Certificate,
+      ``Itasca.StreamAcceptingScheduler.Valid, ``Itasca.StreamAcceptingScheduler.ValidQueue,
+      ``Itasca.StreamAcceptingScheduler.Accepts, ``Itasca.StreamSync.Queued,
+      ``Itasca.StreamExamples.bytes, ``Itasca.StreamExamples.emptyEnv,
+      ``Itasca.StreamExamples.emptyBytes, ``Itasca.StreamExamples.impossibleIssued,
+      ``Itasca.StreamExamples.forgedBatch, ``Itasca.StreamExamples.incoherentSource,
+      ``Itasca.ModuleConsumerExamples.badIssued, ``Itasca.ModuleConsumerExamples.observeCustoms,
+      ``Itasca.StreamRun.Remaining, ``Itasca.StreamRun.Accepted,
+      ``Itasca.ModuleTail.PreservesInvariant,
+      ``Itasca.StreamRetirement.PollTotal, ``Itasca.StreamRetirement.SearchPost,
+      ``Itasca.StreamRetirement.Retired, ``Itasca.StreamScheduler.CallbacksTotal,
+      ``Itasca.StreamScheduler.Provenance, ``Itasca.StreamScheduler.Completed,
+      ``Itasca.StreamBatch.Issued.seed, ``Itasca.StreamBatch.Issued.Bounded,
+      ``Itasca.StreamBatch.Reachable, ``Itasca.StreamBatch.Prefix, ``Itasca.StreamBatch.Identity,
       ``Itasca.CodeEntry.Typed, ``Itasca.CodeEntry.AcceptedTrace,
-      ``Itasca.ModuleCode.HooksTotal, ``Itasca.ModuleCode.VisitorContract,
-      ``Itasca.ModuleCodeVisitor.Accepts, ``Itasca.ModuleCodeVisitor.Validates,
-      ``Itasca.ModuleCodeVisitor.Records, ``Itasca.ModuleCodeVisitor.EntriesValidate,
-      ``Itasca.ModuleCodeVisitor.recorder, ``Itasca.ModuleTail.Preserves,
+      ``Itasca.ModuleTail.Preserves,
       ``Itasca.ModuleTrace.CustomAt, ``Itasca.ModuleTrace.SectionTrace,
-      ``Itasca.ModuleTrace.CodeEntriesTrace, ``Itasca.ModuleTrace.CodeTrace,
-      ``Itasca.ModuleTrace.Accepted, ``Itasca.ModuleTrace.RecordsCustom,
-      ``Itasca.ModuleTrace.RecordsCode, ``Itasca.ModuleTrace.entries,
-      ``Itasca.ModuleTrace.customRecorder, ``Itasca.ModuleTrace.codeRecorder,
-      ``Itasca.ModuleTrace.validatingRecorder,
+      ``Itasca.ModuleTrace.RecordsCustom, ``Itasca.ModuleTrace.customRecorder,
       ``Itasca.FullVisitor.Accepts,
       ``Itasca.VisitorTrace.invoke, ``Itasca.VisitorTrace.ofHandler,
       ``Itasca.VisitorTrace.NumericHook.opcode, ``Itasca.VisitorTrace.NumericHook.instruction,

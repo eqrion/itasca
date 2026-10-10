@@ -1,5 +1,6 @@
 import Itasca.ModuleLayout
 import Itasca.ModuleReadyContexts
+import Itasca.ModuleFunctionComplete
 
 open Aeneas Aeneas.Std
 
@@ -23,18 +24,5 @@ theorem CodeAt.typed {data start finish raw decls env}
     h.segmentFree (List.of_mem_zip hm).2
   apply CodeEntry.Typed.of_func_ok (hr.moduleContext (by omega)) hs _ hfunc
   simpa [hr.types_eq (by omega)] using hprofile
-
-/-- Code-section completeness after the decoded declaration prefix. Arity is
-inherited from the module profile and cache coherence; `hbound` is the proven
-size-derived bound for parameter vectors in that prefix. -/
-theorem CodeAt.complete_of_sections {data start finish raw decls env}
-    (h : CodeAt data start raw.codes finish)
-    (hr : ModuleEnv.Ready raw 9 decls env)
-    (ht : SectionsTyped raw) (hp : Profile raw)
-    (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val) (hbound : CodeEntry.Bounds env) :
-    module.validate_code data start env = .ok (.Ok finish) := by
-  have harity : ∀ ft ∈ env.types.val, ft.results.val.length ≤ 1 := by
-    simpa [hr.types_eq (by omega)] using hp.arity
-  exact h.complete env hsize ⟨hr.represents.cache.func_arity harity, harity⟩ hbound (h.typed hr ht hp)
 
 end Itasca.ModuleLayout

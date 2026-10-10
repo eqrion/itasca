@@ -147,8 +147,12 @@ private theorem four_byte_custom_reply (a b c d : U8) (reply : core.result.Resul
         simp
   have hsize : data.length ≤ limits.MAX_MODULE_BYTES.val := by
     simp [data, fourByteCustom, bytes, alloc.vec.Vec.deref, ModuleBinary.magicVersion, limits.MAX_MODULE_BYTES]
+  have hsplit : stream.find_code_region data = .ok (Slice.len data, Slice.len data) := by
+    unfold stream.find_code_region
+    rw [split_skip_section data 8#usize 10#usize 15#usize 0#u8 hsection (by decide)]
+    simpa [hlen] using split_loop_eof data
   cases reply with
-  | Err e => exact ModuleExamples.environment_error data e hsize henv
+  | Err e => exact ModuleExamples.environment_error data e hsize hsplit henv
   | Ok u =>
       exact ModuleExamples.accepted_at_end data ModuleExamples.emptyEnv hsize rfl (by simpa [hlen] using henv)
 

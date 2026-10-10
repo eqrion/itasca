@@ -1,5 +1,6 @@
 import Itasca.ModuleExamples
 import Itasca.ModuleCompleteness
+import Itasca.StreamSliceExamplesSupport
 
 open Aeneas Aeneas.Std
 
@@ -159,30 +160,25 @@ theorem environment : ∃ env decls, module.validate_env input = .ok (.Ok (env, 
 /-- Public acceptance checks the declared local vector and a direct call into
 the imported function space, together with the export and start declaration. -/
 theorem functions_accepted : ∃ decoded, module.validate_module input = .ok (.Ok decoded) := by
-  obtain ⟨env, decls, he, hr⟩ := environment
-  have htypes : env.types.val = [functionType] := hr.types_eq (by decide)
-  have harity : ∀ ft ∈ env.types.val, ft.results.val.length ≤ 1 := by simp [htypes, functionType]
-  have hbound : CodeEntry.Bounds env := by
-    intro ft hft
-    have hft : ft = functionType := by simpa [htypes] using hft
-    subst ft
-    simp [functionType, limits.MAX_LOCALS]
-    scalar_tac
-  have htyped : List.Forall₂ (CodeEntry.Typed env) env.func_type_indices.val [entry] := by
-    rw [hr.functions_eq (by decide)]
-    exact .cons (entry_typed hr) .nil
-  have hsize : input.length ≤ limits.MAX_MODULE_BYTES.val := by
-    simp [input, ModuleExamples.bytes, alloc.vec.Vec.deref,
-      magicVersion, layout, Layout.bytes, codeBytes, limits.MAX_MODULE_BYTES]
-  have hc := module.validate_code.complete_present input env 37#usize 47#usize [entry]
-    hsize ⟨hr.represents.cache.func_arity harity, harity⟩ hbound htyped code_at
   let tail : module.Tail := ⟨alloc.vec.Vec.new _⟩
-  have ht : At ModuleTail.Encoding input 47#usize (tail.data.val.map ModuleData.raw) (Slice.len input) := by
+  have ht : At ModuleTail.Encoding input 47#usize raw.data (Slice.len input) := by
     refine ⟨[], ⟨[], [], ⟨[], [], .nil, .absent, rfl⟩, .nil, rfl⟩, ?_⟩
     constructor <;> simp [input, ModuleExamples.bytes, alloc.vec.Vec.deref,
       magicVersion, layout, Layout.bytes, codeBytes]
-  exact ⟨⟨env, tail⟩, ModulePipeline.accepted_of_parts input env tail 37#usize 47#usize
-    hsize he hc (module.validate_tail.complete tail ht (by simp [tail]))⟩
+  obtain ⟨first, hh, _⟩ := code_at.section_split
+  have hl : ModuleLayout.Layout input raw declarations 37#usize 47#usize :=
+    ⟨rfl, prefix_encoding, .inl code_at, ht, .inr ⟨10#u8, first, 47#usize, hh, by decide⟩⟩
+  obtain ⟨env, ha⟩ := StreamSliceExamplesSupport.accepted_layout input raw declarations
+    37#usize 47#usize hl (by
+      simp [input, ModuleExamples.bytes, alloc.vec.Vec.deref,
+        magicVersion, layout, Layout.bytes, codeBytes, limits.MAX_MODULE_BYTES])
+    requirements tail rfl (by
+      intro decls env hr
+      rw [hr.functions_eq (by decide)]
+      exact .cons (entry_typed hr) .nil) (by
+      intro decls env hr
+      simp [tail])
+  exact ⟨⟨env, tail⟩, ha⟩
 
 /-- Whole-module soundness certifies these exact import/code/export/start bytes. -/
 theorem functions_validated : ∃ decoded, module.validate_module input = .ok (.Ok decoded) ∧

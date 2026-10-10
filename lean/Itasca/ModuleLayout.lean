@@ -1,5 +1,7 @@
 import Itasca.ModuleLimits
-import Itasca.ModuleCodeComplete
+import Itasca.BodySyntax
+import Itasca.ModuleNameFacts
+import Itasca.ModuleCodeSemantic
 import Itasca.ModuleComposition
 import Itasca.ModuleEnvRequirements
 
@@ -35,18 +37,6 @@ theorem CodeAt.segmentFree {data start entries finish} (h : CodeAt data start en
     obtain ⟨_, _, _, _, _, _, _, hbody, _, _⟩ := hv.member hm
     exact BodyContext.body_segmentFree hbody
   · simp [he] at hm
-
-theorem CodeAt.complete {data start entries finish} (h : CodeAt data start entries finish)
-    (env : module.Env) (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
-    (henv : Wasm1.Environment env) (hbound : CodeEntry.Bounds env)
-    (htyped : List.Forall₂ (CodeEntry.Typed env) env.func_type_indices.val entries) :
-    module.validate_code data start env = .ok (.Ok finish) := by
-  rcases h with hs | ⟨he, hn, hstop⟩
-  · exact module.validate_code.complete_present data env start finish entries hsize henv hbound htyped hs
-  · subst entries
-    subst finish
-    have hnil : env.func_type_indices.val = [] := by simpa using htyped
-    exact module.validate_code.complete_absent data env start hsize hnil hstop
 
 /-- Independent byte spans arranged exactly as the greedy environment/code/tail
 parser consumes them. The raw module and all per-body limits are unchanged. -/

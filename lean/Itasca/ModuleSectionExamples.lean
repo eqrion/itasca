@@ -1,5 +1,6 @@
 import Itasca.ModuleExamples
 import Itasca.ModuleCompleteness
+import Itasca.StreamSliceExamplesSupport
 
 open Aeneas Aeneas.Std
 
@@ -128,31 +129,33 @@ theorem sections_accepted : ∃ decoded, module.validate_module input = .ok (.Ok
     constructor <;> simp [input, ModuleExamples.bytes, alloc.vec.Vec.deref,
       magicVersion, layout, Layout.bytes, dataBytes]
   obtain ⟨first, hh, _⟩ := hd.section_split
-  obtain ⟨env, decls, he, hr⟩ := module.validate_env.complete input raw declarations 42#usize
-    hp rfl (.inr ⟨11#u8, first, 51#usize, hh, by decide⟩) requirements
-  have hsize : input.length ≤ limits.MAX_MODULE_BYTES.val := by
-    simp [input, ModuleExamples.bytes, alloc.vec.Vec.deref,
-      magicVersion, layout, Layout.bytes, dataBytes, limits.MAX_MODULE_BYTES]
-  have hf : env.func_type_indices.val = [] := hr.functions_eq (by decide)
-  have hc := module.validate_code.complete_absent input env 42#usize hsize hf
-    (.inr ⟨11#u8, first, 51#usize, hh, by decide⟩)
   let tail : module.Tail := ⟨alloc.vec.Vec.from [segment] (by simp; scalar_tac)⟩
   have ht : At ModuleTail.Encoding input 42#usize (tail.data.val.map ModuleData.raw) (Slice.len input) := by
     refine ⟨dataBytes, ⟨dataBytes, [], ⟨[], dataBytes, .nil, .present data_encoding, rfl⟩, .nil, rfl⟩, ?_⟩
     constructor <;> simp [input, ModuleExamples.bytes, alloc.vec.Vec.deref,
       magicVersion, layout, Layout.bytes, dataBytes]
-  have hv : ∀ s ∈ tail.data.val, ModuleData.Valid env s := by
-    intro s hs
-    have heq : s = segment := by simpa [tail] using hs
-    subst s
-    refine ⟨?_, .i32 _⟩
-    have hlen := congrArg List.length (hr.memories_context (by decide))
-    simp [ModuleElaboration.contextOf, raw, declarations, Declarations.module,
-      ModuleTranslation.mems] at hlen
-    change 0 < env.mem_types.val.length
-    omega
-  exact ⟨⟨env, tail⟩, ModulePipeline.accepted_of_parts input env tail 42#usize 42#usize
-    hsize he hc (module.validate_tail.complete tail ht hv)⟩
+  have hl : ModuleLayout.Layout input raw declarations 42#usize 42#usize :=
+    ⟨rfl, hp, .inr ⟨rfl, rfl, .inr ⟨11#u8, first, 51#usize, hh, by decide⟩⟩,
+      by simpa [tail, raw, declarations, Declarations.module] using ht,
+      .inr ⟨11#u8, first, 51#usize, hh, by decide⟩⟩
+  obtain ⟨env, ha⟩ := StreamSliceExamplesSupport.accepted_layout input raw declarations
+    42#usize 42#usize hl (by
+      simp [input, ModuleExamples.bytes, alloc.vec.Vec.deref,
+        magicVersion, layout, Layout.bytes, dataBytes, limits.MAX_MODULE_BYTES])
+    requirements tail rfl (by
+      intro decls env hr
+      rw [hr.functions_eq (by decide)]
+      exact .nil) (by
+      intro decls env hr s hs
+      have heq : s = segment := by simpa [tail] using hs
+      subst s
+      refine ⟨?_, .i32 _⟩
+      have hlen := congrArg List.length (hr.memories_context (by decide))
+      simp [ModuleElaboration.contextOf, raw, declarations, Declarations.module,
+        ModuleTranslation.mems] at hlen
+      change 0 < env.mem_types.val.length
+      omega)
+  exact ⟨⟨env, tail⟩, ha⟩
 
 /-- The certificate refers to the exact fixture bytes and includes generated
 module typing, the Wasm 1.0 profile, and ordered external metadata. -/
