@@ -12,7 +12,7 @@ grammar and explicit Wasm 1.0 restrictions. Read the
 | --- | --- |
 | `src/module.rs` | Environment, code-entry/section, tail and whole-module validation; visitors. |
 | `src/code.rs` | Streaming body validator and opcode dispatch. |
-| `src/stream.rs` | Experimental streaming and parallel module driver (`stream` feature). |
+| `src/stream.rs` | Streaming and parallel module driver; extracted, not yet proved. |
 | `src/reader.rs`, `types.rs`, `limits.rs`, `error.rs` | Byte readers, API types, implementation bounds and errors. |
 | `lean/Itasca/Generated/Types.lean`, `Funs.lean` | Committed Aeneas extraction; never edit by hand. |
 | `lean/Itasca/Generated/FunsExternal.lean` | Handwritten concrete models of `Vec.pop` and `Vec.is_empty`. |
@@ -127,13 +127,13 @@ validation. Preserve buffer identity and offsets when dispatching workers:
 separate-buffer proofs require exact concatenation of validated regions.
 Consumer allocation and execution are outside these proofs.
 
-## Experimental streaming API
+## Streaming API
 
-The opt-in `stream` feature adds `stream::validate`, one entry point for
-streaming and parallel validation. With the feature, `validate_module` is a
-synchronous adapter over the same driver. Both are extracted and compiled by
-`just extract-stream` but have no whole-module proof yet. Builds without the
-feature keep the proved implementation until the proof migrates.
+`stream::validate_streaming` is one entry point for streaming and parallel
+validation, and `stream::validate_module_slice` is a synchronous adapter over
+it for one contiguous buffer. Both are part of the normal extraction but have
+no whole-module proof yet. `validate_module` keeps the proved implementation
+until the proof lands.
 
 ### Design
 
@@ -141,35 +141,42 @@ Start an audit with `src/stream.rs`; its rustdoc states each contract. The
 driver owns phase order and acceptance:
 
 1. Decode the environment from `Source::prefix` into caller-provided storage.
-2. Read the code section header, then frame its entries into `Batch`es of about
-   `Config::batch_bytes` body bytes and submit each to the `Host`.
+2. Read the code section header, then frame its entries into `CodeBatch`es of
+   about `Config::batch_bytes` body bytes and submit each to the
+   `StreamingVisitor`.
 3. Validate the tail from `Source::suffix` at EOF.
-4. Collect every outstanding batch, accepting each exactly once.
+4. Retire every outstanding batch, accepting each exactly once.
 
-The host schedules work and may return batches in any order, but cannot skip a
-phase or certify success. A batch carries private module and serial IDs, its
+The visitor schedules work and may return batches in any order, but cannot skip
+a phase or certify success. A batch carries private module and batch IDs, its
 environment and bytes, independent dispatch and validation cursors, and its
-first error. Only `Batch::validate_func` advances validation. The driver keeps
-one serial per outstanding batch, bounded by `Config::max_batches`: no
-per-function ledger, reference counts, or code copies. A host that returns a
+first error. Only `CodeBatch::validate_func` advances validation. The driver
+keeps one ID per outstanding batch, bounded by `Config::max_batches`: no
+per-function ledger, reference counts, or code copies. A visitor that returns a
 foreign, duplicate or unfinished batch, or requests no batches, gets
 `Error::Host`.
 
-`validate_module` uses `SliceSource` over the original bytes and a private
-`InlineHost` that validates each batch as it is submitted. It holds at most one
-batch and never shares it, so a constant module ID suffices. The decomposed
-APIs remain during migration and serve as a differential test oracle.
+`validate_module_slice` uses `SliceSource` over the original bytes and a
+private `SyncVisitor` that validates each batch as it is submitted. It holds at
+most one batch and never shares it, so a constant module ID suffices. The
+decomposed APIs remain and serve as a differential test oracle.
 
 ### Embedding obligations
 
-The driver cannot check these, so an embedding must justify them:
+The driver reads every byte it validates through exactly one view: the
+environment from `prefix`, the code header and each batch from one `read`
+each, and the tail from `suffix`. Reads that only locate batch boundaries are
+revalidated by the batch. So soundness can be stated over the bytes the driver
+was served, and source coherence is only a completeness hypothesis: views that
+disagree can cause a rejection but not an acceptance. The embedding still
+owes:
 
-- Source coherence: views are initialized, immutable, and agree where they
-  overlap. A header read may stop short at EOF or an allocation boundary; every
-  other read returns exactly its range.
-- `module_id` is unique among invocations whose batches can reach the same host.
+- Published bytes stay unchanged while a batch borrows them. Rust borrows
+  enforce this; an FFI must uphold it.
+- `module_id` is unique among invocations whose batches can reach the same
+  visitor.
 - The environment and source outlive every worker, including after an error.
-  Only `Ok` from `validate` certifies acceptance.
+  Only `Ok` from `validate_streaming` certifies acceptance.
 - FFI handles are valid, exclusively owned, and not accessed concurrently.
 
 A worker's compiler failure also rejects the module, even if the bytes are
@@ -194,29 +201,21 @@ through batch operations. Assuming a returned batch is already validated would
 reopen the original gap. Private Rust fields do not constrain arbitrary
 extracted Lean callbacks, so the contracts must be explicit.
 
-The shared driver proof composes the existing environment, entry, tail and
-module-region theorems. The contiguous theorem then discharges the source and
-host contracts for `SliceSource` and `InlineHost`, exposing no scheduler
-assumptions to callers. Termination additionally needs returning callbacks;
-completeness needs available bytes and accepting callbacks. Function-body and
-opcode-visitor proofs are reused. Once this covers the shared path, remove the
-feature switch and the old whole-module orchestration.
+The driver proof composes the existing environment, entry, tail and
+module-region theorems, stated over the views the driver observed. The
+contiguous theorem then discharges the source and visitor contracts for
+`SliceSource` and `SyncVisitor`, exposing no scheduler assumptions to callers.
+Termination additionally needs returning callbacks; completeness needs
+coherent, available bytes and accepting callbacks. Function-body and
+opcode-visitor proofs are reused. Once this covers the driver, `validate_module`
+can switch to it and the old whole-module orchestration can go.
 
-### Checks
+### Tests
 
-```sh
-cargo test --features stream
-cargo test --no-default-features --features stream
-just extract-stream
-```
-
-`extract-stream` translates the feature with its core dependencies, checks that
-only the two existing `Vec` models are required, and compiles the generated
-Lean in a temporary directory. `python3 lean/scripts/check_stream.py --output
-DIR` keeps the output for inspection. No proof input is replaced. The tests
-compare the specification corpus against the existing validator and exercise
-bounded out-of-order completion, parallel workers, foreign batches, sticky
-errors, truncation and region boundaries.
+`tests/stream.rs` compares the specification corpus against the existing
+validator over both a contiguous and a split source, and exercises bounded
+out-of-order completion, parallel workers, foreign batches, sticky errors,
+truncation and region boundaries.
 
 Firefox's `testWasmEncodeBasic` JSAPI test is not adapted yet: it calls
 `ModuleGenerator` directly without an environment or framed code bytes, so

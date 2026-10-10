@@ -90,16 +90,14 @@ In addition to formal verification, the validator has been conventionally tested
 
 It has also been integrated into SpiderMonkey in an experimental
 [branch](https://github.com/eqrion/firefox/tree/itasca). See the
-[integration notes](DEVELOPMENT.md#experimental-streaming-api) for its current
+[integration notes](DEVELOPMENT.md#streaming-api) for its current
 API, verification status, and limitations.
 
 ## Formal verification
 
-The opt-in `stream` feature uses an **unproved experimental driver** for both
-`validate_module` and parallel streaming validation. Its complete Aeneas model
-compiles separately; the whole-module guarantees below apply to builds without
-that feature until the shared-driver proof is complete. See the
-[streaming design and checks](DEVELOPMENT.md#experimental-streaming-api).
+The streaming and parallel driver, `stream::validate_streaming`, is extracted
+but **not yet proved**; the whole-module guarantees below do not cover it. See
+the [streaming design and proof plan](DEVELOPMENT.md#streaming-api).
 
 The proofs cover the actual extracted public Rust validator, including malformed
 input, size guards, streaming loops, visitor dispatch, and final byte-consumption
