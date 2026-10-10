@@ -177,7 +177,10 @@ completeness hypothesis: a wrong split can cause a rejection but not an
 acceptance. The embedding still owes:
 
 - Every view of a region shows the same bytes, which stay unchanged while a
-  batch borrows them. Rust borrows enforce this; an FFI must uphold it.
+  batch borrows them. Rust borrows protect an individual view from mutation;
+  they do not force separate `Source::code` calls to return slices of the same
+  logical region. Source coherence is an explicit embedding obligation, even
+  for a safe Rust implementation. An FFI must also uphold the borrow rules.
 - `module_id` is unique among invocations whose batches can reach the same
   visitor.
 - The environment and source outlive every worker, including after an error.
@@ -194,26 +197,24 @@ SpiderMonkey for tier-2 compilation. Module IDs come from a relaxed atomic
 counter that rejects exhaustion instead of wrapping. Its environment, code, and
 tail allocations are the `Source` regions directly.
 
-### Proof plan
+### Proof and consolidation plan
 
-The proof has three layers: a batch invariant tying validation progress to
-successful core entry validations; a scheduler contract preserving legitimately
-issued batches; and driver invariants covering every function exactly once
-before acceptance. A returned batch must be reachable from its own submission
-through batch operations. Assuming a returned batch is already validated would
-reopen the original gap. Private Rust fields do not constrain arbitrary
-extracted Lean callbacks, so the contracts must be explicit.
+[STREAMING_PROOF_PLAN.md](STREAMING_PROOF_PLAN.md) is the detailed handoff for
+proving the extracted driver and consolidating the public APIs. It records the
+source and scheduler contracts, batch/driver invariants, existing proof reuse,
+dependency refactoring, ordered milestones, and verification gates.
 
-The driver proof composes the existing environment, entry, tail and
-module-region theorems, stated over the concatenated regions of a coherent
-source, one whose code reads are slices of a single code region. The
-contiguous theorem then discharges the source and visitor contracts for the
-slice split and `SyncVisitor`, exposing no scheduler assumptions to callers.
-Termination additionally needs returning callbacks; completeness needs a
-coherent source split as `Source` describes, available bytes, and accepting
-callbacks. Function-body and
-opcode-visitor proofs are reused. Once this covers the driver, `validate_module`
-can switch to it and the old whole-module orchestration can go.
+The target is one module driver, `validate_streaming`, with `validate_module`
+as its synchronous contiguous-buffer adapter. After the streaming slice API
+has soundness, totality, completeness, and metadata proofs, retire the legacy
+`validate_module_with`, `CodeVisitor`, and separate code-section walk. Keep the
+shared environment, entry, body, and tail components and their visitor proofs.
+
+Build the new proofs on driver-independent semantic assembly and component
+certificates. Batch provenance must connect every returned batch to its actual
+submission through batch operations; successful completion is derived from
+those operations and the driver's checks. Discharge source and scheduler
+assumptions for the concrete slice adapter. No trust-base extension is planned.
 
 ### Tests
 
