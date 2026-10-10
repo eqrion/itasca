@@ -6430,14 +6430,14 @@ def code.validate_body
   ok r
 
 /-- [itasca::error::{impl core::convert::From<itasca::error::OpError> for itasca::error::Error}::from]:
-    Source: 'src/error.rs', lines 112:4-114:5
+    Source: 'src/error.rs', lines 116:4-118:5
     Visibility: public -/
 def error.Error.Insts.CoreConvertFromOpError.from
   (e : _root_.Itasca.error.OpError) : Result _root_.Itasca.error.Error := do
   ok (error.Error.Read e)
 
 /-- Trait implementation: [itasca::error::{impl core::convert::From<itasca::error::OpError> for itasca::error::Error}]
-    Source: 'src/error.rs', lines 111:0-115:1 -/
+    Source: 'src/error.rs', lines 115:0-119:1 -/
 @[reducible]
 def error.Error.Insts.CoreConvertFromOpError : core.convert.From
   _root_.Itasca.error.Error _root_.Itasca.error.OpError := {

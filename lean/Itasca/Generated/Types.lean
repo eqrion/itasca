@@ -643,7 +643,7 @@ structure code.OpVisitor (Self : Type) where
 def code.EmptyOpVisitor := Unit
 
 /-- [itasca::error::Error]
-    Source: 'src/error.rs', lines 57:0-109:1
+    Source: 'src/error.rs', lines 57:0-113:1
     Visibility: public -/
 @[discriminant isize]
 inductive error.Error where
@@ -675,6 +675,7 @@ inductive error.Error where
 | ModuleTooLarge : error.Error
 | Body : _root_.Itasca.error.OpError → error.Error
 | Visitor : _root_.Itasca.error.VisitError → error.Error
+| Host : error.Error
 
 /-- [itasca::module::Data]
     Source: 'src/module.rs', lines 182:0-186:1

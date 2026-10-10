@@ -53,7 +53,7 @@ pub enum VisitError {
 
 /// Why a module was rejected.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub enum Error {
     // --- The shape of the binary ---
     /// A byte read failed while decoding the module structure.
@@ -106,6 +106,10 @@ pub enum Error {
     /// validity verdict, the same way `OpError::Visitor` is not: the module may
     /// well be valid, and this says only that decoding did not finish.
     Visitor(VisitError),
+    /// A streaming host broke the driver's protocol: it returned a batch that
+    /// was not outstanding or not fully validated, or asked for no batches.
+    /// Not a validity verdict.
+    Host,
 }
 
 impl From<OpError> for Error {
@@ -152,6 +156,7 @@ impl fmt::Display for Error {
             Error::ModuleTooLarge => write!(f, "module too large"),
             Error::Body(e) => write!(f, "invalid function body: {:?}", e),
             Error::Visitor(e) => write!(f, "the consumer declined: {:?}", e),
+            Error::Host => write!(f, "the streaming host broke the driver's protocol"),
         }
     }
 }
