@@ -12,6 +12,7 @@ grammar and explicit Wasm 1.0 restrictions. Read the
 | --- | --- |
 | `src/module.rs` | Environment, code-entry/section, tail and whole-module validation; visitors. |
 | `src/code.rs` | Streaming body validator and opcode dispatch. |
+| `src/stream.rs` | Experimental streaming and parallel module driver (`stream` feature). |
 | `src/reader.rs`, `types.rs`, `limits.rs`, `error.rs` | Byte readers, API types, implementation bounds and errors. |
 | `lean/Itasca/Generated/Types.lean`, `Funs.lean` | Committed Aeneas extraction; never edit by hand. |
 | `lean/Itasca/Generated/FunsExternal.lean` | Handwritten concrete models of `Vec.pop` and `Vec.is_empty`. |
@@ -128,93 +129,80 @@ Consumer allocation and execution are outside these proofs.
 
 ## Experimental streaming API
 
-The opt-in `stream` Cargo feature adds
-`stream::validate(module_id, source, host, env)`. With this feature,
-`validate_module` is a synchronous adapter for that same driver. Both paths are
-extracted and checked separately, but have no whole-module correctness proof
-yet. Builds without the feature and the normal extraction/proof targets retain
-the existing implementation until its proof is migrated.
+The opt-in `stream` feature adds `stream::validate`, one entry point for
+streaming and parallel validation. With the feature, `validate_module` is a
+synchronous adapter over the same driver. Both are extracted and compiled by
+`just extract-stream` but have no whole-module proof yet. Builds without the
+feature keep the proved implementation until the proof migrates.
 
-Start an audit with `src/stream.rs`: `validate` decodes the environment into
-caller-provided storage and directly calls `validate_remaining`. The latter
-checks code framing, dispatches bounded batches, validates the tail at EOF, and
-consumes all pending completions. The host cannot replace these phases or supply
-a module-success certificate. The implementation reuses the core LEB reader and
-module validators.
+### Design
 
-- `Source` exposes a prefix containing the environment, reads at absolute module
-  offsets, and a suffix available at EOF. The prefix may contain more than the
-  environment: `SliceSource` simply supplies the entire module. The driver
-  discovers the code boundaries itself. Reads publish initialized immutable
-  bytes, overlapping views must agree, and every requested batch is contiguous.
-  Header reads may stop at EOF or an allocation boundary; body reads must return
-  their exact requested range. The suffix contains every remaining byte.
-- `env` is output storage for the decoded environment, not a prevalidated input.
-  Batches borrow it and the source bytes with ordinary Rust lifetimes. Callers
-  keep that storage alive until their workers finish, including after errors.
-  Only a successful return from `validate` certifies module acceptance.
-- `Host` receives owned batches and returns completed batches in any order. Each
-  batch holds private module/batch IDs, its environment and byte range, dispatch
-  and validation cursors, and the first actual `Error`. `Batch::validate_func`
-  alone advances validation. The driver registers a batch before submission,
-  checks both IDs on completion, and consumes each outstanding ID exactly once.
-  Outstanding IDs are bounded by `Config::max_batches`, with no per-function
-  ledger, reference counts, or code copies in the driver.
-- `module_id` must be unique among invocations whose batches can reach the same
-  host. The Firefox FFI generates it with one relaxed atomic allocation per
-  invocation and rejects exhaustion instead of wrapping. This allocation is
-  outside extraction; identity uniqueness is an explicit embedding obligation.
-- `Visitor` selects the region and its absolute base for custom-section offsets.
-  Environment and tail callbacks translate metadata for the embedding; worker
-  opcode visitors drive compilation as before. A compiler failure also rejects
-  the module, even if its validation would otherwise succeed.
+Start an audit with `src/stream.rs`; its rustdoc states each contract. The
+driver owns phase order and acceptance:
 
-The Firefox adapter allocates stable environment storage before calling the
-Rust driver. Its `finish` callback joins and releases remaining jobs before that
-storage can be freed, including on errors. On success, ownership of the same
-allocation transfers to SM for retained tier-2 compilation. The callback performs
-cleanup; it cannot make validation succeed. Batch handles transfer exclusive
-ownership on submission and completion. Returning a live foreign-module batch
-is rejected, but invalid/freed pointers and concurrent handle access remain FFI
-contract violations.
+1. Decode the environment from `Source::prefix` into caller-provided storage.
+2. Read the code section header, then frame its entries into `Batch`es of about
+   `Config::batch_bytes` body bytes and submit each to the `Host`.
+3. Validate the tail from `Source::suffix` at EOF.
+4. Collect every outstanding batch, accepting each exactly once.
 
-Firefox's source translates absolute requests into its environment, code, and
-tail allocations. The physical code length bounds readable storage; it does not
-replace the driver's parsing of the section header. The adapter checks that the
-discovered code range agrees with that allocation. Without code, the entire
-module resides in the environment allocation, including any data/custom tail.
+The host schedules work and may return batches in any order, but cannot skip a
+phase or certify success. A batch carries private module and serial IDs, its
+environment and bytes, independent dispatch and validation cursors, and its
+first error. Only `Batch::validate_func` advances validation. The driver keeps
+one serial per outstanding batch, bounded by `Config::max_batches`: no
+per-function ledger, reference counts, or code copies. A host that returns a
+foreign, duplicate or unfinished batch, or requests no batches, gets
+`Error::Host`.
 
-For contiguous validation, `SliceSource` borrows the original bytes and a private
-`InlineHost` validates each submitted batch immediately using `validate_func`.
-It retains at most one completed batch. No worker threads, module-ID allocator,
-or code copies are needed. This host never exchanges tokens with another
-invocation, so its constant ID is sufficient. The old visiting/decomposed APIs
-remain available during migration and provide a differential test oracle.
-The driver's explicit `'data: 'host` bound states that storage outlives the
-mutable host borrow. Aeneas needs this relation in the generic signature to
-return updated host/environment state in the same order at concrete calls whose
-host stores borrowed batches. `extract-stream` compiles that concrete adapter as
-well as the generic driver, so it checks this boundary too.
+`validate_module` uses `SliceSource` over the original bytes and a private
+`InlineHost` that validates each batch as it is submitted. It holds at most one
+batch and never shares it, so a constant module ID suffices. The decomposed
+APIs remain during migration and serve as a differential test oracle.
 
-The intended proof has three layers: a batch invariant tying validation progress
-to successful core entry validations; a scheduler contract preserving legitimately
-issued batches through those operations; and driver invariants covering every
-function exactly once before acceptance. Private Rust fields do not by themselves
-restrict arbitrary extracted Lean callbacks. Byte coherence, unique module IDs,
-and faithful FFI ownership/publication must be justified at the embedding
-boundary. Extraction alone establishes none of these correctness claims.
+### Embedding obligations
 
-The proof migration should establish source coherence and batch reachability
-once for the shared driver, composing the existing environment, entry, tail,
-and module-region theorems. A completed batch must be reachable from its actual
-submission through batch API operations; assuming that a returned batch has
-already validated everything would leave the original gap. The contiguous
-theorem then discharges the source and host contracts for `SliceSource` and
-`InlineHost`, with no scheduler assumptions exposed to its callers. Termination
-additionally needs returning source/host callbacks; completeness needs available
-bytes and accepting callbacks. Once these proofs cover the shared path, remove
-the feature switch and old whole-module orchestration. Function-body proofs and
-their opcode-visitor guarantees are reused, not duplicated.
+The driver cannot check these, so an embedding must justify them:
+
+- Source coherence: views are initialized, immutable, and agree where they
+  overlap. A header read may stop short at EOF or an allocation boundary; every
+  other read returns exactly its range.
+- `module_id` is unique among invocations whose batches can reach the same host.
+- The environment and source outlive every worker, including after an error.
+  Only `Ok` from `validate` certifies acceptance.
+- FFI handles are valid, exclusively owned, and not accessed concurrently.
+
+A worker's compiler failure also rejects the module, even if the bytes are
+valid.
+
+The Firefox adapter allocates the environment at a stable address before
+calling the driver, and its `finish` callback joins and releases outstanding
+jobs before that storage is freed. On success the same allocation transfers to
+SpiderMonkey for tier-2 compilation. Module IDs come from a relaxed atomic
+counter that rejects exhaustion instead of wrapping. The adapter maps absolute
+reads onto its environment, code, and tail allocations, and checks that the
+code range the driver found matches the code allocation. A module without code
+lives entirely in the environment allocation.
+
+### Proof plan
+
+The proof has three layers: a batch invariant tying validation progress to
+successful core entry validations; a scheduler contract preserving legitimately
+issued batches; and driver invariants covering every function exactly once
+before acceptance. A returned batch must be reachable from its own submission
+through batch operations. Assuming a returned batch is already validated would
+reopen the original gap. Private Rust fields do not constrain arbitrary
+extracted Lean callbacks, so the contracts must be explicit.
+
+The shared driver proof composes the existing environment, entry, tail and
+module-region theorems. The contiguous theorem then discharges the source and
+host contracts for `SliceSource` and `InlineHost`, exposing no scheduler
+assumptions to callers. Termination additionally needs returning callbacks;
+completeness needs available bytes and accepting callbacks. Function-body and
+opcode-visitor proofs are reused. Once this covers the shared path, remove the
+feature switch and the old whole-module orchestration.
+
+### Checks
 
 ```sh
 cargo test --features stream
@@ -222,21 +210,17 @@ cargo test --no-default-features --features stream
 just extract-stream
 ```
 
-`extract-stream` translates the actual feature and its core dependencies, checks
-that only the two existing concrete `Vec` models are required, and compiles the
-generated Lean. Output goes to a temporary directory outside the proof sources.
-`python3 lean/scripts/check_stream.py --output /tmp/itasca-stream` keeps it at a
-chosen location for inspection. No generated proof input is replaced and no
-external template is imported. Tests compare the full specification corpus and
-exercise bounded out-of-order work, parallel workers, foreign-module completion,
-sticky errors, truncation, and region boundaries.
+`extract-stream` translates the feature with its core dependencies, checks that
+only the two existing `Vec` models are required, and compiles the generated
+Lean in a temporary directory. `python3 lean/scripts/check_stream.py --output
+DIR` keeps the output for inspection. No proof input is replaced. The tests
+compare the specification corpus against the existing validator and exercise
+bounded out-of-order completion, parallel workers, foreign batches, sticky
+errors, truncation and region boundaries.
 
-The Firefox `testWasmEncodeBasic` embedding test is not yet adapted: it builds
-metadata and calls `ModuleGenerator` directly without supplying an Itasca
-environment or framed code bytes. It reaches the standalone entry API with a
-null environment, bypassing this driver entirely. This limitation predates the
-shared-driver changes; passing the Wasm jit-test suite or the seven Wasm ABI
-helper tests does not establish that the entire JSAPI suite passes.
+Firefox's `testWasmEncodeBasic` JSAPI test is not adapted yet: it calls
+`ModuleGenerator` directly without an environment or framed code bytes, so
+passing the Wasm jit-tests does not mean the whole JSAPI suite passes.
 
 ## Archived Rocq version
 
