@@ -19,11 +19,13 @@ inductive State (data : Slice U8) (env : module.Env) (locals : alloc.vec.Vec typ
       env.types.val[index.val]? = some ft → Bounds data st →
       Frames.Open env (bodyContext env locals ft) st parents current →
       Frames.bodyType parents current = some (.TypeIndex index) →
-      Consumed data 0#usize (Frames.trace parents current) st.core.pos → State data env locals index st
+      Consumed data 0#usize (Frames.trace parents current) st.core.pos →
+      TokensDeclared (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) (Frames.trace parents current) → State data env locals index st
   | closed (st : code.BodyState) (ft : types.FuncType) (ops : List instr) (tokens : List Token) :
       env.types.val[index.val]? = some ft → Bounds data st →
       st.core.ctrls.val = [] → st.blocks.val = [] → BodyTokens tokens ops →
       FunctionTyped env locals ft ops → Consumed data 0#usize tokens st.core.pos →
+      TokensDeclared (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) tokens →
       State data env locals index st
 
 theorem State.bounds {data env locals index st} (h : State data env locals index st) :
@@ -31,19 +33,19 @@ theorem State.bounds {data env locals index st} (h : State data env locals index
 
 theorem State.shape {data env locals index st} (h : State data env locals index st) : Shape st := by
   cases h with
-  | running ft parents current hi bounds ho hb hc => exact ho.shape
-  | closed _ _ _ _ _ hc hb _ _ _ =>
+  | running ft parents current hi bounds ho hb hc hd => exact ho.shape
+  | closed _ _ _ _ _ hc hb _ _ _ _ =>
     exact ⟨⟨by simp [hc], by simp [hc]⟩, by simp [hc, hb]⟩
 
 theorem State.finished {data env locals index st} (h : State data env locals index st)
     (hblocks : st.blocks.val = []) (hpos : st.core.pos.val = data.length) :
     Validated data env locals index := by
   cases h with
-  | running ft parents current _ _ ho _ _ =>
+  | running ft parents current _ _ ho _ _ _ =>
     obtain ⟨_, _, _, _, _, _, _, hb, _⟩ := ho
     simp [hblocks] at hb
-  | closed ft ops tokens hi _ _ _ ht htyped hc =>
-    exact ⟨ft, ops, hi, ⟨tokens, st.core.pos, hc, hpos, ht⟩, htyped⟩
+  | closed ft ops tokens hi _ _ _ ht htyped hc hd =>
+    exact ⟨ft, ops, hi, ⟨tokens, st.core.pos, hc, hpos, ht⟩, htyped, (ht.declared_iff _).mp hd⟩
 
 def initial (index : U32) : code.BodyState :=
   { core := ⟨alloc.vec.Vec.new _,
@@ -65,6 +67,7 @@ theorem State.start (data : Slice U8) (env : module.Env) (locals : alloc.vec.Vec
   · rfl
   · simpa [Frames.trace, Frames.Saved.trace, Frames.Saved.fresh, Frames.Form.opening, initial]
       using Consumed.nil (data := data) 0#usize (by simp)
+  · simp [Frames.trace, Frames.Saved.trace, Frames.Saved.fresh, Frames.Form.opening]
 
 /-- The opcode has been consumed, but its immediate is still arbitrary. -/
 structure Pending (data : Slice U8) (env : module.Env) (locals : alloc.vec.Vec types.ValueType)
@@ -78,6 +81,7 @@ structure Pending (data : Slice U8) (env : module.Env) (locals : alloc.vec.Vec t
   opened : Frames.Open env (bodyContext env locals ft) st parents current
   bodyType : Frames.bodyType parents current = some (.TypeIndex index)
   consumed : Consumed data 0#usize (Frames.trace parents current) start
+  declared : TokensDeclared (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) (Frames.trace parents current)
   inbounds : start.val < data.length
   pos : st.core.pos.val = start.val + 1
   ctrls : st.blocks.val.length ≤ start.val + 1
@@ -88,10 +92,10 @@ theorem State.pending {data env locals index st} (h : State data env locals inde
     ∃ p : Pending data env locals index { st with core := { st.core with pos := next } },
       p.start = st.core.pos := by
   cases h with
-  | closed _ _ _ _ _ _ hb _ _ _ => exact False.elim (hblocks hb)
-  | running ft parents current hi bounds ho hbody hc =>
+  | closed _ _ _ _ _ _ hb _ _ _ _ => exact False.elim (hblocks hb)
+  | running ft parents current hi bounds ho hbody hc hd =>
     exact ⟨⟨st.core.pos, ft, parents, current, hi, bounds.size, ho.with_pos next, hbody,
-      hc, hpos, hnext, bounds.ctrls⟩, rfl⟩
+      hc, hd, hpos, hnext, bounds.ctrls⟩, rfl⟩
 
 def Pending.After {data env locals index st} (_ : Pending data env locals index st)
     (s : code.BodyState) : Prop :=
@@ -103,14 +107,18 @@ theorem Pending.running_after {data env locals index st} (p : Pending data env l
     (ho : Frames.Open env (bodyContext env locals p.ft) s parents current)
     (hb : Frames.bodyType parents current = some (.TypeIndex index))
     (ht : Frames.trace parents current = Frames.trace p.parents p.current ++ [token])
-    (hc : s.blocks.val.length ≤ st.blocks.val.length + 1) : p.After s := by
+    (hc : s.blocks.val.length ≤ st.blocks.val.length + 1)
+    (hd : token.Declared (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) := by
+      simp [Token.Declared, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]) : p.After s := by
   have hs := encoded.span
   have hp := p.pos
   have hbnd := p.ctrls
   refine ⟨.running s p.ft parents current p.signature
-    ⟨p.size, hs.2, by omega⟩ ho hb ?_, by omega, hs.2⟩
-  rw [ht]
-  exact .snoc p.consumed encoded
+    ⟨p.size, hs.2, by omega⟩ ho hb ?_ ?_, by omega, hs.2⟩
+  · rw [ht]
+    exact .snoc p.consumed encoded
+  · rw [ht, tokensDeclared_append, tokensDeclared_singleton]
+    exact ⟨p.declared, hd⟩
 
 theorem Pending.closed_after {data env locals index st} (p : Pending data env locals index st)
     (s : code.BodyState) (ops : List instr) (encoded : At data p.start .end_ s.core.pos)
@@ -120,7 +128,7 @@ theorem Pending.closed_after {data env locals index st} (p : Pending data env lo
   have hs := encoded.span
   have hp := p.pos
   exact ⟨.closed s p.ft ops _ p.signature ⟨p.size, hs.2, by simp [hb]⟩ hc hb ht htyped
-    (.snoc p.consumed encoded), by omega, hs.2⟩
+    (.snoc p.consumed encoded) (by simpa [Token.Declared] using p.declared), by omega, hs.2⟩
 
 /-- Closing the root frame recovers the result vector selected by the actual
 function type index, without treating function parameters as operands. -/
@@ -155,9 +163,11 @@ theorem Pending.append_result {data env locals index st} (p : Pending data env l
     (hc : s.core.ctrls.val = p.parents.map Frames.Saved.ctrl ++
       [{ p.current.ctrl with polymorphic_base := poly }])
     (hb : s.blocks.val = p.parents.map Frames.Saved.bt ++ [p.current.bt])
-    (hv : s.core.vals.val = outer ++ newVals) : p.After s := by
+    (hv : s.core.vals.val = outer ++ newVals)
+    (hdecl : DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) op := by
+      simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]) : p.After s := by
   refine p.running_after s p.parents (p.current.advance (.plain op) op poly newVals)
-    (.plain op) encoded ?_ ?_ ?_ ?_
+    (.plain op) encoded ?_ ?_ ?_ ?_ hdecl
   · exact ⟨C, outer, spine, ⟨header.kind, header.placeholder, header.inputs, header.outputs,
       header.prior, .simple header.emits (.plain op hwf)⟩, base, typed, hc, hb, hv⟩
   · simpa [Frames.bodyType_advance] using p.bodyType

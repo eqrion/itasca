@@ -31,14 +31,15 @@ theorem forall₂_right {α β : Type} {R : α → β → Prop} {xs ys}
 
 theorem functions_typed {env indices codes} {profile : ValidationProfile}
     (h : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry profile) indices codes)
-    (C : context) (hc : CodeEntry.ModuleContext env C) :
+    (C : context) (hc : CodeEntry.ModuleContext env C)
+    (hsegments : CodeEntry.SegmentContext env C) :
     List.Forall₂ (fun ft f => Func_ok C f ft)
       (indices.map (functionType env.types.val)) (List.zipWith CodeEntry.function indices codes) := by
   induction h with
   | nil => exact .nil
   | cons hp _ ih =>
     apply List.Forall₂.cons _ ih
-    simpa [functionType_lookup hp.type_lt] using hp.func_ok C hc
+    simpa [functionType_lookup hp.type_lt] using hp.func_ok C hc hsegments
 
 theorem exports_typed {env entries xts}
     (h : List.Forall₂ (ModuleExternals.ExportResolves env) entries xts)

@@ -7,13 +7,14 @@ namespace Itasca
 
 open ModuleBinary
 
-theorem module.decode_locals_loop.complete (data : Slice U8) (groups : U32)
+theorem module.decode_locals_loop.complete (data : Slice U8) (profile : ValidationProfile) (groups : U32)
     (out : alloc.vec.Vec types.ValueType) (pos : Usize) (i : U32)
     (decoded : List (U32 × types.ValueType)) (next : Usize)
     (hcount : i.val + decoded.length = groups.val)
     (hbytes : At (Rep LocalEncoding) data pos decoded next)
+    (hallowed : ∀ group ∈ decoded, ValueTypeAllowed profile group.2)
     (hcap : out.val.length + (ModuleLocals.declared decoded).length ≤ limits.MAX_LOCALS.val) :
-    ∃ locals, module.decode_locals_loop data groups out pos i = .ok (.Ok (locals, next)) ∧
+    ∃ locals, module.decode_locals_loop data profile groups out pos i = .ok (.Ok (locals, next)) ∧
       locals.val = out.val ++ ModuleLocals.declared decoded := by
   induction decoded generalizing out pos i with
   | nil =>
@@ -30,7 +31,7 @@ theorem module.decode_locals_loop.complete (data : Slice U8) (groups : U32)
     obtain ⟨valuePos, hcountSpan, htypeSpan⟩ := hlocal.split
     have hread := hcountSpan.read_u32 count hcountBytes
     have htype := module.decode_value_type.complete data valuePos ty middle
-      ⟨[valueByte ty], rfl, htypeSpan⟩
+      ⟨[valueByte ty], rfl, htypeSpan⟩ profile (hallowed (count, ty) (by simp))
     have hlt : i.val < groups.val := by simp only [List.length_cons] at hcount; omega
     have hstop : ¬ i ≥ groups := by scalar_tac
     have hdecl : ModuleLocals.declared ((count, ty) :: rest) =
@@ -51,6 +52,7 @@ theorem module.decode_locals_loop.complete (data : Slice U8) (groups : U32)
       (UScalar.add_spec (x := i) (y := 1#u32) (by scalar_tac))
     obtain ⟨locals, hrec, hvals⟩ := ih pushed middle j
       (by simp only [List.length_cons] at hcount; scalar_tac) hrest
+      (fun group hm => hallowed group (by simp [hm]))
       (by simpa [hpushed, List.length_append, List.length_replicate] using hroom)
     refine ⟨locals, ?_, by simpa [hpushed, hdecl, List.append_assoc] using hvals⟩
     unfold module.decode_locals_loop
@@ -60,15 +62,16 @@ theorem module.decode_locals_loop.complete (data : Slice U8) (groups : U32)
     simpa [module.decode_locals_loop, module.decode_locals_loop.body,
       core.result.Result.Insts.CoreOpsTry.branch, lift, htype, hfitval, hpush, hspace, hj] using hrec
 
-theorem module.decode_locals.complete (data : Slice U8) (pos : Usize)
+theorem module.decode_locals.complete (data : Slice U8) (pos : Usize) (profile : ValidationProfile)
     (groups : List (U32 × types.ValueType)) (next : Usize)
     (hbytes : At (VecEncoding LocalEncoding) data pos groups next)
+    (hallowed : ∀ group ∈ groups, ValueTypeAllowed profile group.2)
     (hcap : (ModuleLocals.declared groups).length ≤ limits.MAX_LOCALS.val) :
-    ∃ locals, module.decode_locals data pos = .ok (.Ok (locals, next)) ∧
+    ∃ locals, module.decode_locals data pos profile = .ok (.Ok (locals, next)) ∧
       locals.val = ModuleLocals.declared groups := by
   obtain ⟨count, first, hcount, hread, hrest⟩ := hbytes.vector_split
-  obtain ⟨locals, hloop, hvals⟩ := module.decode_locals_loop.complete data count
-    (alloc.vec.Vec.new _) first 0#u32 groups next (by simpa using hcount.symm) hrest (by simpa using hcap)
+  obtain ⟨locals, hloop, hvals⟩ := module.decode_locals_loop.complete data profile count
+    (alloc.vec.Vec.new _) first 0#u32 groups next (by simpa using hcount.symm) hrest hallowed (by simpa using hcap)
   refine ⟨locals, ?_, by simpa using hvals⟩
   simp [module.decode_locals, reader.read_u32_leb.complete data pos count first hread,
     core.result.Result.Insts.CoreOpsTry.branch, hloop]

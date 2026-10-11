@@ -5,13 +5,22 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Control
 
-/-- The five single-byte block type encodings supported by Wasm 1.0. -/
+/-- Single-byte block-type spellings. `ScalarBlockType` separately restricts
+which spellings belong to the Wasm 1.0 grammar and decoder. -/
 def blockByte : code.BlockType → U8
   | .Empty => 64#u8
   | .Value .I32 => 127#u8
   | .Value .I64 => 126#u8
   | .Value .F32 => 125#u8
   | .Value .F64 => 124#u8
+  | .Value .V128 => 123#u8
+  | .Value .FuncRef => 112#u8
+  | .Value .ExternRef => 111#u8
+
+/-- The empty and four numeric result types admitted by Wasm 1.0 block headers. -/
+def ScalarBlockType : code.BlockType → Prop
+  | .Empty | .Value .I32 | .Value .I64 | .Value .F32 | .Value .F64 => True
+  | _ => False
 
 def labelContext (ts : List valtype) : context :=
   ⟨[], [], [], [], [], [], [], [], [.mk_list ts], none⟩
@@ -52,14 +61,15 @@ namespace Itasca
 
 @[step]
 theorem code.read_block_type.spec (data : Slice U8) (pos : Usize) (bt : code.BlockType)
-    (h : pos.val < data.length) (hbyte : data.val[pos.val] = Control.blockByte bt) :
+    (h : pos.val < data.length) (hbyte : data.val[pos.val] = Control.blockByte bt)
+    (hbt : Control.ScalarBlockType bt) :
     code.read_block_type data pos ⦃ r =>
       ∃ next, r = .Ok (bt, next) ∧ next.val = pos.val + 1 ⦄ := by
   obtain ⟨r, hr, next, rfl, hnext⟩ := WP.spec_imp_exists (reader.read_byte.spec data pos h)
   rw [code.read_block_type, hr, hbyte]
   cases bt with
   | Empty => simp [Control.blockByte, core.result.Result.Insts.CoreOpsTry.branch, hnext]
-  | Value t => cases t <;> simp [Control.blockByte, core.result.Result.Insts.CoreOpsTry.branch, hnext]
+  | Value t => cases t <;> simp_all [Control.ScalarBlockType, Control.blockByte, core.result.Result.Insts.CoreOpsTry.branch, hnext]
 
 theorem code.read_block_type.eof (data : Slice U8) (pos : Usize) (h : data.length ≤ pos.val) :
     code.read_block_type data pos = .ok (.Err .UnexpectedEof) := by
@@ -69,14 +79,14 @@ theorem code.read_block_type.eof (data : Slice U8) (pos : Usize) (h : data.lengt
 
 theorem code.read_block_type.invalid (data : Slice U8) (pos : Usize)
     (h : pos.val < data.length)
-    (hbyte : ∀ bt, data.val[pos.val] ≠ Control.blockByte bt) :
+    (hbyte : ∀ bt, Control.ScalarBlockType bt → data.val[pos.val] ≠ Control.blockByte bt) :
     code.read_block_type data pos = .ok (.Err .InvalidBlockType) := by
   obtain ⟨r, hr, next, rfl, _⟩ := WP.spec_imp_exists (reader.read_byte.spec data pos h)
-  have h0 := hbyte .Empty
-  have h1 := hbyte (.Value .I32)
-  have h2 := hbyte (.Value .I64)
-  have h3 := hbyte (.Value .F32)
-  have h4 := hbyte (.Value .F64)
+  have h0 := hbyte .Empty trivial
+  have h1 := hbyte (.Value .I32) trivial
+  have h2 := hbyte (.Value .I64) trivial
+  have h3 := hbyte (.Value .F32) trivial
+  have h4 := hbyte (.Value .F64) trivial
   simp only [Control.blockByte] at h0 h1 h2 h3 h4
   simp [code.read_block_type, hr, core.result.Result.Insts.CoreOpsTry.branch]
   split <;> simp_all [U8.ofNat, UScalar.ofNat, UScalar.ofNatCore]
@@ -84,12 +94,12 @@ theorem code.read_block_type.invalid (data : Slice U8) (pos : Usize)
 @[step]
 theorem code.read_block.spec (st : code.OpIterState) (data : Slice U8) (bt : code.BlockType)
     (h : st.pos.val < data.length) (hbyte : data.val[st.pos.val] = Control.blockByte bt)
-    (hsize : st.ctrls.val.length < Usize.max) :
+    (hsize : st.ctrls.val.length < Usize.max) (hbt : Control.ScalarBlockType bt) :
     code.read_block st data ⦃ r =>
       r.1 = .Ok bt ∧ r.2.pos.val = st.pos.val + 1 ∧ r.2.vals = st.vals ∧
       r.2.ctrls.val = st.ctrls.val ++ [Control.frame st .Block bt] ⦄ := by
   obtain ⟨_, hr, next, rfl, hnext⟩ :=
-    WP.spec_imp_exists (code.read_block_type.spec data st.pos bt h hbyte)
+    WP.spec_imp_exists (code.read_block_type.spec data st.pos bt h hbyte hbt)
   rw [code.read_block, hr]
   simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
   step*
@@ -98,12 +108,12 @@ theorem code.read_block.spec (st : code.OpIterState) (data : Slice U8) (bt : cod
 @[step]
 theorem code.read_loop.spec (st : code.OpIterState) (data : Slice U8) (bt : code.BlockType)
     (h : st.pos.val < data.length) (hbyte : data.val[st.pos.val] = Control.blockByte bt)
-    (hsize : st.ctrls.val.length < Usize.max) :
+    (hsize : st.ctrls.val.length < Usize.max) (hbt : Control.ScalarBlockType bt) :
     code.read_loop st data ⦃ r =>
       r.1 = .Ok bt ∧ r.2.pos.val = st.pos.val + 1 ∧ r.2.vals = st.vals ∧
       r.2.ctrls.val = st.ctrls.val ++ [Control.frame st .Loop bt] ⦄ := by
   obtain ⟨_, hr, next, rfl, hnext⟩ :=
-    WP.spec_imp_exists (code.read_block_type.spec data st.pos bt h hbyte)
+    WP.spec_imp_exists (code.read_block_type.spec data st.pos bt h hbyte hbt)
   rw [code.read_loop, hr]
   simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
   step*
@@ -114,14 +124,14 @@ theorem code.read_block.context (st : code.OpIterState) (data : Slice U8) (bt : 
     (C : context) (hC : wf_context C) (hlabels : C.LABELS = Control.labels st.ctrls.val)
     (hshape : Control.Shape st) (h : st.pos.val < data.length)
     (hbyte : data.val[st.pos.val] = Control.blockByte bt)
-    (hsize : st.ctrls.val.length < Usize.max) :
+    (hsize : st.ctrls.val.length < Usize.max) (hbt : Control.ScalarBlockType bt) :
     ∃ st', code.read_block st data = .ok (.Ok bt, st') ∧
       st'.pos.val = st.pos.val + 1 ∧ st'.vals = st.vals ∧ Control.Shape st' ∧
       (Control.labelContext (Control.resultTypes bt) ++ C).LABELS = Control.labels st'.ctrls.val ∧
       Blocktype_ok C (Control.blockType bt)
         (.mk_functype (.mk_list []) (.mk_list (Control.resultTypes bt))) := by
   obtain ⟨⟨_, st'⟩, hr, rfl, hnext, hvals, hctrls⟩ :=
-    WP.spec_imp_exists (code.read_block.spec st data bt h hbyte hsize)
+    WP.spec_imp_exists (code.read_block.spec st data bt h hbyte hsize hbt)
   refine ⟨st', hr, hnext, hvals, Control.Shape.push hshape .Block bt hctrls hvals,
     ?_, Control.blockType_ok C hC bt⟩
   simp [hctrls, Control.labels_push, Control.frame, Control.targetTypes,
@@ -132,14 +142,14 @@ theorem code.read_loop.context (st : code.OpIterState) (data : Slice U8) (bt : c
     (C : context) (hC : wf_context C) (hlabels : C.LABELS = Control.labels st.ctrls.val)
     (hshape : Control.Shape st) (h : st.pos.val < data.length)
     (hbyte : data.val[st.pos.val] = Control.blockByte bt)
-    (hsize : st.ctrls.val.length < Usize.max) :
+    (hsize : st.ctrls.val.length < Usize.max) (hbt : Control.ScalarBlockType bt) :
     ∃ st', code.read_loop st data = .ok (.Ok bt, st') ∧
       st'.pos.val = st.pos.val + 1 ∧ st'.vals = st.vals ∧ Control.Shape st' ∧
       (Control.labelContext [] ++ C).LABELS = Control.labels st'.ctrls.val ∧
       Blocktype_ok C (Control.blockType bt)
         (.mk_functype (.mk_list []) (.mk_list (Control.resultTypes bt))) := by
   obtain ⟨⟨_, st'⟩, hr, rfl, hnext, hvals, hctrls⟩ :=
-    WP.spec_imp_exists (code.read_loop.spec st data bt h hbyte hsize)
+    WP.spec_imp_exists (code.read_loop.spec st data bt h hbyte hsize hbt)
   refine ⟨st', hr, hnext, hvals, Control.Shape.push hshape .Loop bt hctrls hvals,
     ?_, Control.blockType_ok C hC bt⟩
   simp [hctrls, Control.labels_push, Control.frame, Control.targetTypes,

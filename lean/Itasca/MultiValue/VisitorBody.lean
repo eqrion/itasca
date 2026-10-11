@@ -23,7 +23,7 @@ def bodyGood {V : Type} (cf :
 abbrev body {V : Type} (visitor : code.OpVisitor V) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (v : V) (st : code.BodyState) :=
   code.validate_multi_value_body_with_loop.body visitor data env.types env.imports env.globals env.exports
-    env.elements env.start env.func_type_indices env.func_types env.table_types env.mem_types
+    env.elements env.data_count env.declared_funcs env.start env.func_type_indices env.func_types env.table_types env.mem_types
     env.global_types env.num_imported_funcs env.num_imported_globals ctx index v st
 
 set_option maxHeartbeats 2000000 in
@@ -95,11 +95,11 @@ theorem code.validate_multi_value_body_with_loop.accepted_transfer {V W : Type}
     (halign : st.blocks.val.length = st.core.ctrls.val.length)
     (hbound : st.blocks.val.length ≤ st.core.pos.val + 1)
     (h : code.validate_multi_value_body_with_loop visitor data env.types env.imports env.globals
-      env.exports env.elements env.start env.func_type_indices env.func_types env.table_types
+      env.exports env.elements env.data_count env.declared_funcs env.start env.func_type_indices env.func_types env.table_types
       env.mem_types env.global_types env.num_imported_funcs env.num_imported_globals ctx index v st =
       .ok (.Ok (), v')) :
     ∃ w', code.validate_multi_value_body_with_loop replacement data env.types env.imports env.globals
-      env.exports env.elements env.start env.func_type_indices env.func_types env.table_types
+      env.exports env.elements env.data_count env.declared_funcs env.start env.func_type_indices env.func_types env.table_types
       env.mem_types env.global_types env.num_imported_funcs env.num_imported_globals ctx' index w st =
       .ok (.Ok (), w') := by
   generalize hn : Usize.max - st.core.pos.val = n
@@ -161,8 +161,8 @@ theorem code.validate_multi_value_body_with.accepted_transfer {V W : Type}
   · simp [hsize] at h
   · simp only [hsize, if_false] at h ⊢
     obtain ⟨r, hr, h⟩ := ResultFacts.bind_ok_inv _ _ _ h
-    have hi : code.initial_state env ctx' index .MultiValue =
-        code.initial_state env ctx index .MultiValue := rfl
+    have hi : code.initial_state env ctx' index .Wasm2 =
+        code.initial_state env ctx index .Wasm2 := rfl
     rw [hi, hr]
     cases r with
     | Err e =>

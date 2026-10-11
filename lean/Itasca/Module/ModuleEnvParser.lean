@@ -78,23 +78,33 @@ theorem module.validate_env_with_loop.profile_spec {V : Type} (visitor : module.
           split
           · exact ⟨currentDecls, lastId, hrun, hbound⟩
           · split
-            · simp [LoopPostWith]
-            · rename_i horder
-              have horder' : lastId.val < id.val := by scalar_tac
-              obtain ⟨⟨r, updated⟩, hread, hp⟩ := WP.spec_imp_exists
-                (module.decode_env_section.profile_spec data first id current currentDecls profile (hbound.mono (by omega)))
-              simp only [hread, bind_ok]
-              cases r with
-              | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, LoopPostWith]
-              | Ok next =>
-                obtain ⟨after, heffect, hbound⟩ := hp
-                simp
-                by_cases he : next = last
-                · subst next
-                  simp only [↓reduceIte, WP.spec_ok]
-                  exact ⟨⟨after, .step hrun horder' hh heffect⟩, hbound, by scalar_tac⟩
-                · have hn : next.val ≠ last.val := fun h => he (UScalar.eq_of_val_eq h)
-                  simp [hn, LoopPostWith]
+            · exact ⟨currentDecls, lastId, hrun, hbound⟩
+            · obtain ⟨rankResult, hrank, hrankPost⟩ := WP.spec_imp_exists (module.section_order.spec id)
+              rw [hrank]
+              cases rankResult with
+              | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
+                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, LoopPostWith]
+              | Ok rank =>
+                obtain ⟨rfl, hidLow, hidHigh⟩ := hrankPost
+                simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+                split
+                · simp [LoopPostWith]
+                · rename_i horder
+                  have horder' : lastId.val < (sectionRank id).val := by scalar_tac
+                  obtain ⟨⟨r, updated⟩, hread, hp⟩ := WP.spec_imp_exists
+                    (module.decode_env_section.profile_spec data first id current currentDecls profile (hbound.mono (by omega)))
+                  simp only [hread, bind_ok]
+                  cases r with
+                  | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, LoopPostWith]
+                  | Ok next =>
+                    obtain ⟨after, heffect, hbound⟩ := hp
+                    simp
+                    by_cases he : next = last
+                    · subst next
+                      simp only [↓reduceIte, WP.spec_ok]
+                      exact ⟨⟨after, .step hrun horder' hh heffect⟩, hbound, by scalar_tac⟩
+                    · have hn : next.val ≠ last.val := fun h => he (UScalar.eq_of_val_eq h)
+                      simp [hn, LoopPostWith]
   · exact ⟨decls, .nil, hbound⟩
 
 /-- Header checking and empty initialization discharge the loop's input bounds. -/

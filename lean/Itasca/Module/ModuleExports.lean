@@ -83,10 +83,11 @@ end Itasca
 namespace Itasca.ModuleSections
 
 def ExportAdded (env result : module.Env) (entry : module.Export) : Prop :=
-  result = { env with exports := result.exports } ∧
+  result = { env with exports := result.exports, declared_funcs := result.declared_funcs } ∧
   result.exports.val = env.exports.val ++ [entry] ∧
   entry.name.val ∉ env.exports.val.map (fun e => e.name.val) ∧
-  ∃ xt, ModuleExternals.ExportResolves env entry xt
+  (∃ xt, ModuleExternals.ExportResolves env entry xt) ∧
+  result.declared_funcs.val = env.declared_funcs.val ++ ModuleReferences.exportIndices entry
 
 inductive ExportsAdded (initial : module.Env) : List module.Export → module.Env → Prop where
   | nil : ExportsAdded initial [] initial
@@ -100,10 +101,16 @@ theorem ExportsAdded.exports {env entries result} (h : ExportsAdded env entries 
   | snoc _ ha ih => simpa [ih, List.append_assoc] using ha.2.1
 
 theorem ExportsAdded.unchanged {env entries result} (h : ExportsAdded env entries result) :
-    result = { env with exports := result.exports } := by
+    result = { env with exports := result.exports, declared_funcs := result.declared_funcs } := by
   induction h with
   | nil => cases env; rfl
   | snoc _ ha ih => rw [ha.1, ih]
+
+theorem ExportsAdded.references {env entries result} (h : ExportsAdded env entries result) :
+    result.declared_funcs.val = env.declared_funcs.val ++ entries.flatMap ModuleReferences.exportIndices := by
+  induction h with
+  | nil => simp
+  | snoc _ ha ih => simpa [ih, List.append_assoc] using ha.2.2.2.2
 
 def descByte : module.ExportDesc → U8
   | .Func _ => 0#u8 | .Table _ => 1#u8 | .Memory _ => 2#u8 | .Global _ => 3#u8
@@ -245,13 +252,18 @@ private theorem export_step (data : Slice U8) (count : U32) (env : module.Env)
                       have hprogress : pos.val < next.val := by omega
                       have hsize := hbound.exports
                       have hcapacity : env.exports.val.length < Usize.max := by scalar_tac
+                      have hsizeRefs := hbound.declaredFuncs
+                      have hcapacityRefs : env.declared_funcs.val.length < Usize.max := by scalar_tac
                       simp [module.decode_export_section_loop.body, hmore, hn, ht, hk, hu, hd]
-                      step*
-                      refine ⟨⟨nm, desc⟩, ⟨rfl, ?_, hfresh, hvalid.resolves nm⟩, he, ?_, ?_⟩
-                      · exact v_post
-                      · cases hbound
-                        constructor <;> simp only [v_post, List.length_append, List.length_singleton] <;> omega
-                      · scalar_tac
+                      cases desc <;> step*
+                      all_goals
+                        refine ⟨⟨nm, _⟩, ⟨rfl, ?_, hfresh, hvalid.resolves nm, ?_⟩, he, ?_, ?_⟩
+                        · first | exact v1_post | exact v_post
+                        · simp_all only [ModuleReferences.exportIndices, List.append_nil]
+                        · cases hbound
+                          constructor <;>
+                            simp_all only [List.length_append, List.length_singleton] <;> omega
+                        · scalar_tac
 
 theorem module.decode_export_section_loop.spec (data : Slice U8) (env : module.Env)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length)

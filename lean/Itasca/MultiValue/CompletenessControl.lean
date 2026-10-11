@@ -183,12 +183,13 @@ theorem execute_body {data : Slice U8} {env : module.Env} {ctx : code.Context} {
     (hbody : Instrs_ok C ops (.mk_functype (.mk_list (ins.map Translate.valueType))
       (.mk_list (outs.map Translate.valueType))))
     (hthen : f.core.current.kind = .Then → ins = outs)
-    (hcap : f.core.outer.length + outs.length ≤ Usize.max) :
+    (hcap : f.core.outer.length + outs.length ≤ Usize.max)
+    (hdecl : DeclaredReferences.Instructions (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) ops) :
     ∃ s, Execution data env ctx index st s ∧ s.core.pos = next ∧
       s.core.ctrls.val = f.core.parents ∧ s.blocks.val = f.parents ∧
       s.core.vals.val = if f.parents = [] then f.core.outer else f.core.outer ++ outs.map code.StackType.Val := by
   obtain ⟨middle, hinner, hend⟩ := hbytes.split
-  obtain ⟨mid, hrun, hpos, hout', hbounds⟩ := program C st f middle _ _ hm hl hb hinner ht hbody
+  obtain ⟨mid, hrun, hpos, hout', hbounds⟩ := program C st f middle _ _ hm hl hb hinner ht hbody hdecl
   obtain ⟨g, hgp, hgc, hp, ho, hk, hcb, hbase, hreal⟩ := hout'.next
   obtain ⟨s, hclose, hp', hc', hb', hv'⟩ := execute_end g data env ctx index next ins outs
     (by simpa [hpos] using hend.single) (by simpa [hgc] using hin) (by simpa [hgc] using hout)
@@ -242,7 +243,8 @@ theorem run_closed_child {data : Slice U8} {env : module.Env} {ctx : code.Contex
     (ht : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ form.args ins))
     (hbody : Instrs_ok (Frames.enter C form ins outs) ops
       (.mk_functype (.mk_list (ins.map Translate.valueType)) (.mk_list (outs.map Translate.valueType))))
-    (hthen : form = .then_ → ins = outs) :
+    (hthen : form = .then_ → ins = outs)
+    (hdecl : DeclaredReferences.Instructions (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) ops) :
     ∃ s, Execution data env ctx index st s ∧ s.core.pos = next ∧
       f.Output (front ++ outs.map Translate.valueType) s ∧ Bounds data s := by
   obtain ⟨header, hhead, hrest⟩ := Consumed.cons_iff.mp (by simpa using hbytes)
@@ -273,7 +275,7 @@ theorem run_closed_child {data : Slice U8} {env : module.Env} {ctx : code.Contex
     (concrete_realizes ins) hbody (by
       intro he
       apply hthen
-      rcases initial with rfl | rfl | rfl <;> simp_all [child, Frames.Saved.fresh, Frames.Form.kind]) hcap
+      rcases initial with rfl | rfl | rfl <;> simp_all [child, Frames.Saved.fresh, Frames.Form.kind]) hcap hdecl
   have hvals : s.core.vals.val = f.core.outer ++ remaining ++ outs.map code.StackType.Val := by
     have hne : st.core.ctrls.val ≠ [] := by simpa using f.nonempty
     simpa [child, hne] using hv'
@@ -312,38 +314,39 @@ theorem atom_block {data : Slice U8} {env : module.Env} {ctx : code.Context} {in
     {tokens : List Token} {ops : List instr} (he : Emits tokens ops)
     (smaller : SmallerPrograms data env ctx index ([Token.block bt] ++ tokens ++ [Token.end_]).length) :
     AtomProgram data env ctx index ([.block bt] ++ tokens ++ [Token.end_]) (.BLOCK (blockType bt) ops) := by
-  intro C st f next front input output hm hl hb hbytes ht htyped
+  intro C st f next front input output hm hl hb hbytes ht htyped hdecl
   cases htyped with
   | block _ _ _ input output hbt hbody _ _ _ =>
     obtain ⟨ins, outs, hin, hout, rfl, rfl⟩ := blocktype_signature hm bt hbt
     exact run_closed_child limits .block (Or.inl rfl) bt tokens ops (smaller tokens ops (by simp) he)
       C st f next front ins outs hm hl hb hbytes hin hout (by simpa [Frames.Form.args] using ht)
-      hbody (by simp)
+      hbody (by simp) hdecl
 
 theorem atom_loop {data : Slice U8} {env : module.Env} {ctx : code.Context} {index : U32}
     (limits : EnvironmentWithinLimits env) (bt : signature.BlockType)
     {tokens : List Token} {ops : List instr} (he : Emits tokens ops)
     (smaller : SmallerPrograms data env ctx index ([Token.loop bt] ++ tokens ++ [Token.end_]).length) :
     AtomProgram data env ctx index ([.loop bt] ++ tokens ++ [Token.end_]) (.LOOP (blockType bt) ops) := by
-  intro C st f next front input output hm hl hb hbytes ht htyped
+  intro C st f next front input output hm hl hb hbytes ht htyped hdecl
   cases htyped with
   | loop _ _ _ input output hbt hbody _ _ _ =>
     obtain ⟨ins, outs, hin, hout, rfl, rfl⟩ := blocktype_signature hm bt hbt
     exact run_closed_child limits .loop (Or.inr (Or.inl rfl)) bt tokens ops (smaller tokens ops (by simp) he)
       C st f next front ins outs hm hl hb hbytes hin hout (by simpa [Frames.Form.args] using ht)
-      hbody (by simp)
+      hbody (by simp) hdecl
 
 theorem atom_ifEnd {data : Slice U8} {env : module.Env} {ctx : code.Context} {index : U32}
     (limits : EnvironmentWithinLimits env) (bt : signature.BlockType)
     {tokens : List Token} {ops : List instr} (he : Emits tokens ops)
     (smaller : SmallerPrograms data env ctx index ([Token.if_ bt] ++ tokens ++ [Token.end_]).length) :
     AtomProgram data env ctx index ([.if_ bt] ++ tokens ++ [Token.end_]) (.IFELSE (blockType bt) ops []) := by
-  intro C st f next front input output hm hl hb hbytes ht htyped
+  intro C st f next front input output hm hl hb hbytes ht htyped hdecl
   cases htyped with
   | «if» _ _ _ _ input output hbt hbody hempty _ _ _ =>
     obtain ⟨ins, outs, hin, hout, rfl, rfl⟩ := blocktype_signature hm bt hbt
     exact run_closed_child limits .then_ (Or.inr (Or.inr rfl)) bt tokens ops (smaller tokens ops (by simp) he)
       C st f next front ins outs hm hl hb hbytes hin hout ht hbody (fun _ => empty_identity ins outs hempty)
+      (DeclaredReferences.Instruction.ifElse_iff.mp hdecl).1
 
 theorem atom_ifElse {data : Slice U8} {env : module.Env} {ctx : code.Context} {index : U32}
     (limits : EnvironmentWithinLimits env) (bt : signature.BlockType)
@@ -353,7 +356,7 @@ theorem atom_ifElse {data : Slice U8} {env : module.Env} {ctx : code.Context} {i
       ([Token.if_ bt] ++ yesTokens ++ [Token.else_] ++ noTokens ++ [Token.end_]).length) :
     AtomProgram data env ctx index ([.if_ bt] ++ yesTokens ++ [.else_] ++ noTokens ++ [.end_])
       (.IFELSE (blockType bt) yes no) := by
-  intro C st f next front input output hm hl hb hbytes ht htyped
+  intro C st f next front input output hm hl hb hbytes ht htyped hdecl
   cases htyped with
   | «if» _ _ _ _ input output hbt hyesBody hnoBody _ _ _ =>
     obtain ⟨ins, outs, hin, hout, rfl, rfl⟩ := blocktype_signature hm bt hbt
@@ -378,7 +381,7 @@ theorem atom_ifElse {data : Slice U8} {env : module.Env} {ctx : code.Context} {i
     obtain ⟨yesState, hyesRun, hyesPos, hyesOut, hyesBounds⟩ :=
       smaller yesTokens yes (by simp) hyes _ entered child yesEnd
         (ins.map Translate.valueType) (outs.map Translate.valueType) (hm.enter _) hlabel hbounds
-        hybytes (concrete_realizes ins) hyesBody
+        hybytes (concrete_realizes ins) hyesBody (DeclaredReferences.Instruction.ifElse_iff.mp hdecl).1
     obtain ⟨yesPoly, yesOperands, hyc, hyv, hyr⟩ := hyesOut.1
     let yesFrame : Frame yesState :=
       ⟨⟨child.core.parents, {child.core.current with polymorphic_base := yesPoly},
@@ -418,7 +421,7 @@ theorem atom_ifElse {data : Slice U8} {env : module.Env} {ctx : code.Context} {i
     obtain ⟨s, hnoRun, hp', hc', hb', hv'⟩ := execute_body
       (smaller noTokens no (by simp; omega) hno) _ elseState elseFrame next ins outs
       (hm.enter _) hlabelElse heBounds (by simpa [helsePos] using hnoBytes) hin hout
-      (concrete_realizes ins) hnoBody (by simp [elseFrame]) hcapOuts
+      (concrete_realizes ins) hnoBody (by simp [elseFrame]) hcapOuts (DeclaredReferences.Instruction.ifElse_iff.mp hdecl).2
     have hvals : s.core.vals.val = f.core.outer ++ remaining ++ outs.map code.StackType.Val := by
       have hne : st.core.ctrls.val ≠ [] := by simpa using f.nonempty
       simpa [elseFrame, yesFrame, child, hne] using hv'

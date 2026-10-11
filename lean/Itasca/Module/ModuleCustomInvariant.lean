@@ -30,9 +30,20 @@ theorem module.validate_tail_with_loop.accepted_invariant {V : Type}
     rw [loop] at h
     simp only [module.validate_tail_with_loop.body] at h
     by_cases hstop : pos ≥ Slice.len data
-    · simp [hstop] at h
-      obtain ⟨_, rfl⟩ := h
-      exact id
+    · simp only [hstop, ↓reduceIte] at h
+      cases hc : env.data_count with
+      | none =>
+        simp [hc] at h
+        obtain ⟨_, rfl⟩ := h
+        exact id
+      | some count =>
+        simp only [hc, Std.bind_assoc] at h
+        obtain ⟨size, _, ht⟩ := ResultFacts.bind_ok_inv _ _ _ h
+        by_cases he : size.val = segments.val.length
+        · simp [he] at ht
+          obtain ⟨_, rfl⟩ := ht
+          exact id
+        · simp [he] at ht
     · simp only [hstop, ↓reduceIte] at h
       obtain ⟨r, hr, hh⟩ := WP.spec_imp_exists (module.read_section_header.spec data pos)
       rw [hr] at h
@@ -142,27 +153,40 @@ theorem module.validate_env_with_loop.accepted_invariant {V : Type}
                   core.result.Result.Insts.CoreOpsTry.branch] using ht) rfl
               exact fun hv0 => hrest (hp v chunk v1 hv hv0)
         · simp only [hcustom, ↓reduceIte] at h
-          by_cases hcode : module.SECTION_CODE.val ≤ id.val
+          by_cases hcode : id = module.SECTION_CODE
           · simp [hcode] at h
             obtain ⟨_, _, rfl⟩ := h
             exact fun hv => hv
           · simp only [hcode, ↓reduceIte] at h
-            by_cases horder : id.val ≤ lastId.val
-            · simp [horder] at h
-            · simp only [horder, ↓reduceIte, Std.bind_assoc] at h
-              obtain ⟨⟨read, updated⟩, _, ht⟩ := ResultFacts.bind_ok_inv _ _ _ h
-              cases read with
+            by_cases hdata : id = module.SECTION_DATA
+            · simp [hdata] at h
+              obtain ⟨_, _, rfl⟩ := h
+              exact fun hv => hv
+            · simp only [hdata, ↓reduceIte] at h
+              obtain ⟨ordered, hord, _⟩ := WP.spec_imp_exists (module.section_order.spec id)
+              rw [hord] at h
+              cases ordered with
               | Err e =>
-                simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at ht
-              | Ok consumed =>
-                simp at ht
-                by_cases he : consumed = last
-                · simp only [he, ↓reduceIte] at ht
-                  exact ih (data.length - last.val) hmeasure v updated last id
-                    (by simpa [module.validate_env_with_loop, module.validate_env_with_loop.body,
-                      core.result.Result.Insts.CoreOpsTry.branch] using ht) rfl
-                · have hne : consumed.val ≠ last.val := fun h => he (UScalar.eq_of_val_eq h)
-                  simp [hne] at ht
+                simp [core.result.Result.Insts.CoreOpsTry.branch,
+                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
+              | Ok rank =>
+                simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at h
+                by_cases horder : rank.val ≤ lastId.val
+                · simp [horder] at h
+                · simp only [horder, ↓reduceIte, Std.bind_assoc] at h
+                  obtain ⟨⟨read, updated⟩, _, ht⟩ := ResultFacts.bind_ok_inv _ _ _ h
+                  cases read with
+                  | Err e =>
+                    simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at ht
+                  | Ok consumed =>
+                    simp at ht
+                    by_cases he : consumed = last
+                    · simp only [he, ↓reduceIte] at ht
+                      exact ih (data.length - last.val) hmeasure v updated last rank
+                        (by simpa [module.validate_env_with_loop, module.validate_env_with_loop.body,
+                          core.result.Result.Insts.CoreOpsTry.branch] using ht) rfl
+                    · have hne : consumed.val ≠ last.val := fun h => he (UScalar.eq_of_val_eq h)
+                      simp [hne] at ht
 
 theorem module.validate_env_with.accepted_invariant {V : Type}
     (visitor : module.ModuleVisitor V) (P : V → Prop)

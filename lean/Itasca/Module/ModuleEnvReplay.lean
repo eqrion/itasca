@@ -37,13 +37,12 @@ theorem module.validate_env_with_loop.complete_stop (data : Slice U8) (env : mod
     rw [Aeneas.Std.loop]
     simp [module.validate_env_with_loop.body]
   · have hmore : ¬ pos ≥ Slice.len data := by have := hh.span; scalar_tac
-    have hcustom : id ≠ module.SECTION_CUSTOM := by simp only [global_simps]; scalar_tac
-    have hcode : module.SECTION_CODE.val ≤ id.val := by simp only [global_simps]; scalar_tac
     have hr := module.read_section_header.complete data pos id first next hh
     unfold ModuleEnv.parseLoop module.validate_env_with_loop
     rw [Aeneas.Std.loop]
-    simp [module.validate_env_with_loop.body, hmore, hr, hcustom, hcode,
-      core.result.Result.Insts.CoreOpsTry.branch]
+    rcases hid with rfl | rfl <;>
+      simp [module.validate_env_with_loop.body, hmore, hr, global_simps,
+        core.result.Result.Insts.CoreOpsTry.branch]
 
 theorem module.validate_env_with_loop.complete_custom (data : Slice U8) (env : module.Env)
     (pos next : Usize) (last : U8)
@@ -74,18 +73,22 @@ theorem module.validate_env_with_loop.complete_customs (data : Slice U8) (env : 
 
 theorem module.validate_env_with_loop.complete_section {profile : ValidationProfile} (data : Slice U8)
     (env result : module.Env) (pos first next : Usize) (last id : U8)
-    (hh : SectionHeader data pos id first next) (hlo : 1 ≤ id.val) (hhi : id.val < 10)
-    (horder : last.val < id.val)
+    (hh : SectionHeader data pos id first next)
+    (hlo : 1 ≤ (sectionRank id).val) (hhi : (sectionRank id).val ≤ 10)
+    (horder : last.val < (sectionRank id).val)
     (hread : module.decode_env_section data first id env profile = .ok (.Ok next, result)) :
-    ModuleEnv.parseLoop data env pos last profile = ModuleEnv.parseLoop data result next id profile := by
+    ModuleEnv.parseLoop data env pos last profile = ModuleEnv.parseLoop data result next (sectionRank id) profile := by
+  have hid := sectionRank_prefix hlo hhi
   have hmore : ¬ pos ≥ Slice.len data := by have := hh.span; scalar_tac
   have hcustom : id ≠ module.SECTION_CUSTOM := by simp only [global_simps]; scalar_tac
-  have hcode : ¬ module.SECTION_CODE.val ≤ id.val := by simp only [global_simps]; scalar_tac
-  have hlast : ¬ id.val ≤ last.val := by scalar_tac
+  have hcode : id ≠ module.SECTION_CODE := by simp only [global_simps]; scalar_tac
+  have hdata : id ≠ module.SECTION_DATA := by simp only [global_simps]; scalar_tac
+  have hlast : ¬ (sectionRank id).val ≤ last.val := by omega
+  have hrank := module.section_order.complete id (by omega) (by omega)
   have hr := module.read_section_header.complete data pos id first next hh
   unfold ModuleEnv.parseLoop module.validate_env_with_loop
   conv_lhs => rw [Aeneas.Std.loop]
-  simp [module.validate_env_with_loop.body, hmore, hr, hcustom, hcode, hlast,
-    hread, core.result.Result.Insts.CoreOpsTry.branch]
+  simp [module.validate_env_with_loop.body, hmore, hr, hcustom, hcode, hdata, hlast,
+    hrank, hread, core.result.Result.Insts.CoreOpsTry.branch]
 
 end Itasca

@@ -52,6 +52,7 @@ theorem code.read_call_indirect.complete (st : code.OpIterState) (data : Slice U
     (hd : reader.read_u32_leb data st.pos = .ok (.Ok (idx, middle)))
     (hz : reader.read_byte data middle = .ok (.Ok (0#u8, next)))
     (htable : 0 < env.table_types.val.length)
+    (hfun : env.table_types.val[0].elem = .FuncRef)
     (hi : idx.val < env.types.val.length) (ht : env.types.val[idx.val] = ft)
     (harity : ft.results.val.length ≤ 1)
     (outer segment : List code.StackType) (before : List valtype)
@@ -66,6 +67,9 @@ theorem code.read_call_indirect.complete (st : code.OpIterState) (data : Slice U
       .ok (.Ok (), {st with pos := next}) := by
     simp [code.read_reserved_zero, hz, core.result.Result.Insts.CoreOpsTry.branch]
   have hnonempty : env.table_types.val ≠ [] := by simpa using List.ne_nil_of_length_pos htable
+  obtain ⟨tt, hget, hgeteq⟩ := WP.spec_imp_exists
+    (alloc.vec.Vec.index_usize_spec env.table_types 0#usize (by simpa using htable))
+  have helem : tt.elem = .FuncRef := by simpa [hgeteq] using hfun
   have hix : (UScalar.cast .Usize idx).val < env.types.val.length := by simpa using hi
   obtain ⟨ft', hft, hfteq⟩ := WP.spec_imp_exists
     (alloc.vec.Vec.index_usize_spec env.types (UScalar.cast .Usize idx) hix)
@@ -92,7 +96,9 @@ theorem code.read_call_indirect.complete (st : code.OpIterState) (data : Slice U
   rw [WP.spec_equiv_exists]
   refine ⟨(.Ok idx, s'), ?_, rfl, hc'.trans (hcs.trans hcc), hp'.trans (hps.trans hpc),
     rest ++ ft.results.val.map code.StackType.Val, ?_, ?_, ?_⟩
-  · simp [code.read_call_indirect, htake, hzero, alloc.vec.Vec.is_empty, hnonempty,
+  · simp [code.read_call_indirect, hget, helem, types.ElemType.value_type,
+      core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
+      types.ValueType.Insts.CoreCmpPartialEqValueType.eq, htake, hzero, alloc.vec.Vec.is_empty, hnonempty,
       lift, hsmall, hft, hreq, hcond, hpop, hpush, core.result.Result.Insts.CoreOpsTry.branch]
   · simpa [hvs, List.append_assoc, alloc.vec.Vec.deref] using hv'
   · simpa using Nat.add_le_add_right (hlen.trans hlc) ft.results.val.length

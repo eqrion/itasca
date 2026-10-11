@@ -1,8 +1,10 @@
-//! Scalar, signature, external, and constant-expression metadata.
+//! Value, signature, external, and constant-expression metadata.
 
 use alloc::vec::Vec;
 
-/// A scalar WebAssembly value type supported by both profiles.
+/// A WebAssembly value type.
+///
+/// The Wasm 1.0 profile admits only the four numeric types.
 #[cfg_attr(not(charon), derive(Debug))]
 #[derive(Clone, Copy)]
 pub enum ValueType {
@@ -10,6 +12,9 @@ pub enum ValueType {
     I64,
     F32,
     F64,
+    V128,
+    FuncRef,
+    ExternRef,
 }
 
 impl PartialEq for ValueType {
@@ -19,6 +24,9 @@ impl PartialEq for ValueType {
             (ValueType::I64, ValueType::I64) => true,
             (ValueType::F32, ValueType::F32) => true,
             (ValueType::F64, ValueType::F64) => true,
+            (ValueType::V128, ValueType::V128) => true,
+            (ValueType::FuncRef, ValueType::FuncRef) => true,
+            (ValueType::ExternRef, ValueType::ExternRef) => true,
             _ => false,
         }
     }
@@ -69,11 +77,22 @@ pub struct MemType {
     pub limits: Limits,
 }
 
-/// The element type supported by both profiles.
+/// A reference type used by tables, element segments, and null references.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
 pub enum ElemType {
     FuncRef,
+    ExternRef,
+}
+
+impl ElemType {
+    /// Returns the corresponding operand and signature value type.
+    pub fn value_type(&self) -> ValueType {
+        match self {
+            ElemType::FuncRef => ValueType::FuncRef,
+            ElemType::ExternRef => ValueType::ExternRef,
+        }
+    }
 }
 
 /// A table's element type and size limits.
@@ -103,8 +122,8 @@ pub enum ExternType {
 
 /// A decoded initializer or segment-offset expression.
 ///
-/// Both profiles allow one constant instruction or a read of an immutable
-/// imported global.
+/// Initializers contain one constant instruction or a read of an immutable
+/// imported global. Reference and vector constants require the extended profile.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
 pub enum ConstExpr {
@@ -114,6 +133,12 @@ pub enum ConstExpr {
     F32(u32),
     /// The exact `f64` immediate bits, including signed zero and NaN payloads.
     F64(u64),
+    /// The exact 128 vector bits, with the low 64 bits first.
+    V128(u64, u64),
+    /// A null reference of the specified reference type.
+    RefNull(ElemType),
+    /// A reference to the function at this module index.
+    RefFunc(u32),
     /// A read of an immutable imported global.
     GlobalGet(u32),
 }

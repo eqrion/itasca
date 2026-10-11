@@ -1,4 +1,5 @@
 import Itasca.Profile.BodySpec
+import Itasca.Binary.WasmDeclaredReferences
 import Itasca.Body.Wasm1Soundness
 import Itasca.Body.WasmComplete
 import Itasca.MultiValue.Complete
@@ -28,7 +29,7 @@ theorem Body.wasm1_iff (data : Slice U8) (env : module.Env) (ctx : code.Context)
     rw [hb]
     cases bt <;> simp [Control.results]
   constructor
-  · rintro ⟨ft', ops, hi', _, he, ht, hp⟩
+  · rintro ⟨ft', ops, hi', _, he, ht, hp, _⟩
     have heq : ft' = ft := Option.some.inj (hi'.symm.trans hi)
     subst ft'
     refine ⟨ops, he, ?_, ?_⟩
@@ -37,7 +38,7 @@ theorem Body.wasm1_iff (data : Slice U8) (env : module.Env) (ctx : code.Context)
     · change Wasm1.Instructions (functionContext env ctx.locals ft) ops at hp
       exact hc ▸ hp
   · rintro ⟨ops, he, ht, hp⟩
-    refine ⟨ft, ops, hi, hs, he, ?_, ?_⟩
+    refine ⟨ft, ops, hi, hs, he, ?_, ?_, he.declared _⟩
     · change Instrs_ok (functionContext env ctx.locals ft) ops _
       simpa only [Wasm.FunctionTyped, hc, Control.resultTypes, hb] using ht
     · change Wasm1.Instructions (functionContext env ctx.locals ft) ops
@@ -45,25 +46,25 @@ theorem Body.wasm1_iff (data : Slice U8) (env : module.Env) (ctx : code.Context)
 
 theorem Body.multiValue_iff (data : Slice U8) (env : module.Env)
     (locals : alloc.vec.Vec types.ValueType) (index : U32) :
-    Body .MultiValue data env locals index ↔ MultiValue.Validated data env locals index := by
+    Body .Wasm2 data env locals index ↔ MultiValue.Validated data env locals index := by
   constructor
-  · rintro ⟨ft, ops, hi, _, he, ht, _⟩
-    exact ⟨ft, ops, hi, he, ht⟩
-  · rintro ⟨ft, ops, hi, he, ht⟩
-    exact ⟨ft, ops, hi, trivial, he, ht, trivial⟩
+  · rintro ⟨ft, ops, hi, _, he, ht, _, hd⟩
+    exact ⟨ft, ops, hi, he, ht, hd⟩
+  · rintro ⟨ft, ops, hi, he, ht, hd⟩
+    exact ⟨ft, ops, hi, trivial, he, ht, trivial, hd⟩
 
 /-- The no-op body calls selected by the entry pipeline. -/
 def run (profile : ValidationProfile) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) :=
   match profile with
   | .Wasm1 => code.validate_body data env ctx
-  | .MultiValue => code.validate_multi_value_body data env ctx.locals index
+  | .Wasm2 => code.validate_multi_value_body data env ctx.locals index
 
 theorem run.total (profile : ValidationProfile) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) : ∃ r, run profile data env ctx index = .ok r := by
   cases profile with
   | Wasm1 => exact code.validate_body.wasm_total data env ctx
-  | MultiValue => exact code.validate_multi_value_body.wasm_total data env ctx.locals index
+  | Wasm2 => exact code.validate_multi_value_body.wasm_total data env ctx.locals index
 
 theorem run.sound (profile : ValidationProfile) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (ft : types.FuncType)
@@ -84,7 +85,7 @@ theorem run.sound (profile : ValidationProfile) (data : Slice U8) (env : module.
     obtain ⟨bt, hb⟩ := hb
     exact (Body.wasm1_iff data env ctx index ft bt hi hr hb).mpr
       (code.validate_body.wasm1_sound data env ctx bt (hr.trans hb) haccepted)
-  | MultiValue =>
+  | Wasm2 =>
     exact (Body.multiValue_iff data env ctx.locals index).mpr
       (code.validate_multi_value_body.wasm_sound data env ctx.locals index haccepted)
 
@@ -110,7 +111,7 @@ theorem run.complete (profile : ValidationProfile) (data : Slice U8) (env : modu
     obtain ⟨bt, hb⟩ := hb
     exact code.validate_body.wasm_complete data env ctx bt ⟨henv.2, henv.1⟩
       (hr.trans hb) hsize ((Body.wasm1_iff data env ctx index ft bt hi hr hb).mp hbody)
-  | MultiValue =>
+  | Wasm2 =>
     have hcap : MultiValue.EnvironmentWithinLimits env := by
       constructor
       · simpa [FuncTypeWithinLimits, limits.MAX_MULTI_VALUE_PARAMS,

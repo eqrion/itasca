@@ -12,9 +12,15 @@ def limitsType (lim : types.Limits) : limits :=
   .mk_limits (.mk_uN lim.min.val) (lim.max.map fun x => .mk_uN x.val)
 
 def tableType (tt : types.TableType) : tabletype :=
-  .mk_tabletype (limitsType tt.limits) .FUNCREF
+  .mk_tabletype (limitsType tt.limits) (Translate.referenceType tt.elem)
 
 def memType (mt : types.MemType) : memtype := .PAGE (limitsType mt.limits)
+
+def elementTypes (env : module.Env) : List elemtype :=
+  env.elements.val.map (fun entry => Translate.referenceType entry.elem)
+
+def dataTypes (env : module.Env) : List datatype :=
+  List.replicate ((env.data_count.map (fun count => count.val)).getD 0) .OK
 
 /-- The body validator uses the environment's resolved function-type cache. Its
     coherence with the module's type indices is a separate module invariant. -/
@@ -24,8 +30,8 @@ def context (env : module.Env) (ctx : code.Context) : _root_.context :=
     GLOBALS := env.global_types.val.map Translate.globalType
     TABLES := env.table_types.val.map tableType
     MEMS := env.mem_types.val.map memType
-    ELEMS := []
-    DATAS := []
+    ELEMS := elementTypes env
+    DATAS := dataTypes env
     LOCALS := ctx.locals.val.map Translate.valueType
     LABELS := []
     RETURN := some (.mk_list (ctx.results.val.map Translate.valueType)) }
@@ -67,15 +73,17 @@ structure Matches (env : module.Env) (ctx : code.Context) (C : _root_.context) :
   globals : C.GLOBALS = env.global_types.val.map Translate.globalType
   tables : C.TABLES = env.table_types.val.map tableType
   mems : C.MEMS = env.mem_types.val.map memType
+  elems : C.ELEMS = elementTypes env
+  datas : C.DATAS = dataTypes env
   locals : C.LOCALS = ctx.locals.val.map Translate.valueType
   ret : C.RETURN = some (.mk_list (ctx.results.val.map Translate.valueType))
 
 theorem Matches.root (env : module.Env) (ctx : code.Context) :
-    Matches env ctx (context env ctx) := ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+    Matches env ctx (context env ctx) := ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
 theorem Matches.enter {env ctx C} (h : Matches env ctx C) (ts : List valtype) :
     Matches env ctx (Control.labelContext ts ++ C) := by
-  exact ⟨h.types, h.funcs, h.globals, h.tables, h.mems, h.locals, h.ret⟩
+  exact ⟨h.types, h.funcs, h.globals, h.tables, h.mems, h.elems, h.datas, h.locals, h.ret⟩
 
 theorem Matches.wf {env ctx C} (h : Matches env ctx C) : wf_context C := by
   cases C
@@ -165,23 +173,25 @@ theorem Matches.call {env ctx C} (h : Matches env ctx C)
   · exact .instr_case_10 _ (index_wf idx)
 
 theorem Matches.call_indirect {env ctx C} (h : Matches env ctx C)
-    (idx : U32) (ft : types.FuncType) (hi : idx.val < env.types.val.length)
-    (ht : env.types.val[idx.val] = ft) (htable : 0 < env.table_types.val.length) :
-    Instr_ok C (.CALL_INDIRECT (.mk_uN 0) (.mk_uN idx.val))
+    (idx tableIdx : U32) (ft : types.FuncType) (hi : idx.val < env.types.val.length)
+    (ht : env.types.val[idx.val] = ft)
+    (htable : tableIdx.val < env.table_types.val.length)
+    (hfun : env.table_types.val[tableIdx.val].elem = .FuncRef) :
+    Instr_ok C (.CALL_INDIRECT (.mk_uN tableIdx.val) (.mk_uN idx.val))
       (.mk_functype (.mk_list (ft.params.val.map Translate.valueType ++ [.I32]))
         (.mk_list (ft.results.val.map Translate.valueType))) := by
-  apply Instr_ok.call_indirect _ _ _ _ _ (limitsType (env.table_types.val[0]).limits)
+  apply Instr_ok.call_indirect _ _ _ _ _ (limitsType (env.table_types.val[tableIdx.val]).limits)
   · simpa [h.tables, proj_uN_0] using htable
   · simp only [h.tables, proj_uN_0]
     rw [getElem!_pos _ _ (by simpa using htable), List.getElem_map]
-    rfl
+    simp [tableType, hfun, Translate.referenceType]
   · simpa [h.types, proj_uN_0] using hi
   · simp only [h.types, proj_uN_0]
     rw [getElem!_pos _ _ (by simpa using hi), List.getElem_map, ht]
     rfl
   · exact h.wf
-  · exact .instr_case_11 _ _ (index_wf 0#u32) (index_wf idx)
-  · exact tableType_wf _
+  · exact .instr_case_11 _ _ (index_wf tableIdx) (index_wf idx)
+  · exact .tabletype_case_0 _ _ (limitsType_wf _)
 
 theorem Matches.memory_size {env ctx C} (h : Matches env ctx C)
     (hmem : 0 < env.mem_types.val.length) :

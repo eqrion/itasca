@@ -69,12 +69,12 @@ private theorem nested_typed (env : module.Env) :
 
 private theorem nested_encoded : Wasm.BodyEncoding nestedBytes nestedOps := by
   have h0 : Wasm.At nestedBytes 0#usize (.block (.Value .I32)) 2#usize :=
-    ⟨[0x02#u8, 0x7F#u8], ⟨0x02#u8, [0x7F#u8], rfl, .block (.Value .I32)⟩, ⟨rfl, rfl, by decide⟩⟩
+    ⟨[0x02#u8, 0x7F#u8], ⟨0x02#u8, [0x7F#u8], rfl, .block (.Value .I32) trivial⟩, ⟨rfl, rfl, by decide⟩⟩
   have h2 : Wasm.At nestedBytes 2#usize (.plain (Core.i32Const 1#i32)) 4#usize :=
     ⟨[0x41#u8, 1#u8], ⟨0x41#u8, [1#u8], rfl, .i32Const 1#i32 (constant_encoded _ _ (by decide) rfl)⟩,
       ⟨rfl, rfl, by decide⟩⟩
   have h4 : Wasm.At nestedBytes 4#usize (.if_ (.Value .I32)) 6#usize :=
-    ⟨[0x04#u8, 0x7F#u8], ⟨0x04#u8, [0x7F#u8], rfl, .if_ (.Value .I32)⟩, ⟨rfl, rfl, by decide⟩⟩
+    ⟨[0x04#u8, 0x7F#u8], ⟨0x04#u8, [0x7F#u8], rfl, .if_ (.Value .I32) trivial⟩, ⟨rfl, rfl, by decide⟩⟩
   have h6 : Wasm.At nestedBytes 6#usize (.plain (Core.i32Const 7#i32)) 8#usize :=
     ⟨[0x41#u8, 7#u8], ⟨0x41#u8, [7#u8], rfl, .i32Const 7#i32 (constant_encoded _ _ (by decide) rfl)⟩,
       ⟨rfl, rfl, by decide⟩⟩
@@ -150,7 +150,7 @@ private theorem table_body_typed (env : module.Env) :
 
 private theorem table_encoded : Wasm.BodyEncoding tableBytes tableOps := by
   have h0 : Wasm.At tableBytes 0#usize (.block (.Value .I32)) 2#usize :=
-    ⟨[0x02#u8, 0x7F#u8], ⟨0x02#u8, [0x7F#u8], rfl, .block (.Value .I32)⟩, ⟨rfl, rfl, by decide⟩⟩
+    ⟨[0x02#u8, 0x7F#u8], ⟨0x02#u8, [0x7F#u8], rfl, .block (.Value .I32) trivial⟩, ⟨rfl, rfl, by decide⟩⟩
   have h2 : Wasm.At tableBytes 2#usize (.plain .UNREACHABLE) 3#usize :=
     ⟨[0#u8], ⟨0#u8, [], rfl, .unreachable⟩, ⟨rfl, rfl, by decide⟩⟩
   have h3 : Wasm.At tableBytes 3#usize (.plain table) 7#usize :=
@@ -195,6 +195,8 @@ def exampleEnv : module.Env where
   exports := alloc.vec.Vec.new _
   elements := alloc.vec.Vec.new _
   start := none
+  data_count := none
+  declared_funcs := alloc.vec.Vec.new _
   func_type_indices := alloc.vec.Vec.from [0#u32] (by scalar_tac)
   func_types := alloc.vec.Vec.from [scalarFunction] (by scalar_tac)
   table_types := alloc.vec.Vec.new _

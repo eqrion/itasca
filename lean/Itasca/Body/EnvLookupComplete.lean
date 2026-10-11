@@ -36,6 +36,21 @@ theorem Matches.type_lookup {env ctx C} (h : Matches env ctx C)
       env.types.val[idx.val] = ft ∧ funcType ft = t := by
   exact mapped_lookup _ _ _ _ (by simpa [h.types] using hi) (by simpa [h.types] using ht)
 
+theorem Matches.table_lookup {env ctx C} (h : Matches env ctx C)
+    (idx : U32) (t : tabletype) (hi : idx.val < C.TABLES.length) (ht : C.TABLES[idx.val]! = t) :
+    ∃ tt, ∃ hv : idx.val < env.table_types.val.length,
+      env.table_types.val[idx.val] = tt ∧ tableType tt = t := by
+  exact mapped_lookup _ _ _ _ (by simpa [h.tables] using hi) (by simpa [h.tables] using ht)
+
+theorem Matches.table_funcref {env ctx C} (h : Matches env ctx C)
+    (idx : U32) (lim : limits) (hi : idx.val < C.TABLES.length)
+    (ht : C.TABLES[idx.val]! = .mk_tabletype lim .FUNCREF) :
+    ∃ hv : idx.val < env.table_types.val.length, env.table_types.val[idx.val].elem = .FuncRef := by
+  obtain ⟨tt, hv, htt, htype⟩ := h.table_lookup idx _ hi ht
+  refine ⟨hv, ?_⟩
+  rw [htt]
+  cases he : tt.elem <;> simp_all [tableType, Translate.referenceType]
+
 theorem Matches.table_exists {env ctx C} (h : Matches env ctx C)
     (hi : 0 < C.TABLES.length) : 0 < env.table_types.val.length := by simpa [h.tables] using hi
 

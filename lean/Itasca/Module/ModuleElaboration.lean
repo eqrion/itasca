@@ -37,8 +37,8 @@ def exportDecl (entry : ModuleBinary.Export) : «export» :=
   .EXPORT (ModuleBinary.nameOfBytes entry.name) (exportIndex entry.desc)
 
 def element (entry : ModuleBinary.Element) : elem :=
-  .ELEM .FUNCREF (entry.init.map (fun idx => [instr.REF_FUNC (.mk_uN idx.val)]))
-    (.ACTIVE (.mk_uN entry.tableIdx.val) (ModuleConstants.expression entry.offset))
+  .ELEM (Translate.referenceType entry.elem) (entry.init.map ModuleConstants.expression)
+    (ModuleSegments.elementMode entry.mode)
 
 def table (tt : types.TableType) : _root_.table := .TABLE (EnvTranslation.tableType tt)
 
@@ -68,7 +68,7 @@ structure Elaborates (raw : ModuleBinary.Module) (spec : _root_.module) : Prop w
 judgment. Instruction syntax itself is restricted by `ModuleBinary`. -/
 structure ModuleConditions (raw : ModuleBinary.Module) (profile : ValidationProfile := .Wasm1) : Prop where
   unique_exports : (raw.exports.map (fun entry => ModuleBinary.nameOfBytes entry.name)).Nodup
-  table_count : (ModuleTranslation.tables (raw.imports.map (fun entry => importType raw.types entry.desc))).length +
+  table_count : profile = .Wasm1 → (ModuleTranslation.tables (raw.imports.map (fun entry => importType raw.types entry.desc))).length +
     raw.tables.length ≤ 1
   memory_count : (ModuleTranslation.mems (raw.imports.map (fun entry => importType raw.types entry.desc))).length +
     raw.memories.length ≤ 1

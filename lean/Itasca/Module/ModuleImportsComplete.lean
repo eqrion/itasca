@@ -10,12 +10,12 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleSections
 
-theorem ImportsAdded.trans {env middle result first rest}
-    (h : ImportsAdded env first middle) (h' : ImportsAdded middle rest result) :
-    ImportsAdded env (first ++ rest) result := by
+theorem ImportsAdded.trans {profile} {env middle result first rest}
+    (h : ImportsAdded env first middle profile) (h' : ImportsAdded middle rest result profile) :
+    ImportsAdded env (first ++ rest) result profile := by
   induction h' with
   | nil => simpa using h
-  | snoc previous current ih => simpa [List.append_assoc] using ImportsAdded.snoc ih current
+  | snoc previous current ih => simpa [List.append_assoc] using ImportsAdded.snoc (ih h) current
 
 end Itasca.ModuleSections
 
@@ -26,11 +26,12 @@ open ModuleBinary ModuleSections
 /-- Independently encoded, well-typed import names and descriptors make the
 actual decoder append exactly that import and its resolved cache entry. -/
 theorem module.decode_import.complete (data : Slice U8) (pos : Usize)
-    (env : module.Env) (entry : ModuleBinary.Import) (next : Usize)
+    (env : module.Env) (profile : ValidationProfile) (entry : ModuleBinary.Import) (next : Usize)
     (hb : At ImportEncoding data pos entry next)
-    (hv : ImportValid env entry.desc) (hbound : ModuleEnv.Bounded env pos.val) :
-    ∃ result actual, module.decode_import data pos env = .ok (.Ok next, result) ∧
-      ModuleEnv.rawImport actual = entry ∧ ImportAdded env result actual := by
+    (hv : ImportValid env entry.desc profile)
+    (hallowed : ImportAllowed profile entry.desc) (hbound : ModuleEnv.Bounded env pos.val) :
+    ∃ result actual, module.decode_import data pos env profile = .ok (.Ok next, result) ∧
+      ModuleEnv.rawImport actual = entry ∧ ImportAdded env result actual profile := by
   rcases entry with ⟨moduleName, rawName, desc⟩
   obtain ⟨bs, ⟨modBytes, nameBytes, descBytes, hm, hn, hd, rfl⟩, hs⟩ := hb
   obtain ⟨p1, hmbytes, hremain⟩ :=
@@ -65,21 +66,20 @@ theorem module.decode_import.complete (data : Slice U8) (pos : Usize)
     obtain ⟨p3, htag, hty⟩ := (show Wasm.BytesAt data p2 ([1#u8] ++ _) next from hdbytes).split
     have hprogress := htag.length
     have hnext := hty.bound
-    have hv' : ModuleBinary.LimitsValid tt.limits limits.MAX_TABLE_ELEMS ∧ env.table_types.val.length + 1 ≤ 1 := hv
-    have hread := module.decode_table_type.complete data p3 tt next ⟨_, he, hty⟩ hv'.1
+    have hv' : ModuleBinary.LimitsValid tt.limits limits.MAX_TABLE_ELEMS ∧ (profile = .Wasm1 → env.table_types.val.length + 1 ≤ 1) := hv
+    have hread := module.decode_table_type.complete data p3 tt next ⟨_, he, hty⟩ hv'.1 profile hallowed
     obtain ⟨tables, hpush, htables⟩ := WP.spec_imp_exists
-      (alloc.vec.Vec.push_spec env.table_types tt (by scalar_tac))
-    have hlen : tables.val.length ≤ 1 := by
+      (alloc.vec.Vec.push_spec env.table_types tt (by have := hbound.tables; scalar_tac))
+    have hlen : profile = .Wasm1 → tables.val.length ≤ 1 := by
       simpa only [htables, List.length_append, List.length_singleton] using hv'.2
-    have hmax : ¬ limits.MAX_TABLES.val < tables.val.length := by
-      simpa [limits.MAX_TABLES] using hlen
+    have hcheck := module.check_table_count.complete {env with table_types := tables} profile hlen
     let actual : module.Import := ⟨modName, nm, .Table tt⟩
     obtain ⟨imports, hpushimport, himports⟩ := WP.spec_imp_exists
       (alloc.vec.Vec.push_spec env.imports actual (by have := hbound.imports; scalar_tac))
     let result := {env with imports := imports, table_types := tables}
-    refine ⟨result, actual, ?_, ?_, himports, rfl, htables, ?_, ?_⟩
+    refine ⟨result, actual, ?_, ?_, himports, rfl, htables, ?_, ?_, hallowed⟩
     · simp [module.decode_import, hmod, hname, htag.read_byte, hread,
-        hpush, hmax, hpushimport, actual, result, core.result.Result.Insts.CoreOpsTry.branch]
+        hpush, hcheck, hpushimport, actual, result, core.result.Result.Insts.CoreOpsTry.branch]
     · simp_all [ModuleEnv.rawImport, actual]
     · simpa [result, htables] using hv'.2
     · simpa [ModuleTranslation.LimitsValid, ModuleBinary.LimitsValid,
@@ -111,7 +111,7 @@ theorem module.decode_import.complete (data : Slice U8) (pos : Usize)
     obtain ⟨p3, htag, hty⟩ := (show Wasm.BytesAt data p2 ([3#u8] ++ _) next from hdbytes).split
     have hprogress := htag.length
     have hnext := hty.bound
-    have hread := module.decode_global_type.complete data p3 gt next ⟨_, he, hty⟩
+    have hread := module.decode_global_type.complete data p3 gt next ⟨_, he, hty⟩ profile hallowed
     obtain ⟨globals, hpush, hglobals⟩ := WP.spec_imp_exists
       (alloc.vec.Vec.push_spec env.global_types gt (by have := hbound.globalTypes; scalar_tac))
     obtain ⟨num, hnum, hnumval⟩ := WP.spec_imp_exists
@@ -120,20 +120,21 @@ theorem module.decode_import.complete (data : Slice U8) (pos : Usize)
     obtain ⟨imports, hpushimport, himports⟩ := WP.spec_imp_exists
       (alloc.vec.Vec.push_spec env.imports actual (by have := hbound.imports; scalar_tac))
     let result := {env with imports := imports, global_types := globals, num_imported_globals := num}
-    refine ⟨result, actual, ?_, ?_, himports, rfl, hglobals, hnumval⟩
+    refine ⟨result, actual, ?_, ?_, himports, rfl, hglobals, hnumval, hallowed⟩
     · simp [module.decode_import, hmod, hname, htag.read_byte, hread,
         hpush, hnum, hpushimport, actual, result, core.result.Result.Insts.CoreOpsTry.branch]
     · simp_all [ModuleEnv.rawImport, actual]
 
 
 theorem module.decode_import_section_loop.complete
-    (data : Slice U8) (env : module.Env) (count : U32) (pos : Usize) (i : U32)
+    (data : Slice U8) (env : module.Env) (profile : ValidationProfile) (count : U32) (pos : Usize) (i : U32)
     (entries : List ModuleBinary.Import) (next : Usize)
     (hb : At (Rep ImportEncoding) data pos entries next)
     (hc : i.val + entries.length = count.val)
-    (hv : ImportsValid env entries) (hbound : ModuleEnv.Bounded env pos.val) :
-    ∃ result actual, module.decode_import_section_loop data env count pos i = .ok (.Ok next, result) ∧
-      actual.map ModuleEnv.rawImport = entries ∧ ImportsAdded env actual result := by
+    (hv : ImportsValid env entries profile)
+    (hallowed : ∀ entry ∈ entries, ImportAllowed profile entry.desc) (hbound : ModuleEnv.Bounded env pos.val) :
+    ∃ result actual, module.decode_import_section_loop data env profile count pos i = .ok (.Ok next, result) ∧
+      actual.map ModuleEnv.rawImport = entries ∧ ImportsAdded env actual result profile := by
   induction entries generalizing env pos i with
   | nil =>
     have he := hb.rep_nil
@@ -146,18 +147,18 @@ theorem module.decode_import_section_loop.complete
     obtain ⟨middle, hfirst, hrest⟩ := hb.rep_cons
     have hmore : ¬ i ≥ count := by simp only [List.length_cons] at hc; scalar_tac
     obtain ⟨updated, current, hread, hraw, hadded⟩ := module.decode_import.complete
-      data pos env entry middle hfirst hv.head hbound
+      data pos env profile entry middle hfirst hv.head (hallowed entry (by simp)) hbound
     have hbound' : ModuleEnv.Bounded updated middle.val := by
-      have hs := module.decode_import.spec data pos env hbound
+      have hs := module.decode_import.spec data pos env hbound profile
       simp only [hread, WP.spec_ok] at hs
       exact hs.choose_spec.2.2
     obtain ⟨j, hj, hjval⟩ := WP.spec_imp_exists
       (U32.add_spec (x := i) (y := 1#u32) (by scalar_tac))
-    have hv' : ImportsValid updated entries := by
+    have hv' : ImportsValid updated entries profile := by
       rw [← hraw] at hv
       exact hv.tail hadded
     obtain ⟨result, actual, hloop, hraws, hhistory⟩ := ih updated middle j hrest
-      (by simp only [List.length_cons] at hc; scalar_tac) hv' hbound'
+      (by simp only [List.length_cons] at hc; scalar_tac) hv' (fun entry hm => hallowed entry (by simp [hm])) hbound'
     refine ⟨result, current :: actual, ?_, by simp [hraw, hraws], ?_⟩
     · unfold module.decode_import_section_loop at hloop ⊢
       rw [loop]
@@ -166,14 +167,15 @@ theorem module.decode_import_section_loop.complete
     · simpa using (ImportsAdded.snoc ImportsAdded.nil hadded).trans hhistory
 
 theorem module.decode_import_section.complete (data : Slice U8) (pos : Usize)
-    (env : module.Env) (entries : List ModuleBinary.Import) (next : Usize)
+    (env : module.Env) (profile : ValidationProfile) (entries : List ModuleBinary.Import) (next : Usize)
     (hb : At (VecEncoding ImportEncoding) data pos entries next)
-    (hv : ImportsValid env entries) (hbound : ModuleEnv.Bounded env pos.val) :
-    ∃ result actual, module.decode_import_section data pos env = .ok (.Ok next, result) ∧
-      actual.map ModuleEnv.rawImport = entries ∧ ImportsAdded env actual result := by
+    (hv : ImportsValid env entries profile)
+    (hallowed : ∀ entry ∈ entries, ImportAllowed profile entry.desc) (hbound : ModuleEnv.Bounded env pos.val) :
+    ∃ result actual, module.decode_import_section data pos env profile = .ok (.Ok next, result) ∧
+      actual.map ModuleEnv.rawImport = entries ∧ ImportsAdded env actual result profile := by
   obtain ⟨count, middle, hc, hcount, hentries⟩ := hb.vector_split
   obtain ⟨result, actual, hr, hp⟩ := module.decode_import_section_loop.complete
-    data env count middle 0#u32 entries next hentries (by simpa using hc.symm) hv
+    data env profile count middle 0#u32 entries next hentries (by simpa using hc.symm) hv hallowed
     (hbound.mono (by have := hcount.span; omega))
   refine ⟨result, actual, ?_, hp⟩
   simp [module.decode_import_section, reader.read_u32_leb.complete data pos count middle hcount,

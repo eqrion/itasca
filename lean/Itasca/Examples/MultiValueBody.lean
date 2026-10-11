@@ -29,6 +29,8 @@ def env : module.Env where
   exports := alloc.vec.Vec.new _
   elements := alloc.vec.Vec.new _
   start := none
+  data_count := none
+  declared_funcs := alloc.vec.Vec.new _
   func_type_indices := alloc.vec.Vec.new _
   func_types := alloc.vec.Vec.new _
   table_types := alloc.vec.Vec.new _
@@ -265,22 +267,22 @@ without evaluating or assuming any handler succeeds. -/
 theorem block_accepted : code.validate_multi_value_body blockBytes env locals 0#u32 = .ok (.Ok ()) :=
   code.validate_multi_value_body.wasm_complete_of_typing blockBytes env locals 0#u32 pairResult blockOps
     environment_limits (by simp [blockBytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
-    rfl block_encoded block_typed
+    rfl block_encoded block_typed (by simp [blockOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, pairOps, identityBlock, identityIf, loopInstr, tableBlock, tableInner, heterogeneousTable, Core.i32Const, ScalarConst.i64, BrTable.instruction])
 
 theorem if_accepted : code.validate_multi_value_body ifBytes env locals 0#u32 = .ok (.Ok ()) :=
   code.validate_multi_value_body.wasm_complete_of_typing ifBytes env locals 0#u32 pairResult ifOps
     environment_limits (by simp [ifBytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
-    rfl if_encoded if_typed
+    rfl if_encoded if_typed (by simp [ifOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, pairOps, identityBlock, identityIf, loopInstr, tableBlock, tableInner, heterogeneousTable, Core.i32Const, ScalarConst.i64, BrTable.instruction])
 
 theorem loop_accepted : code.validate_multi_value_body loopBytes env locals 3#u32 = .ok (.Ok ()) :=
   code.validate_multi_value_body.wasm_complete_of_typing loopBytes env locals 3#u32 emptyResult loopOps
     environment_limits (by simp [loopBytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
-    rfl loop_encoded loop_typed
+    rfl loop_encoded loop_typed (by simp [loopOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, pairOps, identityBlock, identityIf, loopInstr, tableBlock, tableInner, heterogeneousTable, Core.i32Const, ScalarConst.i64, BrTable.instruction])
 
 theorem table_accepted : code.validate_multi_value_body tableBytes env locals 0#u32 = .ok (.Ok ()) :=
   code.validate_multi_value_body.wasm_complete_of_typing tableBytes env locals 0#u32 pairResult tableOps
     environment_limits (by simp [tableBytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
-    rfl table_encoded table_typed
+    rfl table_encoded table_typed (by simp [tableOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, pairOps, identityBlock, identityIf, loopInstr, tableBlock, tableInner, heterogeneousTable, Core.i32Const, ScalarConst.i64, BrTable.instruction])
 
 /-- The same actual accepted runs produce independent soundness certificates. -/
 theorem block_validated : Validated blockBytes env locals 0#u32 :=

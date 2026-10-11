@@ -261,12 +261,12 @@ theorem code.block_loop_empty_roundtrip (st : code.OpIterState) (data : Slice U8
       s₄.vals = st.vals ∧ s₄.ctrls = st.ctrls ∧ s₄.pos.val = st.pos.val + 2 ∧
       Control.Shape s₄ := by
   obtain ⟨⟨_, s₁⟩, hr₁, rfl, hp₁, hv₁, hc₁⟩ := WP.spec_imp_exists
-    (code.read_block.spec st data .Empty (by exact Nat.lt_of_succ_lt hdata) hblock (by omega))
+    (code.read_block.spec st data .Empty (by exact Nat.lt_of_succ_lt hdata) hblock (by omega) trivial)
   dsimp only at hp₁ hv₁ hc₁
   have hs₁ := Control.Shape.push hshape .Block .Empty hc₁ hv₁
   obtain ⟨⟨_, s₂⟩, hr₂, rfl, hp₂, hv₂, hc₂⟩ := WP.spec_imp_exists
     (code.read_loop.spec s₁ data .Empty (by simpa [hp₁] using hdata)
-      (by simpa [Control.blockByte, hp₁] using hloop) (by simp [hc₁]; omega))
+      (by simpa [Control.blockByte, hp₁] using hloop) (by simp [hc₁]; omega) trivial)
   dsimp only at hp₂ hv₂ hc₂
   have hs₂ := Control.Shape.push hs₁ .Loop .Empty hc₂ hv₂
   obtain ⟨s₃, hr₃, hc₃, hv₃, hp₃, hs₃, _⟩ :=

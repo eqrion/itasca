@@ -74,7 +74,7 @@ private theorem single_encoding (b : U8) (h : b.val < 128) : Leb128.Encoding [b]
 /-- The counterexample has a complete independent Wasm 1.0 binary spelling. -/
 theorem encoded : Wasm.BodyEncoding bytes ops := by
   have h0 : Wasm.At bytes 0#usize (.block (.Value .I64)) 2#usize :=
-    ⟨[0x02#u8, 0x7E#u8], ⟨0x02#u8, [0x7E#u8], rfl, .block (.Value .I64)⟩,
+    ⟨[0x02#u8, 0x7E#u8], ⟨0x02#u8, [0x7E#u8], rfl, .block (.Value .I64) trivial⟩,
       ⟨rfl, rfl, by decide⟩⟩
   have h2 : Wasm.At bytes 2#usize (.plain .UNREACHABLE) 3#usize :=
     ⟨[0x00#u8], ⟨0x00#u8, [], rfl, .unreachable⟩, ⟨rfl, rfl, by decide⟩⟩
@@ -205,7 +205,7 @@ theorem rejected (env : module.Env) :
   let poly : code.Ctrl := { frame with polymorphic_base := true }
   obtain ⟨⟨_, opened⟩, hopen, rfl, hop, hov, hoc⟩ := WP.spec_imp_exists
     (code.read_block.spec first bytes (.Value .I64) (by decide) rfl
-      (by simp [first, initial, Body.initial]; scalar_tac))
+      (by simp [first, initial, Body.initial]; scalar_tac) trivial)
   dsimp only at hop hov hoc
   have hz : alloc.vec.Vec.len first.vals = 0#usize := by
     apply UScalar.eq_of_val_eq

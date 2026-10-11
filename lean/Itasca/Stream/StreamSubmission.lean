@@ -315,7 +315,8 @@ private theorem body_sound {S V : Type} (source : stream.Source S) (visitor : st
     (out : ControlFlow (V × alloc.vec.Vec Usize × Usize × Usize × Usize)
       (core.result.Result (alloc.vec.Vec Usize) error.Error × V))
     (h : stream.submit_code_batches_loop.body source visitor moduleId profile state env.types env.imports
-      env.globals env.exports env.elements env.start env.func_type_indices env.func_types
+      env.globals env.exports env.elements env.data_count env.declared_funcs env.start
+      env.func_type_indices env.func_types
       env.table_types env.mem_types env.global_types env.num_imported_funcs env.num_imported_globals
       (Slice.len code) config (alloc.vec.Vec.len env.func_type_indices) v pending pos func batchId = .ok out) :
     BodyPost (profile := profile) Tracks code env start moduleId config.max_batches func out := by
@@ -394,7 +395,8 @@ theorem stream.submit_code_batches_loop.sound {S V : Type}
     (hv : Tracks moduleId history v)
     (finalPending : alloc.vec.Vec Usize) (finalV : V)
     (h : stream.submit_code_batches_loop source visitor moduleId profile state env.types env.imports
-      env.globals env.exports env.elements env.start env.func_type_indices env.func_types
+      env.globals env.exports env.elements env.data_count env.declared_funcs env.start
+      env.func_type_indices env.func_types
       env.table_types env.mem_types env.global_types env.num_imported_funcs env.num_imported_globals
       (Slice.len code) config v pending pos func batchId (alloc.vec.Vec.len env.func_type_indices) =
         .ok (.Ok finalPending, finalV)) :
@@ -419,7 +421,8 @@ theorem stream.submit_code_batches_loop.sound {S V : Type}
         have hb := hinv'.functions
         omega
       have hrecursive : stream.submit_code_batches_loop source visitor moduleId profile state env.types env.imports
-          env.globals env.exports env.elements env.start env.func_type_indices env.func_types
+          env.globals env.exports env.elements env.data_count env.declared_funcs env.start
+          env.func_type_indices env.func_types
           env.table_types env.mem_types env.global_types env.num_imported_funcs env.num_imported_globals
           (Slice.len code) config v' pending' pos' func' batchId' (alloc.vec.Vec.len env.func_type_indices) =
             .ok (.Ok finalPending, finalV) := hrest

@@ -1,4 +1,6 @@
+import Itasca.Examples.DeclaredReferences
 import Itasca.MultiValue.BlockDecode
+import Itasca.Profile.BinaryUnique
 import Itasca.MultiValue.Typing
 import Itasca.MultiValue.Stack
 import Itasca.MultiValue.Signature

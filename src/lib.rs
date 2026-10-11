@@ -1,4 +1,4 @@
-//! WebAssembly validation for the Wasm 1.0 and multi-value profiles.
+//! WebAssembly validation for the Wasm 1.0 and Wasm 2.0 core profiles.
 //!
 //! [`validate_module`] validates a complete byte slice and returns read-only
 //! module metadata. It requires no caller preconditions. Both profiles have
@@ -47,8 +47,8 @@ pub use code::{
 };
 pub use error::{Error, OpError, VisitError};
 pub use module::{
-    export_types, import_types, validate_module, Data, Element, Env, Export, ExportDesc, Global,
-    Import, ImportDesc, Module, ModuleVisitor, Tail,
+    export_types, import_types, validate_module, Data, DataMode, Element, ElementMode, Env, Export,
+    ExportDesc, Global, Import, ImportDesc, Module, ModuleVisitor, Tail,
 };
 pub use signature::{BlockType, ResultType, TypePart};
 pub use stream::{
@@ -67,7 +67,6 @@ mod stream;
 pub enum ValidationProfile {
     /// WebAssembly 1.0, including its original segment and branch-table rules.
     Wasm1,
-    /// Scalar WebAssembly with multi-value functions and indexed block signatures.
-    /// Other Wasm 2.0 proposals remain disabled.
-    MultiValue,
+    /// WebAssembly Core 2.0, including reference types, bulk memory, and SIMD.
+    Wasm2,
 }

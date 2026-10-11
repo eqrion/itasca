@@ -3,7 +3,7 @@
 ***veritas caput***
 
 A streaming WebAssembly validator written in Rust and verified in Lean. It
-supports WebAssembly 1.0 and a scalar multi-value extension profile, including
+supports the WebAssembly 1.0 and 2.0 core profiles, including
 parallel function validation and compiler callbacks. Both profiles have
 whole-module termination, soundness, and completeness proofs.
 
@@ -32,12 +32,14 @@ Select a profile explicitly:
 | Profile | Supported language |
 | --- | --- |
 | `ValidationProfile::Wasm1` | WebAssembly 1.0, including single-result functions and blocks, original active-segment encodings, and identical branch-table target signatures. |
-| `ValidationProfile::MultiValue` | Scalar instructions plus multi-result functions, indexed block signatures with parameters and results, and Wasm 2.0 branch-table typing. Active segments use flags 0 or 2. Other Wasm 2.0 proposals are excluded. |
+| `ValidationProfile::Wasm2` | WebAssembly Core 2.0: multi-value control, sign extension, saturating conversions, reference types, multiple tables, bulk memory, passive and declarative segments, and all 236 SIMD instructions. |
 
-Both profiles allow at most one table and one memory, counting imports and
-definitions together. They require unique decoded export names and restrict
-constant expressions to one constant or a read of an immutable imported global.
-Passive and declarative segments are unsupported.
+Both profiles allow at most one memory, counting imports and definitions
+together, and require unique decoded export names. Wasm 1.0 permits one table;
+Wasm 2.0 permits multiple tables of `funcref` or `externref`. Constant expressions
+contain one permitted constant, reference instruction, or read of an immutable
+imported global, according to the selected profile. Proposals added after Core
+2.0, including relaxed SIMD, are outside these profiles.
 
 ## Streaming and callbacks
 
@@ -96,9 +98,9 @@ from independent encoding, elaboration, typing, profile restrictions, and
 resource bounds. It does not assume parser success or prevalidated bodies.
 
 The grammar covers nonminimal valid LEB encodings, strict UTF-8, section order
-and framing, grouped locals, active segments, and complete input consumption.
-Float immediates preserve their raw bits. Independent body and module decoding
-are unique without typing or implementation-size premises.
+and framing, grouped locals, active/passive/declarative segments, data-count
+sections, and complete input consumption. Float and vector immediates preserve
+their raw bits. Independent body and module decoding are unique without typing or implementation-size premises.
 
 ### Implementation limits
 
@@ -109,8 +111,8 @@ Completeness applies within the caps in [src/limits.rs](src/limits.rs):
 | Complete module bytes | 1,073,741,824 |
 | Instruction-body bytes, including final `end`, excluding local declarations | 7,654,321 |
 | Declared locals per function, excluding parameters | 50,000 |
-| Parameters per signature in the multi-value profile | 1,000 |
-| Results per signature in the multi-value profile | 1,000 |
+| Parameters per signature in the Wasm 2.0 profile | 1,000 |
+| Results per signature in the Wasm 2.0 profile | 1,000 |
 
 Wasm 1.0 retains its single-result restriction and existing parameter behavior.
 Resource caps are separate from language validity; otherwise valid modules may
@@ -130,7 +132,14 @@ Generated Rust models and the specification are committed and reproducibly
 checked. Local tool/specification repairs are versioned [source patches](patches),
 with their scope described in the [Lean guide](lean/README.md#source-patches).
 The explicit profile supplements gaps in the generated module judgment, including
-export-name uniqueness; elaboration checks type references and function/code counts.
+export-name uniqueness. The independent
+[declared-reference condition](lean/Itasca/Profile/DeclaredReferences.lean) requires
+every `ref.func` target to occur in the module outside function definitions and
+the start declaration. This supplements the pinned model's missing reference
+declaration context without modifying its generated typing rules. Elaboration
+checks type references and function/code counts. The independent SIMD grammar
+also distinguishes the two load-zero encodings duplicated in the pinned binary
+table, as documented in the [Lean guide](lean/README.md#expanding-the-supported-profile).
 
 [Itasca.Audit](lean/Itasca/Audit.lean) checks every declaration originating in
 an imported local module, including private helpers, generated auxiliaries,
@@ -154,7 +163,7 @@ just test         # Default and no-default-feature corpus tests
 ```
 
 The retained tests use the Wasm 1.0 specification corpus and a
-[pinned Wasm 2.0 control-flow corpus](tests/spec2/README.md), with wasmparser as
+[complete pinned Wasm 2.0 corpus](tests/spec2/README.md), with wasmparser as
 an independent oracle. [fuzz](fuzz) contains differential byte and generated-module
 fuzzers. Lean examples check typing, malformed inputs, traces, and worker protocol
 behavior. External integrations have their own validation and lifetime obligations.

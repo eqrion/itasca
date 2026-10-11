@@ -284,7 +284,7 @@ theorem step_call_indirect {data env ctx bt st} (p : Wasm.Pending data env ctx b
     StepRecords p visitor observe code.OP_CALL_INDIRECT := by
   intro v result final v' h
   rw [dispatch_call_indirect] at h
-  apply run_step_trace data p.start _ visitor observe hrecords .call_indirect ?_ v result final v' h
+  apply run_step_trace data p.start _ visitor observe hrecords (fun idx => .call_indirect idx 0#u32) ?_ v result final v' h
   intro s a hr
   obtain ⟨C, outer, spine, _, base, typed, ctrls, vals⟩ := p.opened
   have hpoly : Control.polymorphic st = p.current.ctrl.polymorphic_base := by

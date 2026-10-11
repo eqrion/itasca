@@ -11,7 +11,7 @@ the validator and does not impose implementation limits. -/
 def BodyEncoding (profile : ValidationProfile) (data : Slice U8) (ops : List instr) : Prop :=
   match profile with
   | .Wasm1 => Wasm.BodyEncoding data ops
-  | .MultiValue => MultiValue.BodyEncoding data ops
+  | .Wasm2 => MultiValue.BodyEncoding data ops
 
 def functionContext (env : module.Env) (locals : alloc.vec.Vec types.ValueType)
     (ft : types.FuncType) : context :=
@@ -25,6 +25,7 @@ def Body (profile : ValidationProfile) (data : Slice U8) (env : module.Env)
     (locals : alloc.vec.Vec types.ValueType) (index : U32) : Prop :=
   ∃ ft ops, env.types.val[index.val]? = some ft ∧ FuncType profile ft ∧
     BodyEncoding profile data ops ∧ MultiValue.FunctionTyped env locals ft ops ∧
-    Instructions profile (functionContext env locals ft) ops
+    Instructions profile (functionContext env locals ft) ops ∧
+    DeclaredReferences.Instructions (env.declared_funcs.val.map (fun idx => uN.mk_uN idx.val)) ops
 
 end Itasca.Profile

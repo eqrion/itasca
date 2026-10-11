@@ -6,20 +6,20 @@ namespace Itasca.ModuleEnv
 
 open ModuleBinary
 
-/-- The nine ordered optional declaration slots, followed by all custom bytes
+/-- The ten ordered optional declaration slots, followed by all custom bytes
 consumed before the first code/data header. -/
 inductive Chain (raw : ModuleBinary.Module) :
     Nat → List U8 → (profile : optParam ValidationProfile .Wasm1) → Prop where
-  | done {profile bytes} : CustomsEncoding bytes → Chain raw 9 bytes profile
+  | done {profile bytes} : CustomsEncoding bytes → Chain raw 10 bytes profile
   | step {profile} {n : Nat} {id : U8} {first rest : List U8} :
-      n < 9 → id.val = n + 1 → SlotEncoding raw id first profile → Chain raw (n + 1) rest profile →
+      n < 10 → (sectionRank id).val = n + 1 → SlotEncoding raw id first profile → Chain raw (n + 1) rest profile →
       Chain raw n (first ++ rest) profile
 
 theorem padded_slot {profile} {α : Type} {R : α → List U8 → Prop} {raw : ModuleBinary.Module}
     {id : U8} {value absent : α} {bytes : List U8}
     (h : PaddedEncoding id R absent value bytes)
-    (hzero : value = absent → Empty raw id.val)
-    (hpayload : ∀ bs, R value bs → Payload raw id.val () bs profile) : SlotEncoding raw id bytes profile := by
+    (hzero : value = absent → Empty raw (sectionRank id).val)
+    (hpayload : ∀ bs, R value bs → Payload raw (sectionRank id).val () bs profile) : SlotEncoding raw id bytes profile := by
   obtain ⟨customs, body, hc, hs, rfl⟩ := h
   refine ⟨customs, body, hc, ?_, rfl⟩
   cases hs with
@@ -33,8 +33,8 @@ all custom-section bytes and all optional empty slots are retained. -/
 theorem PrefixEncoding.chain {profile} {decls : Declarations} {bytes : List U8}
     (h : PrefixEncoding decls bytes profile) (codes : List ModuleBinary.Code) (datas : List ModuleBinary.Data) :
     ∃ suffix, Chain (decls.module codes datas) 0 suffix profile ∧ bytes = magicVersion ++ suffix := by
-  obtain ⟨types, imports, functions, tables, memories, globals, exports, start, elements,
-    customs, ht, hi, hf, hta, hm, hg, he, hs, hel, hc, rfl⟩ := h
+  obtain ⟨types, imports, functions, tables, memories, globals, exports, start, elements, dataCount,
+    customs, ht, hi, hf, hta, hm, hg, he, hs, hel, hdc, hc, rfl, hallowed⟩ := h
   have ht' := padded_slot (profile := profile) (raw := decls.module codes datas) ht (fun h => h) (fun _ h => h)
   have hi' := padded_slot (profile := profile) (raw := decls.module codes datas) hi (fun h => h) (fun _ h => h)
   have hf' := padded_slot (profile := profile) (raw := decls.module codes datas) hf (fun h => h) (fun _ h => h)
@@ -44,7 +44,14 @@ theorem PrefixEncoding.chain {profile} {decls : Declarations} {bytes : List U8}
   have he' := padded_slot (profile := profile) (raw := decls.module codes datas) he (fun h => h) (fun _ h => h)
   have hs' := padded_slot (profile := profile) (raw := decls.module codes datas) hs (fun h => h) (fun _ h => h)
   have hel' := padded_slot (profile := profile) (raw := decls.module codes datas) hel (fun h => h) (fun _ h => h)
-  refine ⟨types ++ imports ++ functions ++ tables ++ memories ++ globals ++ exports ++ start ++ elements ++ customs,
+  have hdc' : SlotEncoding (decls.module codes datas) 12#u8 dataCount profile := by
+    cases profile with
+    | Wasm1 =>
+      obtain ⟨hvalue, rfl⟩ := hdc
+      exact ⟨[], [], .nil, .inl ⟨hvalue, rfl⟩, rfl⟩
+    | Wasm2 =>
+      exact padded_slot hdc (fun h => h) (fun _ h => ⟨rfl, h⟩)
+  refine ⟨types ++ imports ++ functions ++ tables ++ memories ++ globals ++ exports ++ start ++ elements ++ dataCount ++ customs,
     ?_, by simp [List.append_assoc]⟩
   simpa only [List.append_assoc] using
     (Chain.step (n := 0) (id := 1#u8) (by decide) rfl ht'
@@ -55,6 +62,7 @@ theorem PrefixEncoding.chain {profile} {decls : Declarations} {bytes : List U8}
     (Chain.step (n := 5) (id := 6#u8) (by decide) rfl hg'
     (Chain.step (n := 6) (id := 7#u8) (by decide) rfl he'
     (Chain.step (n := 7) (id := 8#u8) (by decide) rfl hs'
-    (Chain.step (n := 8) (id := 9#u8) (by decide) rfl hel' (.done hc))))))))))
+    (Chain.step (n := 8) (id := 9#u8) (by decide) rfl hel'
+    (Chain.step (n := 9) (id := 12#u8) (by decide) rfl hdc' (.done hc)))))))))))
 
 end Itasca.ModuleEnv

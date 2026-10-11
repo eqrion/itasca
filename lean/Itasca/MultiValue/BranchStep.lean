@@ -60,11 +60,14 @@ theorem Pending.call_indirect {data env locals index st} (p : Pending data env l
     p.current.vals vals (by simp [Control.base, ctrls, base]) _ hC _ p.current.ops
     (by simpa [hpoly, Frames.enter] using typed))
   intro r hr hok
-  obtain ⟨idx, middle, hd, ⟨hm, hz, hn⟩, hc, hb, rest, hv, ht⟩ := hr hok
-  apply p.append_result C outer spine header base r.2 (.CALL_INDIRECT (.mk_uN 0) (.mk_uN idx.val))
+  obtain ⟨idx, table, middle, hd, hdtable, hc, hb, rest, hv, ht⟩ := hr hok
+  obtain ⟨typeBytes, hts, htl, htb, hte⟩ := hd
+  obtain ⟨tableBytes, hss, hsl, hsb, hse⟩ := hdtable
+  have hbytes := (Wasm.BytesAt.mk hts htl htb).append (Wasm.BytesAt.mk hss hsl hsb)
+  apply p.append_result C outer spine header base r.2 (.CALL_INDIRECT (.mk_uN table.val) (.mk_uN idx.val))
     p.current.ctrl.polymorphic_base rest
-    (.instr_case_11 _ _ (EnvTranslation.index_wf 0#u32) (EnvTranslation.index_wf idx))
-    (.plain (.of_index_zero idx p.inbounds hbyte p.pos hd hm hz hn))
+    (.instr_case_11 _ _ (EnvTranslation.index_wf table) (EnvTranslation.index_wf idx))
+    (.of_immediate p.inbounds hbyte p.pos (.reference (.callIndirect idx table hte hse)) hbytes)
     (by simpa [hpoly, Frames.enter] using ht) _ (by simpa [hb] using blocks) hv
   simpa [hc] using ctrls
 

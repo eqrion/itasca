@@ -13,6 +13,7 @@ theorem module.decode_type_section_loop.profile_complete
     (hb : At (Rep FuncTypeEncoding) data pos types next)
     (hc : i.val + types.length = count.val)
     (ht : ∀ ft ∈ types, Profile.FuncType profile ft ∧ Profile.FuncTypeWithinLimits profile ft)
+    (hallowed : ∀ ft ∈ types, ∀ ty ∈ ft.params.val ++ ft.results.val, ValueTypeAllowed profile ty)
     (hsize : env.types.val.length ≤ pos.val) :
     ∃ result, module.decode_type_section_loop data env profile count pos i = .ok (.Ok next, result) ∧
       TypesAdded env result types := by
@@ -30,7 +31,7 @@ theorem module.decode_type_section_loop.profile_complete
     have hbound := hfirst.span.2
     have hmore : ¬ i ≥ count := by simp only [List.length_cons] at hc; scalar_tac
     have hread := module.decode_func_type.profile_complete data pos ft middle profile hfirst
-      (ht ft (by simp)).1 (ht ft (by simp)).2
+      (ht ft (by simp)).1 (ht ft (by simp)).2 (hallowed ft (by simp))
     obtain ⟨updatedTypes, hpush, htypes⟩ := WP.spec_imp_exists
       (alloc.vec.Vec.push_spec env.types ft (by scalar_tac))
     obtain ⟨j, hj, hjval⟩ := WP.spec_imp_exists
@@ -39,6 +40,7 @@ theorem module.decode_type_section_loop.profile_complete
     obtain ⟨result, hloop, hadded⟩ := ih updated middle j hrest
       (by simp only [List.length_cons] at hc; scalar_tac)
       (by intro ft hx; exact ht ft (by simp [hx]))
+      (by intro ft hx; exact hallowed ft (by simp [hx]))
       (by simp only [updated, htypes, List.length_append, List.length_singleton]; omega)
     refine ⟨result, ?_, ?_⟩
     · unfold module.decode_type_section_loop
@@ -54,12 +56,13 @@ theorem module.decode_type_section.profile_complete (data : Slice U8) (pos : Usi
     (env : module.Env) (profile : ValidationProfile) (types : List types.FuncType) (next : Usize)
     (hb : At (VecEncoding FuncTypeEncoding) data pos types next)
     (ht : ∀ ft ∈ types, Profile.FuncType profile ft ∧ Profile.FuncTypeWithinLimits profile ft)
+    (hallowed : ∀ ft ∈ types, ∀ ty ∈ ft.params.val ++ ft.results.val, ValueTypeAllowed profile ty)
     (hsize : env.types.val.length ≤ pos.val) :
     ∃ result, module.decode_type_section data pos env profile = .ok (.Ok next, result) ∧
       TypesAdded env result types := by
   obtain ⟨count, middle, hc, hcount, hentries⟩ := hb.vector_split
   obtain ⟨result, hr, hp⟩ := module.decode_type_section_loop.profile_complete
-    data env profile count middle 0#u32 types next hentries (by simpa using hc.symm) ht
+    data env profile count middle 0#u32 types next hentries (by simpa using hc.symm) ht hallowed
     (by have := hcount.span; omega)
   refine ⟨result, ?_, hp⟩
   simp [module.decode_type_section, reader.read_u32_leb.complete data pos count middle hcount,
@@ -72,20 +75,22 @@ theorem module.decode_type_section_loop.complete
     (hb : At (Rep FuncTypeEncoding) data pos types next)
     (hc : i.val + types.length = count.val)
     (ht : ∀ ft ∈ types, ft.results.val.length ≤ 1)
+    (hallowed : ∀ ft ∈ types, ∀ ty ∈ ft.params.val ++ ft.results.val, ValueTypeAllowed .Wasm1 ty)
     (hsize : env.types.val.length ≤ pos.val) :
     ∃ result, module.decode_type_section_loop data env .Wasm1 count pos i = .ok (.Ok next, result) ∧
       TypesAdded env result types := by
   exact module.decode_type_section_loop.profile_complete data env .Wasm1 count pos i types next
-    hb hc (by simpa [Profile.FuncType, Profile.FuncTypeWithinLimits] using ht) hsize
+    hb hc (by simpa [Profile.FuncType, Profile.FuncTypeWithinLimits] using ht) hallowed hsize
 
 theorem module.decode_type_section.complete (data : Slice U8) (pos : Usize)
     (env : module.Env) (types : List types.FuncType) (next : Usize)
     (hb : At (VecEncoding FuncTypeEncoding) data pos types next)
     (ht : ∀ ft ∈ types, ft.results.val.length ≤ 1)
+    (hallowed : ∀ ft ∈ types, ∀ ty ∈ ft.params.val ++ ft.results.val, ValueTypeAllowed .Wasm1 ty)
     (hsize : env.types.val.length ≤ pos.val) :
     ∃ result, module.decode_type_section data pos env .Wasm1 = .ok (.Ok next, result) ∧
       TypesAdded env result types := by
   exact module.decode_type_section.profile_complete data pos env .Wasm1 types next
-    hb (by simpa [Profile.FuncType, Profile.FuncTypeWithinLimits] using ht) hsize
+    hb (by simpa [Profile.FuncType, Profile.FuncTypeWithinLimits] using ht) hallowed hsize
 
 end Itasca

@@ -38,6 +38,7 @@ const SECTION_START: u8 = 8;
 const SECTION_ELEMENT: u8 = 9;
 pub(crate) const SECTION_CODE: u8 = 10;
 const SECTION_DATA: u8 = 11;
+pub(crate) const SECTION_DATA_COUNT: u8 = 12;
 
 // --- The environment: everything before the code section ---
 
@@ -86,13 +87,22 @@ pub struct Export {
     pub desc: ExportDesc,
 }
 
-/// An active element segment with its table index, offset, and function indices.
+/// The initialization mode of an element segment.
+#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
+#[derive(Clone, Copy)]
+pub enum ElementMode {
+    Active { table_idx: u32, offset: ConstExpr },
+    Passive,
+    Declarative,
+}
+
+/// An element segment with its reference type, mode, and initializer expressions.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone)]
 pub struct Element {
-    pub table_idx: u32,
-    pub offset: ConstExpr,
-    pub init: Vec<u32>,
+    pub elem: ElemType,
+    pub mode: ElementMode,
+    pub init: Vec<ConstExpr>,
 }
 
 /// Read-only declarations and index spaces decoded before the code section.
@@ -111,8 +121,12 @@ pub struct Env {
     pub(crate) globals: Vec<Global>,
     /// The export declarations, in binary order.
     pub(crate) exports: Vec<Export>,
-    /// The active element segments.
+    /// The element segments in element-index order.
     pub(crate) elements: Vec<Element>,
+    /// The optional data-segment count declared before function bodies.
+    pub(crate) data_count: Option<u32>,
+    /// Function indices declared as referenceable outside function bodies.
+    pub(crate) declared_funcs: Vec<u32>,
     /// The optional start-function index.
     pub(crate) start: Option<u32>,
     /// The type index of each defined function, in code-section order.
@@ -143,6 +157,8 @@ impl Env {
             globals: Vec::new(),
             exports: Vec::new(),
             elements: Vec::new(),
+            data_count: None,
+            declared_funcs: Vec::new(),
             start: None,
             func_type_indices: Vec::new(),
             func_types: Vec::new(),
@@ -174,9 +190,28 @@ impl Env {
         &self.exports
     }
 
-    /// Returns the active element segments.
+    /// Returns all element segments in element-index order.
     pub fn elements(&self) -> &[Element] {
         &self.elements
+    }
+
+    /// Returns the optional data count declared before the code section.
+    pub fn data_count(&self) -> Option<u32> {
+        self.data_count
+    }
+
+    /// Returns whether the module declares a function as referenceable.
+    pub fn declares_function(&self, index: u32) -> bool {
+        let mut i: usize = 0;
+        loop {
+            if i >= self.declared_funcs.len() {
+                return false;
+            }
+            if self.declared_funcs[i] == index {
+                return true;
+            }
+            i += 1;
+        }
     }
 
     /// Returns the optional start-function index.
@@ -220,12 +255,18 @@ impl Env {
     }
 }
 
-/// An active data segment with its memory index, offset, and initialization
-/// bytes.
+/// The initialization mode of a data segment.
+#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
+#[derive(Clone, Copy)]
+pub enum DataMode {
+    Active { memory_idx: u32, offset: ConstExpr },
+    Passive,
+}
+
+/// A data segment with its mode and initialization bytes.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 pub struct Data {
-    pub memory_idx: u32,
-    pub offset: ConstExpr,
+    pub mode: DataMode,
     pub init: Vec<u8>,
 }
 
@@ -259,8 +300,8 @@ impl Module {
 ///
 /// Accepts arbitrary bytes with no caller preconditions. Both profiles have
 /// termination, soundness, and completeness guarantees within the implementation
-/// limits, assuming allocation succeeds. `ValidationProfile::MultiValue` enables
-/// the supported extension subset.
+/// limits, assuming allocation succeeds. `ValidationProfile::Wasm2` enables
+/// the complete WebAssembly Core 2.0 instruction and module grammar.
 pub fn validate_module(data: &[u8], profile: ValidationProfile) -> Result<Module> {
     crate::stream::validate_module_slice(data, profile)
 }
@@ -394,13 +435,29 @@ pub(crate) fn read_section_header(data: &[u8], pos: usize) -> Result<(u8, usize,
 
 // --- Types (spec 5.3) ---
 
-pub(crate) fn decode_value_type(data: &[u8], pos: usize) -> Result<(ValueType, usize)> {
+pub(crate) fn decode_value_type(
+    data: &[u8],
+    pos: usize,
+    profile: ValidationProfile,
+) -> Result<(ValueType, usize)> {
     let (b, p) = read_byte(data, pos)?;
     match b {
         0x7f => Ok((ValueType::I32, p)),
         0x7e => Ok((ValueType::I64, p)),
         0x7d => Ok((ValueType::F32, p)),
         0x7c => Ok((ValueType::F64, p)),
+        0x7b => match profile {
+            ValidationProfile::Wasm1 => Err(Error::InvalidType(b)),
+            ValidationProfile::Wasm2 => Ok((ValueType::V128, p)),
+        },
+        0x70 => match profile {
+            ValidationProfile::Wasm1 => Err(Error::InvalidType(b)),
+            ValidationProfile::Wasm2 => Ok((ValueType::FuncRef, p)),
+        },
+        0x6f => match profile {
+            ValidationProfile::Wasm1 => Err(Error::InvalidType(b)),
+            ValidationProfile::Wasm2 => Ok((ValueType::ExternRef, p)),
+        },
         _ => Err(Error::InvalidType(b)),
     }
 }
@@ -409,6 +466,7 @@ fn decode_value_types(
     data: &[u8],
     pos: usize,
     bound: Option<(usize, OpError)>,
+    profile: ValidationProfile,
 ) -> Result<(Vec<ValueType>, usize)> {
     let (count, p) = read_u32_leb(data, pos)?;
     if let Some((limit, error)) = bound {
@@ -423,7 +481,7 @@ fn decode_value_types(
         if i >= count {
             return Ok((out, q));
         }
-        let (vt, q1) = decode_value_type(data, q)?;
+        let (vt, q1) = decode_value_type(data, q, profile)?;
         out.push(vt);
         q = q1;
         i += 1;
@@ -442,7 +500,7 @@ fn decode_func_type(
     }
     let (params_bound, results_bound) = match profile {
         ValidationProfile::Wasm1 => (None, None),
-        ValidationProfile::MultiValue => (
+        ValidationProfile::Wasm2 => (
             Some((
                 crate::limits::MAX_MULTI_VALUE_PARAMS,
                 OpError::TooManyParams,
@@ -453,15 +511,15 @@ fn decode_func_type(
             )),
         ),
     };
-    let (params, p1) = decode_value_types(data, p, params_bound)?;
-    let (results, p2) = decode_value_types(data, p1, results_bound)?;
+    let (params, p1) = decode_value_types(data, p, params_bound, profile)?;
+    let (results, p2) = decode_value_types(data, p1, results_bound, profile)?;
     match profile {
         ValidationProfile::Wasm1 => {
             if results.len() > MAX_RESULTS {
                 return Err(Error::TooManyResults);
             }
         }
-        ValidationProfile::MultiValue => {}
+        ValidationProfile::Wasm2 => {}
     }
     Ok((FuncType { params, results }, p2))
 }
@@ -489,21 +547,46 @@ fn decode_limits(data: &[u8], pos: usize) -> Result<(Limits, usize)> {
     }
 }
 
-/// Decodes a funcref table type and checks its size limits.
-fn decode_table_type(data: &[u8], pos: usize) -> Result<(TableType, usize)> {
-    let (elem, p) = read_byte(data, pos)?;
-    if elem != 0x70 {
-        return Err(Error::InvalidType(elem));
+/// Decodes a reference type admitted by the selected profile.
+fn decode_elem_type(
+    data: &[u8],
+    pos: usize,
+    profile: ValidationProfile,
+) -> Result<(ElemType, usize)> {
+    let (b, p) = read_byte(data, pos)?;
+    match b {
+        0x70 => Ok((ElemType::FuncRef, p)),
+        0x6f => match profile {
+            ValidationProfile::Wasm1 => Err(Error::InvalidType(b)),
+            ValidationProfile::Wasm2 => Ok((ElemType::ExternRef, p)),
+        },
+        _ => Err(Error::InvalidType(b)),
     }
+}
+
+/// Decodes a table type and checks its size limits.
+fn decode_table_type(
+    data: &[u8],
+    pos: usize,
+    profile: ValidationProfile,
+) -> Result<(TableType, usize)> {
+    let (elem, p) = decode_elem_type(data, pos, profile)?;
     let (limits, p1) = decode_limits(data, p)?;
     validate_limits(&limits, MAX_TABLE_ELEMS)?;
-    Ok((
-        TableType {
-            limits,
-            elem: ElemType::FuncRef,
-        },
-        p1,
-    ))
+    Ok((TableType { limits, elem }, p1))
+}
+
+/// Enforces the original profile's combined imported and defined table bound.
+fn check_table_count(env: &Env, profile: ValidationProfile) -> Result<()> {
+    match profile {
+        ValidationProfile::Wasm1 => {
+            if env.table_types.len() > MAX_TABLES {
+                return Err(Error::MultipleTables);
+            }
+        }
+        ValidationProfile::Wasm2 => {}
+    }
+    Ok(())
 }
 
 /// Decodes a memory type and checks its page limits.
@@ -514,8 +597,12 @@ fn decode_mem_type(data: &[u8], pos: usize) -> Result<(MemType, usize)> {
 }
 
 /// Decodes a global's value type and mutability.
-fn decode_global_type(data: &[u8], pos: usize) -> Result<(GlobalType, usize)> {
-    let (valtype, p) = decode_value_type(data, pos)?;
+fn decode_global_type(
+    data: &[u8],
+    pos: usize,
+    profile: ValidationProfile,
+) -> Result<(GlobalType, usize)> {
+    let (valtype, p) = decode_value_type(data, pos, profile)?;
     let (m, p1) = read_byte(data, p)?;
     match m {
         0x00 => Ok((
@@ -669,6 +756,7 @@ pub(crate) fn decode_const_expr(
     pos: usize,
     env: &Env,
     expected: ValueType,
+    profile: ValidationProfile,
 ) -> Result<(ConstExpr, usize)> {
     let (op, p) = read_byte(data, pos)?;
     match op {
@@ -702,6 +790,44 @@ pub(crate) fn decode_const_expr(
             expect_const_type(gt.valtype, expected)?;
             let p2 = read_expr_end(data, p1)?;
             Ok((ConstExpr::GlobalGet(idx), p2))
+        }
+        0xd0 => {
+            match profile {
+                ValidationProfile::Wasm1 => return Err(Error::InvalidConstExpr),
+                ValidationProfile::Wasm2 => {}
+            }
+            let (ty, p1) = decode_elem_type(data, p, profile)?;
+            expect_const_type(ty.value_type(), expected)?;
+            let p2 = read_expr_end(data, p1)?;
+            Ok((ConstExpr::RefNull(ty), p2))
+        }
+        0xd2 => {
+            match profile {
+                ValidationProfile::Wasm1 => return Err(Error::InvalidConstExpr),
+                ValidationProfile::Wasm2 => {}
+            }
+            let (idx, p1) = read_u32_leb(data, p)?;
+            if idx as usize >= env.func_types.len() {
+                return Err(Error::UnknownFunc(idx));
+            }
+            expect_const_type(ValueType::FuncRef, expected)?;
+            let p2 = read_expr_end(data, p1)?;
+            Ok((ConstExpr::RefFunc(idx), p2))
+        }
+        0xfd => {
+            match profile {
+                ValidationProfile::Wasm1 => return Err(Error::InvalidConstExpr),
+                ValidationProfile::Wasm2 => {}
+            }
+            let (sub, p1) = read_u32_leb(data, p)?;
+            if sub != 12 {
+                return Err(Error::InvalidConstExpr);
+            }
+            let (low, p2) = read_f64_bits(data, p1)?;
+            let (high, p3) = read_f64_bits(data, p2)?;
+            expect_const_type(ValueType::V128, expected)?;
+            let p4 = read_expr_end(data, p3)?;
+            Ok((ConstExpr::V128(low, high), p4))
         }
         _ => Err(Error::InvalidConstExpr),
     }
@@ -760,7 +886,12 @@ fn decode_type_section(
 }
 
 /// Decodes an import and appends it to the corresponding index space.
-fn decode_import(data: &[u8], pos: usize, env: &mut Env) -> Result<usize> {
+fn decode_import(
+    data: &[u8],
+    pos: usize,
+    env: &mut Env,
+    profile: ValidationProfile,
+) -> Result<usize> {
     let (module, p1) = decode_name(data, pos)?;
     let (name, p2) = decode_name(data, p1)?;
     let (kind, p3) = read_byte(data, p2)?;
@@ -778,11 +909,9 @@ fn decode_import(data: &[u8], pos: usize, env: &mut Env) -> Result<usize> {
             Ok(p4)
         }
         0x01 => {
-            let (tt, p4) = decode_table_type(data, p3)?;
+            let (tt, p4) = decode_table_type(data, p3, profile)?;
             env.table_types.push(tt);
-            if env.table_types.len() > MAX_TABLES {
-                return Err(Error::MultipleTables);
-            }
+            check_table_count(env, profile)?;
             env.imports.push(Import {
                 module,
                 name,
@@ -804,7 +933,7 @@ fn decode_import(data: &[u8], pos: usize, env: &mut Env) -> Result<usize> {
             Ok(p4)
         }
         0x03 => {
-            let (gt, p4) = decode_global_type(data, p3)?;
+            let (gt, p4) = decode_global_type(data, p3, profile)?;
             env.global_types.push(gt);
             env.num_imported_globals += 1;
             env.imports.push(Import {
@@ -818,7 +947,12 @@ fn decode_import(data: &[u8], pos: usize, env: &mut Env) -> Result<usize> {
     }
 }
 
-fn decode_import_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize> {
+fn decode_import_section(
+    data: &[u8],
+    pos: usize,
+    env: &mut Env,
+    profile: ValidationProfile,
+) -> Result<usize> {
     let (count, p) = read_u32_leb(data, pos)?;
     let mut q = p;
     let mut i: u32 = 0;
@@ -826,7 +960,7 @@ fn decode_import_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize
         if i >= count {
             return Ok(q);
         }
-        q = decode_import(data, q, env)?;
+        q = decode_import(data, q, env, profile)?;
         i += 1;
     }
 }
@@ -848,7 +982,12 @@ fn decode_function_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usi
     }
 }
 
-fn decode_table_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize> {
+fn decode_table_section(
+    data: &[u8],
+    pos: usize,
+    env: &mut Env,
+    profile: ValidationProfile,
+) -> Result<usize> {
     let (count, p) = read_u32_leb(data, pos)?;
     let mut q = p;
     let mut i: u32 = 0;
@@ -856,11 +995,9 @@ fn decode_table_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize>
         if i >= count {
             return Ok(q);
         }
-        let (tt, q1) = decode_table_type(data, q)?;
+        let (tt, q1) = decode_table_type(data, q, profile)?;
         env.table_types.push(tt);
-        if env.table_types.len() > MAX_TABLES {
-            return Err(Error::MultipleTables);
-        }
+        check_table_count(env, profile)?;
         q = q1;
         i += 1;
     }
@@ -884,7 +1021,12 @@ fn decode_memory_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize
     }
 }
 
-fn decode_global_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize> {
+fn decode_global_section(
+    data: &[u8],
+    pos: usize,
+    env: &mut Env,
+    profile: ValidationProfile,
+) -> Result<usize> {
     let (count, p) = read_u32_leb(data, pos)?;
     let mut q = p;
     let mut i: u32 = 0;
@@ -892,8 +1034,9 @@ fn decode_global_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize
         if i >= count {
             return Ok(q);
         }
-        let (gtype, q1) = decode_global_type(data, q)?;
-        let (init, q2) = decode_const_expr(data, q1, env, gtype.valtype)?;
+        let (gtype, q1) = decode_global_type(data, q, profile)?;
+        let (init, q2) = decode_const_expr(data, q1, env, gtype.valtype, profile)?;
+        declare_initializer(env, init);
         env.global_types.push(gtype);
         env.globals.push(Global { gtype, init });
         q = q2;
@@ -977,6 +1120,9 @@ fn decode_export_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize
         let (kind, q2) = read_byte(data, q1)?;
         let (idx, q3) = read_u32_leb(data, q2)?;
         let desc = export_desc(env, kind, idx)?;
+        if let ExportDesc::Func(index) = desc {
+            env.declared_funcs.push(index);
+        }
         env.exports.push(Export { name, desc });
         q = q3;
         i += 1;
@@ -1017,7 +1163,7 @@ pub(crate) fn decode_func_indices(data: &[u8], pos: usize, env: &Env) -> Result<
     }
 }
 
-/// Decodes a Wasm 1.0 segment index or multi-value active-segment flags.
+/// Decodes a Wasm 1.0 segment index or Wasm 2.0 active-segment flags.
 fn decode_segment_index(
     data: &[u8],
     pos: usize,
@@ -1026,7 +1172,7 @@ fn decode_segment_index(
 ) -> Result<(u32, usize, bool)> {
     match profile {
         ValidationProfile::Wasm1 => Ok((index_or_flags, pos, false)),
-        ValidationProfile::MultiValue => match index_or_flags {
+        ValidationProfile::Wasm2 => match index_or_flags {
             0 => Ok((0, pos, false)),
             2 => {
                 let (index, next) = read_u32_leb(data, pos)?;
@@ -1035,6 +1181,146 @@ fn decode_segment_index(
             _ => Err(Error::InvalidType(0xff)),
         },
     }
+}
+
+/// Records a function reference made outside function bodies.
+fn declare_initializer(env: &mut Env, init: ConstExpr) {
+    if let ConstExpr::RefFunc(index) = init {
+        env.declared_funcs.push(index);
+    }
+}
+
+fn decode_element_header(
+    data: &[u8],
+    pos: usize,
+    env: &Env,
+    profile: ValidationProfile,
+) -> Result<(ElementMode, ElemType, bool, usize)> {
+    let (tag, mut q) = read_u32_leb(data, pos)?;
+    let (mode, elem, expressions) = match profile {
+        ValidationProfile::Wasm1 => {
+            if tag as usize >= env.table_types.len() {
+                return Err(Error::UnknownTable(tag));
+            }
+            let (offset, next) = decode_const_expr(data, q, env, ValueType::I32, profile)?;
+            q = next;
+            (
+                ElementMode::Active {
+                    table_idx: tag,
+                    offset,
+                },
+                ElemType::FuncRef,
+                false,
+            )
+        }
+        ValidationProfile::Wasm2 => {
+            if tag > 7 {
+                return Err(Error::InvalidType(0xff));
+            }
+            let mode = if tag % 2 == 0 {
+                let table_idx = if tag == 2 || tag == 6 {
+                    let (index, next) = read_u32_leb(data, q)?;
+                    q = next;
+                    index
+                } else {
+                    0
+                };
+                if table_idx as usize >= env.table_types.len() {
+                    return Err(Error::UnknownTable(table_idx));
+                }
+                let (offset, next) = decode_const_expr(data, q, env, ValueType::I32, profile)?;
+                q = next;
+                ElementMode::Active { table_idx, offset }
+            } else if tag == 1 || tag == 5 {
+                ElementMode::Passive
+            } else {
+                ElementMode::Declarative
+            };
+            let expressions = tag >= 4;
+            let elem = if tag == 0 || tag == 4 {
+                ElemType::FuncRef
+            } else if expressions {
+                let (ty, next) = decode_elem_type(data, q, profile)?;
+                q = next;
+                ty
+            } else {
+                let (kind, next) = read_byte(data, q)?;
+                if kind != 0 {
+                    return Err(Error::InvalidType(kind));
+                }
+                q = next;
+                ElemType::FuncRef
+            };
+            (mode, elem, expressions)
+        }
+    };
+    if let ElementMode::Active { table_idx, .. } = mode {
+        // This lookup also checks its bound independently of mode decoding.
+        let i = table_idx as usize;
+        if i >= env.table_types.len() {
+            return Err(Error::UnknownTable(table_idx));
+        }
+        if elem.value_type() != env.table_types[i].elem.value_type() {
+            return Err(Error::InvalidConstExpr);
+        }
+    }
+    Ok((mode, elem, expressions, q))
+}
+
+/// Decodes one initializer without changing the declaration cache.
+fn decode_element_initializer(
+    data: &[u8],
+    pos: usize,
+    env: &Env,
+    elem: ElemType,
+    expressions: bool,
+    profile: ValidationProfile,
+) -> Result<(ConstExpr, usize)> {
+    if expressions {
+        decode_const_expr(data, pos, env, elem.value_type(), profile)
+    } else {
+        let (index, next) = read_u32_leb(data, pos)?;
+        if index as usize >= env.func_types.len() {
+            return Err(Error::UnknownFunc(index));
+        }
+        Ok((ConstExpr::RefFunc(index), next))
+    }
+}
+
+/// Decodes a segment's initializer vector and records its function declarations.
+fn decode_element_initializers(
+    data: &[u8],
+    pos: usize,
+    env: &mut Env,
+    elem: ElemType,
+    expressions: bool,
+    profile: ValidationProfile,
+) -> Result<(Vec<ConstExpr>, usize)> {
+    let (count, p) = read_u32_leb(data, pos)?;
+    let mut q = p;
+    let mut init = Vec::new();
+    let mut i: u32 = 0;
+    loop {
+        if i >= count {
+            return Ok((init, q));
+        }
+        let (value, next) = decode_element_initializer(data, q, env, elem, expressions, profile)?;
+        declare_initializer(env, value);
+        init.push(value);
+        q = next;
+        i += 1;
+    }
+}
+
+fn decode_element(
+    data: &[u8],
+    pos: usize,
+    env: &mut Env,
+    profile: ValidationProfile,
+) -> Result<(Element, usize)> {
+    let (mode, elem, expressions, next) = decode_element_header(data, pos, env, profile)?;
+    let (init, next) = decode_element_initializers(data, next, env, elem, expressions, profile)?;
+    Ok((Element { elem, mode, init }, next))
 }
 
 fn decode_element_section(
@@ -1050,27 +1336,37 @@ fn decode_element_section(
         if i >= count {
             return Ok(q);
         }
-        let (index_or_flags, q1) = read_u32_leb(data, q)?;
-        let (table_idx, q1, explicit) = decode_segment_index(data, q1, index_or_flags, profile)?;
-        if table_idx as usize >= env.table_types.len() {
-            return Err(Error::UnknownTable(table_idx));
-        }
-        let (offset, mut q2) = decode_const_expr(data, q1, env, ValueType::I32)?;
-        if explicit {
-            let (kind, next) = read_byte(data, q2)?;
-            if kind != 0 {
-                return Err(Error::InvalidType(kind));
-            }
-            q2 = next;
-        }
-        let (init, q3) = decode_func_indices(data, q2, env)?;
-        env.elements.push(Element {
-            table_idx,
-            offset,
-            init,
-        });
-        q = q3;
+        let (element, next) = decode_element(data, q, env, profile)?;
+        env.elements.push(element);
+        q = next;
         i += 1;
+    }
+}
+
+fn decode_data_count(
+    data: &[u8],
+    pos: usize,
+    env: &mut Env,
+    profile: ValidationProfile,
+) -> Result<usize> {
+    match profile {
+        ValidationProfile::Wasm1 => Err(Error::UnknownSection(SECTION_DATA_COUNT)),
+        ValidationProfile::Wasm2 => {
+            let (count, next) = read_u32_leb(data, pos)?;
+            env.data_count = Some(count);
+            Ok(next)
+        }
+    }
+}
+
+/// Returns the binary section order, which differs from its wire ID for data count.
+fn section_order(id: u8) -> Result<u8> {
+    match id {
+        1..=9 => Ok(id),
+        SECTION_DATA_COUNT => Ok(10),
+        SECTION_CODE => Ok(11),
+        SECTION_DATA => Ok(12),
+        _ => Err(Error::UnknownSection(id)),
     }
 }
 
@@ -1083,14 +1379,15 @@ pub(crate) fn decode_env_section(
 ) -> Result<usize> {
     match id {
         SECTION_TYPE => decode_type_section(data, pos, env, profile),
-        SECTION_IMPORT => decode_import_section(data, pos, env),
+        SECTION_IMPORT => decode_import_section(data, pos, env, profile),
         SECTION_FUNCTION => decode_function_section(data, pos, env),
-        SECTION_TABLE => decode_table_section(data, pos, env),
+        SECTION_TABLE => decode_table_section(data, pos, env, profile),
         SECTION_MEMORY => decode_memory_section(data, pos, env),
-        SECTION_GLOBAL => decode_global_section(data, pos, env),
+        SECTION_GLOBAL => decode_global_section(data, pos, env, profile),
         SECTION_EXPORT => decode_export_section(data, pos, env),
         SECTION_START => decode_start_section(data, pos, env),
         SECTION_ELEMENT => decode_element_section(data, pos, env, profile),
+        SECTION_DATA_COUNT => decode_data_count(data, pos, env, profile),
         _ => Err(Error::UnknownSection(id)),
     }
 }
@@ -1126,14 +1423,14 @@ pub(crate) fn validate_env_with<V: ModuleVisitor>(
                 Err(e) => return Err(Error::Visitor(e)),
             }
             q = end;
-        } else if id >= SECTION_CODE {
-            // The code section and everything after it belong to the other two
-            // parts, so hand back the header unread.
+        } else if id == SECTION_CODE || id == SECTION_DATA {
             return Ok((env, q));
-        } else if id <= last_id {
-            return Err(Error::SectionOutOfOrder);
         } else {
-            last_id = id;
+            let order = section_order(id)?;
+            if order <= last_id {
+                return Err(Error::SectionOutOfOrder);
+            }
+            last_id = order;
             let p = decode_env_section(data, start, id, &mut env, profile)?;
             if p != end {
                 return Err(Error::SectionSizeMismatch);
@@ -1158,7 +1455,11 @@ fn push_locals(out: &mut Vec<ValueType>, count: u32, vt: ValueType) {
 
 /// Decodes grouped local declarations, enforcing the declared-local limit before
 /// expansion.
-pub(crate) fn decode_locals(data: &[u8], pos: usize) -> Result<(Vec<ValueType>, usize)> {
+pub(crate) fn decode_locals(
+    data: &[u8],
+    pos: usize,
+    profile: ValidationProfile,
+) -> Result<(Vec<ValueType>, usize)> {
     let (groups, p) = read_u32_leb(data, pos)?;
     let mut out = Vec::new();
     let mut q = p;
@@ -1168,7 +1469,7 @@ pub(crate) fn decode_locals(data: &[u8], pos: usize) -> Result<(Vec<ValueType>, 
             return Ok((out, q));
         }
         let (count, q1) = read_u32_leb(data, q)?;
-        let (vt, q2) = decode_value_type(data, q1)?;
+        let (vt, q2) = decode_value_type(data, q1, profile)?;
         // The count is a u32 with no byte cost, so it is the one place in the
         // format where a couple of bytes can ask for an unbounded allocation.
         if count as usize > MAX_LOCALS - out.len() {
@@ -1214,7 +1515,7 @@ pub(crate) fn validate_code_entry_with<V: OpVisitor>(
     have_bytes(data, p, n)?;
     let end = p + n;
 
-    let (declared, p1) = decode_locals(data, p)?;
+    let (declared, p1) = decode_locals(data, p, profile)?;
     if p1 > end {
         return Err(Error::SectionSizeMismatch);
     }
@@ -1240,7 +1541,7 @@ pub(crate) fn validate_code_entry_with<V: OpVisitor>(
     // what decides that the last byte is the terminating `end`.
     let body_result = match profile {
         ValidationProfile::Wasm1 => code::validate_body_with(&data[p1..end], env, &ctx, v),
-        ValidationProfile::MultiValue => {
+        ValidationProfile::Wasm2 => {
             code::validate_multi_value_body_with(&data[p1..end], env, &ctx, type_idx, v)
         }
     };
@@ -1271,24 +1572,25 @@ fn decode_data_segment(
     env: &Env,
     profile: ValidationProfile,
 ) -> Result<(Data, usize)> {
-    let (index_or_flags, p1) = read_u32_leb(data, pos)?;
-    let (memory_idx, p1, _) = decode_segment_index(data, p1, index_or_flags, profile)?;
-    if memory_idx as usize >= env.mem_types.len() {
-        return Err(Error::UnknownMemory(memory_idx));
-    }
-    let (offset, p2) = decode_const_expr(data, p1, env, ValueType::I32)?;
-    let (len, p3) = read_u32_leb(data, p2)?;
+    let (tag, mut q) = read_u32_leb(data, pos)?;
+    let mode = match profile {
+        ValidationProfile::Wasm2 if tag == 1 => DataMode::Passive,
+        _ => {
+            let (memory_idx, next, _) = decode_segment_index(data, q, tag, profile)?;
+            q = next;
+            if memory_idx as usize >= env.mem_types.len() {
+                return Err(Error::UnknownMemory(memory_idx));
+            }
+            let (offset, next) = decode_const_expr(data, q, env, ValueType::I32, profile)?;
+            q = next;
+            DataMode::Active { memory_idx, offset }
+        }
+    };
+    let (len, p) = read_u32_leb(data, q)?;
     let n = len as usize;
-    have_bytes(data, p3, n)?;
-    let init = copy_bytes(data, p3, p3 + n);
-    Ok((
-        Data {
-            memory_idx,
-            offset,
-            init,
-        },
-        p3 + n,
-    ))
+    have_bytes(data, p, n)?;
+    let init = copy_bytes(data, p, p + n);
+    Ok((Data { mode, init }, p + n))
 }
 
 fn decode_data_section(
@@ -1340,6 +1642,11 @@ pub(crate) fn validate_tail_with<V: ModuleVisitor>(
     let mut seen_data = false;
     loop {
         if q >= data.len() {
+            if let Some(count) = env.data_count {
+                if count as usize != segments.len() {
+                    return Err(Error::DataCountMismatch);
+                }
+            }
             return Ok(Tail { data: segments });
         }
         let (id, start, end) = read_section_header(data, q)?;

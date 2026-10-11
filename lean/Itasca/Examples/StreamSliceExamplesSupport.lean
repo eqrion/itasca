@@ -23,9 +23,9 @@ theorem prepared_layout (data : Slice U8) (raw : ModuleBinary.Module)
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (hrequirements : Requirements raw) (tail : module.Tail)
     (hrawTail : tail.data.val.map ModuleData.raw = raw.data)
-    (htypedReady : ∀ decls env, Ready raw 9 decls env →
+    (htypedReady : ∀ decls env, Ready raw 10 decls env →
       List.Forall₂ (CodeEntry.Typed env) env.func_type_indices.val raw.codes)
-    (htailReady : ∀ decls env, Ready raw 9 decls env →
+    (htailReady : ∀ decls env, Ready raw 10 decls env →
       ∀ segment ∈ tail.data.val, ModuleData.Valid env segment) :
     ∃ regions env, Certificate data raw regions env tail := by
   have hsplit := stream.find_code_region.complete_layout hl
@@ -77,8 +77,15 @@ theorem prepared_layout (data : Slice U8) (raw : ModuleBinary.Module)
     apply ModuleCode.EntriesTyped.of_forall₂ (by simpa using htypes)
     exact ModuleBinary.Rep.locals_within_limits (profile := .Wasm1) henc
   have htailEnc := hl.tail.on_region htailSpan
+  have hrawCount : raw.dataCount = none := by
+    rw [hl.raw_eq]
+    change decls.dataCount = none
+    obtain ⟨bytes, hprefix, _⟩ := hl.environment
+    obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hcount, _⟩ := hprefix
+    exact hcount.1
   have htail := module.validate_tail.complete tail (by simpa [hrawTail] using htailEnc)
     (htailReady finalDecls env hready)
+    (by simp [hready.dataCount_eq (by decide), hrawCount])
   have hmatches := hready.matches tail hrawTail
   have hsemantic := module.validate_env.semantic_spec environment
   rw [henv] at hsemantic
@@ -127,9 +134,9 @@ theorem accepted_layout (data : Slice U8) (raw : ModuleBinary.Module)
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (hrequirements : Requirements raw) (tail : module.Tail)
     (hrawTail : tail.data.val.map ModuleData.raw = raw.data)
-    (htypedReady : ∀ decls env, Ready raw 9 decls env →
+    (htypedReady : ∀ decls env, Ready raw 10 decls env →
       List.Forall₂ (CodeEntry.Typed env) env.func_type_indices.val raw.codes)
-    (htailReady : ∀ decls env, Ready raw 9 decls env →
+    (htailReady : ∀ decls env, Ready raw 10 decls env →
       ∀ segment ∈ tail.data.val, ModuleData.Valid env segment) :
     ∃ env, module.validate_module data .Wasm1 = .ok (.Ok ⟨env, tail⟩) := by
   obtain ⟨regions, env, hc⟩ := prepared_layout data raw decls codePos tailPos hl hsize
@@ -169,12 +176,17 @@ theorem accepted_at_end (data : Slice U8) (env : module.Env)
   subst emptyBytes
   let raw := decls.module [] []
   let tail : module.Tail := ⟨alloc.vec.Vec.new _⟩
-  have hready : Ready raw 9 decls env :=
+  have hready : Ready raw 10 decls env :=
     ⟨hrep, by simp [Phase], by intro; rfl, by intro; rfl, by intro; rfl,
       by intro; rfl, by intro; rfl, by intro; rfl, by intro; rfl,
-      by intro; rfl, by intro; rfl⟩
+      by intro; rfl, by intro; rfl, by intro; rfl⟩
+  have hdataCount : env.data_count = none := by
+    rw [← hrep.dataCount]
+    obtain ⟨bytes, hp, _⟩ := hprefix
+    obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hcount, _⟩ := hp
+    exact hcount.1
   have htail : module.validate_tail empty 0#usize env .Wasm1 = .ok (.Ok tail) := by
-    have hr := ModuleTail.loop_eof empty env (alloc.vec.Vec.new _) false
+    have hr := ModuleTail.loop_eof empty env (alloc.vec.Vec.new _) false .Wasm1 (by simp [hdataCount])
     have hz : Slice.len empty = 0#usize := rfl
     rw [hz] at hr
     simp [module.validate_tail, module.validate_tail_with, hr, tail]

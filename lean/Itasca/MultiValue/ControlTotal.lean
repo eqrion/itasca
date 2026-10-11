@@ -1,6 +1,7 @@
 import Itasca.MultiValue.Control
 import Itasca.MultiValue.TableAdapters
 import Itasca.MultiValue.Calls
+import Itasca.Body.EnvReaders
 
 open Aeneas Aeneas.Std
 
@@ -179,37 +180,62 @@ theorem code.branch_table.total (st : code.BodyState) (data : Slice U8)
   · step* <;> simp_all
 
 @[step]
+theorem code.take_index.shape (st : code.OpIterState) (data : Slice U8)
+    (hs : Control.Shape st) :
+    code.take_index st data ⦃ r => Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
+      st.pos.val ≤ r.2.pos.val ⦄ := by
+  obtain ⟨⟨r, out⟩, hr, hv, hc, hd⟩ := WP.spec_imp_exists (code.take_index.spec st data)
+  dsimp only at hv hc hd
+  rw [hr, WP.spec_ok]
+  refine ⟨?_, hc, ?_⟩
+  · exact ⟨by simpa [hc] using hs.ordered, by simpa [hc, hv] using hs.bounded⟩
+  · cases r with
+    | Err e => simpa only [hd.2] using Nat.le_refl st.pos.val
+    | Ok index => exact (Leb128.Decoded.span _ _ _ _ hd).1.le
+
+@[step]
+theorem types.ElemType.value_type.total (ty : types.ElemType) :
+    types.ElemType.value_type ty ⦃ _ => True ⦄ := by
+  cases ty <;> simp [types.ElemType.value_type]
+
+@[step]
+theorem types.ValueType.Insts.CoreCmpPartialEqValueType.eq.total
+    (a b : types.ValueType) :
+    types.ValueType.Insts.CoreCmpPartialEqValueType.eq a b ⦃ _ => True ⦄ := by
+  cases a <;> cases b <;> simp [types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
+
+@[step]
+theorem types.ValueType.ne.total (a b : types.ValueType) :
+    core.cmp.PartialEq.ne.trait_default types.ValueType.Insts.CoreCmpPartialEqValueType a b
+      ⦃ _ => True ⦄ := by
+  cases a <;> cases b <;>
+    simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
+      types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
+
+@[step]
+theorem code.call_info.total (st : code.BodyState) (data : Slice U8)
+    (env : module.Env) (hs : Control.Shape st.core) :
+    code.call_info st data env ⦃ r =>
+      Control.Shape r.2.core ∧ r.2.core.ctrls = st.core.ctrls ∧ r.2.blocks = st.blocks ∧
+        st.core.pos.val ≤ r.2.core.pos.val ⦄ := by
+  unfold code.call_info
+  step* <;> simp_all
+
+@[step]
+theorem code.call_indirect_info.total (st : code.BodyState) (data : Slice U8)
+    (env : module.Env) (hs : Control.Shape st.core) :
+    code.call_indirect_info st data env ⦃ r =>
+      Control.Shape r.2.core ∧ r.2.core.ctrls = st.core.ctrls ∧ r.2.blocks = st.blocks ∧
+        st.core.pos.val ≤ r.2.core.pos.val ⦄ := by
+  unfold code.call_indirect_info
+  step* <;> simp_all <;> omega
+
+@[step]
 theorem code.call.total (st : code.BodyState) (data : Slice U8)
     (env : module.Env) (indirect : Bool) (hs : Control.Shape st.core) :
     code.call st data env indirect ⦃ r =>
       Control.Shape r.2.core ∧ r.2.core.ctrls = st.core.ctrls ∧ r.2.blocks = st.blocks ∧ st.core.pos.val ≤ r.2.core.pos.val ⦄ := by
-  rw [code.call.eq_core]
-  unfold MultiValue.callCore
-  step with reader.read_u32_leb.spec data st.core.pos as ⟨res, hdecoded⟩
-  step
-  split
-  · rename_i _ pair
-    obtain ⟨index, next⟩ := pair
-    have hpnext : st.core.pos.val ≤ next.val := by
-      cases res <;> simp_all [Leb128.Post]
-      cases cf_post
-      exact (Leb128.Decoded.span _ _ _ _ hdecoded).1.le
-    have hspos : Control.Shape { st.core with pos := next } := ⟨hs.ordered, hs.bounded⟩
-    step
-    cases indirect
-    · step* <;> simp_all
-    · simp only [↓reduceIte]
-      by_cases hn : next.val < data.length
-      · step with reader.read_byte.spec data next hn as ⟨r1, next1, hbyte, hnext⟩
-        subst r1
-        step as ⟨cf1, hcf1⟩
-        subst cf1
-        have hsnext (p : Usize) : Control.Shape { st.core with pos := p } :=
-          ⟨hs.ordered, hs.bounded⟩
-        simp only [alloc.vec.Vec.is_empty, bind_ok]
-        step* <;> simp_all <;> omega
-      · rw [reader.read_byte.eof data next (by omega)]
-        step* <;> simp_all
-  · step* <;> simp_all
+  unfold code.call
+  cases indirect <;> step* <;> simp_all
 
 end Itasca

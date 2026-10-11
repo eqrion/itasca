@@ -10,10 +10,22 @@ namespace Itasca.ModuleExamples
 def bytes (xs : List U8) (h : xs.length ≤ Usize.max := by scalar_tac) : Slice U8 :=
   alloc.vec.Vec.deref (alloc.vec.Vec.from xs h)
 
-def emptyEnv : module.Env :=
-  ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _, alloc.vec.Vec.new _, alloc.vec.Vec.new _,
-    alloc.vec.Vec.new _, none, alloc.vec.Vec.new _, alloc.vec.Vec.new _,
-    alloc.vec.Vec.new _, alloc.vec.Vec.new _, alloc.vec.Vec.new _, 0#usize, 0#usize⟩
+def emptyEnv : module.Env where
+  types := alloc.vec.Vec.new _
+  imports := alloc.vec.Vec.new _
+  globals := alloc.vec.Vec.new _
+  exports := alloc.vec.Vec.new _
+  elements := alloc.vec.Vec.new _
+  start := none
+  data_count := none
+  declared_funcs := alloc.vec.Vec.new _
+  func_type_indices := alloc.vec.Vec.new _
+  func_types := alloc.vec.Vec.new _
+  table_types := alloc.vec.Vec.new _
+  mem_types := alloc.vec.Vec.new _
+  global_types := alloc.vec.Vec.new _
+  num_imported_funcs := 0#usize
+  num_imported_globals := 0#usize
 
 def emptyModule : module.Module := ⟨emptyEnv, ⟨alloc.vec.Vec.new _⟩⟩
 

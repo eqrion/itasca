@@ -104,11 +104,11 @@ theorem stream.validate_streaming.profile_sound {S V : Type}
   have htailSem := module.validate_tail.spec run.remaining.tailBytes 0#usize env (by simp) profile
   rw [htail] at htailSem
   simp only [WP.spec_ok] at htailSem
-  obtain ⟨⟨tailBytes, ht, hts⟩, hsegments⟩ := htailSem
+  obtain ⟨⟨tailBytes, ht, hts⟩, hsegments, hdataCount⟩ := htailSem
   have htailWhole : run.remaining.tailBytes.val = tailBytes := by simpa using hts.suffix
   refine ⟨run, ?_, ?_⟩
   · exact ModuleSound.assembled_regions hbytes (by simpa [← hwhole, heq] using hprefix)
-      hrep hvalid hcode htyped (by simpa [← htailWhole, hteq] using ht) hsegments
+      hrep hvalid hcode htyped (by simpa [← htailWhole, hteq] using ht) hsegments hdataCount
   · have heLength := congrArg List.length heq
     have htLength := congrArg List.length hteq
     have hdLength := congrArg List.length hbytes

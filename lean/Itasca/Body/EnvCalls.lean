@@ -101,80 +101,96 @@ theorem code.read_call_indirect.prefix (st : code.OpIterState) (data : Slice U8)
           · simp [code.read_call_indirect, hr, hz, alloc.vec.Vec.is_empty, htable,
               core.result.Result.Insts.CoreOpsTry.branch]
           · have htablelen : 0 < env.table_types.val.length := List.length_pos_iff.mpr htable
-            by_cases hi : idx.val < env.types.val.length
-            · have hix : (UScalar.cast .Usize idx).val < env.types.val.length := by simpa using hi
-              obtain ⟨ft, hft, heq⟩ := WP.spec_imp_exists
-                (alloc.vec.Vec.index_usize_spec env.types (UScalar.cast .Usize idx) hix)
-              have htype : env.types.val[idx.val] = ft := by simpa using heq.symm
-              have hsmall := Nat.not_le_of_gt hi
-              obtain ⟨rreq, hreq, hresults⟩ := WP.spec_imp_exists
-                (code.require_single_result.spec (alloc.vec.Vec.deref ft.results))
-              cases rreq with
-              | Err e =>
-                  simp [code.read_call_indirect, hr, hz, alloc.vec.Vec.is_empty, htable,
-                    lift, hsmall, hft, hreq, core.result.Result.Insts.CoreOpsTry.branch,
-                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-              | Ok u =>
-                  obtain ⟨⟨rc, sc⟩, hcond, hcc, hpc, condrest, hvc, hlc, houtc⟩ := WP.spec_imp_exists
-                    (code.pop_with_type.realizes sz outer segment .I32
-                      (by simpa [hvz, hv] using hvals)
-                      (by simpa [Control.base, hcz, hc] using hbase))
-                  dsimp only at hcc hpc hvc hlc houtc
-                  cases rc with
+            obtain ⟨tt, hget, hgeteq⟩ := WP.spec_imp_exists
+              (alloc.vec.Vec.index_usize_spec env.table_types 0#usize (by simpa using htablelen))
+            have htt : env.table_types.val[0] = tt := by simpa using hgeteq.symm
+            cases helem : tt.elem with
+            | ExternRef =>
+                simp [code.read_call_indirect, hr, hz, alloc.vec.Vec.is_empty, htable,
+                  hget, helem, types.ElemType.value_type, core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
+                  types.ValueType.Insts.CoreCmpPartialEqValueType.eq,
+                  core.result.Result.Insts.CoreOpsTry.branch]
+            | FuncRef =>
+                have hfun : env.table_types.val[0].elem = .FuncRef := by rw [htt]; exact helem
+                by_cases hi : idx.val < env.types.val.length
+                · have hix : (UScalar.cast .Usize idx).val < env.types.val.length := by simpa using hi
+                  obtain ⟨ft, hft, heq⟩ := WP.spec_imp_exists
+                    (alloc.vec.Vec.index_usize_spec env.types (UScalar.cast .Usize idx) hix)
+                  have htype : env.types.val[idx.val] = ft := by simpa using heq.symm
+                  have hsmall := Nat.not_le_of_gt hi
+                  obtain ⟨rreq, hreq, hresults⟩ := WP.spec_imp_exists
+                    (code.require_single_result.spec (alloc.vec.Vec.deref ft.results))
+                  cases rreq with
                   | Err e =>
-                      simp [code.read_call_indirect, hr, hz, alloc.vec.Vec.is_empty, htable,
-                        lift, hsmall, hft, hreq, hcond, core.result.Result.Insts.CoreOpsTry.branch,
+                      simp [code.read_call_indirect, hget, helem, types.ElemType.value_type,
+                      core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default, types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hr, hz, alloc.vec.Vec.is_empty, htable,
+                        lift, hsmall, hft, hreq, core.result.Result.Insts.CoreOpsTry.branch,
                         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-                  | Ok popped =>
-                      obtain ⟨⟨r', s'⟩, hp, hc', hpos, rest, hv', hlen, hout'⟩ := WP.spec_imp_exists
-                        (code.pop_types.realizes sc outer condrest (alloc.vec.Vec.deref ft.params)
-                          hvc (by simpa [Control.base, hcc, hcz, hc] using hbase))
-                      dsimp only at hc' hpos hv' hlen hout'
-                      cases r' with
+                  | Ok u =>
+                      obtain ⟨⟨rc, sc⟩, hcond, hcc, hpc, condrest, hvc, hlc, houtc⟩ := WP.spec_imp_exists
+                        (code.pop_with_type.realizes sz outer segment .I32
+                          (by simpa [hvz, hv] using hvals)
+                          (by simpa [Control.base, hcz, hc] using hbase))
+                      dsimp only at hcc hpc hvc hlc houtc
+                      cases rc with
                       | Err e =>
-                          simp [code.read_call_indirect, hr, hz, alloc.vec.Vec.is_empty, htable,
-                            lift, hsmall, hft, hreq, hcond, hp, core.result.Result.Insts.CoreOpsTry.branch,
+                          simp [code.read_call_indirect, hget, helem, types.ElemType.value_type,
+                      core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default, types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hr, hz, alloc.vec.Vec.is_empty, htable,
+                            lift, hsmall, hft, hreq, hcond, core.result.Result.Insts.CoreOpsTry.branch,
                             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-                      | Ok u =>
-                          have hresultlen : ft.results.val.length ≤ 1 := by
-                            simpa [alloc.vec.Vec.deref] using hresults
-                          have hcap : s'.vals.val.length + (alloc.vec.Vec.deref ft.results).val.length ≤ Usize.max := by
-                            simp only [hv', hvals, List.length_append, alloc.vec.Vec.deref] at *
-                            omega
-                          obtain ⟨s'', hpush, hv'', hc'', hpos'⟩ := WP.spec_imp_exists
-                            (code.push_types.spec s' (alloc.vec.Vec.deref ft.results) hcap)
-                          have hcondpop : ∀ ts, Sequence.Realizes (Control.polymorphic st) condrest ts →
-                              Sequence.Realizes (Control.polymorphic st) segment (ts ++ [.I32]) := by
-                            simpa [Control.polymorphic, hcz, hc, Translate.valueType] using houtc.2
-                          have hparampop : ∀ ts, Sequence.Realizes (Control.polymorphic st) rest ts →
-                              Sequence.Realizes (Control.polymorphic st) condrest
-                                (ts ++ ft.params.val.map Translate.valueType) := by
-                            simpa [Control.polymorphic, hcc, hcz, hc, alloc.vec.Vec.deref] using hout'
-                          have hpop : ∀ ts, Sequence.Realizes (Control.polymorphic st) rest ts →
-                              Sequence.Realizes (Control.polymorphic st) segment
-                                (ts ++ (ft.params.val.map Translate.valueType ++ [.I32])) := by
-                            intro ts ht
-                            simpa [List.append_assoc] using hcondpop _ (hparampop ts ht)
-                          have htyping := (Frames.ResumePrefix.after_pop htyped hpop).finish hC.wf
-                            (.CALL_INDIRECT (.mk_uN 0) (.mk_uN idx.val)) ft.results.val
-                            (.instr_case_11 _ _ (EnvTranslation.index_wf 0#u32) (EnvTranslation.index_wf idx))
-                            (hC.call_indirect idx ft hi htype htablelen)
-                          rw [WP.spec_equiv_exists]
-                          refine ⟨(.Ok idx, s''), ?_, ?_⟩
-                          · simp [code.read_call_indirect, hr, hz, alloc.vec.Vec.is_empty, htable,
-                              lift, hsmall, hft, hreq, hcond, hp, hpush, core.result.Result.Insts.CoreOpsTry.branch]
-                          · intro ix heq
-                            cases heq
-                            obtain ⟨hm, hb, hn⟩ := houtz
-                            refine ⟨⟨s.pos, hout, hm, hb, ?_⟩,
-                              hc''.trans (hc'.trans (hcc.trans (hcz.trans hc))),
-                              rest ++ ft.results.val.map code.StackType.Val, ?_, ?_, htyping⟩
-                            · simpa [hpos', hpos, hpc] using hn
-                            · simpa [hv', List.append_assoc, alloc.vec.Vec.deref] using hv''
-                            · simp only [List.length_append, List.length_map]
-                              omega
-            · have hlarge := Nat.le_of_not_gt hi
-              simp [code.read_call_indirect, hr, hz, alloc.vec.Vec.is_empty, htable,
-                lift, hlarge, core.result.Result.Insts.CoreOpsTry.branch]
+                      | Ok popped =>
+                          obtain ⟨⟨r', s'⟩, hp, hc', hpos, rest, hv', hlen, hout'⟩ := WP.spec_imp_exists
+                            (code.pop_types.realizes sc outer condrest (alloc.vec.Vec.deref ft.params)
+                              hvc (by simpa [Control.base, hcc, hcz, hc] using hbase))
+                          dsimp only at hc' hpos hv' hlen hout'
+                          cases r' with
+                          | Err e =>
+                              simp [code.read_call_indirect, hget, helem, types.ElemType.value_type,
+                      core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default, types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hr, hz, alloc.vec.Vec.is_empty, htable,
+                                lift, hsmall, hft, hreq, hcond, hp, core.result.Result.Insts.CoreOpsTry.branch,
+                                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+                          | Ok u =>
+                              have hresultlen : ft.results.val.length ≤ 1 := by
+                                simpa [alloc.vec.Vec.deref] using hresults
+                              have hcap : s'.vals.val.length + (alloc.vec.Vec.deref ft.results).val.length ≤ Usize.max := by
+                                simp only [hv', hvals, List.length_append, alloc.vec.Vec.deref] at *
+                                omega
+                              obtain ⟨s'', hpush, hv'', hc'', hpos'⟩ := WP.spec_imp_exists
+                                (code.push_types.spec s' (alloc.vec.Vec.deref ft.results) hcap)
+                              have hcondpop : ∀ ts, Sequence.Realizes (Control.polymorphic st) condrest ts →
+                                  Sequence.Realizes (Control.polymorphic st) segment (ts ++ [.I32]) := by
+                                simpa [Control.polymorphic, hcz, hc, Translate.valueType] using houtc.2
+                              have hparampop : ∀ ts, Sequence.Realizes (Control.polymorphic st) rest ts →
+                                  Sequence.Realizes (Control.polymorphic st) condrest
+                                    (ts ++ ft.params.val.map Translate.valueType) := by
+                                simpa [Control.polymorphic, hcc, hcz, hc, alloc.vec.Vec.deref] using hout'
+                              have hpop : ∀ ts, Sequence.Realizes (Control.polymorphic st) rest ts →
+                                  Sequence.Realizes (Control.polymorphic st) segment
+                                    (ts ++ (ft.params.val.map Translate.valueType ++ [.I32])) := by
+                                intro ts ht
+                                simpa [List.append_assoc] using hcondpop _ (hparampop ts ht)
+                              have htyping := (Frames.ResumePrefix.after_pop htyped hpop).finish hC.wf
+                                (.CALL_INDIRECT (.mk_uN 0) (.mk_uN idx.val)) ft.results.val
+                                (.instr_case_11 _ _ (EnvTranslation.index_wf 0#u32) (EnvTranslation.index_wf idx))
+                                (hC.call_indirect idx 0#u32 ft hi htype htablelen hfun)
+                              rw [WP.spec_equiv_exists]
+                              refine ⟨(.Ok idx, s''), ?_, ?_⟩
+                              · simp [code.read_call_indirect, hget, helem, types.ElemType.value_type,
+                      core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default, types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hr, hz, alloc.vec.Vec.is_empty, htable,
+                                  lift, hsmall, hft, hreq, hcond, hp, hpush, core.result.Result.Insts.CoreOpsTry.branch]
+                              · intro ix heq
+                                cases heq
+                                obtain ⟨hm, hb, hn⟩ := houtz
+                                refine ⟨⟨s.pos, hout, hm, hb, ?_⟩,
+                                  hc''.trans (hc'.trans (hcc.trans (hcz.trans hc))),
+                                  rest ++ ft.results.val.map code.StackType.Val, ?_, ?_, htyping⟩
+                                · simpa [hpos', hpos, hpc] using hn
+                                · simpa [hv', List.append_assoc, alloc.vec.Vec.deref] using hv''
+                                · simp only [List.length_append, List.length_map]
+                                  omega
+                · have hlarge := Nat.le_of_not_gt hi
+                  simp [code.read_call_indirect, hget, helem, types.ElemType.value_type,
+                      core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default, types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hr, hz, alloc.vec.Vec.is_empty, htable,
+                    lift, hlarge, core.result.Result.Insts.CoreOpsTry.branch]
 
 end Itasca

@@ -1,4 +1,4 @@
-import Itasca.Module.ModuleAssembly
+import Itasca.Module.ModuleDeclared
 import Itasca.Body.Wasm1ProfileTransport
 import Mathlib.Data.List.Nodup
 
@@ -21,6 +21,7 @@ judgment. Neither these conditions nor elaboration mention validator calls. -/
 structure Profile (raw : ModuleBinary.Module) (validationProfile : ValidationProfile := .Wasm1) : Prop
     extends ModuleConditions raw validationProfile where
   bodies : List.Forall₂ (fun idx entry => FunctionProfile raw.types idx entry validationProfile) raw.functions raw.codes
+  declared : DeclaredReferences.Module (moduleOf raw)
 
 theorem typed_profile {env idx entry} {validationProfile : ValidationProfile}
     (h : CodeEntry.Typed env idx entry validationProfile) :
@@ -58,6 +59,22 @@ theorem profile {env tables memories codes segments}
       simpa [fromEnv, ModuleEnv.rawImport, List.map_map, Function.comp_def, mems_imports] using h
     · exact (hv.environment hc).1
   · exact code_profiles hcodes
+  · change ∀ f ∈ List.zipWith CodeEntry.function env.func_type_indices.val codes,
+      DeclaredReferences.Function _ f
+    have hall : ∀ f ∈ List.zipWith CodeEntry.function env.func_type_indices.val codes,
+        DeclaredReferences.Function
+          (env.declared_funcs.val.map (fun idx => uN.mk_uN idx.val)) f := by
+      generalize hi : env.func_type_indices.val = indices at hcodes ⊢
+      clear hi
+      induction hcodes with
+      | nil => simp
+      | cons hp htail ih =>
+        intro f hf
+        rcases List.mem_cons.mp hf with rfl | hf
+        · exact hp.declared
+        · exact ih f hf
+    intro f hf
+    exact (hall f hf).mono (ModuleReferences.coherent_declared hv.references)
 
 theorem elaborates {env tables memories codes segments} {validationProfile : ValidationProfile}
     (hc : ModuleEnv.Cache env tables memories)

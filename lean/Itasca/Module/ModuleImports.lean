@@ -9,7 +9,8 @@ open Aeneas Aeneas.Std
 namespace Itasca.ModuleSections
 
 /-- A single import updates just its own index space, preserving declaration order. -/
-def ImportAdded (env result : module.Env) (entry : module.Import) : Prop :=
+def ImportAdded (env result : module.Env) (entry : module.Import)
+    (profile : ValidationProfile := .Wasm1) : Prop :=
   result.imports.val = env.imports.val ++ [entry] ∧
   match entry.desc with
   | .Func idx => ∃ ft, ModuleEnv.Resolves env.types.val idx ft ∧
@@ -19,11 +20,13 @@ def ImportAdded (env result : module.Env) (entry : module.Import) : Prop :=
   | .Global gt =>
       result = { env with imports := result.imports, global_types := result.global_types, num_imported_globals := result.num_imported_globals } ∧
       result.global_types.val = env.global_types.val ++ [gt] ∧
-      result.num_imported_globals.val = env.num_imported_globals.val + 1
+      result.num_imported_globals.val = env.num_imported_globals.val + 1 ∧
+      ModuleBinary.ValueTypeAllowed profile gt.valtype
   | .Table tt =>
       result = { env with imports := result.imports, table_types := result.table_types } ∧
-      result.table_types.val = env.table_types.val ++ [tt] ∧ result.table_types.val.length ≤ 1 ∧
-      ModuleTranslation.LimitsValid tt.limits (2 ^ 32 - 1)
+      result.table_types.val = env.table_types.val ++ [tt] ∧ (profile = .Wasm1 → result.table_types.val.length ≤ 1) ∧
+      ModuleTranslation.LimitsValid tt.limits (2 ^ 32 - 1) ∧
+      ModuleBinary.ElemTypeAllowed profile tt.elem
   | .Memory mt =>
       result = { env with imports := result.imports, mem_types := result.mem_types } ∧
       result.mem_types.val = env.mem_types.val ++ [mt] ∧ result.mem_types.val.length ≤ 1 ∧
@@ -47,9 +50,9 @@ open ModuleBinary ModuleSections
 
 @[step]
 theorem module.decode_import.spec (data : Slice U8) (pos : Usize) (env : module.Env)
-    (hbound : ModuleEnv.Bounded env pos.val) :
-    module.decode_import data pos env ⦃ r => match r.1 with
-      | .Ok next => ∃ entry, ImportAdded env r.2 entry ∧
+    (hbound : ModuleEnv.Bounded env pos.val) (profile : ValidationProfile := .Wasm1) :
+    module.decode_import data pos env profile ⦃ r => match r.1 with
+      | .Ok next => ∃ entry, ImportAdded env r.2 entry profile ∧
           At ImportEncoding data pos (ModuleEnv.rawImport entry) next ∧
           ModuleEnv.Bounded r.2 next.val
       | .Err _ => True ⦄ := by
@@ -108,26 +111,32 @@ theorem module.decode_import.spec (data : Slice U8) (pos : Usize) (env : module.
                 intro bytes hbytes
                 exact .func value hbytes
               · constructor <;> simp only [v_post, v1_post, List.length_append, List.length_singleton] <;> scalar_tac
-        · obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (module.decode_table_type.spec data p3)
+        · obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (module.decode_table_type.allowed_spec data p3 profile)
           cases r with
           | Err e => simp [hd,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
           | Ok pair =>
             obtain ⟨value, next⟩ := pair
-            obtain ⟨hdesc, hlimits⟩ := hdesc
+            obtain ⟨⟨hdesc, hlimits⟩, hallowed⟩ := hdesc
             have hspanD := hdesc.span
             have hcapacity : env.table_types.val.length < Usize.max := by scalar_tac
             have hcapacityI : env.imports.val.length < Usize.max := by scalar_tac
             simp [hd]
             step
-            split
-            · simp
-            · rename_i hcount
+            obtain ⟨checked, hchecked, hcount⟩ := WP.spec_imp_exists
+              (module.check_table_count.spec { env with table_types := v } profile)
+            rw [hchecked]
+            cases checked with
+            | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+            | Ok unit =>
+              cases unit
+              simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
               step
               let entry : module.Import := ⟨modname, nm, .Table value⟩
               refine ⟨entry, ?_, ?_, ?_⟩
-              · refine ⟨v1_post, rfl, v_post, ?_, ?_⟩
-                · simpa [global_simps] using hcount
+              · refine ⟨v1_post, rfl, v_post, ?_, ?_, hallowed⟩
+                · exact hcount
                 · simpa [ModuleTranslation.LimitsValid, ModuleBinary.LimitsValid, Option.mem_def, global_simps, U32.rMax] using hlimits
               · apply import_encoded hm hname
                 apply At.prepend (by with_unfolding_all exact hkind) hdesc
@@ -160,12 +169,13 @@ theorem module.decode_import.spec (data : Slice U8) (pos : Usize) (env : module.
                 intro bytes hbytes
                 exact .memory value hbytes
               · constructor <;> simp only [v_post, v1_post, List.length_append, List.length_singleton] <;> scalar_tac
-        · obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (module.decode_global_type.spec data p3)
+        · obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (module.decode_global_type.allowed_spec data p3 profile)
           cases r with
           | Err e => simp [hd,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
           | Ok pair =>
             obtain ⟨value, next⟩ := pair
+            obtain ⟨hdesc, hallowed⟩ := hdesc
             have hspanD := hdesc.span
             have hcapacity : env.global_types.val.length < Usize.max := by scalar_tac
             have hcapacityI : env.imports.val.length < Usize.max := by scalar_tac
@@ -176,7 +186,7 @@ theorem module.decode_import.spec (data : Slice U8) (pos : Usize) (env : module.
             step
             let entry : module.Import := ⟨modname, nm, .Global value⟩
             refine ⟨entry, ?_, ?_, ?_⟩
-            · exact ⟨v1_post, rfl, v_post, i_post⟩
+            · exact ⟨v1_post, rfl, v_post, i_post, hallowed⟩
             · apply import_encoded hm hname
               apply At.prepend (by with_unfolding_all exact hkind) hdesc
               intro bytes hbytes

@@ -1,4 +1,5 @@
 import Itasca.MultiValue.Binary
+import Itasca.MultiValue.DeclaredBodySyntax
 
 open Aeneas Aeneas.Std
 
@@ -20,6 +21,7 @@ validator-success premise and imposes no Wasm 1.0 result-arity restriction. -/
 def Validated (data : Slice U8) (env : module.Env) (locals : alloc.vec.Vec types.ValueType)
     (index : U32) : Prop :=
   ∃ ft ops, env.types.val[index.val]? = some ft ∧ BodyEncoding data ops ∧
-    FunctionTyped env locals ft ops
+    FunctionTyped env locals ft ops ∧
+    DeclaredReferences.Instructions (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) ops
 
 end Itasca.MultiValue

@@ -30,12 +30,16 @@ pub enum OpError {
     UnknownFunc,
     UnknownType,
     UnknownTable,
+    UnknownData,
+    UnknownElement,
     /// A function signature exceeds the selected profile's result limit.
     TooManyResults,
     TooManyParams,
     /// An instruction's reserved zero byte is nonzero.
     ReservedByteNotZero,
     InvalidAlignment,
+    /// A SIMD lane or shuffle selector is out of range.
+    InvalidLane,
     TrailingBytes,
     BodyTooLarge,
     /// An operator callback rejected the input, which may otherwise be valid.
@@ -68,6 +72,8 @@ pub enum Error {
     SectionSizeMismatch,
     /// The function and code sections declare different function counts.
     FuncCodeMismatch,
+    /// The data count differs from the number of data segments.
+    DataCountMismatch,
     /// Defined functions have no corresponding code section.
     MissingCodeSection,
     /// A name contains invalid UTF-8.
@@ -123,6 +129,7 @@ impl fmt::Display for Error {
             Error::FuncCodeMismatch => {
                 write!(f, "function and code sections have inconsistent lengths")
             }
+            Error::DataCountMismatch => write!(f, "data count does not match data segments"),
             Error::MissingCodeSection => {
                 write!(f, "the module declares functions and has no code section")
             }

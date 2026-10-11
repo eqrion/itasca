@@ -18,10 +18,11 @@ structure Layout where
   exports : List U8 := []
   start : List U8 := []
   elements : List U8 := []
+  dataCount : List U8 := []
   customs : List U8 := []
 
 def Layout.bytes (l : Layout) : List U8 :=
-  l.types ++ l.imports ++ l.functions ++ l.tables ++ l.memories ++ l.globals ++ l.exports ++ l.start ++ l.elements ++ l.customs
+  l.types ++ l.imports ++ l.functions ++ l.tables ++ l.memories ++ l.globals ++ l.exports ++ l.start ++ l.elements ++ l.dataCount ++ l.customs
 
 def Layout.Future (last : Nat) (l : Layout) : Prop :=
   (last < 1 → l.types = []) ∧
@@ -32,7 +33,8 @@ def Layout.Future (last : Nat) (l : Layout) : Prop :=
   (last < 6 → l.globals = []) ∧
   (last < 7 → l.exports = []) ∧
   (last < 8 → l.start = []) ∧
-  (last < 9 → l.elements = [])
+  (last < 9 → l.elements = []) ∧
+  (last < 10 → l.dataCount = [])
 
 structure Layout.Valid (last : Nat) (decls : Declarations) (l : Layout)
     (profile : ValidationProfile := .Wasm1) : Prop where
@@ -45,8 +47,10 @@ structure Layout.Valid (last : Nat) (decls : Declarations) (l : Layout)
   exports : PaddedEncoding 7#u8 (VecEncoding ExportEncoding) [] decls.exports l.exports
   start : PaddedEncoding 8#u8 StartEncoding none decls.start l.start
   elements : PaddedEncoding 9#u8 (VecEncoding (ElementEncodingFor profile)) [] decls.elements l.elements
+  dataCount : DataCountSectionEncoding profile decls.dataCount l.dataCount
   customs : CustomsEncoding l.customs
   future : l.Future last
+  allowed : ModuleTypesAllowed profile (decls.module [] [])
 
 theorem Layout.valid_empty (profile : ValidationProfile := .Wasm1) :
     Layout.Valid 0 ({} : Declarations) ({} : Layout) profile := by
@@ -60,35 +64,42 @@ theorem Layout.valid_empty (profile : ValidationProfile := .Wasm1) :
   · exact ⟨[], [], .nil, .absent, rfl⟩
   · exact ⟨[], [], .nil, .absent, rfl⟩
   · exact ⟨[], [], .nil, .absent, rfl⟩
+  · cases profile with
+    | Wasm1 => exact ⟨rfl, rfl⟩
+    | Wasm2 => exact ⟨[], [], .nil, .absent, rfl⟩
   · exact .nil
-  · simp [Layout.Future]
+  · simp [sectionRank, global_simps, Layout.Future]
+  · simp [ModuleTypesAllowed, Declarations.module]
 
 theorem Layout.Valid.custom {profile last decls l bytes} (h : Layout.Valid last decls l profile)
     (hc : CustomEncoding bytes) :
     Layout.Valid last decls { l with customs := l.customs ++ bytes } profile := by
   exact ⟨h.types, h.imports, h.functions, h.tables, h.memories, h.globals,
-    h.exports, h.start, h.elements,
-    by simpa using ModuleTail.customs_append h.customs (.cons hc .nil), h.future⟩
+    h.exports, h.start, h.elements, h.dataCount,
+    by simpa using ModuleTail.customs_append h.customs (.cons hc .nil), h.future, h.allowed⟩
 
 theorem Effect.append_layout {profile} {data origin pos first next env result before after id last l}
     (h : Effect (profile := profile) data first env before id next result after)
     (hh : SectionHeader data pos id first next)
-    (hl : Layout.Valid last before l profile) (ho : last < id.val)
+    (hl : Layout.Valid last before l profile) (ho : last < (sectionRank id).val)
     (hs : Wasm.BytesAt data origin l.bytes pos) :
-    ∃ updated, Layout.Valid id.val after updated profile ∧ Wasm.BytesAt data origin updated.bytes next := by
-  rcases hl.future with ⟨hf1, hf2, hf3, hf4, hf5, hf6, hf7, hf8, hf9⟩
+    ∃ updated, Layout.Valid (sectionRank id).val after updated profile ∧ Wasm.BytesAt data origin updated.bytes next := by
+  have hallowed := h.allowed hl.allowed
+  rcases hl.future with ⟨hf1, hf2, hf3, hf4, hf5, hf6, hf7, hf8, hf9, hf10⟩
   cases h with
   | types hadd hb hv =>
     obtain ⟨bytes, he, hbytes⟩ := ModuleTail.header_payload hh hb
-    have hz1 : l.types = [] := hf1 (by scalar_tac)
-    have hz2 : l.imports = [] := hf2 (by scalar_tac)
-    have hz3 : l.functions = [] := hf3 (by scalar_tac)
-    have hz4 : l.tables = [] := hf4 (by scalar_tac)
-    have hz5 : l.memories = [] := hf5 (by scalar_tac)
-    have hz6 : l.globals = [] := hf6 (by scalar_tac)
-    have hz7 : l.exports = [] := hf7 (by scalar_tac)
-    have hz8 : l.start = [] := hf8 (by scalar_tac)
-    have hz9 : l.elements = [] := hf9 (by scalar_tac)
+    change last < 1 at ho
+    have hz1 : l.types = [] := hf1 (by omega)
+    have hz2 : l.imports = [] := hf2 (by omega)
+    have hz3 : l.functions = [] := hf3 (by omega)
+    have hz4 : l.tables = [] := hf4 (by omega)
+    have hz5 : l.memories = [] := hf5 (by omega)
+    have hz6 : l.globals = [] := hf6 (by omega)
+    have hz7 : l.exports = [] := hf7 (by omega)
+    have hz8 : l.start = [] := hf8 (by omega)
+    have hz9 : l.elements = [] := hf9 (by omega)
+    have hz10 : l.dataCount = [] := hf10 (by omega)
     refine ⟨{ l with types := l.customs ++ bytes, customs := [] }, ?_, ?_⟩
     · constructor
       · exact ⟨l.customs, bytes, hl.customs, .present he, rfl⟩
@@ -100,20 +111,24 @@ theorem Effect.append_layout {profile} {data origin pos first next env result be
       · exact hl.exports
       · exact hl.start
       · exact hl.elements
+      · exact hl.dataCount
       · exact .nil
-      · simp [Layout.Future, hz2, hz3, hz4, hz5, hz6, hz7, hz8, hz9]
+      · simp [sectionRank, global_simps, Layout.Future, hz2, hz3, hz4, hz5, hz6, hz7, hz8, hz9, hz10]
+      · exact hallowed
     · convert hs.append hbytes using 1
-      simp [Layout.bytes, hz1, hz2, hz3, hz4, hz5, hz6, hz7, hz8, hz9]
+      simp [Layout.bytes, hz1, hz2, hz3, hz4, hz5, hz6, hz7, hz8, hz9, hz10, List.append_assoc]
   | imports hadd hb =>
     obtain ⟨bytes, he, hbytes⟩ := ModuleTail.header_payload hh hb
-    have hz2 : l.imports = [] := hf2 (by scalar_tac)
-    have hz3 : l.functions = [] := hf3 (by scalar_tac)
-    have hz4 : l.tables = [] := hf4 (by scalar_tac)
-    have hz5 : l.memories = [] := hf5 (by scalar_tac)
-    have hz6 : l.globals = [] := hf6 (by scalar_tac)
-    have hz7 : l.exports = [] := hf7 (by scalar_tac)
-    have hz8 : l.start = [] := hf8 (by scalar_tac)
-    have hz9 : l.elements = [] := hf9 (by scalar_tac)
+    change last < 2 at ho
+    have hz2 : l.imports = [] := hf2 (by omega)
+    have hz3 : l.functions = [] := hf3 (by omega)
+    have hz4 : l.tables = [] := hf4 (by omega)
+    have hz5 : l.memories = [] := hf5 (by omega)
+    have hz6 : l.globals = [] := hf6 (by omega)
+    have hz7 : l.exports = [] := hf7 (by omega)
+    have hz8 : l.start = [] := hf8 (by omega)
+    have hz9 : l.elements = [] := hf9 (by omega)
+    have hz10 : l.dataCount = [] := hf10 (by omega)
     refine ⟨{ l with imports := l.customs ++ bytes, customs := [] }, ?_, ?_⟩
     · constructor
       · exact hl.types
@@ -125,19 +140,23 @@ theorem Effect.append_layout {profile} {data origin pos first next env result be
       · exact hl.exports
       · exact hl.start
       · exact hl.elements
+      · exact hl.dataCount
       · exact .nil
-      · simp [Layout.Future, hz3, hz4, hz5, hz6, hz7, hz8, hz9]
+      · simp [sectionRank, global_simps, Layout.Future, hz3, hz4, hz5, hz6, hz7, hz8, hz9, hz10]
+      · exact hallowed
     · convert hs.append hbytes using 1
-      simp [Layout.bytes, hz2, hz3, hz4, hz5, hz6, hz7, hz8, hz9, List.append_assoc]
+      simp [Layout.bytes, hz2, hz3, hz4, hz5, hz6, hz7, hz8, hz9, hz10, List.append_assoc]
   | functions hadd hb =>
     obtain ⟨bytes, he, hbytes⟩ := ModuleTail.header_payload hh hb
-    have hz3 : l.functions = [] := hf3 (by scalar_tac)
-    have hz4 : l.tables = [] := hf4 (by scalar_tac)
-    have hz5 : l.memories = [] := hf5 (by scalar_tac)
-    have hz6 : l.globals = [] := hf6 (by scalar_tac)
-    have hz7 : l.exports = [] := hf7 (by scalar_tac)
-    have hz8 : l.start = [] := hf8 (by scalar_tac)
-    have hz9 : l.elements = [] := hf9 (by scalar_tac)
+    change last < 3 at ho
+    have hz3 : l.functions = [] := hf3 (by omega)
+    have hz4 : l.tables = [] := hf4 (by omega)
+    have hz5 : l.memories = [] := hf5 (by omega)
+    have hz6 : l.globals = [] := hf6 (by omega)
+    have hz7 : l.exports = [] := hf7 (by omega)
+    have hz8 : l.start = [] := hf8 (by omega)
+    have hz9 : l.elements = [] := hf9 (by omega)
+    have hz10 : l.dataCount = [] := hf10 (by omega)
     refine ⟨{ l with functions := l.customs ++ bytes, customs := [] }, ?_, ?_⟩
     · constructor
       · exact hl.types
@@ -149,18 +168,22 @@ theorem Effect.append_layout {profile} {data origin pos first next env result be
       · exact hl.exports
       · exact hl.start
       · exact hl.elements
+      · exact hl.dataCount
       · exact .nil
-      · simp [Layout.Future, hz4, hz5, hz6, hz7, hz8, hz9]
+      · simp [sectionRank, global_simps, Layout.Future, hz4, hz5, hz6, hz7, hz8, hz9, hz10]
+      · exact hallowed
     · convert hs.append hbytes using 1
-      simp [Layout.bytes, hz3, hz4, hz5, hz6, hz7, hz8, hz9, List.append_assoc]
+      simp [Layout.bytes, hz3, hz4, hz5, hz6, hz7, hz8, hz9, hz10, List.append_assoc]
   | tables hadd hb hv hc =>
     obtain ⟨bytes, he, hbytes⟩ := ModuleTail.header_payload hh hb
-    have hz4 : l.tables = [] := hf4 (by scalar_tac)
-    have hz5 : l.memories = [] := hf5 (by scalar_tac)
-    have hz6 : l.globals = [] := hf6 (by scalar_tac)
-    have hz7 : l.exports = [] := hf7 (by scalar_tac)
-    have hz8 : l.start = [] := hf8 (by scalar_tac)
-    have hz9 : l.elements = [] := hf9 (by scalar_tac)
+    change last < 4 at ho
+    have hz4 : l.tables = [] := hf4 (by omega)
+    have hz5 : l.memories = [] := hf5 (by omega)
+    have hz6 : l.globals = [] := hf6 (by omega)
+    have hz7 : l.exports = [] := hf7 (by omega)
+    have hz8 : l.start = [] := hf8 (by omega)
+    have hz9 : l.elements = [] := hf9 (by omega)
+    have hz10 : l.dataCount = [] := hf10 (by omega)
     refine ⟨{ l with tables := l.customs ++ bytes, customs := [] }, ?_, ?_⟩
     · constructor
       · exact hl.types
@@ -172,17 +195,21 @@ theorem Effect.append_layout {profile} {data origin pos first next env result be
       · exact hl.exports
       · exact hl.start
       · exact hl.elements
+      · exact hl.dataCount
       · exact .nil
-      · simp [Layout.Future, hz5, hz6, hz7, hz8, hz9]
+      · simp [sectionRank, global_simps, Layout.Future, hz5, hz6, hz7, hz8, hz9, hz10]
+      · exact hallowed
     · convert hs.append hbytes using 1
-      simp [Layout.bytes, hz4, hz5, hz6, hz7, hz8, hz9, List.append_assoc]
+      simp [Layout.bytes, hz4, hz5, hz6, hz7, hz8, hz9, hz10, List.append_assoc]
   | memories hadd hb hv hc =>
     obtain ⟨bytes, he, hbytes⟩ := ModuleTail.header_payload hh hb
-    have hz5 : l.memories = [] := hf5 (by scalar_tac)
-    have hz6 : l.globals = [] := hf6 (by scalar_tac)
-    have hz7 : l.exports = [] := hf7 (by scalar_tac)
-    have hz8 : l.start = [] := hf8 (by scalar_tac)
-    have hz9 : l.elements = [] := hf9 (by scalar_tac)
+    change last < 5 at ho
+    have hz5 : l.memories = [] := hf5 (by omega)
+    have hz6 : l.globals = [] := hf6 (by omega)
+    have hz7 : l.exports = [] := hf7 (by omega)
+    have hz8 : l.start = [] := hf8 (by omega)
+    have hz9 : l.elements = [] := hf9 (by omega)
+    have hz10 : l.dataCount = [] := hf10 (by omega)
     refine ⟨{ l with memories := l.customs ++ bytes, customs := [] }, ?_, ?_⟩
     · constructor
       · exact hl.types
@@ -194,16 +221,20 @@ theorem Effect.append_layout {profile} {data origin pos first next env result be
       · exact hl.exports
       · exact hl.start
       · exact hl.elements
+      · exact hl.dataCount
       · exact .nil
-      · simp [Layout.Future, hz6, hz7, hz8, hz9]
+      · simp [sectionRank, global_simps, Layout.Future, hz6, hz7, hz8, hz9, hz10]
+      · exact hallowed
     · convert hs.append hbytes using 1
-      simp [Layout.bytes, hz5, hz6, hz7, hz8, hz9, List.append_assoc]
+      simp [Layout.bytes, hz5, hz6, hz7, hz8, hz9, hz10, List.append_assoc]
   | globals hadd hb hv =>
     obtain ⟨bytes, he, hbytes⟩ := ModuleTail.header_payload hh hb
-    have hz6 : l.globals = [] := hf6 (by scalar_tac)
-    have hz7 : l.exports = [] := hf7 (by scalar_tac)
-    have hz8 : l.start = [] := hf8 (by scalar_tac)
-    have hz9 : l.elements = [] := hf9 (by scalar_tac)
+    change last < 6 at ho
+    have hz6 : l.globals = [] := hf6 (by omega)
+    have hz7 : l.exports = [] := hf7 (by omega)
+    have hz8 : l.start = [] := hf8 (by omega)
+    have hz9 : l.elements = [] := hf9 (by omega)
+    have hz10 : l.dataCount = [] := hf10 (by omega)
     refine ⟨{ l with globals := l.customs ++ bytes, customs := [] }, ?_, ?_⟩
     · constructor
       · exact hl.types
@@ -215,15 +246,19 @@ theorem Effect.append_layout {profile} {data origin pos first next env result be
       · exact hl.exports
       · exact hl.start
       · exact hl.elements
+      · exact hl.dataCount
       · exact .nil
-      · simp [Layout.Future, hz7, hz8, hz9]
+      · simp [sectionRank, global_simps, Layout.Future, hz7, hz8, hz9, hz10]
+      · exact hallowed
     · convert hs.append hbytes using 1
-      simp [Layout.bytes, hz6, hz7, hz8, hz9, List.append_assoc]
+      simp [Layout.bytes, hz6, hz7, hz8, hz9, hz10, List.append_assoc]
   | exports hadd hb =>
     obtain ⟨bytes, he, hbytes⟩ := ModuleTail.header_payload hh hb
-    have hz7 : l.exports = [] := hf7 (by scalar_tac)
-    have hz8 : l.start = [] := hf8 (by scalar_tac)
-    have hz9 : l.elements = [] := hf9 (by scalar_tac)
+    change last < 7 at ho
+    have hz7 : l.exports = [] := hf7 (by omega)
+    have hz8 : l.start = [] := hf8 (by omega)
+    have hz9 : l.elements = [] := hf9 (by omega)
+    have hz10 : l.dataCount = [] := hf10 (by omega)
     refine ⟨{ l with exports := l.customs ++ bytes, customs := [] }, ?_, ?_⟩
     · constructor
       · exact hl.types
@@ -235,14 +270,18 @@ theorem Effect.append_layout {profile} {data origin pos first next env result be
       · exact ⟨l.customs, bytes, hl.customs, .present he, rfl⟩
       · exact hl.start
       · exact hl.elements
+      · exact hl.dataCount
       · exact .nil
-      · simp [Layout.Future, hz8, hz9]
+      · simp [sectionRank, global_simps, Layout.Future, hz8, hz9, hz10]
+      · exact hallowed
     · convert hs.append hbytes using 1
-      simp [Layout.bytes, hz7, hz8, hz9, List.append_assoc]
+      simp [Layout.bytes, hz7, hz8, hz9, hz10, List.append_assoc]
   | start he hb hi =>
     obtain ⟨bytes, he, hbytes⟩ := ModuleTail.header_payload hh hb
-    have hz8 : l.start = [] := hf8 (by scalar_tac)
-    have hz9 : l.elements = [] := hf9 (by scalar_tac)
+    change last < 8 at ho
+    have hz8 : l.start = [] := hf8 (by omega)
+    have hz9 : l.elements = [] := hf9 (by omega)
+    have hz10 : l.dataCount = [] := hf10 (by omega)
     refine ⟨{ l with start := l.customs ++ bytes, customs := [] }, ?_, ?_⟩
     · constructor
       · exact hl.types
@@ -254,13 +293,17 @@ theorem Effect.append_layout {profile} {data origin pos first next env result be
       · exact hl.exports
       · exact ⟨l.customs, bytes, hl.customs, .present he, rfl⟩
       · exact hl.elements
+      · exact hl.dataCount
       · exact .nil
-      · simp [Layout.Future, hz9]
+      · simp [sectionRank, global_simps, Layout.Future, hz9, hz10]
+      · exact hallowed
     · convert hs.append hbytes using 1
-      simp [Layout.bytes, hz8, hz9, List.append_assoc]
+      simp [Layout.bytes, hz8, hz9, hz10, List.append_assoc]
   | elements hadd hb hv =>
     obtain ⟨bytes, he, hbytes⟩ := ModuleTail.header_payload hh hb
-    have hz9 : l.elements = [] := hf9 (by scalar_tac)
+    change last < 9 at ho
+    have hz9 : l.elements = [] := hf9 (by omega)
+    have hz10 : l.dataCount = [] := hf10 (by omega)
     refine ⟨{ l with elements := l.customs ++ bytes, customs := [] }, ?_, ?_⟩
     · constructor
       · exact hl.types
@@ -272,10 +315,34 @@ theorem Effect.append_layout {profile} {data origin pos first next env result be
       · exact hl.exports
       · exact hl.start
       · exact ⟨l.customs, bytes, hl.customs, .present he, rfl⟩
+      · exact hl.dataCount
       · exact .nil
-      · simp [Layout.Future]
+      · simp [sectionRank, global_simps, Layout.Future, hz10]
+      · exact hallowed
     · convert hs.append hbytes using 1
-      simp [Layout.bytes, hz9, List.append_assoc]
+      simp [Layout.bytes, hz9, hz10, List.append_assoc]
+  | dataCount hprofile hstate hb =>
+    subst profile
+    obtain ⟨bytes, he, hbytes⟩ := ModuleTail.header_payload hh hb
+    change last < 10 at ho
+    have hz10 : l.dataCount = [] := hf10 (by omega)
+    refine ⟨{ l with dataCount := l.customs ++ bytes, customs := [] }, ?_, ?_⟩
+    · constructor
+      · exact hl.types
+      · exact hl.imports
+      · exact hl.functions
+      · exact hl.tables
+      · exact hl.memories
+      · exact hl.globals
+      · exact hl.exports
+      · exact hl.start
+      · exact hl.elements
+      · exact ⟨l.customs, bytes, hl.customs, .present he, rfl⟩
+      · exact .nil
+      · simp [sectionRank, global_simps, Layout.Future]
+      · exact hallowed
+    · convert hs.append hbytes using 1
+      simp [Layout.bytes, hz10, List.append_assoc]
 
 theorem Run.append_layout {profile} {data initial decls start initialId after afterDecls next id origin l}
     (h : Run (profile := profile) data initial decls start initialId after afterDecls next id)
@@ -296,9 +363,9 @@ theorem Run.append_layout {profile} {data initial decls start initialId after af
 theorem Layout.Valid.encoding {profile last decls l} (h : Layout.Valid last decls l profile) :
     PrefixEncoding decls (magicVersion ++ l.bytes) profile := by
   exact ⟨l.types, l.imports, l.functions, l.tables, l.memories, l.globals, l.exports,
-    l.start, l.elements, l.customs, h.types, h.imports, h.functions, h.tables,
-    h.memories, h.globals, h.exports, h.start, h.elements, h.customs,
-    by simp only [Layout.bytes, List.append_assoc]⟩
+    l.start, l.elements, l.dataCount, l.customs, h.types, h.imports, h.functions, h.tables,
+    h.memories, h.globals, h.exports, h.start, h.elements, h.dataCount, h.customs,
+    by simp only [Layout.bytes, List.append_assoc], h.allowed⟩
 
 /-- Successful section histories have the full independently encoded prefix. -/
 theorem Run.encoding {profile} {data initial start after decls next id}

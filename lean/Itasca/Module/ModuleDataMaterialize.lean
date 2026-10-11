@@ -25,13 +25,13 @@ theorem PaddedEncoding.length_bounded {α : Type} {R : α → List U8 → Prop}
 
 theorem DataEncoding.init_bounded {entry bytes} (h : DataEncoding entry bytes) :
     entry.init.length ≤ Usize.max := by
-  obtain ⟨_, _, _, _, _, hi, _⟩ := h
+  obtain ⟨_, _, _, _, _, _, _, _, hi, _⟩ := h
   exact VecEncoding.length_bounded hi
 
 /-- Reify the independently encoded data record without running the parser. -/
 theorem DataEncoding.materialize {entry bytes} (h : DataEncoding entry bytes) :
     ∃ segment : module.Data, ModuleData.raw segment = entry := by
-  refine ⟨⟨entry.memoryIdx, entry.offset, Vec.from entry.init h.init_bounded⟩, ?_⟩
+  refine ⟨⟨entry.mode, Vec.from entry.init h.init_bounded⟩, ?_⟩
   simp [ModuleData.raw]
 
 
@@ -39,14 +39,15 @@ theorem DataEncodingFor.init_bounded {profile entry bytes}
     (h : DataEncodingFor profile entry bytes) : entry.init.length ≤ Usize.max := by
   cases profile with
   | Wasm1 => exact DataEncoding.init_bounded h
-  | MultiValue =>
-    obtain ⟨_, _, _, _, _, _, hi, _⟩ := h
-    exact hi.length_bounded
+  | Wasm2 =>
+    cases h with
+    | active _ _ hi => exact hi.length_bounded
+    | passive _ hi => exact hi.length_bounded
 
 theorem DataEncodingFor.materialize {profile entry bytes}
     (h : DataEncodingFor profile entry bytes) :
     ∃ segment : module.Data, ModuleData.raw segment = entry := by
-  refine ⟨⟨entry.memoryIdx, entry.offset, Vec.from entry.init h.init_bounded⟩, ?_⟩
+  refine ⟨⟨entry.mode, Vec.from entry.init h.init_bounded⟩, ?_⟩
   simp [ModuleData.raw]
 
 end Itasca.ModuleBinary
@@ -83,7 +84,7 @@ namespace Itasca.ModuleEnv
 
 open ModuleElaboration
 
-theorem Ready.data_valid {raw decls env} (hready : Ready raw 9 decls env)
+theorem Ready.data_valid {raw decls env} (hready : Ready raw 10 decls env)
     (htyped : SectionsTyped raw) {segments : Vec module.Data}
     (hmap : segments.val.map ModuleData.raw = raw.data) :
     ∀ segment ∈ segments.val, ModuleData.Valid env segment := by
@@ -92,6 +93,7 @@ theorem Ready.data_valid {raw decls env} (hready : Ready raw 9 decls env)
     rw [← hmap]
     exact List.mem_map.mpr ⟨segment, hm, rfl⟩
   apply data_valid_of_typing (hready.initializer_globals (by decide))
+  · simpa [ModuleConstants.FunctionContext, initializerContextOf] using hready.funcs_context (by decide)
   · simpa [initializerContextOf] using hready.memories_context (by decide)
   · exact htyped.data _ hr
 
@@ -105,7 +107,7 @@ theorem materialize {profile} (data : Slice U8) (start next : Usize)
     (raw : ModuleBinary.Module) (decls : ModuleEnv.Declarations) (env : module.Env)
     (hb : ModuleBinary.At (fun es bs => Encoding es bs profile) data start raw.data next)
     (htyped : ModuleElaboration.SectionsTyped raw)
-    (hready : ModuleEnv.Ready raw 9 decls env) :
+    (hready : ModuleEnv.Ready raw 10 decls env) :
     ∃ segments : Vec module.Data, segments.val.map ModuleData.raw = raw.data ∧
       ∀ segment ∈ segments.val, ModuleData.Valid env segment := by
   obtain ⟨_, he, _⟩ := hb

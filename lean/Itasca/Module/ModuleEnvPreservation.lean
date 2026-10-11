@@ -15,7 +15,7 @@ theorem module.Env.new.profile_declarations (profile : ValidationProfile) : modu
   · constructor <;> try rfl
     constructor <;> simp [ModuleEnv.importedFuncs, ModuleEnv.importedGlobals,
       ModuleEnv.importedTables, ModuleEnv.importedMems]
-  · constructor <;> simp
+  · constructor <;> simp [ModuleReferences.Coherent, ModuleReferences.collected]
   · simp [ModuleEnv.SignatureBounded]
   · constructor <;> simp
   · simp [ModuleEnv.Phase]
@@ -29,11 +29,11 @@ end Itasca
 
 namespace Itasca.ModuleSections
 
-theorem ImportsAdded.types {env entries result} (h : ImportsAdded env entries result) :
+theorem ImportsAdded.types {profile} {env entries result} (h : ImportsAdded env entries result profile) :
     result.types = env.types := by
   induction h with
   | nil => rfl
-  | @snoc entries before after entry hp ha ih =>
+  | @snoc profile entries before after entry hp ha ih =>
       obtain ⟨_, ha⟩ := ha
       cases hd : entry.desc <;> simp only [hd] at ha
       · obtain ⟨_, _, he, _⟩ := ha
@@ -53,8 +53,8 @@ theorem ImportsAdded.types {env entries result} (h : ImportsAdded env entries re
 
 open ModuleEnv
 
-theorem ImportAdded.represents {env result entry decls}
-    (h : ImportAdded env result entry) (hr : Represents env decls)
+theorem ImportAdded.represents {profile} {env result entry decls}
+    (h : ImportAdded env result entry profile) (hr : Represents env decls)
     (hf : decls.functions = []) (hg : decls.globals = [])
     (ht : decls.tables = []) (hm : decls.memories = []) :
     Represents result { decls with imports := decls.imports ++ [rawImport entry] } := by
@@ -64,7 +64,7 @@ theorem ImportAdded.represents {env result entry decls}
   cases he : entry.desc <;> simp only [he] at hd
   · obtain ⟨ft, hresolve, henv, hfuncs, hnum⟩ := hd
     rw [henv]
-    refine ⟨hr.types, ?_, hr.functions, hr.globals, hr.exports, hr.start, hr.elements, ?_⟩
+    refine ⟨hr.types, ?_, hr.functions, hr.globals, hr.exports, hr.start, hr.elements, hr.dataCount, ?_⟩
     · simp only [hi, List.map_append, List.map_cons, List.map_nil, hr.imports]
     · constructor
       · simpa [importedFuncs, hi, he, hidx, hfuncs] using
@@ -77,7 +77,7 @@ theorem ImportAdded.represents {env result entry decls}
   · rename_i tt
     obtain ⟨henv, htables, _, _⟩ := hd
     rw [henv]
-    refine ⟨hr.types, ?_, hr.functions, hr.globals, hr.exports, hr.start, hr.elements, ?_⟩
+    refine ⟨hr.types, ?_, hr.functions, hr.globals, hr.exports, hr.start, hr.elements, hr.dataCount, ?_⟩
     · simp only [hi, List.map_append, List.map_cons, List.map_nil, hr.imports]
     · constructor
       · simpa [importedFuncs, hi, he] using hr.cache.funcs
@@ -89,7 +89,7 @@ theorem ImportAdded.represents {env result entry decls}
   · rename_i mt
     obtain ⟨henv, hmemories, _, _⟩ := hd
     rw [henv]
-    refine ⟨hr.types, ?_, hr.functions, hr.globals, hr.exports, hr.start, hr.elements, ?_⟩
+    refine ⟨hr.types, ?_, hr.functions, hr.globals, hr.exports, hr.start, hr.elements, hr.dataCount, ?_⟩
     · simp only [hi, List.map_append, List.map_cons, List.map_nil, hr.imports]
     · constructor
       · simpa [importedFuncs, hi, he] using hr.cache.funcs
@@ -99,9 +99,9 @@ theorem ImportAdded.represents {env result entry decls}
       · simpa [importedTables, hi, he] using hr.cache.tables
       · simpa [importedMems, hi, he, hmemories, hm] using congrArg (· ++ [mt]) hr.cache.memories
   · rename_i gt
-    obtain ⟨henv, htypes, hnum⟩ := hd
+    obtain ⟨henv, htypes, hnum, _⟩ := hd
     rw [henv]
-    refine ⟨hr.types, ?_, hr.functions, hr.globals, hr.exports, hr.start, hr.elements, ?_⟩
+    refine ⟨hr.types, ?_, hr.functions, hr.globals, hr.exports, hr.start, hr.elements, hr.dataCount, ?_⟩
     · simp only [hi, List.map_append, List.map_cons, List.map_nil, hr.imports]
     · constructor
       · simpa [importedFuncs, hi, he] using hr.cache.funcs
@@ -112,8 +112,8 @@ theorem ImportAdded.represents {env result entry decls}
       · simpa [importedMems, hi, he] using hr.cache.memories
 
 
-theorem ImportsAdded.represents {env result entries decls}
-    (h : ImportsAdded env entries result) (hr : Represents env decls)
+theorem ImportsAdded.represents {profile} {env result entries decls}
+    (h : ImportsAdded env entries result profile) (hr : Represents env decls)
     (hf : decls.functions = []) (hg : decls.globals = [])
     (ht : decls.tables = []) (hm : decls.memories = []) :
     Represents result { decls with imports := decls.imports ++ entries.map rawImport } := by
@@ -166,15 +166,18 @@ theorem Effect.signatureBounded {profile} {data pos env before id next result af
       change result.types = env.types at ht
       simpa only [SignatureBounded, ht] using hm
 
+  | dataCount hp he hb => simpa only [SignatureBounded, he] using hm
+
 
 /-- An ordered section update preserves the exact relationship between raw
 section declarations and the merged runtime index-space caches. -/
 theorem Effect.represents {profile} {data pos env before id next result after last}
     (h : Effect (profile := profile) data pos env before id next result after) (hr : Represents env before)
-    (hp : Phase last before) (horder : last < id.val) : Represents result after := by
-  obtain ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9⟩ := hp
+    (hp : Phase last before) (horder : last < (sectionRank id).val) : Represents result after := by
+  obtain ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9, h10⟩ := hp
   cases h with
   | types ha hb hv =>
+    change last < 1 at horder
     have ht := h1 (by simpa using horder)
     have hi : env.imports.val = [] := by
       have he := hr.imports.symm.trans (h2 (by scalar_tac))
@@ -184,7 +187,7 @@ theorem Effect.represents {profile} {data pos env before id next result after la
       have hl := hr.cache.funcs.length_eq
       simpa [importedFuncs, hi, hidx] using hl.symm
     rw [ha.1]
-    refine ⟨?_, hr.imports, hr.functions, hr.globals, hr.exports, hr.start, hr.elements, ?_⟩
+    refine ⟨?_, hr.imports, hr.functions, hr.globals, hr.exports, hr.start, hr.elements, hr.dataCount, ?_⟩
     · dsimp only
       rw [ha.2, ← hr.types, ht, List.nil_append]
     · constructor
@@ -195,13 +198,15 @@ theorem Effect.represents {profile} {data pos env before id next result after la
       · exact hr.cache.tables
       · exact hr.cache.memories
   | imports ha hb =>
+    change last < 2 at horder
     have hi := ha.represents hr (h3 (by scalar_tac)) (h6 (by scalar_tac))
       (h4 (by scalar_tac)) (h5 (by scalar_tac))
     simpa only [h2 (by scalar_tac), List.nil_append] using hi
   | functions ha hb =>
+    change last < 3 at horder
     have hf := h3 (by simpa using horder)
     rw [ha.1]
-    refine ⟨hr.types, hr.imports, ?_, hr.globals, hr.exports, hr.start, hr.elements, ?_⟩
+    refine ⟨hr.types, hr.imports, ?_, hr.globals, hr.exports, hr.start, hr.elements, hr.dataCount, ?_⟩
     · dsimp only
       rw [ha.2.1, ← hr.functions, hf, List.nil_append]
     · constructor
@@ -213,9 +218,10 @@ theorem Effect.represents {profile} {data pos env before id next result after la
       · exact hr.cache.tables
       · exact hr.cache.memories
   | tables ha hb hv hc =>
+    change last < 4 at horder
     have ht := h4 (by simpa using horder)
     rw [ha.1]
-    refine ⟨hr.types, hr.imports, hr.functions, hr.globals, hr.exports, hr.start, hr.elements, ?_⟩
+    refine ⟨hr.types, hr.imports, hr.functions, hr.globals, hr.exports, hr.start, hr.elements, hr.dataCount, ?_⟩
     constructor
     · exact hr.cache.funcs
     · exact hr.cache.numFuncs
@@ -225,9 +231,10 @@ theorem Effect.represents {profile} {data pos env before id next result after la
       rw [ha.2, hr.cache.tables, ht, List.append_nil]
     · exact hr.cache.memories
   | memories ha hb hv hc =>
+    change last < 5 at horder
     have hm := h5 (by simpa using horder)
     rw [ha.1]
-    refine ⟨hr.types, hr.imports, hr.functions, hr.globals, hr.exports, hr.start, hr.elements, ?_⟩
+    refine ⟨hr.types, hr.imports, hr.functions, hr.globals, hr.exports, hr.start, hr.elements, hr.dataCount, ?_⟩
     constructor
     · exact hr.cache.funcs
     · exact hr.cache.numFuncs
@@ -237,36 +244,46 @@ theorem Effect.represents {profile} {data pos env before id next result after la
     · dsimp only
       rw [ha.2, hr.cache.memories, hm, List.append_nil]
   | globals ha hb hv =>
+    change last < 6 at horder
     have hg := h6 (by simpa using horder)
     rw [ha.1]
-    refine ⟨hr.types, hr.imports, hr.functions, ?_, hr.exports, hr.start, hr.elements, ?_⟩
+    refine ⟨hr.types, hr.imports, hr.functions, ?_, hr.exports, hr.start, hr.elements, hr.dataCount, ?_⟩
     · dsimp only
       rw [ha.2.1, ← hr.globals, hg, List.nil_append]
     · constructor
       · exact hr.cache.funcs
       · exact hr.cache.numFuncs
       · dsimp only
-        rw [ha.2.1, ha.2.2, hr.cache.globals, List.map_append, List.append_assoc]
+        rw [ha.2.1, ha.2.2.1, hr.cache.globals, List.map_append, List.append_assoc]
       · exact hr.cache.numGlobals
       · exact hr.cache.tables
       · exact hr.cache.memories
   | exports ha hb =>
+    change last < 7 at horder
     have he := h7 (by simpa using horder)
     rw [ha.unchanged]
-    refine ⟨hr.types, hr.imports, hr.functions, hr.globals, ?_, hr.start, hr.elements, ?_⟩
+    refine ⟨hr.types, hr.imports, hr.functions, hr.globals, ?_, hr.start, hr.elements, hr.dataCount, ?_⟩
     · dsimp only
       rw [ha.exports, List.map_append, ← hr.exports, he, List.nil_append]
     · exact ⟨hr.cache.funcs, hr.cache.numFuncs, hr.cache.globals, hr.cache.numGlobals, hr.cache.tables, hr.cache.memories⟩
   | start he hb hv =>
+    change last < 8 at horder
     rw [he]
-    exact ⟨hr.types, hr.imports, hr.functions, hr.globals, hr.exports, rfl, hr.elements, ⟨hr.cache.funcs, hr.cache.numFuncs, hr.cache.globals, hr.cache.numGlobals, hr.cache.tables, hr.cache.memories⟩⟩
+    exact ⟨hr.types, hr.imports, hr.functions, hr.globals, hr.exports, rfl, hr.elements, hr.dataCount, ⟨hr.cache.funcs, hr.cache.numFuncs, hr.cache.globals, hr.cache.numGlobals, hr.cache.tables, hr.cache.memories⟩⟩
   | elements ha hb hv =>
+    change last < 9 at horder
     have he := h9 (by simpa using horder)
     rw [ha.1]
-    refine ⟨hr.types, hr.imports, hr.functions, hr.globals, hr.exports, hr.start, ?_, ?_⟩
+    refine ⟨hr.types, hr.imports, hr.functions, hr.globals, hr.exports, hr.start, ?_, hr.dataCount, ?_⟩
     · dsimp only
-      rw [ha.2, List.map_append, ← hr.elements, he, List.nil_append]
+      rw [ha.2.1, List.map_append, ← hr.elements, he, List.nil_append]
     · exact ⟨hr.cache.funcs, hr.cache.numFuncs, hr.cache.globals, hr.cache.numGlobals, hr.cache.tables, hr.cache.memories⟩
+
+  | dataCount hp he hb =>
+    rw [he]
+    exact ⟨hr.types, hr.imports, hr.functions, hr.globals, hr.exports, hr.start,
+      hr.elements, rfl, ⟨hr.cache.funcs, hr.cache.numFuncs, hr.cache.globals,
+      hr.cache.numGlobals, hr.cache.tables, hr.cache.memories⟩⟩
 
 
 theorem Run.represents {profile} {data initial decls start initialId after afterDecls next id}

@@ -45,6 +45,7 @@ theorem Pending.enter_after {data env locals index st} (p : Pending data env loc
     (by simpa [base] using hbase) hctrls hblocks
     (by simpa [vals, base] using hvals)
   refine p.running_after r.2 _ _ (form.token bt) encoded ho ?_ ?_ ?_
+    (by cases form <;> simp [Frames.Form.token, Token.Declared])
   · simpa [Frames.bodyType_enter] using p.bodyType
   · have he : form.opening bt = [form.token bt] := by
       rcases initial with rfl | rfl | rfl <;> rfl

@@ -119,7 +119,8 @@ private theorem submit_body_total {S V : Type} (source : stream.Source S)
     (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)
     (hinv : StreamSubmission.Invariant codeLen num config.max_batches pending pos func batchId) :
     stream.submit_code_batches_loop.body source visitor moduleId profile state env.types env.imports
-      env.globals env.exports env.elements env.start env.func_type_indices env.func_types
+      env.globals env.exports env.elements env.data_count env.declared_funcs env.start
+      env.func_type_indices env.func_types
       env.table_types env.mem_types env.global_types env.num_imported_funcs env.num_imported_globals
       codeLen config num v pending pos func batchId ⦃ out => match out with
       | .done result => StreamSubmission.Post config.max_batches result
@@ -169,7 +170,8 @@ theorem stream.submit_code_batches_loop.spec {S V : Type} (source : stream.Sourc
     (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)
     (hinv : StreamSubmission.Invariant codeLen num config.max_batches pending pos func batchId) :
     stream.submit_code_batches_loop source visitor moduleId profile state env.types env.imports
-      env.globals env.exports env.elements env.start env.func_type_indices env.func_types
+      env.globals env.exports env.elements env.data_count env.declared_funcs env.start
+      env.func_type_indices env.func_types
       env.table_types env.mem_types env.global_types env.num_imported_funcs env.num_imported_globals
       codeLen config v pending pos func batchId num ⦃ StreamSubmission.Post config.max_batches ⦄ := by
   unfold stream.submit_code_batches_loop

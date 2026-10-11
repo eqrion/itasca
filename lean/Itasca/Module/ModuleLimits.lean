@@ -31,11 +31,17 @@ theorem PaddedEncoding.imp {α : Type} {R S : α → List U8 → Prop} {id absen
 theorem ModuleEncodingWith.imp {profile} {R S : Code → List U8 → Prop} {raw bytes}
     (h : ModuleEncodingWith R raw bytes profile) (hs : ∀ code bs, R code bs → S code bs) :
     ModuleEncodingWith S raw bytes profile := by
-  obtain ⟨types, imports, functions, tables, memories, globals, exports, start, elements,
-    codes, datas, customs, ht, hi, hf, htt, hm, hg, he, hst, hel, hc, hd, hcs, hb⟩ := h
-  exact ⟨types, imports, functions, tables, memories, globals, exports, start, elements,
-    codes, datas, customs, ht, hi, hf, htt, hm, hg, he, hst, hel,
-    hc.imp (fun _ _ hv => hv.imp hs), hd, hcs, hb⟩
+  obtain ⟨types, imports, functions, tables, memories, globals, exports, start, elements, dataCount,
+    codes, datas, customs, ht, hi, hf, htt, hm, hg, he, hst, hel, hcount, hc, hd, hcs, hb, ha, hv⟩ := h
+  exact ⟨types, imports, functions, tables, memories, globals, exports, start, elements, dataCount,
+    codes, datas, customs, ht, hi, hf, htt, hm, hg, he, hst, hel, hcount,
+    hc.imp (fun _ _ hv => hv.imp hs), hd, hcs, hb, ha, hv⟩
+
+theorem ModuleEncodingWith.guards {profile R raw bytes}
+    (h : ModuleEncodingWith R raw bytes profile) :
+    ModuleTypesAllowed profile raw ∧ DataCountValid raw := by
+  obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, ha, hc⟩ := h
+  exact ⟨ha, hc⟩
 
 /-- This strengthens only the code entries' exact encoding witnesses. It
 retains padded LEB encodings and constrains the actual encoded body bytes. -/

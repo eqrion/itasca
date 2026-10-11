@@ -188,7 +188,8 @@ private theorem body_complete {S V : Type} (source : stream.Source S)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId : Usize)
     (hinv : CompleteInvariant (profile := profile) Queued code env moduleId config v pending pos func batchId) :
     stream.submit_code_batches_loop.body source visitor moduleId profile state env.types env.imports
-      env.globals env.exports env.elements env.start env.func_type_indices env.func_types
+      env.globals env.exports env.elements env.data_count env.declared_funcs env.start
+      env.func_type_indices env.func_types
       env.table_types env.mem_types env.global_types env.num_imported_funcs env.num_imported_globals
       (Slice.len code) config (alloc.vec.Vec.len env.func_type_indices) v pending pos func batchId
         ⦃ CompleteBodyPost (profile := profile) Queued code env moduleId config func ⦄ := by
@@ -248,7 +249,8 @@ theorem stream.submit_code_batches_loop.complete_spec {S V : Type} (source : str
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId : Usize)
     (hinv : StreamSubmission.CompleteInvariant (profile := profile) Queued code env moduleId config v pending pos func batchId) :
     stream.submit_code_batches_loop source visitor moduleId profile state env.types env.imports
-      env.globals env.exports env.elements env.start env.func_type_indices env.func_types
+      env.globals env.exports env.elements env.data_count env.declared_funcs env.start
+      env.func_type_indices env.func_types
       env.table_types env.mem_types env.global_types env.num_imported_funcs env.num_imported_globals
       (Slice.len code) config v pending pos func batchId (alloc.vec.Vec.len env.func_type_indices)
         ⦃ StreamSubmission.CompletePost (profile := profile) Queued moduleId config ⦄ := by

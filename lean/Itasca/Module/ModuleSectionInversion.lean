@@ -39,9 +39,10 @@ theorem global_expr_typed {C : context} {g : module.Global}
 
 theorem global_valid_of_typing {env : module.Env} {C : context} {g : module.Global}
     (hg : ModuleConstants.GlobalContext env C)
+    (hf : ModuleConstants.FunctionContext env C)
     (h : Global_ok C (ModuleConstants.global g) (Translate.globalType g.gtype)) :
     ModuleConstants.Valid env g.init g.gtype.valtype :=
-  ModuleConstants.valid_of_typing hg (global_expr_typed h)
+  ModuleConstants.valid_of_typing hg hf (global_expr_typed h)
 
 theorem export_resolves_of_typing {env : module.Env} {C : context} {entry : module.Export} {xt}
     (hc : CodeEntry.ModuleContext env C)
@@ -129,11 +130,19 @@ theorem data_mode_typed {C : context} {d : _root_.data} (h : Data_ok C d) :
 
 theorem data_valid_of_typing {env : module.Env} {C : context} {entry : module.Data}
     (hg : ModuleConstants.GlobalContext env C)
+    (hf : ModuleConstants.FunctionContext env C)
     (hm : C.MEMS = env.mem_types.val.map EnvTranslation.memType)
     (h : Data_ok C (ModuleData.translate (ModuleData.raw entry))) : ModuleData.Valid env entry := by
-  obtain ⟨hi, hn, ht⟩ := datamode_active_properties (data_mode_typed h)
-  have he : entry.memory_idx.val = 0 := uN.mk_uN.inj hi
-  exact ⟨by simpa [hm, he] using hn, ModuleConstants.valid_of_typing hg ht⟩
+  have hmode : Datamode_ok C (ModuleSegments.dataMode entry.mode) := data_mode_typed h
+  cases he : entry.mode with
+  | Passive => simp [ModuleData.Valid, he]
+  | Active idx offset =>
+    rw [he] at hmode
+    obtain ⟨hi, hn, ht⟩ := datamode_active_properties hmode
+    have hidx : idx.val = 0 := uN.mk_uN.inj hi
+    simpa only [ModuleData.Valid, he] using
+      (And.intro (show idx.val < env.mem_types.val.length by simpa [hm, hidx] using hn)
+        (ModuleConstants.valid_of_typing hg hf ht))
 
 theorem elemmode_active_properties {C : context} {mode : elemmode} {rt}
     (h : Elemmode_ok C mode rt) :
@@ -163,21 +172,39 @@ theorem ref_func_index {C : context} {idx : U32} {ty}
   cases hp
   assumption
 
-theorem element_valid_of_typing {env : module.Env} {C : context} {entry : module.Element}
+theorem element_valid_raw_of_typing {env : module.Env} {C : context} {entry : ModuleBinary.Element}
     (hg : ModuleConstants.GlobalContext env C)
-    (hf : C.FUNCS = env.func_types.val.map EnvTranslation.funcType)
+    (hf : ModuleConstants.FunctionContext env C)
     (ht : C.TABLES = env.table_types.val.map EnvTranslation.tableType)
-    (h : Elem_ok C (element (ModuleEnv.rawElement entry)) .FUNCREF) :
-    entry.table_idx.val < env.table_types.val.length ∧
-      ModuleConstants.Valid env entry.offset .I32 ∧
-      ∀ idx ∈ entry.init.val, idx.val < env.func_types.val.length := by
+    (h : Elem_ok C (element entry) (Translate.referenceType entry.elem)) :
+    (match entry.mode with
+      | .Active idx offset => ∃ hi : idx.val < env.table_types.val.length,
+          env.table_types.val[idx.val].elem = entry.elem ∧ ModuleConstants.Valid env offset .I32
+      | .Passive | .Declarative => True) ∧
+    ∀ init ∈ entry.init, ModuleConstants.Valid env init (ModuleConstants.referenceValueType entry.elem) := by
   obtain ⟨hexprs, hmode⟩ := element_parts h
-  obtain ⟨hidx, hconst⟩ := elemmode_active_properties hmode
-  refine ⟨by simpa [ht, proj_uN_0, ModuleEnv.rawElement] using hidx,
-    ModuleConstants.valid_of_typing hg hconst, ?_⟩
-  intro idx hi
-  have he : Expr_ok_const C [instr.REF_FUNC (.mk_uN idx.val)] .FUNCREF :=
-    hexprs _ (List.mem_map.mpr ⟨idx, hi, rfl⟩)
-  simpa [hf] using ref_func_index he
+  constructor
+  · cases hm : entry.mode with
+    | Passive => trivial
+    | Declarative => trivial
+    | Active idx offset =>
+      change Elemmode_ok C (ModuleSegments.elementMode entry.mode) (Translate.referenceType entry.elem) at hmode
+      rw [hm] at hmode
+      cases hmode with
+      | active _ _ _ lim hi hlookup hconst _ _ _ =>
+        have hb : idx.val < env.table_types.val.length := by simpa [ht, proj_uN_0] using hi
+        refine ⟨hb, ?_, ModuleConstants.valid_of_typing hg hf hconst⟩
+        change C.TABLES[idx.val]! = _ at hlookup
+        rw [ht, getElem!_pos _ _ (by simpa using hb), List.getElem_map] at hlookup
+        have href := (tabletype.mk_tabletype.inj hlookup).2
+        have hinj : Function.Injective Translate.referenceType := by
+          intro a b he
+          cases a <;> cases b <;> simp_all [Translate.referenceType]
+        exact hinj href
+  · intro init hi
+    have he := hexprs _ (List.mem_map.mpr ⟨init, hi, rfl⟩)
+    have hty : valtype_reftype (Translate.referenceType entry.elem) =
+        Translate.valueType (ModuleConstants.referenceValueType entry.elem) := by cases entry.elem <;> rfl
+    exact ModuleConstants.valid_of_typing hg hf (hty ▸ he)
 
 end Itasca.ModuleElaboration

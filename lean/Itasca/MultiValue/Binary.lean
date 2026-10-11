@@ -1,3 +1,7 @@
+import Itasca.MultiValue.SimdBinary
+import Itasca.MultiValue.ReferencesBinary
+import Itasca.MultiValue.BulkBinary
+import Itasca.MultiValue.NumericExtensions
 import Itasca.MultiValue.Syntax
 import Itasca.MultiValue.BlockDecode
 import Itasca.Binary.WasmBinary
@@ -38,6 +42,18 @@ theorem blockDecoded_iff {data pos bt next} :
 inductive Immediate : U8 → Token → List U8 → Prop where
   | plain {opcode op bytes} : Wasm.Immediate opcode (.plain op) bytes →
       Immediate opcode (.plain op) bytes
+  | signExtension (opcode : U8) (operation : Numeric.Operation) :
+      NumericExtensions.signMeaning opcode = some operation →
+      Immediate opcode (.plain operation.instruction) []
+  | saturating (subopcode : U32) (operation : Numeric.Operation) {bytes} :
+      NumericExtensions.saturatingMeaning subopcode = some operation →
+      Leb128.Encoding bytes subopcode.val → Immediate 0xFC#u8 (.plain operation.instruction) bytes
+  | reference {opcode op bytes} : ReferencesBinary.Immediate opcode op bytes →
+      Immediate opcode (.plain op) bytes
+  | bulk (subopcode : U32) {prefixBytes op bytes} : Leb128.Encoding prefixBytes subopcode.val →
+      BulkBinary.Immediate subopcode op bytes → Immediate 0xfc#u8 (.plain op) (prefixBytes ++ bytes)
+  | simd (subopcode : U32) {prefixBytes op bytes} : Leb128.Encoding prefixBytes subopcode.val →
+      Simd.Immediate subopcode op bytes → Immediate 0xfd#u8 (.plain op) (prefixBytes ++ bytes)
   | block {bt bytes} : BlockEncoding bt bytes → Immediate 0x02#u8 (.block bt) bytes
   | loop {bt bytes} : BlockEncoding bt bytes → Immediate 0x03#u8 (.loop bt) bytes
   | if_ {bt bytes} : BlockEncoding bt bytes → Immediate 0x04#u8 (.if_ bt) bytes

@@ -22,12 +22,12 @@ theorem module.decode_env_section.profile_spec (data : Slice U8) (pos : Usize) (
     | Err e => trivial
     | Ok next =>
       obtain ⟨added, hadd, hbytes, hv, hs⟩ := hp
-      refine ⟨_, .types hadd hbytes (by intro ft hm; exact (Profile.funcTypeAdmissible_iff profile ft).mpr (hv ft hm)), ?_⟩
+      refine ⟨_, .types hadd hbytes (by intro ft hm; exact ⟨(Profile.funcTypeAdmissible_iff profile ft).mpr (hv ft hm).1, (hv ft hm).2⟩), ?_⟩
       have hold := hb.mono hbytes.span.1
       rw [hadd.1]
       cases hold
       constructor <;> assumption
-  · apply WP.spec_mono (module.decode_import_section.spec data pos env hb)
+  · apply WP.spec_mono (module.decode_import_section.spec data pos env hb profile)
     rintro ⟨r, result⟩ hp
     cases r with
     | Err e => trivial
@@ -46,7 +46,7 @@ theorem module.decode_env_section.profile_spec (data : Slice U8) (pos : Usize) (
       rw [hadd.1]
       cases hold
       constructor <;> assumption
-  · apply WP.spec_mono (module.decode_table_section.spec data pos env hb.tables)
+  · apply WP.spec_mono (module.decode_table_section.spec data pos env hb.tables profile)
     rintro ⟨r, result⟩ hp
     cases r with
     | Err e => trivial
@@ -68,12 +68,12 @@ theorem module.decode_env_section.profile_spec (data : Slice U8) (pos : Usize) (
       rw [hadd.1]
       cases hold
       constructor <;> assumption
-  · apply WP.spec_mono (module.decode_global_section.spec data pos env hb.globals hb.globalTypes)
+  · apply WP.spec_mono (module.decode_global_section.spec data pos env hb.globals hb.globalTypes hb.declaredFuncs profile)
     rintro ⟨r, result⟩ hp
     cases r with
     | Err e => trivial
     | Ok next =>
-      obtain ⟨added, hadd, hbytes, hv, hs, ht⟩ := hp
+      obtain ⟨added, hadd, hbytes, hv, hs, ht, href⟩ := hp
       refine ⟨_, .globals hadd hbytes hv, ?_⟩
       have hold := hb.mono hbytes.span.1
       rw [hadd.1]
@@ -98,19 +98,29 @@ theorem module.decode_env_section.profile_spec (data : Slice U8) (pos : Usize) (
       rw [he]
       cases hold
       constructor <;> assumption
-  · apply WP.spec_mono (module.decode_element_section.profile_spec data pos env profile hb.elements)
+  · apply WP.spec_mono (module.decode_element_section.profile_spec data pos env profile hb.elements hb.declaredFuncs)
     rintro ⟨r, result⟩ hp
     cases r with
     | Err e => trivial
     | Ok next =>
-      obtain ⟨added, hadd, hbytes, hv, hs⟩ := hp
+      obtain ⟨added, hadd, hbytes, hv, hs, href⟩ := hp
       refine ⟨_, .elements hadd hbytes hv, ?_⟩
       have hold := hb.mono hbytes.span.1
       rw [hadd.1]
       cases hold
       constructor <;> assumption
-  ·
-    simp
+  · apply WP.spec_mono (module.decode_data_count.spec data pos env profile)
+    rintro ⟨r, result⟩ hp
+    cases r with
+    | Err e => trivial
+    | Ok next =>
+      obtain ⟨count, hbytes, he, hprofile⟩ := hp
+      refine ⟨_, .dataCount hprofile he hbytes, ?_⟩
+      have hold := hb.mono hbytes.span.1
+      rw [he]
+      cases hold
+      constructor <;> assumption
+  · simp
 
 @[step]
 theorem module.decode_env_section.spec (data : Slice U8) (pos : Usize) (id : U8)

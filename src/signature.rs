@@ -117,10 +117,10 @@ impl BlockType {
     }
 }
 
-/// Decodes an empty or scalar block tag, or a nonnegative signed-33-bit type
+/// Decodes an empty or value-type block tag, or a nonnegative signed-33-bit type
 /// index.
 ///
-/// Padded negative tags are rejected instead of being interpreted as scalar
+/// Padded negative tags are rejected instead of being interpreted as value
 /// types.
 pub(crate) fn read_block_type(data: &[u8], pos: usize) -> Result<(BlockType, usize), OpError> {
     let (b, p) = read_byte(data, pos)?;
@@ -130,6 +130,9 @@ pub(crate) fn read_block_type(data: &[u8], pos: usize) -> Result<(BlockType, usi
         0x7e => Ok((BlockType::Value(ValueType::I64), p)),
         0x7d => Ok((BlockType::Value(ValueType::F32), p)),
         0x7c => Ok((BlockType::Value(ValueType::F64), p)),
+        0x7b => Ok((BlockType::Value(ValueType::V128), p)),
+        0x70 => Ok((BlockType::Value(ValueType::FuncRef), p)),
+        0x6f => Ok((BlockType::Value(ValueType::ExternRef), p)),
         _ => {
             let (index, end) = read_s33_leb(data, pos)?;
             if index < 0 {

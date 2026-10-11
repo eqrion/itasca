@@ -1,6 +1,8 @@
 import Itasca.Body.DeclarativeComplete
 import Itasca.Body.Wasm1Profile
 
+open Aeneas Aeneas.Std
+
 namespace Itasca.BodyContext
 
 /-- Install the segment declarations unavailable when the function-body API is
@@ -21,14 +23,20 @@ theorem blocktype_segments {C : context} {bt : blocktype} {ft : functype}
   | typeidx x ins outs hi hx hC hw =>
     exact .typeidx _ _ _ _ hi hx (segments_wf hC _ _) hw
 
-/-- Empty source segment spaces rule out the post-MVP segment instructions.
+private theorem prefix_index {α : Type} [Inhabited α] {xs ys : List α}
+    (h : xs.IsPrefix ys) {i : Nat} (hi : i < xs.length) :
+    i < ys.length ∧ ys[i]! = xs[i]! := by
+  have hj := Nat.lt_of_lt_of_le hi h.length_le
+  exact ⟨hj, by rw [getElem!_pos ys i hj, getElem!_pos xs i hi]; exact (h.getElem hi).symm⟩
+
+/-- Extending segment index spaces preserves every existing index and its type.
 The proof traverses the generated mutually inductive typing derivation. -/
-theorem instrs_segments {C : context} {ops : List instr} {ft : functype}
+theorem instrs_extend {C : context} {ops : List instr} {ft : functype}
     (h : Instrs_ok C ops ft) :
-    ∀ elems datas, C.ELEMS = [] → C.DATAS = [] →
+    ∀ elems datas, C.ELEMS.IsPrefix elems → C.DATAS.IsPrefix datas →
       Instrs_ok (segments C elems datas) ops ft := by
   induction h using Instrs_ok.rec
-    (motive_1 := fun C op ft _ => ∀ elems datas, C.ELEMS = [] → C.DATAS = [] →
+    (motive_1 := fun C op ft _ => ∀ elems datas, C.ELEMS.IsPrefix elems → C.DATAS.IsPrefix datas →
       Instr_ok (segments C elems datas) op ft)
   case nop =>
     rename_i elems datas he hd
@@ -306,12 +314,13 @@ theorem instrs_segments {C : context} {ops : List instr} {ft : functype}
     apply Instr_ok.table_copy <;> first
       | assumption
       | exact segments_wf (by assumption) _ _
-  case table_init =>
-    rename_i elems datas he hd
-    simp_all
-  case elem_drop =>
-    rename_i elems datas he hd
-    simp_all
+  case table_init C x y lim rt hti hte hei hee hw hop hlim elems datas he hd =>
+    obtain ⟨hi, hx⟩ := prefix_index he hei
+    exact .table_init _ x y lim rt hti hte hi (hx.trans hee)
+      (segments_wf hw _ _) hop hlim
+  case elem_drop C x rt hei hee hw hop elems datas he hd =>
+    obtain ⟨hi, hx⟩ := prefix_index he hei
+    exact .elem_drop _ x rt hi (hx.trans hee) (segments_wf hw _ _) hop
   case memory_size =>
     rename_i elems datas he hd
     apply Instr_ok.memory_size <;> first
@@ -332,12 +341,13 @@ theorem instrs_segments {C : context} {ops : List instr} {ft : functype}
     apply Instr_ok.memory_copy <;> first
       | assumption
       | exact segments_wf (by assumption) _ _
-  case memory_init =>
-    rename_i elems datas he hd
-    simp_all
-  case data_drop =>
-    rename_i elems datas he hd
-    simp_all
+  case memory_init C x mt hmi hme hdi hde hw hmt hop elems datas he hd =>
+    obtain ⟨hi, hx⟩ := prefix_index hd hdi
+    exact .memory_init _ x mt hmi hme hi (hx.trans hde)
+      (segments_wf hw _ _) hmt hop
+  case data_drop C x hdi hde hw hop elems datas he hd =>
+    obtain ⟨hi, hx⟩ := prefix_index hd hdi
+    exact .data_drop _ x hi (hx.trans hde) (segments_wf hw _ _) hop
   case load_val =>
     rename_i elems datas he hd
     apply Instr_ok.load_val <;> first
@@ -426,6 +436,13 @@ theorem instrs_segments {C : context} {ops : List instr} {ft : functype}
       | exact blocktype_segments (by assumption) _ _
       | (apply_assumption <;> assumption)
 
+/-- Empty segment spaces are a special case of index-preserving extension. -/
+theorem instrs_segments {C : context} {ops : List instr} {ft : functype}
+    (h : Instrs_ok C ops ft) (elems : List elemtype) (datas : List datatype)
+    (he : C.ELEMS = []) (hd : C.DATAS = []) :
+    Instrs_ok (segments C elems datas) ops ft :=
+  instrs_extend h elems datas (by simp [he]) (by simp [hd])
+
 /-- Static context agreement permits a body's segment spaces to be enlarged
 without changing the meaning of any existing index or label. -/
 structure SameCore (C D : context) : Prop where
@@ -444,6 +461,12 @@ theorem SameCore.eq_segments {C D : context} (h : SameCore C D) :
   cases D
   cases h
   simp_all [segments]
+
+theorem instrs_transport_extend {C D : context} {ops : List instr} {ft : functype}
+    (h : Instrs_ok C ops ft) (he : C.ELEMS.IsPrefix D.ELEMS)
+    (hd : C.DATAS.IsPrefix D.DATAS) (hc : SameCore C D) : Instrs_ok D ops ft := by
+  rw [hc.eq_segments]
+  exact instrs_extend h _ _ he hd
 
 theorem instrs_transport {C D : context} {ops : List instr} {ft : functype}
     (h : Instrs_ok C ops ft) (he : C.ELEMS = []) (hd : C.DATAS = [])

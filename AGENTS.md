@@ -1,7 +1,7 @@
 # Coding-agent instructions
 
 itasca is a Rust WebAssembly validator verified in Lean against SpecTec-generated
-Wasm 2.0 typing rules and explicit Wasm 1.0 and multi-value profiles.
+Wasm 2.0 typing rules and explicit Wasm 1.0 and Wasm 2.0 profiles.
 
 Before changing Rust, proofs, or extraction inputs, read
 [DEVELOPMENT.md](DEVELOPMENT.md), the

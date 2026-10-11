@@ -1,4 +1,5 @@
 import Itasca.Module.ModuleIndexSpaces
+import Itasca.Module.ModuleSegmentTyping
 
 open Aeneas Aeneas.Std
 
@@ -22,35 +23,16 @@ theorem refFunc_const (C : context) (hC : wf_context C) (idx : U32)
 theorem element_wf (entry : ModuleBinary.Element) : wf_elem (element entry) := by
   constructor
   · simp only [Forall, List.mem_map]
-    rintro _ ⟨idx, _, rfl⟩
-    simpa [Forall] using refFunc_wf idx
-  · exact .elemmode_case_0 _ _ (EnvTranslation.index_wf entry.tableIdx)
-      (ModuleConstants.expression_wf entry.offset)
+    rintro _ ⟨init, _, rfl⟩
+    exact ModuleConstants.expression_wf init
+  · exact ModuleSegments.elementMode_wf entry.mode
 
 theorem element_typed {env : module.Env} {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile)
     (entry : module.Element) (he : entry ∈ env.elements.val) :
-    Elem_ok (initializerContext env) (element (ModuleEnv.rawElement entry)) .FUNCREF := by
-  obtain ⟨hi, hoffset, hfuncs⟩ := hv.elements entry he
-  let C := initializerContext env
-  have hC : wf_context C := initializerContext_wf env
-  dsimp only [element, ModuleEnv.rawElement]
-  apply Elem_ok.mk_Elem_ok C .FUNCREF _ _
-  · simp only [Forall, List.mem_map]
-    rintro _ ⟨idx, hidx, rfl⟩
-    exact refFunc_const C hC idx (by simpa [C, initializerContext, moduleContext] using hfuncs idx hidx)
-  · apply Elemmode_ok.active C _ _ .FUNCREF
-      (EnvTranslation.limitsType env.table_types.val[entry.table_idx.val].limits)
-    · simpa [C, initializerContext, moduleContext, proj_uN_0] using hi
-    · simp only [C, initializerContext, moduleContext, proj_uN_0]
-      rw [getElem!_pos _ _ (by simpa using hi), List.getElem_map]
-      rfl
-    · exact hoffset.expr_ok_const C hC rfl
-    · exact hC
-    · exact .elemmode_case_0 _ _ (EnvTranslation.index_wf entry.table_idx)
-        (ModuleConstants.expression_wf entry.offset)
-    · exact EnvTranslation.tableType_wf _
-  · exact hC
-  · exact element_wf (ModuleEnv.rawElement entry)
+    Elem_ok (initializerContext env) (element (ModuleEnv.rawElement entry))
+      (Translate.referenceType entry.elem) := by
+  exact (hv.elements entry he).typed (initializerContext env) (initializerContext_wf env)
+    rfl rfl rfl
 
 theorem table_typed {env tables memories} (hc : ModuleEnv.Cache env tables memories)
     {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile) (tt : types.TableType) (ht : tt ∈ tables)

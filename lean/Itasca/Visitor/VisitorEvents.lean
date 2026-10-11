@@ -161,6 +161,23 @@ inductive MemoryHook where
   | i64_store32
   deriving DecidableEq
 
+/-- Scalar Wasm 2.0 callback identities. -/
+inductive ExtendedNumericHook where
+  | i32_extend8_s
+  | i32_extend16_s
+  | i64_extend8_s
+  | i64_extend16_s
+  | i64_extend32_s
+  | i32_trunc_sat_f32_s
+  | i32_trunc_sat_f32_u
+  | i32_trunc_sat_f64_s
+  | i32_trunc_sat_f64_u
+  | i64_trunc_sat_f32_s
+  | i64_trunc_sat_f32_u
+  | i64_trunc_sat_f64_s
+  | i64_trunc_sat_f64_u
+  deriving DecidableEq
+
 /-- Exact instruction-hook arguments. Floating constants retain every input bit. -/
 inductive Action where
   | unreachable
@@ -176,7 +193,7 @@ inductive Action where
   | br_table : U32 → signature.ResultType → Action
   | return_
   | call : U32 → Action
-  | call_indirect : U32 → Action
+  | call_indirect : U32 → U32 → Action
   | drop : code.StackType → Action
   | select : code.StackType → Action
   | local_get : U32 → Action
@@ -191,6 +208,29 @@ inductive Action where
   | f32_const : U32 → Action
   | f64_const : U64 → Action
   | numeric : NumericHook → Action
+  | extendedNumeric : ExtendedNumericHook → Action
+  | ref_null : types.ElemType → Action
+  | ref_is_null
+  | ref_func : U32 → Action
+  | select_typed : types.ValueType → Action
+  | table_get : U32 → Action
+  | table_set : U32 → Action
+  | memory_init : U32 → Action
+  | data_drop : U32 → Action
+  | memory_copy
+  | memory_fill
+  | table_init : U32 → U32 → Action
+  | elem_drop : U32 → Action
+  | table_copy : U32 → U32 → Action
+  | table_grow : U32 → Action
+  | table_size : U32 → Action
+  | table_fill : U32 → Action
+  | simd : U32 → Action
+  | simd_lane : U32 → U8 → Action
+  | simd_memory : U32 → code.MemArg → Action
+  | simd_memory_lane : U32 → code.MemArg → U8 → Action
+  | simd_const : U64 → U64 → Action
+  | simd_shuffle : U64 → U64 → Action
   | memory : MemoryHook → code.MemArg → Action
 
 /-- Every callback argument, including the validator state observed by a hook. -/
@@ -223,7 +263,7 @@ def invoke {V : Type} (visitor : code.OpVisitor V) (v : V) :
     | .br_table a0 a1 => visitor.on_br_table v st a0 a1
     | .return_ => visitor.on_return v st
     | .call a0 => visitor.on_call v st a0
-    | .call_indirect a0 => visitor.on_call_indirect v st a0
+    | .call_indirect a0 a1 => visitor.on_call_indirect v st a0 a1
     | .drop a0 => visitor.on_drop v st a0
     | .select a0 => visitor.on_select v st a0
     | .local_get a0 => visitor.on_local_get v st a0
@@ -237,6 +277,43 @@ def invoke {V : Type} (visitor : code.OpVisitor V) (v : V) :
     | .i64_const a0 => visitor.on_i64_const v st a0
     | .f32_const a0 => visitor.on_f32_const v st a0
     | .f64_const a0 => visitor.on_f64_const v st a0
+    | .ref_null a0 => visitor.on_ref_null v st a0
+    | .ref_is_null => visitor.on_ref_is_null v st
+    | .ref_func a0 => visitor.on_ref_func v st a0
+    | .select_typed a0 => visitor.on_select_typed v st a0
+    | .table_get a0 => visitor.on_table_get v st a0
+    | .table_set a0 => visitor.on_table_set v st a0
+    | .memory_init a0 => visitor.on_memory_init v st a0
+    | .data_drop a0 => visitor.on_data_drop v st a0
+    | .memory_copy => visitor.on_memory_copy v st
+    | .memory_fill => visitor.on_memory_fill v st
+    | .table_init a0 a1 => visitor.on_table_init v st a0 a1
+    | .elem_drop a0 => visitor.on_elem_drop v st a0
+    | .table_copy a0 a1 => visitor.on_table_copy v st a0 a1
+    | .table_grow a0 => visitor.on_table_grow v st a0
+    | .table_size a0 => visitor.on_table_size v st a0
+    | .table_fill a0 => visitor.on_table_fill v st a0
+    | .simd a0 => visitor.on_simd v st a0
+    | .simd_lane a0 a1 => visitor.on_simd_lane v st a0 a1
+    | .simd_memory a0 a1 => visitor.on_simd_memory v st a0 a1
+    | .simd_memory_lane a0 a1 a2 => visitor.on_simd_memory_lane v st a0 a1 a2
+    | .simd_const a0 a1 => visitor.on_simd_const v st a0 a1
+    | .simd_shuffle a0 a1 => visitor.on_simd_shuffle v st a0 a1
+    | .extendedNumeric hook =>
+      match hook with
+      | .i32_extend8_s => visitor.on_i32_extend8_s v st
+      | .i32_extend16_s => visitor.on_i32_extend16_s v st
+      | .i64_extend8_s => visitor.on_i64_extend8_s v st
+      | .i64_extend16_s => visitor.on_i64_extend16_s v st
+      | .i64_extend32_s => visitor.on_i64_extend32_s v st
+      | .i32_trunc_sat_f32_s => visitor.on_i32_trunc_sat_f32_s v st
+      | .i32_trunc_sat_f32_u => visitor.on_i32_trunc_sat_f32_u v st
+      | .i32_trunc_sat_f64_s => visitor.on_i32_trunc_sat_f64_s v st
+      | .i32_trunc_sat_f64_u => visitor.on_i32_trunc_sat_f64_u v st
+      | .i64_trunc_sat_f32_s => visitor.on_i64_trunc_sat_f32_s v st
+      | .i64_trunc_sat_f32_u => visitor.on_i64_trunc_sat_f32_u v st
+      | .i64_trunc_sat_f64_s => visitor.on_i64_trunc_sat_f64_s v st
+      | .i64_trunc_sat_f64_u => visitor.on_i64_trunc_sat_f64_u v st
     | .numeric hook =>
       match hook with
       | .i32_eqz => visitor.on_i32_eqz v st
@@ -406,7 +483,7 @@ def ofHandler {V : Type} (handler : V → Event → Result (VisitResult × V)) :
   on_br_table v st a0 a1 := handler v (.op st (.br_table a0 a1))
   on_return v st := handler v (.op st (.return_))
   on_call v st a0 := handler v (.op st (.call a0))
-  on_call_indirect v st a0 := handler v (.op st (.call_indirect a0))
+  on_call_indirect v st a0 a1 := handler v (.op st (.call_indirect a0 a1))
   on_drop v st a0 := handler v (.op st (.drop a0))
   on_select v st a0 := handler v (.op st (.select a0))
   on_local_get v st a0 := handler v (.op st (.local_get a0))
@@ -566,6 +643,42 @@ def ofHandler {V : Type} (handler : V → Event → Result (VisitResult × V)) :
   on_i64_reinterpret_f64 v st := handler v (.op st (.numeric .i64_reinterpret_f64))
   on_f32_reinterpret_i32 v st := handler v (.op st (.numeric .f32_reinterpret_i32))
   on_f64_reinterpret_i64 v st := handler v (.op st (.numeric .f64_reinterpret_i64))
+  on_i32_extend8_s v st := handler v (.op st (.extendedNumeric .i32_extend8_s))
+  on_i32_extend16_s v st := handler v (.op st (.extendedNumeric .i32_extend16_s))
+  on_i64_extend8_s v st := handler v (.op st (.extendedNumeric .i64_extend8_s))
+  on_i64_extend16_s v st := handler v (.op st (.extendedNumeric .i64_extend16_s))
+  on_i64_extend32_s v st := handler v (.op st (.extendedNumeric .i64_extend32_s))
+  on_i32_trunc_sat_f32_s v st := handler v (.op st (.extendedNumeric .i32_trunc_sat_f32_s))
+  on_i32_trunc_sat_f32_u v st := handler v (.op st (.extendedNumeric .i32_trunc_sat_f32_u))
+  on_i32_trunc_sat_f64_s v st := handler v (.op st (.extendedNumeric .i32_trunc_sat_f64_s))
+  on_i32_trunc_sat_f64_u v st := handler v (.op st (.extendedNumeric .i32_trunc_sat_f64_u))
+  on_i64_trunc_sat_f32_s v st := handler v (.op st (.extendedNumeric .i64_trunc_sat_f32_s))
+  on_i64_trunc_sat_f32_u v st := handler v (.op st (.extendedNumeric .i64_trunc_sat_f32_u))
+  on_i64_trunc_sat_f64_s v st := handler v (.op st (.extendedNumeric .i64_trunc_sat_f64_s))
+  on_i64_trunc_sat_f64_u v st := handler v (.op st (.extendedNumeric .i64_trunc_sat_f64_u))
+
+  on_ref_null v st a0 := handler v (.op st (.ref_null a0))
+  on_ref_is_null v st := handler v (.op st (.ref_is_null))
+  on_ref_func v st a0 := handler v (.op st (.ref_func a0))
+  on_select_typed v st a0 := handler v (.op st (.select_typed a0))
+  on_table_get v st a0 := handler v (.op st (.table_get a0))
+  on_table_set v st a0 := handler v (.op st (.table_set a0))
+  on_memory_init v st a0 := handler v (.op st (.memory_init a0))
+  on_data_drop v st a0 := handler v (.op st (.data_drop a0))
+  on_memory_copy v st := handler v (.op st (.memory_copy))
+  on_memory_fill v st := handler v (.op st (.memory_fill))
+  on_table_init v st a0 a1 := handler v (.op st (.table_init a0 a1))
+  on_elem_drop v st a0 := handler v (.op st (.elem_drop a0))
+  on_table_copy v st a0 a1 := handler v (.op st (.table_copy a0 a1))
+  on_table_grow v st a0 := handler v (.op st (.table_grow a0))
+  on_table_size v st a0 := handler v (.op st (.table_size a0))
+  on_table_fill v st a0 := handler v (.op st (.table_fill a0))
+  on_simd v st a0 := handler v (.op st (.simd a0))
+  on_simd_lane v st a0 a1 := handler v (.op st (.simd_lane a0 a1))
+  on_simd_memory v st a0 a1 := handler v (.op st (.simd_memory a0 a1))
+  on_simd_memory_lane v st a0 a1 a2 := handler v (.op st (.simd_memory_lane a0 a1 a2))
+  on_simd_const v st a0 a1 := handler v (.op st (.simd_const a0 a1))
+  on_simd_shuffle v st a0 a1 := handler v (.op st (.simd_shuffle a0 a1))
 
 /-- Event dispatch and handler construction are exact inverses. -/
 @[simp] theorem invoke_ofHandler {V : Type}
@@ -575,6 +688,6 @@ def ofHandler {V : Type} (handler : V → Event → Result (VisitResult × V)) :
   | functionStart ctx typeidx bodybegin bodyend => rfl
   | op st action =>
     cases action <;> try rfl
-    all_goals first | (cases ‹NumericHook› <;> rfl) | (cases ‹MemoryHook› <;> rfl)
+    all_goals first | (cases ‹NumericHook› <;> rfl) | (cases ‹ExtendedNumericHook› <;> rfl) | (cases ‹MemoryHook› <;> rfl)
 
 end Itasca.VisitorTrace

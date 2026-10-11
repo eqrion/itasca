@@ -12,7 +12,7 @@ theorem CodeEntry.Witness.profile_validated
     (w : CodeEntry.Witness visitor data env index start finish v v' profile)
     (hbody : Profile.Body profile w.body env w.ctx.locals w.typeIdx) :
     Profile.Entry profile data env index start finish := by
-  obtain ⟨ft, ops, hlookup, hsignature, hbytes, htyped, hinstructions⟩ := hbody
+  obtain ⟨ft, ops, hlookup, hsignature, hbytes, htyped, hinstructions, hdeclared⟩ := hbody
   have hlookup' : env.types.val[w.typeIdx.val]? = some w.ft := by
     rw [List.getElem?_eq_getElem w.type_lt, w.function_type]
   have hft : ft = w.ft := Option.some.inj (hlookup.symm.trans hlookup')
@@ -20,7 +20,7 @@ theorem CodeEntry.Witness.profile_validated
   refine ⟨⟨w.groups, ops⟩, Profile.codeEncoding_of_parts w.header w.extent
     w.locals_bytes w.body_bytes hbytes, w.index_lt, ?_, w.locals_bound⟩
   rw [w.index_type]
-  exact Profile.EntryTyped.of_body hlookup hsignature w.context_locals htyped hinstructions
+  exact Profile.EntryTyped.of_body hlookup hsignature w.context_locals htyped hinstructions w.locals_allowed hdeclared
 
 /-- Actual visiting acceptance yields an independent entry certificate for
 the selected profile, without a visitor totality assumption. -/

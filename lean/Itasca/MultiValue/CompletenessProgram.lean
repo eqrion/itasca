@@ -14,6 +14,7 @@ def Program (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U
     Bounds data st → Consumed data st.core.pos tokens next →
     Sequence.Realizes f.core.current.polymorphic_base f.core.operands input →
     Instrs_ok C ops (.mk_functype (.mk_list input) (.mk_list output)) →
+    DeclaredReferences.Instructions (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) ops →
     ∃ s, Execution data env ctx index st s ∧ s.core.pos = next ∧ f.Output output s ∧
       Bounds data s
 
@@ -27,6 +28,7 @@ def AtomProgram (data : Slice U8) (env : module.Env) (ctx : code.Context) (index
     Bounds data st → Consumed data st.core.pos tokens next →
     Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input) →
     Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output)) →
+    DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) op →
     ∃ s, Execution data env ctx index st s ∧ s.core.pos = next ∧
       f.Output (front ++ output) s ∧ Bounds data s
 
@@ -45,7 +47,7 @@ theorem program_of_atoms (data : Slice U8) (env : module.Env) (ctx : code.Contex
   generalize hn : tokens.length = n
   induction n using Nat.strong_induction_on generalizing tokens ops with
   | h n ih =>
-    intro C st f next input output hmatch hlabels hbounds hbytes hreal htyped
+    intro C st f next input output hmatch hlabels hbounds hbytes hreal htyped hdecl
     cases ops with
     | nil =>
       have hnil := Emits.empty_iff.mp hemits
@@ -71,13 +73,13 @@ theorem program_of_atoms (data : Slice U8) (env : module.Env) (ctx : code.Contex
         exact ih ts.length (by omega) ts es he rfl
       obtain ⟨mid, hrun, hpos, hout, hbound⟩ :=
         hatom first op hfirst hsmaller C st f middle front ins outs hmatch hlabels
-          hbounds hfirstbytes hinput hop
+          hbounds hfirstbytes hinput hop (DeclaredReferences.Instructions.cons_iff.mp hdecl).1
       obtain ⟨g, _, _, hgp, hgo, hgk, hgb, hgba, hgr⟩ := hout.next
       have hrestbytes' : Consumed data mid.core.pos rest next := by simpa [hpos] using hrestbytes
       have hlabels' : Labels env mid C := hout.labels hlabels
       obtain ⟨last, hrun', hpos', hout', hbound'⟩ :=
         ih rest.length hrest_len rest ops hrest rfl C mid g next _ _
-          hmatch hlabels' hbound hrestbytes' hgr htail
+          hmatch hlabels' hbound hrestbytes' hgr htail (DeclaredReferences.Instructions.cons_iff.mp hdecl).2
       exact ⟨last, hrun.append hrun', hpos',
         hout'.transfer hout.2 hgp hgo hgk hgb hgba, hbound'⟩
 

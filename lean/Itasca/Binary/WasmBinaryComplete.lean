@@ -101,10 +101,11 @@ theorem BytesAt.read_f64 {data start next bytes} (bits : U64)
     ⟨bytes, h.suffix, by simpa [he.1] using h.length, h.bound, he⟩
 
 theorem BytesAt.read_block_type {data start next} (bt : code.BlockType)
-    (h : BytesAt data start [Control.blockByte bt] next) :
+    (h : BytesAt data start [Control.blockByte bt] next)
+    (hbt : Control.ScalarBlockType bt) :
     code.read_block_type data start = .ok (.Ok (bt, next)) := by
   obtain ⟨hp, hb, hn⟩ := h.single
-  obtain ⟨_, hr, p, rfl, hp'⟩ := WP.spec_imp_exists (code.read_block_type.spec data start bt hp hb)
+  obtain ⟨_, hr, p, rfl, hp'⟩ := WP.spec_imp_exists (code.read_block_type.spec data start bt hp hb hbt)
   have heq : p = next := UScalar.eq_of_val_eq (hp'.trans hn.symm)
   simpa [heq] using hr
 
@@ -260,21 +261,21 @@ theorem At.read_block {data start next} (bt : code.BlockType)
     code.read_block_type data pos = .ok (.Ok (bt, next)) := by
   obtain ⟨opcode, imm, hi, _, hs⟩ := h.immediate pos hp
   cases hi
-  exact hs.read_block_type bt
+  exact hs.read_block_type bt (by assumption)
 
 theorem At.read_loop {data start next} (bt : code.BlockType)
     (h : At data start (.loop bt) next) (pos : Usize) (hp : pos.val = start.val + 1) :
     code.read_block_type data pos = .ok (.Ok (bt, next)) := by
   obtain ⟨opcode, imm, hi, _, hs⟩ := h.immediate pos hp
   cases hi
-  exact hs.read_block_type bt
+  exact hs.read_block_type bt (by assumption)
 
 theorem At.read_if {data start next} (bt : code.BlockType)
     (h : At data start (.if_ bt) next) (pos : Usize) (hp : pos.val = start.val + 1) :
     code.read_block_type data pos = .ok (.Ok (bt, next)) := by
   obtain ⟨opcode, imm, hi, _, hs⟩ := h.immediate pos hp
   cases hi
-  exact hs.read_block_type bt
+  exact hs.read_block_type bt (by assumption)
 
 theorem At.else_cursor {data start next} (h : At data start .else_ next) :
     next.val = start.val + 1 := by

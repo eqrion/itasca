@@ -21,5 +21,6 @@ theorem Pending.branch_table {data env locals index st} (p : Pending data env lo
     (BrTable.instruction_wf depths default)
     (.plain (.of_table_decoded depths default p.inbounds hbyte p.pos hd)) ht hc
     (by simpa [hb] using blocks) (by simpa using hv)
+    (by simp [BrTable.instruction, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices])
 
 end Itasca.MultiValue

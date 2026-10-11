@@ -5,14 +5,24 @@ open Aeneas Aeneas.Std
 namespace Itasca.ModuleConstants
 
 theorem constant_valid_type {env : module.Env} {C : context} {e : types.ConstExpr}
-    (hg : GlobalContext env C) (h : Instr_const C (instruction e)) :
+    (hg : GlobalContext env C) (hf : FunctionContext env C)
+    (h : Instr_const C (instruction e))
+    {ins outs : List valtype}
+    (ht : Instr_ok C (instruction e) (.mk_functype (.mk_list ins) (.mk_list outs))) :
     ∃ ty, Valid env e ty := by
   change C.GLOBALS = (env.global_types.val.take env.num_imported_globals.val).map Translate.globalType at hg
+  change C.FUNCS = env.func_types.val.map EnvTranslation.funcType at hf
   cases e with
   | I32 value => exact ⟨.I32, .i32 value⟩
   | I64 value => exact ⟨.I64, .i64 value⟩
   | F32 bits => exact ⟨.F32, .f32 bits⟩
   | F64 bits => exact ⟨.F64, .f64 bits⟩
+  | V128 low high => exact ⟨.V128, .v128 low high⟩
+  | RefNull ty => exact ⟨referenceValueType ty, .refNull ty⟩
+  | RefFunc idx =>
+    cases ht with
+    | ref_func _ _ _ hi _ _ _ =>
+      exact ⟨.FuncRef, .refFunc idx (by simpa [hf, proj_uN_0] using hi)⟩
   | GlobalGet idx =>
     cases h with
     | global_get _ t hi he hw hf =>
@@ -39,18 +49,18 @@ theorem instruction_output_unique {C : context} {e : types.ConstExpr} {ins outs 
 /-- Generated typing of the restricted initializer language recovers exactly
 the validator's constant-expression check, including imported immutability. -/
 theorem valid_of_typing {env : module.Env} {C : context} {e : types.ConstExpr} {ty : types.ValueType}
-    (hg : GlobalContext env C) (h : Expr_ok_const C (expression e) (Translate.valueType ty)) :
+    (hg : GlobalContext env C) (hfunctions : FunctionContext env C) (h : Expr_ok_const C (expression e) (Translate.valueType ty)) :
     Valid env e ty := by
   cases h with
   | mk_Expr_ok_const ht hc hw hws =>
     have hconst : Instr_const C (instruction e) := by
       cases hc with
       | mk_Expr_const hc _ _ => exact hc _ (by simp [expression])
-    obtain ⟨actual, hv⟩ := constant_valid_type hg hconst
-    have hcanonical := (hv.instruction_typed C hw hg).1
     have hseq : Instrs_ok C (expression e)
         (.mk_functype (.mk_list []) (.mk_list [Translate.valueType ty])) := by cases ht; assumption
     obtain ⟨front, ins, outs, hp, hi, ho⟩ := DeclarativeComplete.singleton hseq
+    obtain ⟨actual, hv⟩ := constant_valid_type hg hfunctions hconst hp
+    have hcanonical := (hv.instruction_typed C hw hg hfunctions).1
     have hn := DeclarativeComplete.result_sub_length hi
     have hf : front = [] := by
       apply List.length_eq_zero_iff.mp

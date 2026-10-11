@@ -164,7 +164,7 @@ theorem Pending.step_call_indirect {data env ctx bt st} (p : Pending data env ct
   have hC : EnvTranslation.Matches env ctx (WasmFrames.enter C p.current.form p.current.ctrl.block_type) :=
     spine.matches.enter _
   rw [code.step_call_indirect.dispatch]
-  apply run_after p _ _ v _ (hvisitor.on_call_indirect v)
+  apply run_after p _ _ v _ (fun s idx => hvisitor.on_call_indirect v s idx 0#u32)
   refine WP.spec_mono (code.read_call_indirect.prefix st data env ctx outer p.current.vals vals
     (by simpa [Control.base, ctrls] using base) (by have := p.val_capacity; omega)
     _ hC p.current.ops (by simpa [hpoly] using typed)) ?_

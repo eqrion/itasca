@@ -105,14 +105,14 @@ theorem SelectEffect.multi_prefix {initial : List valtype} {poly before t after}
     (C : context) (hC : wf_context C) (ops : List instr)
     (htyped : MultiValue.TypedPrefix C initial ops poly before) :
     MultiValue.TypedPrefix C initial (ops ++ [.SELECT none]) poly after := by
-  obtain ⟨rest, rfl, htransfer⟩ := h
+  obtain ⟨hselect, rest, rfl, htransfer⟩ := h
   apply htyped.append hC (.SELECT none) (.instr_case_3 _)
   intro out hout
   obtain ⟨front, u, rfl, hf, hu⟩ := hout.snoc_inv
   refine ⟨front ++ [selectedType t, selectedType t, .I32], htransfer front hf, ?_⟩
   apply Instrs_ok.frame C [.SELECT none] front _ _ _ hC (by simp [Forall]; exact .instr_case_3 _)
   apply Instrs_ok.sub C [.SELECT none] _ _ _ _
-    (.instr C _ _ _ (selectedType_typed C hC t) hC (.instr_case_3 _))
+    (.instr C _ _ _ (selectedType_typed C hC t hselect) hC (.instr_case_3 _))
     _ _ hC (by simp [Forall]; exact .instr_case_3 _)
   · exact .mk_Resulttype_sub _ _ rfl (by simp [Forall₂, Valtype_sub.refl])
   · exact .mk_Resulttype_sub _ _ rfl (by simpa [Forall₂] using selectedType_sub hu)

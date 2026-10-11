@@ -12,7 +12,8 @@ def code.validate_multi_value_body_loop.body
   (v1 : alloc.vec.Vec module.Import)
   (v2 : alloc.vec.Vec module.Global)
   (v3 : alloc.vec.Vec module.Export)
-  (v4 : alloc.vec.Vec module.Element) (o : Option U32)
+  (v4 : alloc.vec.Vec module.Element) (data_count : Option U32)
+  (declared_funcs : alloc.vec.Vec U32) (o : Option U32)
   (v5 : alloc.vec.Vec U32)
   (v6 : alloc.vec.Vec types.FuncType)
   (v7 : alloc.vec.Vec types.TableType)
@@ -27,7 +28,7 @@ def code.validate_multi_value_body_loop.body
     code.EmptyOpVisitor) (core.result.Result Unit
     error.OpError))
   := do
-  let env : module.Env := ⟨v, v1, v2, v3, v4, o, v5, v6, v7, v8, v9, i, i1⟩
+  let env : module.Env := ⟨v, v1, v2, v3, v4, data_count, declared_funcs, o, v5, v6, v7, v8, v9, i, i1⟩
   let b ← alloc.vec.Vec.is_empty Global st.blocks
   if b
   then
@@ -202,7 +203,7 @@ def code.validate_multi_value_body_loop.body
         then ok (done (core.result.Result.Err error.OpError.StackTooLarge))
         else
           let (r1, ois, visitor1) ←
-            code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+            code.step_wasm2 code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
               { st.core with pos := «end» } data
               env { locals, results := v10 } op visitor
           let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
@@ -226,7 +227,8 @@ def code.validate_multi_value_body_loop
   (v1 : alloc.vec.Vec module.Import)
   (v2 : alloc.vec.Vec module.Global)
   (v3 : alloc.vec.Vec module.Export)
-  (v4 : alloc.vec.Vec module.Element) (o : Option U32)
+  (v4 : alloc.vec.Vec module.Element) (data_count : Option U32)
+  (declared_funcs : alloc.vec.Vec U32) (o : Option U32)
   (v5 : alloc.vec.Vec U32)
   (v6 : alloc.vec.Vec types.FuncType)
   (v7 : alloc.vec.Vec types.TableType)
@@ -240,7 +242,7 @@ def code.validate_multi_value_body_loop
   Result (core.result.Result Unit error.OpError)
   := do
   let (r, _) ← code.validate_multi_value_body_with_loop
-    code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor data v v1 v2 v3 v4 o v5 v6 v7 v8 v9 i i1
+    code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor data v v1 v2 v3 v4 data_count declared_funcs o v5 v6 v7 v8 v9 i i1
     ⟨locals, v10⟩ type_index visitor st
   .ok r
 
@@ -249,9 +251,9 @@ adapter and the extracted visiting loop. -/
 theorem code.validate_multi_value_body_loop.body_eq (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (st : code.BodyState) :
     code.body_loop_loop.body code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
-      data env ctx index .MultiValue () st = (do
+      data env ctx index .Wasm2 () st = (do
       let r ← code.validate_multi_value_body_loop.body data env.types env.imports env.globals
-        env.exports env.elements env.start env.func_type_indices env.func_types env.table_types
+        env.exports env.elements env.data_count env.declared_funcs env.start env.func_type_indices env.func_types env.table_types
         env.mem_types env.global_types env.num_imported_funcs env.num_imported_globals
         index ctx.locals ctx.results st ()
       .ok (match r with | .cont (s, _) => .cont ((), s) | .done result => .done (result, ()))) := by
@@ -274,7 +276,7 @@ theorem code.validate_multi_value_body_loop.body_eq (data : Slice U8) (env : mod
       conv_rhs => arg 1; whnf
       split
       all_goals simp_all only [bind_ok, code.enter, code.end_frame,
-        code.branch, code.branch_table, code.call, Std.bind_assoc]
+        code.branch, code.branch_table, code.call, Bool.false_eq_true, ↓reduceIte, Std.bind_assoc]
       all_goals first
         | (congr 1; funext pair; rcases pair with ⟨r, s⟩; cases r <;>
             simp [code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor, code.OpVisitor.on_block.default,
@@ -333,7 +335,7 @@ def code.bodyCore
                 }
             } code.LabelKind.Body (signature.BlockType.TypeIndex type_index)
         code.validate_multi_value_body_loop data env.types env.imports env.globals
-          env.exports env.elements env.start env.func_type_indices
+          env.exports env.elements env.data_count env.declared_funcs env.start env.func_type_indices
           env.func_types env.table_types env.mem_types env.global_types
           env.num_imported_funcs env.num_imported_globals type_index st locals
           (alloc.vec.Vec.new types.ValueType) ()

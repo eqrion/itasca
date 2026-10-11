@@ -1,7 +1,7 @@
 //! Function-body validation for both supported profiles.
 //!
 //! One body worker owns initialization and iteration over the shared operand and
-//! control stacks. Wasm 1.0 and multi-value select their control rules; scalar
+//! control stacks. Wasm 1.0 and Wasm 2.0 select their control rules; shared
 //! readers and operator callbacks are shared.
 
 use crate::error::{OpError, VisitError};
@@ -13,7 +13,7 @@ use crate::reader::{
     read_byte, read_f32_bits, read_f64_bits, read_s32_leb, read_s64_leb, read_u32_leb,
 };
 use crate::signature::{self, BlockType as BlockSignature, ResultType, TypePart};
-use crate::types::{FuncType, GlobalType, Mut, ValueType};
+use crate::types::{ElemType, FuncType, GlobalType, Mut, ValueType};
 use alloc::vec::Vec;
 
 /// The Wasm 1.0 block immediate: zero or one result type.
@@ -570,6 +570,13 @@ fn join_stack_type(a: StackType, b: StackType) -> Result<StackType> {
 ///
 /// The selected type remains `Bot` when both values come from an exhausted
 /// unreachable frame.
+fn is_select_type(t: StackType) -> bool {
+    match t {
+        StackType::Val(ValueType::FuncRef) | StackType::Val(ValueType::ExternRef) => false,
+        _ => true,
+    }
+}
+
 fn read_select(st: &mut OpIterState) -> Result<StackType> {
     pop_with_type(st, ValueType::I32)?;
     // Named t2/t3 because the condition that just came off is conventionally
@@ -577,6 +584,9 @@ fn read_select(st: &mut OpIterState) -> Result<StackType> {
     let t2 = pop_stack_type(st)?;
     let t3 = pop_stack_type(st)?;
     let t = join_stack_type(t2, t3)?;
+    if !is_select_type(t) {
+        return Err(OpError::TypeMismatch);
+    }
     push_val(st, t);
     Ok(t)
 }
@@ -894,6 +904,9 @@ fn read_call_indirect(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u3
     if env.table_types.is_empty() {
         return Err(OpError::UnknownTable);
     }
+    if env.table_types[0].elem.value_type() != ValueType::FuncRef {
+        return Err(OpError::TypeMismatch);
+    }
     let i = idx as usize;
     if i >= env.types.len() {
         return Err(OpError::UnknownType);
@@ -1138,7 +1151,7 @@ pub(crate) fn step<V: OpVisitor>(
         }
         OP_CALL_INDIRECT => {
             let idx = read_call_indirect(st, data, env)?;
-            visit(v.on_call_indirect(st, idx))?;
+            visit(v.on_call_indirect(st, idx, 0))?;
             Ok(())
         }
         OP_LOCAL_GET => {
@@ -1301,6 +1314,597 @@ fn step_numeric<V: OpVisitor>(st: &mut OpIterState, opcode: u8, v: &mut V) -> Re
         None => {}
     }
     Err(OpError::UnrecognizedOpcode)
+}
+
+/// Returns the operand type for a Wasm 2.0 sign-extension instruction.
+fn sign_extension_type(opcode: u8) -> Option<ValueType> {
+    match opcode {
+        OP_I32_EXTEND8_S | OP_I32_EXTEND16_S => Some(ValueType::I32),
+        OP_I64_EXTEND8_S | OP_I64_EXTEND16_S | OP_I64_EXTEND32_S => Some(ValueType::I64),
+        _ => None,
+    }
+}
+
+/// Returns the input and output types of a saturating conversion subopcode.
+fn saturating_types(opcode: u32) -> Option<(ValueType, ValueType)> {
+    match opcode {
+        0 | 1 => Some((ValueType::F32, ValueType::I32)),
+        2 | 3 => Some((ValueType::F64, ValueType::I32)),
+        4 | 5 => Some((ValueType::F32, ValueType::I64)),
+        6 | 7 => Some((ValueType::F64, ValueType::I64)),
+        _ => None,
+    }
+}
+
+/// Decodes and validates the scalar instructions added in Wasm 2.0.
+fn step_extended<V: OpVisitor>(
+    st: &mut OpIterState,
+    data: &[u8],
+    env: &Env,
+    ctx: &Context,
+    opcode: u8,
+    visitor: &mut V,
+) -> Result<()> {
+    match sign_extension_type(opcode) {
+        Some(ty) => {
+            read_conversion(st, ty, ty)?;
+            visit(visit_sign_extension(visitor, st, opcode))?;
+            return Ok(());
+        }
+        None => {}
+    }
+    if opcode == OP_MISC_PREFIX {
+        let (subopcode, next) = read_u32_leb(data, st.pos)?;
+        st.pos = next;
+        match saturating_types(subopcode) {
+            Some((from, to)) => {
+                read_conversion(st, from, to)?;
+                visit(visit_saturating(visitor, st, subopcode))?;
+                return Ok(());
+            }
+            None => return Err(OpError::UnrecognizedOpcode),
+        }
+    }
+    step(st, data, env, ctx, opcode, visitor)
+}
+
+fn visit_sign_extension<V: OpVisitor>(v: &mut V, st: &OpIterState, opcode: u8) -> VisitResult {
+    match opcode {
+        OP_I32_EXTEND8_S => v.on_i32_extend8_s(st),
+        OP_I32_EXTEND16_S => v.on_i32_extend16_s(st),
+        OP_I64_EXTEND8_S => v.on_i64_extend8_s(st),
+        OP_I64_EXTEND16_S => v.on_i64_extend16_s(st),
+        OP_I64_EXTEND32_S => v.on_i64_extend32_s(st),
+        _ => Ok(()),
+    }
+}
+
+fn visit_saturating<V: OpVisitor>(v: &mut V, st: &OpIterState, opcode: u32) -> VisitResult {
+    match opcode {
+        0 => v.on_i32_trunc_sat_f32_s(st),
+        1 => v.on_i32_trunc_sat_f32_u(st),
+        2 => v.on_i32_trunc_sat_f64_s(st),
+        3 => v.on_i32_trunc_sat_f64_u(st),
+        4 => v.on_i64_trunc_sat_f32_s(st),
+        5 => v.on_i64_trunc_sat_f32_u(st),
+        6 => v.on_i64_trunc_sat_f64_s(st),
+        7 => v.on_i64_trunc_sat_f64_u(st),
+        _ => Ok(()),
+    }
+}
+
+// --- Reference types and table/bulk-memory operations ---
+
+fn take_reference_type(st: &mut OpIterState, data: &[u8]) -> Result<ElemType> {
+    let (tag, next) = read_byte(data, st.pos)?;
+    st.pos = next;
+    match tag {
+        0x70 => Ok(ElemType::FuncRef),
+        0x6f => Ok(ElemType::ExternRef),
+        _ => Err(OpError::TypeMismatch),
+    }
+}
+
+fn take_value_type(st: &mut OpIterState, data: &[u8]) -> Result<ValueType> {
+    let (tag, next) = read_byte(data, st.pos)?;
+    st.pos = next;
+    match tag {
+        0x7f => Ok(ValueType::I32),
+        0x7e => Ok(ValueType::I64),
+        0x7d => Ok(ValueType::F32),
+        0x7c => Ok(ValueType::F64),
+        0x7b => Ok(ValueType::V128),
+        0x70 => Ok(ValueType::FuncRef),
+        0x6f => Ok(ValueType::ExternRef),
+        _ => Err(OpError::TypeMismatch),
+    }
+}
+
+fn read_ref_null(st: &mut OpIterState, data: &[u8]) -> Result<ElemType> {
+    let ty = take_reference_type(st, data)?;
+    push_val(st, StackType::Val(ty.value_type()));
+    Ok(ty)
+}
+
+fn read_ref_is_null(st: &mut OpIterState) -> Result<()> {
+    match pop_stack_type(st)? {
+        StackType::Bot => {}
+        StackType::Val(ValueType::FuncRef) => {}
+        StackType::Val(ValueType::ExternRef) => {}
+        _ => return Err(OpError::TypeMismatch),
+    }
+    push_val(st, StackType::Val(ValueType::I32));
+    Ok(())
+}
+
+fn read_ref_func(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
+    let index = take_index(st, data)?;
+    if index as usize >= env.func_types.len() {
+        return Err(OpError::UnknownFunc);
+    }
+    if !env.declares_function(index) {
+        return Err(OpError::UnknownFunc);
+    }
+    push_val(st, StackType::Val(ValueType::FuncRef));
+    Ok(index)
+}
+
+fn read_typed_select(st: &mut OpIterState, data: &[u8]) -> Result<ValueType> {
+    let count = take_index(st, data)?;
+    if count != 1 {
+        return Err(OpError::TypeMismatch);
+    }
+    let ty = take_value_type(st, data)?;
+    pop_with_type(st, ValueType::I32)?;
+    pop_with_type(st, ty)?;
+    pop_with_type(st, ty)?;
+    push_val(st, StackType::Val(ty));
+    Ok(ty)
+}
+
+fn take_table(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<(u32, ValueType)> {
+    let index = take_index(st, data)?;
+    let i = index as usize;
+    if i >= env.table_types.len() {
+        return Err(OpError::UnknownTable);
+    }
+    Ok((index, env.table_types[i].elem.value_type()))
+}
+
+fn read_table_get(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
+    let (index, ty) = take_table(st, data, env)?;
+    pop_with_type(st, ValueType::I32)?;
+    push_val(st, StackType::Val(ty));
+    Ok(index)
+}
+
+fn read_table_set(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
+    let (index, ty) = take_table(st, data, env)?;
+    pop_with_type(st, ty)?;
+    pop_with_type(st, ValueType::I32)?;
+    Ok(index)
+}
+
+fn take_data_index(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
+    let index = take_index(st, data)?;
+    match env.data_count {
+        Some(count) => {
+            if index >= count {
+                return Err(OpError::UnknownData);
+            }
+        }
+        None => return Err(OpError::UnknownData),
+    }
+    Ok(index)
+}
+
+fn take_element(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<(u32, ValueType)> {
+    let index = take_index(st, data)?;
+    let i = index as usize;
+    if i >= env.elements.len() {
+        return Err(OpError::UnknownElement);
+    }
+    Ok((index, env.elements[i].elem.value_type()))
+}
+
+fn read_bulk_operands(st: &mut OpIterState) -> Result<()> {
+    pop_with_type(st, ValueType::I32)?;
+    pop_with_type(st, ValueType::I32)?;
+    pop_with_type(st, ValueType::I32)?;
+    Ok(())
+}
+
+fn read_bulk_memory(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<()> {
+    read_reserved_zero(st, data)?;
+    if env.mem_types.is_empty() {
+        return Err(OpError::UnknownMemory);
+    }
+    Ok(())
+}
+
+fn read_memory_init(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
+    let index = take_data_index(st, data, env)?;
+    read_bulk_memory(st, data, env)?;
+    read_bulk_operands(st)?;
+    Ok(index)
+}
+
+fn read_memory_copy(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<()> {
+    read_bulk_memory(st, data, env)?;
+    read_reserved_zero(st, data)?;
+    read_bulk_operands(st)
+}
+
+fn read_memory_fill(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<()> {
+    read_bulk_memory(st, data, env)?;
+    read_bulk_operands(st)
+}
+
+fn read_table_init(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<(u32, u32)> {
+    let (element, element_type) = take_element(st, data, env)?;
+    let (table, table_type) = take_table(st, data, env)?;
+    if element_type != table_type {
+        return Err(OpError::TypeMismatch);
+    }
+    read_bulk_operands(st)?;
+    Ok((element, table))
+}
+
+fn read_table_copy(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<(u32, u32)> {
+    let (destination, destination_type) = take_table(st, data, env)?;
+    let (source, source_type) = take_table(st, data, env)?;
+    if destination_type != source_type {
+        return Err(OpError::TypeMismatch);
+    }
+    read_bulk_operands(st)?;
+    Ok((destination, source))
+}
+
+fn read_table_grow(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
+    let (index, ty) = take_table(st, data, env)?;
+    pop_with_type(st, ValueType::I32)?;
+    pop_with_type(st, ty)?;
+    push_val(st, StackType::Val(ValueType::I32));
+    Ok(index)
+}
+
+fn read_table_size(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
+    let (index, _) = take_table(st, data, env)?;
+    push_val(st, StackType::Val(ValueType::I32));
+    Ok(index)
+}
+
+fn read_table_fill(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
+    let (index, ty) = take_table(st, data, env)?;
+    pop_with_type(st, ValueType::I32)?;
+    pop_with_type(st, ty)?;
+    pop_with_type(st, ValueType::I32)?;
+    Ok(index)
+}
+
+fn step_bulk<V: OpVisitor>(
+    st: &mut OpIterState,
+    data: &[u8],
+    env: &Env,
+    subopcode: u32,
+    visitor: &mut V,
+) -> Result<()> {
+    match subopcode {
+        8 => {
+            let index = read_memory_init(st, data, env)?;
+            visit(visitor.on_memory_init(st, index))
+        }
+        9 => {
+            let index = take_data_index(st, data, env)?;
+            visit(visitor.on_data_drop(st, index))
+        }
+        10 => {
+            read_memory_copy(st, data, env)?;
+            visit(visitor.on_memory_copy(st))
+        }
+        11 => {
+            read_memory_fill(st, data, env)?;
+            visit(visitor.on_memory_fill(st))
+        }
+        12 => {
+            let (element, table) = read_table_init(st, data, env)?;
+            visit(visitor.on_table_init(st, element, table))
+        }
+        13 => {
+            let (index, _) = take_element(st, data, env)?;
+            visit(visitor.on_elem_drop(st, index))
+        }
+        14 => {
+            let (destination, source) = read_table_copy(st, data, env)?;
+            visit(visitor.on_table_copy(st, destination, source))
+        }
+        15 => {
+            let index = read_table_grow(st, data, env)?;
+            visit(visitor.on_table_grow(st, index))
+        }
+        16 => {
+            let index = read_table_size(st, data, env)?;
+            visit(visitor.on_table_size(st, index))
+        }
+        17 => {
+            let index = read_table_fill(st, data, env)?;
+            visit(visitor.on_table_fill(st, index))
+        }
+        _ => Err(OpError::UnrecognizedOpcode),
+    }
+}
+
+// --- Wasm 2.0 SIMD instructions ---
+
+/// The operand shape of a SIMD instruction without an immediate.
+#[derive(Clone, Copy)]
+pub(crate) enum SimdSignature {
+    Unary,
+    Binary,
+    Ternary,
+    Test,
+    Shift,
+    SplatI32,
+    SplatI64,
+    SplatF32,
+    SplatF64,
+}
+
+/// Lists exactly the immediate-free SIMD opcodes in the core 2.0 profile.
+fn simd_signature(subopcode: u32) -> Option<SimdSignature> {
+    if subopcode >= 256 {
+        return None;
+    }
+    match subopcode {
+        14 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51
+        | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68
+        | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 78 | 79 | 80 | 81 | 101 | 102 | 110 | 111
+        | 112 | 113 | 114 | 115 | 118 | 119 | 120 | 121 | 123 | 130 | 133 | 134 | 142 | 143
+        | 144 | 145 | 146 | 147 | 149 | 150 | 151 | 152 | 153 | 155 | 156 | 157 | 158 | 159
+        | 174 | 177 | 181 | 182 | 183 | 184 | 185 | 186 | 188 | 189 | 190 | 191 | 206 | 209
+        | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220 | 221 | 222 | 223 | 228 | 229 | 230
+        | 231 | 232 | 233 | 234 | 235 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 => {
+            Some(SimdSignature::Binary)
+        }
+        15 | 16 | 17 => Some(SimdSignature::SplatI32),
+        18 => Some(SimdSignature::SplatI64),
+        19 => Some(SimdSignature::SplatF32),
+        20 => Some(SimdSignature::SplatF64),
+        77 | 94 | 95 | 96 | 97 | 98 | 103 | 104 | 105 | 106 | 116 | 117 | 122 | 124 | 125 | 126
+        | 127 | 128 | 129 | 135 | 136 | 137 | 138 | 148 | 160 | 161 | 167 | 168 | 169 | 170
+        | 192 | 193 | 199 | 200 | 201 | 202 | 224 | 225 | 227 | 236 | 237 | 239 | 248 | 249
+        | 250 | 251 | 252 | 253 | 254 | 255 => Some(SimdSignature::Unary),
+        82 => Some(SimdSignature::Ternary),
+        83 | 99 | 100 | 131 | 132 | 163 | 164 | 195 | 196 => Some(SimdSignature::Test),
+        107 | 108 | 109 | 139 | 140 | 141 | 171 | 172 | 173 | 203 | 204 | 205 => {
+            Some(SimdSignature::Shift)
+        }
+        _ => None,
+    }
+}
+
+fn read_simd_signature(st: &mut OpIterState, signature: SimdSignature) -> Result<()> {
+    match signature {
+        SimdSignature::Unary => read_conversion(st, ValueType::V128, ValueType::V128),
+        SimdSignature::Binary => read_binary(st, ValueType::V128, ValueType::V128),
+        SimdSignature::Ternary => {
+            pop_with_type(st, ValueType::V128)?;
+            read_binary(st, ValueType::V128, ValueType::V128)
+        }
+        SimdSignature::Test => read_conversion(st, ValueType::V128, ValueType::I32),
+        SimdSignature::Shift => {
+            pop_with_type(st, ValueType::I32)?;
+            read_conversion(st, ValueType::V128, ValueType::V128)
+        }
+        SimdSignature::SplatI32 => read_conversion(st, ValueType::I32, ValueType::V128),
+        SimdSignature::SplatI64 => read_conversion(st, ValueType::I64, ValueType::V128),
+        SimdSignature::SplatF32 => read_conversion(st, ValueType::F32, ValueType::V128),
+        SimdSignature::SplatF64 => read_conversion(st, ValueType::F64, ValueType::V128),
+    }
+}
+
+/// The scalar type, lane count, and replacement flag of a lane instruction.
+fn simd_lane_info(subopcode: u32) -> Option<(ValueType, u8, bool)> {
+    match subopcode {
+        21 | 22 => Some((ValueType::I32, 16, false)),
+        23 => Some((ValueType::I32, 16, true)),
+        24 | 25 => Some((ValueType::I32, 8, false)),
+        26 => Some((ValueType::I32, 8, true)),
+        27 => Some((ValueType::I32, 4, false)),
+        28 => Some((ValueType::I32, 4, true)),
+        29 => Some((ValueType::I64, 2, false)),
+        30 => Some((ValueType::I64, 2, true)),
+        31 => Some((ValueType::F32, 4, false)),
+        32 => Some((ValueType::F32, 4, true)),
+        33 => Some((ValueType::F64, 2, false)),
+        34 => Some((ValueType::F64, 2, true)),
+        _ => None,
+    }
+}
+
+fn take_simd_lane(st: &mut OpIterState, data: &[u8], count: u8) -> Result<u8> {
+    let (lane, next) = read_byte(data, st.pos)?;
+    st.pos = next;
+    if lane >= count {
+        return Err(OpError::InvalidLane);
+    }
+    Ok(lane)
+}
+
+fn read_simd_lane(
+    st: &mut OpIterState,
+    data: &[u8],
+    ty: ValueType,
+    count: u8,
+    replace: bool,
+) -> Result<u8> {
+    let lane = take_simd_lane(st, data, count)?;
+    if replace {
+        pop_with_type(st, ty)?;
+        read_conversion(st, ValueType::V128, ValueType::V128)?;
+    } else {
+        read_conversion(st, ValueType::V128, ty)?;
+    }
+    Ok(lane)
+}
+
+/// The natural alignment exponent, store flag, and optional lane count.
+fn simd_memory_info(subopcode: u32) -> Option<(u32, bool, u8)> {
+    match subopcode {
+        0 => Some((4, false, 0)),
+        1 | 2 | 3 | 4 | 5 | 6 => Some((3, false, 0)),
+        7 => Some((0, false, 0)),
+        8 => Some((1, false, 0)),
+        9 | 92 => Some((2, false, 0)),
+        10 | 93 => Some((3, false, 0)),
+        11 => Some((4, true, 0)),
+        84 => Some((0, false, 16)),
+        85 => Some((1, false, 8)),
+        86 => Some((2, false, 4)),
+        87 => Some((3, false, 2)),
+        88 => Some((0, true, 16)),
+        89 => Some((1, true, 8)),
+        90 => Some((2, true, 4)),
+        91 => Some((3, true, 2)),
+        _ => None,
+    }
+}
+
+fn read_simd_memory_lane(
+    st: &mut OpIterState,
+    data: &[u8],
+    env: &Env,
+    natural_align: u32,
+    store: bool,
+    count: u8,
+) -> Result<(MemArg, u8)> {
+    let memarg = read_memarg(st, data)?;
+    let lane = take_simd_lane(st, data, count)?;
+    check_memory_and_alignment(env, &memarg, natural_align)?;
+    pop_with_type(st, ValueType::V128)?;
+    pop_with_type(st, ValueType::I32)?;
+    if !store {
+        push_val(st, StackType::Val(ValueType::V128));
+    }
+    Ok((memarg, lane))
+}
+
+/// Reads a 128-bit immediate as two little-endian 64-bit words.
+fn take_simd_bits(st: &mut OpIterState, data: &[u8]) -> Result<(u64, u64)> {
+    let (low, p1) = read_f64_bits(data, st.pos)?;
+    let (high, p2) = read_f64_bits(data, p1)?;
+    st.pos = p2;
+    Ok((low, high))
+}
+
+fn read_simd_const(st: &mut OpIterState, data: &[u8]) -> Result<(u64, u64)> {
+    let bits = take_simd_bits(st, data)?;
+    push_val(st, StackType::Val(ValueType::V128));
+    Ok(bits)
+}
+
+fn read_simd_shuffle(st: &mut OpIterState, data: &[u8]) -> Result<(u64, u64)> {
+    let mut pos = st.pos;
+    let mut i = 0;
+    while i < 16 {
+        let (lane, next) = read_byte(data, pos)?;
+        if lane >= 32 {
+            return Err(OpError::InvalidLane);
+        }
+        pos = next;
+        i += 1;
+    }
+    let bits = take_simd_bits(st, data)?;
+    read_binary(st, ValueType::V128, ValueType::V128)?;
+    Ok(bits)
+}
+
+fn step_simd<V: OpVisitor>(
+    st: &mut OpIterState,
+    data: &[u8],
+    env: &Env,
+    visitor: &mut V,
+) -> Result<()> {
+    let (subopcode, next) = read_u32_leb(data, st.pos)?;
+    st.pos = next;
+    if let Some(signature) = simd_signature(subopcode) {
+        read_simd_signature(st, signature)?;
+        return visit(visitor.on_simd(st, subopcode));
+    }
+    if let Some((ty, count, replace)) = simd_lane_info(subopcode) {
+        let lane = read_simd_lane(st, data, ty, count, replace)?;
+        return visit(visitor.on_simd_lane(st, subopcode, lane));
+    }
+    if let Some((align, store, count)) = simd_memory_info(subopcode) {
+        if count != 0 {
+            let (memarg, lane) = read_simd_memory_lane(st, data, env, align, store, count)?;
+            return visit(visitor.on_simd_memory_lane(st, subopcode, memarg, lane));
+        }
+        let memarg = if store {
+            read_store(st, data, env, ValueType::V128, align)?
+        } else {
+            read_load(st, data, env, ValueType::V128, align)?
+        };
+        return visit(visitor.on_simd_memory(st, subopcode, memarg));
+    }
+    match subopcode {
+        12 => {
+            let (low, high) = read_simd_const(st, data)?;
+            visit(visitor.on_simd_const(st, low, high))
+        }
+        13 => {
+            let (low, high) = read_simd_shuffle(st, data)?;
+            visit(visitor.on_simd_shuffle(st, low, high))
+        }
+        _ => Err(OpError::UnrecognizedOpcode),
+    }
+}
+
+fn step_wasm2<V: OpVisitor>(
+    st: &mut OpIterState,
+    data: &[u8],
+    env: &Env,
+    ctx: &Context,
+    opcode: u8,
+    visitor: &mut V,
+) -> Result<()> {
+    match opcode {
+        0xfd => step_simd(st, data, env, visitor),
+        0x1c => {
+            let ty = read_typed_select(st, data)?;
+            visit(visitor.on_select_typed(st, ty))
+        }
+        0x25 => {
+            let index = read_table_get(st, data, env)?;
+            visit(visitor.on_table_get(st, index))
+        }
+        0x26 => {
+            let index = read_table_set(st, data, env)?;
+            visit(visitor.on_table_set(st, index))
+        }
+        0xd0 => {
+            let ty = read_ref_null(st, data)?;
+            visit(visitor.on_ref_null(st, ty))
+        }
+        0xd1 => {
+            read_ref_is_null(st)?;
+            visit(visitor.on_ref_is_null(st))
+        }
+        0xd2 => {
+            let index = read_ref_func(st, data, env)?;
+            visit(visitor.on_ref_func(st, index))
+        }
+        OP_MISC_PREFIX => {
+            let (subopcode, next) = read_u32_leb(data, st.pos)?;
+            if subopcode < 8 {
+                step_extended(st, data, env, ctx, opcode, visitor)
+            } else {
+                st.pos = next;
+                step_bulk(st, data, env, subopcode, visitor)
+            }
+        }
+        _ => step_extended(st, data, env, ctx, opcode, visitor),
+    }
 }
 
 // --- Multi-value control and signature handling ---
@@ -1606,37 +2210,43 @@ fn apply_func_type(st: &mut OpIterState, ft: &FuncType) -> Result<()> {
     Ok(())
 }
 
-fn call_info(st: &mut BodyState, data: &[u8], env: &Env, indirect: bool) -> Result<u32> {
-    let (index, end) = read_u32_leb(data, st.core.pos)?;
-    st.core.pos = end;
+fn call_info(st: &mut BodyState, data: &[u8], env: &Env) -> Result<u32> {
+    let index = take_index(&mut st.core, data)?;
     let i = index as usize;
-    if indirect {
-        let (reserved, end) = read_byte(data, st.core.pos)?;
-        if reserved != 0 {
-            return Err(OpError::ReservedByteNotZero);
-        }
-        st.core.pos = end;
-        if env.table_types.is_empty() {
-            return Err(OpError::UnknownTable);
-        }
-        if i >= env.types.len() {
-            return Err(OpError::UnknownType);
-        }
-        pop_with_type(&mut st.core, ValueType::I32)?;
-        apply_func_type(&mut st.core, &env.types[i])?;
-    } else {
-        if i >= env.func_types.len() {
-            return Err(OpError::UnknownFunc);
-        }
-        apply_func_type(&mut st.core, &env.func_types[i])?;
+    if i >= env.func_types.len() {
+        return Err(OpError::UnknownFunc);
     }
+    apply_func_type(&mut st.core, &env.func_types[i])?;
     Ok(index)
+}
+
+fn call_indirect_info(st: &mut BodyState, data: &[u8], env: &Env) -> Result<(u32, u32)> {
+    let index = take_index(&mut st.core, data)?;
+    let table = take_index(&mut st.core, data)?;
+    let t = table as usize;
+    if t >= env.table_types.len() {
+        return Err(OpError::UnknownTable);
+    }
+    if env.table_types[t].elem.value_type() != ValueType::FuncRef {
+        return Err(OpError::TypeMismatch);
+    }
+    let i = index as usize;
+    if i >= env.types.len() {
+        return Err(OpError::UnknownType);
+    }
+    pop_with_type(&mut st.core, ValueType::I32)?;
+    apply_func_type(&mut st.core, &env.types[i])?;
+    Ok((index, table))
 }
 
 // Stable no-op projection used by the extracted semantic contracts.
 #[allow(dead_code)]
 fn call(st: &mut BodyState, data: &[u8], env: &Env, indirect: bool) -> Result<()> {
-    call_info(st, data, env, indirect)?;
+    if indirect {
+        call_indirect_info(st, data, env)?;
+    } else {
+        call_info(st, data, env)?;
+    }
     Ok(())
 }
 
@@ -1653,7 +2263,7 @@ fn initial_state(
         crate::ValidationProfile::Wasm1 => Ok(BodyState {
             core: start_function(&ctx.results),
         }),
-        crate::ValidationProfile::MultiValue => {
+        crate::ValidationProfile::Wasm2 => {
             let i = type_index as usize;
             if i >= env.types.len() {
                 return Err(OpError::UnknownType);
@@ -1712,7 +2322,7 @@ fn step_profile<V: OpVisitor>(
 ) -> Result<()> {
     match profile {
         crate::ValidationProfile::Wasm1 => step(&mut st.core, data, env, ctx, op, visitor),
-        crate::ValidationProfile::MultiValue => {
+        crate::ValidationProfile::Wasm2 => {
             match op {
                 OP_BLOCK => {
                     let bt = enter_info(st, data, env, LabelKind::Block)?;
@@ -1756,19 +2366,19 @@ fn step_profile<V: OpVisitor>(
                     visit(visitor.on_return(&st.core))?;
                 }
                 OP_CALL => {
-                    let idx = call_info(st, data, env, false)?;
+                    let idx = call_info(st, data, env)?;
                     visit(visitor.on_call(&st.core, idx))?;
                 }
                 OP_CALL_INDIRECT => {
-                    let idx = call_info(st, data, env, true)?;
-                    visit(visitor.on_call_indirect(&st.core, idx))?;
+                    let (idx, table) = call_indirect_info(st, data, env)?;
+                    visit(visitor.on_call_indirect(&st.core, idx, table))?;
                 }
                 _ => {
                     // Every scalar instruction pushes at most one value.
                     if st.core.vals.len() == usize::MAX {
                         return Err(OpError::StackTooLarge);
                     }
-                    step(&mut st.core, data, env, ctx, op, visitor)?;
+                    step_wasm2(&mut st.core, data, env, ctx, op, visitor)?;
                 }
             }
             Ok(())
@@ -1792,7 +2402,7 @@ pub(crate) fn validate_body_with_profile<V: OpVisitor>(
     body_loop(data, env, ctx, type_index, profile, visitor, st)
 }
 
-/// Validates a multi-value body with operator callbacks.
+/// Validates a Wasm 2.0 body with operator callbacks.
 ///
 /// `ctx.locals` contains the parameters followed by declared locals; `type_index`
 /// selects the function's results from `env`. Parameters enter the local space,
@@ -1811,12 +2421,12 @@ pub(crate) fn validate_multi_value_body_with<V: OpVisitor>(
         env,
         ctx,
         type_index,
-        crate::ValidationProfile::MultiValue,
+        crate::ValidationProfile::Wasm2,
         visitor,
     )
 }
 
-/// Validates a multi-value body with accepting operator callbacks.
+/// Validates a Wasm 2.0 body with accepting operator callbacks.
 #[allow(dead_code)] // Retained as an extracted proof entry point.
 pub(crate) fn validate_multi_value_body(
     data: &[u8],
@@ -2051,6 +2661,163 @@ macro_rules! memory_hooks {
 /// label hooks run after label decoding and bounds checks but before all target
 /// compatibility checks finish.
 pub trait OpVisitor {
+    fn on_ref_null(&mut self, _st: &OpIterState, _ty: ElemType) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_ref_is_null(&mut self, _st: &OpIterState) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_ref_func(&mut self, _st: &OpIterState, _index: u32) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_select_typed(&mut self, _st: &OpIterState, _ty: ValueType) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_table_get(&mut self, _st: &OpIterState, _index: u32) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_table_set(&mut self, _st: &OpIterState, _index: u32) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_memory_init(&mut self, _st: &OpIterState, _data: u32) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_data_drop(&mut self, _st: &OpIterState, _data: u32) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_memory_copy(&mut self, _st: &OpIterState) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_memory_fill(&mut self, _st: &OpIterState) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_table_init(&mut self, _st: &OpIterState, _element: u32, _table: u32) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_elem_drop(&mut self, _st: &OpIterState, _element: u32) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_table_copy(&mut self, _st: &OpIterState, _destination: u32, _source: u32) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_table_grow(&mut self, _st: &OpIterState, _table: u32) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_table_size(&mut self, _st: &OpIterState, _table: u32) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_table_fill(&mut self, _st: &OpIterState, _table: u32) -> VisitResult {
+        Ok(())
+    }
+
+    /// Visits an immediate-free core 2.0 SIMD instruction by its `0xfd` subopcode.
+    fn on_simd(&mut self, _st: &OpIterState, _subopcode: u32) -> VisitResult {
+        Ok(())
+    }
+
+    /// Visits a SIMD lane extraction or replacement, after checking the lane.
+    fn on_simd_lane(&mut self, _st: &OpIterState, _subopcode: u32, _lane: u8) -> VisitResult {
+        Ok(())
+    }
+
+    /// Visits a SIMD memory instruction, with its checked memory argument.
+    fn on_simd_memory(
+        &mut self,
+        _st: &OpIterState,
+        _subopcode: u32,
+        _memarg: MemArg,
+    ) -> VisitResult {
+        Ok(())
+    }
+
+    /// Visits a SIMD lane memory instruction, after checking its lane and alignment.
+    fn on_simd_memory_lane(
+        &mut self,
+        _st: &OpIterState,
+        _subopcode: u32,
+        _memarg: MemArg,
+        _lane: u8,
+    ) -> VisitResult {
+        Ok(())
+    }
+
+    /// Visits a vector constant represented by two little-endian 64-bit words.
+    fn on_simd_const(&mut self, _st: &OpIterState, _low: u64, _high: u64) -> VisitResult {
+        Ok(())
+    }
+
+    /// Visits sixteen checked shuffle lanes packed into little-endian words.
+    fn on_simd_shuffle(&mut self, _st: &OpIterState, _low: u64, _high: u64) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_i32_extend8_s(&mut self, _st: &OpIterState) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_i32_extend16_s(&mut self, _st: &OpIterState) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_i64_extend8_s(&mut self, _st: &OpIterState) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_i64_extend16_s(&mut self, _st: &OpIterState) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_i64_extend32_s(&mut self, _st: &OpIterState) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_i32_trunc_sat_f32_s(&mut self, _st: &OpIterState) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_i32_trunc_sat_f32_u(&mut self, _st: &OpIterState) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_i32_trunc_sat_f64_s(&mut self, _st: &OpIterState) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_i32_trunc_sat_f64_u(&mut self, _st: &OpIterState) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_i64_trunc_sat_f32_s(&mut self, _st: &OpIterState) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_i64_trunc_sat_f32_u(&mut self, _st: &OpIterState) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_i64_trunc_sat_f64_s(&mut self, _st: &OpIterState) -> VisitResult {
+        Ok(())
+    }
+
+    fn on_i64_trunc_sat_f64_u(&mut self, _st: &OpIterState) -> VisitResult {
+        Ok(())
+    }
+
     // --- The function around the operators ---
 
     /// Reports the function context before validating its instruction body.
@@ -2139,7 +2906,7 @@ pub trait OpVisitor {
 
     /// Reports the completed branch table and its default target signature.
     ///
-    /// Targets have equal arity. In the multi-value profile, unreachable operands
+    /// Targets have equal arity. In the Wasm 2.0 profile, unreachable operands
     /// may match different concrete target types.
     fn on_br_table(
         &mut self,
@@ -2158,7 +2925,12 @@ pub trait OpVisitor {
         Ok(())
     }
 
-    fn on_call_indirect(&mut self, _st: &OpIterState, _type_idx: u32) -> VisitResult {
+    fn on_call_indirect(
+        &mut self,
+        _st: &OpIterState,
+        _type_idx: u32,
+        _table_idx: u32,
+    ) -> VisitResult {
         Ok(())
     }
 
@@ -2276,3 +3048,11 @@ macro_rules! memory_fanout {
 
 numeric_table!(numeric_fanout);
 memory_table!(memory_fanout);
+
+// Wasm 2.0 scalar extension opcodes.
+const OP_I32_EXTEND8_S: u8 = 0xc0;
+const OP_I32_EXTEND16_S: u8 = 0xc1;
+const OP_I64_EXTEND8_S: u8 = 0xc2;
+const OP_I64_EXTEND16_S: u8 = 0xc3;
+const OP_I64_EXTEND32_S: u8 = 0xc4;
+const OP_MISC_PREFIX: u8 = 0xfc;

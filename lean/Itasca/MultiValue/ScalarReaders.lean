@@ -157,6 +157,9 @@ theorem store (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ty :
   unfold code.read_store
   step*
 
+@[local step] private theorem select_type_total (t : code.StackType) :
+    code.is_select_type t ⦃ _ => True ⦄ := by simp
+
 theorem select (st : code.OpIterState) 
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_select st  ⦃ r => Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧

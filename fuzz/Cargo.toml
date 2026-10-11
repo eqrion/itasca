@@ -29,3 +29,17 @@ path = "fuzz_targets/wasm1_smith.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "wasm2_raw_bytes"
+path = "fuzz_targets/wasm2_raw_bytes.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "wasm2_smith"
+path = "fuzz_targets/wasm2_smith.rs"
+test = false
+doc = false
+bench = false

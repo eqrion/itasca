@@ -22,6 +22,38 @@ theorem code.join_stack_type.spec (a b : code.StackType) :
 
 namespace StackSemantics
 
+/-- Implicit select admits numeric/vector values and the polymorphic bottom. -/
+def Selectable : code.StackType → Prop
+  | .Val .FuncRef | .Val .ExternRef => False
+  | _ => True
+
+instance (t : code.StackType) : Decidable (Selectable t) := by
+  cases t with
+  | Bot => exact isTrue trivial
+  | Val t =>
+    cases t with
+    | I32 | I64 | F32 | F64 | V128 => exact isTrue trivial
+    | FuncRef | ExternRef => exact isFalse (fun h => h)
+
+theorem Selectable.of_accepts {t : code.StackType} {u : valtype}
+    (ha : Sequence.Accepts t u) (hf : u ≠ .FUNCREF) (he : u ≠ .EXTERNREF) :
+    Selectable t := by
+  cases t with
+  | Bot => trivial
+  | Val t =>
+    cases t <;> simp_all [Selectable, Sequence.Accepts, Translate.valueType]
+
+theorem select_type_not_reference {t t' : valtype} {nt : numtype} {vt : vectype}
+    (hsub : Valtype_sub t t')
+    (ht : t' = valtype_numtype nt ∨ t' = valtype_vectype vt) :
+    t ≠ .FUNCREF ∧ t ≠ .EXTERNREF := by
+  cases hsub with
+  | bot => simp
+  | refl =>
+    rcases ht with rfl | rfl
+    · cases nt <;> simp [valtype_numtype]
+    · cases vt <;> simp [valtype_vectype]
+
 def selectedType : code.StackType → valtype
   | .Val t => Translate.valueType t
   | .Bot => .BOT
@@ -36,7 +68,7 @@ theorem selectedType_sub {t : code.StackType} {u : valtype} (h : Sequence.Accept
   | Val t => change u = Translate.valueType t at h; subst u; exact .refl _
 
 /-- Implicit select supports numeric operands and a bottom operand that can later be subsumed. -/
-theorem selectedType_typed (C : context) (hC : wf_context C) (t : code.StackType) :
+theorem selectedType_typed (C : context) (hC : wf_context C) (t : code.StackType) (hs : Selectable t) :
     Instr_ok C (.SELECT none)
       (.mk_functype (.mk_list [selectedType t, selectedType t, .I32])
         (.mk_list [selectedType t])) := by
@@ -48,30 +80,38 @@ theorem selectedType_typed (C : context) (hC : wf_context C) (t : code.StackType
     | I64 => exact .select_impl C _ _ .I64 .V128 (.refl _) (.inl rfl) hC (.instr_case_3 _)
     | F32 => exact .select_impl C _ _ .F32 .V128 (.refl _) (.inl rfl) hC (.instr_case_3 _)
     | F64 => exact .select_impl C _ _ .F64 .V128 (.refl _) (.inl rfl) hC (.instr_case_3 _)
+    | V128 => exact .select_impl C _ _ .I32 .V128 (.refl _) (.inr rfl) hC (.instr_case_3 _)
+    | FuncRef | ExternRef => exact False.elim hs
 
 /-- The operands share one numeric/bottom interpretation; the explicit result retains its join. -/
 def SelectEffect (poly : Bool) (before : List code.StackType) (t : code.StackType)
     (after : List code.StackType) : Prop :=
-  ∃ rest, after = rest ++ [t] ∧ ∀ ts, Sequence.Realizes poly rest ts →
+  Selectable t ∧ ∃ rest, after = rest ++ [t] ∧ ∀ ts, Sequence.Realizes poly rest ts →
     Sequence.Realizes poly before (ts ++ [selectedType t, selectedType t, .I32])
 
 theorem SelectEffect.prefix {poly before t after} (h : SelectEffect poly before t after)
     (C : context) (hC : wf_context C) (ops : List instr)
     (htyped : Sequence.TypedPrefix C ops poly before) :
     Sequence.TypedPrefix C (ops ++ [.SELECT none]) poly after := by
-  obtain ⟨rest, rfl, htransfer⟩ := h
+  obtain ⟨hselect, rest, rfl, htransfer⟩ := h
   apply htyped.append hC (.SELECT none) (.instr_case_3 _)
   intro out hout
   obtain ⟨front, u, rfl, hf, hu⟩ := hout.snoc_inv
   refine ⟨front ++ [selectedType t, selectedType t, .I32], htransfer front hf, ?_⟩
   apply Instrs_ok.frame C [.SELECT none] front _ _ _ hC (by simp [Forall]; exact .instr_case_3 _)
   apply Instrs_ok.sub C [.SELECT none] _ _ _ _
-    (.instr C _ _ _ (selectedType_typed C hC t) hC (.instr_case_3 _))
+    (.instr C _ _ _ (selectedType_typed C hC t hselect) hC (.instr_case_3 _))
     _ _ hC (by simp [Forall]; exact .instr_case_3 _)
   · exact .mk_Resulttype_sub _ _ rfl (by simp [Forall₂, Valtype_sub.refl])
   · exact .mk_Resulttype_sub _ _ rfl (by simpa [Forall₂] using selectedType_sub hu)
 
 end StackSemantics
+
+@[simp] theorem code.is_select_type.eq (t : code.StackType) :
+    code.is_select_type t = .ok (decide (StackSemantics.Selectable t)) := by
+  cases t with
+  | Bot => rfl
+  | Val t => cases t <;> rfl
 
 /-- Select is total on bounded mixed operand segments, including all bottom combinations. -/
 theorem code.read_select.segment (st : code.OpIterState)
@@ -134,22 +174,28 @@ theorem code.read_select.segment (st : code.OpIterState)
           simp [code.read_select, hr1, hr2, hr3, hj, core.result.Result.Insts.CoreOpsTry.branch,
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
         | Ok t =>
-          have hcap : s3.vals.val.length < Usize.max := by
-            simp only [hvals, List.length_append] at hsize
-            simp only [hv3, List.length_append]
-            omega
-          obtain ⟨s4, hr4, hv4, hc4, hp4⟩ :=
-            WP.spec_imp_exists (code.push_val.spec s3 t hcap)
-          rw [WP.spec_equiv_exists]
-          refine ⟨(.Ok t, s4), ?_, hc4.trans (hc3.trans (hc2.trans hc1)),
-            hp4.trans (hp3.trans (hp2.trans hp1)), rest3 ++ [t], ?_, ?_, rest3, rfl, ?_⟩
-          · simp [code.read_select, hr1, hr2, hr3, hj, hr4, core.result.Result.Insts.CoreOpsTry.branch]
-          · simpa [List.append_assoc, hv3] using hv4
-          · simp only [List.length_append, List.length_singleton]; omega
-          · intro ts hs
-            obtain ⟨ht2, ht1⟩ := hjoin _ (StackSemantics.selectedType_accepts t)
-            simpa [List.append_assoc, Translate.valueType] using
-              ho1.2 _ (ho2.realizes _ _ ht2 (ho3.realizes ts _ ht1 hs))
+          by_cases hselect : StackSemantics.Selectable t
+          · have hcap : s3.vals.val.length < Usize.max := by
+              simp only [hvals, List.length_append] at hsize
+              simp only [hv3, List.length_append]
+              omega
+            obtain ⟨s4, hr4, hv4, hc4, hp4⟩ :=
+              WP.spec_imp_exists (code.push_val.spec s3 t hcap)
+            rw [WP.spec_equiv_exists]
+            refine ⟨(.Ok t, s4), ?_, hc4.trans (hc3.trans (hc2.trans hc1)),
+              hp4.trans (hp3.trans (hp2.trans hp1)), rest3 ++ [t], ?_, ?_, hselect, rest3, rfl, ?_⟩
+            · simp [code.read_select, hr1, hr2, hr3, hj, hr4, code.is_select_type.eq, hselect, core.result.Result.Insts.CoreOpsTry.branch]
+            · simpa [List.append_assoc, hv3] using hv4
+            · simp only [List.length_append, List.length_singleton]; omega
+            · intro ts hs
+              obtain ⟨ht2, ht1⟩ := hjoin _ (StackSemantics.selectedType_accepts t)
+              simpa [List.append_assoc, Translate.valueType] using
+                ho1.2 _ (ho2.realizes _ _ ht2 (ho3.realizes ts _ ht1 hs))
+          · rw [WP.spec_equiv_exists]
+            refine ⟨(.Err .TypeMismatch, s3), ?_, hc3.trans (hc2.trans hc1),
+              hp3.trans (hp2.trans hp1), rest3, hv3, by omega, .inr rfl⟩
+            simp [code.read_select, hr1, hr2, hr3, hj, code.is_select_type.eq, hselect,
+              core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- The complete SELECT dispatcher has the shared handler-and-hook operational shape. -/
 theorem code.step_select.dispatch {V : Type} (visitor : code.OpVisitor V)

@@ -35,7 +35,8 @@ structure SectionsTyped (raw : ModuleBinary.Module) : Prop where
     Global_ok (initializerContextOf raw) (ModuleConstants.global g) (Translate.globalType g.gtype)
   tables : ∀ tt ∈ raw.tables, Tabletype_ok (EnvTranslation.tableType tt)
   memories : ∀ mt ∈ raw.memories, Memtype_ok (EnvTranslation.memType mt)
-  elements : ∀ e ∈ raw.elements, Elem_ok (initializerContextOf raw) (element e) .FUNCREF
+  elements : ∀ e ∈ raw.elements,
+    Elem_ok (initializerContextOf raw) (element e) (Translate.referenceType e.elem)
   data : ∀ d ∈ raw.data, Data_ok (initializerContextOf raw) (ModuleData.translate d)
   functions : List.Forall₂
     (fun idx entry => Func_ok (contextOf raw) (CodeEntry.function idx entry) (functionType raw.types idx))
@@ -111,7 +112,7 @@ theorem sections_of_typing {raw : ModuleBinary.Module}
   have hmts : mts = raw.memories.map EnvTranslation.memType :=
     eq_map_right hmems' (fun _ _ hp => by cases hp; rfl)
   have helems' := forall₂_of_generated helemlen helems
-  have hrts : rts = raw.elements.map (fun _ => reftype.FUNCREF) :=
+  have hrts : rts = raw.elements.map (fun entry => Translate.referenceType entry.elem) :=
     eq_map_right helems' (fun _ _ hp => by cases hp; rfl)
   have hfuns' := forall₂_of_generated hfunlen hfuns
   have hCtypes : C.TYPES = raw.types.map EnvTranslation.funcType := by rw [hC]; exact hfts
@@ -122,7 +123,7 @@ theorem sections_of_typing {raw : ModuleBinary.Module}
   have hims : imts = ModuleTranslation.mems ixt := him.trans (ModuleTranslation.mems_unique hmproj)
   have hCe : C = contextOf raw := by
     simp only [hC, contextOf, hfts, hftdefs, hgts, htts, hmts, hrts,
-      hifs, higs, hits, hims, hixt, hn, List.length_map, List.map_const']
+      hifs, higs, hits, hims, hixt, hn, List.length_map]
   have hC'e : C' = initializerContextOf raw := by
     simp only [hC', initializerContextOf, contextOf, hfts, hftdefs, htts, hmts,
       hifs, higs, hits, hims, hixt]

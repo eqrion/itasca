@@ -1,3 +1,4 @@
+import Itasca.MultiValue.SimdBinary
 import Itasca.Visitor.VisitorEvents
 import Itasca.Binary.WasmBinary
 
@@ -464,6 +465,53 @@ def MemoryHook.ofOpcode (opcode : U8) : Option MemoryHook :=
   | 0x3E => some .i64_store32
   | _ => none
 
+/-- Specification meanings of the scalar extension callbacks. -/
+def ExtendedNumericHook.instruction : ExtendedNumericHook → instr
+  | .i32_extend8_s => .UNOP .I32 (.mk_unop__0 .I32 (.EXTEND 8))
+  | .i32_extend16_s => .UNOP .I32 (.mk_unop__0 .I32 (.EXTEND 16))
+  | .i64_extend8_s => .UNOP .I64 (.mk_unop__0 .I64 (.EXTEND 8))
+  | .i64_extend16_s => .UNOP .I64 (.mk_unop__0 .I64 (.EXTEND 16))
+  | .i64_extend32_s => .UNOP .I64 (.mk_unop__0 .I64 (.EXTEND 32))
+  | .i32_trunc_sat_f32_s => .CVTOP .I32 .F32 (.mk_cvtop___2 .F32 .I32 (.TRUNC_SAT .S))
+  | .i32_trunc_sat_f32_u => .CVTOP .I32 .F32 (.mk_cvtop___2 .F32 .I32 (.TRUNC_SAT .U))
+  | .i32_trunc_sat_f64_s => .CVTOP .I32 .F64 (.mk_cvtop___2 .F64 .I32 (.TRUNC_SAT .S))
+  | .i32_trunc_sat_f64_u => .CVTOP .I32 .F64 (.mk_cvtop___2 .F64 .I32 (.TRUNC_SAT .U))
+  | .i64_trunc_sat_f32_s => .CVTOP .I64 .F32 (.mk_cvtop___2 .F32 .I64 (.TRUNC_SAT .S))
+  | .i64_trunc_sat_f32_u => .CVTOP .I64 .F32 (.mk_cvtop___2 .F32 .I64 (.TRUNC_SAT .U))
+  | .i64_trunc_sat_f64_s => .CVTOP .I64 .F64 (.mk_cvtop___2 .F64 .I64 (.TRUNC_SAT .S))
+  | .i64_trunc_sat_f64_u => .CVTOP .I64 .F64 (.mk_cvtop___2 .F64 .I64 (.TRUNC_SAT .U))
+
+def ExtendedNumericHook.opcode : ExtendedNumericHook → U8
+  | .i32_extend8_s => 0xC0#u8
+  | .i32_extend16_s => 0xC1#u8
+  | .i64_extend8_s => 0xC2#u8
+  | .i64_extend16_s => 0xC3#u8
+  | .i64_extend32_s => 0xC4#u8
+  | .i32_trunc_sat_f32_s => 0xFC#u8
+  | .i32_trunc_sat_f32_u => 0xFC#u8
+  | .i32_trunc_sat_f64_s => 0xFC#u8
+  | .i32_trunc_sat_f64_u => 0xFC#u8
+  | .i64_trunc_sat_f32_s => 0xFC#u8
+  | .i64_trunc_sat_f32_u => 0xFC#u8
+  | .i64_trunc_sat_f64_s => 0xFC#u8
+  | .i64_trunc_sat_f64_u => 0xFC#u8
+
+/-- Full opcode coordinates of a scalar extension callback. -/
+def ExtendedNumericHook.encoding : ExtendedNumericHook → U8 × Option U32
+  | .i32_extend8_s => (0xC0#u8, none)
+  | .i32_extend16_s => (0xC1#u8, none)
+  | .i64_extend8_s => (0xC2#u8, none)
+  | .i64_extend16_s => (0xC3#u8, none)
+  | .i64_extend32_s => (0xC4#u8, none)
+  | .i32_trunc_sat_f32_s => (0xFC#u8, some 0#u32)
+  | .i32_trunc_sat_f32_u => (0xFC#u8, some 1#u32)
+  | .i32_trunc_sat_f64_s => (0xFC#u8, some 2#u32)
+  | .i32_trunc_sat_f64_u => (0xFC#u8, some 3#u32)
+  | .i64_trunc_sat_f32_s => (0xFC#u8, some 4#u32)
+  | .i64_trunc_sat_f32_u => (0xFC#u8, some 5#u32)
+  | .i64_trunc_sat_f64_s => (0xFC#u8, some 6#u32)
+  | .i64_trunc_sat_f64_u => (0xFC#u8, some 7#u32)
+
 /-- Recover the flat specification token represented by a completed callback.
 A table-label callback contributes only to the pending label vector. -/
 def Action.token (action : Action) (pending : List U32) : Option Wasm.Token :=
@@ -487,7 +535,7 @@ def Action.token (action : Action) (pending : List U32) : Option Wasm.Token :=
   | .br_table fallback _ => some (.plain (.BR_TABLE (pending.map (fun i => .mk_uN i.val)) (.mk_uN fallback.val)))
   | .return_ => some (.plain .RETURN)
   | .call idx => some (.plain (.CALL (.mk_uN idx.val)))
-  | .call_indirect idx => some (.plain (.CALL_INDIRECT (.mk_uN 0) (.mk_uN idx.val)))
+  | .call_indirect idx table => some (.plain (.CALL_INDIRECT (.mk_uN table.val) (.mk_uN idx.val)))
   | .drop _ => some (.plain .DROP)
   | .select _ => some (.plain (.SELECT none))
   | .local_get idx => some (.plain (.LOCAL_GET (.mk_uN idx.val)))
@@ -502,6 +550,32 @@ def Action.token (action : Action) (pending : List U32) : Option Wasm.Token :=
   | .f32_const bits => some (.plain (ScalarConst.f32 bits))
   | .f64_const bits => some (.plain (ScalarConst.f64 bits))
   | .numeric hook => some (.plain hook.instruction)
+  | .extendedNumeric hook => some (.plain hook.instruction)
+  | .ref_null a0 => some (.plain (.REF_NULL (Translate.referenceType a0)))
+  | .ref_is_null => some (.plain .REF_IS_NULL)
+  | .ref_func a0 => some (.plain (.REF_FUNC (.mk_uN a0.val)))
+  | .select_typed a0 => some (.plain (.SELECT (some [Translate.valueType a0])))
+  | .table_get a0 => some (.plain (.TABLE_GET (.mk_uN a0.val)))
+  | .table_set a0 => some (.plain (.TABLE_SET (.mk_uN a0.val)))
+  | .memory_init a0 => some (.plain (.MEMORY_INIT (.mk_uN a0.val)))
+  | .data_drop a0 => some (.plain (.DATA_DROP (.mk_uN a0.val)))
+  | .memory_copy => some (.plain .MEMORY_COPY)
+  | .memory_fill => some (.plain .MEMORY_FILL)
+  | .table_init a0 a1 => some (.plain (.TABLE_INIT (.mk_uN a1.val) (.mk_uN a0.val)))
+  | .elem_drop a0 => some (.plain (.ELEM_DROP (.mk_uN a0.val)))
+  | .table_copy a0 a1 => some (.plain (.TABLE_COPY (.mk_uN a0.val) (.mk_uN a1.val)))
+  | .table_grow a0 => some (.plain (.TABLE_GROW (.mk_uN a0.val)))
+  | .table_size a0 => some (.plain (.TABLE_SIZE (.mk_uN a0.val)))
+  | .table_fill a0 => some (.plain (.TABLE_FILL (.mk_uN a0.val)))
+  | .simd subopcode => (MultiValue.Simd.pureMeaning subopcode.val).map (fun op => .plain op.instruction)
+  | .simd_lane subopcode lane => (MultiValue.Simd.laneMeaning subopcode.val).map
+      (fun op => .plain (op.instruction (.mk_uN lane.val)))
+  | .simd_memory subopcode arg => (MultiValue.Simd.memoryMeaning subopcode.val).map
+      (fun op => .plain (op.instruction (MemoryMeaning.memArg arg) (.mk_uN 0)))
+  | .simd_memory_lane subopcode arg lane => (MultiValue.Simd.memoryMeaning subopcode.val).map
+      (fun op => .plain (op.instruction (MemoryMeaning.memArg arg) (.mk_uN lane.val)))
+  | .simd_const low high => some (.plain (MultiValue.Simd.vectorConstant low high))
+  | .simd_shuffle low high => some (.plain (MultiValue.Simd.shuffle low high))
   | .memory hook arg => some (.plain (hook.instruction arg))
 
 /-- The opcode represented by a hook; vector-entry hooks have no separate opcode. -/
@@ -518,7 +592,7 @@ def Action.opcode : Action → Option U8
   | .br_table _ _ => some 0x0E#u8
   | .return_ => some 0x0F#u8
   | .call _ => some 0x10#u8
-  | .call_indirect _ => some 0x11#u8
+  | .call_indirect _ _ => some 0x11#u8
   | .drop _ => some 0x1A#u8
   | .select _ => some 0x1B#u8
   | .local_get _ => some 0x20#u8
@@ -534,6 +608,25 @@ def Action.opcode : Action → Option U8
   | .f64_const _ => some 0x44#u8
   | .br_table_label _ => none
   | .numeric hook => some hook.opcode
+  | .extendedNumeric hook => some hook.opcode
+  | .ref_null _ => some 0xD0#u8
+  | .ref_is_null => some 0xD1#u8
+  | .ref_func _ => some 0xD2#u8
+  | .select_typed _ => some 0x1C#u8
+  | .table_get _ => some 0x25#u8
+  | .table_set _ => some 0x26#u8
+  | .memory_init _ => some 0xFC#u8
+  | .data_drop _ => some 0xFC#u8
+  | .memory_copy => some 0xFC#u8
+  | .memory_fill => some 0xFC#u8
+  | .table_init _ _ => some 0xFC#u8
+  | .elem_drop _ => some 0xFC#u8
+  | .table_copy _ _ => some 0xFC#u8
+  | .table_grow _ => some 0xFC#u8
+  | .table_size _ => some 0xFC#u8
+  | .table_fill _ => some 0xFC#u8
+  | .simd _ | .simd_lane _ _ | .simd_memory _ _ | .simd_memory_lane _ _ _
+  | .simd_const _ _ | .simd_shuffle _ _ => some 0xFD#u8
   | .memory hook _ => some hook.opcode
 
 end Itasca.VisitorTrace

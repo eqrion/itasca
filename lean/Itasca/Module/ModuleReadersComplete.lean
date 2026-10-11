@@ -51,11 +51,23 @@ namespace Itasca
 open ModuleBinary
 
 theorem module.decode_value_type.complete (data : Slice U8) (pos : Usize)
-    (ty : types.ValueType) (next : Usize) (h : At ValueTypeEncoding data pos ty next) :
-    module.decode_value_type data pos = .ok (.Ok (ty, next)) := by
+    (ty : types.ValueType) (next : Usize) (h : At ValueTypeEncoding data pos ty next)
+    (profile : ValidationProfile) (hallowed : ValueTypeAllowed profile ty) :
+    module.decode_value_type data pos profile = .ok (.Ok (ty, next)) := by
   obtain ⟨bytes, rfl, hs⟩ := h
   have hr := hs.read_byte
-  cases ty <;> simp [module.decode_value_type, hr, valueByte,
-    core.result.Result.Insts.CoreOpsTry.branch]
+  cases profile <;> cases ty <;>
+    simp_all [module.decode_value_type, hr, valueByte, ValueTypeAllowed,
+      core.result.Result.Insts.CoreOpsTry.branch]
+
+theorem module.decode_elem_type.complete (data : Slice U8) (pos : Usize)
+    (ty : types.ElemType) (next : Usize) (h : At ElemTypeEncoding data pos ty next)
+    (profile : ValidationProfile) (hallowed : ElemTypeAllowed profile ty) :
+    module.decode_elem_type data pos profile = .ok (.Ok (ty, next)) := by
+  obtain ⟨bytes, rfl, hs⟩ := h
+  have hr := hs.read_byte
+  cases profile <;> cases ty <;>
+    simp_all [module.decode_elem_type, hr, elemByte, ElemTypeAllowed,
+      core.result.Result.Insts.CoreOpsTry.branch]
 
 end Itasca

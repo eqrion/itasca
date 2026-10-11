@@ -55,29 +55,40 @@ theorem environment_loop_noop {V : Type} (visitor : module.ModuleVisitor V)
             simpa [module.validate_env_with_loop, module.validate_env_with_loop.body,
               core.result.Result.Insts.CoreOpsTry.branch, hnoop] using hi
         · simp only [hcustom, ↓reduceIte] at h ⊢
-          by_cases hcode : module.SECTION_CODE.val ≤ id.val
+          by_cases hcode : id = module.SECTION_CODE
           · simpa [hcode] using h
           · simp only [hcode, ↓reduceIte] at h ⊢
-            by_cases horder : id.val ≤ lastId.val
-            · simpa [horder] using h
-            · simp only [horder, ↓reduceIte, Std.bind_assoc] at h ⊢
-              obtain ⟨⟨read, updated⟩, hr, ht⟩ := ResultFacts.bind_ok_inv _ _ _ h
-              rw [hr]
-              simp only [bind_ok]
-              cases read with
+            by_cases hdata : id = module.SECTION_DATA
+            · simpa [hdata] using h
+            · simp only [hdata, ↓reduceIte] at h ⊢
+              obtain ⟨ordered, hord, _⟩ := WP.spec_imp_exists (module.section_order.spec id)
+              rw [hord] at h ⊢
+              cases ordered with
               | Err e =>
-                simpa [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] using ht
-              | Ok consumed =>
-                simp at ht ⊢
-                by_cases he : consumed = last
-                · simp only [he, ↓reduceIte] at ht ⊢
-                  have hi := ih (data.length - last.val) hmeasure updated last id
-                    (by simpa [module.validate_env_with_loop, module.validate_env_with_loop.body,
-                      core.result.Result.Insts.CoreOpsTry.branch] using ht) rfl
-                  simpa [module.validate_env_with_loop, module.validate_env_with_loop.body,
-                    core.result.Result.Insts.CoreOpsTry.branch] using hi
-                · have hne : consumed.val ≠ last.val := fun h => he (UScalar.eq_of_val_eq h)
-                  simpa [hne] using ht
+                simpa [core.result.Result.Insts.CoreOpsTry.branch,
+                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] using h
+              | Ok rank =>
+                simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at h ⊢
+                by_cases horder : rank.val ≤ lastId.val
+                · simpa [horder] using h
+                · simp only [horder, ↓reduceIte, Std.bind_assoc] at h ⊢
+                  obtain ⟨⟨read, updated⟩, hr, ht⟩ := ResultFacts.bind_ok_inv _ _ _ h
+                  rw [hr]
+                  simp only [bind_ok]
+                  cases read with
+                  | Err e =>
+                    simpa [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] using ht
+                  | Ok consumed =>
+                    simp at ht ⊢
+                    by_cases he : consumed = last
+                    · simp only [he, ↓reduceIte] at ht ⊢
+                      have hi := ih (data.length - last.val) hmeasure updated last rank
+                        (by simpa [module.validate_env_with_loop, module.validate_env_with_loop.body,
+                          core.result.Result.Insts.CoreOpsTry.branch] using ht) rfl
+                      simpa [module.validate_env_with_loop, module.validate_env_with_loop.body,
+                        core.result.Result.Insts.CoreOpsTry.branch] using hi
+                    · have hne : consumed.val ≠ last.val := fun h => he (UScalar.eq_of_val_eq h)
+                      simpa [hne] using ht
 
 theorem environment_noop {V : Type} (visitor : module.ModuleVisitor V)
     (hnoop : ∀ (v : V) (chunk : types.CustomSection),

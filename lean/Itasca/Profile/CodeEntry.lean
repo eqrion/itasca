@@ -11,7 +11,7 @@ namespace Itasca.Profile
 def BodyBytes (profile : ValidationProfile) (ops : List instr) (bytes : List U8) : Prop :=
   match profile with
   | .Wasm1 => ModuleBinary.BodyEncoding ops bytes
-  | .MultiValue => ∃ tokens, ModuleBinary.Rep MultiValue.TokenEncoding tokens bytes ∧
+  | .Wasm2 => ∃ tokens, ModuleBinary.Rep MultiValue.TokenEncoding tokens bytes ∧
       MultiValue.BodyTokens tokens ops
 
 /-- Entry framing and locals are shared across the supported profiles. -/
@@ -46,6 +46,9 @@ structure EntryTyped (profile : ValidationProfile) (env : module.Env)
   instructions : Instructions profile (CodeEntry.bodyContext env
     env.types.val[typeIdx.val].params.val entry.declared
     env.types.val[typeIdx.val].results.val) entry.body
+  locals_allowed : ∀ group ∈ entry.locals, ModuleBinary.ValueTypeAllowed profile group.2
+  declared : DeclaredReferences.Instructions
+    (env.declared_funcs.val.map (fun idx => uN.mk_uN idx.val)) entry.body
 
 /-- An accepted entry is described entirely by independent binary syntax and
 declarative typing, using the original function-index and type-index spaces. -/
@@ -82,7 +85,7 @@ theorem BodyEncoding.bytes {profile data ops} (h : BodyEncoding profile data ops
     BodyBytes profile ops data.val := by
   cases profile with
   | Wasm1 => exact ModuleBinary.bodyEncoding_of_body h
-  | MultiValue =>
+  | Wasm2 =>
     obtain ⟨tokens, next, hs, hn, ht⟩ := h
     obtain ⟨bytes, he, hb⟩ := multiValue_consumed_rep hs
     have heq : data.val = bytes := by simpa [hn] using hb.suffix
@@ -92,7 +95,7 @@ theorem BodyBytes.body {profile} {data : Slice U8} {ops}
     (h : BodyBytes profile ops data.val) : BodyEncoding profile data ops := by
   cases profile with
   | Wasm1 => exact ModuleBinary.body_of_bodyEncoding h
-  | MultiValue =>
+  | Wasm2 =>
     obtain ⟨tokens, ht, hb⟩ := h
     exact ⟨tokens, Slice.len data, multiValue_rep_consumed ht
       ⟨by simp, by simp, by simp⟩, rfl, hb⟩
@@ -130,10 +133,13 @@ theorem EntryTyped.of_body {profile env locals index ft groups ops}
     (hi : env.types.val[index.val]? = some ft) (hs : FuncType profile ft)
     (hl : locals.val = ft.params.val ++ ModuleLocals.declared groups)
     (ht : MultiValue.FunctionTyped env locals ft ops)
-    (hp : Instructions profile (functionContext env locals ft) ops) :
+    (hp : Instructions profile (functionContext env locals ft) ops)
+    (hallowed : ∀ group ∈ groups, ModuleBinary.ValueTypeAllowed profile group.2)
+    (hdeclared : DeclaredReferences.Instructions
+      (env.declared_funcs.val.map (fun idx => uN.mk_uN idx.val)) ops) :
     EntryTyped profile env index ⟨groups, ops⟩ := by
   have hlt := List.getElem?_eq_some_iff.mp hi
-  refine ⟨hlt.1, ?_, ?_, ?_⟩
+  refine ⟨hlt.1, ?_, ?_, ?_, hallowed, hdeclared⟩
   · simpa [hlt.2] using hs
   · change Instrs_ok (functionContext env locals ft) ops _ at ht
     rw [functionContext_entry hl] at ht
@@ -148,7 +154,7 @@ theorem EntryTyped.body {profile env index entry}
     (hl : locals.val = (env.types.val[index.val]'h.type_lt).params.val ++ entry.declared)
     (he : BodyEncoding profile data entry.body) : Body profile data env locals index := by
   refine ⟨env.types.val[index.val]'h.type_lt, entry.body,
-    List.getElem?_eq_getElem h.type_lt, h.signature, he, ?_, ?_⟩
+    List.getElem?_eq_getElem h.type_lt, h.signature, he, ?_, ?_, h.declared⟩
   · change Instrs_ok (functionContext env locals _) entry.body _
     rw [functionContext_entry hl]
     exact h.typed
@@ -158,25 +164,25 @@ theorem EntryTyped.body {profile env index entry}
 /-- Generated function typing uses a single proof for every profile. -/
 theorem EntryTyped.func_ok {profile env typeIdx entry}
     (h : EntryTyped profile env typeIdx entry) (C : context)
-    (hc : CodeEntry.ModuleContext env C) :
+    (hc : CodeEntry.ModuleContext env C) (hsegments : CodeEntry.SegmentContext env C) :
     Func_ok C (CodeEntry.function typeIdx entry)
       (EnvTranslation.funcType (env.types.val[typeIdx.val]'h.type_lt)) :=
-  CodeEntry.typed_func_ok h.type_lt h.typed C hc
+  CodeEntry.typed_func_ok h.type_lt h.typed C hc hsegments
 
 /-- Shared module composition needs the typing and instruction-profile facts;
 the signature restriction is retained separately by the entry certificate. -/
 theorem EntryTyped.core {profile env typeIdx entry} (h : EntryTyped profile env typeIdx entry) :
-    CodeEntry.Typed env typeIdx entry profile := ⟨h.type_lt, h.typed, h.instructions⟩
+    CodeEntry.Typed env typeIdx entry profile := ⟨h.type_lt, h.typed, h.instructions, h.locals_allowed, h.declared⟩
 
 theorem EntryTyped.of_core {profile env typeIdx entry} (h : CodeEntry.Typed env typeIdx entry profile)
     (hs : FuncType profile (env.types.val[typeIdx.val]'h.type_lt)) : EntryTyped profile env typeIdx entry :=
-  ⟨h.type_lt, hs, h.typed, h.profile⟩
+  ⟨h.type_lt, hs, h.typed, h.profile, h.locals_allowed, h.declared⟩
 
 theorem EntryTyped.wasm1 {env typeIdx entry} (h : EntryTyped .Wasm1 env typeIdx entry) :
-    CodeEntry.Typed env typeIdx entry := ⟨h.type_lt, h.typed, h.instructions⟩
+    CodeEntry.Typed env typeIdx entry := ⟨h.type_lt, h.typed, h.instructions, h.locals_allowed, h.declared⟩
 
 theorem EntryTyped.of_wasm1 {env typeIdx entry} (h : CodeEntry.Typed env typeIdx entry)
     (hs : FuncType .Wasm1 (env.types.val[typeIdx.val]'h.type_lt)) : EntryTyped .Wasm1 env typeIdx entry :=
-  ⟨h.type_lt, hs, h.typed, h.profile⟩
+  ⟨h.type_lt, hs, h.typed, h.profile, h.locals_allowed, h.declared⟩
 
 end Itasca.Profile

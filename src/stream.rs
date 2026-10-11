@@ -12,7 +12,7 @@
 //! Only a successful driver result certifies whole-module validity.
 
 use crate::limits::{add_offset, MAX_CODE_HEADER_BYTES, MAX_LEB_BYTES};
-use crate::module::{self, SECTION_CODE};
+use crate::module::{self, SECTION_CODE, SECTION_DATA_COUNT};
 use crate::{Env, Error, OpError, OpVisitor, Tail, ValidationProfile};
 use alloc::vec::Vec;
 
@@ -538,7 +538,7 @@ fn find_code_region(bytes: &[u8]) -> (usize, usize) {
             return (len, len);
         }
         let id = bytes[pos];
-        if id > SECTION_CODE {
+        if id > SECTION_CODE && id != SECTION_DATA_COUNT {
             return (pos, pos);
         }
         let end = match read_len(bytes, pos + 1) {

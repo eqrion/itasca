@@ -100,7 +100,8 @@ theorem module.decode_export_section_loop.complete
     (hc : i.val + raw.length = count.val)
     (hnames : (env.exports.val.map (fun e => e.name.val) ++ raw.map (fun e => e.name)).Nodup)
     (hvalid : ∀ entry ∈ raw, ExportDescValid env entry.desc)
-    (hsize : env.exports.val.length ≤ pos.val) :
+    (hsize : env.exports.val.length ≤ pos.val)
+    (hrefs : env.declared_funcs.val.length ≤ pos.val) :
     ∃ result entries, module.decode_export_section_loop data env count pos i = .ok (.Ok next, result) ∧
       ExportsAdded env entries result ∧ entries.map ModuleEnv.rawExport = raw := by
   induction raw generalizing env pos i with
@@ -133,39 +134,69 @@ theorem module.decode_export_section_loop.complete
       have hbound := hentry.span.2
       let actual : module.Export := ⟨nm, entry.desc⟩
       have hraw : ModuleEnv.rawExport actual = entry := by cases entry; simp_all [ModuleEnv.rawExport, actual]
+      have hdeclares : (match entry.desc with
+          | .Func index => do
+              let v ← alloc.vec.Vec.push env.declared_funcs index
+              Result.ok {env with declared_funcs := v}
+          | .Table _ => Result.ok env
+          | .Memory _ => Result.ok env
+          | .Global _ => Result.ok env) ⦃ result =>
+          ModuleReferences.Added env result (ModuleReferences.exportIndices actual) ⦄ := by
+        cases hdescCase : entry.desc <;> simp only
+        · step
+          exact ⟨rfl, by simpa [ModuleReferences.exportIndices, actual, hdescCase] using v_post⟩
+        all_goals exact ⟨by cases env; rfl, by simp [ModuleReferences.exportIndices, actual, hdescCase]⟩
+      obtain ⟨declared, hdeclare, hdeclared⟩ := WP.spec_imp_exists hdeclares
+      have hnewRefs : declared.declared_funcs.val.length ≤ endEntry.val := by
+        rw [hdeclared.2, List.length_append]
+        have : (ModuleReferences.exportIndices actual).length ≤ 1 := by
+          cases h : entry.desc <;> simp [ModuleReferences.exportIndices, actual, h]
+        omega
       obtain ⟨exports, hpush, hexports⟩ := WP.spec_imp_exists
         (alloc.vec.Vec.push_spec env.exports actual (by scalar_tac))
       obtain ⟨j, hj, hjval⟩ := WP.spec_imp_exists
         (U32.add_spec (x := i) (y := 1#u32) (by scalar_tac))
-      let updated := {env with exports := exports}
+      let updated := {env with exports := exports, declared_funcs := declared.declared_funcs}
       have hadded : ExportAdded env updated actual :=
         ⟨rfl, hexports, by simpa only [actual, hnm] using hfresh,
-          (hvalid entry (by simp)).resolves nm⟩
+          (hvalid entry (by simp)).resolves nm, hdeclared.2⟩
       obtain ⟨result, entries, hloop, hhistory, hentries⟩ := ih updated endEntry j hrest
         (by simp only [List.length_cons] at hc; scalar_tac)
         (by simpa [updated, hexports, actual, hnm, List.append_assoc] using hnames)
         (by intro e he; exact hvalid e (by simp [he]))
         (by simp only [updated, hexports, List.length_append, List.length_singleton]; omega)
+        hnewRefs
       refine ⟨result, actual :: entries, ?_, ?_, by simp [hraw, hentries]⟩
       · unfold module.decode_export_section_loop
         rw [loop]
-        simp [module.decode_export_section_loop.body, hmore, hname, htaken,
-          htag.read_byte, hindex.read_index, hdesc, hpush, hj, actual,
-          core.result.Result.Insts.CoreOpsTry.branch]
-        exact hloop
+        simp [module.decode_export_section_loop.body, hmore,
+          hname, htaken, htag.read_byte, hindex.read_index, hdesc,
+          core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+        cases hdescCase : entry.desc <;> simp only [hdescCase] at hdeclare ⊢
+        all_goals
+          rw [hdeclare]
+          simp only [bind_ok]
+          rw [hdeclared.1]
+          have hpush' := hpush
+          simp only [actual, hdescCase] at hpush'
+          simpa [hpush', hj, module.decode_export_section_loop,
+            module.decode_export_section_loop.body, actual, updated, hdescCase,
+            core.result.Result.Insts.CoreOpsTry.branch] using hloop
       · simpa using (ExportsAdded.snoc ExportsAdded.nil hadded).append hhistory
 
 theorem module.decode_export_section.complete (data : Slice U8) (pos : Usize)
     (env : module.Env) (raw : List ModuleBinary.Export) (next : Usize)
     (hb : At (VecEncoding ExportEncoding) data pos raw next)
     (hempty : env.exports.val = []) (hnames : (raw.map (fun e => e.name)).Nodup)
-    (hvalid : ∀ entry ∈ raw, ExportDescValid env entry.desc) :
+    (hvalid : ∀ entry ∈ raw, ExportDescValid env entry.desc)
+    (hrefs : env.declared_funcs.val.length ≤ pos.val) :
     ∃ result entries, module.decode_export_section data pos env = .ok (.Ok next, result) ∧
       ExportsAdded env entries result ∧ entries.map ModuleEnv.rawExport = raw := by
   obtain ⟨count, middle, hc, hcount, hentries⟩ := hb.vector_split
   obtain ⟨result, entries, hr, hp, he⟩ := module.decode_export_section_loop.complete
     data env count middle 0#u32 raw next hentries (by simpa using hc.symm)
     (by simpa [hempty] using hnames) hvalid (by simp [hempty])
+    (by have := hcount.span; omega)
   refine ⟨result, entries, ?_, hp, he⟩
   simp [module.decode_export_section, reader.read_u32_leb.complete data pos count middle hcount,
     core.result.Result.Insts.CoreOpsTry.branch, hr]

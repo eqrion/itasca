@@ -69,30 +69,61 @@ theorem module.have_bytes.spec (data : Slice U8) (pos n : Usize)
   step* <;> scalar_tac
 
 @[step]
-theorem module.decode_value_type.spec (data : Slice U8) (pos : Usize) :
-    module.decode_value_type data pos ⦃ r => ModuleBinary.ParserPost ModuleBinary.ValueTypeEncoding data pos r ⦄ := by
+theorem module.decode_value_type.spec (data : Slice U8) (pos : Usize)
+    (profile : ValidationProfile) :
+    module.decode_value_type data pos profile ⦃ r =>
+      ModuleBinary.ParserPost (ModuleBinary.ValueTypeEncodingFor profile) data pos r ⦄ := by
   obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data pos)
   cases r with
   | Err e =>
       simp [module.decode_value_type, hr, core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-        error.Error.Insts.CoreConvertFromOpError.from,
-        ModuleBinary.ParserPost]
+        error.Error.Insts.CoreConvertFromOpError.from, ModuleBinary.ParserPost]
   | Ok pair =>
       obtain ⟨b, next⟩ := pair
       have hs := ModuleBinary.At.byte hp
-      simp [module.decode_value_type, hr,
-        core.result.Result.Insts.CoreOpsTry.branch, ModuleBinary.ParserPost]
-      split
-      · simp only [WP.spec_ok]
-        exact ⟨_, rfl, by with_unfolding_all exact hs⟩
-      · simp only [WP.spec_ok]
-        exact ⟨_, rfl, by with_unfolding_all exact hs⟩
-      · simp only [WP.spec_ok]
-        exact ⟨_, rfl, by with_unfolding_all exact hs⟩
-      · simp only [WP.spec_ok]
-        exact ⟨_, rfl, by with_unfolding_all exact hs⟩
-      · simp
+      cases profile <;>
+        simp [module.decode_value_type, hr, core.result.Result.Insts.CoreOpsTry.branch,
+          ModuleBinary.ParserPost]
+      all_goals split
+      all_goals first
+        | exact ⟨_, ⟨rfl, trivial⟩, by with_unfolding_all exact hs⟩
+        | simp
+
+@[step]
+theorem module.decode_elem_type.spec (data : Slice U8) (pos : Usize)
+    (profile : ValidationProfile) :
+    module.decode_elem_type data pos profile ⦃ r =>
+      ModuleBinary.ParserPost (ModuleBinary.ElemTypeEncodingFor profile) data pos r ⦄ := by
+  obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data pos)
+  cases r with
+  | Err e =>
+      simp [module.decode_elem_type, hr, core.result.Result.Insts.CoreOpsTry.branch,
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
+        error.Error.Insts.CoreConvertFromOpError.from, ModuleBinary.ParserPost]
+  | Ok pair =>
+      obtain ⟨b, next⟩ := pair
+      have hs := ModuleBinary.At.byte hp
+      cases profile <;>
+        simp [module.decode_elem_type, hr, core.result.Result.Insts.CoreOpsTry.branch,
+          ModuleBinary.ParserPost]
+      all_goals split
+      all_goals first
+        | exact ⟨_, ⟨rfl, trivial⟩, by with_unfolding_all exact hs⟩
+        | simp
+
+theorem module.decode_value_type.syntax_spec (data : Slice U8) (pos : Usize)
+    (profile : ValidationProfile) :
+    module.decode_value_type data pos profile ⦃ r =>
+      ModuleBinary.ParserPost ModuleBinary.ValueTypeEncoding data pos r ⦄ := by
+  apply WP.spec_mono (module.decode_value_type.spec data pos profile)
+  intro result h
+  cases result with
+  | Err _ => trivial
+  | Ok pair =>
+    obtain ⟨ty, next⟩ := pair
+    obtain ⟨bytes, he, hs⟩ := h
+    exact ⟨bytes, he.1, hs⟩
 
 private theorem copy_bytes_body (data : Slice U8) (last : Usize) (out : alloc.vec.Vec U8)
     (i : Usize) (hi : i.val < last.val) (hb : last.val ≤ data.length)

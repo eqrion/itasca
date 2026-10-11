@@ -14,7 +14,7 @@ theorem CodeEntry.runBody.accepted_erase {V : Type} (visitor : code.OpVisitor V)
     Profile.run profile data env ctx index = .ok (.Ok ()) := by
   cases profile with
   | Wasm1 => exact code.validate_body_with.accepted_erase visitor data env ctx v v' h
-  | MultiValue => exact code.validate_multi_value_body_with.accepted_erase visitor data env ctx index v v' h
+  | Wasm2 => exact code.validate_multi_value_body_with.accepted_erase visitor data env ctx index v v' h
 
 theorem CodeEntry.runBody.accepted_lift {V : Type} (visitor : code.OpVisitor V)
     (ha : FullVisitor.Accepts visitor) (profile : ValidationProfile)
@@ -23,7 +23,7 @@ theorem CodeEntry.runBody.accepted_lift {V : Type} (visitor : code.OpVisitor V)
     ∃ v', CodeEntry.runBody visitor profile data env ctx index v = .ok (.Ok (), v') := by
   cases profile with
   | Wasm1 => exact code.validate_body_with.accepted_lift visitor ha data env ctx v h
-  | MultiValue => exact code.validate_multi_value_body_with.accepted_lift visitor ha data env ctx index v h
+  | Wasm2 => exact code.validate_multi_value_body_with.accepted_lift visitor ha data env ctx index v h
 
 theorem CodeEntry.runBody.sound {V : Type} (visitor : code.OpVisitor V)
     (profile : ValidationProfile) (data : Slice U8) (env : module.Env)

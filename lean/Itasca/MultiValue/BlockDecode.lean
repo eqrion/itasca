@@ -9,6 +9,19 @@ def valueByte : types.ValueType → U8
   | .I64 => 126#u8
   | .F32 => 125#u8
   | .F64 => 124#u8
+  | .V128 => 123#u8
+  | .FuncRef => 112#u8
+  | .ExternRef => 111#u8
+
+theorem valueByte_injective : Function.Injective valueByte := by
+  intro a b h
+  cases a <;> cases b <;> simp_all [valueByte]
+
+/-- Inline value tags are negative one-byte signed integers, so they cannot
+    be confused with a nonnegative type index. -/
+theorem valueByte_negative (t : types.ValueType) :
+    64 ≤ (valueByte t).val ∧ (valueByte t).val < 128 := by
+  cases t <;> decide
 
 /-- Binary block grammar: singleton literal tags or nonnegative signed s33.
     In particular, a padded negative s33 is not an inline result type. -/
@@ -118,3 +131,17 @@ theorem signature.read_block_type.complete (data : Slice U8) (pos : Usize)
     simp [hs, hv, hu, hui]
 
 end Itasca
+
+namespace Itasca.MultiValue
+
+/-- Independent block bytes determine both the signature and its end cursor,
+    including reference/vector tags and nonminimal positive type indices. -/
+theorem BlockDecoded.unique {data pos first second next last}
+    (hfirst : BlockDecoded data pos first next)
+    (hsecond : BlockDecoded data pos second last) :
+    first = second ∧ next = last := by
+  have h := (signature.read_block_type.complete data pos first next hfirst).symm.trans
+    (signature.read_block_type.complete data pos second last hsecond)
+  simpa using h
+
+end Itasca.MultiValue

@@ -19,6 +19,33 @@ theorem Ready.functions_eq {raw last decls env} (h : Ready raw last decls env) (
 theorem Ready.globals_eq {raw last decls env} (h : Ready raw last decls env) (hn : 6 ≤ last) :
     env.globals.val = raw.globals := h.represents.globals.symm.trans (h.globals hn)
 
+theorem Ready.elements_eq {raw last decls env} (h : Ready raw last decls env) (hn : 9 ≤ last) :
+    env.elements.val.map rawElement = raw.elements := h.represents.elements.symm.trans (h.elements hn)
+
+theorem Ready.dataCount_eq {raw last decls env} (h : Ready raw last decls env) (hn : 10 ≤ last) :
+    env.data_count = raw.dataCount := h.represents.dataCount.symm.trans (h.dataCount hn)
+
+theorem Ready.elements_context {raw last decls env} (h : Ready raw last decls env) (hn : 9 ≤ last) :
+    (contextOf raw).ELEMS = EnvTranslation.elementTypes env := by
+  simp only [contextOf]
+  rw [← h.elements_eq hn]
+  simp [EnvTranslation.elementTypes, rawElement, List.map_map]
+
+/-- An encoded data count identifies the final data space. When omitted, the
+independent binary condition rules out every data-index instruction in each body. -/
+theorem Ready.data_context {raw last decls env} (h : Ready raw last decls env) (hn : 10 ≤ last)
+    (hv : ModuleBinary.DataCountValid raw) (entry : ModuleBinary.Code) (hm : entry ∈ raw.codes) :
+    (contextOf raw).DATAS = EnvTranslation.dataTypes env ∨ ModuleBinary.instructionsUseData entry.body = false := by
+  cases hc : raw.dataCount with
+  | none =>
+    right
+    exact (show ∀ code ∈ raw.codes, ModuleBinary.instructionsUseData code.body = false from by
+      simpa only [ModuleBinary.DataCountValid, hc] using hv) entry hm
+  | some count =>
+    left
+    have he : count.val = raw.data.length := by simpa only [ModuleBinary.DataCountValid, hc] using hv
+    simp [contextOf, EnvTranslation.dataTypes, h.dataCount_eq hn, hc, he]
+
 theorem Ready.importTypes_eq {raw last decls env} (h : Ready raw last decls env) (hn : 2 ≤ last) :
     importTypes env = raw.imports.map (fun e => importType raw.types e.desc) := by
   rw [← h.imports_eq hn]

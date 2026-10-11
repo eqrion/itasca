@@ -18,7 +18,7 @@ theorem module.decode_segment_index.profile_spec (data : Slice U8) (pos : Usize)
   | Wasm1 =>
       simp only [module.decode_segment_index, WP.spec_ok]
       exact ⟨[], ⟨rfl, rfl, rfl⟩, Wasm.BytesAt.nil data pos hpos⟩
-  | MultiValue =>
+  | Wasm2 =>
       by_cases hzero : flags = 0#u32
       · subst flags
         simp only [module.decode_segment_index, WP.spec_ok]
@@ -56,7 +56,7 @@ theorem module.decode_segment_index.profile_complete {data : Slice U8} {pos next
       obtain ⟨rfl, rfl, rfl⟩ := he
       rw [hs.empty]
       rfl
-  | MultiValue =>
+  | Wasm2 =>
       rcases he with ⟨rfl, rfl, rfl, rfl⟩ | ⟨rfl, rfl, he⟩
       · rw [hs.empty]
         rfl

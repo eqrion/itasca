@@ -77,32 +77,32 @@ theorem memories_cache {env tables memories} (h : ModuleEnv.Cache env tables mem
       memories.map EnvTranslation.memType := by
   simp [importTypes, mems_imports, h.memories, List.map_append]
 
-def moduleContext (env : module.Env) (elementCount dataCount : Nat) : context :=
+def moduleContext (env : module.Env) (elementTypes : List elemtype) (dataCount : Nat) : context :=
   { TYPES := env.types.val.map EnvTranslation.funcType
     FUNCS := env.func_types.val.map EnvTranslation.funcType
     GLOBALS := env.global_types.val.map Translate.globalType
     TABLES := env.table_types.val.map EnvTranslation.tableType
     MEMS := env.mem_types.val.map EnvTranslation.memType
-    ELEMS := List.replicate elementCount reftype.FUNCREF
+    ELEMS := elementTypes
     DATAS := List.replicate dataCount datatype.OK
     LOCALS := []
     LABELS := []
     RETURN := none }
 
 def initializerContext (env : module.Env) : context :=
-  { moduleContext env 0 0 with
+  { moduleContext env [] 0 with
     GLOBALS := (env.global_types.val.take env.num_imported_globals.val).map Translate.globalType }
 
-theorem moduleContext_matches (env : module.Env) (elementCount dataCount : Nat) :
-    CodeEntry.ModuleContext env (moduleContext env elementCount dataCount) :=
+theorem moduleContext_matches (env : module.Env) (elementTypes : List elemtype) (dataCount : Nat) :
+    CodeEntry.ModuleContext env (moduleContext env elementTypes dataCount) :=
   ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
-theorem moduleContext_wf (env : module.Env) (elementCount dataCount : Nat) :
-    wf_context (moduleContext env elementCount dataCount) :=
-  (moduleContext_matches env elementCount dataCount).wf
+theorem moduleContext_wf (env : module.Env) (elementTypes : List elemtype) (dataCount : Nat) :
+    wf_context (moduleContext env elementTypes dataCount) :=
+  (moduleContext_matches env elementTypes dataCount).wf
 
 theorem initializerContext_wf (env : module.Env) : wf_context (initializerContext env) := by
-  cases moduleContext_wf env 0 0
+  cases moduleContext_wf env [] 0
   constructor <;> assumption
 
 theorem initializerContext_globals (env : module.Env) :

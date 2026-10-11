@@ -14,7 +14,7 @@ theorem code.validate_multi_value_body_loop.total (data : Slice U8) (env : modul
     (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (hb : st.blocks.val.length ≤ st.core.pos.val + 1) :
     code.validate_multi_value_body_loop data env.types env.imports env.globals env.exports
-      env.elements env.start env.func_type_indices env.func_types env.table_types
+      env.elements env.data_count env.declared_funcs env.start env.func_type_indices env.func_types env.table_types
       env.mem_types env.global_types env.num_imported_funcs env.num_imported_globals
       type_index st locals results visitor ⦃ _ => True ⦄ := by
   cases visitor

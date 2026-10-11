@@ -1,4 +1,4 @@
-import Itasca.MultiValue.StepContext
+import Itasca.MultiValue.ExtendedComplete
 import Itasca.MultiValue.ScalarComplete
 import Itasca.MultiValue.CompletenessProgram
 
@@ -84,7 +84,9 @@ theorem Frame.scalar {st} (f : Frame st) (data : Slice U8) (env : module.Env)
   refine ⟨{st with core := out}, ?_, hpos, ⟨hout, ?_⟩, hlen⟩
   · rw [step.scalar_eq st data env ctx index opcode hscalar]
     have hn : alloc.vec.Vec.len st.core.vals ≠ core.num.Usize.MAX := by scalar_tac
-    rw [if_neg hn, scalar_context _ st.core data env ctx semantic opcode () hscalar hlocals, hrun]
+    rw [if_neg hn, code.step_wasm2.base _ _ _ _ _ _ _ (wasm2_base_immediate hi),
+      code.step_extended.base _ _ _ _ _ _ _ (base_immediate hi).1 (base_immediate hi).2,
+      scalar_context _ st.core data env ctx semantic opcode () hscalar hlocals, hrun]
     simp
   · obtain ⟨poly, operands, hctrls, _, _⟩ := hout
     simp [hctrls, f.core.ctrls]
@@ -96,9 +98,10 @@ def LeafContract (data : Slice U8) (env : module.Env) (ctx : code.Context) (inde
     (op : instr) (bytes : List U8) (next : Usize) (front input output : List valtype),
     EnvTranslation.Matches env ctx C → Labels env st C →
     st.core.vals.val.length + 1000 < Usize.max →
-    Wasm.Immediate opcode (.plain op) bytes → Wasm.BytesAt data st.core.pos bytes next →
+    Immediate opcode (.plain op) bytes → Wasm.BytesAt data st.core.pos bytes next →
     Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input) →
     Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output)) →
+    DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) op →
     ∃ s, step st data env ctx index opcode = .ok (.Ok (), s) ∧ s.core.pos = next ∧
       f.Output (front ++ output) s ∧
       s.core.vals.val.length ≤ st.core.vals.val.length + 500 * (bytes.length + 1)
@@ -108,28 +111,26 @@ and preserves the byte-weighted capacity bound for the surrounding program. -/
 theorem atom_of_leaf (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
     (hstep : LeafContract data env ctx index) (op : instr) :
     AtomProgram data env ctx index [.plain op] op := by
-  intro C st f next front input output hmatch hlabels hbounds hbytes hreal htyped
+  intro C st f next front input output hmatch hlabels hbounds hbytes hreal htyped hdecl
   have hat := hbytes.single
   obtain ⟨opcode, pos, bytes, hread, hpos, himmediate, hspan⟩ := hat.read_byte
-  cases himmediate with
-  | plain hi =>
-    let decoded : code.BodyState := {st with core := {st.core with pos := pos}}
-    let g : Frame decoded :=
-      ⟨⟨f.core.parents, f.core.current, f.core.outer, f.core.operands,
-        f.core.ctrls, f.core.vals, f.core.base⟩, f.parents, f.current, f.blocks, f.aligned⟩
-    have hcap : decoded.core.vals.val.length + 1000 < Usize.max := hbounds.val_capacity
-    obtain ⟨s, hrun, hcursor, hout, hlen⟩ :=
-      hstep C decoded g opcode op bytes next front input output hmatch hlabels hcap
-        hi hspan hreal htyped
-    have hout' : f.Output (front ++ output) s := hout
-    refine ⟨s, .single f.nonempty hread hrun, hcursor, hout', ?_⟩
-    apply bounds_after hbounds hat hcursor
-    · have hlenbytes : bytes.length + 1 = next.val - st.core.pos.val := by
-        have := hspan.length
-        omega
-      simpa [decoded, hlenbytes] using hlen
-    · have hb := hout'.2
-      simp [hb]
+  let decoded : code.BodyState := {st with core := {st.core with pos := pos}}
+  let g : Frame decoded :=
+    ⟨⟨f.core.parents, f.core.current, f.core.outer, f.core.operands,
+      f.core.ctrls, f.core.vals, f.core.base⟩, f.parents, f.current, f.blocks, f.aligned⟩
+  have hcap : decoded.core.vals.val.length + 1000 < Usize.max := hbounds.val_capacity
+  obtain ⟨s, hrun, hcursor, hout, hlen⟩ :=
+    hstep C decoded g opcode op bytes next front input output hmatch hlabels hcap
+      himmediate hspan hreal htyped hdecl
+  have hout' : f.Output (front ++ output) s := hout
+  refine ⟨s, .single f.nonempty hread hrun, hcursor, hout', ?_⟩
+  apply bounds_after hbounds hat hcursor
+  · have hlenbytes : bytes.length + 1 = next.val - st.core.pos.val := by
+      have := hspan.length
+      omega
+    simpa [decoded, hlenbytes] using hlen
+  · have hb := hout'.2
+    simp [hb]
 
 /-- The scalar family discharges the shared leaf growth contract. -/
 theorem scalar_leaf (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
@@ -151,29 +152,7 @@ theorem scalar_leaf (data : Slice U8) (env : module.Env) (ctx : code.Context) (i
 /-- Independently encoded scalar atoms satisfy the whole-program interface. -/
 theorem scalar_atom (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (index : U32) (op : instr)
-    (hscalar : ∀ opcode bytes, Wasm.Immediate opcode (.plain op) bytes →
-      opcode.val ∉ controlOpcodes) : AtomProgram data env ctx index [.plain op] op := by
-  intro C st f next front input output hmatch hlabels hbounds hbytes hreal htyped
-  have hat := hbytes.single
-  obtain ⟨opcode, pos, bytes, hread, hpos, himmediate, hspan⟩ := hat.read_byte
-  cases himmediate with
-  | plain hi =>
-    let decoded : code.BodyState := {st with core := {st.core with pos := pos}}
-    let g : Frame decoded :=
-      ⟨⟨f.core.parents, f.core.current, f.core.outer, f.core.operands,
-        f.core.ctrls, f.core.vals, f.core.base⟩, f.parents, f.current, f.blocks, f.aligned⟩
-    have hcap : decoded.core.vals.val.length + 1000 < Usize.max := hbounds.val_capacity
-    obtain ⟨s, hrun, hcursor, hout, hlen⟩ :=
-      scalar_leaf data env ctx index C decoded g opcode op bytes next front input output hmatch
-        hcap (hscalar opcode bytes hi) hi hspan hreal htyped
-    have hout' : f.Output (front ++ output) s := hout
-    refine ⟨s, .single f.nonempty hread hrun, hcursor, hout', ?_⟩
-    apply bounds_after hbounds hat hcursor
-    · have hlenbytes : bytes.length + 1 = next.val - st.core.pos.val := by
-        have := hspan.length
-        omega
-      simpa [decoded, hlenbytes] using hlen
-    · have hb := hout'.2
-      simp [hb]
+    (hstep : LeafContract data env ctx index) : AtomProgram data env ctx index [.plain op] op :=
+  atom_of_leaf data env ctx index hstep op
 
 end Itasca.MultiValue.Completeness

@@ -28,8 +28,8 @@ def tableType : types.TableType := ⟨⟨0#u32, none⟩, .FuncRef⟩
 def memoryType : types.MemType := ⟨⟨0#u32, none⟩⟩
 def global : module.Global := ⟨⟨.Const, .I32⟩, .I32 0#i32⟩
 def globalExport : ModuleBinary.Export := ⟨[0x67#u8], .Global 0#u32⟩
-def element : ModuleBinary.Element := ⟨0#u32, .I32 0#i32, []⟩
-def segment : module.Data := ⟨0#u32, .I32 0#i32, alloc.vec.Vec.from [42#u8] (by simp; scalar_tac)⟩
+def element : ModuleBinary.Element := ⟨.FuncRef, .Active 0#u32 (.I32 0#i32), []⟩
+def segment : module.Data := ⟨.Active 0#u32 (.I32 0#i32), alloc.vec.Vec.from [42#u8] (by simp; scalar_tac)⟩
 
 def declarations : Declarations :=
   { tables := [tableType], memories := [memoryType], globals := [global],
@@ -63,10 +63,13 @@ private theorem layout_valid : Layout.Valid 9 declarations layout := by
       ⟨ByteVecEncoding.iff.mpr ⟨[1#u8], leb 1#u8, rfl⟩,
         .cons (.one _ (by decide)) .nil⟩, .global _ (leb 0#u8), rfl⟩) rfl
   · exact omitted _ _ _
-  · exact padded _ 6#u8 _ (one ⟨[0#u8], [0x41#u8,0#u8,0x0B#u8], [0#u8],
-      leb 0#u8, zero_const, ⟨[0#u8], [], leb 0#u8, .nil, rfl⟩, rfl⟩) rfl
+  · exact padded _ 6#u8 _ (one ⟨0#u32, .I32 0#i32, [], [0#u8], [0x41#u8,0#u8,0x0B#u8], [0#u8],
+      rfl, leb 0#u8, zero_const, ⟨[0#u8], [], leb 0#u8, .nil, rfl⟩, rfl⟩) rfl
+  · exact ⟨rfl, rfl⟩
   · exact .nil
-  · simp [Layout.Future]
+  · simp [Layout.Future, layout]
+  · simp [ModuleTypesAllowed, ValueTypeAllowed, ElemTypeAllowed, ConstAllowed,
+      declarations, Declarations.module, tableType, global, element]
 
 private theorem requirements : Requirements raw := by
   intro id decls env hlo hhi hr
@@ -103,18 +106,26 @@ private theorem requirements : Requirements raw := by
   · intro e he
     have heq : e = element := by simpa [raw, declarations, Declarations.module] using he
     subst e
-    refine ⟨?_, by exact .i32 _, by simp [element]⟩
+    refine ⟨?_, by simp [element]⟩
     have hlen := congrArg List.length (hr.tables_context (by decide))
     simp [ModuleElaboration.contextOf, raw, declarations, Declarations.module,
       ModuleTranslation.tables] at hlen
-    change 0 < env.table_types.val.length
-    omega
+    have hi : 0 < env.table_types.val.length := by omega
+    refine ⟨hi, ?_, .i32 _⟩
+    have ht := hr.tables_context (by decide)
+    have he := congrArg (fun ts => ts[0]!) ht
+    simp [ModuleElaboration.contextOf, raw, declarations, Declarations.module,
+      ModuleTranslation.tables, hi, tableType,
+      EnvTranslation.tableType] at he
+    have href := he.2
+    cases ht : env.table_types.val[0].elem <;> simp_all [Translate.referenceType, element]
+  · trivial
 
 private theorem data_encoding : SectionEncoding 11#u8 (VecEncoding DataEncoding)
     [ModuleData.raw segment] dataBytes := by
   refine ⟨[7#u8], [1#u8,0#u8,0x41#u8,0#u8,0x0B#u8,1#u8,42#u8], leb 7#u8, ?_, rfl⟩
-  exact one ⟨[0#u8], [0x41#u8,0#u8,0x0B#u8], [1#u8,42#u8],
-    leb 0#u8, zero_const, ByteVecEncoding.iff.mpr ⟨[1#u8], leb 1#u8, rfl⟩, rfl⟩
+  exact one ⟨0#u32, .I32 0#i32, [0#u8], [0x41#u8,0#u8,0x0B#u8], [1#u8,42#u8],
+    rfl, leb 0#u8, zero_const, ByteVecEncoding.iff.mpr ⟨[1#u8], leb 1#u8, rfl⟩, rfl⟩
 
 /-- A real 51-byte module exercises ordered sections, immutable initialization,
 a named global export, and both kinds of active segment. -/

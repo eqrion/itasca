@@ -134,7 +134,7 @@ theorem duplicate_unicode_exports_rejected : module.validate_module duplicateUni
   have hloop : parseLoop data env 13#usize 5#u8 = .ok (.Err .DuplicateExportName, ()) := by
     unfold parseLoop module.validate_env_with_loop
     rw [loop]
-    simp [module.validate_env_with_loop.body, hmore, hheader, global_simps,
+    simp [module.validate_env_with_loop.body, module.section_order, hmore, hheader, global_simps,
       module.decode_env_section, hexport, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   have hsplit : stream.find_code_region data = .ok (Slice.len data, Slice.len data) := by
@@ -161,18 +161,22 @@ private theorem first_section_error (data : Slice U8)
     module.validate_module data .Wasm1 = .ok (.Err e) := by
   have hsplit : stream.find_code_region data = .ok (Slice.len data, Slice.len data) := by
     unfold stream.find_code_region
-    rw [split_skip_section data 8#usize first last id hsection hhi, hfinish, split_loop_eof]
+    rw [split_skip_section data 8#usize first last id hsection (.inl hhi), hfinish, split_loop_eof]
   have hheader := module.read_section_header.complete data 8#usize id first last hsection
   apply ModuleExamples.environment_error data e hsize hsplit
   apply env_from_loop data hbytes e
   have hstop : ¬ 8#usize ≥ Slice.len data := by scalar_tac
   have hcustom : id ≠ module.SECTION_CUSTOM := by
     intro he; have := congrArg UScalar.val he; simp [module.SECTION_CUSTOM] at this; omega
-  have hcode : ¬ module.SECTION_CODE.val ≤ id.val := by simpa [module.SECTION_CODE] using hhi
+  have hcode : id ≠ module.SECTION_CODE := by simp only [global_simps]; scalar_tac
+  have hdata : id ≠ module.SECTION_DATA := by simp only [global_simps]; scalar_tac
+  have hrank : module.section_order id = .ok (.Ok id) := by
+    simp [module.section_order, show 1#u8 ≤ id by scalar_tac,
+      show id ≤ 9#u8 by scalar_tac]
   have horder : id.val ≠ 0 := by omega
   unfold parseLoop module.validate_env_with_loop
   rw [loop]
-  simp [module.validate_env_with_loop.body, hstop, hheader, hcustom, hcode, horder,
+  simp [module.validate_env_with_loop.body, hstop, hheader, hcustom, hcode, hdata, hrank, horder,
     hread, core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
@@ -370,7 +374,7 @@ theorem repeated_type_section_rejected : module.validate_module repeatedTypeSect
     simp [data, repeatedTypeSection, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion]
   unfold parseLoop module.validate_env_with_loop
   rw [loop]
-  simp [module.validate_env_with_loop.body, hmore, hheader, global_simps,
+  simp [module.validate_env_with_loop.body, module.section_order, sectionRank, hmore, hheader, global_simps,
     core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Code framing reports its streaming EOF variant for a missing count. -/
@@ -501,7 +505,7 @@ theorem section_size_mismatch_rejected : module.validate_module longEmptyTypeSec
     simp [data, longEmptyTypeSection, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion]
   unfold parseLoop module.validate_env_with_loop
   rw [loop]
-  simp [module.validate_env_with_loop.body, hmore, hheader, module.decode_env_section, hd,
+  simp [module.validate_env_with_loop.body, module.section_order, hmore, hheader, module.decode_env_section, hd,
     global_simps, core.result.Result.Insts.CoreOpsTry.branch]
 
 end Itasca.ModuleNegativeExamples

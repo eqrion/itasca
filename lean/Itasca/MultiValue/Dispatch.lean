@@ -1,5 +1,5 @@
 import Itasca.MultiValue.Invariant
-import Itasca.MultiValue.BodyTotal
+import Itasca.MultiValue.BodyAdapters
 
 open Aeneas Aeneas.Std Result
 
@@ -36,20 +36,20 @@ def step (st : code.BodyState) (data : Slice U8) (env : module.Env)
     if alloc.vec.Vec.len st.core.vals = core.num.Usize.MAX then
       .ok (.Err .StackTooLarge, st)
     else
-      let (r, ois, _) ← code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+      let (r, ois, _) ← code.step_wasm2 code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
         st.core data env ctx opcode ()
       .ok (r, { st with core := ois })
 
 abbrev run (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (index : U32) (st : code.BodyState) :=
   code.validate_multi_value_body_loop data env.types env.imports env.globals env.exports
-    env.elements env.start env.func_type_indices env.func_types env.table_types env.mem_types
+    env.elements env.data_count env.declared_funcs env.start env.func_type_indices env.func_types env.table_types env.mem_types
     env.global_types env.num_imported_funcs env.num_imported_globals index st ctx.locals ctx.results ()
 
 abbrev loopBody (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (index : U32) (st : code.BodyState) :=
   code.validate_multi_value_body_loop.body data env.types env.imports env.globals env.exports
-    env.elements env.start env.func_type_indices env.func_types env.table_types env.mem_types
+    env.elements env.data_count env.declared_funcs env.start env.func_type_indices env.func_types env.table_types env.mem_types
     env.global_types env.num_imported_funcs env.num_imported_globals index ctx.locals ctx.results st ()
 
 def continueStep (r : core.result.Result Unit error.OpError × code.BodyState) :

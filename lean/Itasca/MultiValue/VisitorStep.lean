@@ -1,5 +1,5 @@
 import Itasca.MultiValue.VisitorTransfer
-import Itasca.MultiValue.ScalarContext
+import Itasca.MultiValue.Wasm2Visitor
 import Itasca.Visitor.VisitorComplete
 
 open Aeneas Aeneas.Std Result ControlFlow
@@ -14,9 +14,9 @@ theorem step_transfer {V W : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : module.Env) (ctx ctx' : code.Context)
     (hlocals : ctx.locals = ctx'.locals) (index : U32) (opcode : U8)
     (st final : code.BodyState) (v : V) (w : W) (v' : V)
-    (h : code.step_profile visitor st data env ctx index .MultiValue opcode v =
+    (h : code.step_profile visitor st data env ctx index .Wasm2 opcode v =
       .ok (.Ok (), final, v')) :
-    ∃ w', code.step_profile replacement st data env ctx' index .MultiValue opcode w =
+    ∃ w', code.step_profile replacement st data env ctx' index .Wasm2 opcode w =
       .ok (.Ok (), final, w') := by
   unfold code.step_profile at h ⊢
   conv at h => lhs; whnf
@@ -66,7 +66,7 @@ theorem step_transfer {V W : Type} (visitor : code.OpVisitor V)
         | (obtain ⟨w', hw⟩ := ha.on_call w s.core a
            refine ⟨w', ?_⟩
            simpa [hw, code.visit, core.result.Result.Insts.CoreOpsTry.branch])
-        | (obtain ⟨w', hw⟩ := ha.on_call_indirect w s.core a
+        | (obtain ⟨w', hw⟩ := ha.on_call_indirect w s.core a.1 a.2
            refine ⟨w', ?_⟩
            simpa [hw, code.visit, core.result.Result.Insts.CoreOpsTry.branch])
   case h_8 =>
@@ -130,11 +130,8 @@ theorem step_transfer {V W : Type} (visitor : code.OpVisitor V)
         cases u
         simp [core.result.Result.Insts.CoreOpsTry.branch] at h
         obtain ⟨rfl, rfl⟩ := h
-        have he := code.step.accepted_erase visitor st.core ois
-          data env ctx opcode v v' hs
-        rw [scalar_context _ _ data env ctx ctx' opcode () hscalar hlocals] at he
-        obtain ⟨w', hw⟩ := code.step.accepted_lift replacement ha
-          st.core ois data env ctx' opcode w he
+        obtain ⟨w', hw⟩ := wasm2_transfer visitor replacement ha
+          st.core ois data env ctx ctx' opcode v v' w hscalar hlocals hs
         exact ⟨w', by simp [hw, core.result.Result.Insts.CoreOpsTry.branch]⟩
 
 end Itasca.MultiValue.Visitor

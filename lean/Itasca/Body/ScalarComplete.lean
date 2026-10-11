@@ -106,11 +106,12 @@ theorem code.join_stack_type.complete (a b : code.StackType) (u : valtype)
           refine ⟨.Val a, ?_, ha⟩
           cases a <;> simp [code.join_stack_type, types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
 
-/-- Implicit select accepts every common operand interpretation, including Bot. -/
+/-- Implicit select accepts common numeric/vector operands, including Bot. -/
 theorem code.read_select.complete (st : code.OpIterState)
     (outer segment : List code.StackType) (ts : List valtype) (u : valtype)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Control.base st).val = outer.length)
     (hsize : st.vals.val.length < Usize.max)
+    (hfun : u ≠ .FUNCREF) (hext : u ≠ .EXTERNREF)
     (ht : Sequence.Realizes (Control.polymorphic st) segment (ts ++ [u, u, .I32])) :
     ∃ t s after, code.read_select st = .ok (.Ok t, s) ∧
       s.ctrls = st.ctrls ∧ s.pos = st.pos ∧ s.vals.val = outer ++ after ∧
@@ -128,6 +129,7 @@ theorem code.read_select.complete (st : code.OpIterState)
       (by simpa [Control.base, hc2, hc1] using hbase)
       (by simpa [Control.polymorphic, hc2, hc1] using ht2)
   obtain ⟨t, hj, hat⟩ := code.join_stack_type.complete t2 t1 u ha2 ha1
+  have hselect := StackSemantics.Selectable.of_accepts hat hfun hext
   have hcap : s3.vals.val.length < Usize.max := by
     simp only [hvals, List.length_append] at hsize
     simp only [hv3, List.length_append]
@@ -135,7 +137,7 @@ theorem code.read_select.complete (st : code.OpIterState)
   obtain ⟨s, hs, hsv, hsc, hsp⟩ := WP.spec_imp_exists (code.push_val.spec s3 t hcap)
   refine ⟨t, s, rest3 ++ [t], ?_, hsc.trans (hc3.trans (hc2.trans hc1)),
     hsp.trans (hp3.trans (hp2.trans hp1)), ?_, ?_, hat, ?_⟩
-  · simp [code.read_select, hr1, hr2, hr3, hj, hs, core.result.Result.Insts.CoreOpsTry.branch]
+  · simp [code.read_select, hr1, hr2, hr3, hj, hs, code.is_select_type.eq, hselect, core.result.Result.Insts.CoreOpsTry.branch]
   · simpa [hv3, List.append_assoc] using hsv
   · simp; omega
   · simpa [Control.polymorphic, hc2, hc1] using ht3.snoc t u hat

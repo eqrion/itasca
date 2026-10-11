@@ -49,8 +49,11 @@ private theorem layout_valid : Layout.Valid 9 declarations layout := by
   · exact omitted _ _ _
   · exact omitted _ _ _
   · exact omitted _ _ _
+  · exact ⟨rfl, rfl⟩
   · exact .nil
-  · simp [Layout.Future]
+  · simp [Layout.Future, layout]
+  · simp [ModuleTypesAllowed, ValueTypeAllowed, ConstAllowed, declarations,
+      Declarations.module, globalType, imported, global]
 
 private theorem init_typed : Expr_ok_const (ModuleElaboration.initializerContextOf raw)
     (ModuleConstants.expression (.GlobalGet 0#u32)) (Translate.valueType .I32) := by
@@ -63,6 +66,7 @@ private theorem init_typed : Expr_ok_const (ModuleElaboration.initializerContext
   · constructor <;> simp [ModuleElaboration.contextOf,
       raw, declarations, Declarations.module, imported, ModuleElaboration.importType,
       ModuleTranslation.tables, ModuleTranslation.mems, Forall]
+  · rfl
   · rfl
 
 private theorem requirements : Requirements raw := by
@@ -88,10 +92,13 @@ private theorem requirements : Requirements raw := by
   · intro g hg
     have hg : g = global := by simpa [raw, declarations, Declarations.module] using hg
     subst g
-    exact ModuleConstants.valid_of_typing (hr.initializer_globals (by decide)) init_typed
+    exact ModuleConstants.valid_of_typing (hr.initializer_globals (by decide))
+      (by simpa [ModuleConstants.FunctionContext, ModuleElaboration.initializerContextOf]
+        using hr.funcs_context (by decide)) init_typed
   · constructor <;> simp [raw, declarations, Declarations.module]
   · simp [SectionValid, raw, declarations, Declarations.module]
   · simp [SectionValid, raw, declarations, Declarations.module]
+  · trivial
 
 /-- A four-byte emoji import name remains Unicode, and the imported immutable
 I32 global is available to a defined global's `global.get` initializer. -/
@@ -135,12 +142,13 @@ theorem defined_global_initializer_rejected : module.validate_module definedGlob
     ⟨[2#u8], leb 2#u8, by constructor <;> simp [data, definedGlobalInput, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_index
   have hg1 := module.decode_global_type.complete data 11#usize globalType 13#usize
     ⟨[0x7F#u8,0#u8], rfl, by constructor <;> simp [data, definedGlobalInput, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion]⟩
+    .Wasm1 trivial
   have hz : ConstEncoding (.I32 0#i32) [0x41#u8,0#u8,0x0B#u8] :=
     .i32 _ ⟨[], 0#u8, rfl, by simp, by simp, by decide, rfl, by decide, by decide⟩
   have he1 := module.decode_const_expr.complete
     (env := initial) (ty := .I32)
     (show At ConstEncoding data 13#usize (.I32 0#i32) 16#usize from
-      ⟨_, hz, by constructor <;> simp [data, definedGlobalInput, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion]⟩) (.i32 _)
+      ⟨_, hz, by constructor <;> simp [data, definedGlobalInput, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion]⟩) (.i32 _) .Wasm1 trivial
   obtain ⟨types, htypes, htval⟩ := WP.spec_imp_exists
     (alloc.vec.Vec.push_spec initial.global_types globalType (by simp [initial, ModuleExamples.emptyEnv]; scalar_tac))
   obtain ⟨globals, hglobals, hgval⟩ := WP.spec_imp_exists
@@ -153,14 +161,15 @@ theorem defined_global_initializer_rejected : module.validate_module definedGlob
     simp [module.const_global, hcast, lift, hgt, updated, initial, ModuleExamples.emptyEnv]
   have hg2 := module.decode_global_type.complete data 16#usize globalType 18#usize
     ⟨[0x7F#u8,0#u8], rfl, by constructor <;> simp [data, definedGlobalInput, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion]⟩
+    .Wasm1 trivial
   have hop := (show At ByteEncoding data 18#usize 0x23#u8 19#usize from
     ⟨[0x23#u8], rfl, by constructor <;> simp [data, definedGlobalInput, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_byte
   have hidx := (show At IndexEncoding data 19#usize 0#u32 20#usize from
     ⟨[0#u8], leb 0#u8, by constructor <;> simp [data, definedGlobalInput, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_index
-  have he2 : module.decode_const_expr data 18#usize updated .I32 = .ok (.Err .MutableGlobalInConstExpr) := by
+  have he2 : module.decode_const_expr data 18#usize updated .I32 .Wasm1 = .ok (.Err .MutableGlobalInConstExpr) := by
     simp [module.decode_const_expr, hop, hidx, hglobal, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  have hrest : module.decode_global_section_loop data updated 2#u32 16#usize 1#u32 =
+  have hrest : module.decode_global_section_loop data updated .Wasm1 2#u32 16#usize 1#u32 =
       .ok (.Err .MutableGlobalInConstExpr, updated) := by
     unfold module.decode_global_section_loop
     rw [loop]
@@ -172,14 +181,14 @@ theorem defined_global_initializer_rejected : module.validate_module definedGlob
     obtain ⟨x, hx, rfl⟩ := WP.spec_imp_exists hs
     exact hx
   simp only [globalType] at htypes hglobals
-  have hread : module.decode_global_section data 10#usize initial =
+  have hread : module.decode_global_section data 10#usize initial .Wasm1 =
       .ok (.Err .MutableGlobalInConstExpr, updated) := by
     simp [module.decode_global_section, hcount, core.result.Result.Insts.CoreOpsTry.branch]
     unfold module.decode_global_section_loop
     rw [loop]
     simpa [module.decode_global_section_loop.body, hg1, he1, globalType,
       htypes, hglobals, hinc, core.result.Result.Insts.CoreOpsTry.branch,
-      module.decode_global_section_loop, updated] using hrest
+      module.decode_global_section_loop, module.declare_initializer, updated] using hrest
   have hloop : parseLoop data initial 8#usize 0#u8 = .ok (.Err .MutableGlobalInConstExpr, ()) := by
     unfold parseLoop module.validate_env_with_loop
     rw [loop]
@@ -187,6 +196,7 @@ theorem defined_global_initializer_rejected : module.validate_module definedGlob
     simp [module.validate_env_with_loop.body, hmore,
       module.read_section_header.complete data 8#usize 6#u8 10#usize 21#usize hh,
       module.decode_env_section, hread, module.SECTION_CUSTOM, module.SECTION_CODE,
+      module.SECTION_DATA, module.section_order,
       core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   have hsplit : stream.find_code_region data = .ok (Slice.len data, Slice.len data) := by

@@ -16,7 +16,7 @@ structure Early (env : module.Env) : Prop where
 
 theorem Early.of_phase {env decls last} (hr : Represents env decls)
     (hp : Phase last decls) (hl : last < 6) : Early env := by
-  rcases hp with ⟨_, _, _, _, _, hg, he, hs, hm⟩
+  rcases hp with ⟨_, _, _, _, _, hg, he, hs, hm, _⟩
   refine ⟨hr.globals.symm.trans (hg hl), ?_, hr.start.symm.trans (hs (by omega)), ?_⟩
   · have h := hr.exports.symm.trans (he (by omega))
     exact List.map_eq_nil_iff.mp h
@@ -27,9 +27,10 @@ theorem Early.valid {profile} {env} (h : Early env)
     (ht : ∀ ft ∈ env.types.val, Profile.FuncTypeAdmissible profile ft)
     (htt : ∀ tt ∈ env.table_types.val, ModuleTranslation.LimitsValid tt.limits (2 ^ 32 - 1))
     (hmt : ∀ mt ∈ env.mem_types.val, ModuleTranslation.LimitsValid mt.limits (2 ^ 16))
-    (htc : env.table_types.val.length ≤ 1) (hmc : env.mem_types.val.length ≤ 1)
-    (hi : ∀ entry ∈ env.imports.val, Utf8 entry.module.val ∧ Utf8 entry.name.val) : Valid env profile := by
-  refine ⟨ht, htt, hmt, htc, hmc, ?_, hi, ?_, ?_, ?_, ?_, ?_⟩
+    (htc : profile = .Wasm1 → env.table_types.val.length ≤ 1) (hmc : env.mem_types.val.length ≤ 1)
+    (hi : ∀ entry ∈ env.imports.val, Utf8 entry.module.val ∧ Utf8 entry.name.val)
+    (href : ModuleReferences.Coherent env) : Valid env profile := by
+  refine ⟨ht, htt, hmt, htc, hmc, ?_, hi, ?_, ?_, ?_, ?_, ?_, href⟩
   all_goals simp [h.globals, h.exports, h.start, h.elements]
 
 end Itasca.ModuleEnv
@@ -38,7 +39,7 @@ namespace Itasca.ModuleSections
 
 open ModuleEnv ModuleBinary
 
-theorem ImportAdded.early {env result entry} (h : ImportAdded env result entry)
+theorem ImportAdded.early {profile} {env result entry} (h : ImportAdded env result entry profile)
     (he : Early env) : Early result := by
   obtain ⟨_, h⟩ := h
   cases hd : entry.desc <;> simp only [hd] at h
@@ -46,7 +47,7 @@ theorem ImportAdded.early {env result entry} (h : ImportAdded env result entry)
     rw [h]; exact ⟨he.globals, he.exports, he.start, he.elements⟩
   all_goals rw [h.1]; exact ⟨he.globals, he.exports, he.start, he.elements⟩
 
-theorem ImportAdded.valid {profile} {env result entry} (h : ImportAdded env result entry)
+theorem ImportAdded.valid {profile} {env result entry} (h : ImportAdded env result entry profile)
     (hv : Valid env profile) (he : Early env)
     (hn : Utf8 entry.module.val ∧ Utf8 entry.name.val) : Valid result profile := by
   have her := h.early he
@@ -61,8 +62,9 @@ theorem ImportAdded.valid {profile} {env result entry} (h : ImportAdded env resu
   · obtain ⟨ft, hft, heq, hfs, hnum⟩ := ha
     apply her.valid <;> first | exact hnames | (rw [heq]; exact hv.types) |
       (rw [heq]; exact hv.tables) | (rw [heq]; exact hv.memories) |
-      (rw [heq]; exact hv.tableCount) | (rw [heq]; exact hv.memoryCount)
-  · obtain ⟨heq, hts, hcount, hlim⟩ := ha
+      (rw [heq]; exact hv.tableCount) | (rw [heq]; exact hv.memoryCount) |
+      (rw [heq]; exact hv.references)
+  · obtain ⟨heq, hts, hcount, hlim, _⟩ := ha
     apply her.valid
     · (rw [heq]; exact hv.types)
     · intro tt hm
@@ -74,6 +76,7 @@ theorem ImportAdded.valid {profile} {env result entry} (h : ImportAdded env resu
     · exact hcount
     · (rw [heq]; exact hv.memoryCount)
     · exact hnames
+    · rw [heq]; exact hv.references
   · obtain ⟨heq, hms, hcount, hlim⟩ := ha
     apply her.valid
     · (rw [heq]; exact hv.types)
@@ -86,24 +89,26 @@ theorem ImportAdded.valid {profile} {env result entry} (h : ImportAdded env resu
     · (rw [heq]; exact hv.tableCount)
     · exact hcount
     · exact hnames
-  · obtain ⟨heq, hgs, hnum⟩ := ha
+    · rw [heq]; exact hv.references
+  · obtain ⟨heq, hgs, hnum, _⟩ := ha
     apply her.valid <;> first | exact hnames | (rw [heq]; exact hv.types) |
       (rw [heq]; exact hv.tables) | (rw [heq]; exact hv.memories) |
-      (rw [heq]; exact hv.tableCount) | (rw [heq]; exact hv.memoryCount)
+      (rw [heq]; exact hv.tableCount) | (rw [heq]; exact hv.memoryCount) |
+      (rw [heq]; exact hv.references)
 
-theorem ImportsAdded.early {env entries result} (h : ImportsAdded env entries result)
+theorem ImportsAdded.early {profile} {env entries result} (h : ImportsAdded env entries result profile)
     (he : Early env) : Early result := by
   induction h with
   | nil => exact he
   | snoc hp ha ih => exact ha.early ih
 
-theorem ImportsAdded.valid {profile} {env entries result} (h : ImportsAdded env entries result)
+theorem ImportsAdded.valid {profile} {env entries result} (h : ImportsAdded env entries result profile)
     (hv : Valid env profile) (he : Early env)
     (hn : ∀ e ∈ entries, Utf8 e.module.val ∧ Utf8 e.name.val) : Valid result profile := by
   induction h with
   | nil => exact hv
   | snoc hp ha ih =>
-    exact ha.valid (ih (by intro e hm; exact hn e (by simp [hm])))
+    exact ha.valid (ih hv (by intro e hm; exact hn e (by simp [hm])))
       (hp.early he) (hn _ (by simp))
 
 end Itasca.ModuleSections
@@ -125,6 +130,9 @@ theorem SameCore.constant {env result e t} (h : SameCore env result)
   | i64 value => exact .i64 value
   | f32 value => exact .f32 value
   | f64 value => exact .f64 value
+  | v128 low high => exact .v128 low high
+  | refNull ty => exact .refNull ty
+  | refFunc idx hi => exact .refFunc idx (by simpa [h.funcs] using hi)
   | globalGet idx gt hi hgt himp hc =>
     exact .globalGet idx gt (by simpa [h.globals] using hi)
       (by simpa [h.globals] using hgt) (by simpa [h.numGlobals] using himp) hc
@@ -136,8 +144,14 @@ theorem SameCore.export {env result e xt} (h : SameCore env result)
 
 theorem SameCore.element {env result entry} (h : SameCore env result)
     (hv : ModuleSections.ElementValid env entry) : ModuleSections.ElementValid result entry := by
-  exact ⟨by simpa [h.tables] using hv.1, h.constant hv.2.1,
-    by simpa [h.funcs] using hv.2.2⟩
+  refine ⟨?_, fun e hm => h.constant (hv.2 e hm)⟩
+  cases hm : entry.mode with
+  | Passive => trivial
+  | Declarative => trivial
+  | Active idx offset =>
+    obtain ⟨hi, ht, ho⟩ := (show ∃ hi : idx.val < env.table_types.val.length,
+      env.table_types.val[idx.val].elem = entry.elem ∧ ModuleConstants.Valid env offset .I32 from by simpa [hm] using hv.1)
+    exact ⟨by simpa [h.tables] using hi, by simpa [h.tables] using ht, h.constant ho⟩
 
 theorem SameCore.start {env result} {idx : U32} (h : SameCore env result)
     (hv : ∃ hi : idx.val < env.func_types.val.length,
@@ -153,10 +167,10 @@ namespace Itasca.ModuleSections
 open ModuleEnv ModuleBinary
 
 theorem ExportAdded.valid {profile} {env result entry} (h : ExportAdded env result entry)
-    (hv : Valid env profile) (hn : Utf8 entry.name.val) : Valid result profile := by
-  obtain ⟨he, hexports, hnew, hresolve⟩ := h
+    (hv : Valid env profile) (helements : env.elements.val = []) (hn : Utf8 entry.name.val) : Valid result profile := by
+  obtain ⟨he, hexports, hnew, hresolve, href⟩ := h
   have hc : SameCore env result := by constructor <;> rw [he]
-  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [he]; exact hv.types
   · rw [he]; exact hv.tables
   · rw [he]; exact hv.memories
@@ -187,13 +201,21 @@ theorem ExportAdded.valid {profile} {env result entry} (h : ExportAdded env resu
   · intro e hm
     have hm' : e ∈ env.elements.val := by simpa only [congrArg module.Env.elements he] using hm
     exact hc.element (hv.elements _ hm')
+  · have hrefold := hv.references
+    unfold ModuleReferences.Coherent ModuleReferences.collected at hrefold ⊢
+    rw [href, hrefold]
+    rw [he]
+    dsimp only
+    simp only [hexports, List.flatMap_append, List.flatMap_cons, List.flatMap_nil, List.append_nil]
+    simp [helements, List.append_assoc]
 
 theorem ExportsAdded.valid {profile} {env entries result} (h : ExportsAdded env entries result)
-    (hv : Valid env profile) (hn : ∀ e ∈ entries, Utf8 e.name.val) : Valid result profile := by
+    (hv : Valid env profile) (helements : env.elements.val = []) (hn : ∀ e ∈ entries, Utf8 e.name.val) : Valid result profile := by
   induction h with
   | nil => exact hv
   | snoc hp ha ih =>
-    exact ha.valid (ih (by intro e hm; exact hn e (by simp [hm]))) (hn _ (by simp))
+    exact ha.valid (ih (by intro e hm; exact hn e (by simp [hm])))
+      (by rw [hp.unchanged]; exact helements) (hn _ (by simp))
 
 end Itasca.ModuleSections
 
@@ -206,7 +228,7 @@ stored environment obligations, including names, uniqueness, and initializers. -
 theorem Effect.valid {profile} {data pos env before id next result after last}
     (h : Effect (profile := profile) data pos env before id next result after)
     (hr : Represents env before) (hv : Valid env profile)
-    (hp : Phase last before) (ho : last < id.val) : Valid result profile := by
+    (hp : Phase last before) (ho : last < (sectionRank id).val) : Valid result profile := by
   cases h with
   | types ha hb ht =>
     have hearly := Early.of_phase hr hp (by change last < 1 at ho; omega)
@@ -217,12 +239,13 @@ theorem Effect.valid {profile} {data pos env before id next result after last}
       rw [hts] at hm
       rcases List.mem_append.mp hm with hm | hm
       · exact hv.types _ hm
-      · exact ht _ hm
+      · exact (ht _ hm).1
     · rw [he]; exact hv.tables
     · rw [he]; exact hv.memories
     · rw [he]; exact hv.tableCount
     · rw [he]; exact hv.memoryCount
     · rw [he]; exact hv.imports
+    · rw [he]; exact hv.references
   | imports ha hb =>
     apply ha.valid hv (Early.of_phase hr hp (by change last < 2 at ho; omega))
     intro entry hm
@@ -237,7 +260,8 @@ theorem Effect.valid {profile} {data pos env before id next result after last}
     apply her.valid <;> first | (rw [he]; exact hv.types) |
       (rw [he]; exact hv.tables) | (rw [he]; exact hv.memories) |
       (rw [he]; exact hv.tableCount) | (rw [he]; exact hv.memoryCount) |
-      (rw [he]; exact hv.imports)
+      (rw [he]; exact hv.imports) |
+      (rw [he]; exact hv.references)
   | tables ha hb ht hcount =>
     have hearly := Early.of_phase hr hp (by change last < 4 at ho; omega)
     obtain ⟨he, hts⟩ := ha
@@ -248,11 +272,13 @@ theorem Effect.valid {profile} {data pos env before id next result after last}
       rw [hts] at hm
       rcases List.mem_append.mp hm with hm | hm
       · exact hv.tables _ hm
-      · exact ht _ hm
+      · exact (ht _ hm).1
     · rw [he]; exact hv.memories
-    · simpa [max_eq_right hv.tableCount] using hcount
+    · intro hprofile
+      simpa [max_eq_right (hv.tableCount hprofile)] using hcount hprofile
     · rw [he]; exact hv.memoryCount
     · rw [he]; exact hv.imports
+    · rw [he]; exact hv.references
   | memories ha hb ht hcount =>
     have hearly := Early.of_phase hr hp (by change last < 5 at ho; omega)
     obtain ⟨he, hms⟩ := ha
@@ -268,21 +294,32 @@ theorem Effect.valid {profile} {data pos env before id next result after last}
     · rw [he]; exact hv.tableCount
     · simpa [max_eq_right hv.memoryCount] using hcount
     · rw [he]; exact hv.imports
+    · rw [he]; exact hv.references
   | globals ha hb hg =>
     have hearly := Early.of_phase hr hp (by change last < 6 at ho; exact ho)
-    obtain ⟨he, hgs, htypes⟩ := ha
-    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    obtain ⟨he, hgs, htypes, href⟩ := ha
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
     · rw [he]; exact hv.types
     · rw [he]; exact hv.tables
     · rw [he]; exact hv.memories
     · rw [he]; exact hv.tableCount
     · rw [he]; exact hv.memoryCount
     · intro g hm
-      exact hg _ (by simpa [hgs, hearly.globals] using hm)
+      exact (hg _ (by simpa [hgs, hearly.globals] using hm)).1
     · rw [he]; exact hv.imports
-    all_goals rw [he]; simp [hearly.exports, hearly.start, hearly.elements]
+    all_goals try (rw [he]; simp [hearly.exports, hearly.start, hearly.elements]; done)
+    · unfold ModuleReferences.Coherent ModuleReferences.collected
+      rw [he]
+      dsimp only
+      rw [href, hgs]
+      have hold := hv.references
+      unfold ModuleReferences.Coherent ModuleReferences.collected at hold
+      simp [hearly.globals, hearly.exports, hearly.elements] at hold
+      simp [hold, hearly.globals, hearly.exports, hearly.elements]
   | exports ha hb =>
     apply ha.valid hv
+    · have he := hp.2.2.2.2.2.2.2.2.1 (by change last < 7 at ho; omega)
+      exact List.map_eq_nil_iff.mp (hr.elements.symm.trans he)
     intro entry hm
     obtain ⟨bytes, hbytes, _⟩ := hb
     obtain ⟨bs, he⟩ := hbytes.member (List.mem_map.mpr ⟨entry, hm, rfl⟩)
@@ -290,7 +327,7 @@ theorem Effect.valid {profile} {data pos env before id next result after last}
     exact hn.2
   | start he hb hstart =>
     have hc : SameCore env result := by constructor <;> rw [he]
-    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
     · rw [he]; exact hv.types
     · rw [he]; exact hv.tables
     · rw [he]; exact hv.memories
@@ -310,10 +347,11 @@ theorem Effect.valid {profile} {data pos env before id next result after last}
       exact hc.start hstart
     · intro e hm
       exact hc.element (hv.elements e (by simpa only [congrArg module.Env.elements he] using hm))
+    · rw [he]; exact hv.references
   | elements ha hb ht =>
-    obtain ⟨he, hes⟩ := ha
+    obtain ⟨he, hes, href⟩ := ha
     have hc : SameCore env result := by constructor <;> rw [he]
-    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
     · rw [he]; exact hv.types
     · rw [he]; exact hv.tables
     · rw [he]; exact hv.memories
@@ -334,5 +372,32 @@ theorem Effect.valid {profile} {data pos env before id next result after last}
       rcases List.mem_append.mp hm with hm | hm
       · exact hc.element (hv.elements e hm)
       · exact hc.element (ht e hm)
+    · have hrefold := hv.references
+      unfold ModuleReferences.Coherent ModuleReferences.collected at hrefold ⊢
+      rw [href, hrefold]
+      rw [he]
+      dsimp only
+      simp only [hes, List.flatMap_append, List.append_assoc]
+  | dataCount hprofile he hbytes =>
+    have hc : SameCore env result := by constructor <;> rw [he]
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    · rw [he]; exact hv.types
+    · rw [he]; exact hv.tables
+    · rw [he]; exact hv.memories
+    · rw [he]; exact hv.tableCount
+    · rw [he]; exact hv.memoryCount
+    · intro g hg
+      exact hc.constant (hv.globals g (by simpa only [congrArg module.Env.globals he] using hg))
+    · rw [he]; exact hv.imports
+    · rw [he]; exact hv.exportNames
+    · rw [he]; exact hv.distinctExports
+    · intro e hm
+      obtain ⟨xt, hx⟩ := hv.exports e (by simpa only [congrArg module.Env.exports he] using hm)
+      exact ⟨xt, hc.export hx⟩
+    · intro idx hs
+      exact hc.start (hv.start idx (by simpa only [congrArg module.Env.start he] using hs))
+    · intro e hm
+      exact hc.element (hv.elements e (by simpa only [congrArg module.Env.elements he] using hm))
+    · rw [he]; exact hv.references
 
 end Itasca.ModuleEnv

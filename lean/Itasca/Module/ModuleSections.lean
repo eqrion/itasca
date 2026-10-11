@@ -43,19 +43,41 @@ namespace Itasca
 open ModuleBinary ModuleSections
 
 @[step]
+theorem module.check_table_count.spec (env : module.Env) (profile : ValidationProfile) :
+    module.check_table_count env profile ⦃ result => match result with
+      | .Ok _ => profile = .Wasm1 → env.table_types.val.length ≤ 1
+      | .Err _ => profile = .Wasm1 ∧ 1 < env.table_types.val.length ⦄ := by
+  cases profile with
+  | Wasm2 => simp [module.check_table_count]
+  | Wasm1 =>
+    simp only [module.check_table_count]
+    split <;> simp_all [global_simps]
+
+theorem module.check_table_count.complete (env : module.Env) (profile : ValidationProfile)
+    (h : profile = .Wasm1 → env.table_types.val.length ≤ 1) :
+    module.check_table_count env profile = .ok (.Ok ()) := by
+  cases profile with
+  | Wasm2 => simp [module.check_table_count]
+  | Wasm1 =>
+    have hb := h rfl
+    simp [module.check_table_count, limits.MAX_TABLES, global_simps, show ¬1 < env.table_types.val.length by omega]
+
+@[step]
 theorem module.decode_type_section_loop.profile_spec (data : Slice U8) (env : module.Env)
     (profile : ValidationProfile) (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
     (hsize : env.types.val.length ≤ start.val) :
     module.decode_type_section_loop data env profile count start 0#u32 ⦃ r => match r.1 with
       | .Ok next => ∃ added, added.length = count.val ∧ TypesAdded env r.2 added ∧
           At (Rep FuncTypeEncoding) data start added next ∧
-          (∀ ft ∈ added, Profile.FuncType profile ft ∧ Profile.FuncTypeWithinLimits profile ft) ∧ r.2.types.val.length ≤ next.val
+          (∀ ft ∈ added, (Profile.FuncType profile ft ∧ Profile.FuncTypeWithinLimits profile ft) ∧
+            ∀ ty ∈ ft.params.val ++ ft.results.val, ValueTypeAllowed profile ty) ∧ r.2.types.val.length ≤ next.val
       | .Err _ => True ⦄ := by
   unfold module.decode_type_section_loop
   apply loop.spec_decr_nat (fun s => count.val - s.2.2.val)
     (fun s => s.2.2.val ≤ count.val ∧ ∃ added, added.length = s.2.2.val ∧
       TypesAdded env s.1 added ∧ At (Rep FuncTypeEncoding) data start added s.2.1 ∧
-      (∀ ft ∈ added, Profile.FuncType profile ft ∧ Profile.FuncTypeWithinLimits profile ft) ∧ s.1.types.val.length ≤ s.2.1.val)
+      (∀ ft ∈ added, (Profile.FuncType profile ft ∧ Profile.FuncTypeWithinLimits profile ft) ∧
+            ∀ ty ∈ ft.params.val ++ ft.results.val, ValueTypeAllowed profile ty) ∧ s.1.types.val.length ≤ s.2.1.val)
   · rintro ⟨current, pos, i⟩ ⟨hi, added, hlen, henv, hbytes, hvalid, hsize⟩
     dsimp only at hi hlen henv hbytes hvalid hsize
     unfold module.decode_type_section_loop.body
@@ -65,14 +87,14 @@ theorem module.decode_type_section_loop.profile_spec (data : Slice U8) (env : mo
       have heq : i.val = count.val := by scalar_tac
       exact ⟨added, by omega, henv, hbytes, hvalid, hsize⟩
     · rename_i hmore
-      obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (module.decode_func_type.profile_spec data pos profile)
+      obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (module.decode_func_type.allowed_spec data pos profile)
       rw [hr]
       cases r with
       | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       | Ok pair =>
         obtain ⟨ft, next⟩ := pair
-        obtain ⟨hb, ht⟩ := hp
+        obtain ⟨⟨hb, ht⟩, ha⟩ := hp
         have hprogress := hb.funcType_progress
         have hbound := hb.span.2
         have hcapacity : current.types.val.length < Usize.max := by scalar_tac
@@ -88,8 +110,8 @@ theorem module.decode_type_section_loop.profile_spec (data : Slice U8) (env : mo
         · exact hbytes.snoc hb
         · intro ty hm
           rcases List.mem_append.mp hm with hm | hm
-          · exact hvalid ty hm
-          · simpa [List.mem_singleton.mp hm] using ht
+          · exact ⟨(hvalid ty hm).1.1, (hvalid ty hm).1.2, (hvalid ty hm).2⟩
+          · simpa [List.mem_singleton.mp hm] using And.intro ht ha
         · simp only [r_post, List.length_append, List.length_singleton]; omega
         · scalar_tac
   · exact ⟨by simp, [], by simp, ⟨by cases env; rfl, by simp⟩,
@@ -101,7 +123,8 @@ theorem module.decode_type_section.profile_spec (data : Slice U8) (pos : Usize) 
     module.decode_type_section data pos env profile ⦃ r => match r.1 with
       | .Ok next => ∃ added, TypesAdded env r.2 added ∧
           At (VecEncoding FuncTypeEncoding) data pos added next ∧
-          (∀ ft ∈ added, Profile.FuncType profile ft ∧ Profile.FuncTypeWithinLimits profile ft) ∧ r.2.types.val.length ≤ next.val
+          (∀ ft ∈ added, (Profile.FuncType profile ft ∧ Profile.FuncTypeWithinLimits profile ft) ∧
+            ∀ ty ∈ ft.params.val ++ ft.results.val, ValueTypeAllowed profile ty) ∧ r.2.types.val.length ≤ next.val
       | .Err _ => True ⦄ := by
   obtain ⟨r, hr, hc⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
   cases r with
@@ -119,7 +142,7 @@ theorem module.decode_type_section.profile_spec (data : Slice U8) (pos : Usize) 
     | Err e => simp
     | Ok next =>
       obtain ⟨added, hlen, henv, hb, ht, hsize⟩ := hp
-      exact ⟨added, henv, At.vector hc hb hlen, ht, hsize⟩
+      exact ⟨added, henv, At.vector hc hb hlen, by simpa only [and_assoc, List.mem_append] using ht, hsize⟩
 
 
 @[step]
@@ -134,7 +157,11 @@ theorem module.decode_type_section_loop.spec (data : Slice U8) (env : module.Env
   obtain ⟨⟨r, result⟩, hr, hp⟩ := WP.spec_imp_exists
     (module.decode_type_section_loop.profile_spec data env .Wasm1 count start hstart hsize)
   rw [hr]
-  cases r <;> simpa [Profile.FuncType, Profile.FuncTypeWithinLimits] using hp
+  cases r with
+  | Err _ => simp
+  | Ok next =>
+    obtain ⟨added, hlen, henv, hb, ht, hsize⟩ := hp
+    exact ⟨added, hlen, henv, hb, fun ft hm => (ht ft hm).1.1, hsize⟩
 
 @[step]
 theorem module.decode_type_section.spec (data : Slice U8) (pos : Usize) (env : module.Env)
@@ -147,6 +174,10 @@ theorem module.decode_type_section.spec (data : Slice U8) (pos : Usize) (env : m
   obtain ⟨⟨r, result⟩, hr, hp⟩ := WP.spec_imp_exists
     (module.decode_type_section.profile_spec data pos env .Wasm1 hsize)
   rw [hr]
-  cases r <;> simpa [Profile.FuncType, Profile.FuncTypeWithinLimits] using hp
+  cases r with
+  | Err _ => simp
+  | Ok next =>
+    obtain ⟨added, henv, hb, ht, hsize⟩ := hp
+    exact ⟨added, henv, hb, fun ft hm => (ht ft hm).1.1, hsize⟩
 
 end Itasca

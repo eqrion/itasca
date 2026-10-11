@@ -8,7 +8,7 @@ namespace Itasca
 open ModuleBinary
 
 theorem split_body_section (data : Slice U8) (pos first last : Usize) (id : U8)
-    (h : SectionHeader data pos id first last) (hid : id.val ≤ 10) :
+    (h : SectionHeader data pos id first last) (hid : id.val ≤ 10 ∨ id.val = 12) :
     stream.find_code_region_loop.body data (Slice.len data) pos =
       .ok (if id = 10#u8 then .done (pos, last)
         else if last = Slice.len data then .done (last, last) else .cont last) := by
@@ -22,19 +22,37 @@ theorem split_body_section (data : Slice U8) (pos first last : Usize) (id : U8)
     have hn : ¬ pos ≥ Slice.len data := by scalar_tac
     simp only [hn, ↓reduceIte]
     step
-    have hnid : ¬ id > module.SECTION_CODE := by simp [module.SECTION_CODE]; scalar_tac
-    simp only [hnid, ↓reduceIte]
-    step
-    have he : i = middle := by apply UScalar.eq_of_val_eq; omega
-    subst i
-    simp only [hlen, bind_ok]
-    step
-    step
-    step
-    have he : «end» = last := by apply UScalar.eq_of_val_eq; scalar_tac
-    subst «end»
-    simp only [module.SECTION_CODE]
-    split <;> split <;> simp_all
+    by_cases hnid : id > module.SECTION_CODE
+    · have hidCount : id = module.SECTION_DATA_COUNT := by
+        apply UScalar.eq_of_val_eq
+        simp only [module.SECTION_DATA_COUNT]
+        simp only [module.SECTION_CODE] at hnid
+        scalar_tac
+      simp only [hnid, ↓reduceIte]
+      simp only [hidCount, bne_self_eq_false, Bool.false_eq_true, ↓reduceIte]
+      step
+      have he : i = middle := by apply UScalar.eq_of_val_eq; omega
+      subst i
+      simp only [hlen, bind_ok]
+      step
+      step
+      step
+      have he : «end» = last := by apply UScalar.eq_of_val_eq; scalar_tac
+      subst «end»
+      simp only [module.SECTION_CODE]
+      split <;> split <;> simp_all
+    · simp only [hnid, ↓reduceIte]
+      step
+      have he : i = middle := by apply UScalar.eq_of_val_eq; omega
+      subst i
+      simp only [hlen, bind_ok]
+      step
+      step
+      step
+      have he : «end» = last := by apply UScalar.eq_of_val_eq; scalar_tac
+      subst «end»
+      simp only [module.SECTION_CODE]
+      split <;> split <;> simp_all
   obtain ⟨r, hr, he⟩ := WP.spec_imp_exists hs
   exact hr.trans (congrArg Result.ok he)
 
@@ -45,7 +63,7 @@ theorem split_loop_eof (data : Slice U8) :
   simp [stream.find_code_region_loop.body]
 
 theorem split_skip_section (data : Slice U8) (pos first last : Usize) (id : U8)
-    (h : SectionHeader data pos id first last) (hid : id.val < 10) :
+    (h : SectionHeader data pos id first last) (hid : id.val < 10 ∨ id.val = 12) :
     stream.find_code_region_loop data (Slice.len data) pos =
       stream.find_code_region_loop data (Slice.len data) last := by
   have hb := split_body_section data pos first last id h (by omega)
@@ -66,7 +84,7 @@ private theorem split_code_section (data : Slice U8) (pos first last : Usize)
   simp
 
 private theorem split_after_code (data : Slice U8) (pos first last : Usize) (id : U8)
-    (h : SectionHeader data pos id first last) (hid : 10 < id.val) :
+    (h : SectionHeader data pos id first last) (hid : 10 < id.val) (hnotCount : id.val ≠ 12) :
     stream.find_code_region_loop data (Slice.len data) pos = .ok (pos, pos) := by
   obtain ⟨_, _, hb, _, _, _⟩ := h
   obtain ⟨hp, hbyte, _⟩ := hb.byte.single
@@ -77,7 +95,12 @@ private theorem split_after_code (data : Slice U8) (pos first last : Usize) (id 
     simp only [hn, ↓reduceIte]
     step
     have hnid : id > module.SECTION_CODE := by simp [module.SECTION_CODE]; scalar_tac
-    simp [hnid]
+    have hncount : id ≠ module.SECTION_DATA_COUNT := by
+      intro he
+      have hv := congrArg UScalar.val he
+      simp only [module.SECTION_DATA_COUNT] at hv
+      scalar_tac
+    simp [hnid, hncount]
   obtain ⟨r, hr, rfl⟩ := WP.spec_imp_exists hs
   rw [stream.find_code_region_loop, loop, hr]
   simp
@@ -114,9 +137,11 @@ private theorem split_skip_chain {profile} {data : Slice U8} {raw n bytes}
     · rw [← hsection.empty]
       exact ih hrest
     · obtain ⟨content, hh, _⟩ := (show
-        At (SectionEncoding id (fun u bs => ModuleEnv.Payload raw id.val u bs profile)) data afterCustoms () middle
+        At (SectionEncoding id (fun u bs => ModuleEnv.Payload raw (sectionRank id).val u bs profile)) data afterCustoms () middle
         from ⟨_, hs, hsection⟩).section_split
-      rw [split_skip_section data afterCustoms content middle id hh (by omega)]
+      rw [split_skip_section data afterCustoms content middle id hh (by
+        have hrange := sectionRank_prefix (id := id) (by omega) (by omega)
+        omega)]
       exact ih hrest
 
 theorem split_skip_prefix {profile} {data : Slice U8} {decls next}
@@ -157,10 +182,12 @@ theorem stream.find_code_region.complete_layout {profile} {data : Slice U8} {raw
           have hread := (module.read_section_header.complete data codePos id first last hh).symm.trans
             (module.read_section_header.complete data codePos id' first' last' hh')
           simpa using hread
-        exact split_after_code data codePos first last id hh (by
-          have hne' : id.val ≠ 10 := by intro heq; apply hne; apply UScalar.eq_of_val_eq; exact heq
-          rw [he.1] at hne' ⊢
-          omega)
+        have hid : id = 11#u8 := by
+          rcases hge with hc | hd
+          · exact False.elim (hne (he.1.trans hc))
+          · exact he.1.trans hd
+        exact split_after_code data codePos first last id hh
+          (by simp [hid]) (by simp [hid])
 
 /-- Independent module encoding supplies canonical splitter boundaries without
 assuming any successful parser run. -/

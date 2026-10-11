@@ -1,5 +1,5 @@
 import Itasca.MultiValue.Dispatch
-import Itasca.MultiValue.ScalarContext
+import Itasca.MultiValue.Wasm2Dispatch
 
 open Aeneas Aeneas.Std
 
@@ -12,7 +12,7 @@ theorem step.scalar_eq (st : code.BodyState) (data : Slice U8) (env : module.Env
       if alloc.vec.Vec.len st.core.vals = core.num.Usize.MAX then
         .ok (.Err .StackTooLarge, st)
       else (do
-        let (r, s, _) ← code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+        let (r, s, _) ← code.step_wasm2 code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
           st.core data env ctx opcode ()
         .ok (r, {st with core := s})) := by
   unfold step
@@ -28,7 +28,7 @@ theorem step_context (st : code.BodyState) (data : Slice U8) (env : module.Env)
   by_cases hs : opcode.val ∉ controlOpcodes
   · rw [step.scalar_eq st data env ctx index opcode hs,
       step.scalar_eq st data env ctx' index opcode hs,
-      scalar_context _ st.core data env ctx ctx' opcode () hs hlocals]
+      wasm2_context _ st.core data env ctx ctx' opcode () hs hlocals]
   · have hm := Classical.not_not.mp hs
     obtain ⟨⟨n, hn⟩⟩ := opcode
     change n ∈ controlOpcodes at hm

@@ -237,7 +237,7 @@ private theorem read_block_empty (st out : code.OpIterState) (data : Slice U8) (
     (hc : out.ctrls.val = st.ctrls.val ++ [Control.frame st .Block .Empty])
     (hp : out.pos = next) : code.read_block st data = .ok (.Ok .Empty, out) := by
   obtain ⟨⟨_, s⟩, hr, rfl, hspos, hsvals, hsctrls⟩ := WP.spec_imp_exists
-    (code.read_block.complete st data .Empty next hb hcap)
+    (code.read_block.complete st data .Empty next hb hcap trivial)
   dsimp only at hspos hsvals hsctrls
   have heq : s = out := state_ext _ _ (by simpa [hsvals] using hv.symm)
     (hsctrls.trans hc.symm) (hspos.trans hp.symm)
@@ -252,7 +252,7 @@ private theorem read_if_empty (st out : code.OpIterState) (data : Slice U8) (nex
   have ht : Sequence.Realizes (Control.polymorphic st) [.Val .I32] ([] ++ [.I32]) :=
     Sequence.realizes_default _ _
   obtain ⟨⟨_, s⟩, hr, rfl, hspos, rest, hvs', _, hcs', ht'⟩ := WP.spec_imp_exists
-    (code.read_if.complete st data .Empty next [] [.Val .I32] [] hb hvs hbase hcap ht)
+    (code.read_if.complete st data .Empty next [] [.Val .I32] [] hb hvs hbase hcap ht trivial)
   have hnil := ht'.empty_values
   dsimp only at hspos hvs' hcs'
   have hsv : s.vals.val = [] := by simpa [hnil] using hvs'

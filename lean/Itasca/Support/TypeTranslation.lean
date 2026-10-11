@@ -8,6 +8,18 @@ def valueType : types.ValueType → valtype
   | .I64 => .I64
   | .F32 => .F32
   | .F64 => .F64
+  | .V128 => .V128
+  | .FuncRef => .FUNCREF
+  | .ExternRef => .EXTERNREF
+
+/-- Numeric value types admitted by the original binary profile. -/
+def scalar : types.ValueType → Prop
+  | .I32 | .I64 | .F32 | .F64 => True
+  | _ => False
+
+def referenceType : types.ElemType → reftype
+  | .FuncRef => .FUNCREF
+  | .ExternRef => .EXTERNREF
 
 def mutability : types.Mut → «mut»
   | .Const => none

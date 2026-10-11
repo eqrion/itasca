@@ -2,6 +2,7 @@ import Itasca.MultiValue.ScalarMemory
 import Itasca.MultiValue.Invariant
 import Itasca.MultiValue.ScalarContext
 import Itasca.Body.WasmStepEnv
+import Itasca.Binary.WasmDeclaredReferences
 
 open Aeneas Aeneas.Std
 
@@ -27,7 +28,7 @@ private theorem Pending.append_scalar {data env locals index st}
   have hb := p.opened
   obtain ⟨_, _, _, _, _, _, _, blocks, _⟩ := hb
   exact p.append_result C outer spine header base {st with core := s} op poly newVals hwf
-    (At.plain encoded) typed hc (by simpa [hc, _ctrls] using blocks) hv
+    (At.plain encoded) typed hc (by simpa [hc, _ctrls] using blocks) hv (encoded.declared _)
 
 private theorem Pending.append_scalar_simple {data env locals index st}
     (p : Pending data env locals index st)

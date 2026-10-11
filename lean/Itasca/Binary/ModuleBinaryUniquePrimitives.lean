@@ -8,6 +8,16 @@ theorem valueByte_injective : Function.Injective valueByte := by
   intro a b h
   cases a <;> cases b <;> simp_all [valueByte]
 
+theorem elemByte_injective : Function.Injective elemByte := by
+  intro a b h
+  cases a <;> cases b <;> simp_all [elemByte]
+
+theorem elemType_prefix_unique : PrefixUnique ElemTypeEncoding := by
+  rintro x y a b rest tail rfl rfl he
+  obtain ⟨hv, rfl⟩ := List.cons.inj he
+  obtain rfl := elemByte_injective hv
+  exact ⟨rfl, rfl, rfl⟩
+
 theorem mutByte_injective : Function.Injective mutByte := by
   intro a b h
   cases a <;> cases b <;> simp_all [mutByte]
@@ -48,12 +58,11 @@ theorem tableType_prefix_unique : PrefixUnique TableTypeEncoding := by
   intro x y a b rest tail hx hy he
   obtain ⟨a, hx, rfl⟩ := hx
   obtain ⟨b, hy, rfl⟩ := hy
-  obtain ⟨hv, rfl, rfl⟩ := limits_prefix_unique hx hy (List.cons.inj he).2
-  have hxy : x = y := by
-    cases x with | mk xl xe =>
-      cases y with | mk yl ye =>
-        cases xe; cases ye; cases hv; rfl
-  exact ⟨hxy, rfl, rfl⟩
+  obtain ⟨helem, hrest⟩ := List.cons.inj he
+  have helem := elemByte_injective helem
+  obtain ⟨hv, rfl, rfl⟩ := limits_prefix_unique hx hy hrest
+  have hxy : x = y := by cases x; cases y; simp_all
+  exact ⟨hxy, by simp [helem], rfl⟩
 
 theorem memType_prefix_unique : PrefixUnique MemTypeEncoding := by
   intro x y a b rest tail hx hy he
@@ -98,6 +107,21 @@ theorem const_prefix_unique : PrefixUnique ConstEncoding := by
   case globalGet.globalGet x a hx y b hy =>
     obtain ⟨rfl, rfl, hseq1⟩ := index_prefix_unique hx hy (by simpa [List.append_assoc] using he.2)
     obtain rfl := (List.cons.inj hseq1).2
+    exact ⟨rfl, rfl, rfl⟩
+  case refFunc.refFunc x a hx y b hy =>
+    obtain ⟨rfl, rfl, hseq1⟩ := index_prefix_unique hx hy (by simpa [List.append_assoc] using he.2)
+    obtain rfl := (List.cons.inj hseq1).2
+    exact ⟨rfl, rfl, rfl⟩
+  case refNull.refNull x y =>
+    obtain rfl := elemByte_injective he.2.1
+    exact ⟨rfl, rfl, he.2.2.2⟩
+  case v128.v128 low high sub first second hs hl hh low' high' sub' first' second' hs' hl' hh' =>
+    obtain ⟨_, rfl, hseq1⟩ := index_prefix_unique hs hs' (by simpa [List.append_assoc] using he.2)
+    obtain ⟨hlo, rfl, hseq2⟩ := float_prefix_unique 8 hl hl' (by simpa [List.append_assoc] using hseq1)
+    obtain ⟨hhi, rfl, hseq3⟩ := float_prefix_unique 8 hh hh' (by simpa [List.append_assoc] using hseq2)
+    obtain rfl := UScalar.eq_of_val_eq hlo
+    obtain rfl := UScalar.eq_of_val_eq hhi
+    obtain rfl := (List.cons.inj hseq3).2
     exact ⟨rfl, rfl, rfl⟩
 
 theorem importDesc_prefix_unique : PrefixUnique ImportDescEncoding := by
@@ -168,18 +192,17 @@ theorem local_prefix_unique : PrefixUnique LocalEncoding := by
 
 theorem element_prefix_unique : PrefixUnique ElementEncoding := by
   intro x y a b rest tail hx hy he
-  obtain ⟨xt, xo, xi, ht, ho, hi, rfl⟩ := hx
-  obtain ⟨yt, yo, yi, ht', ho', hi', rfl⟩ := hy
-  obtain ⟨htv, rfl, hseq1⟩ := index_prefix_unique ht ht' (by simpa [List.append_assoc] using he)
-  obtain ⟨hov, rfl, hseq2⟩ := const_prefix_unique ho ho' (by simpa [List.append_assoc] using hseq1)
-  obtain ⟨hiv, rfl, rfl⟩ := index_prefix_unique.vec hi hi' hseq2
-  have hv : x = y := by cases x; cases y; simp_all
-  exact ⟨hv, rfl, rfl⟩
+  obtain ⟨xti, xof, xin, xt, xo, xi, rfl, ht, ho, hi, rfl⟩ := hx
+  obtain ⟨yti, yof, yin, yt, yo, yi, rfl, ht', ho', hi', rfl⟩ := hy
+  obtain ⟨rfl, rfl, hseq1⟩ := index_prefix_unique ht ht' (by simpa [List.append_assoc] using he)
+  obtain ⟨rfl, rfl, hseq2⟩ := const_prefix_unique ho ho' (by simpa [List.append_assoc] using hseq1)
+  obtain ⟨rfl, rfl, rfl⟩ := index_prefix_unique.vec hi hi' hseq2
+  exact ⟨rfl, rfl, rfl⟩
 
 theorem data_prefix_unique : PrefixUnique DataEncoding := by
   intro x y a b rest tail hx hy he
-  obtain ⟨xt, xo, xi, ht, ho, hi, rfl⟩ := hx
-  obtain ⟨yt, yo, yi, ht', ho', hi', rfl⟩ := hy
+  obtain ⟨xti, xof, xt, xo, xi, hxm, ht, ho, hi, rfl⟩ := hx
+  obtain ⟨yti, yof, yt, yo, yi, hym, ht', ho', hi', rfl⟩ := hy
   obtain ⟨htv, rfl, hseq1⟩ := index_prefix_unique ht ht' (by simpa [List.append_assoc] using he)
   obtain ⟨hov, rfl, hseq2⟩ := const_prefix_unique ho ho' (by simpa [List.append_assoc] using hseq1)
   obtain ⟨hiv, rfl, rfl⟩ := byte_prefix_unique.vec hi hi' hseq2

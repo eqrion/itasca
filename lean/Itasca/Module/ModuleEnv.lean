@@ -1,4 +1,6 @@
 import Itasca.Module.ModuleConstantTyping
+import Itasca.Module.ModuleSegmentSyntax
+import Itasca.Module.ModuleReferences
 import Itasca.Module.ModuleExternals
 import Itasca.Profile.Types
 
@@ -38,7 +40,7 @@ structure Valid (env : module.Env) (profile : ValidationProfile := .Wasm1) : Pro
   types : ∀ ft ∈ env.types.val, Profile.FuncTypeAdmissible profile ft
   tables : ∀ tt ∈ env.table_types.val, ModuleTranslation.LimitsValid tt.limits (2 ^ 32 - 1)
   memories : ∀ mt ∈ env.mem_types.val, ModuleTranslation.LimitsValid mt.limits (2 ^ 16)
-  tableCount : env.table_types.val.length ≤ 1
+  tableCount : profile = .Wasm1 → env.table_types.val.length ≤ 1
   memoryCount : env.mem_types.val.length ≤ 1
   globals : ∀ g ∈ env.globals.val, ModuleConstants.Valid env g.init g.gtype.valtype
   imports : ∀ entry ∈ env.imports.val,
@@ -48,10 +50,8 @@ structure Valid (env : module.Env) (profile : ValidationProfile := .Wasm1) : Pro
   exports : ∀ entry ∈ env.exports.val, ∃ xt, ModuleExternals.ExportResolves env entry xt
   start : ∀ idx, env.start = some idx → ∃ hi : idx.val < env.func_types.val.length,
     env.func_types.val[idx.val].params.val = [] ∧ env.func_types.val[idx.val].results.val = []
-  elements : ∀ entry ∈ env.elements.val,
-    entry.table_idx.val < env.table_types.val.length ∧
-    ModuleConstants.Valid env entry.offset .I32 ∧
-    ∀ idx ∈ entry.init.val, idx.val < env.func_types.val.length
+  elements : ∀ entry ∈ env.elements.val, ModuleSegments.elementValid env entry
+  references : ModuleReferences.Coherent env
 
 /-- Allocation and counter arithmetic use a separate cursor accounting invariant. -/
 structure Bounded (env : module.Env) (pos : Nat) : Prop where
@@ -67,6 +67,7 @@ structure Bounded (env : module.Env) (pos : Nat) : Prop where
   globalTypes : env.global_types.val.length ≤ pos
   numFuncs : env.num_imported_funcs.val ≤ pos
   numGlobals : env.num_imported_globals.val ≤ pos
+  declaredFuncs : env.declared_funcs.val.length ≤ pos
 
 theorem Bounded.mono {env pos next} (h : Bounded env pos) (hle : pos ≤ next) :
     Bounded env next := by
@@ -161,7 +162,7 @@ theorem module.Env.new.spec : module.Env.new ⦃ env =>
   · constructor <;> simp [ModuleEnv.importedFuncs, ModuleEnv.importedGlobals,
       ModuleEnv.importedTables, ModuleEnv.importedMems]
   · constructor
-    · constructor <;> simp
+    · constructor <;> simp [ModuleReferences.Coherent, ModuleReferences.collected]
     · constructor <;> simp
 
 end Itasca

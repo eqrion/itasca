@@ -18,10 +18,10 @@ inductive Run (data : Slice U8) (initial : module.Env) (decls : Declarations)
       Run (profile := profile) data initial decls start initialId before beforeDecls next last
   | step {profile} {before beforeDecls pos last id first next after afterDecls} :
       Run (profile := profile) data initial decls start initialId before beforeDecls pos last →
-      last.val < id.val →
+      last.val < (ModuleBinary.sectionRank id).val →
       ModuleBinary.SectionHeader data pos id first next →
       Effect (profile := profile) data first before beforeDecls id next after afterDecls →
-      Run (profile := profile) data initial decls start initialId after afterDecls next id
+      Run (profile := profile) data initial decls start initialId after afterDecls next (ModuleBinary.sectionRank id)
 
 theorem Run.phase {profile} {data initial decls start initialId after afterDecls next id}
     (h : Run (profile := profile) data initial decls start initialId after afterDecls next id)
@@ -41,7 +41,7 @@ theorem Run.span {profile} {data initial decls start initialId after afterDecls 
 
 theorem Run.id_bounds {profile} {data initial decls start initialId after afterDecls next id}
     (h : Run (profile := profile) data initial decls start initialId after afterDecls next id)
-    (hstart : initialId.val ≤ 9) : initialId.val ≤ id.val ∧ id.val ≤ 9 := by
+    (hstart : initialId.val ≤ 10) : initialId.val ≤ id.val ∧ id.val ≤ 10 := by
   induction h with
   | nil => exact ⟨le_rfl, hstart⟩
   | custom _ _ ih => exact ih

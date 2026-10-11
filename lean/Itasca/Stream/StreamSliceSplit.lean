@@ -19,7 +19,22 @@ theorem stream.find_code_region_loop.spec (bytes : Slice U8) (pos : Usize) :
       have hcursor' : cursor.val < bytes.length := by scalar_tac
       step
       split
-      · simp; scalar_tac
+      · split
+        · simp; scalar_tac
+        · step
+          obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (stream.read_len.spec bytes i)
+          rw [hr]
+          cases r with
+          | Err e =>
+            simp only [bind_ok]
+            split <;> simp_all
+          | Ok p =>
+            obtain ⟨size, contents⟩ := p
+            obtain ⟨_, _, hd⟩ := hp
+            have hprogress := hd.span.1
+            have hbound := hd.span.2.2
+            simp only [bind_ok]
+            step* <;> scalar_tac
       · step
         obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (stream.read_len.spec bytes i)
         rw [hr]

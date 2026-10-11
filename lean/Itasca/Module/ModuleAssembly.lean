@@ -9,13 +9,13 @@ def fromEnv (env : module.Env) (tables : List types.TableType) (memories : List 
     (codes : List ModuleBinary.Code) (segments : List module.Data) : ModuleBinary.Module :=
   ⟨env.types.val, env.imports.val.map ModuleEnv.rawImport, env.func_type_indices.val,
     tables, memories, env.globals.val, env.exports.val.map ModuleEnv.rawExport, env.start,
-    env.elements.val.map ModuleEnv.rawElement, codes, segments.map ModuleData.raw⟩
+    env.elements.val.map ModuleEnv.rawElement, env.data_count, codes, segments.map ModuleData.raw⟩
 
 theorem represents_module {env decls codes segments} (h : ModuleEnv.Represents env decls) :
     decls.module codes (segments.map ModuleData.raw) =
       fromEnv env decls.tables decls.memories codes segments := by
   simp [ModuleEnv.Declarations.module, fromEnv, h.types, h.imports, h.functions,
-    h.globals, h.exports, h.start, h.elements]
+    h.globals, h.exports, h.start, h.elements, h.dataCount]
 
 def importContext (env : module.Env) : context :=
   ⟨env.types.val.map EnvTranslation.funcType, [], [], [], [], [], [], [], [], none⟩
@@ -24,14 +24,14 @@ theorem importContext_wf (env : module.Env) : wf_context (importContext env) := 
   constructor <;> simp [Forall]
 
 theorem moduleContext_eq {env tables memories} (hc : ModuleEnv.Cache env tables memories)
-    (ne nd : Nat) :
-    moduleContext env ne nd =
+    (es : List elemtype) (nd : Nat) :
+    moduleContext env es nd =
       ⟨env.types.val.map EnvTranslation.funcType,
         ModuleTranslation.funcs (importTypes env) ++ env.func_type_indices.val.map (functionType env.types.val),
         ModuleTranslation.globals (importTypes env) ++ env.globals.val.map (fun g => Translate.globalType g.gtype),
         ModuleTranslation.tables (importTypes env) ++ tables.map EnvTranslation.tableType,
         ModuleTranslation.mems (importTypes env) ++ memories.map EnvTranslation.memType,
-        List.replicate ne .FUNCREF, List.replicate nd .OK, [], [], none⟩ := by
+        es, List.replicate nd .OK, [], [], none⟩ := by
   simp only [moduleContext, funcs_cache hc, globals_cache hc, tables_cache hc, memories_cache hc]
 
 theorem initializerContext_eq {env tables memories} (hc : ModuleEnv.Cache env tables memories) :
@@ -54,13 +54,20 @@ theorem typed {env : module.Env} {tables memories codes segments xts}
     (heNames : ∀ entry ∈ env.exports.val, wf_name (ModuleBinary.nameOfBytes entry.name.val))
     (hcodes : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry profile) env.func_type_indices.val codes)
     (hsegments : ∀ segment ∈ segments, ModuleData.Valid env segment)
+    (hdataCount : ∀ count, env.data_count = some count → count.val = segments.length)
     (hxts : List.Forall₂ (ModuleExternals.ExportResolves env) env.exports.val xts) :
     Module_ok (moduleOf (fromEnv env tables memories codes segments)) := by
-  let C := moduleContext env env.elements.val.length segments.length
+  let C := moduleContext env (EnvTranslation.elementTypes env) segments.length
   let C' := initializerContext env
-  have hwC := moduleContext_wf env env.elements.val.length segments.length
+  have hwC := moduleContext_wf env (EnvTranslation.elementTypes env) segments.length
   have hwC' := initializerContext_wf env
-  have hmatch := moduleContext_matches env env.elements.val.length segments.length
+  have hmatch := moduleContext_matches env (EnvTranslation.elementTypes env) segments.length
+  have hsegmentContext : CodeEntry.SegmentContext env C := by
+    constructor
+    · simp [C, moduleContext]
+    · cases hd : env.data_count with
+      | none => simp [C, moduleContext, EnvTranslation.dataTypes, hd]
+      | some count => simp [C, moduleContext, EnvTranslation.dataTypes, hd, hdataCount count hd]
   have htypes := forall₂_map env.types.val EnvTranslation.funcType
     (fun ft => type.TYPE (EnvTranslation.funcType ft)) (fun ft ty => Type_ok ty ft)
     (fun ft _ => Type_ok.mk_Type_ok _ (ModuleTranslation.funcType_valid ft))
@@ -70,18 +77,18 @@ theorem typed {env : module.Env} {tables memories codes segments xts}
     (fun e he => import_typed hc hv he (hiNames e he).1 (hiNames e he).2 _ (importContext_wf env))
   have hglobals := forall₂_map env.globals.val ModuleConstants.global
     (fun g => Translate.globalType g.gtype) (Global_ok C')
-    (fun g hg => ModuleConstants.global_typed env g (hv.globals g hg) C' hwC' rfl)
+    (fun g hg => ModuleConstants.global_typed env g (hv.globals g hg) C' hwC' rfl rfl)
   have htables := forall₂_map tables table EnvTranslation.tableType (Table_ok C')
     (fun tt ht => table_typed hc hv tt ht C' hwC')
   have hmemories := forall₂_map memories memory EnvTranslation.memType (Mem_ok C')
     (fun mt ht => memory_typed hc hv mt ht C' hwC')
   have helements := forall₂_map env.elements.val (fun e => element (ModuleEnv.rawElement e))
-    (fun _ => reftype.FUNCREF) (Elem_ok C') (fun e he => element_typed hv e he)
+    (fun e => Translate.referenceType e.elem) (Elem_ok C') (fun e he => element_typed hv e he)
   have hdatas : Forall (Data_ok C') (segments.map (fun d => ModuleData.translate (ModuleData.raw d))) := by
     simp only [Forall, List.mem_map]
     rintro _ ⟨d, hd, rfl⟩
-    exact (hsegments d hd).typed hv.memoryCount C' hwC' rfl rfl
-  have hfuncs := functions_typed hcodes C hmatch
+    exact (hsegments d hd).typed hv.memoryCount C' hwC' rfl rfl rfl
+  have hfuncs := functions_typed hcodes C hmatch hsegmentContext
   have hstart : Forall (Start_ok C) ((env.start.map start).toList) := by
     cases hs : env.start with
     | none => simp [Forall]
@@ -104,7 +111,7 @@ theorem typed {env : module.Env} {tables memories codes segments xts}
     (ixt_lst := importTypes env) (C' := C')
     (gt_lst := env.globals.val.map (fun g => Translate.globalType g.gtype))
     (tt_lst := tables.map EnvTranslation.tableType) (mt_lst := memories.map EnvTranslation.memType)
-    (rt_lst := env.elements.val.map (fun _ => reftype.FUNCREF)) (C := C)
+    (rt_lst := EnvTranslation.elementTypes env) (C := C)
     (ft_lst := env.func_type_indices.val.map (functionType env.types.val))
     (xt_lst := xts.map ModuleExternals.externalType)
     (ift_lst := ModuleTranslation.funcs (importTypes env))
@@ -129,8 +136,8 @@ theorem typed {env : module.Env} {tables memories codes segments xts}
   · exact forall₂_generated htables
   · exact hmemories.length_eq
   · exact forall₂_generated hmemories
-  · simp
-  · simpa [List.map_map, Function.comp_def] using forall₂_generated helements
+  · simp [EnvTranslation.elementTypes]
+  · simpa [List.map_map, Function.comp_def, EnvTranslation.elementTypes] using forall₂_generated helements
   · simpa [List.map_map, Function.comp_def] using hdatas
   · exact hfuncs.length_eq
   · exact forall₂_generated hfuncs
@@ -138,7 +145,7 @@ theorem typed {env : module.Env} {tables memories codes segments xts}
   · simpa using hxts.length_eq
   · simpa [List.map_map, Function.comp_def] using forall₂_generated hexports
   · have h := hv.memoryCount; rw [hc.memories, List.length_append] at h; simpa using (show memories.length ≤ 1 by omega)
-  · simpa [C, List.map_const'] using moduleContext_eq hc env.elements.val.length segments.length
+  · simpa [C, List.map_const'] using moduleContext_eq hc (EnvTranslation.elementTypes env) segments.length
   · exact initializerContext_eq hc
   · rfl
   · rfl

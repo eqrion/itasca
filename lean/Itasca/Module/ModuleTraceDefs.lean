@@ -50,7 +50,7 @@ theorem SectionTrace.span {data allowed start finish events}
 
 def EnvTrace (data : Slice U8) (finish : Usize) (events : List Event) : Prop :=
   ∃ start, Wasm.BytesAt data 0#usize ModuleBinary.magicVersion start ∧
-    SectionTrace data (fun id => 1 ≤ id.val ∧ id.val < 10) start finish events
+    SectionTrace data (fun id => (1 ≤ id.val ∧ id.val < 10) ∨ id.val = 12) start finish events
 
 def TailTrace (data : Slice U8) (start : Usize) (events : List Event) : Prop :=
   SectionTrace data (fun id => id = 11#u8) start (Slice.len data) events

@@ -8,14 +8,14 @@ namespace Itasca.Profile
 def FuncType (profile : ValidationProfile) (ft : types.FuncType) : Prop :=
   match profile with
   | .Wasm1 => ft.results.val.length ≤ 1
-  | .MultiValue => True
+  | .Wasm2 => True
 
 /-- Implementation signature bounds are separate from language validity.
 The Wasm 1.0 profile preserves its existing parameter behavior. -/
 def FuncTypeWithinLimits (profile : ValidationProfile) (ft : types.FuncType) : Prop :=
   match profile with
   | .Wasm1 => True
-  | .MultiValue => ft.params.val.length ≤ limits.MAX_MULTI_VALUE_PARAMS.val ∧
+  | .Wasm2 => ft.params.val.length ≤ limits.MAX_MULTI_VALUE_PARAMS.val ∧
       ft.results.val.length ≤ limits.MAX_MULTI_VALUE_RESULTS.val
 
 /-- Both direct and indexed calls use signatures admitted by the profile. -/
@@ -33,7 +33,7 @@ bound definitionally unchanged in existing environment certificates. -/
 def FuncTypeAdmissible (profile : ValidationProfile) (ft : types.FuncType) : Prop :=
   match profile with
   | .Wasm1 => ft.results.val.length ≤ 1
-  | .MultiValue => ft.params.val.length ≤ limits.MAX_MULTI_VALUE_PARAMS.val ∧
+  | .Wasm2 => ft.params.val.length ≤ limits.MAX_MULTI_VALUE_PARAMS.val ∧
       ft.results.val.length ≤ limits.MAX_MULTI_VALUE_RESULTS.val
 
 theorem funcTypeAdmissible_iff (profile : ValidationProfile) (ft : types.FuncType) :

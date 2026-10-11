@@ -20,7 +20,7 @@ structure Accepts {V : Type} (visitor : code.OpVisitor V) : Prop where
   on_br_table : ∀ (v : V) (a1 : _root_.Itasca.code.OpIterState) (a2 : Std.U32) (a3 : _root_.Itasca.signature.ResultType), ∃ v', visitor.on_br_table v a1 a2 a3 = .ok (.Ok (), v')
   on_return : ∀ (v : V) (a1 : _root_.Itasca.code.OpIterState), ∃ v', visitor.on_return v a1 = .ok (.Ok (), v')
   on_call : ∀ (v : V) (a1 : _root_.Itasca.code.OpIterState) (a2 : Std.U32), ∃ v', visitor.on_call v a1 a2 = .ok (.Ok (), v')
-  on_call_indirect : ∀ (v : V) (a1 : _root_.Itasca.code.OpIterState) (a2 : Std.U32), ∃ v', visitor.on_call_indirect v a1 a2 = .ok (.Ok (), v')
+  on_call_indirect : ∀ (v : V) (a1 : _root_.Itasca.code.OpIterState) (a2 : Std.U32) (a3 : Std.U32), ∃ v', visitor.on_call_indirect v a1 a2 a3 = .ok (.Ok (), v')
   on_drop : ∀ (v : V) (a1 : _root_.Itasca.code.OpIterState) (a2 : _root_.Itasca.code.StackType), ∃ v', visitor.on_drop v a1 a2 = .ok (.Ok (), v')
   on_select : ∀ (v : V) (a1 : _root_.Itasca.code.OpIterState) (a2 : _root_.Itasca.code.StackType), ∃ v', visitor.on_select v a1 a2 = .ok (.Ok (), v')
   on_local_get : ∀ (v : V) (a1 : _root_.Itasca.code.OpIterState) (a2 : Std.U32), ∃ v', visitor.on_local_get v a1 a2 = .ok (.Ok (), v')
@@ -180,6 +180,41 @@ structure Accepts {V : Type} (visitor : code.OpVisitor V) : Prop where
   on_i64_reinterpret_f64 : ∀ (v : V) (a1 : _root_.Itasca.code.OpIterState), ∃ v', visitor.on_i64_reinterpret_f64 v a1 = .ok (.Ok (), v')
   on_f32_reinterpret_i32 : ∀ (v : V) (a1 : _root_.Itasca.code.OpIterState), ∃ v', visitor.on_f32_reinterpret_i32 v a1 = .ok (.Ok (), v')
   on_f64_reinterpret_i64 : ∀ (v : V) (a1 : _root_.Itasca.code.OpIterState), ∃ v', visitor.on_f64_reinterpret_i64 v a1 = .ok (.Ok (), v')
+  on_i32_extend8_s : ∀ (v : V) (a1 : _root_.Itasca.code.OpIterState), ∃ v', visitor.on_i32_extend8_s v a1 = .ok (.Ok (), v')
+  on_i32_extend16_s : ∀ (v : V) (a1 : _root_.Itasca.code.OpIterState), ∃ v', visitor.on_i32_extend16_s v a1 = .ok (.Ok (), v')
+  on_i64_extend8_s : ∀ (v : V) (a1 : _root_.Itasca.code.OpIterState), ∃ v', visitor.on_i64_extend8_s v a1 = .ok (.Ok (), v')
+  on_i64_extend16_s : ∀ (v : V) (a1 : _root_.Itasca.code.OpIterState), ∃ v', visitor.on_i64_extend16_s v a1 = .ok (.Ok (), v')
+  on_i64_extend32_s : ∀ (v : V) (a1 : _root_.Itasca.code.OpIterState), ∃ v', visitor.on_i64_extend32_s v a1 = .ok (.Ok (), v')
+  on_i32_trunc_sat_f32_s : ∀ (v : V) (a1 : _root_.Itasca.code.OpIterState), ∃ v', visitor.on_i32_trunc_sat_f32_s v a1 = .ok (.Ok (), v')
+  on_i32_trunc_sat_f32_u : ∀ (v : V) (a1 : _root_.Itasca.code.OpIterState), ∃ v', visitor.on_i32_trunc_sat_f32_u v a1 = .ok (.Ok (), v')
+  on_i32_trunc_sat_f64_s : ∀ (v : V) (a1 : _root_.Itasca.code.OpIterState), ∃ v', visitor.on_i32_trunc_sat_f64_s v a1 = .ok (.Ok (), v')
+  on_i32_trunc_sat_f64_u : ∀ (v : V) (a1 : _root_.Itasca.code.OpIterState), ∃ v', visitor.on_i32_trunc_sat_f64_u v a1 = .ok (.Ok (), v')
+  on_i64_trunc_sat_f32_s : ∀ (v : V) (a1 : _root_.Itasca.code.OpIterState), ∃ v', visitor.on_i64_trunc_sat_f32_s v a1 = .ok (.Ok (), v')
+  on_i64_trunc_sat_f32_u : ∀ (v : V) (a1 : _root_.Itasca.code.OpIterState), ∃ v', visitor.on_i64_trunc_sat_f32_u v a1 = .ok (.Ok (), v')
+  on_i64_trunc_sat_f64_s : ∀ (v : V) (a1 : _root_.Itasca.code.OpIterState), ∃ v', visitor.on_i64_trunc_sat_f64_s v a1 = .ok (.Ok (), v')
+  on_i64_trunc_sat_f64_u : ∀ (v : V) (a1 : _root_.Itasca.code.OpIterState), ∃ v', visitor.on_i64_trunc_sat_f64_u v a1 = .ok (.Ok (), v')
+  on_ref_null : ∀ (v : V) (a1 : code.OpIterState) (a2 : types.ElemType), ∃ v', visitor.on_ref_null v a1 a2 = .ok (.Ok (), v')
+  on_ref_is_null : ∀ (v : V) (a1 : code.OpIterState), ∃ v', visitor.on_ref_is_null v a1 = .ok (.Ok (), v')
+  on_ref_func : ∀ (v : V) (a1 : code.OpIterState) (a2 : Std.U32), ∃ v', visitor.on_ref_func v a1 a2 = .ok (.Ok (), v')
+  on_select_typed : ∀ (v : V) (a1 : code.OpIterState) (a2 : types.ValueType), ∃ v', visitor.on_select_typed v a1 a2 = .ok (.Ok (), v')
+  on_table_get : ∀ (v : V) (a1 : code.OpIterState) (a2 : Std.U32), ∃ v', visitor.on_table_get v a1 a2 = .ok (.Ok (), v')
+  on_table_set : ∀ (v : V) (a1 : code.OpIterState) (a2 : Std.U32), ∃ v', visitor.on_table_set v a1 a2 = .ok (.Ok (), v')
+  on_memory_init : ∀ (v : V) (a1 : code.OpIterState) (a2 : Std.U32), ∃ v', visitor.on_memory_init v a1 a2 = .ok (.Ok (), v')
+  on_data_drop : ∀ (v : V) (a1 : code.OpIterState) (a2 : Std.U32), ∃ v', visitor.on_data_drop v a1 a2 = .ok (.Ok (), v')
+  on_memory_copy : ∀ (v : V) (a1 : code.OpIterState), ∃ v', visitor.on_memory_copy v a1 = .ok (.Ok (), v')
+  on_memory_fill : ∀ (v : V) (a1 : code.OpIterState), ∃ v', visitor.on_memory_fill v a1 = .ok (.Ok (), v')
+  on_table_init : ∀ (v : V) (a1 : code.OpIterState) (a2 : Std.U32) (a3 : Std.U32), ∃ v', visitor.on_table_init v a1 a2 a3 = .ok (.Ok (), v')
+  on_elem_drop : ∀ (v : V) (a1 : code.OpIterState) (a2 : Std.U32), ∃ v', visitor.on_elem_drop v a1 a2 = .ok (.Ok (), v')
+  on_table_copy : ∀ (v : V) (a1 : code.OpIterState) (a2 : Std.U32) (a3 : Std.U32), ∃ v', visitor.on_table_copy v a1 a2 a3 = .ok (.Ok (), v')
+  on_table_grow : ∀ (v : V) (a1 : code.OpIterState) (a2 : Std.U32), ∃ v', visitor.on_table_grow v a1 a2 = .ok (.Ok (), v')
+  on_table_size : ∀ (v : V) (a1 : code.OpIterState) (a2 : Std.U32), ∃ v', visitor.on_table_size v a1 a2 = .ok (.Ok (), v')
+  on_table_fill : ∀ (v : V) (a1 : code.OpIterState) (a2 : Std.U32), ∃ v', visitor.on_table_fill v a1 a2 = .ok (.Ok (), v')
+  on_simd : ∀ (v : V) (a1 : code.OpIterState) (a2 : Std.U32), ∃ v', visitor.on_simd v a1 a2 = .ok (.Ok (), v')
+  on_simd_lane : ∀ (v : V) (a1 : code.OpIterState) (a2 : Std.U32) (a3 : Std.U8), ∃ v', visitor.on_simd_lane v a1 a2 a3 = .ok (.Ok (), v')
+  on_simd_memory : ∀ (v : V) (a1 : code.OpIterState) (a2 : Std.U32) (a3 : code.MemArg), ∃ v', visitor.on_simd_memory v a1 a2 a3 = .ok (.Ok (), v')
+  on_simd_memory_lane : ∀ (v : V) (a1 : code.OpIterState) (a2 : Std.U32) (a3 : code.MemArg) (a4 : Std.U8), ∃ v', visitor.on_simd_memory_lane v a1 a2 a3 a4 = .ok (.Ok (), v')
+  on_simd_const : ∀ (v : V) (a1 : code.OpIterState) (a2 : Std.U64) (a3 : Std.U64), ∃ v', visitor.on_simd_const v a1 a2 a3 = .ok (.Ok (), v')
+  on_simd_shuffle : ∀ (v : V) (a1 : code.OpIterState) (a2 : Std.U64) (a3 : Std.U64), ∃ v', visitor.on_simd_shuffle v a1 a2 a3 = .ok (.Ok (), v')
 
 theorem empty_accepts : Accepts code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor := by
   constructor <;> intros <;> exact ⟨_, rfl⟩
@@ -229,8 +264,8 @@ theorem Accepts.toTotal {V : Type} {visitor : code.OpVisitor V} (h : Accepts vis
   · intro v a1 a2
     obtain ⟨v', hv⟩ := h.on_call v a1 a2
     exact ⟨.Ok (), v', hv⟩
-  · intro v a1 a2
-    obtain ⟨v', hv⟩ := h.on_call_indirect v a1 a2
+  · intro v a1 a2 a3
+    obtain ⟨v', hv⟩ := h.on_call_indirect v a1 a2 a3
     exact ⟨.Ok (), v', hv⟩
   · intro v a1 a2
     obtain ⟨v', hv⟩ := h.on_drop v a1 a2
@@ -708,6 +743,111 @@ theorem Accepts.toTotal {V : Type} {visitor : code.OpVisitor V} (h : Accepts vis
     exact ⟨.Ok (), v', hv⟩
   · intro v a1
     obtain ⟨v', hv⟩ := h.on_f64_reinterpret_i64 v a1
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1
+    obtain ⟨v', hv⟩ := h.on_i32_extend8_s v a1
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1
+    obtain ⟨v', hv⟩ := h.on_i32_extend16_s v a1
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1
+    obtain ⟨v', hv⟩ := h.on_i64_extend8_s v a1
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1
+    obtain ⟨v', hv⟩ := h.on_i64_extend16_s v a1
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1
+    obtain ⟨v', hv⟩ := h.on_i64_extend32_s v a1
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1
+    obtain ⟨v', hv⟩ := h.on_i32_trunc_sat_f32_s v a1
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1
+    obtain ⟨v', hv⟩ := h.on_i32_trunc_sat_f32_u v a1
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1
+    obtain ⟨v', hv⟩ := h.on_i32_trunc_sat_f64_s v a1
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1
+    obtain ⟨v', hv⟩ := h.on_i32_trunc_sat_f64_u v a1
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1
+    obtain ⟨v', hv⟩ := h.on_i64_trunc_sat_f32_s v a1
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1
+    obtain ⟨v', hv⟩ := h.on_i64_trunc_sat_f32_u v a1
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1
+    obtain ⟨v', hv⟩ := h.on_i64_trunc_sat_f64_s v a1
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1
+    obtain ⟨v', hv⟩ := h.on_i64_trunc_sat_f64_u v a1
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1 a2
+    obtain ⟨v', hv⟩ := h.on_ref_null v a1 a2
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1
+    obtain ⟨v', hv⟩ := h.on_ref_is_null v a1
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1 a2
+    obtain ⟨v', hv⟩ := h.on_ref_func v a1 a2
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1 a2
+    obtain ⟨v', hv⟩ := h.on_select_typed v a1 a2
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1 a2
+    obtain ⟨v', hv⟩ := h.on_table_get v a1 a2
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1 a2
+    obtain ⟨v', hv⟩ := h.on_table_set v a1 a2
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1 a2
+    obtain ⟨v', hv⟩ := h.on_memory_init v a1 a2
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1 a2
+    obtain ⟨v', hv⟩ := h.on_data_drop v a1 a2
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1
+    obtain ⟨v', hv⟩ := h.on_memory_copy v a1
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1
+    obtain ⟨v', hv⟩ := h.on_memory_fill v a1
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1 a2 a3
+    obtain ⟨v', hv⟩ := h.on_table_init v a1 a2 a3
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1 a2
+    obtain ⟨v', hv⟩ := h.on_elem_drop v a1 a2
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1 a2 a3
+    obtain ⟨v', hv⟩ := h.on_table_copy v a1 a2 a3
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1 a2
+    obtain ⟨v', hv⟩ := h.on_table_grow v a1 a2
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1 a2
+    obtain ⟨v', hv⟩ := h.on_table_size v a1 a2
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1 a2
+    obtain ⟨v', hv⟩ := h.on_table_fill v a1 a2
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1 a2
+    obtain ⟨v', hv⟩ := h.on_simd v a1 a2
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1 a2 a3
+    obtain ⟨v', hv⟩ := h.on_simd_lane v a1 a2 a3
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1 a2 a3
+    obtain ⟨v', hv⟩ := h.on_simd_memory v a1 a2 a3
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1 a2 a3 a4
+    obtain ⟨v', hv⟩ := h.on_simd_memory_lane v a1 a2 a3 a4
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1 a2 a3
+    obtain ⟨v', hv⟩ := h.on_simd_const v a1 a2 a3
+    exact ⟨.Ok (), v', hv⟩
+  · intro v a1 a2 a3
+    obtain ⟨v', hv⟩ := h.on_simd_shuffle v a1 a2 a3
     exact ⟨.Ok (), v', hv⟩
 
 set_option maxHeartbeats 4000000 in

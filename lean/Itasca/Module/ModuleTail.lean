@@ -1,4 +1,5 @@
 import Itasca.Module.ModuleDataTyping
+import Itasca.Module.ModuleData
 import Itasca.Module.ModuleNames
 
 open Aeneas Aeneas.Std
@@ -112,7 +113,8 @@ theorem module.validate_tail_with.spec {V : Type} (visitor : module.ModuleVisito
     module.validate_tail_with visitor data start env profile v ⦃ r => match r.1 with
       | .Ok tail => ModuleBinary.At (fun segments bytes => ModuleTail.Encoding segments bytes profile) data start
           (tail.data.val.map ModuleData.raw) (Slice.len data) ∧
-          ∀ segment ∈ tail.data.val, ModuleData.Valid env segment
+          (∀ segment ∈ tail.data.val, ModuleData.Valid env segment) ∧
+          ∀ count, env.data_count = some count → count.val = tail.data.val.length
       | .Err _ => True ⦄ := by
   unfold module.validate_tail_with module.validate_tail_with_loop
   apply loop.spec_decr_nat (fun s => data.length - s.2.2.1.val)
@@ -128,7 +130,20 @@ theorem module.validate_tail_with.spec {V : Type} (visitor : module.ModuleVisito
     · rename_i hstop
       have heq : pos = Slice.len data := by apply UScalar.eq_of_val_eq; scalar_tac
       obtain ⟨bytes, hp, hs⟩ := hbytes
-      exact ⟨⟨bytes, hp.encoding, heq ▸ hs⟩, hvalid⟩
+      cases hcount : env.data_count with
+      | none =>
+        simp only [WP.spec_ok]
+        exact ⟨⟨bytes, hp.encoding, heq ▸ hs⟩, hvalid, by simp [hcount]⟩
+      | some count =>
+        step
+        split
+        · simp
+        · simp only [WP.spec_ok]
+          refine ⟨⟨bytes, hp.encoding, heq ▸ hs⟩, hvalid, ?_⟩
+          intro other ho
+          have he : other = count := Option.some.inj ho.symm
+          subst other
+          scalar_tac
     · rename_i hmore
       have hlt : pos.val < data.length := by scalar_tac
       obtain ⟨r, hr, hh⟩ := WP.spec_imp_exists (module.read_section_header.spec data pos)
@@ -192,7 +207,8 @@ theorem module.validate_tail.spec (data : Slice U8) (start : Usize) (env : modul
     module.validate_tail data start env profile ⦃ r => match r with
       | .Ok tail => ModuleBinary.At (fun segments bytes => ModuleTail.Encoding segments bytes profile) data start
           (tail.data.val.map ModuleData.raw) (Slice.len data) ∧
-          ∀ segment ∈ tail.data.val, ModuleData.Valid env segment
+          (∀ segment ∈ tail.data.val, ModuleData.Valid env segment) ∧
+          ∀ count, env.data_count = some count → count.val = tail.data.val.length
       | .Err _ => True ⦄ := by
   obtain ⟨⟨r, state⟩, hr, hp⟩ := WP.spec_imp_exists
     (module.validate_tail_with.spec module.EmptyModuleVisitor.Insts.ItascaModuleModuleVisitor

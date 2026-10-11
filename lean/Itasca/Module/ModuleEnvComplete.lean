@@ -14,9 +14,10 @@ theorem Chain.profile_complete {profile raw n bytes} (h : Chain raw n bytes prof
     (data : Slice U8) (env : module.Env) (decls : Declarations) (pos next : Usize) (last : U8)
     (hb : Wasm.BytesAt data pos bytes next) (hstop : StopAt data next)
     (hready : Ready raw n decls env) (hbound : Bounded env pos.val)
-    (hlast : last.val ≤ n) (hreq : Requirements raw profile) :
+    (hlast : last.val ≤ n) (hreq : Requirements raw profile)
+    (hallowed : ModuleTypesAllowed profile {raw with codes := [], data := []}) :
     ∃ result finalDecls, parseLoop data env pos last profile = .ok (.Ok (result, next), ()) ∧
-      Ready raw 9 finalDecls result := by
+      Ready raw 10 finalDecls result := by
   induction h generalizing env decls pos last with
   | @done profile bytes hc =>
     refine ⟨env, decls, ?_, hready⟩
@@ -29,28 +30,28 @@ theorem Chain.profile_complete {profile raw n bytes} (h : Chain raw n bytes prof
     obtain ⟨afterCustoms, hcustoms, hsection⟩ := hfirst.split
     have hcustomeq := module.validate_env_with_loop.complete_customs data env pos afterCustoms last ⟨_, hc, hcustoms⟩ profile
     have hbound' : Bounded env afterCustoms.val := hbound.mono (by have := hcustoms.length; omega)
-    have hlo : 1 ≤ id.val := by omega
-    have hhi : id.val ≤ 9 := by omega
-    have hready' : Ready raw (id.val - 1) decls env := by simpa only [hid, Nat.add_sub_cancel] using hready
+    have hlo : 1 ≤ (sectionRank id).val := by omega
+    have hhi : (sectionRank id).val ≤ 10 := by omega
+    have hready' : Ready raw ((sectionRank id).val - 1) decls env := by simpa only [hid, Nat.add_sub_cancel] using hready
     rcases hbody with ⟨hempty, rfl⟩ | hpresent
     · have hend := hsection.empty
       subst middle
       have hr : Ready raw (n + 1) decls env := by simpa only [hid] using hready'.absent hlo hhi hempty
-      obtain ⟨result, finalDecls, hrun, hr⟩ := ih env decls afterCustoms last hremaining hr hbound' (by omega) hreq
+      obtain ⟨result, finalDecls, hrun, hr⟩ := ih env decls afterCustoms last hremaining hr hbound' (by omega) hreq hallowed
       exact ⟨result, finalDecls, hcustomeq.trans hrun, hr⟩
     · obtain ⟨payloadStart, hh, hencoding⟩ := At.section_split
-        (show At (SectionEncoding id (fun u bs => Payload raw id.val u bs profile)) data afterCustoms () middle from ⟨_, hpresent, hsection⟩)
+        (show At (SectionEncoding id (fun u bs => Payload raw (sectionRank id).val u bs profile)) data afterCustoms () middle from ⟨_, hpresent, hsection⟩)
       have hboundPayload := hbound'.mono (Nat.le_of_lt hh.span.1)
       obtain ⟨updated, hread, heffect⟩ := module.decode_env_section.profile_complete data payloadStart id env decls raw middle profile
-        hlo hhi hencoding (hreq id.val decls env hlo hhi hready') hready' hboundPayload
+        hlo hhi hencoding (hreq (sectionRank id).val decls env hlo hhi hready') hready' hboundPayload hallowed
       have hrep := heffect.represents hready'.represents hready'.phase (by omega)
-      have hr : Ready raw (n + 1) (update raw id.val decls) updated := by
+      have hr : Ready raw (n + 1) (update raw (sectionRank id).val decls) updated := by
         simpa only [hid] using hready'.updated hlo hhi hrep
       have hupdated : Bounded updated middle.val := by
         have hs := module.decode_env_section.profile_spec data payloadStart id env decls profile hboundPayload
         simp only [hread, WP.spec_ok] at hs
         exact hs.choose_spec.2
-      obtain ⟨result, finalDecls, hrun, hr⟩ := ih updated (update raw id.val decls) middle id hremaining hr hupdated (by omega) hreq
+      obtain ⟨result, finalDecls, hrun, hr⟩ := ih updated (update raw (sectionRank id).val decls) middle (sectionRank id) hremaining hr hupdated (by omega) hreq hallowed
       refine ⟨result, finalDecls, hcustomeq.trans ?_, hr⟩
       exact (module.validate_env_with_loop.complete_section data env updated afterCustoms payloadStart middle last id
         hh hlo (by omega) (by omega) hread).trans hrun
@@ -59,10 +60,11 @@ theorem Chain.complete {raw n bytes} (h : Chain raw n bytes)
     (data : Slice U8) (env : module.Env) (decls : Declarations) (pos next : Usize) (last : U8)
     (hb : Wasm.BytesAt data pos bytes next) (hstop : StopAt data next)
     (hready : Ready raw n decls env) (hbound : Bounded env pos.val)
-    (hlast : last.val ≤ n) (hreq : Requirements raw) :
+    (hlast : last.val ≤ n) (hreq : Requirements raw)
+    (hallowed : ModuleTypesAllowed .Wasm1 {raw with codes := [], data := []}) :
     ∃ result finalDecls, parseLoop data env pos last = .ok (.Ok (result, next), ()) ∧
-      Ready raw 9 finalDecls result := by
-  exact h.profile_complete data env decls pos next last hb hstop hready hbound hlast hreq
+      Ready raw 10 finalDecls result := by
+  exact h.profile_complete data env decls pos next last hb hstop hready hbound hlast hreq hallowed
 
 end Itasca.ModuleEnv
 
@@ -78,7 +80,7 @@ theorem module.validate_env.profile_complete (data : Slice U8) (raw : ModuleBina
     (hraw : raw = decls.module raw.codes raw.data)
     (hstop : StopAt data next) (hrequirements : Requirements raw profile) :
     ∃ env finalDecls, module.validate_env data profile = .ok (.Ok (env, next)) ∧
-      Ready raw 9 finalDecls env := by
+      Ready raw 10 finalDecls env := by
   obtain ⟨bytes, hp, hs⟩ := hprefix
   obtain ⟨suffix, hchain, hbytes⟩ := hp.chain raw.codes raw.data
   have hchain' : Chain raw 0 suffix profile := by simpa only [← hraw] using hchain
@@ -87,9 +89,13 @@ theorem module.validate_env.profile_complete (data : Slice U8) (raw : ModuleBina
   have hread := module.read_header.complete data start hheader
   obtain ⟨initial, hnew, hrep, _, _, hbound, hphase⟩ := WP.spec_imp_exists module.Env.new.declarations
   have hready : Ready raw 0 {} initial := by
-    refine ⟨hrep, hphase, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;> omega
+    refine ⟨hrep, hphase, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;> omega
+  have hallowed : ModuleTypesAllowed profile {raw with codes := [], data := []} := by
+    have he := congrArg (fun (value : ModuleBinary.Module) => {value with codes := [], data := []}) hraw
+    rw [he]
+    exact hp.allowed
   obtain ⟨env, finalDecls, hrun, hready⟩ := hchain'.profile_complete data initial {} start next 0#u8
-    hsections hstop hready (hbound.mono (Nat.zero_le _)) (by simp) hrequirements
+    hsections hstop hready (hbound.mono (Nat.zero_le _)) (by simp) hrequirements hallowed
   refine ⟨env, finalDecls, ?_, hready⟩
   simp [module.validate_env, module.validate_env_with, hnew, hread,
     core.result.Result.Insts.CoreOpsTry.branch, hrun]
@@ -100,7 +106,7 @@ theorem module.validate_env.complete (data : Slice U8) (raw : ModuleBinary.Modul
     (hraw : raw = decls.module raw.codes raw.data)
     (hstop : StopAt data next) (hrequirements : Requirements raw) :
     ∃ env finalDecls, module.validate_env data .Wasm1 = .ok (.Ok (env, next)) ∧
-      Ready raw 9 finalDecls env := by
+      Ready raw 10 finalDecls env := by
   exact module.validate_env.profile_complete data raw .Wasm1 decls next hprefix hraw hstop hrequirements
 
 end Itasca

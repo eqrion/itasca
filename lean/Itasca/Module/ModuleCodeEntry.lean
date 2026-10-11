@@ -1,3 +1,4 @@
+import Itasca.Binary.WasmDeclaredReferences
 import Itasca.Module.ModuleCodeContext
 import Itasca.Module.ModuleCodeBinary
 import Itasca.Body.Wasm1Soundness
@@ -36,6 +37,7 @@ structure Witness {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
   locals_bytes : ModuleBinary.At (ModuleBinary.VecEncoding ModuleBinary.LocalEncoding)
     data content groups bodyStart
   locals_bound : (ModuleLocals.declared groups).length ≤ limits.MAX_LOCALS.val
+  locals_allowed : ∀ group ∈ groups, ModuleBinary.ValueTypeAllowed profile group.2
   context_locals : ctx.locals.val = ft.params.val ++ ModuleLocals.declared groups
   context_results : ctx.results.val = ft.results.val
   body_bytes : Wasm.BytesAt data bodyStart body.val finish
@@ -75,7 +77,7 @@ theorem Witness.validated {V : Type} {visitor : code.OpVisitor V} {data env inde
   refine ⟨⟨w.groups, ops⟩, ModuleBinary.codeEncoding_of_parts w.header w.extent
     w.locals_bytes w.body_bytes hbytes, w.index_lt, ?_, w.locals_bound⟩
   rw [w.index_type]
-  refine ⟨w.type_lt, ?_, ?_⟩
+  refine ⟨w.type_lt, ?_, ?_, w.locals_allowed, hbytes.declared _⟩
   · rw [w.function_type]
     unfold Wasm.FunctionTyped at htyped
     rw [body_context w.context_locals w.context_results hbt] at htyped
@@ -135,14 +137,14 @@ theorem module.validate_code_entry_with.pipeline_of_body_total {V : Type} (visit
             have hbytes := hhpost.1.mp rfl
             simp
             step
-            obtain ⟨r, hl, hlpost⟩ := WP.spec_imp_exists (module.decode_locals.spec data content)
+            obtain ⟨r, hl, hlpost⟩ := WP.spec_imp_exists (module.decode_locals.spec data content profile)
             rw [hl]
             cases r with
             | Err e =>
                 simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
             | Ok pair =>
                 obtain ⟨declared, bodyStart⟩ := pair
-                obtain ⟨groups, hg, hd, hcap⟩ := hlpost
+                obtain ⟨groups, hg, hd, hcap, hallowed⟩ := hlpost
                 simp
                 split
                 · simp
@@ -192,7 +194,7 @@ theorem module.validate_code_entry_with.pipeline_of_body_total {V : Type} (visit
                                 content := content, bodyStart := bodyStart, body := s3, size := size
                                 startedState := started, index_lt := hi, index_type := type_idx_post.symm
                                 type_lt := hti, function_type := ?_, header := hp, extent := ?_
-                                locals_bytes := hg, locals_bound := ?_, context_locals := ?_
+                                locals_bytes := hg, locals_bound := ?_, locals_allowed := hallowed, context_locals := ?_
                                 context_results := ?_, body_bytes := ?_, function_start := hstart
                                 body_accepted := hb }⟩
                               · simpa [t_post] using ft_post.symm

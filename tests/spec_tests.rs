@@ -135,6 +135,9 @@ fn valtype(t: itasca::ValueType) -> &'static str {
         ValueType::I64 => "i64",
         ValueType::F32 => "f32",
         ValueType::F64 => "f64",
+        ValueType::V128 => "v128",
+        ValueType::FuncRef => "funcref",
+        ValueType::ExternRef => "externref",
     }
 }
 
@@ -155,7 +158,11 @@ fn ours(t: &itasca::ExternType) -> String {
             format!("func({})->({})", ps.join(","), rs.join(","))
         }
         ExternType::Table(tt) => format!(
-            "table funcref {}",
+            "table {} {}",
+            match tt.elem {
+                itasca::ElemType::FuncRef => "funcref",
+                itasca::ElemType::ExternRef => "externref",
+            },
             limits(tt.limits.min.into(), tt.limits.max.map(u64::from))
         ),
         ExternType::Memory(mt) => format!(

@@ -16,8 +16,8 @@ theorem signature (opcode : U8) (op : Operation) (hmap : NumericOp opcode op)
   unfold NumericOp opcodeMeaning at hmap
   split at hmap <;> simp only [Option.some.injEq, reduceCtorEq] at hmap <;> try contradiction
   all_goals subst op
-  all_goals cases ht; simp [Operation.inputs, unary, binary, test, relation, conversion, numType_value,
-    Translate.valueType]
+  all_goals cases ht; simp [Operation.inputs, unary, binary, test, relation, conversion, valueType,
+    Translate.valueType, valtype_numtype]
 
 end Itasca.Numeric
 
@@ -79,9 +79,10 @@ theorem Frame.step_select {st} (f : Frame st) (data : Slice U8) (env : module.En
     (hr : Sequence.Realizes f.current.polymorphic_base f.operands (front ++ ins)) :
     StepResult f data env ctx 0x1B#u8 next (front ++ outs) := by
   cases ht with
-  | select_impl _ t _ _ _ _ _ _ _ =>
+  | select_impl _ t _ _ _ hsub htype _ _ =>
+      obtain ⟨hfun, hext⟩ := StackSemantics.select_type_not_reference hsub htype
       obtain ⟨value, s, after, hs, hc, hp, hv, hl, _, hout⟩ :=
-        code.read_select.complete st f.outer f.operands front t f.vals f.base_eq hsize
+        code.read_select.complete st f.outer f.operands front t f.vals f.base_eq hsize hfun hext
           (by simpa [f.poly_eq] using hr)
       apply same_ctrls f data env ctx 0x1B#u8 next _ s after _ (hp.trans hb.empty.symm) hc hv hl hout
       simp [hs, code.OpVisitor.on_select.default, code.visit, core.result.Result.Insts.CoreOpsTry.branch]

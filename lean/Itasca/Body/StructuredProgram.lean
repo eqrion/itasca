@@ -178,7 +178,7 @@ theorem execute_block {st : code.OpIterState} (f : Frame st) (data : Slice U8)
     have hc := hb.ctrls; have hp := hb.pos; have hs := hb.size; have hm := Body.byte_limit_room
     omega
   obtain ⟨⟨_, s⟩, hr, rfl, hp, hv, hc⟩ := WP.spec_imp_exists
-    (code.read_block.complete {st with pos := pos} data bt next hspan hcap)
+    (code.read_block.complete {st with pos := pos} data bt next hspan hcap (by assumption))
   dsimp only at hp hv hc
   have hstep : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       {st with pos := pos} data env ctx code.OP_BLOCK () = .ok (.Ok (), s, ()) := by
@@ -198,7 +198,7 @@ theorem execute_loop {st : code.OpIterState} (f : Frame st) (data : Slice U8)
     have hc := hb.ctrls; have hp := hb.pos; have hs := hb.size; have hm := Body.byte_limit_room
     omega
   obtain ⟨⟨_, s⟩, hr, rfl, hp, hv, hc⟩ := WP.spec_imp_exists
-    (code.read_loop.complete {st with pos := pos} data bt next hspan hcap)
+    (code.read_loop.complete {st with pos := pos} data bt next hspan hcap (by assumption))
   dsimp only at hp hv hc
   have hstep : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       {st with pos := pos} data env ctx code.OP_LOOP () = .ok (.Ok (), s, ()) := by
@@ -223,7 +223,7 @@ theorem execute_if {st : code.OpIterState} (f : Frame st) (data : Slice U8)
     omega
   obtain ⟨⟨_, s⟩, hr, rfl, hp, rest, hv, hl, hc, ht'⟩ := WP.spec_imp_exists
     (code.read_if.complete {st with pos := pos} data bt next f.outer f.operands front
-      hspan f.vals f.base_eq hcap (by simpa [Control.polymorphic, f.ctrls] using ht))
+      hspan f.vals f.base_eq hcap (by simpa [Control.polymorphic, f.ctrls] using ht) (by assumption))
   dsimp only at hp hv hl hc ht'
   have hstep : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       {st with pos := pos} data env ctx code.OP_IF () = .ok (.Ok (), s, ()) := by

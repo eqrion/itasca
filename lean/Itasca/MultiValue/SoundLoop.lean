@@ -1,3 +1,4 @@
+import Itasca.MultiValue.BodyTotal
 import Itasca.MultiValue.Execution
 
 open Aeneas Aeneas.Std

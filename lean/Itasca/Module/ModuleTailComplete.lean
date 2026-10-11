@@ -22,12 +22,25 @@ theorem custom_decode {data : Slice U8} {pos next : Usize} {bytes : List U8}
   exact ⟨first, custom, hh, hc⟩
 
 theorem loop_eof (data : Slice U8) (env : module.Env) (segments : alloc.vec.Vec module.Data) (seen : Bool)
-    (profile : ValidationProfile := .Wasm1) :
+    (profile : ValidationProfile := .Wasm1)
+    (hcount : ∀ count, env.data_count = some count → count.val = segments.val.length) :
     module.validate_tail_with_loop module.EmptyModuleVisitor.Insts.ItascaModuleModuleVisitor
       data env profile () segments (Slice.len data) seen = .ok (.Ok ⟨segments⟩, ()) := by
+  have hb : module.validate_tail_with_loop.body module.EmptyModuleVisitor.Insts.ItascaModuleModuleVisitor
+      data env profile () segments (Slice.len data) seen ⦃ r =>
+      r = .done ((.Ok ⟨segments⟩), ()) ⦄ := by
+    unfold module.validate_tail_with_loop.body
+    simp only [ge_iff_le, le_refl, ↓reduceIte]
+    cases hc : env.data_count with
+    | none => simp
+    | some count =>
+      step
+      have hlen : r.val = segments.val.length := by have := hcount count hc; scalar_tac
+      simp [hlen]
+  obtain ⟨r, hr, rfl⟩ := WP.spec_imp_exists hb
   unfold module.validate_tail_with_loop
   rw [loop]
-  simp [module.validate_tail_with_loop.body]
+  simp [hr]
 
 theorem customs_prefix {profile} {data : Slice U8} {env : module.Env} {segments : alloc.vec.Vec module.Data}
     {pos next : Usize} {seen : Bool} {bytes : List U8}
@@ -83,7 +96,8 @@ private theorem optional_cases {α : Type} {id R absent value bytes}
 
 theorem loop_complete {profile} {data : Slice U8} {env : module.Env} {segments : alloc.vec.Vec module.Data}
     {pos : Usize} (hb : At (fun segments bytes => Encoding segments bytes profile) data pos (segments.val.map ModuleData.raw) (Slice.len data))
-    (hv : ∀ s ∈ segments.val, ModuleData.Valid env s) :
+    (hv : ∀ s ∈ segments.val, ModuleData.Valid env s)
+    (hcount : ∀ count, env.data_count = some count → count.val = segments.val.length) :
     module.validate_tail_with_loop module.EmptyModuleVisitor.Insts.ItascaModuleModuleVisitor
       data env profile () (alloc.vec.Vec.new _) pos false = .ok (.Ok ⟨segments⟩, ()) := by
   obtain ⟨bytes, hencoding, hspan⟩ := hb
@@ -101,9 +115,9 @@ theorem loop_complete {profile} {data : Slice U8} {env : module.Env} {segments :
     subst segments
     have hpos := hsec.empty
     subst afterSection
-    exact customs_prefix htrailing htrail (loop_eof data env (alloc.vec.Vec.new _) false profile)
+    exact customs_prefix htrailing htrail (loop_eof data env (alloc.vec.Vec.new _) false profile hcount)
   · exact data_prefix ⟨sectionBytes, hs, hsec⟩ hv
-      (customs_prefix htrailing htrail (loop_eof data env segments true profile))
+      (customs_prefix htrailing htrail (loop_eof data env segments true profile hcount))
 
 end Itasca.ModuleTail
 
@@ -114,9 +128,10 @@ theorem module.validate_tail.complete {profile} {data : Slice U8} {pos : Usize} 
     (tail : module.Tail)
     (hb : ModuleBinary.At (fun segments bytes => ModuleTail.Encoding segments bytes profile) data pos
       (tail.data.val.map ModuleData.raw) (Slice.len data))
-    (hv : ∀ s ∈ tail.data.val, ModuleData.Valid env s) :
+    (hv : ∀ s ∈ tail.data.val, ModuleData.Valid env s)
+    (hcount : ∀ count, env.data_count = some count → count.val = tail.data.val.length) :
     module.validate_tail data pos env profile = .ok (.Ok tail) := by
-  have h := ModuleTail.loop_complete hb hv
+  have h := ModuleTail.loop_complete hb hv hcount
   cases tail
   simp [module.validate_tail, module.validate_tail_with, h]
 

@@ -1,13 +1,14 @@
 import Itasca.Module.BodyContext
 import Itasca.Binary.ModuleBinary
+import Itasca.Module.TypingDataUse
 import Itasca.Profile.Instructions
+import Itasca.Profile.DeclaredReferences
 
 open Aeneas Aeneas.Std
 
 namespace Itasca.CodeEntry
 
-/-- The statically resolved module tables used by body validation. Segment
-spaces are supplied later; module-level local and label spaces are empty. -/
+/-- The statically resolved module tables; local and label spaces are empty. -/
 structure ModuleContext (env : module.Env) (C : context) : Prop where
   types : C.TYPES = env.types.val.map EnvTranslation.funcType
   funcs : C.FUNCS = env.func_types.val.map EnvTranslation.funcType
@@ -17,14 +18,20 @@ structure ModuleContext (env : module.Env) (C : context) : Prop where
   locals : C.LOCALS = []
   labels : C.LABELS = []
 
+/-- Final segment spaces preserve every index available while validating a body.
+The data-count section supplies the body-visible data space. -/
+structure SegmentContext (env : module.Env) (C : context) : Prop where
+  elems : (EnvTranslation.elementTypes env).IsPrefix C.ELEMS
+  datas : (EnvTranslation.dataTypes env).IsPrefix C.DATAS
+
 def bodyContext (env : module.Env) (params declared results : List types.ValueType) : context :=
   { TYPES := env.types.val.map EnvTranslation.funcType
     FUNCS := env.func_types.val.map EnvTranslation.funcType
     GLOBALS := env.global_types.val.map Translate.globalType
     TABLES := env.table_types.val.map EnvTranslation.tableType
     MEMS := env.mem_types.val.map EnvTranslation.memType
-    ELEMS := []
-    DATAS := []
+    ELEMS := EnvTranslation.elementTypes env
+    DATAS := EnvTranslation.dataTypes env
     LOCALS := (params ++ declared).map Translate.valueType
     LABELS := [.mk_list (results.map Translate.valueType)]
     RETURN := some (.mk_list (results.map Translate.valueType)) }
@@ -42,9 +49,18 @@ structure Typed (env : module.Env) (typeIdx : U32) (entry : ModuleBinary.Code)
     (instructionType env.types.val[typeIdx.val])
   profile : Profile.Instructions validationProfile (bodyContext env env.types.val[typeIdx.val].params.val
     entry.declared env.types.val[typeIdx.val].results.val) entry.body
+  locals_allowed : ∀ group ∈ entry.locals, ModuleBinary.ValueTypeAllowed validationProfile group.2
+  declared : DeclaredReferences.Instructions
+    (env.declared_funcs.val.map (fun idx => uN.mk_uN idx.val)) entry.body
 
 def function (typeIdx : U32) (entry : ModuleBinary.Code) : func :=
   .FUNC (.mk_uN typeIdx.val) (entry.declared.map (fun t => .LOCAL (Translate.valueType t))) entry.body
+
+/-- A body validated without a data-count section cannot contain a data-indexed
+instruction, regardless of control nesting or stack reachability. -/
+theorem Typed.no_data {env typeIdx entry profile} (h : Typed env typeIdx entry profile)
+    (hcount : env.data_count = none) : ModuleBinary.instructionsUseData entry.body = false :=
+  ModuleBinary.typed_no_data h.typed (by simp [bodyContext, EnvTranslation.dataTypes, hcount])
 
 theorem ModuleContext.wf {env C} (h : ModuleContext env C) : wf_context C := by
   have ht := h.tables
@@ -62,13 +78,13 @@ theorem ModuleContext.wf {env C} (h : ModuleContext env C) : wf_context C := by
     rintro _ ⟨mt, _, rfl⟩
     exact EnvTranslation.memType_wf mt
 
-/-- Generated function typing in the full module context. No equality of the
-body API's empty segment spaces with the module's segment spaces is assumed. -/
+/-- Generated function typing in the full module context preserves segment indices. -/
 theorem typed_func_ok {env : module.Env} {typeIdx : U32} {entry : ModuleBinary.Code}
     (hindex : typeIdx.val < env.types.val.length)
     (htyped : Instrs_ok (bodyContext env env.types.val[typeIdx.val].params.val
       entry.declared env.types.val[typeIdx.val].results.val) entry.body
-      (instructionType env.types.val[typeIdx.val])) (C : context) (hc : ModuleContext env C) :
+      (instructionType env.types.val[typeIdx.val])) (C : context) (hc : ModuleContext env C)
+    (hsegments : SegmentContext env C) :
     Func_ok C (function typeIdx entry) (EnvTranslation.funcType (env.types.val[typeIdx.val]'hindex)) := by
   let ft := env.types.val[typeIdx.val]'hindex
   let ps := ft.params.val.map Translate.valueType
@@ -89,7 +105,8 @@ theorem typed_func_ok {env : module.Env} {typeIdx : U32} {entry : ModuleBinary.C
     · change [.mk_list rs] = [.mk_list rs] ++ C.LABELS
       simp [hc.labels]
     · rfl
-  have ht := BodyContext.instrs_transport htyped rfl rfl hcore
+  have ht := BodyContext.instrs_transport_extend (D := localC ++ C) htyped
+    hsegments.elems hsegments.datas hcore
   have hw := (DeclarativeComplete.wellFormed htyped).2
   have he : Expr_ok (localC ++ C) entry.body (.mk_list rs) :=
     .mk_Expr_ok _ _ _ ht
@@ -109,9 +126,10 @@ theorem typed_func_ok {env : module.Env} {typeIdx : U32} {entry : ModuleBinary.C
 
 /-- The Wasm 1.0 certificate specializes the common function-typing bridge. -/
 theorem Typed.func_ok {env : module.Env} {typeIdx : U32} {entry : ModuleBinary.Code}
-    {profile : ValidationProfile} (h : Typed env typeIdx entry profile) (C : context) (hc : ModuleContext env C) :
+    {profile : ValidationProfile} (h : Typed env typeIdx entry profile) (C : context) (hc : ModuleContext env C)
+    (hsegments : SegmentContext env C) :
     Func_ok C (function typeIdx entry) (EnvTranslation.funcType (env.types.val[typeIdx.val]'h.type_lt)) :=
-  typed_func_ok h.type_lt h.typed C hc
+  typed_func_ok h.type_lt h.typed C hc hsegments
 
 /-- The function-body soundness result uses this same context when its locals
 and results are the vectors constructed by the code-entry validator. -/

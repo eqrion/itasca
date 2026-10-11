@@ -95,7 +95,7 @@ theorem dispatch_call {V : Type} (visitor : code.OpVisitor V)
 theorem dispatch_call_indirect {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_CALL_INDIRECT v =
-      CoreVisitor.run (code.read_call_indirect st data env) (fun v s a => invoke visitor v (.op s (.call_indirect a))) v :=
+      CoreVisitor.run (code.read_call_indirect st data env) (fun v s a => invoke visitor v (.op s (.call_indirect a 0#u32))) v :=
   code.step_call_indirect.dispatch visitor st data env ctx v
 
 theorem dispatch_memory_size {V : Type} (visitor : code.OpVisitor V)

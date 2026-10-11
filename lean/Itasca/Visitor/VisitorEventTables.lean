@@ -1,3 +1,4 @@
+import Itasca.MultiValue.NumericExtensions
 import Itasca.Visitor.VisitorEventMeaning
 import Mathlib.Tactic.IntervalCases
 
@@ -127,5 +128,29 @@ theorem MemoryHook.dispatch {V : Type} (visitor : code.OpVisitor V) (v : V)
     code.visit_memory visitor v st hook.opcode arg =
       invoke visitor v (.op st (.memory hook arg)) := by
   simp only [visit_memory, MemoryHook.ofOpcode_opcode]
+
+end Itasca.VisitorTrace
+
+namespace Itasca.VisitorTrace
+
+/-- Every scalar-extension callback names exactly its independently specified instruction. -/
+theorem ExtendedNumericHook.meaning (hook : ExtendedNumericHook) :
+    match hook.encoding.2 with
+    | none => ∃ operation,
+        MultiValue.NumericExtensions.signMeaning hook.encoding.1 = some operation ∧
+        operation.instruction = hook.instruction
+    | some subopcode => ∃ operation,
+        MultiValue.NumericExtensions.saturatingMeaning subopcode = some operation ∧
+        operation.instruction = hook.instruction := by
+  cases hook <;> exact ⟨_, rfl, rfl⟩
+
+/-- Extracted extension dispatch invokes the independently named callback. -/
+theorem ExtendedNumericHook.dispatch {V : Type} (visitor : code.OpVisitor V)
+    (v : V) (st : code.OpIterState) (hook : ExtendedNumericHook) :
+    (match hook.encoding.2 with
+    | none => code.visit_sign_extension visitor v st hook.encoding.1
+    | some subopcode => code.visit_saturating visitor v st subopcode) =
+      invoke visitor v (.op st (.extendedNumeric hook)) := by
+  cases hook <;> rfl
 
 end Itasca.VisitorTrace

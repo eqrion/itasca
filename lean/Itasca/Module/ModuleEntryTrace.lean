@@ -70,6 +70,7 @@ theorem Witness.trace_sound {V : Type} {visitor : code.OpVisitor V}
   obtain ⟨ha, tokens, next, hc, hend⟩ := htrace.accepted
   obtain ⟨ops, hb, ht, hp⟩ := code.validate_body_with.wasm1_sound visitor
     w.body env w.ctx bt hr w.startedState v' w.body_accepted
+  have hdeclared := hb.declared (env.declared_funcs.val.map (fun idx => uN.mk_uN idx.val))
   have hcode := ModuleBinary.codeEncoding_of_parts w.header w.extent w.locals_bytes w.body_bytes hb
   obtain ⟨tokens', next', hb, hend', hsyntax⟩ := hb
   have he : next' = next := UScalar.eq_of_val_eq (hend'.trans hend.symm)
@@ -84,7 +85,7 @@ theorem Witness.trace_sound {V : Type} {visitor : code.OpVisitor V}
     rfl, ha, hc, hend, hsyntax, ht,
     w.content, w.size, w.header, w.extent, w.locals_bytes⟩
   · simpa [hstart, List.append_assoc] using hlog
-  · refine ⟨w.type_lt, ?_, ?_⟩
+  · refine ⟨w.type_lt, ?_, ?_, w.locals_allowed, ?_⟩
     · rw [w.function_type]
       unfold Wasm.FunctionTyped at ht
       rw [body_context w.context_locals w.context_results hbt] at ht
@@ -93,6 +94,7 @@ theorem Witness.trace_sound {V : Type} {visitor : code.OpVisitor V}
     · rw [w.function_type]
       rw [body_context w.context_locals w.context_results hbt] at hp
       exact hp
+    · exact hdeclared
   · exact ⟨w.type_lt, by simpa [w.function_type] using w.context_locals,
       by simpa [w.function_type] using w.context_results⟩
 

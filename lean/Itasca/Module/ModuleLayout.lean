@@ -30,14 +30,6 @@ theorem CodeAt.optional {profile data start entries finish} (h : CodeAt data sta
       · have := hh.span; omega
     exact ⟨[], .absent, Wasm.BytesAt.nil data start hb⟩
 
-theorem CodeAt.segmentFree {profile data start entries finish} (h : CodeAt data start entries finish profile)
-    {entry : Code} (hm : entry ∈ entries) : Forall BodyContext.SegmentFree entry.body := by
-  rcases h with ⟨bytes, hs, _⟩ | ⟨he, _, _⟩
-  · obtain ⟨_, _, _, hv, _⟩ := hs
-    obtain ⟨_, _, _, _, _, _, _, hbody, _, _⟩ := hv.member hm
-    exact hbody.segmentFree
-  · simp [he] at hm
-
 /-- Independent byte spans arranged exactly as the greedy environment/code/tail
 parser consumes them. The raw module and all per-body limits are unchanged. -/
 structure Layout (data : Slice U8) (raw : Module) (decls : ModuleEnv.Declarations)
@@ -74,18 +66,21 @@ preceding environment scan, through the next data header or EOF. -/
 theorem normalize {profile} (data : Slice U8) (raw : Module)
     (h : ModuleEncodingWithinLimits raw data.val profile) :
     ∃ decls codePos tailPos, Layout data raw decls codePos tailPos profile := by
-  obtain ⟨types, imports, functions, tables, memories, globals, exports, start, elements,
-    codes, datas, customs, ht, hi, hf, hta, hm, hg, he, hst, hel, hc, hd, hcustom, hbytes⟩ := h.2
+  obtain ⟨types, imports, functions, tables, memories, globals, exports, start, elements, dataCount,
+    codes, datas, customs, ht, hi, hf, hta, hm, hg, he, hst, hel, hcount, hc, hd, hcustom, hbytes, hallowed, hcountValid⟩ := h.2
   let decls : ModuleEnv.Declarations :=
     ⟨raw.types, raw.imports, raw.functions, raw.tables, raw.memories, raw.globals,
-      raw.exports, raw.start, raw.elements⟩
+      raw.exports, raw.start, raw.elements, raw.dataCount⟩
   have hr : raw = decls.module raw.codes raw.data := by cases raw; rfl
   let before := magicVersion ++ types ++ imports ++ functions ++ tables ++ memories ++
-    globals ++ exports ++ start ++ elements
+    globals ++ exports ++ start ++ elements ++ dataCount
   have hp : ∀ cs, CustomsEncoding cs → ModuleEnv.PrefixEncoding decls (before ++ cs) profile := by
     intro cs hs
-    exact ⟨types, imports, functions, tables, memories, globals, exports, start, elements,
-      cs, ht, hi, hf, hta, hm, hg, he, hst, hel, hs, rfl⟩
+    refine ⟨types, imports, functions, tables, memories, globals, exports, start, elements, dataCount,
+      cs, ht, hi, hf, hta, hm, hg, he, hst, hel, hcount, hs, rfl, ?_⟩
+    exact ⟨hallowed.1, hallowed.2.1, hallowed.2.2.1, hallowed.2.2.2.1,
+      by simp [decls, ModuleEnv.Declarations.module], hallowed.2.2.2.2.2.1,
+      by simp [decls, ModuleEnv.Declarations.module]⟩
   obtain ⟨codeCustoms, codeBytes, hcc, hcode, hcodes⟩ := hc
   rcases optional_cases hcode with ⟨hnoCode, hcempty⟩ | hcode
   · obtain ⟨dataCustoms, dataBytes, hdc, hdata, hdatas⟩ := hd

@@ -19,16 +19,21 @@ theorem function_body {C : context} {f ft} (h : Func_ok C f ft) :
 
 theorem Typed.of_func_ok {profile} {env : module.Env} {C : context} {idx : U32}
     {entry : ModuleBinary.Code} {ft : functype}
-    (hc : ModuleContext env C) (hs : Forall BodyContext.SegmentFree entry.body)
+    (hc : ModuleContext env C)
+    (he : C.ELEMS = EnvTranslation.elementTypes env)
+    (hd : C.DATAS = EnvTranslation.dataTypes env ∨ ModuleBinary.instructionsUseData entry.body = false)
     (hp : ModuleElaboration.FunctionProfile env.types.val idx entry profile)
-    (hf : Func_ok C (function idx entry) ft) : Typed env idx entry profile := by
+    (hf : Func_ok C (function idx entry) ft)
+    (hallowed : ∀ group ∈ entry.locals, ModuleBinary.ValueTypeAllowed profile group.2)
+    (hdeclared : DeclaredReferences.Instructions
+      (env.declared_funcs.val.map (fun idx => uN.mk_uN idx.val)) entry.body) : Typed env idx entry profile := by
   have hi : idx.val < env.types.val.length := by
     simpa [function, hc.types, proj_uN_0] using ModuleElaboration.func_index_bound hf
   have hft := ModuleElaboration.function_type_of_typing hf hc.types
   rw [ModuleElaboration.functionType_lookup hi] at hft
-  obtain ⟨declared, params, results, hd, ht, hb⟩ := function_body hf
+  obtain ⟨declared, params, results, hlocals, ht, hb⟩ := function_body hf
   have hd' : entry.declared.map Translate.valueType = declared := by
-    have he := congrArg (List.map (fun l => match l with | _root_.local.LOCAL t => t)) hd
+    have he := congrArg (List.map (fun l => match l with | _root_.local.LOCAL t => t)) hlocals
     simpa [List.map_map, Function.comp_def] using he
   subst declared
   rw [ht] at hft
@@ -54,7 +59,13 @@ theorem Typed.of_func_ok {profile} {env : module.Env} {C : context} {idx : U32}
     · rfl
   cases hb with
   | mk_Expr_ok ts hbody hw hws =>
-    refine ⟨hi, BodyContext.instrs_transport_of_syntax hbody hs hcore, ?_⟩
-    exact hp.choose_spec.congr_labels _ rfl
+    refine ⟨hi, ?_, hp.choose_spec.congr_labels _ rfl, hallowed, hdeclared⟩
+    rcases hd with hd | hno
+    · apply BodyContext.instrs_transport_extend hbody _ _ hcore
+      · change C.ELEMS.IsPrefix (EnvTranslation.elementTypes env)
+        rw [he]
+      · change C.DATAS.IsPrefix (EnvTranslation.dataTypes env)
+        rw [hd]
+    · exact BodyContext.instrs_transport_of_no_data hbody hno he hcore
 
 end Itasca.CodeEntry

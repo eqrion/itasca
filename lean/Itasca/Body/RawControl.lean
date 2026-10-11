@@ -11,7 +11,7 @@ def BlockDecoded (data : Slice U8) (start : Usize) (bt : code.BlockType)
     (next : Usize) : Prop :=
   ∃ h : start.val < data.length,
     data.val[start.val] = blockByte bt ∧ next.val = start.val + 1 ∧
-      next.val ≤ data.length
+      next.val ≤ data.length ∧ ScalarBlockType bt
 
 end Itasca.Control
 
@@ -26,11 +26,11 @@ theorem code.read_block_type.raw_spec (data : Slice U8) (pos : Usize) :
       | .Err e => e = .UnexpectedEof ∨ e = .InvalidBlockType ⦄ := by
   classical
   by_cases hp : pos.val < data.length
-  · by_cases hb : ∃ bt, data.val[pos.val] = Control.blockByte bt
-    · obtain ⟨bt, hb⟩ := hb
-      apply WP.spec_mono (code.read_block_type.spec data pos bt hp hb)
+  · by_cases hb : ∃ bt, Control.ScalarBlockType bt ∧ data.val[pos.val] = Control.blockByte bt
+    · obtain ⟨bt, hbt, hb⟩ := hb
+      apply WP.spec_mono (code.read_block_type.spec data pos bt hp hb hbt)
       rintro _ ⟨next, rfl, hn⟩
-      exact ⟨hp, hb, hn, by omega⟩
+      exact ⟨hp, hb, hn, by omega, hbt⟩
     · rw [code.read_block_type.invalid data pos hp (by simpa using hb)]
       simp
   · rw [code.read_block_type.eof data pos (by omega)]
@@ -49,12 +49,12 @@ theorem code.read_block.raw_spec (st : code.OpIterState) (data : Slice U8)
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok pair =>
       obtain ⟨bt, next⟩ := pair
-      obtain ⟨hp, hb, hn, hbound⟩ := hout
-      apply WP.spec_mono (code.read_block.spec st data bt hp hb hsize)
+      obtain ⟨hp, hb, hn, hbound, hbt⟩ := hout
+      apply WP.spec_mono (code.read_block.spec st data bt hp hb hsize hbt)
       rintro r ⟨hok, hp', hv, hc⟩ b heq
       have : b = bt := by simpa [hok] using heq.symm
       subst b
-      exact ⟨⟨hp, hb, hp', by omega⟩, hv, hc⟩
+      exact ⟨⟨hp, hb, hp', by omega, hbt⟩, hv, hc⟩
 
 theorem code.read_loop.raw_spec (st : code.OpIterState) (data : Slice U8)
     (hsize : st.ctrls.val.length < Usize.max) :
@@ -69,12 +69,12 @@ theorem code.read_loop.raw_spec (st : code.OpIterState) (data : Slice U8)
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok pair =>
       obtain ⟨bt, next⟩ := pair
-      obtain ⟨hp, hb, hn, hbound⟩ := hout
-      apply WP.spec_mono (code.read_loop.spec st data bt hp hb hsize)
+      obtain ⟨hp, hb, hn, hbound, hbt⟩ := hout
+      apply WP.spec_mono (code.read_loop.spec st data bt hp hb hsize hbt)
       rintro r ⟨hok, hp', hv, hc⟩ b heq
       have : b = bt := by simpa [hok] using heq.symm
       subst b
-      exact ⟨⟨hp, hb, hp', by omega⟩, hv, hc⟩
+      exact ⟨⟨hp, hb, hp', by omega, hbt⟩, hv, hc⟩
 
 theorem code.read_if.raw_spec (st : code.OpIterState) (data : Slice U8)
     (outer segment : List code.StackType)

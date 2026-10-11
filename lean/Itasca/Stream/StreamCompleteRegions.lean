@@ -85,7 +85,7 @@ structure Certificate (data : Slice U8) (raw : ModuleBinary.Module)
   bytes : data.val = source.env.val ++ source.code.val ++ source.tail.val
   bounded : data.length ≤ limits.MAX_MODULE_BYTES.val
   environment : module.validate_env source.env validationProfile = .ok (.Ok (env, Slice.len source.env))
-  ready : ∃ decls, ModuleEnv.Ready raw 9 decls env
+  ready : ∃ decls, ModuleEnv.Ready raw 10 decls env
   entry_bounds : CodeEntry.Bounds env
   profile : Itasca.Profile.Environment validationProfile env
   signature_limits : Itasca.Profile.EnvironmentWithinLimits validationProfile env
@@ -135,7 +135,40 @@ theorem prepare (data : Slice U8) (raw : ModuleBinary.Module) (profile : Validat
     omega
   obtain ⟨hbounds, hprofile, hlimits⟩ := ModuleEnv.profile_accepted_entry_conditions
     environment env (Slice.len environment) profile henvSize henv
-  have htypes := hl.code.typed hready hs hp
+  have htailEnc := hl.tail.on_region htailSpan
+  obtain ⟨segments, hsegments, hvalid⟩ := ModuleTail.materialize
+    tailBytes 0#usize (Slice.len tailBytes) raw finalDecls env htailEnc hs hready
+  let tail : module.Tail := ⟨segments⟩
+  have hmatches := hready.matches tail hsegments
+  have hsemantic := module.validate_env.profile_semantic_spec environment profile
+  rw [henv] at hsemantic
+  simp only [WP.spec_ok] at hsemantic
+  obtain ⟨_, hrep, hv, _, _, hprefix⟩ := hsemantic
+  have hguards := hb.2.guards
+  have hdeclared : ∀ entry ∈ raw.codes, DeclaredReferences.Instructions
+      (env.declared_funcs.val.map (fun idx => uN.mk_uN idx.val)) entry.body := by
+    intro entry hm
+    obtain ⟨j, hj, hjentry⟩ := List.mem_iff_getElem.mp hm
+    have hidx : j < raw.functions.length := by rw [he.code_count]; exact hj
+    have hfun : CodeEntry.function raw.functions[j] entry ∈
+        List.zipWith CodeEntry.function raw.functions raw.codes := by
+      apply List.mem_iff_getElem.mpr
+      refine ⟨j, by simp only [List.length_zipWith]; omega, ?_⟩
+      simp [List.getElem_zipWith, hjentry]
+    have hd := hp.declared _ hfun
+    apply hd.mono
+    intro index hx
+    apply (ModuleReferences.coherent_declared_iff (tables := raw.tables) (memories := raw.memories)
+      (codes := raw.codes) hv.references hv.elements hvalid index).mpr
+    rw [hmatches.1] at hx
+    exact hx
+  have hdataCount : ∀ count, env.data_count = some count → count.val = segments.val.length := by
+    intro count hc
+    have he : raw.dataCount = some count := (hready.dataCount_eq (by decide)).symm.trans hc
+    have hv := hguards.2
+    simpa [DataCountValid, he, ← hsegments] using hv
+  have htail := module.validate_tail.complete tail (by simpa [tail, hsegments] using htailEnc) hvalid hdataCount
+  have htypes := hl.code.typed hready hs hp hguards.1 hguards.2 hdeclared
   have hcount : raw.codes.length = env.func_type_indices.val.length := htypes.length_eq.symm
   have hcode : ∃ entries, StreamFraming.HeaderAt code env entries ∧
       At (Rep (Itasca.Profile.CodeEncodingWithinLimits profile)) code entries raw.codes (Slice.len code) := by
@@ -160,16 +193,6 @@ theorem prepare (data : Slice U8) (raw : ModuleBinary.Module) (profile : Validat
     obtain ⟨_, _, bytes, henc, _⟩ := hcode
     apply ModuleCode.EntriesTyped.of_forall₂ (by simpa using htypes)
     exact henc.locals_within_limits
-  have htailEnc := hl.tail.on_region htailSpan
-  obtain ⟨segments, hsegments, hvalid⟩ := ModuleTail.materialize
-    tailBytes 0#usize (Slice.len tailBytes) raw finalDecls env htailEnc hs hready
-  let tail : module.Tail := ⟨segments⟩
-  have htail := module.validate_tail.complete tail (by simpa [tail, hsegments] using htailEnc) hvalid
-  have hmatches := hready.matches tail hsegments
-  have hsemantic := module.validate_env.profile_semantic_spec environment profile
-  rw [henv] at hsemantic
-  simp only [WP.spec_ok] at hsemantic
-  obtain ⟨_, hrep, hv, _, _, hprefix⟩ := hsemantic
   obtain ⟨bytes, hprefix, _⟩ := hprefix
   have hnames : ∀ entry ∈ env.exports.val, wf_name (ModuleBinary.nameOfBytes entry.name.val) := by
     intro entry hentry

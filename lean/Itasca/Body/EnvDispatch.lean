@@ -82,7 +82,7 @@ theorem code.step_call.dispatch {V : Type} (visitor : code.OpVisitor V)
 theorem code.step_call_indirect.dispatch {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_CALL_INDIRECT v =
-      CoreVisitor.run (code.read_call_indirect st data env) visitor.on_call_indirect v := by
+      CoreVisitor.run (code.read_call_indirect st data env) (fun v s idx => visitor.on_call_indirect v s idx 0#u32) v := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1

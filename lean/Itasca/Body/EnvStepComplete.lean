@@ -162,7 +162,8 @@ theorem callIndirect {st} (f : Frame st) (data : Slice U8) (env : module.Env) (c
     (hsize : st.vals.val.length < Usize.max) :
     StepResult f data env ctx 0x11#u8 next (front ++ outs) := by
   cases ht with
-  | call_indirect _ _ _ params results lim htable _ hi ht _ _ _ =>
+  | call_indirect _ _ _ params results lim htable htabletype hi ht _ _ _ =>
+    obtain ⟨htableenv, hfun⟩ := hc.table_funcref 0#u32 lim htable htabletype
     obtain ⟨ft, hi, ht, hv⟩ := hc.type_lookup idx _ hi ht
     have hparams : ft.params.val.map Translate.valueType = params :=
       list.mk_list.inj (functype.mk_functype.inj hv).1
@@ -172,7 +173,7 @@ theorem callIndirect {st} (f : Frame st) (data : Slice U8) (env : module.Env) (c
     obtain ⟨middle, hd, hz, _⟩ := hb.index_zero idx he
     obtain ⟨⟨_, s⟩, hread, hpost⟩ := WP.spec_imp_exists
       (code.read_call_indirect.complete st data env idx middle next ft hd hz
-        (hc.table_exists htable) hi ht ha f.outer f.operands front f.vals f.base_eq hsize
+        htableenv hfun hi ht ha f.outer f.operands front f.vals f.base_eq hsize
         (by simpa [f.poly_eq, hparams] using hr))
     obtain ⟨rfl, hp⟩ := hpost
     have result := finish f data env ctx code.OP_CALL_INDIRECT front ft.results.val next idx s ⟨rfl, hp⟩

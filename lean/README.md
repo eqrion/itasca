@@ -113,7 +113,7 @@ component functions are private in the consumer API.
 | Worker batches | [StreamBatch](Itasca/Stream/StreamBatch.lean) connects actual operations, ordered entry validation, and exact coverage. [StreamBatchComplete](Itasca/Stream/StreamBatchComplete.lean) derives successful validation from independently typed entries. |
 | Shared body and entry | [Profile/BodyVisitor](Itasca/Profile/BodyVisitor.lean), [EntrySound](Itasca/Profile/EntrySound.lean), and [EntryComplete](Itasca/Profile/EntryComplete.lean) supply both profiles' certificates and visitor contracts. |
 | Wasm 1.0 body | [WasmSoundness](Itasca/Body/WasmSoundness.lean), [Wasm1Soundness](Itasca/Body/Wasm1Soundness.lean), and [WasmComplete](Itasca/Body/WasmComplete.lean) establish termination, generated typing, profile restrictions, and independent completeness. |
-| Multi-value body | [BodyTotal](Itasca/MultiValue/BodyTotal.lean), [Soundness](Itasca/MultiValue/Soundness.lean), and [Complete](Itasca/MultiValue/Complete.lean) connect the shared worker to indexed signatures and Wasm 2.0 typing. |
+| Wasm 2.0 body | [BodyTotal](Itasca/MultiValue/BodyTotal.lean), [Soundness](Itasca/MultiValue/Soundness.lean), and [Complete](Itasca/MultiValue/Complete.lean) connect the shared worker to the complete Core 2.0 grammar, generated typing, and independent reference declarations. |
 | Wasm 1.0 callback traces | [VisitorBodyTrace](Itasca/Visitor/VisitorBodyTrace.lean), [ModuleEntryTrace](Itasca/Module/ModuleEntryTrace.lean), and [VisitorTraceCorollaries](Itasca/Visitor/VisitorTraceCorollaries.lean) identify accepted traces and rejection stopping behavior. |
 
 `ModuleSound.Validated` identifies one independently encoded raw module,
@@ -127,7 +127,7 @@ Completeness starts from `ModuleEncodingWithinLimits`,
 `ModuleSignaturesWithinLimits`, `Elaborates`, generated `Module_ok`, and
 `ModuleElaboration.Profile` for the same raw module. It assumes neither parser
 success nor a local validity checker. Byte bounds include the final body `end`;
-local bounds exclude parameters. Multi-value signatures have at most 1000
+local bounds exclude parameters. Wasm 2.0 signatures have at most 1000
 parameters and results; Wasm 1.0's signature-cap predicate preserves its existing
 parameter behavior. Resource limits remain separate from language validity.
 
@@ -159,15 +159,17 @@ Completeness additionally requires zero-or-one results in stored signatures and
 the body-byte bound. Whole-module proofs derive these environment obligations
 from actual module decoding.
 
-Multi-value body soundness selects results from the actual function type index.
-Its completeness theorem requires bounded signatures and independently encoded,
-typed instructions. The grammar covers scalar instructions, indexed block
-parameters/results, both forms of `if`, loop parameter labels, and branch tables
-with a common `BOT` subtype. Other Wasm 2.0 proposals are outside that grammar.
+Wasm 2.0 body soundness selects results from the actual function type index.
+Completeness requires bounded signatures, independently encoded and typed
+instructions, and the independent `ref.func` declaration condition. The grammar
+covers indexed block parameters/results, branch tables with a common `BOT`
+subtype, sign extension, saturating conversions, reference/table operations,
+bulk memory, and all 236 Core 2.0 SIMD operations. Instruction typing uses the
+actual element types and declared data count from the environment.
 [WasmCompletenessBoundary](Itasca/Examples/WasmCompletenessBoundary.lean) checks
 why Wasm 1.0 branch-table equality must be an explicit restriction of Wasm 2.0.
 
-Wasm 1.0 traces identify all operator hooks, their order, state snapshots, and
+Wasm 1.0 traces identify the profile's operator hooks, their order, state snapshots, and
 immediates, including float bits and branch-table labels. Entry traces add the
 function-start callback and body/local bounds. An observed rejecting callback
 is included, returns the observed error, and is last. Label callbacks occur
@@ -180,6 +182,8 @@ rejected module/entry runs, or an exact error variant for every malformed input.
 [WasmBinaryUnique](Itasca/Binary/WasmBinaryUnique.lean) and
 [ModuleBinaryUnique](Itasca/Binary/ModuleBinaryUnique.lean) prove independent
 decoding uniqueness without typing or implementation-size assumptions.
+[Profile/BinaryUnique](Itasca/Profile/BinaryUnique.lean) extends these guarantees
+to body, code-entry, and complete-module decoding under either profile.
 
 ## Proof architecture
 
@@ -187,7 +191,7 @@ decoding uniqueness without typing or implementation-size assumptions.
 | --- | --- |
 | `Binary/` | Independent instruction/module grammars, readers, UTF-8, and decoding uniqueness. |
 | `Body/` | Wasm 1.0 stack/control semantics, invariants, typing, completeness, and shared-loop refinement. |
-| `MultiValue/` | Indexed signatures, multi-value control semantics, grammar, body proofs, and adapters. |
+| `MultiValue/` | Wasm 2.0 control, numeric extensions, references, bulk memory, SIMD, independent grammar, and body proofs. The internal directory name is retained. |
 | `Profile/` | Shared language/resource predicates and body/entry certificates. |
 | `Visitor/` | Total/accepting hooks, erasure, instrumentation, and callback traces. |
 | `Module/` | Parsing, elaboration, index spaces, metadata, and module certificates. |
@@ -213,7 +217,7 @@ when adding instructions.
 [ScalarContext](Itasca/MultiValue/ScalarContext.lean) records the control-opcode
 boundary and the shared scalar dispatch's dependence on locals.
 [StepContext](Itasca/MultiValue/StepContext.lean) lifts this fact to the
-multi-value dispatcher. Soundness and completeness both use these execution
+Wasm 2.0 dispatcher. Soundness and completeness both use these execution
 equalities; neither needs the other's scalar correctness proof. Dispatch
 equalities should follow the extracted match branches instead of enumerating
 every possible byte. Scalar termination and soundness also share one memory
@@ -221,24 +225,47 @@ opcode-range lemma in [ScalarTotal](Itasca/MultiValue/ScalarTotal.lean).
 
 ### Expanding the supported profile
 
-The current multi-value instruction restriction in
-[Profile/Instructions](Itasca/Profile/Instructions.lean) is `True`: the
-independent binary grammar supplies the supported-instruction boundary. Broader
-SpecTec typing alone therefore does not extend the accepted language. Extend the
+The Wasm 2.0 instruction restriction in
+[Profile/Instructions](Itasca/Profile/Instructions.lean) is `True`: its
+independent binary grammar supplies the supported instruction boundary. Broader
+SpecTec typing alone therefore does not extend the accepted language. Extend
 binary syntax and encoding, implementation dispatch, typing/stack preservation,
 and independent completeness together. Keep language restrictions separate from
 the bounds in [Profile/Types](Itasca/Profile/Types.lean).
 
-Bulk-memory and table-segment instructions also cross a module/body boundary.
-[BodySyntax](Itasca/Module/BodySyntax.lean) currently proves that encoded bodies
-are segment-free, and [BodyContext](Itasca/Module/BodyContext.lean) transports
-typing across segment contexts. Those arguments must be revisited when an
-instruction can observe element or data declarations. Likewise, extend
-[ModuleElaboration](Itasca/Module/ModuleElaboration.lean),
-[ModuleProfile](Itasca/Module/ModuleProfile.lean), and their independent module
-encodings when widening tables, value types, segment forms, or constant
-expressions. Preserve Wasm 1.0 specialization and the existing source and worker
-contracts as the shared module/streaming proofs acquire the new premises.
+The pinned generated specification omits the `C.refs` condition on `ref.func`.
+[DeclaredReferences](Itasca/Profile/DeclaredReferences.lean) supplies an
+independent syntactic condition: every `ref.func` target must occur in the
+module after removing function definitions and the start declaration. Module
+certificates identify that declaration set, and body/entry certificates preserve
+membership for every `ref.func`, including nested instructions. This condition
+is checked alongside generated typing; the vendored specification remains
+unchanged. Function-index bounds remain a separate typing obligation.
+
+[SimdBinary](Itasca/MultiValue/SimdBinary.lean) defines SIMD immediates independently
+of runtime dispatch. [SimdMeaning](Itasca/MultiValue/SimdMeaning.lean) and the lane,
+memory, and bit-pattern meaning modules connect them to generated typing rules.
+[SimdSound](Itasca/MultiValue/SimdSound.lean) and
+[SimdComplete](Itasca/MultiValue/SimdComplete.lean) establish both directions,
+including alignment, lane bounds, shuffle bytes, and valid nonminimal prefix
+encodings. Relaxed SIMD opcodes are excluded.
+
+The pinned SpecTec binary table assigns subopcode 92 to both
+`v128.load32_zero` and `v128.load64_zero`. The independent grammar and Rust
+implementation use the Core 2.0 encodings 92 and 93 respectively after the
+`0xfd` prefix. The proofs use SpecTec's generated typing judgments, not its
+binary decoding relation. This binary-table discrepancy is recorded explicitly;
+it does not require a vendor edit or a new logical assumption.
+
+Bulk-memory and table-segment instructions cross a module/body boundary.
+[BodyContext](Itasca/Module/BodyContext.lean) transports typing while preserving
+existing segment indices and types. Wasm 1.0's restriction on instructions that
+index segments remains in [BodySyntax](Itasca/Module/BodySyntax.lean); it is not
+imposed on Wasm 2.0.
+Changes to tables, value types, segment forms, or constant expressions must also
+update [ModuleElaboration](Itasca/Module/ModuleElaboration.lean),
+[ModuleProfile](Itasca/Module/ModuleProfile.lean), and independent module encodings.
+Preserve the Wasm 1.0 specialization and source/worker contracts throughout.
 
 ## Source patches
 

@@ -337,7 +337,7 @@ theorem code.step.accepted_lift {V : Type} (visitor : code.OpVisitor V)
       rw [code.step_call_indirect.dispatch _ st data env ctx ()] at h
       rw [code.step_call_indirect.dispatch visitor st data env ctx v]
       exact CoreVisitor.run.accepted_lift _ _ _ () v st' () h
-        (fun a => haccept.on_call_indirect v st' a)
+        (fun a => haccept.on_call_indirect v st' a 0#u32)
     by_cases h_local_get : opcode = code.OP_LOCAL_GET
     · subst opcode
       rw [code.step_local_get.dispatch _ st data env ctx ()] at h

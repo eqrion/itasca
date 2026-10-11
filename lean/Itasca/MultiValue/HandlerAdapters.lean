@@ -67,82 +67,27 @@ def MultiValue.branchCore
         Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
     ok (r1, st1)
 
-def MultiValue.callCore
-  (st : _root_.Itasca.code.BodyState) (data : Slice Std.U8)
-  (env : _root_.Itasca.module.Env) (indirect : Bool) :
-  Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
-    _root_.Itasca.code.BodyState)
-  := do
-  let r ← reader.read_u32_leb data st.core.pos
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue val =>
-    let (index, «end») := val
-    let i ← lift (UScalar.cast .Usize index)
-    if indirect
-    then
-      let r1 ← reader.read_byte data «end»
-      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-      match cf1 with
-      | core.ops.control_flow.ControlFlow.Continue val1 =>
-        let (reserved, end1) := val1
-        if reserved != 0#u8
-        then
-          ok (core.result.Result.Err error.OpError.ReservedByteNotZero,
-            { st with core := { st.core with pos := «end» } })
-        else
-          let b ← alloc.vec.Vec.is_empty Global env.table_types
-          if b
-          then
-            ok (core.result.Result.Err error.OpError.UnknownTable,
-              { st with core := { st.core with pos := end1 } })
-          else
-            let i1 := alloc.vec.Vec.len env.types
-            if i >= i1
-            then
-              ok (core.result.Result.Err error.OpError.UnknownType,
-                { st with core := { st.core with pos := end1 } })
-            else
-              let (r2, ois) ←
-                code.pop_with_type { st.core with pos := end1 }
-                  types.ValueType.I32
-              let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-              match cf2 with
-              | core.ops.control_flow.ControlFlow.Continue _ =>
-                let ft ←
-                  alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-                    _root_.Itasca.types.FuncType) env.types i
-                let (r3, ois1) ← code.apply_func_type ois ft
-                ok (r3, { st with core := ois1 })
-              | core.ops.control_flow.ControlFlow.Break residual =>
-                let r3 ←
-                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                    Unit (core.convert.FromSame _root_.Itasca.error.OpError)
-                    residual
-                ok (r3, { st with core := ois })
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r2 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-        ok (r2, { st with core := { st.core with pos := «end» } })
-    else
-      let i1 := alloc.vec.Vec.len env.func_types
-      if i >= i1
-      then
-        ok (core.result.Result.Err error.OpError.UnknownFunc,
-          { st with core := { st.core with pos := «end» } })
+def MultiValue.callCore (st : code.BodyState) (data : Slice U8)
+    (env : module.Env) (indirect : Bool) :
+    Result (core.result.Result Unit error.OpError × code.BodyState) := do
+  if indirect then
+    let (r, out) ← code.call_indirect_info st data env
+    match r with
+    | .Err e => .ok (.Err e, out)
+    | .Ok _ => .ok (.Ok (), out)
+  else
+    let r ← reader.read_u32_leb data st.core.pos
+    match r with
+    | .Err e => .ok (.Err e, st)
+    | .Ok (index, next) =>
+      let i ← lift (UScalar.cast .Usize index)
+      if i ≥ alloc.vec.Vec.len env.func_types then
+        .ok (.Err .UnknownFunc, { st with core := { st.core with pos := next } })
       else
-        let ft ←
-          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-            _root_.Itasca.types.FuncType) env.func_types i
-        let (r1, ois) ←
-          code.apply_func_type { st.core with pos := «end» } ft
-        ok (r1, { st with core := ois })
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    let r1 ←
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-    ok (r1, st)
+        let ft ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice types.FuncType)
+          env.func_types i
+        let (r, out) ← code.apply_func_type { st.core with pos := next } ft
+        .ok (r, { st with core := out })
 
 
 theorem code.branch.eq_core (st : code.BodyState) (data : Slice U8)
@@ -182,18 +127,27 @@ theorem code.branch.eq_core (st : code.BodyState) (data : Slice U8)
 theorem code.call.eq_core (st : code.BodyState) (data : Slice U8)
     (env : module.Env) (indirect : Bool) :
     code.call st data env indirect = MultiValue.callCore st data env indirect := by
-  simp only [code.call, code.call_info, MultiValue.callCore, Std.bind_assoc]
-  congr 1
-  funext r
-  cases r with
-  | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
+  cases indirect with
+  | true =>
+    simp only [code.call, MultiValue.callCore, ↓reduceIte]
+    congr 1
+    funext pair
+    obtain ⟨r, out⟩ := pair
+    cases r <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  | Ok pair =>
-    obtain ⟨index, next⟩ := pair
-    simp only [uncurry, core.result.Result.Insts.CoreOpsTry.branch, bind_ok, lift, Std.bind_assoc]
-    cases indirect with
-    | false =>
-      simp only [uncurry, Bool.false_eq_true, ↓reduceIte, Std.bind_assoc]
+  | false =>
+    simp only [code.call, code.call_info, code.take_index, MultiValue.callCore,
+      Bool.false_eq_true, ↓reduceIte, Std.bind_assoc]
+    congr 1
+    funext r
+    cases r with
+    | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+    | Ok pair =>
+      obtain ⟨index, next⟩ := pair
+      simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, Std.uncurry, Std.bind_assoc]
+      congr 1
+      funext i
       split
       · simp [core.result.Result.Insts.CoreOpsTry.branch,
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -201,43 +155,9 @@ theorem code.call.eq_core (st : code.BodyState) (data : Slice U8)
         congr 1
         funext ft
         congr 1
-        funext x
-        obtain ⟨r, ois⟩ := x
+        funext pair
+        obtain ⟨r, out⟩ := pair
         cases r <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-    | true =>
-      simp only [uncurry, ↓reduceIte, Std.bind_assoc]
-      congr 1
-      funext r
-      cases r with
-      | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-      | Ok pair =>
-        obtain ⟨reserved, next⟩ := pair
-        simp only [uncurry, core.result.Result.Insts.CoreOpsTry.branch, bind_ok, Std.bind_assoc]
-        split
-        · simp [core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-        · simp only [Std.bind_assoc]
-          congr 1
-          funext empty
-          cases empty <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, Std.bind_assoc]
-          split
-          · simp [core.result.Result.Insts.CoreOpsTry.branch,
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-          · simp only [Std.bind_assoc]
-            congr 1
-            funext x
-            obtain ⟨r, ois⟩ := x
-            cases r <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, Std.bind_assoc]
-            congr 1
-            funext ft
-            congr 1
-            funext x
-            obtain ⟨r, ois⟩ := x
-            cases r <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
 end Itasca

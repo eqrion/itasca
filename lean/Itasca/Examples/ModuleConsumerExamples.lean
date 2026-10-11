@@ -29,11 +29,12 @@ private theorem bad_size : Leb128.Decoded badBytes 0#usize 2#u32 1#usize :=
   (show Wasm.BytesAt badBytes 0#usize [2#u8] 1#usize by
     constructor <;> simp [badBytes, ModuleExamples.bytes, alloc.vec.Vec.deref]).u32_decoded _ (leb 2#u8)
 
-private theorem bad_locals : module.decode_locals badBytes 1#usize =
+private theorem bad_locals : module.decode_locals badBytes 1#usize .Wasm1 =
     .ok (.Ok (alloc.vec.Vec.new _, 2#usize)) := by
-  obtain ⟨locals, hl, hv⟩ := module.decode_locals.complete badBytes 1#usize [] 2#usize
+  obtain ⟨locals, hl, hv⟩ := module.decode_locals.complete badBytes 1#usize .Wasm1 [] 2#usize
     ⟨[0#u8], ⟨[0#u8], [], leb 0#u8, .nil, rfl⟩, by
       constructor <;> simp [badBytes, ModuleExamples.bytes, alloc.vec.Vec.deref]⟩
+    (by simp)
     (by simp [ModuleLocals.declared, limits.MAX_LOCALS])
   have he : locals = alloc.vec.Vec.new _ := alloc.vec.Vec.ext _ _ (by simpa [ModuleLocals.declared] using hv)
   simpa [he] using hl
@@ -141,7 +142,7 @@ theorem bad_batch_finish_rejected : ∃ after,
 def tailBuffer : Slice U8 := ModuleExamples.bytes [0#u8,1#u8,0#u8]
 def emptyTail : module.Tail := ⟨alloc.vec.Vec.new _⟩
 
-private theorem good_tail (env : module.Env) :
+private theorem good_tail (env : module.Env) (hcount : env.data_count = none) :
     module.validate_tail tailBuffer 0#usize env .Wasm1 = .ok (.Ok emptyTail) := by
   apply module.validate_tail.complete emptyTail
   · refine ⟨[0#u8,1#u8,0#u8], ?_, ?_⟩
@@ -153,6 +154,7 @@ private theorem good_tail (env : module.Env) :
       simpa using CustomsEncoding.cons hc CustomsEncoding.nil
     · constructor <;> simp [tailBuffer, ModuleExamples.bytes, alloc.vec.Vec.deref]
   · simp [emptyTail]
+  · simp [hcount]
 
 /-- A custom-section observer can share the work list and leave it intact. -/
 def observeCustoms : module.ModuleVisitor (List StreamBatch.Issued) where
@@ -167,11 +169,11 @@ private theorem observe_customs_preserve : ModuleTail.Preserves observeCustoms i
   simpa [observeCustoms, Eq.comm] using h
 
 /-- The final custom section cannot erase the outstanding batch obligation. -/
-theorem tail_custom_preserves_work (env : module.Env) :
+theorem tail_custom_preserves_work (env : module.Env) (hcount : env.data_count = none) :
     module.validate_tail_with observeCustoms tailBuffer 0#usize env .Wasm1 [badIssued] =
       .ok (.Ok emptyTail, [badIssued]) := by
   obtain ⟨v', hv⟩ := module.validate_tail_with.accepted_lift observeCustoms observe_customs_accept
-    tailBuffer 0#usize env [badIssued] emptyTail (good_tail env)
+    tailBuffer 0#usize env [badIssued] emptyTail (good_tail env hcount)
   have he := module.validate_tail_with.accepted_preserves observeCustoms id observe_customs_preserve
     tailBuffer 0#usize env [badIssued] emptyTail v' hv
   change v' = [badIssued] at he

@@ -24,10 +24,10 @@ pub const MAX_MEMORIES: usize = 1;
 // the operand stack.
 pub const MAX_RESULTS: usize = 1;
 
-/// The maximum parameters per multi-value function signature.
+/// The maximum parameters per Wasm 2.0 function signature.
 pub const MAX_MULTI_VALUE_PARAMS: usize = 1000;
 
-/// The maximum results per multi-value function signature.
+/// The maximum results per Wasm 2.0 function signature.
 pub const MAX_MULTI_VALUE_RESULTS: usize = 1000;
 
 // Implementation cap on function body size, chosen so position tracking in

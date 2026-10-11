@@ -35,8 +35,8 @@ theorem module.validate_code_entry_with.complete_spec_of_body {V : Type} (visito
     have := hlocalsSpan.length
     have := hbodySpan.length
     omega
-  obtain ⟨declared, hdeclared, hdeclaredVal⟩ := module.decode_locals.complete data content entry.locals bodyStart
-    ⟨localBytes, hlocals, hlocalsSpan⟩ hcap
+  obtain ⟨declared, hdeclared, hdeclaredVal⟩ := module.decode_locals.complete data content profile entry.locals bodyStart
+    ⟨localBytes, hlocals, hlocalsSpan⟩ htyped.locals_allowed hcap
   have hindex : ¬ index ≥ alloc.vec.Vec.len env.func_type_indices := by scalar_tac
   unfold module.validate_code_entry_with
   simp [hindex, hread, core.result.Result.Insts.CoreOpsTry.branch]

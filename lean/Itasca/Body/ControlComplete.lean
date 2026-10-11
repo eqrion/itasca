@@ -19,27 +19,27 @@ theorem Sequence.Realizes.empty_values {poly : Bool} {vals : List code.StackType
 theorem code.read_block.complete (st : code.OpIterState) (data : Slice U8)
     (bt : code.BlockType) (next : Usize)
     (hbytes : Wasm.BytesAt data st.pos [Control.blockByte bt] next)
-    (hsize : st.ctrls.val.length < Usize.max) :
+    (hsize : st.ctrls.val.length < Usize.max) (hbt : Control.ScalarBlockType bt) :
     code.read_block st data ⦃ r => r.1 = .Ok bt ∧ r.2.pos = next ∧
       r.2.vals = st.vals ∧
       r.2.ctrls.val = st.ctrls.val ++ [Control.frame st .Block bt] ⦄ := by
   obtain ⟨s, hp, hc, hv, hn⟩ := WP.spec_imp_exists
     (code.push_ctrl.spec { st with pos := next } .Block bt hsize)
   rw [WP.spec_equiv_exists]
-  exact ⟨(.Ok bt, s), by simp [code.read_block, hbytes.read_block_type bt, hp,
+  exact ⟨(.Ok bt, s), by simp [code.read_block, hbytes.read_block_type bt hbt, hp,
     core.result.Result.Insts.CoreOpsTry.branch], rfl, hn, hv, hc⟩
 
 theorem code.read_loop.complete (st : code.OpIterState) (data : Slice U8)
     (bt : code.BlockType) (next : Usize)
     (hbytes : Wasm.BytesAt data st.pos [Control.blockByte bt] next)
-    (hsize : st.ctrls.val.length < Usize.max) :
+    (hsize : st.ctrls.val.length < Usize.max) (hbt : Control.ScalarBlockType bt) :
     code.read_loop st data ⦃ r => r.1 = .Ok bt ∧ r.2.pos = next ∧
       r.2.vals = st.vals ∧
       r.2.ctrls.val = st.ctrls.val ++ [Control.frame st .Loop bt] ⦄ := by
   obtain ⟨s, hp, hc, hv, hn⟩ := WP.spec_imp_exists
     (code.push_ctrl.spec { st with pos := next } .Loop bt hsize)
   rw [WP.spec_equiv_exists]
-  exact ⟨(.Ok bt, s), by simp [code.read_loop, hbytes.read_block_type bt, hp,
+  exact ⟨(.Ok bt, s), by simp [code.read_loop, hbytes.read_block_type bt hbt, hp,
     core.result.Result.Insts.CoreOpsTry.branch], rfl, hn, hv, hc⟩
 
 /-- A realizable i32 condition makes `if` succeed, retaining the realizable
@@ -51,7 +51,8 @@ theorem code.read_if.complete (st : code.OpIterState) (data : Slice U8)
     (hvals : st.vals.val = outer ++ segment)
     (hbase : (Control.base st).val = outer.length)
     (hsize : st.ctrls.val.length < Usize.max)
-    (ht : Sequence.Realizes (Control.polymorphic st) segment (ts ++ [.I32])) :
+    (ht : Sequence.Realizes (Control.polymorphic st) segment (ts ++ [.I32]))
+    (hbt : Control.ScalarBlockType bt) :
     code.read_if st data ⦃ r => r.1 = .Ok bt ∧ r.2.pos = next ∧
       ∃ rest, r.2.vals.val = outer ++ rest ∧ rest.length ≤ segment.length ∧
         r.2.ctrls.val = st.ctrls.val ++ [Control.frame r.2 .Then bt] ∧
@@ -63,7 +64,7 @@ theorem code.read_if.complete (st : code.OpIterState) (data : Slice U8)
     (code.push_ctrl.spec popped .Then bt (by simpa [hc] using hsize))
   rw [WP.spec_equiv_exists]
   refine ⟨(.Ok bt, s), ?_, rfl, hps.trans hp, rest, ?_, hl, ?_, ht'⟩
-  · simp [code.read_if, hbytes.read_block_type bt, hpop, hpush,
+  · simp [code.read_if, hbytes.read_block_type bt hbt, hpop, hpush,
       core.result.Result.Insts.CoreOpsTry.branch]
   · simpa [hvs] using hv
   · simpa [hc, Control.frame, hvs] using hcs

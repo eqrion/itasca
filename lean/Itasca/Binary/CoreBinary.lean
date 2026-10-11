@@ -14,9 +14,9 @@ inductive Immediate : Token → List U8 → Prop where
   | i32Add : Immediate .i32Add []
   | i32Const (v : I32) {bytes} : SignedLeb.Encoding bytes v.val →
       Immediate (.i32Const v) bytes
-  | block (bt : code.BlockType) : Immediate (.block bt) [Control.blockByte bt]
-  | loop (bt : code.BlockType) : Immediate (.loop bt) [Control.blockByte bt]
-  | if_ (bt : code.BlockType) : Immediate (.if_ bt) [Control.blockByte bt]
+  | block (bt : code.BlockType) (hbt : Control.ScalarBlockType bt) : Immediate (.block bt) [Control.blockByte bt]
+  | loop (bt : code.BlockType) (hbt : Control.ScalarBlockType bt) : Immediate (.loop bt) [Control.blockByte bt]
+  | if_ (bt : code.BlockType) (hbt : Control.ScalarBlockType bt) : Immediate (.if_ bt) [Control.blockByte bt]
   | else_ : Immediate .else_ []
   | end_ : Immediate .end_ []
   | br (d : U32) {bytes} : Leb128.Encoding bytes d.val → Immediate (.br d) bytes
@@ -125,12 +125,13 @@ theorem At.read_brIf {data start next} {depth : U32}
 
 private theorem read_block_type_of_byte (data : Slice U8) (p next : Usize) (bt : code.BlockType)
     (hbytes : data.val.drop p.val = Control.blockByte bt :: data.val.drop next.val)
-    (hnext : next.val = p.val + 1) (hbound : next.val ≤ data.length) :
+    (hnext : next.val = p.val + 1) (hbound : next.val ≤ data.length)
+    (hbt : Control.ScalarBlockType bt) :
     code.read_block_type data p = .ok (.Ok (bt, next)) := by
   have hp : p.val < data.length := by omega
   rw [List.drop_eq_getElem_cons hp] at hbytes
   have hbyte := (List.cons.inj hbytes).1
-  obtain ⟨_, hr, q, rfl, hq⟩ := WP.spec_imp_exists (code.read_block_type.spec data p bt hp hbyte)
+  obtain ⟨_, hr, q, rfl, hq⟩ := WP.spec_imp_exists (code.read_block_type.spec data p bt hp hbyte hbt)
   have heq : q = next := UScalar.eq_of_val_eq (by omega)
   simpa [heq] using hr
 
@@ -139,21 +140,21 @@ theorem At.read_block {data start next} {bt : code.BlockType}
     code.read_block_type data p = .ok (.Ok (bt, next)) := by
   obtain ⟨imm, hi, hbytes, hnext, hbound⟩ := h.immediate p hp
   cases hi
-  exact read_block_type_of_byte data p next bt (by simpa using hbytes) (by simpa using hnext) hbound
+  exact read_block_type_of_byte data p next bt (by simpa using hbytes) (by simpa using hnext) hbound (by assumption)
 
 theorem At.read_loop {data start next} {bt : code.BlockType}
     (h : At data start (.loop bt) next) (p : Usize) (hp : p.val = start.val + 1) :
     code.read_block_type data p = .ok (.Ok (bt, next)) := by
   obtain ⟨imm, hi, hbytes, hnext, hbound⟩ := h.immediate p hp
   cases hi
-  exact read_block_type_of_byte data p next bt (by simpa using hbytes) (by simpa using hnext) hbound
+  exact read_block_type_of_byte data p next bt (by simpa using hbytes) (by simpa using hnext) hbound (by assumption)
 
 theorem At.read_if {data start next} {bt : code.BlockType}
     (h : At data start (.if_ bt) next) (p : Usize) (hp : p.val = start.val + 1) :
     code.read_block_type data p = .ok (.Ok (bt, next)) := by
   obtain ⟨imm, hi, hbytes, hnext, hbound⟩ := h.immediate p hp
   cases hi
-  exact read_block_type_of_byte data p next bt (by simpa using hbytes) (by simpa using hnext) hbound
+  exact read_block_type_of_byte data p next bt (by simpa using hbytes) (by simpa using hnext) hbound (by assumption)
 
 /-- Expose the next token boundary without assuming anything about control or operand validity. -/
 theorem Rest.cons_iff {data pos token tokens} : Rest data pos (token :: tokens) ↔

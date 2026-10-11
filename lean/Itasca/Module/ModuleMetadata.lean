@@ -13,16 +13,17 @@ def contextOf (raw : ModuleBinary.Module) : context :=
     ModuleTranslation.globals imports ++ raw.globals.map (fun g => Translate.globalType g.gtype),
     ModuleTranslation.tables imports ++ raw.tables.map EnvTranslation.tableType,
     ModuleTranslation.mems imports ++ raw.memories.map EnvTranslation.memType,
-    List.replicate raw.elements.length .FUNCREF,
+    raw.elements.map (fun entry => Translate.referenceType entry.elem),
     List.replicate raw.data.length .OK, [], [], none⟩
 
 theorem contextOf_fromEnv {env tables memories codes segments}
     (hc : ModuleEnv.Cache env tables memories) :
     contextOf (fromEnv env tables memories codes segments) =
-      moduleContext env env.elements.val.length segments.length := by
+      moduleContext env (EnvTranslation.elementTypes env) segments.length := by
   symm
-  simpa [contextOf, fromEnv, importTypes, ModuleEnv.rawImport, List.map_map, Function.comp_def]
-    using moduleContext_eq hc env.elements.val.length segments.length
+  simpa [contextOf, fromEnv, importTypes, ModuleEnv.rawImport, ModuleEnv.rawElement,
+    EnvTranslation.elementTypes, List.map_map, Function.comp_def]
+    using moduleContext_eq hc (EnvTranslation.elementTypes env) segments.length
 
 theorem import_types_resolved {env entries xts}
     (h : List.Forall₂ (ModuleExternals.ImportResolves env) entries xts) :
@@ -53,7 +54,7 @@ theorem accessorTypes {env tables memories codes segments}
   · simpa [hiEq, fromEnv, ModuleEnv.rawImport, List.map_map, Function.comp_def] using import_types_resolved hi
   · rw [heEq, contextOf_fromEnv hc]
     simpa [fromEnv, List.map_map, Function.comp_def] using
-      exports_typed he hn _ (moduleContext_matches env env.elements.val.length segments.length)
+      exports_typed he hn _ (moduleContext_matches env (EnvTranslation.elementTypes env) segments.length)
 
 /-- Returned declarations and data segments are exactly the independently
 decoded module's declarations; merged runtime spaces retain their cache proof. -/

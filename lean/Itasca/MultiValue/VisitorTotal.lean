@@ -1,6 +1,6 @@
 import Itasca.MultiValue.BodyAdapters
 import Itasca.MultiValue.EndTotal
-import Itasca.MultiValue.ScalarTotal
+import Itasca.MultiValue.Wasm2Total
 import Itasca.Visitor.FullVisitorAccept
 
 open Aeneas Aeneas.Std
@@ -32,21 +32,6 @@ namespace Itasca
   by
   obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (code.end_frame.total st env isElse hs ha)
   unfold code.end_frame at hr
-  obtain ⟨⟨result, out⟩, hs, hnext⟩ := ResultFacts.bind_ok_inv _ _ _ hr
-  rw [hs, WP.spec_ok]
-  cases result <;>
-    simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at hnext
-  all_goals subst r; exact hp
-
-@[step] theorem code.call_info.total (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (indirect : Bool) (hs : Control.Shape st.core) :
-    code.call_info st data env indirect ⦃ r =>
-      Control.Shape r.2.core ∧ r.2.core.ctrls = st.core.ctrls ∧
-      r.2.blocks = st.blocks ∧ st.core.pos.val ≤ r.2.core.pos.val ⦄ :=
-  by
-  obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (code.call.total st data env indirect hs)
-  unfold code.call at hr
   obtain ⟨⟨result, out⟩, hs, hnext⟩ := ResultFacts.bind_ok_inv _ _ _ hr
   rw [hs, WP.spec_ok]
   cases result <;>
@@ -219,9 +204,9 @@ theorem code.branch_table_with.total {V : Type} (visitor : code.OpVisitor V)
   simp [h]
 
 @[local step] private theorem call_indirect_hook_total {V : Type} (visitor : code.OpVisitor V)
-    (hv : FullVisitor.Total visitor) (v : V) (st : code.OpIterState) (index : U32) :
-    visitor.on_call_indirect v st index ⦃ _ => True ⦄ := by
-  obtain ⟨r, w, h⟩ := hv.on_call_indirect v st index
+    (hv : FullVisitor.Total visitor) (v : V) (st : code.OpIterState) (index table : U32) :
+    visitor.on_call_indirect v st index table ⦃ _ => True ⦄ := by
+  obtain ⟨r, w, h⟩ := hv.on_call_indirect v st index table
   simp [h]
 
 attribute [local step] code.enter_info.total
@@ -237,7 +222,7 @@ theorem code.validate_multi_value_body_with_loop.body_total {V : Type}
     (ha : s.blocks.val.length = s.core.ctrls.val.length)
     (hb : s.blocks.val.length ≤ s.core.pos.val + 1) :
     code.validate_multi_value_body_with_loop.body visitor data env.types env.imports env.globals
-      env.exports env.elements env.start env.func_type_indices env.func_types env.table_types
+      env.exports env.elements env.data_count env.declared_funcs env.start env.func_type_indices env.func_types env.table_types
       env.mem_types env.global_types env.num_imported_funcs env.num_imported_globals
       ctx type_index v s ⦃ r =>
       match r with
@@ -283,7 +268,7 @@ theorem code.validate_multi_value_body_with_loop.body_total {V : Type}
         · simp [core.result.Result.Insts.CoreOpsTry.branch,
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
         · have hsize : s.core.vals.val.length < Usize.max := by scalar_tac
-          step with MultiValue.scalar_total visitor
+          step with MultiValue.wasm2_total visitor
             { s.core with pos := next } data env ctx
             data.val[s.core.pos.val] v hspos hsize hscalar hv
             as ⟨r, hsc, hcount, hp'⟩
@@ -318,7 +303,7 @@ theorem code.validate_multi_value_body_with_loop.total {V : Type} (visitor : cod
     (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (hb : st.blocks.val.length ≤ st.core.pos.val + 1) :
     code.validate_multi_value_body_with_loop visitor data env.types env.imports env.globals
-      env.exports env.elements env.start env.func_type_indices env.func_types env.table_types
+      env.exports env.elements env.data_count env.declared_funcs env.start env.func_type_indices env.func_types env.table_types
       env.mem_types env.global_types env.num_imported_funcs env.num_imported_globals
       ctx type_index v st ⦃ _ => True ⦄ := by
   unfold code.validate_multi_value_body_with_loop code.body_loop_loop
@@ -338,7 +323,7 @@ attribute [local step] code.validate_multi_value_body_with_loop.total
 /-- Multi-value initialization is total and supplies the shared loop invariant. -/
 @[step] theorem code.initial_state.multi_value_total
     (env : module.Env) (ctx : code.Context) (index : U32) :
-    code.initial_state env ctx index .MultiValue ⦃ r =>
+    code.initial_state env ctx index .Wasm2 ⦃ r =>
       match r with
       | .Err _ => True
       | .Ok st => Control.Shape st.core ∧

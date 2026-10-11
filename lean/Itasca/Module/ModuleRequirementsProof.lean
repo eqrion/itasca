@@ -55,7 +55,8 @@ theorem profile_requirements_of_typing {profile : ValidationProfile} {raw : Modu
       · cases ht with
         | mem _ ht _ =>
           exact limits_scalar (by simpa [limits.MAX_MEMORY_PAGES] using memory_valid_of_typing ht)
-    · have ht := hp.table_count
+    · intro hprofile
+      have ht := hp.table_count hprofile
       simpa [hr.empty_tables (by decide), raw_tables_projection] using
         (show (ModuleTranslation.tables (raw.imports.map (fun e => importType raw.types e.desc))).length ≤ 1 by omega)
     · have hm := hp.memory_count
@@ -67,15 +68,17 @@ theorem profile_requirements_of_typing {profile : ValidationProfile} {raw : Modu
   · constructor
     · intro tt ht
       exact limits_scalar (by simpa [limits.MAX_TABLE_ELEMS, U32.rMax] using table_valid_of_typing (hs.tables tt ht))
-    · rw [hr.tables_count (by decide) (by decide)]
-      exact hp.table_count
+    · intro hprofile
+      rw [hr.tables_count (by decide) (by decide)]
+      exact hp.table_count hprofile
   · constructor
     · intro mt hm
       exact limits_scalar (by simpa [limits.MAX_MEMORY_PAGES] using memory_valid_of_typing (hs.memories mt hm))
     · rw [hr.memories_count (by decide) (by decide)]
       exact hp.memory_count
   · intro g hg
-    exact global_valid_of_typing (hr.initializer_globals (by decide)) (hs.globals g hg)
+    exact global_valid_of_typing (hr.initializer_globals (by decide))
+      (by simpa [ModuleConstants.FunctionContext, initializerContextOf] using hr.funcs_context (by decide)) (hs.globals g hg)
   · constructor
     · have hn : ((raw.exports.map ModuleBinary.Export.name).map ModuleBinary.nameOfBytes).Nodup := by
         simpa [List.map_map, Function.comp_def] using hp.unique_exports
@@ -87,14 +90,10 @@ theorem profile_requirements_of_typing {profile : ValidationProfile} {raw : Modu
   · intro idx hi
     exact start_valid_of_typing (hr.moduleContext (by decide)) (hs.start idx hi)
   · intro e hm
-    obtain ⟨hexprs, hmode⟩ := element_parts (hs.elements e hm)
-    obtain ⟨hidx, hconst⟩ := elemmode_active_properties hmode
-    refine ⟨?_, ModuleConstants.valid_of_typing (hr.initializer_globals (by decide)) hconst, ?_⟩
-    · simpa [initializerContextOf, hr.tables_context (by decide), proj_uN_0] using hidx
-    · intro idx hi
-      have ht : Expr_ok_const (initializerContextOf raw) [instr.REF_FUNC (.mk_uN idx.val)] .FUNCREF :=
-        hexprs _ (List.mem_map.mpr ⟨idx, hi, rfl⟩)
-      simpa [initializerContextOf, hr.funcs_context (by decide)] using ref_func_index ht
+    exact element_valid_raw_of_typing (hr.initializer_globals (by decide))
+      (by simpa [ModuleConstants.FunctionContext, initializerContextOf] using hr.funcs_context (by decide))
+      (by simpa [initializerContextOf] using hr.tables_context (by decide)) (hs.elements e hm)
+  · trivial
 
 theorem requirements_of_typing {raw : ModuleBinary.Module}
     (he : Elaborates raw (moduleOf raw)) (hs : SectionsTyped raw) (hp : Profile raw) :

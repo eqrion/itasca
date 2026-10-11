@@ -255,7 +255,7 @@ theorem polymorphic_select_accepted (env : module.Env) :
   have hselect : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor second data env emptyContext
       code.OP_SELECT () = .ok (.Ok (), s2, ()) := by
     rw [code.step_select.dispatch]
-    simp [CoreVisitor.run, code.read_select, hcond, hpop, code.join_stack_type, hpush,
+    simp [CoreVisitor.run, code.read_select, hcond, hpop, code.join_stack_type, hpush, code.is_select_type,
       core.result.Result.Insts.CoreOpsTry.branch, code.OpVisitor.on_select.default, code.visit]
   let third := {s2 with pos := 3#usize}
   obtain ⟨⟨_, s3⟩, hd, rfl, hv3, hc3, hp3⟩ := WP.spec_imp_exists

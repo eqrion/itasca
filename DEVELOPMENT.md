@@ -12,7 +12,7 @@ to install the pinned tools.
 | `src/lib.rs` | Explicit consumer exports and profile selection. |
 | `src/stream.rs` | Module orchestration, source/scheduler contracts, issued batches, and the private contiguous adapter. |
 | `src/module.rs` | Read-only module metadata and internal environment, entry, and tail validation. |
-| `src/code.rs` | Shared body execution, both profiles' control handlers, scalar instructions, operator callbacks, and opcode tables. |
+| `src/code.rs` | Shared body execution, both profiles' control handlers, scalar/reference/SIMD instructions, operator callbacks, and opcode tables. |
 | `src/signature.rs` | Allocation-free block and result descriptors. |
 | `src/types.rs`, `error.rs` | Shared metadata and error vocabulary. |
 | `src/reader.rs`, `limits.rs` | Byte readers, specification bounds, and resource caps. |
@@ -143,9 +143,11 @@ validated. The first validation error remains stored. Only successful
 batch's pending identity and successful finish.
 
 A source exposes environment, code, and tail regions. The canonical split is
-at the first section with ID at least 10: the code region is that section when
-it is code, otherwise empty. The environment precedes it and the tail follows
-it. No such section means the complete input is environment. Successful views
+at the code section (ID 10), or at the first later section ID other than the
+data-count section (ID 12). The code region contains the framed code section
+when present; otherwise it is empty. The environment includes the data-count
+section before code, and the tail contains data segments after code. If neither
+code nor a tail section occurs, the complete input is environment. Successful views
 must agree with fixed logical bytes, including overlapping code reads. The
 driver checks framing; an incorrect split may reject otherwise valid input.
 
@@ -184,11 +186,14 @@ Keep language restrictions and implementation limits separate in
 to generated typing; module and streaming proofs compose those certificates.
 Changes to sections, index spaces, initializers, or segment encodings also need
 independent module-grammar and elaboration updates. A new body feature alone
-does not establish a new module profile.
+does not establish a new module profile. The Wasm 2.0 certificate includes the
+independent declared-reference condition for `ref.func`; preserve it through
+body, entry, module, and worker certificates. The pinned generated typing model
+does not supply that condition.
 
 Check encoded counts before allocation where available. `MAX_LOCALS` excludes
 parameters; `MAX_FUNCTION_BYTES` includes the final `end` and excludes local
-declarations. Multi-value signatures have at most 1000 parameters and results.
+declarations. Wasm 2.0 signatures have at most 1000 parameters and results.
 Do not tighten Wasm 1.0's parameter behavior as a side effect of another profile.
 
 Every new proof module must be reachable from `Itasca.Audit`. The audit checks

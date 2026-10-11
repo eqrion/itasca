@@ -111,6 +111,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "itasca"
+version = "0.1.0"
+
+[[package]]
+name = "itasca-fuzz"
+version = "0.0.0"
+dependencies = [
+ "arbitrary",
+ "itasca",
+ "libfuzzer-sys",
+ "wasm-smith",
+ "wasmparser",
+]
+
+[[package]]
 name = "jobserver"
 version = "0.1.35"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -234,21 +249,6 @@ name = "unicode-ident"
 version = "1.0.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e6e4313cd5fcd3dad5cafa179702e2b244f760991f45397d14d4ebf38247da75"
-
-[[package]]
-name = "itasca"
-version = "0.1.0"
-
-[[package]]
-name = "itasca-fuzz"
-version = "0.0.0"
-dependencies = [
- "arbitrary",
- "libfuzzer-sys",
- "itasca",
- "wasm-smith",
- "wasmparser",
-]
 
 [[package]]
 name = "wasm-encoder"

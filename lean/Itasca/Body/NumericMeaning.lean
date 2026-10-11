@@ -4,15 +4,15 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Numeric
 
-/-- The scalar numeric type used by the independent specification map. -/
-def numType : types.ValueType → numtype
+/-- Embed a specification numeric type into the wider runtime value vocabulary. -/
+def valueType : numtype → types.ValueType
   | .I32 => .I32
   | .I64 => .I64
   | .F32 => .F32
   | .F64 => .F64
 
-@[simp] theorem numType_value (t : types.ValueType) :
-    valtype_numtype (numType t) = Translate.valueType t := by cases t <;> rfl
+@[simp] theorem numType_value (t : numtype) :
+    Translate.valueType (valueType t) = valtype_numtype t := by cases t <;> rfl
 
 /-- A scalar instruction together with its one- or two-operand specification effect. -/
 structure Operation where
@@ -28,49 +28,58 @@ structure Operation where
 def Operation.inputs (op : Operation) : List types.ValueType :=
   if op.binary then [op.input, op.input] else [op.input]
 
-def unary (t : types.ValueType) (op : unop_) (hwf : wf_unop_ (numType t) op) : Operation where
-  instruction := .UNOP (numType t) op
-  input := t
-  output := t
+def unary (t : numtype) (op : unop_) (hwf : wf_unop_ t op) : Operation where
+  instruction := .UNOP t op
+  input := valueType t
+  output := valueType t
   binary := false
   wellFormed := .instr_case_14 _ _ hwf
-  typed C hC := by simpa using Instr_ok.unop C (numType t) op hC (.instr_case_14 _ _ hwf)
+  typed C hC := by
+    have h := Instr_ok.unop C t op hC (.instr_case_14 _ _ hwf)
+    cases t <;> simpa [valueType, Translate.valueType, valtype_numtype] using h
 
-def binary (t : types.ValueType) (op : binop_) (hwf : wf_binop_ (numType t) op) : Operation where
-  instruction := .BINOP (numType t) op
-  input := t
-  output := t
+def binary (t : numtype) (op : binop_) (hwf : wf_binop_ t op) : Operation where
+  instruction := .BINOP t op
+  input := valueType t
+  output := valueType t
   binary := true
   wellFormed := .instr_case_15 _ _ hwf
-  typed C hC := by simpa using Instr_ok.binop C (numType t) op hC (.instr_case_15 _ _ hwf)
+  typed C hC := by
+    have h := Instr_ok.binop C t op hC (.instr_case_15 _ _ hwf)
+    cases t <;> simpa [valueType, Translate.valueType, valtype_numtype] using h
 
-def test (t : types.ValueType) (op : testop_) (hwf : wf_testop_ (numType t) op) : Operation where
-  instruction := .TESTOP (numType t) op
-  input := t
+def test (t : numtype) (op : testop_) (hwf : wf_testop_ t op) : Operation where
+  instruction := .TESTOP t op
+  input := valueType t
   output := .I32
   binary := false
   wellFormed := .instr_case_16 _ _ hwf
-  typed C hC := by simpa [Translate.valueType] using Instr_ok.testop C (numType t) op hC (.instr_case_16 _ _ hwf)
+  typed C hC := by
+    have h := Instr_ok.testop C t op hC (.instr_case_16 _ _ hwf)
+    cases t <;> simpa [valueType, Translate.valueType, valtype_numtype] using h
 
-def relation (t : types.ValueType) (op : relop_) (hwf : wf_relop_ (numType t) op) : Operation where
-  instruction := .RELOP (numType t) op
-  input := t
+def relation (t : numtype) (op : relop_) (hwf : wf_relop_ t op) : Operation where
+  instruction := .RELOP t op
+  input := valueType t
   output := .I32
   binary := true
   wellFormed := .instr_case_17 _ _ hwf
-  typed C hC := by simpa [Translate.valueType] using Instr_ok.relop C (numType t) op hC (.instr_case_17 _ _ hwf)
+  typed C hC := by
+    have h := Instr_ok.relop C t op hC (.instr_case_17 _ _ hwf)
+    cases t <;> simpa [valueType, Translate.valueType, valtype_numtype] using h
 
-def conversion (source target : types.ValueType) (op : cvtop__)
-    (hwf : wf_cvtop__ (numType source) (numType target) op)
-    (hne : numType target ≠ numType source) : Operation where
-  instruction := .CVTOP (numType target) (numType source) op
-  input := source
-  output := target
+def conversion (source target : numtype) (op : cvtop__)
+    (hwf : wf_cvtop__ source target op)
+    (hne : target ≠ source) : Operation where
+  instruction := .CVTOP target source op
+  input := valueType source
+  output := valueType target
   binary := false
   wellFormed := .instr_case_18 _ _ _ hwf hne
   typed C hC := by
-    simpa using Instr_ok.cvtop C (numType target) (numType source) op hC
+    have h := Instr_ok.cvtop C target source op hC
       (.instr_case_18 _ _ _ hwf hne)
+    cases source <;> cases target <;> simpa [valueType, Translate.valueType, valtype_numtype] using h
 
 /-- The WebAssembly 1.0 scalar numeric opcode table, specified independently of the validator tables. -/
 def opcodeMeaning (opcode : U8) : Option Operation :=

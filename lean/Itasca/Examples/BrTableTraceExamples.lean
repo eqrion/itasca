@@ -413,7 +413,7 @@ theorem mismatching_observed_label (env : module.Env) :
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   obtain ⟨⟨res, opened⟩, hopen, hok, hp, hv, hc⟩ := WP.spec_imp_exists
     (code.read_block.spec (bodyState false 1#usize) mismatchBytes (.Value .I64) (by decide) rfl
-      (by simp [bodyState]; scalar_tac))
+      (by simp [bodyState]; scalar_tac) trivial)
   dsimp only at hok hp hv hc
   have hz : alloc.vec.Vec.len (bodyState false 1#usize).vals = 0#usize := by
     apply UScalar.eq_of_val_eq
@@ -482,7 +482,7 @@ theorem loop_branch_label_type (env : module.Env) :
       code.visit, core.result.Result.Insts.CoreOpsTry.branch]
   obtain ⟨⟨res, opened⟩, hopen, hok, hp, hv, hc⟩ := WP.spec_imp_exists
     (code.read_loop.spec (bodyState false 1#usize) loopBytes (.Value .I64) (by decide) rfl
-      (by simp [bodyState]; scalar_tac))
+      (by simp [bodyState]; scalar_tac) trivial)
   dsimp only at hok hp hv hc
   have hz : alloc.vec.Vec.len (bodyState false 1#usize).vals = 0#usize := by
     apply UScalar.eq_of_val_eq

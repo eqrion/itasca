@@ -58,8 +58,11 @@ theorem layout_valid : Layout.Valid 9 declarations layout := by
   · exact padded _ 5#u8 _ (one ⟨[1#u8,0x72#u8], [0#u8,1#u8], ascii _ (by decide), .func _ (leb 1#u8), rfl⟩) rfl
   · exact padded _ 1#u8 _ ⟨1#u32, rfl, leb 1#u8⟩ rfl
   · exact omitted _ _ _
+  · exact ⟨rfl, rfl⟩
   · exact .nil
-  · simp [Layout.Future]
+  · simp [Layout.Future, layout]
+  · simp [ModuleTypesAllowed, ValueTypeAllowed, declarations, Declarations.module,
+      functionType, imported, exported]
 
 private theorem functions_context {last decls env} (h : Ready raw last decls env) (hn : 3 ≤ last) :
     env.func_types.val.map EnvTranslation.funcType =
@@ -109,6 +112,7 @@ theorem requirements : Requirements raw := by
     · exact (hr.moduleContext (by decide)).wf
     · exact .start_case_0 _ (EnvTranslation.index_wf 1#u32)
   · simp [SectionValid, raw, declarations, Declarations.module]
+  · trivial
 
 theorem code_encoding : SectionEncoding 10#u8 (VecEncoding CodeEncodingWithinLimits) [entry] codeBytes := by
   refine ⟨[8#u8], [1#u8,6#u8,1#u8,1#u8,0x7F#u8,0x10#u8,0#u8,0x0B#u8], leb 8#u8, one ?_, rfl⟩
@@ -121,9 +125,9 @@ theorem code_encoding : SectionEncoding 10#u8 (VecEncoding CodeEncodingWithinLim
   · exact ⟨[.plain (.CALL (.mk_uN 0))], rfl,
       .simple .nil (.plain _ (.instr_case_10 _ (EnvTranslation.index_wf 0#u32)))⟩
 
-theorem entry_typed {decls env} (hr : Ready raw 9 decls env) : CodeEntry.Typed env 0#u32 entry := by
+theorem entry_typed {decls env} (hr : Ready raw 10 decls env) : CodeEntry.Typed env 0#u32 entry := by
   have htypes : env.types.val = [functionType] := hr.types_eq (by decide)
-  refine ⟨by simp [htypes], ?_, ?_⟩
+  refine ⟨by simp [htypes], ?_, ?_, ?_, ?_⟩
   · let C := CodeEntry.bodyContext env [] entry.declared []
     have hf : C.FUNCS = [.mk_functype (.mk_list []) (.mk_list []), .mk_functype (.mk_list []) (.mk_list [])] :=
       functions_context hr (by decide)
@@ -137,6 +141,9 @@ theorem entry_typed {decls env} (hr : Ready raw 9 decls env) : CodeEntry.Typed e
     simpa [htypes, functionType, entry, CodeEntry.instructionType, C] using
       Instrs_ok.instr C _ _ _ hi hw (.instr_case_10 _ (EnvTranslation.index_wf 0#u32))
   · exact .cons (.leaf _ _ trivial) (.nil _)
+  · simp [entry, ModuleBinary.ValueTypeAllowed]
+  · simp [entry, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices,
+      DeclaredReferences.instructionIndices]
 
 theorem prefix_encoding : At PrefixEncoding input 0#usize declarations 37#usize := by
   refine ⟨magicVersion ++ layout.bytes, layout_valid.encoding, ?_⟩
@@ -152,7 +159,7 @@ theorem code_at : At (SectionEncoding 10#u8 (VecEncoding CodeEncodingWithinLimit
 /-- The parsed prefix has one imported and one defined function, and stops
 exactly before the code section. This witness is reusable for visitor tests. -/
 theorem environment : ∃ env decls, module.validate_env input .Wasm1 = .ok (.Ok (env, 37#usize)) ∧
-    Ready raw 9 decls env := by
+    Ready raw 10 decls env := by
   obtain ⟨first, hh, _⟩ := code_at.section_split
   exact module.validate_env.complete input raw declarations 37#usize prefix_encoding rfl
     (.inr ⟨10#u8, first, 47#usize, hh, by decide⟩) requirements

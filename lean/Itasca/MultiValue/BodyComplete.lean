@@ -15,7 +15,8 @@ theorem body_of_programs (data : Slice U8) (env : module.Env)
     (hprograms : ∀ tokens ops, Emits tokens ops →
       Program data env ⟨locals, ft.results⟩ index tokens ops)
     (ops : List instr) (hencoding : BodyEncoding data ops)
-    (htyped : FunctionTyped env locals ft ops) :
+    (htyped : FunctionTyped env locals ft ops)
+    (hdecl : DeclaredReferences.Instructions (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) ops) :
     code.validate_multi_value_body data env locals index = .ok (.Ok ()) := by
   obtain ⟨tokens, next, hbytes, hfinish, inner, heq, hemits⟩ := hencoding
   subst tokens
@@ -37,7 +38,7 @@ theorem body_of_programs (data : Slice U8) (env : module.Env)
     constructor <;> simp [st, initial, hsize]
   obtain ⟨s, hrun, hp, hout, _⟩ := hprograms inner ops hemits C st f middle []
     (ft.results.val.map Translate.valueType) hmatch hlabels hbounds hinner
-      (Sequence.realizes_default false []) htyped
+      (Sequence.realizes_default false []) htyped hdecl
   obtain ⟨g, hgp, hgc, hcp, hco, hck, hcb, hcbase, hreal⟩ := hout.next
   obtain ⟨last, hclose, hp', hc', hb', _⟩ := execute_end g data env ⟨locals, ft.results⟩
     index next ft.params.val ft.results.val (by simpa [hp] using hend.single)

@@ -25,9 +25,9 @@ numeric map define the accepted syntax; no validator execution occurs here. -/
 inductive Immediate : U8 → Token → List U8 → Prop where
   | unreachable : Immediate 0x00#u8 (.plain .UNREACHABLE) []
   | nop : Immediate 0x01#u8 (.plain .NOP) []
-  | block (bt : code.BlockType) : Immediate 0x02#u8 (.block bt) [Control.blockByte bt]
-  | loop (bt : code.BlockType) : Immediate 0x03#u8 (.loop bt) [Control.blockByte bt]
-  | if_ (bt : code.BlockType) : Immediate 0x04#u8 (.if_ bt) [Control.blockByte bt]
+  | block (bt : code.BlockType) (hbt : Control.ScalarBlockType bt) : Immediate 0x02#u8 (.block bt) [Control.blockByte bt]
+  | loop (bt : code.BlockType) (hbt : Control.ScalarBlockType bt) : Immediate 0x03#u8 (.loop bt) [Control.blockByte bt]
+  | if_ (bt : code.BlockType) (hbt : Control.ScalarBlockType bt) : Immediate 0x04#u8 (.if_ bt) [Control.blockByte bt]
   | else_ : Immediate 0x05#u8 .else_ []
   | end_ : Immediate 0x0B#u8 .end_ []
   | br (idx : U32) {bytes} : Leb128.Encoding bytes idx.val →
@@ -242,9 +242,9 @@ namespace Itasca.Wasm
 theorem At.of_block_type {data start pos next opcode token} (bt : code.BlockType)
     (hstart : start.val < data.length) (hbyte : data.val[start.val] = opcode)
     (hpos : pos.val = start.val + 1)
-    (himm : Immediate opcode token [Control.blockByte bt])
+    (himm : Control.ScalarBlockType bt → Immediate opcode token [Control.blockByte bt])
     (hdecoded : Control.BlockDecoded data pos bt next) : At data start token next := by
-  obtain ⟨hb, hv, hn, _⟩ := hdecoded
-  exact .of_byte (Control.blockByte bt) hstart hbyte hpos himm hb hv hn
+  obtain ⟨hb, hv, hn, _, hbt⟩ := hdecoded
+  exact .of_byte (Control.blockByte bt) hstart hbyte hpos (himm hbt) hb hv hn
 
 end Itasca.Wasm
