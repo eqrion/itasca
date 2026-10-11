@@ -15,8 +15,8 @@ The Wasm 1.0 profile preserves its existing parameter behavior. -/
 def FuncTypeWithinLimits (profile : ValidationProfile) (ft : types.FuncType) : Prop :=
   match profile with
   | .Wasm1 => True
-  | .MultiValue => ft.params.val.length ≤ multi_value.MAX_PARAMS.val ∧
-      ft.results.val.length ≤ multi_value.MAX_RESULTS.val
+  | .MultiValue => ft.params.val.length ≤ limits.MAX_MULTI_VALUE_PARAMS.val ∧
+      ft.results.val.length ≤ limits.MAX_MULTI_VALUE_RESULTS.val
 
 /-- Both direct and indexed calls use signatures admitted by the profile. -/
 def Environment (profile : ValidationProfile) (env : module.Env) : Prop :=
@@ -33,8 +33,8 @@ bound definitionally unchanged in existing environment certificates. -/
 def FuncTypeAdmissible (profile : ValidationProfile) (ft : types.FuncType) : Prop :=
   match profile with
   | .Wasm1 => ft.results.val.length ≤ 1
-  | .MultiValue => ft.params.val.length ≤ multi_value.MAX_PARAMS.val ∧
-      ft.results.val.length ≤ multi_value.MAX_RESULTS.val
+  | .MultiValue => ft.params.val.length ≤ limits.MAX_MULTI_VALUE_PARAMS.val ∧
+      ft.results.val.length ≤ limits.MAX_MULTI_VALUE_RESULTS.val
 
 theorem funcTypeAdmissible_iff (profile : ValidationProfile) (ft : types.FuncType) :
     FuncTypeAdmissible profile ft ↔ FuncType profile ft ∧ FuncTypeWithinLimits profile ft := by

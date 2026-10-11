@@ -6,19 +6,19 @@ namespace Itasca
 
 /-- The comparison loop decides equality of the resolved lists, without
 assuming descriptor identity (distinct type indices may have equal types). -/
-theorem multi_value.same_types_loop.spec (env : module.Env)
+theorem code.same_types_loop.spec (env : module.Env)
     (a b : signature.ResultType) (ts us : List types.ValueType)
     (ha : MultiValue.resolve env a = some ts)
     (hb : MultiValue.resolve env b = some us)
     (n i : Usize) (hn : n.val = ts.length) (hu : us.length = ts.length)
     (hi : i.val ≤ n.val) (hpre : ∀ j < i.val, ts[j]? = us[j]?) :
-    multi_value.same_types_loop env a b n i ⦃ r =>
+    code.same_types_loop env a b n i ⦃ r =>
       ∃ equal, r = .Ok equal ∧ (equal = true ↔ ts = us) ⦄ := by
-  unfold multi_value.same_types_loop
+  unfold code.same_types_loop
   apply loop.spec_decr_nat (fun j => n.val - j.val)
     (fun j => j.val ≤ n.val ∧ ∀ k < j.val, ts[k]? = us[k]?)
   · intro j ⟨hj, hp⟩
-    unfold multi_value.same_types_loop.body
+    unfold code.same_types_loop.body
     split
     · rename_i hend
       simp only [WP.spec_ok]
@@ -61,15 +61,15 @@ theorem multi_value.same_types_loop.spec (env : module.Env)
 
 /-- Totality and exact equality for arbitrary descriptor pairs. -/
 @[step]
-theorem multi_value.same_types.spec (env : module.Env) (a b : signature.ResultType) :
-    multi_value.same_types env a b ⦃ r =>
+theorem code.same_types.spec (env : module.Env) (a b : signature.ResultType) :
+    code.same_types env a b ⦃ r =>
       match r with
       | .Ok equal => ∃ ts us, MultiValue.resolve env a = some ts ∧
           MultiValue.resolve env b = some us ∧ (equal = true ↔ ts = us)
       | .Err e => e = .UnknownType ∧
           (MultiValue.resolve env a = none ∨ MultiValue.resolve env b = none) ⦄ := by
   obtain ⟨ra, hra, hsa⟩ := WP.spec_imp_exists (signature.ResultType.len.spec a env)
-  unfold multi_value.same_types
+  unfold code.same_types
   rw [hra]
   cases ra with
   | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
@@ -93,16 +93,16 @@ theorem multi_value.same_types.spec (env : module.Env) (a b : signature.ResultTy
         have : n = m := by scalar_tac
         simp_all
       · rename_i he
-        apply WP.spec_mono (multi_value.same_types_loop.spec env a b ts us ha hb
+        apply WP.spec_mono (code.same_types_loop.spec env a b ts us ha hb
           n 0#usize hn (by scalar_tac) (by scalar_tac) (by simp))
         rintro r ⟨equal, rfl, hs⟩
         exact ⟨ts, us, ha, hb, hs⟩
 
-theorem multi_value.same_types.complete (env : module.Env) (a b : signature.ResultType)
+theorem code.same_types.complete (env : module.Env) (a b : signature.ResultType)
     (ts : List types.ValueType) (ha : MultiValue.resolve env a = some ts)
     (hb : MultiValue.resolve env b = some ts) :
-    multi_value.same_types env a b = .ok (.Ok true) := by
-  obtain ⟨r, hr, hs⟩ := WP.spec_imp_exists (multi_value.same_types.spec env a b)
+    code.same_types env a b = .ok (.Ok true) := by
+  obtain ⟨r, hr, hs⟩ := WP.spec_imp_exists (code.same_types.spec env a b)
   cases r with
   | Err e => simp [ha, hb] at hs
   | Ok equal =>

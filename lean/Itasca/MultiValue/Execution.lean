@@ -8,9 +8,9 @@ namespace Itasca.MultiValue
 /-- Successful prefixes of the real byte reader and opcode dispatch. This is
 proof infrastructure; public completeness starts from independent typing. -/
 inductive Execution (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32) :
-    multi_value.State → multi_value.State → Prop where
+    code.BodyState → code.BodyState → Prop where
   | nil (st) : Execution data env ctx index st st
-  | cons (st next last : multi_value.State) (opcode : U8) (pos : Usize) :
+  | cons (st next last : code.BodyState) (opcode : U8) (pos : Usize) :
       st.blocks.val ≠ [] →
       reader.read_byte data st.core.pos = .ok (.Ok (opcode, pos)) →
       step { st with core := { st.core with pos := pos } } data env ctx index opcode =
@@ -33,16 +33,16 @@ theorem Execution.single {data env ctx index st next opcode pos}
   .cons st next next opcode pos hc hr hs (.nil next)
 
 theorem run_unfold (data : Slice U8) (env : module.Env) (ctx : code.Context)
-    (index : U32) (st : multi_value.State) :
+    (index : U32) (st : code.BodyState) :
     run data env ctx index st = (do
       let r ← loopBody data env ctx index st
       match r with
       | .done result => .ok result
       | .cont (s, _) => run data env ctx index s) := by
-  unfold run multi_value.validate_body_loop multi_value.validate_body_with_loop multi_value.body_loop_loop
+  unfold run code.validate_multi_value_body_loop code.validate_multi_value_body_with_loop code.body_loop_loop
   conv_lhs => rw [loop]
   dsimp only
-  rw [multi_value.validate_body_loop.body_eq data env ctx]
+  rw [code.validate_multi_value_body_loop.body_eq data env ctx]
   simp only [Std.bind_assoc]
   congr 1
   funext r
@@ -73,14 +73,14 @@ theorem Execution.public {data env locals index ft final}
     (hparams : ft.params.val.length ≤ 1000) (hresults : ft.results.val.length ≤ 1000)
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
     (hc : final.blocks.val = []) (hp : final.core.pos.val = data.length) :
-    multi_value.validate_body data env locals index = .ok (.Ok ()) := by
+    code.validate_multi_value_body data env locals index = .ok (.Ok ()) := by
   have hb : index.val < env.types.val.length := List.getElem?_eq_some_iff.mp hi |>.1
   have hloop := h.finish hc hp
-  suffices hs : multi_value.validate_body data env locals index ⦃ r => r = .Ok () ⦄ by
+  suffices hs : code.validate_multi_value_body data env locals index ⦃ r => r = .Ok () ⦄ by
     obtain ⟨r, hr, rfl⟩ := WP.spec_imp_exists hs
     exact hr
-  rw [multi_value.validate_body.eq_core]
-  unfold multi_value.bodyCore
+  rw [code.validate_multi_value_body.eq_core]
+  unfold code.bodyCore
   dsimp only
   split
   · scalar_tac
@@ -91,9 +91,9 @@ theorem Execution.public {data env locals index ft final}
       have he : actual = ft := by
         have hx := (List.getElem?_eq_some_iff.mp hi).2
         simp_all
-      rw [he, multi_value.check_func_type.complete ft hparams hresults]
+      rw [he, code.check_func_type.complete ft hparams hresults]
       simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-        multi_value.push_frame.initial]
+        code.push_frame.initial]
       change run data env ⟨locals, alloc.vec.Vec.new _⟩ index (initial index) ⦃ r => r = .Ok () ⦄
       simp [hloop]
 

@@ -7,7 +7,7 @@ namespace Itasca
 /-! Checked projections of the actual visiting body loop. The normalized body
 keeps semantic proofs independent of the empty visitor's bookkeeping. -/
 
-def multi_value.validate_body_loop.body
+def code.validate_multi_value_body_loop.body
   (data : Slice U8) (v : alloc.vec.Vec types.FuncType)
   (v1 : alloc.vec.Vec module.Import)
   (v2 : alloc.vec.Vec module.Global)
@@ -21,9 +21,9 @@ def multi_value.validate_body_loop.body
   (i1 : Usize) (type_index : U32)
   (locals : alloc.vec.Vec types.ValueType)
   (v10 : alloc.vec.Vec types.ValueType)
-  (st : multi_value.State)
+  (st : code.BodyState)
   (visitor : code.EmptyOpVisitor) :
-  Result (ControlFlow (multi_value.State ×
+  Result (ControlFlow (code.BodyState ×
     code.EmptyOpVisitor) (core.result.Result Unit
     error.OpError))
   := do
@@ -44,7 +44,7 @@ def multi_value.validate_body_loop.body
       match op with
       | 2#uscalar =>
         let (r1, st1) ←
-          multi_value.enter { st with core := { st.core with pos := «end» } }
+          code.enter { st with core := { st.core with pos := «end» } }
             data
             env code.LabelKind.Block
         let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
@@ -58,7 +58,7 @@ def multi_value.validate_body_loop.body
           ok (done r2)
       | 3#uscalar =>
         let (r1, st1) ←
-          multi_value.enter { st with core := { st.core with pos := «end» } }
+          code.enter { st with core := { st.core with pos := «end» } }
             data
             env code.LabelKind.Loop
         let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
@@ -72,7 +72,7 @@ def multi_value.validate_body_loop.body
           ok (done r2)
       | 4#uscalar =>
         let (r1, st1) ←
-          multi_value.enter { st with core := { st.core with pos := «end» } }
+          code.enter { st with core := { st.core with pos := «end» } }
             data
             env code.LabelKind.Then
         let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
@@ -86,7 +86,7 @@ def multi_value.validate_body_loop.body
           ok (done r2)
       | 5#uscalar =>
         let (r1, st1) ←
-          multi_value.end_frame
+          code.end_frame
             { st with core := { st.core with pos := «end» } }
             env true
         let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
@@ -100,7 +100,7 @@ def multi_value.validate_body_loop.body
           ok (done r2)
       | 11#uscalar =>
         let (r1, st1) ←
-          multi_value.end_frame
+          code.end_frame
             { st with core := { st.core with pos := «end» } }
             env false
         let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
@@ -114,7 +114,7 @@ def multi_value.validate_body_loop.body
           ok (done r2)
       | 12#uscalar =>
         let (r1, st1) ←
-          multi_value.branch
+          code.branch
             { st with core := { st.core with pos := «end» } } data
             env false
         let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
@@ -128,7 +128,7 @@ def multi_value.validate_body_loop.body
           ok (done r2)
       | 13#uscalar =>
         let (r1, st1) ←
-          multi_value.branch
+          code.branch
             { st with core := { st.core with pos := «end» } } data
             env true
         let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
@@ -142,7 +142,7 @@ def multi_value.validate_body_loop.body
           ok (done r2)
       | 14#uscalar =>
         let (r1, st1) ←
-          multi_value.branch_table
+          code.branch_table
             { st with core := { st.core with pos := «end» } } data
             env
         let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
@@ -156,7 +156,7 @@ def multi_value.validate_body_loop.body
           ok (done r2)
       | 15#uscalar =>
         let (r1, ois) ←
-          multi_value.pop_results { st.core with pos := «end» }
+          code.pop_results { st.core with pos := «end» }
             env (signature.ResultType.Type type_index signature.TypePart.Results)
         let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
         match cf1 with
@@ -170,7 +170,7 @@ def multi_value.validate_body_loop.body
           ok (done r2)
       | 16#uscalar =>
         let (r1, st1) ←
-          multi_value.call { st with core := { st.core with pos := «end» } }
+          code.call { st with core := { st.core with pos := «end» } }
             data
             env false
         let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
@@ -184,7 +184,7 @@ def multi_value.validate_body_loop.body
           ok (done r2)
       | 17#uscalar =>
         let (r1, st1) ←
-          multi_value.call { st with core := { st.core with pos := «end» } }
+          code.call { st with core := { st.core with pos := «end» } }
             data
             env true
         let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
@@ -221,7 +221,7 @@ def multi_value.validate_body_loop.body
           Unit (core.convert.FromSame error.OpError) residual
       ok (done r1)
 
-def multi_value.validate_body_loop
+def code.validate_multi_value_body_loop
   (data : Slice U8) (v : alloc.vec.Vec types.FuncType)
   (v1 : alloc.vec.Vec module.Import)
   (v2 : alloc.vec.Vec module.Global)
@@ -233,30 +233,30 @@ def multi_value.validate_body_loop
   (v8 : alloc.vec.Vec types.MemType)
   (v9 : alloc.vec.Vec types.GlobalType) (i : Usize)
   (i1 : Usize) (type_index : U32)
-  (st : multi_value.State)
+  (st : code.BodyState)
   (locals : alloc.vec.Vec types.ValueType)
   (v10 : alloc.vec.Vec types.ValueType)
   (visitor : code.EmptyOpVisitor) :
   Result (core.result.Result Unit error.OpError)
   := do
-  let (r, _) ← multi_value.validate_body_with_loop
+  let (r, _) ← code.validate_multi_value_body_with_loop
     code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor data v v1 v2 v3 v4 o v5 v6 v7 v8 v9 i i1
     ⟨locals, v10⟩ type_index visitor st
   .ok r
 
 /-- Only the placement of the empty visitor changes between the semantic
 adapter and the extracted visiting loop. -/
-theorem multi_value.validate_body_loop.body_eq (data : Slice U8) (env : module.Env)
-    (ctx : code.Context) (index : U32) (st : multi_value.State) :
-    multi_value.body_loop_loop.body code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+theorem code.validate_multi_value_body_loop.body_eq (data : Slice U8) (env : module.Env)
+    (ctx : code.Context) (index : U32) (st : code.BodyState) :
+    code.body_loop_loop.body code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       data env ctx index .MultiValue () st = (do
-      let r ← multi_value.validate_body_loop.body data env.types env.imports env.globals
+      let r ← code.validate_multi_value_body_loop.body data env.types env.imports env.globals
         env.exports env.elements env.start env.func_type_indices env.func_types env.table_types
         env.mem_types env.global_types env.num_imported_funcs env.num_imported_globals
         index ctx.locals ctx.results st ()
       .ok (match r with | .cont (s, _) => .cont ((), s) | .done result => .done (result, ()))) := by
-  unfold multi_value.body_loop_loop.body multi_value.step_profile multi_value.validate_body_loop.body
-  simp only [multi_value.State.blocks_is_empty, Std.bind_assoc]
+  unfold code.body_loop_loop.body code.step_profile code.validate_multi_value_body_loop.body
+  simp only [code.BodyState.blocks_is_empty, Std.bind_assoc]
   congr 1
   funext b
   split
@@ -273,8 +273,8 @@ theorem multi_value.validate_body_loop.body_eq (data : Slice U8) (env : module.E
       conv_lhs => arg 1; whnf
       conv_rhs => arg 1; whnf
       split
-      all_goals simp_all only [bind_ok, multi_value.enter, multi_value.end_frame,
-        multi_value.branch, multi_value.branch_table, multi_value.call, Std.bind_assoc]
+      all_goals simp_all only [bind_ok, code.enter, code.end_frame,
+        code.branch, code.branch_table, code.call, Std.bind_assoc]
       all_goals first
         | (congr 1; funext pair; rcases pair with ⟨r, s⟩; cases r <;>
             simp [code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor, code.OpVisitor.on_block.default,
@@ -300,7 +300,7 @@ theorem multi_value.validate_body_loop.body_eq (data : Slice U8) (env : module.E
         cases r <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-def multi_value.bodyCore
+def code.bodyCore
   (data : Slice U8) (env : module.Env)
   (locals : alloc.vec.Vec types.ValueType) (type_index : U32)
   :
@@ -318,12 +318,12 @@ def multi_value.bodyCore
       let ft ←
         alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
           types.FuncType) env.types i1
-      let r ← multi_value.check_func_type ft
+      let r ← code.check_func_type ft
       let cf ← core.result.Result.Insts.CoreOpsTry.branch r
       match cf with
       | core.ops.control_flow.ControlFlow.Continue _ =>
         let st ←
-          multi_value.push_frame
+          code.push_frame
             {
               core :=
                 {
@@ -332,7 +332,7 @@ def multi_value.bodyCore
                   pos := 0#usize
                 }
             } code.LabelKind.Body (signature.BlockType.TypeIndex type_index)
-        multi_value.validate_body_loop data env.types env.imports env.globals
+        code.validate_multi_value_body_loop data env.types env.imports env.globals
           env.exports env.elements env.start env.func_type_indices
           env.func_types env.table_types env.mem_types env.global_types
           env.num_imported_funcs env.num_imported_globals type_index st locals
@@ -342,10 +342,10 @@ def multi_value.bodyCore
           Unit (core.convert.FromSame error.OpError) residual
 
 
- theorem multi_value.validate_body.eq_core (data : Slice U8) (env : module.Env)
+ theorem code.validate_multi_value_body.eq_core (data : Slice U8) (env : module.Env)
     (locals : alloc.vec.Vec types.ValueType) (index : U32) :
-    multi_value.validate_body data env locals index = multi_value.bodyCore data env locals index := by
-  unfold multi_value.validate_body multi_value.validate_body_with multi_value.validate_body_with_profile multi_value.initial_state multi_value.bodyCore
+    code.validate_multi_value_body data env locals index = code.bodyCore data env locals index := by
+  unfold code.validate_multi_value_body code.validate_multi_value_body_with code.validate_body_with_profile code.initial_state code.bodyCore
   simp only [Std.bind_assoc]
   split
   · simp [core.result.Result.Insts.CoreOpsTry.branch, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]

@@ -113,15 +113,15 @@ namespace Itasca
 /-- Exact declarative contract for the suffix checker. The witnesses use
 SpecTec's generated subtyping judgment and the independent stack realization;
 they do not mention a validator execution. -/
-theorem multi_value.check_suffix.wasm_spec (st : code.OpIterState) (env : module.Env)
+theorem code.check_suffix.wasm_spec (st : code.OpIterState) (env : module.Env)
     (view : signature.ResultType) (hshape : Control.Shape st) :
-    multi_value.check_suffix st env view ⦃ r =>
+    code.check_suffix st env view ⦃ r =>
       r = .Ok () ↔ ∃ ts front common,
         MultiValue.resolve env view = some ts ∧
         Sequence.Realizes (Control.polymorphic st)
           (st.vals.val.drop (Control.base st).val) (front ++ common) ∧
         Resulttype_sub (.mk_list common) (.mk_list (ts.map Translate.valueType)) ⦄ := by
-  apply WP.spec_mono (multi_value.check_suffix.spec st env view hshape)
+  apply WP.spec_mono (code.check_suffix.spec st env view hshape)
   intro r hr
   constructor
   · intro hok
@@ -136,14 +136,14 @@ theorem multi_value.check_suffix.wasm_spec (st : code.OpIterState) (env : module
 
 /-- The generated common-subtype premise of a branch table suffices for each
 actual suffix check, without requiring equality of the target signatures. -/
-theorem multi_value.check_suffix.complete_of_subtype (st : code.OpIterState) (env : module.Env)
+theorem code.check_suffix.complete_of_subtype (st : code.OpIterState) (env : module.Env)
     (view : signature.ResultType) (ts : List types.ValueType) (front common : List valtype)
     (hshape : Control.Shape st) (hts : MultiValue.resolve env view = some ts)
     (hr : Sequence.Realizes (Control.polymorphic st)
       (st.vals.val.drop (Control.base st).val) (front ++ common))
     (hsub : Resulttype_sub (.mk_list common) (.mk_list (ts.map Translate.valueType))) :
-    multi_value.check_suffix st env view = .ok (.Ok ()) := by
-  apply multi_value.check_suffix.complete st env view ts hshape hts
+    code.check_suffix st env view = .ok (.Ok ()) := by
+  apply code.check_suffix.complete st env view ts hshape hts
   apply MultiValue.Suffix.of_realizes front
   exact DeclarativeComplete.realizes_mono hr
     (DeclarativeComplete.result_sub_append (DeclarativeComplete.result_sub_refl front) hsub)

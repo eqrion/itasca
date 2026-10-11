@@ -14,9 +14,9 @@ private theorem empty_spine_form {env root parents C outer form ins}
 theorem Pending.end_after {data env locals index st} (p : Pending data env locals index st)
     (isElse : Bool) (opcode : U8) (hop : opcode = if isElse then 0x05#u8 else 0x0B#u8)
     (hbyte : data.val[p.start.val]'p.inbounds = opcode) :
-    multi_value.end_frame st env isElse ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
+    code.end_frame st env isElse ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
   obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, vals⟩ := p.opened
-  apply WP.spec_mono (multi_value.end_frame.sound st env isElse
+  apply WP.spec_mono (code.end_frame.sound st env isElse
     (p.parents.map Frames.Saved.ctrl) (p.parents.map Frames.Saved.bt)
     p.current.ctrl p.current.bt p.current.ins p.current.outs outer p.current.vals
     ctrls blocks (by simp) vals base header.inputs header.outputs p.opened.shape.core)

@@ -31,16 +31,16 @@ namespace Itasca
 
 /-- Exact loop contract: rejection is equivalent to incompatibility of the
 remaining signature with the unchanged stack slice. -/
-theorem multi_value.check_suffix_loop.spec (st : code.OpIterState) (env : module.Env)
+theorem code.check_suffix_loop.spec (st : code.OpIterState) (env : module.Env)
     (view : signature.ResultType) (ts : List types.ValueType)
     (hts : MultiValue.resolve env view = some ts) (stack i : Usize)
     (hb : (Control.base st).val ≤ stack.val) (hs : stack.val ≤ st.vals.val.length)
     (hi : i.val ≤ ts.length) :
-    multi_value.check_suffix_loop st.vals st.ctrls st.pos env view (Control.base st) stack i ⦃ r =>
+    code.check_suffix_loop st.vals st.ctrls st.pos env view (Control.base st) stack i ⦃ r =>
       r = .Ok () ↔ MultiValue.Fits (Control.polymorphic st)
         ((st.vals.val.take stack.val).drop (Control.base st).val).reverse
         (ts.take i.val).reverse ⦄ := by
-  unfold multi_value.check_suffix_loop
+  unfold code.check_suffix_loop
   apply loop.spec_decr_nat (fun p => p.2.val)
     (fun p => (Control.base st).val ≤ p.1.val ∧ p.1.val ≤ st.vals.val.length ∧
       p.2.val ≤ ts.length ∧
@@ -52,7 +52,7 @@ theorem multi_value.check_suffix_loop.spec (st : code.OpIterState) (env : module
           (ts.take p.2.val).reverse))
   · rintro ⟨s, j⟩ ⟨hb', hs', hj, he⟩
     dsimp only at hb' hs' hj he
-    unfold multi_value.check_suffix_loop.body
+    unfold code.check_suffix_loop.body
     dsimp only
     split
     · rename_i hz
@@ -121,11 +121,11 @@ theorem multi_value.check_suffix_loop.spec (st : code.OpIterState) (env : module
 
 /-- The actual non-destructive suffix checker is total, sound, and complete
 for the independently specified multi-value operand compatibility relation. -/
-theorem multi_value.check_suffix.spec (st : code.OpIterState) (env : module.Env)
+theorem code.check_suffix.spec (st : code.OpIterState) (env : module.Env)
     (view : signature.ResultType) (hshape : Control.Shape st) :
-    multi_value.check_suffix st env view ⦃ r =>
+    code.check_suffix st env view ⦃ r =>
       r = .Ok () ↔ ∃ ts, MultiValue.resolve env view = some ts ∧ MultiValue.Suffix st ts ⦄ := by
-  unfold multi_value.check_suffix
+  unfold code.check_suffix
   step with code.cur_base.spec st
   subst base
   obtain ⟨r, hr, ht⟩ := WP.spec_imp_exists (signature.ResultType.len.spec view env)
@@ -136,17 +136,17 @@ theorem multi_value.check_suffix.spec (st : code.OpIterState) (env : module.Env)
   | Ok n =>
     obtain ⟨ts, hts, hn⟩ := ht
     simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-    apply WP.spec_mono (multi_value.check_suffix_loop.spec st env view ts hts
+    apply WP.spec_mono (code.check_suffix_loop.spec st env view ts hts
       (alloc.vec.Vec.len st.vals) n hshape.base_le (by simp) (by omega))
     intro res hs
     simpa [hts, hn, MultiValue.Suffix] using hs
 
-theorem multi_value.check_suffix.complete (st : code.OpIterState) (env : module.Env)
+theorem code.check_suffix.complete (st : code.OpIterState) (env : module.Env)
     (view : signature.ResultType) (ts : List types.ValueType)
     (hshape : Control.Shape st) (hts : MultiValue.resolve env view = some ts)
     (hfits : MultiValue.Suffix st ts) :
-    multi_value.check_suffix st env view = .ok (.Ok ()) := by
-  obtain ⟨r, hr, hs⟩ := WP.spec_imp_exists (multi_value.check_suffix.spec st env view hshape)
+    code.check_suffix st env view = .ok (.Ok ()) := by
+  obtain ⟨r, hr, hs⟩ := WP.spec_imp_exists (code.check_suffix.spec st env view hshape)
   rw [hs.mpr ⟨ts, hts, hfits⟩] at hr
   exact hr
 

@@ -41,7 +41,7 @@ theorem signature_limits {env : module.Env} (limits : EnvironmentWithinLimits en
     simp [inputs, outputs, resolve, List.getElem?_eq_getElem hi] at hin hout
     simpa [← hin, ← hout] using h
 
-theorem labels_push {env : module.Env} {C : context} {st s : multi_value.State}
+theorem labels_push {env : module.Env} {C : context} {st s : code.BodyState}
     (hl : Labels env st C) (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (frame : code.Ctrl) (bt : signature.BlockType) (ts : List types.ValueType)
     (hc : s.core.ctrls.val = st.core.ctrls.val ++ [frame])
@@ -60,15 +60,15 @@ theorem labels_push {env : module.Env} {C : context} {st s : multi_value.State}
       have he : (st.blocks.val ++ [bt]).length - 1 - (depth + 1) = st.blocks.val.length - 1 - depth := by simp; omega
       have hbnd : st.blocks.val.length - 1 - depth < st.blocks.val.length := by omega
       have he' : st.blocks.val.length - (depth + 1) = st.blocks.val.length - 1 - depth := by omega
-      simp only [multi_value.State.blocks_length] at hd hs he hbnd he'
+      simp only [code.BodyState.blocks_length] at hd hs he hbnd he'
       simp [hb, hc, hd, he', hbnd, List.getElem?_append]
     · have hs : ¬ depth + 1 < (st.blocks.val ++ [bt]).length := by simp; omega
-      simp only [multi_value.State.blocks_length] at hd
+      simp only [code.BodyState.blocks_length] at hd
       simp [hb, hd]
 
 /-- A delimiter execution, with exact effects and no post-delimiter capacity
 estimate; callers derive bounds from the enclosing entry. -/
-theorem execute_end {st : multi_value.State} (f : Frame st) (data : Slice U8)
+theorem execute_end {st : code.BodyState} (f : Frame st) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (index : U32) (next : Usize)
     (ins outs : List types.ValueType)
     (hat : At data st.core.pos .end_ next)
@@ -86,7 +86,7 @@ theorem execute_end {st : multi_value.State} (f : Frame st) (data : Slice U8)
   cases himm
   have hnext := hspan.empty
   obtain ⟨⟨r, s⟩, hr, hok, hp, hc, hb, hv⟩ := WP.spec_imp_exists
-    (multi_value.end_frame.complete { st with core := { st.core with pos := pos } } env false
+    (code.end_frame.complete { st with core := { st.core with pos := pos } } env false
       f.core.parents f.parents f.core.current f.current ins outs f.core.outer f.core.operands
       f.core.ctrls f.blocks f.aligned f.core.vals f.core.base hin hout ht hthen hcap)
   dsimp only at hok
@@ -96,7 +96,7 @@ theorem execute_end {st : multi_value.State} (f : Frame st) (data : Slice U8)
   exact ⟨s, .single f.nonempty (by simpa [hbyte] using hread) hstep,
     hp.trans hnext.symm, hc, hb, hv⟩
 
-theorem execute_else {st : multi_value.State} (f : Frame st) (data : Slice U8)
+theorem execute_else {st : code.BodyState} (f : Frame st) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (index : U32) (next : Usize)
     (ins outs : List types.ValueType)
     (hat : At data st.core.pos .else_ next)
@@ -114,7 +114,7 @@ theorem execute_else {st : multi_value.State} (f : Frame st) (data : Slice U8)
   cases himm
   have hnext := hspan.empty
   obtain ⟨⟨r, s⟩, hr, hok, hp, hc, hb, hv⟩ := WP.spec_imp_exists
-    (multi_value.end_frame.complete { st with core := { st.core with pos := pos } } env true
+    (code.end_frame.complete { st with core := { st.core with pos := pos } } env true
       f.core.parents f.parents f.core.current f.current ins outs f.core.outer f.core.operands
       f.core.ctrls f.blocks f.aligned f.core.vals f.core.base hin hout ht hthen hcap)
   dsimp only at hok
@@ -124,7 +124,7 @@ theorem execute_else {st : multi_value.State} (f : Frame st) (data : Slice U8)
   exact ⟨s, .single f.nonempty (by simpa [hbyte] using hread) hstep,
     hp.trans hnext.symm, hc, hb, hv⟩
 
-theorem execute_enter {st : multi_value.State} (f : Frame st) (data : Slice U8)
+theorem execute_enter {st : code.BodyState} (f : Frame st) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (index : U32) (next : Usize)
     (form : Frames.Form) (initial : form.Initial) (bt : signature.BlockType)
     (ins outs : List types.ValueType) (front : List valtype)
@@ -143,7 +143,7 @@ theorem execute_enter {st : multi_value.State} (f : Frame st) (data : Slice U8)
   have hd : BlockDecoded data pos bt next := blockDecoded_iff.mpr ⟨bytes, hop.2, hspan⟩
   obtain ⟨hins, houts⟩ := signature_limits limits bt ins outs hin hout
   obtain ⟨⟨r, s⟩, hr, hok, hp, heffect⟩ := WP.spec_imp_exists
-    (multi_value.enter.complete { st with core := { st.core with pos := pos } } data env form initial
+    (code.enter.complete { st with core := { st.core with pos := pos } } data env form initial
       bt next ins outs f.core.outer f.core.operands front hd hin hout hins houts f.core.vals
       f.core.base_eq (by simp [f.blocks, f.core.ctrls, f.aligned]) hb.ctrl_capacity
       (by change st.core.vals.val.length + ins.length ≤ Usize.max; have := hb.val_capacity; omega) (by simpa [Control.polymorphic, f.core.ctrls] using ht))
@@ -162,7 +162,7 @@ theorem execute_enter {st : multi_value.State} (f : Frame st) (data : Slice U8)
     omega
   · simp [hblocks]
 
-private theorem restore_bounds {data : Slice U8} {st s : multi_value.State}
+private theorem restore_bounds {data : Slice U8} {st s : code.BodyState}
     (hb : Bounds data st) (hp : st.core.pos.val ≤ s.core.pos.val) (hpos : s.core.pos.val ≤ data.length)
     (hv : s.core.vals.val.length ≤ st.core.vals.val.length)
     (hc : s.blocks.val.length ≤ st.blocks.val.length) : Bounds data s := by
@@ -174,7 +174,7 @@ parent stack and result descriptor. -/
 theorem execute_body {data : Slice U8} {env : module.Env} {ctx : code.Context} {index : U32}
     {tokens : List Token} {ops : List instr}
     (program : Program data env ctx index tokens ops) (C : context)
-    (st : multi_value.State) (f : Frame st) (next : Usize)
+    (st : code.BodyState) (f : Frame st) (next : Usize)
     (ins outs : List types.ValueType)
     (hm : EnvTranslation.Matches env ctx C) (hl : Labels env st C)
     (hb : Bounds data st) (hbytes : Consumed data st.core.pos (tokens ++ [Token.end_]) next)
@@ -201,7 +201,7 @@ private theorem concrete_realizes (ts : List types.ValueType) :
   apply (WasmFrames.realizes_append_concrete false [] ts _).mpr
   exact ⟨[], by simp [Sequence.Realizes], rfl⟩
 
-private theorem resume_parent {st s : multi_value.State} (f : Frame st)
+private theorem resume_parent {st s : code.BodyState} (f : Frame st)
     (remaining : List code.StackType) (front : List valtype) (outs : List types.ValueType)
     (hreal : Sequence.Realizes f.core.current.polymorphic_base remaining front)
     (hc : s.core.ctrls.val = st.core.ctrls.val) (hb : s.blocks.val = st.blocks.val)
@@ -214,7 +214,7 @@ private theorem resume_parent {st s : multi_value.State} (f : Frame st)
     exact ⟨front, by simpa [f.core.poly_eq] using hreal, rfl⟩
   · exact alloc.vec.Vec.ext _ _ hb
 
-private theorem closed_bounds {data : Slice U8} {st s : multi_value.State}
+private theorem closed_bounds {data : Slice U8} {st s : code.BodyState}
     (f : Frame st) (hb : Bounds data st) (next : Usize)
     (remaining : List code.StackType) (outs : List types.ValueType)
     (hp : s.core.pos = next) (hend : next.val ≤ data.length)
@@ -234,7 +234,7 @@ theorem run_closed_child {data : Slice U8} {env : module.Env} {ctx : code.Contex
     (limits : EnvironmentWithinLimits env) (form : Frames.Form) (initial : form.Initial)
     (bt : signature.BlockType) (tokens : List Token) (ops : List instr)
     (program : Program data env ctx index tokens ops)
-    (C : context) (st : multi_value.State) (f : Frame st) (next : Usize)
+    (C : context) (st : code.BodyState) (f : Frame st) (next : Usize)
     (front : List valtype) (ins outs : List types.ValueType)
     (hm : EnvTranslation.Matches env ctx C) (hl : Labels env st C) (hb : Bounds data st)
     (hbytes : Consumed data st.core.pos ([form.token bt] ++ tokens ++ [Token.end_]) next)

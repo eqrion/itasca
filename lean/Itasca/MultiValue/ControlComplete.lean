@@ -5,7 +5,7 @@ open Aeneas Aeneas.Std Result
 namespace Itasca.MultiValue
 
 /-- Realizing the declared results is sufficient to close a frame. -/
-theorem finishFrame.complete (st : multi_value.State) (env : module.Env) (isElse : Bool)
+theorem finishFrame.complete (st : code.BodyState) (env : module.Env) (isElse : Bool)
     (bt : signature.BlockType) (frame : code.Ctrl) (i n : Usize)
     (parents : List code.Ctrl) (blocks : List signature.BlockType)
     (ins outs : List types.ValueType) (outer segment : List code.StackType)
@@ -23,7 +23,7 @@ theorem finishFrame.complete (st : multi_value.State) (env : module.Env) (isElse
       blocks ++ [bt] from by simpa [hc] using hb) (by simp [ha])).1
   unfold finishFrame
   simp only [signature.BlockType.results.spec, bind_ok]
-  step with multi_value.pop_results.complete st.core env (outputs bt) outs outer segment []
+  step with code.pop_results.complete st.core env (outputs bt) outs outer segment []
     hout hv (by simp [Control.base, hc, hbase]) (by simpa [Control.polymorphic, hc] using ht)
     as ⟨r, s, hok, hsc, hsp, rest, hsv, hl, hrest⟩
   have hempty : rest = [] := by
@@ -42,7 +42,7 @@ theorem finishFrame.complete (st : multi_value.State) (env : module.Env) (isElse
     step as ⟨v1, bv, hbpop, hbval⟩
     split
     · simp_all [EndEffect]
-    · step with multi_value.push_results.spec { s with ctrls := sv } env (outputs bt) outs
+    · step with code.push_results.spec { s with ctrls := sv } env (outputs bt) outs
         hout (by simpa [hsv'] using hcap) as ⟨r1, s1, hr1, hv1, hc1, hp1⟩
       have hnz : blocks ≠ [] := by intro he; subst blocks; simp_all
       exact ⟨hr1, hp1.trans hsp, by simp [hc1, hsvctrl, hsc, hc, hblocks, hbval, hb, hv1, hsv', hnz]⟩
@@ -53,7 +53,7 @@ theorem finishFrame.complete (st : multi_value.State) (env : module.Env) (isElse
         parents ++ [{ frame with kind := .Else, polymorphic_base := false }] := by
       simp_all [alloc.vec.Vec.set]
     simp only [signature.BlockType.params.spec, bind_ok]
-    step with multi_value.push_results.spec
+    step with code.push_results.spec
       { s with ctrls := back1 { c1 with polymorphic_base := false } } env (inputs bt) ins
       hin (by simpa [hsv'] using hcap) as ⟨r1, s1, hr1, hv1, hc1, hp1⟩
     exact ⟨hr1, hp1.trans hsp, by simp [hc1, hcnew, hc, hv1, hsv']⟩
@@ -63,7 +63,7 @@ end Itasca.MultiValue
 namespace Itasca
 
 /-- Independent frame results and the omitted-else identity force actual acceptance. -/
-theorem multi_value.end_frame.complete (st : multi_value.State) (env : module.Env) (isElse : Bool)
+theorem code.end_frame.complete (st : code.BodyState) (env : module.Env) (isElse : Bool)
     (parents : List code.Ctrl) (blocks : List signature.BlockType)
     (frame : code.Ctrl) (bt : signature.BlockType)
     (ins outs : List types.ValueType) (outer segment : List code.StackType)
@@ -75,7 +75,7 @@ theorem multi_value.end_frame.complete (st : multi_value.State) (env : module.En
     (ht : Sequence.Realizes frame.polymorphic_base segment (outs.map Translate.valueType))
     (hallowed : MultiValue.EndAllowed frame isElse ins outs)
     (hcap : outer.length + (if isElse then ins.length else outs.length) ≤ Usize.max) :
-    multi_value.end_frame st env isElse ⦃ r => r.1 = .Ok () ∧
+    code.end_frame st env isElse ⦃ r => r.1 = .Ok () ∧
       MultiValue.EndEffect st r.2 parents blocks frame isElse ins outs outer ⦄ := by
   rw [MultiValue.end_frame_eq st env isElse parents blocks frame bt hc hb ha]
   step as ⟨i, hi⟩
@@ -88,7 +88,7 @@ theorem multi_value.end_frame.complete (st : multi_value.State) (env : module.En
     split
     · rename_i hk
       have heq := hallowed hk
-      rw [multi_value.same_types.complete env (MultiValue.inputs bt) (MultiValue.outputs bt)
+      rw [code.same_types.complete env (MultiValue.inputs bt) (MultiValue.outputs bt)
         ins hin (by simpa [heq] using hout)]
       simpa [core.result.Result.Insts.CoreOpsTry.branch] using hsfinish
     · exact hsfinish

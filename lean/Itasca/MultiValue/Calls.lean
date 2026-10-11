@@ -5,25 +5,25 @@ open Aeneas Aeneas.Std
 
 namespace Itasca
 
-theorem multi_value.check_func_type.complete (ft : types.FuncType)
+theorem code.check_func_type.complete (ft : types.FuncType)
     (hp : ft.params.val.length ≤ 1000) (hr : ft.results.val.length ≤ 1000) :
-    multi_value.check_func_type ft = .ok (.Ok ()) := by
-  have hp' : ¬ alloc.vec.Vec.len ft.params > multi_value.MAX_PARAMS := by
-    simp only [multi_value.MAX_PARAMS]; scalar_tac
-  have hr' : ¬ alloc.vec.Vec.len ft.results > multi_value.MAX_RESULTS := by
-    simp only [multi_value.MAX_RESULTS]; scalar_tac
-  simp [multi_value.check_func_type, hp', hr']
+    code.check_func_type ft = .ok (.Ok ()) := by
+  have hp' : ¬ alloc.vec.Vec.len ft.params > limits.MAX_MULTI_VALUE_PARAMS := by
+    simp only [limits.MAX_MULTI_VALUE_PARAMS]; scalar_tac
+  have hr' : ¬ alloc.vec.Vec.len ft.results > limits.MAX_MULTI_VALUE_RESULTS := by
+    simp only [limits.MAX_MULTI_VALUE_RESULTS]; scalar_tac
+  simp [code.check_func_type, hp', hr']
 
 /-- Multi-value calls are total on structurally bounded stacks. The explicit
 capacity guard also covers arbitrary oversized caller-supplied environments. -/
 @[step]
-theorem multi_value.apply_func_type.total (st : code.OpIterState) (ft : types.FuncType)
+theorem code.apply_func_type.total (st : code.OpIterState) (ft : types.FuncType)
     (hshape : Control.Shape st) :
-    multi_value.apply_func_type st ft ⦃ r =>
+    code.apply_func_type st ft ⦃ r =>
       Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧ r.2.pos = st.pos ∧
         r.2.vals.val.length ≤ st.vals.val.length + 1000 ⦄ := by
-  obtain ⟨check, hcheck, hlimit⟩ := WP.spec_imp_exists (multi_value.check_func_type.spec ft)
-  unfold multi_value.apply_func_type
+  obtain ⟨check, hcheck, hlimit⟩ := WP.spec_imp_exists (code.check_func_type.spec ft)
+  unfold code.apply_func_type
   rw [hcheck]
   cases check with
   | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
@@ -63,10 +63,10 @@ theorem multi_value.apply_func_type.total (st : code.OpIterState) (ft : types.Fu
 
 /-- An accepted call consumes its parameters in operand order and appends all
 results. The semantic transfer is independent of the function's arity. -/
-theorem multi_value.apply_func_type.realizes (st : code.OpIterState) (ft : types.FuncType)
+theorem code.apply_func_type.realizes (st : code.OpIterState) (ft : types.FuncType)
     (outer segment : List code.StackType)
     (hv : st.vals.val = outer ++ segment) (hb : (Control.base st).val = outer.length) :
-    multi_value.apply_func_type st ft ⦃ r =>
+    code.apply_func_type st ft ⦃ r =>
       r.1 = .Ok () → r.2.ctrls = st.ctrls ∧ r.2.pos = st.pos ∧
       ft.params.val.length ≤ 1000 ∧ ft.results.val.length ≤ 1000 ∧
       ∃ rest, r.2.vals.val = outer ++ (rest ++ ft.results.val.map code.StackType.Val) ∧
@@ -74,8 +74,8 @@ theorem multi_value.apply_func_type.realizes (st : code.OpIterState) (ft : types
         ∀ ts, Sequence.Realizes (Control.polymorphic st) rest ts →
           Sequence.Realizes (Control.polymorphic st) segment
             (ts ++ ft.params.val.map Translate.valueType) ⦄ := by
-  obtain ⟨check, hcheck, hc⟩ := WP.spec_imp_exists (multi_value.check_func_type.spec ft)
-  unfold multi_value.apply_func_type
+  obtain ⟨check, hcheck, hc⟩ := WP.spec_imp_exists (code.check_func_type.spec ft)
+  unfold code.apply_func_type
   rw [hcheck]
   cases check with
   | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
@@ -97,14 +97,14 @@ theorem multi_value.apply_func_type.realizes (st : code.OpIterState) (ft : types
 
 /-- Declarative operand compatibility forces call acceptance within the
 profile's signature limits and available stack capacity. -/
-theorem multi_value.apply_func_type.complete (st : code.OpIterState) (ft : types.FuncType)
+theorem code.apply_func_type.complete (st : code.OpIterState) (ft : types.FuncType)
     (outer segment : List code.StackType) (before : List valtype)
     (hp : ft.params.val.length ≤ 1000) (hr : ft.results.val.length ≤ 1000)
     (hv : st.vals.val = outer ++ segment) (hb : (Control.base st).val = outer.length)
     (hcap : st.vals.val.length + ft.results.val.length ≤ Usize.max)
     (ht : Sequence.Realizes (Control.polymorphic st) segment
       (before ++ ft.params.val.map Translate.valueType)) :
-    multi_value.apply_func_type st ft ⦃ r =>
+    code.apply_func_type st ft ⦃ r =>
       r.1 = .Ok () ∧ r.2.ctrls = st.ctrls ∧ r.2.pos = st.pos ∧
       ∃ rest, r.2.vals.val = outer ++ rest ∧
         rest.length ≤ segment.length + ft.results.val.length ∧
@@ -116,8 +116,8 @@ theorem multi_value.apply_func_type.complete (st : code.OpIterState) (ft : types
   have hspace : s.vals.val.length + ft.results.val.length ≤ Usize.max := by
     simp only [hvs, hv, List.length_append] at *
     omega
-  unfold multi_value.apply_func_type
-  rw [multi_value.check_func_type.complete ft hp hr]
+  unfold code.apply_func_type
+  rw [code.check_func_type.complete ft hp hr]
   simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
   rw [hpop]
   simp only [bind_ok]

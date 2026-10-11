@@ -13,12 +13,12 @@ theorem step_transfer {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (ha : FullVisitor.Accepts replacement)
     (data : Slice U8) (env : module.Env) (ctx ctx' : code.Context)
     (hlocals : ctx.locals = ctx'.locals) (index : U32) (opcode : U8)
-    (st final : multi_value.State) (v : V) (w : W) (v' : V)
-    (h : multi_value.step_profile visitor st data env ctx index .MultiValue opcode v =
+    (st final : code.BodyState) (v : V) (w : W) (v' : V)
+    (h : code.step_profile visitor st data env ctx index .MultiValue opcode v =
       .ok (.Ok (), final, v')) :
-    ∃ w', multi_value.step_profile replacement st data env ctx' index .MultiValue opcode w =
+    ∃ w', code.step_profile replacement st data env ctx' index .MultiValue opcode w =
       .ok (.Ok (), final, w') := by
-  unfold multi_value.step_profile at h ⊢
+  unfold code.step_profile at h ⊢
   conv at h => lhs; whnf
   conv => arg 1; ext w'; lhs; whnf
   split at h
@@ -80,7 +80,7 @@ theorem step_transfer {V W : Type} (visitor : code.OpVisitor V)
       cases u
       simp [core.result.Result.Insts.CoreOpsTry.branch] at h
       obtain ⟨rfl, rfl⟩ := h
-      obtain ⟨w', hw⟩ := multi_value.branch_table_with.accepted_transfer visitor replacement ha
+      obtain ⟨w', hw⟩ := code.branch_table_with.accepted_transfer visitor replacement ha
         st data env v w s v' hs
       exact ⟨w', by simp [hw, core.result.Result.Insts.CoreOpsTry.branch]⟩
   case h_9 =>

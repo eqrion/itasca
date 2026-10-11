@@ -12,7 +12,7 @@ def EndAllowed (frame : code.Ctrl) (isElse : Bool) (ins outs : List types.ValueT
   if isElse then frame.kind = .Then else frame.kind = .Then → ins = outs
 
 /-- The exact successful closing effect, including the root's discarded results. -/
-def EndEffect (st s : multi_value.State) (parents : List code.Ctrl)
+def EndEffect (st s : code.BodyState) (parents : List code.Ctrl)
     (blocks : List signature.BlockType) (frame : code.Ctrl) (isElse : Bool)
     (ins outs : List types.ValueType) (outer : List code.StackType) : Prop :=
   s.core.pos = st.core.pos ∧
@@ -23,18 +23,18 @@ def EndEffect (st s : multi_value.State) (parents : List code.Ctrl)
     s.core.ctrls.val = parents ∧ s.blocks.val = blocks ∧
     s.core.vals.val = if blocks = [] then outer else outer ++ outs.map code.StackType.Val
 
-theorem end_frame_eq (st : multi_value.State) (env : module.Env) (isElse : Bool)
+theorem end_frame_eq (st : code.BodyState) (env : module.Env) (isElse : Bool)
     (parents : List code.Ctrl) (blocks : List signature.BlockType)
     (frame : code.Ctrl) (bt : signature.BlockType)
     (hc : st.core.ctrls.val = parents ++ [frame])
     (hb : st.blocks.val = blocks ++ [bt]) (ha : blocks.length = parents.length) :
-    multi_value.end_frame st env isElse = (do
+    code.end_frame st env isElse = (do
       let i ← alloc.vec.Vec.len st.blocks - 1#usize
       if isElse then
         if frame.kind = .Then then finishFrame st env true bt frame i (alloc.vec.Vec.len st.blocks)
         else .ok (.Err .TypeMismatch, st)
       else if frame.kind = .Then then
-        let r ← multi_value.same_types env (inputs bt) (outputs bt)
+        let r ← code.same_types env (inputs bt) (outputs bt)
         let cf ← core.result.Result.Insts.CoreOpsTry.branch r
         match cf with
         | .Continue equal =>
@@ -68,7 +68,7 @@ theorem end_frame_eq (st : multi_value.State) (env : module.Env) (isElse : Bool)
     simp [finishFrame, signature.BlockType.params.spec, signature.BlockType.results.spec] <;> rfl
 
 /-- Successful closing consumes precisely a realization of the complete result vector. -/
-theorem finishFrame.sound (st : multi_value.State) (env : module.Env) (isElse : Bool)
+theorem finishFrame.sound (st : code.BodyState) (env : module.Env) (isElse : Bool)
     (bt : signature.BlockType) (frame : code.Ctrl) (i n : Usize)
     (parents : List code.Ctrl) (blocks : List signature.BlockType)
     (ins outs : List types.ValueType) (outer segment : List code.StackType)
@@ -86,7 +86,7 @@ theorem finishFrame.sound (st : multi_value.State) (env : module.Env) (isElse : 
       blocks ++ [bt] from by simpa [hc] using hb) (by simp [ha])).1
   unfold finishFrame
   simp only [signature.BlockType.results.spec, bind_ok]
-  step with multi_value.pop_results.realizes st.core env (outputs bt) outs outer segment
+  step with code.pop_results.realizes st.core env (outputs bt) outs outer segment
     hout hv (by simp [Control.base, hc, hbase]) as ⟨r, s, hsc, hsp, rest, hsv, hl, ht⟩
   have hss : Control.Shape s := hs.replace_operands hsc (by simp [Control.base, hc, hbase, hsv])
   step
@@ -111,7 +111,7 @@ theorem finishFrame.sound (st : multi_value.State) (env : module.Env) (isElse : 
         have hnew : Control.Shape { s with ctrls := sv } := hss.pop_ctrl rfl hsvctrl
         split
         · simp_all [EndEffect]
-        · step with multi_value.push_results.total { s with ctrls := sv } env (outputs bt) hnew
+        · step with code.push_results.total { s with ctrls := sv } env (outputs bt) hnew
           as ⟨r1, s1, hshape, hctrl, hpos, hpush⟩
           intro hok
           obtain ⟨ts, hts, hvals⟩ := hpush hok
@@ -129,7 +129,7 @@ theorem finishFrame.sound (st : multi_value.State) (env : module.Env) (isElse : 
           apply hss.change_metadata (s := { s with ctrls := back1 { c1 with polymorphic_base := false } }) rfl
           simp [hcnew, hsc, hc]
         simp only [signature.BlockType.params.spec, bind_ok]
-        step with multi_value.push_results.total
+        step with code.push_results.total
           { s with ctrls := back1 { c1 with polymorphic_base := false } } env (inputs bt) hnew
           as ⟨r1, s1, hshape, hctrl, hpos, hpush⟩
         intro hok
@@ -144,7 +144,7 @@ namespace Itasca
 
 /-- Successful `else`/`end` exposes both the semantic closing check and the
 exact physical frame transition. No capacity assumption is needed for soundness. -/
-theorem multi_value.end_frame.sound (st : multi_value.State) (env : module.Env) (isElse : Bool)
+theorem code.end_frame.sound (st : code.BodyState) (env : module.Env) (isElse : Bool)
     (parents : List code.Ctrl) (blocks : List signature.BlockType)
     (frame : code.Ctrl) (bt : signature.BlockType)
     (ins outs : List types.ValueType) (outer segment : List code.StackType)
@@ -154,7 +154,7 @@ theorem multi_value.end_frame.sound (st : multi_value.State) (env : module.Env) 
     (hin : MultiValue.resolve env (MultiValue.inputs bt) = some ins)
     (hout : MultiValue.resolve env (MultiValue.outputs bt) = some outs)
     (hs : Control.Shape st.core) :
-    multi_value.end_frame st env isElse ⦃ r => r.1 = .Ok () →
+    code.end_frame st env isElse ⦃ r => r.1 = .Ok () →
       MultiValue.EndAllowed frame isElse ins outs ∧
       Sequence.Realizes frame.polymorphic_base segment (outs.map Translate.valueType) ∧
       MultiValue.EndEffect st r.2 parents blocks frame isElse ins outs outer ⦄ := by
@@ -168,7 +168,7 @@ theorem multi_value.end_frame.sound (st : multi_value.State) (env : module.Env) 
   · simp only [Bool.false_eq_true, ↓reduceIte]
     split
     · rename_i hk
-      step with multi_value.same_types.spec env (MultiValue.inputs bt) (MultiValue.outputs bt)
+      step with code.same_types.spec env (MultiValue.inputs bt) (MultiValue.outputs bt)
         as ⟨r, hequal⟩
       cases r with
       | Err e => simp [hin, hout] at hequal

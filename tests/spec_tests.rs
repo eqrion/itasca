@@ -60,7 +60,8 @@ fn spec_suite_agrees_with_wasmparser() {
         for path in files {
             let name = path.file_name().unwrap().to_string_lossy().to_string();
             let bytes = std::fs::read(path).unwrap();
-            let itasca_valid = itasca::validate_module(&bytes, itasca::ValidationProfile::Wasm1).is_ok();
+            let itasca_valid =
+                itasca::validate_module(&bytes, itasca::ValidationProfile::Wasm1).is_ok();
 
             if KNOWN_WASMPARSER_DIVERGENCES.contains(&name.as_str()) {
                 if itasca_valid != expected_valid {
@@ -127,8 +128,8 @@ fn spec_suite_agrees_with_wasmparser() {
 // corpus. Both sides are projected to a small string form, so a mismatch reads
 // clearly and the comparison doesn't depend on either crate's type layout.
 
-fn valtype(t: itasca::types::ValueType) -> &'static str {
-    use itasca::types::ValueType;
+fn valtype(t: itasca::ValueType) -> &'static str {
+    use itasca::ValueType;
     match t {
         ValueType::I32 => "i32",
         ValueType::I64 => "i64",
@@ -145,8 +146,8 @@ fn limits(min: u64, max: Option<u64>) -> String {
 }
 
 fn ours(t: &itasca::ExternType) -> String {
-    use itasca::types::Mut;
     use itasca::ExternType;
+    use itasca::Mut;
     match t {
         ExternType::Func(ft) => {
             let ps: Vec<&str> = ft.params.iter().map(|t| valtype(*t)).collect();
@@ -163,7 +164,11 @@ fn ours(t: &itasca::ExternType) -> String {
         ),
         ExternType::Global(gt) => format!(
             "global {} {}",
-            if gt.mutability == Mut::Var { "var" } else { "const" },
+            if gt.mutability == Mut::Var {
+                "var"
+            } else {
+                "const"
+            },
             valtype(gt.valtype)
         ),
     }
@@ -272,12 +277,12 @@ fn extern_types_agree_with_wasmparser() {
             continue;
         };
 
-        let our_imports: Vec<String> = itasca::import_types(&module.env)
+        let our_imports: Vec<String> = itasca::import_types(module.env())
             .expect("a validated module resolves every import type")
             .iter()
             .map(ours)
             .collect();
-        let our_exports: Vec<String> = itasca::export_types(&module.env)
+        let our_exports: Vec<String> = itasca::export_types(module.env())
             .expect("a validated module resolves every export type")
             .iter()
             .map(ours)

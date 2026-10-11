@@ -29,12 +29,12 @@ namespace Itasca
 /-- Completeness of the extracted public multi-value body validator from
 independent binary encoding and generated Wasm 2.0 typing. The only additional
 restrictions are the actual body-byte and per-signature implementation limits. -/
-theorem multi_value.validate_body.wasm_complete (data : Slice U8) (env : module.Env)
+theorem code.validate_multi_value_body.wasm_complete (data : Slice U8) (env : module.Env)
     (locals : alloc.vec.Vec types.ValueType) (index : U32)
     (henv : MultiValue.EnvironmentWithinLimits env)
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
     (hbody : MultiValue.Validated data env locals index) :
-    multi_value.validate_body data env locals index = .ok (.Ok ()) := by
+    code.validate_multi_value_body data env locals index = .ok (.Ok ()) := by
   obtain ⟨ft, ops, hi, hbytes, htyped⟩ := hbody
   have hmem : ft ∈ env.types.val := List.mem_of_getElem? hi
   obtain ⟨hparams, hresults⟩ := henv.types ft hmem
@@ -42,22 +42,22 @@ theorem multi_value.validate_body.wasm_complete (data : Slice U8) (env : module.
     (MultiValue.Completeness.programs data env ⟨locals, ft.results⟩ index henv
       (by simp [MultiValue.resolve, hi])) ops hbytes htyped
 
-theorem multi_value.validate_body.wasm_complete_of_typing (data : Slice U8) (env : module.Env)
+theorem code.validate_multi_value_body.wasm_complete_of_typing (data : Slice U8) (env : module.Env)
     (locals : alloc.vec.Vec types.ValueType) (index : U32) (ft : types.FuncType) (ops : List instr)
     (henv : MultiValue.EnvironmentWithinLimits env)
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
     (hi : env.types.val[index.val]? = some ft)
     (hbytes : MultiValue.BodyEncoding data ops) (htyped : MultiValue.FunctionTyped env locals ft ops) :
-    multi_value.validate_body data env locals index = .ok (.Ok ()) :=
-  multi_value.validate_body.wasm_complete data env locals index henv hsize ⟨ft, ops, hi, hbytes, htyped⟩
+    code.validate_multi_value_body data env locals index = .ok (.Ok ()) :=
+  code.validate_multi_value_body.wasm_complete data env locals index henv hsize ⟨ft, ops, hi, hbytes, htyped⟩
 
-theorem multi_value.validate_body.wasm_accepts_iff (data : Slice U8) (env : module.Env)
+theorem code.validate_multi_value_body.wasm_accepts_iff (data : Slice U8) (env : module.Env)
     (locals : alloc.vec.Vec types.ValueType) (index : U32)
     (henv : MultiValue.EnvironmentWithinLimits env)
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val) :
-    multi_value.validate_body data env locals index = .ok (.Ok ()) ↔
+    code.validate_multi_value_body data env locals index = .ok (.Ok ()) ↔
       MultiValue.Validated data env locals index :=
-  ⟨multi_value.validate_body.wasm_sound data env locals index,
-    multi_value.validate_body.wasm_complete data env locals index henv hsize⟩
+  ⟨code.validate_multi_value_body.wasm_sound data env locals index,
+    code.validate_multi_value_body.wasm_complete data env locals index henv hsize⟩
 
 end Itasca

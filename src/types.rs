@@ -1,12 +1,8 @@
-//! The value and external types of the WebAssembly 1.0 type system.
+//! Scalar, signature, external, and constant-expression metadata.
 
 use alloc::vec::Vec;
 
-/// A wasm value type.
-///
-/// There's no variant for the bottom type of an unreachable stack value; that
-/// lives in `code::StackType::Bot` instead, so it can't leak into a
-/// function signature.
+/// A scalar WebAssembly value type supported by both profiles.
 #[cfg_attr(not(charon), derive(Debug))]
 #[derive(Clone, Copy)]
 pub enum ValueType {
@@ -30,7 +26,7 @@ impl PartialEq for ValueType {
 
 impl Eq for ValueType {}
 
-/// Whether a global is mutable.
+/// The mutability of a global.
 #[cfg_attr(not(charon), derive(Debug))]
 #[derive(Clone, Copy)]
 pub enum Mut {
@@ -50,7 +46,7 @@ impl PartialEq for Mut {
 
 impl Eq for Mut {}
 
-/// A function signature: its parameter types and result types.
+/// The parameter and result types of a function.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone)]
 pub struct FuncType {
@@ -58,7 +54,7 @@ pub struct FuncType {
     pub results: Vec<ValueType>,
 }
 
-/// A minimum and optional maximum size, for a table or a memory.
+/// A minimum size and optional maximum size.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
 pub struct Limits {
@@ -66,21 +62,21 @@ pub struct Limits {
     pub max: Option<u32>,
 }
 
-/// A memory type: the limits on its size, in pages.
+/// A memory's size limits in 64 KiB pages.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
 pub struct MemType {
     pub limits: Limits,
 }
 
-/// Element type, always `funcref` in Wasm 1.0.
+/// The element type supported by both profiles.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
 pub enum ElemType {
     FuncRef,
 }
 
-/// A table type: its element type and size limits.
+/// A table's element type and size limits.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
 pub struct TableType {
@@ -96,8 +92,7 @@ pub struct GlobalType {
     pub valtype: ValueType,
 }
 
-/// An external type (spec 3.2.7): what an import asks for, or what an export
-/// provides.
+/// The resolved type required by an import or provided by an export.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 pub enum ExternType {
     Func(FuncType),
@@ -106,39 +101,35 @@ pub enum ExternType {
     Global(GlobalType),
 }
 
-/// A constant expression: a global's initialiser, or an element or data
-/// segment's offset.
+/// A decoded initializer or segment-offset expression.
 ///
-/// Wasm 1.0 (spec 3.4.10) allows exactly one instruction here, so this is a
-/// decoded value rather than a byte range.
+/// Both profiles allow one constant instruction or a read of an immutable
+/// imported global.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
 pub enum ConstExpr {
     I32(i32),
     I64(i64),
-    /// The immediate's bit pattern, as `reader::read_f32_bits` returns it.
-    /// Validation never interprets it as a float.
+    /// The exact `f32` immediate bits, including signed zero and NaN payloads.
     F32(u32),
+    /// The exact `f64` immediate bits, including signed zero and NaN payloads.
     F64(u64),
-    /// `global.get` of an imported immutable global, the only global in scope
-    /// in an initialiser.
+    /// A read of an immutable imported global.
     GlobalGet(u32),
 }
 
-/// Where a custom section's name and contents are.
+/// The name and payload bounds of a custom section.
 ///
-/// Stored as byte ranges rather than the bytes themselves: a custom section
-/// is opaque payload as far as validation is concerned, and a consumer that
-/// wants the contents already has the original bytes. Positions index the
-/// same buffer as every other position in this crate's API.
+/// Offsets refer to the source region selected by
+/// `StreamingVisitor::custom_region`. The validator checks the name's
+/// UTF-8 encoding and treats the payload as opaque bytes.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
 pub struct CustomSection {
-    /// Length of the name, which is the `name_len` bytes ending at
-    /// `payload_start`. Checked for UTF-8 validity as it was read (spec 5.2.4).
+    /// The number of UTF-8 name bytes immediately preceding `payload_start`.
     pub name_len: usize,
-    /// Start of the section's contents, the bytes after the name.
+    /// The offset of the first payload byte after the name.
     pub payload_start: usize,
-    /// End of the section's contents.
+    /// The exclusive end offset of the payload.
     pub payload_end: usize,
 }

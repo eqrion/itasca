@@ -1,52 +1,27 @@
-//! WebAssembly validator with explicit Wasm 1.0 and multi-value profiles.
-//! Whole-module formal guarantees cover the Wasm 1.0 profile.
+//! WebAssembly validation for the Wasm 1.0 and multi-value profiles.
+//!
+//! [`validate_module`] validates a complete byte slice and returns read-only
+//! module metadata. It requires no caller preconditions. Both profiles have
+//! Lean proofs of termination, acceptance soundness, and completeness within
+//! the implementation limits, assuming successful allocation.
 //!
 //! ```
-//! # let wasm_bytes = b"\x00asm\x01\x00\x00\x00";
-//! let module = itasca::validate_module(wasm_bytes, itasca::ValidationProfile::Wasm1)?;
-//! # Ok::<(), itasca::error::Error>(())
+//! let bytes = b"\x00asm\x01\x00\x00\x00";
+//! let module = itasca::validate_module(bytes, itasca::ValidationProfile::Wasm1)?;
+//! let imports = itasca::import_types(module.env())?;
+//! # Ok::<(), itasca::Error>(())
 //! ```
 //!
-//! [`validate_module`] supplies a synchronous source and worker to
-//! [`stream::validate_streaming`], the sole module driver. Streaming consumers
-//! provide coherent environment, code, and tail regions and schedule the issued
-//! batches. The driver accepts only after every issued batch has validated and
-//! the regions together encode a valid module under the selected profile.
+//! [`validate_streaming`] supports separate input regions, parallel workers,
+//! and compiler callbacks. Its guarantees require coherent source bytes and
+//! workers that preserve issued batch identities. Callbacks must return for
+//! termination and accept for completeness. Only a successful driver result
+//! certifies the complete module.
 //!
-//! A compiler gets at function bodies through [`code::validate_body_with`]
-//! and an [`OpVisitor`]: validation calls one hook per operator, with its
-//! immediates already decoded and checked. Every hook defaults to doing
-//! nothing, so a consumer only pays for the ones it implements.
-//!
-//! [`import_types`] and [`export_types`] read a validated module's
-//! environment and report what it imports and what it exports, which is
-//! what an embedder needs to link it.
-//!
-//! # Trust boundary
-//!
-//! [`validate_module`] takes arbitrary bytes with no caller preconditions.
-//! With [`ValidationProfile::Wasm1`], its Lean contracts prove ordinary return,
-//! acceptance soundness, and acceptance of independently typed Wasm 1.0 binaries
-//! within the implementation limits,
-//! including exact returned declarations, data, and external-type metadata.
-//!
-//! The Wasm 1.0 contracts for [`stream::validate_streaming`] have explicit
-//! source-coherence and batch-
-//! provenance obligations; its totality contract instead requires returning
-//! callbacks. Source availability and an accepting worker/scheduler policy give
-//! completeness. See [`stream`] for storage and worker-lifetime obligations.
-//!
-//! [`module::validate_env`], [`module::validate_code_entry`], and
-//! [`module::validate_tail`] share the same component implementations used by the
-//! driver. Their separate contracts do not certify a whole module. Entry and
-//! tail callers must use the environment decoded for that logical module and
-//! satisfy the component's documented bounds and byte-position requirements.
-//!
-//! [`OpVisitor`] and [`module::ModuleVisitor`] hooks are ordinary embedding code.
-//! Returning an error can reject an otherwise-valid input; successful hooks
-//! cannot bypass entry/body validation. Returning hooks are needed for totality,
-//! and accepting hooks for completeness. Workers advance issued batches through
-//! [`stream::CodeBatch::validate_func`], which retains the validation result.
+//! [`OpVisitor`] observes decoded operators during batch validation.
+//! [`ModuleVisitor`] observes custom sections. Callback errors can reject valid
+//! input; callbacks cannot bypass validation. See [`validate_streaming`] for
+//! source, worker, and storage obligations.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 // Aeneas requires explicit Vec::new() + push() instead of vec![] macro
@@ -54,43 +29,45 @@
 
 extern crate alloc;
 
-pub mod code;
-pub mod error;
-pub mod module;
-pub mod multi_value;
-pub mod signature;
-pub mod types;
+mod code;
+mod error;
+mod module;
+mod signature;
+mod types;
 
-/// Numeric bounds the validator enforces. Private: a consumer has no use
-/// for the bounds themselves, only for the fact that validation enforces them.
+/// Specification bounds and implementation resource limits.
 mod limits;
 
-/// Byte-level reads over `(data, pos)`. Internal: everything else in this
-/// crate is built on top of these rather than around them.
+/// Shared byte readers with explicit cursor arguments.
 mod reader;
 
-pub use code::*;
-pub use error::*;
-pub use module::*;
-pub use types::*;
+pub use code::{
+    Context, Ctrl, EmptyOpVisitor, LabelKind, MemArg, OpIterState, OpVisitor, StackType,
+    VisitResult,
+};
+pub use error::{Error, OpError, VisitError};
+pub use module::{
+    export_types, import_types, validate_module, Data, Element, Env, Export, ExportDesc, Global,
+    Import, ImportDesc, Module, ModuleVisitor, Tail,
+};
+pub use signature::{BlockType, ResultType, TypePart};
+pub use stream::{
+    validate_streaming, CodeBatch, CodeEntry, Config, Region, Result, Source, StreamingVisitor,
+};
+pub use types::{
+    ConstExpr, CustomSection, ElemType, ExternType, FuncType, GlobalType, Limits, MemType, Mut,
+    TableType, ValueType,
+};
 
-pub mod stream;
+mod stream;
 
-/// Selectable validation rules. `MultiValue` is an experimental step towards
-/// Wasm 2.0; the remaining 2.0 proposals are not enabled by this profile.
+/// The language profile used for module and function validation.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
 pub enum ValidationProfile {
+    /// WebAssembly 1.0, including its original segment and branch-table rules.
     Wasm1,
+    /// Scalar WebAssembly with multi-value functions and indexed block signatures.
+    /// Other Wasm 2.0 proposals remain disabled.
     MultiValue,
-}
-
-/// Alias for [`validate_module`] with an explicit validation profile.
-/// Both profiles use the shared streaming module driver.
-/// Whole-module formal guarantees currently cover the Wasm 1.0 profile.
-pub fn validate_module_with_profile(
-    data: &[u8],
-    profile: ValidationProfile,
-) -> core::result::Result<Module, Error> {
-    validate_module(data, profile)
 }

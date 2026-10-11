@@ -12,21 +12,21 @@ structure EnvironmentWithinLimits (env : module.Env) : Prop where
   types : ∀ ft ∈ env.types.val, ft.params.val.length ≤ 1000 ∧ ft.results.val.length ≤ 1000
   funcs : ∀ ft ∈ env.func_types.val, ft.params.val.length ≤ 1000 ∧ ft.results.val.length ≤ 1000
 
-def labelTypes (env : module.Env) (st : multi_value.State) (depth : Nat) : Option resulttype :=
+def labelTypes (env : module.Env) (st : code.BodyState) (depth : Nat) : Option resulttype :=
   ((labelAt st depth).bind (resolve env)).map (fun ts => .mk_list (ts.map Translate.valueType))
 
 /-- Exact correspondence between the physical descriptors and declarative
 label types, with innermost labels first. -/
-def Labels (env : module.Env) (st : multi_value.State) (C : context) : Prop :=
+def Labels (env : module.Env) (st : code.BodyState) (C : context) : Prop :=
   ∀ depth, C.LABELS[depth]? = labelTypes env st depth
 
-theorem labelAt_congr {st s : multi_value.State}
+theorem labelAt_congr {st s : code.BodyState}
     (hb : s.blocks.val = st.blocks.val)
     (hc : s.core.ctrls.val.map code.Ctrl.kind = st.core.ctrls.val.map code.Ctrl.kind)
     (depth : Nat) : labelAt s depth = labelAt st depth := by
   unfold labelAt
   rw [hb]
-  simp only [multi_value.State.blocks_length]
+  simp only [code.BodyState.blocks_length]
   split
   · have he := congrArg (fun cs => cs[st.core.ctrls.val.length - 1 - depth]?) hc
     simp only [List.getElem?_map] at he
@@ -41,7 +41,7 @@ theorem labelAt_congr {st s : multi_value.State}
 
 namespace Completeness
 
-structure Frame (st : multi_value.State) where
+structure Frame (st : code.BodyState) where
   core : Itasca.Completeness.Frame st.core
   parents : List signature.BlockType
   current : signature.BlockType
@@ -50,7 +50,7 @@ structure Frame (st : multi_value.State) where
 
 theorem Frame.nonempty {st} (f : Frame st) : st.blocks.val ≠ [] := by simp [f.blocks]
 
-def Frame.Output {st} (f : Frame st) (out : List valtype) (s : multi_value.State) : Prop :=
+def Frame.Output {st} (f : Frame st) (out : List valtype) (s : code.BodyState) : Prop :=
   f.core.Output out s.core ∧ s.blocks = st.blocks
 
 theorem Frame.output_self {st} (f : Frame st) {out : List valtype}
@@ -86,7 +86,7 @@ theorem Frame.Output.transfer {st s t out} {f : Frame st} {g : Frame s}
     f.Output out t := by
   have hsignatures : s.core.ctrls.val.map code.Ctrl.signature =
       st.core.ctrls.val.map code.Ctrl.signature := by
-    simpa only [multi_value.State.blocks_val] using congrArg alloc.vec.Vec.val hs
+    simpa only [code.BodyState.blocks_val] using congrArg alloc.vec.Vec.val hs
   rw [g.core.ctrls, f.core.ctrls] at hsignatures
   have hsig : g.core.current.signature = f.core.current.signature := by
     have hl := congrArg List.getLast? hsignatures
@@ -96,7 +96,7 @@ theorem Frame.Output.transfer {st s t out} {f : Frame st} {g : Frame s}
 /-- Two-byte vector-producing instructions add at most 1000 values. Nested
 control is bounded from its entry stack, so one-byte ends need no extra
 platform restriction. This bound fits even a 32-bit usize. -/
-structure Bounds (data : Slice U8) (st : multi_value.State) : Prop where
+structure Bounds (data : Slice U8) (st : code.BodyState) : Prop where
   size : data.length ≤ limits.MAX_FUNCTION_BYTES.val
   pos : st.core.pos.val ≤ data.length
   vals : st.core.vals.val.length ≤ 500 * st.core.pos.val

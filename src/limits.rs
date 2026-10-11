@@ -1,11 +1,7 @@
-//! Numeric bounds the validator enforces, in one place.
+//! Specification bounds and implementation resource limits.
 //!
-//! Most are bounds from the spec itself, or Wasm 1.0 restrictions that later
-//! proposals lifted and this validator still enforces. The `MAX_*_BYTES` and
-//! `MAX_LOCALS` constants are different: implementation caps, chosen so the
-//! position and stack-depth arithmetic elsewhere in the crate can't overflow.
-//! A module that only exceeds one of these caps is otherwise valid but still
-//! gets rejected.
+//! Byte and local caps bound allocation and cursor arithmetic. Completeness is
+//! stated within those caps; otherwise valid modules may exceed them.
 
 use crate::error::Error;
 use crate::types::Limits;
@@ -27,6 +23,12 @@ pub const MAX_MEMORIES: usize = 1;
 // from the callee's type rather than from the opcode, so nothing else bounds
 // the operand stack.
 pub const MAX_RESULTS: usize = 1;
+
+/// The maximum parameters per multi-value function signature.
+pub const MAX_MULTI_VALUE_PARAMS: usize = 1000;
+
+/// The maximum results per multi-value function signature.
+pub const MAX_MULTI_VALUE_RESULTS: usize = 1000;
 
 // Implementation cap on function body size, chosen so position tracking in
 // `validate_body` can't overflow.
@@ -50,8 +52,8 @@ pub const MAX_CODE_HEADER_BYTES: usize = 1 + 2 * MAX_LEB_BYTES;
 // could ask for four billion locals.
 pub const MAX_LOCALS: usize = 50_000;
 
-/// Checks that `limits.min` is at most `range`, that `limits.max` is too if
-/// present, and that `limits.max` is not below `limits.min` (spec 3.2.1).
+/// Checks that the minimum and optional maximum fit `range` and that the maximum
+/// is not below the minimum.
 pub(crate) fn validate_limits(limits: &Limits, range: u32) -> Result<(), Error> {
     if limits.min > range {
         return Err(Error::LimitsOutOfRange);
@@ -67,7 +69,8 @@ pub(crate) fn validate_limits(limits: &Limits, range: u32) -> Result<(), Error> 
     Ok(())
 }
 
-/// `a + b` as a module offset, rejecting any offset beyond the largest module.
+/// Adds two module offsets, rejecting sums beyond the implementation's
+/// module-size limit.
 pub(crate) fn add_offset(a: usize, b: usize) -> Result<usize, Error> {
     if a > MAX_MODULE_BYTES || b > MAX_MODULE_BYTES - a {
         return Err(Error::ModuleTooLarge);

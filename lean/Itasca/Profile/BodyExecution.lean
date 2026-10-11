@@ -11,7 +11,7 @@ def runBody {V : Type} (visitor : code.OpVisitor V) (profile : ValidationProfile
     Result (core.result.Result Unit error.OpError × V) :=
   match profile with
   | .Wasm1 => code.validate_body_with visitor data env ctx v
-  | .MultiValue => multi_value.validate_body_with visitor data env ctx index v
+  | .MultiValue => code.validate_multi_value_body_with visitor data env ctx index v
 
 /-- Framing is common to both branches of the extracted body dispatch. -/
 theorem runBody_slice {V : Type} (visitor : code.OpVisitor V) (profile : ValidationProfile)
@@ -24,7 +24,7 @@ theorem runBody_slice {V : Type} (visitor : code.OpVisitor V) (profile : Validat
         .ok (v', r)
     | .MultiValue => do
         let body ← core.slice.index.SliceIndexRangeUsizeSlice.index ⟨first, last⟩ data
-        let (r, v') ← multi_value.validate_body_with visitor body env ctx index v
+        let (r, v') ← code.validate_multi_value_body_with visitor body env ctx index v
         .ok (v', r)) = (do
         let body ← core.slice.index.SliceIndexRangeUsizeSlice.index ⟨first, last⟩ data
         let (r, v') ← runBody visitor profile body env ctx index v

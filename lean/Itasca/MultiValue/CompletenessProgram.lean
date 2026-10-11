@@ -8,7 +8,7 @@ namespace Itasca.MultiValue.Completeness
 /-- Execution of a typed instruction list within one concrete control frame. -/
 def Program (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
     (tokens : List Token) (ops : List instr) : Prop :=
-  ∀ (C : context) (st : multi_value.State) (f : Frame st) (next : Usize)
+  ∀ (C : context) (st : code.BodyState) (f : Frame st) (next : Usize)
     (input output : List valtype),
     EnvTranslation.Matches env ctx C → Labels env st C →
     Bounds data st → Consumed data st.core.pos tokens next →
@@ -21,7 +21,7 @@ def Program (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U
 and a preserved prefix on its operand stack. -/
 def AtomProgram (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
     (tokens : List Token) (op : instr) : Prop :=
-  ∀ (C : context) (st : multi_value.State) (f : Frame st) (next : Usize)
+  ∀ (C : context) (st : code.BodyState) (f : Frame st) (next : Usize)
     (front input output : List valtype),
     EnvTranslation.Matches env ctx C → Labels env st C →
     Bounds data st → Consumed data st.core.pos tokens next →

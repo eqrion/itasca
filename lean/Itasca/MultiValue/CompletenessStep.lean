@@ -68,7 +68,7 @@ theorem Frame.call {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx
       list.mk_list.inj (functype.mk_functype.inj hv).2
     have hlimits := henv.funcs ft (ht ▸ List.getElem_mem hi)
     obtain ⟨⟨_, s⟩, hrun, rfl, hc, hblocks, hp, rest, hvals, hlen, hreal⟩ := WP.spec_imp_exists
-      (multi_value.call.direct_complete st data env idx next ft ⟨bytes, hb.suffix, hb.length, hb.bound, he⟩
+      (code.call.direct_complete st data env idx next ft ⟨bytes, hb.suffix, hb.length, hb.bound, he⟩
         hi ht hlimits.1 hlimits.2 f.core.outer f.core.operands front f.core.vals f.core.base_eq
         (by omega) (by simpa [f.core.poly_eq, hparams] using hr))
     dsimp only at hc hblocks hp hvals hlen hreal
@@ -104,7 +104,7 @@ theorem Frame.call_indirect {st} (f : Frame st) (data : Slice U8) (env : module.
       simpa only [List.drop_eq_getElem_cons hm, List.singleton_append, List.head?_cons,
         Option.some.injEq] using he
     obtain ⟨⟨_, s⟩, hrun, rfl, hc, hblocks, hp, rest, hvals, hlen, hreal⟩ := WP.spec_imp_exists
-      (multi_value.call.indirect_complete st data env idx middle next ft
+      (code.call.indirect_complete st data env idx middle next ft
         ⟨bytes, hindex.suffix, hindex.length, hindex.bound, he⟩ hm hz hn
         (hmatch.table_exists htable) hi ht hlimits.1 hlimits.2 f.core.outer f.core.operands front
         f.core.vals f.core.base_eq (by omega) (by simpa [f.core.poly_eq, hparams] using hr))
@@ -127,7 +127,7 @@ theorem Frame.branch {st} (f : Frame st) (data : Slice U8) (env : module.Env) (c
     obtain ⟨view, ts, hl, hts, hlookup⟩ := hlabels.lookup depth hi
     have hargs : ts.map Translate.valueType = args := by
       simpa [proj_uN_0, proj_list_0, hlookup] using ht
-    obtain ⟨s, hrun, hc, hblocks, hp, hv⟩ := multi_value.branch.complete st data env depth next view ts
+    obtain ⟨s, hrun, hc, hblocks, hp, hv⟩ := code.branch.complete st data env depth next view ts
       f.core.parents f.core.current f.core.outer f.core.operands (front ++ before)
       f.core.ctrls f.core.vals f.core.base
       (by simp [f.blocks, f.core.ctrls, f.aligned])
@@ -153,7 +153,7 @@ theorem Frame.branch_if {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     have hargs : ts.map Translate.valueType = output := by simpa [proj_uN_0, proj_list_0, hlookup] using ht
     have hsize := henv.resolve_bound view ts hts
     obtain ⟨⟨_, s⟩, hrun, rfl, hc, hblocks, hp, rest, hv, hlen, hreal⟩ := WP.spec_imp_exists
-      (multi_value.branch.conditional_complete st data env depth next view ts
+      (code.branch.conditional_complete st data env depth next view ts
         f.core.outer f.core.operands front f.core.vals f.core.base_eq
         (by simp [f.blocks, f.core.ctrls, f.aligned])
         ⟨bytes, hb.suffix, hb.length, hb.bound, he⟩ hl hts (by omega)
@@ -210,7 +210,7 @@ theorem Frame.branch_table {st} (f : Frame st) (data : Slice U8) (env : module.E
         subst d
         obtain ⟨view, ts, hl, hts, hlookup⟩ := hlabels.lookup default hdefaultbound
         exact ⟨view, ts, hl, hts, by simpa [proj_uN_0, hlookup] using hdefaultsub⟩
-    obtain ⟨s, hrun, hc, hblocks, hp, hv⟩ := multi_value.branch_table.complete st data env
+    obtain ⟨s, hrun, hc, hblocks, hp, hv⟩ := code.branch_table.complete st data env
       f.core.parents f.core.current f.core.outer f.core.operands (front ++ before) common depths default next
       f.core.ctrls f.core.vals f.core.base (by simp [f.blocks, f.core.ctrls, f.aligned])
       (hb.br_table_decoded depths default hcount hentries hdefault) htargets
@@ -225,7 +225,7 @@ contract directly from independent encodings and generated primitive rules. -/
 theorem control_leaf (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
     (henv : EnvironmentWithinLimits env)
     (hroot : resolve env (.Type index .Results) = some ctx.results.val)
-    (C : context) (st : multi_value.State) (f : Frame st) (opcode : U8)
+    (C : context) (st : code.BodyState) (f : Frame st) (opcode : U8)
     (op : instr) (bytes : List U8) (next : Usize) (front input output : List valtype)
     (hmatch : EnvTranslation.Matches env ctx C) (hlabels : Labels env st C)
     (hcap : st.core.vals.val.length + 1000 < Usize.max)

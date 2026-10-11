@@ -15,7 +15,7 @@ theorem CodeEntry.runBody.total {V : Type} (visitor : code.OpVisitor V)
     ∃ r, CodeEntry.runBody visitor profile data env ctx index v = .ok r := by
   cases profile with
   | Wasm1 => exact code.validate_body_with.wasm_total visitor hv data env ctx v
-  | MultiValue => exact multi_value.validate_body_with.wasm_total visitor hv data env ctx index v
+  | MultiValue => exact code.validate_multi_value_body_with.wasm_total visitor hv data env ctx index v
 
 /-- A shared execution witness for either supported profile, including the
 actual type lookup, locals, slice, and visitor calls. -/

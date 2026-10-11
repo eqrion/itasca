@@ -350,7 +350,7 @@ theorem module.decode_func_type.profile_spec (data : Slice U8) (start : Usize)
           obtain ⟨tag, pos⟩ := pair
           by_cases he : tag = 0x60#u8
           · obtain ⟨r, hv, hd⟩ := WP.spec_imp_exists (module.decode_value_types.profile_spec
-              data pos (some (multi_value.MAX_PARAMS, error.OpError.TooManyParams)))
+              data pos (some (limits.MAX_MULTI_VALUE_PARAMS, error.OpError.TooManyParams)))
             cases r with
             | Err e =>
                 simp [module.decode_func_type, hr, he, hv, core.result.Result.Insts.CoreOpsTry.branch,
@@ -358,7 +358,7 @@ theorem module.decode_func_type.profile_spec (data : Slice U8) (start : Usize)
             | Ok pair =>
                 obtain ⟨params, middle⟩ := pair
                 obtain ⟨r, hv', hd'⟩ := WP.spec_imp_exists (module.decode_value_types.profile_spec
-                  data middle (some (multi_value.MAX_RESULTS, error.OpError.TooManyResults)))
+                  data middle (some (limits.MAX_MULTI_VALUE_RESULTS, error.OpError.TooManyResults)))
                 cases r with
                 | Err e =>
                     simp [module.decode_func_type, hr, he, hv, hv', core.result.Result.Insts.CoreOpsTry.branch,

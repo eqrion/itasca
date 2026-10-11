@@ -49,6 +49,3 @@ alias lean-prove := prove
 
 lean-spec:
     @make -C lean spec-generate
-
-lean-spec-repro:
-    @make -C lean spec-repro

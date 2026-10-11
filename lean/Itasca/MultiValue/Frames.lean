@@ -79,7 +79,7 @@ inductive Spine (env : module.Env) (root : context) :
 
 /-- The semantic control invariant aligns both physical control vectors with
 a typed syntax zipper, and partitions operands at each frame's actual base. -/
-def Open (env : module.Env) (root : context) (st : multi_value.State)
+def Open (env : module.Env) (root : context) (st : code.BodyState)
     (parents : List Saved) (current : Saved) : Prop :=
   ∃ C outer, Spine env root parents C outer current.form current.ins ∧
     Header env C current ∧ current.ctrl.value_stack_base.val = outer.length ∧
@@ -330,7 +330,7 @@ theorem Open.enter_child {env root st st' parents current}
   · simp [trace, Saved.trace, Saved.fresh, List.flatMap_append, List.append_assoc]
 
 theorem Open.start (env : module.Env) (root : context) (hroot : wf_context root)
-    (st : multi_value.State) (bt : signature.BlockType) (ins outs : List types.ValueType)
+    (st : code.BodyState) (bt : signature.BlockType) (ins outs : List types.ValueType)
     (hin : resolve env (inputs bt) = some ins) (hout : resolve env (outputs bt) = some outs)
     (hctrls : st.core.ctrls.val = [(Saved.fresh 0#usize .body bt ins outs).ctrl])
     (hblocks : st.blocks.val = [bt]) (hvals : st.core.vals.val = []) :
@@ -408,7 +408,7 @@ theorem Spine.headers {env root parents C outer form ins}
 
 /-- Physical reverse-depth lookup resolves to exactly the generated label
 vector, including loop parameters and invalid depths. -/
-theorem resolved_labelAt (env : module.Env) (st : multi_value.State) (frames : List Saved)
+theorem resolved_labelAt (env : module.Env) (st : code.BodyState) (frames : List Saved)
     (hc : st.core.ctrls.val = frames.map Saved.ctrl)
     (hb : st.blocks.val = frames.map Saved.bt)
     (hh : ∀ f ∈ frames, ∃ C, Header env C f) (depth : Nat) :

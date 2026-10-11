@@ -91,7 +91,7 @@ theorem Frame.scalar {st} (f : Frame st) (data : Slice U8) (env : module.Env)
 /-- A leaf contract uses a principal generated typing and an independent
 immediate encoding. Growth is bounded by the full token's encoded byte count. -/
 def LeafContract (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32) : Prop :=
-  ∀ (C : context) (st : multi_value.State) (f : Frame st) (opcode : U8)
+  ∀ (C : context) (st : code.BodyState) (f : Frame st) (opcode : U8)
     (op : instr) (bytes : List U8) (next : Usize) (front input output : List valtype),
     EnvTranslation.Matches env ctx C → Labels env st C →
     st.core.vals.val.length + 1000 < Usize.max →
@@ -112,7 +112,7 @@ theorem atom_of_leaf (data : Slice U8) (env : module.Env) (ctx : code.Context) (
   obtain ⟨opcode, pos, bytes, hread, hpos, himmediate, hspan⟩ := hat.read_byte
   cases himmediate with
   | plain hi =>
-    let decoded : multi_value.State := {st with core := {st.core with pos := pos}}
+    let decoded : code.BodyState := {st with core := {st.core with pos := pos}}
     let g : Frame decoded :=
       ⟨⟨f.core.parents, f.core.current, f.core.outer, f.core.operands,
         f.core.ctrls, f.core.vals, f.core.base⟩, f.parents, f.current, f.blocks, f.aligned⟩
@@ -132,7 +132,7 @@ theorem atom_of_leaf (data : Slice U8) (env : module.Env) (ctx : code.Context) (
 
 /-- The scalar family discharges the shared leaf growth contract. -/
 theorem scalar_leaf (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
-    (C : context) (st : multi_value.State) (f : Frame st) (opcode : U8)
+    (C : context) (st : code.BodyState) (f : Frame st) (opcode : U8)
     (op : instr) (bytes : List U8) (next : Usize) (front input output : List valtype)
     (hmatch : EnvTranslation.Matches env ctx C)
     (hcap : st.core.vals.val.length + 1000 < Usize.max)
@@ -157,7 +157,7 @@ theorem scalar_atom (data : Slice U8) (env : module.Env) (ctx : code.Context)
   obtain ⟨opcode, pos, bytes, hread, hpos, himmediate, hspan⟩ := hat.read_byte
   cases himmediate with
   | plain hi =>
-    let decoded : multi_value.State := {st with core := {st.core with pos := pos}}
+    let decoded : code.BodyState := {st with core := {st.core with pos := pos}}
     let g : Frame decoded :=
       ⟨⟨f.core.parents, f.core.current, f.core.outer, f.core.operands,
         f.core.ctrls, f.core.vals, f.core.base⟩, f.parents, f.current, f.blocks, f.aligned⟩

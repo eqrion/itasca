@@ -1,18 +1,16 @@
-//! The crate's error types.
+//! Validation and embedding errors.
 //!
-//! Decoding and validation are one pass, so there is one `Error` covering
-//! both. `OpError` stays separate because `code` is a self-contained
-//! component: a consumer can call `validate_body` on its own and get a
-//! rejection reason in its own vocabulary.
+//! `OpError` records reader and instruction failures. `Error` adds module framing
+//! and streaming protocol failures. Callback errors can reject valid input; error
+//! values do not include byte positions.
 
 #[cfg(not(charon))]
 use core::fmt;
 
-/// Why a byte read or a function body was rejected. These exist for
-/// debugging only: the spec and the web embedding leave error reporting
-/// unspecified, so no particular variant is guaranteed for a given input.
+/// A byte-decoding, instruction-validation, or operator-callback error.
 ///
-/// Shared by `reader` and `code`, which is why it lives here.
+/// Error variants are diagnostic. The proofs do not specify which variant must be
+/// chosen for every rejected input.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
 pub enum OpError {
@@ -32,56 +30,47 @@ pub enum OpError {
     UnknownFunc,
     UnknownType,
     UnknownTable,
-    /// A callee exceeds the selected profile's result limit.
+    /// A function signature exceeds the selected profile's result limit.
     TooManyResults,
     TooManyParams,
-    /// A byte the specification writes out as a literal zero was not zero.
+    /// An instruction's reserved zero byte is nonzero.
     ReservedByteNotZero,
     InvalidAlignment,
     TrailingBytes,
     BodyTooLarge,
-    /// The consumer of `validate_body_with` declined the body. Not a validity
-    /// verdict: the bytes may well be a well-typed function, and this says only
-    /// that validation did not finish.
+    /// An operator callback rejected the input, which may otherwise be valid.
     Visitor(VisitError),
 }
 
-/// Why a consumer declined a body it was handed.
+/// An error reported by a consumer callback.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
 pub enum VisitError {
     OutOfMemory,
 }
 
-/// Why a module was rejected.
+/// A module-decoding, validation, callback, or streaming-protocol error.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
 pub enum Error {
     // --- The shape of the binary ---
-    /// A byte read failed while decoding the module structure.
+    /// A byte read failed while decoding module structure.
     Read(OpError),
     InvalidMagic,
     InvalidVersion,
     UnexpectedEof,
-    /// A byte where the binary format allows only specific values: a type
-    /// tag, a limits flag, an import or export kind.
+    /// A type tag, limits flag, or import/export kind is unsupported.
     InvalidType(u8),
-    /// A section id that is not one this validator knows, in a position where
-    /// it cannot be skipped.
+    /// A section ID is unsupported at its position in the module.
     UnknownSection(u8),
     SectionOutOfOrder,
-    /// A section's contents did not end exactly where its size prefix said.
+    /// A section did not consume exactly its declared byte extent.
     SectionSizeMismatch,
-    /// The function and code sections declare different numbers of functions.
+    /// The function and code sections declare different function counts.
     FuncCodeMismatch,
-    /// The module declared functions and has no code section.
-    ///
-    /// Apart from `FuncCodeMismatch` because the two are not the same news to a
-    /// consumer reading a module as it arrives: a code section that has not
-    /// been reached yet may still turn up, where a code section that declares
-    /// the wrong number of entries will not become right.
+    /// Defined functions have no corresponding code section.
     MissingCodeSection,
-    /// A name was not valid UTF-8 (spec 5.2.4).
+    /// A name contains invalid UTF-8.
     InvalidUtf8,
 
     // --- Validation ---
@@ -97,20 +86,19 @@ pub enum Error {
     InvalidStartType,
     MutableGlobalInConstExpr,
     InvalidConstExpr,
-    /// A function type returns more than one value, or a function declares
-    /// more locals than the implementation allows.
+    /// A Wasm 1.0 function type declares more than one result.
     TooManyResults,
     TooManyLocals,
     ModuleTooLarge,
-    /// A function body was rejected by `code::validate_body`.
+    /// A function body failed validation or an operator callback rejected it.
     Body(OpError),
-    /// The consumer of a `_with` entry point declined what it was shown. Not a
-    /// validity verdict, the same way `OpError::Visitor` is not: the module may
-    /// well be valid, and this says only that decoding did not finish.
+    /// A module callback rejected the input, which may otherwise be valid.
     Visitor(VisitError),
-    /// A streaming host broke the driver's protocol: it returned a batch that
-    /// was not outstanding or not fully validated, or asked for no batches.
-    /// Not a validity verdict.
+    /// A source or scheduler violated the streaming protocol.
+    ///
+    /// Examples include inconsistent region framing, zero batch settings, or a
+    /// returned batch that is foreign, duplicate, or unfinished. This error does
+    /// not classify Wasm validity.
     Host,
 }
 

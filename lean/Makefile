@@ -19,7 +19,7 @@ CHARON_FLAGS := --preset=aeneas --sysroot=default --rustc-arg=--cfg=charon \
 
 .PHONY: tools patch-aeneas patch-spectec aeneas-build extract extract-check llbc \
  prove trust audit-coverage clean checkpoint spec-build spec-generate spec-update \
- spec-check spec-repro aeneas-repro regressions
+ spec-check regressions
 
 # Source patches are repeatable and fail if the checkout has incompatible edits.
 patch-aeneas:
@@ -88,21 +88,9 @@ spec-check: spec-generate
 	cmp .build/wasm2.0.lean SpecTec/wasm2.0.lean
 	lake build SpecTecGenerated Itasca.SpecChecks
 
-spec-repro: spec-build
-	mkdir -p .build
-	$(SPECTEC) upstream/optional-mutability.spectec --lean --single-pattern-match -o .build/optional-mutability.lean
-	$(SPECTEC) upstream/otherwise-projection.spectec --lean --single-pattern-match -o .build/otherwise-projection.lean
-
-# This formerly failed at the pinned Aeneas revision; the source patch fixes it.
-aeneas-repro: aeneas-build
-	mkdir -p .build
-	RUSTUP_TOOLCHAIN=$(RUST_TOOLCHAIN) $(CHARON) rustc --preset=aeneas --sysroot=default --dest-file=.build/namespace_shadow.llbc -- --crate-type=lib upstream/namespace-shadow.rs --out-dir .build
-	$(AENEAS) -backend lean .build/namespace_shadow.llbc -dest .build -namespace NamespaceShadow -no-progress-bar
-	lake build Aeneas
-	lake env lean .build/NamespaceShadow.lean
-
 # Use upstream's test runner and compile its regenerated outputs in our Lake env.
-regressions: aeneas-repro
+regressions: aeneas-build
+	lake build Aeneas
 	cd $(AENEAS_DIR)/tests/test_runner && opam exec --switch=$(OPAM_SWITCH) -- dune build run_test.exe
 	cd $(AENEAS_DIR) && RUSTUP_TOOLCHAIN=$(RUST_TOOLCHAIN) gmake IN_CI=1 AENEAS_EXE=$(AENEAS) CHARON_EXE=$(CHARON) TEST_RUNNER_EXE=$(TEST_RUNNER) test-namespace-shadow.rs test-deep-else-if.rs
 	lake env lean $(AENEAS_DIR)/tests/lean/NamespaceShadow.lean

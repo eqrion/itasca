@@ -10,13 +10,13 @@ namespace Itasca
 
 /-- Direct-call acceptance consumes every parameter and supplies every result,
 with the function index certified by the independent LEB grammar. -/
-theorem multi_value.call.direct_prefix (st : multi_value.State) (data : Slice U8)
+theorem code.call.direct_prefix (st : code.BodyState) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.core.vals.val = outer ++ segment)
     (hbase : (Control.base st.core).val = outer.length)
     (C : context) (hC : EnvTranslation.Matches env ctx C) (inputs : List valtype) (ops : List instr)
     (htyped : MultiValue.TypedPrefix C inputs ops (Control.polymorphic st.core) segment) :
-    multi_value.call st data env false ⦃ r => r.1 = .Ok () →
+    code.call st data env false ⦃ r => r.1 = .Ok () →
       ∃ idx, Leb128.Decoded data st.core.pos idx r.2.core.pos ∧
       r.2.core.ctrls = st.core.ctrls ∧ r.2.blocks = st.blocks ∧
       ∃ rest, r.2.core.vals.val = outer ++ rest ∧
@@ -24,7 +24,7 @@ theorem multi_value.call.direct_prefix (st : multi_value.State) (data : Slice U8
           (Control.polymorphic st.core) rest ⦄ := by
   obtain ⟨r, hr, hd⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data st.core.pos)
   cases r with
-  | Err e => simp [multi_value.call.eq_core, MultiValue.callCore, hr, core.result.Result.Insts.CoreOpsTry.branch,
+  | Err e => simp [code.call.eq_core, MultiValue.callCore, hr, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok pair =>
     obtain ⟨idx, next⟩ := pair
@@ -35,9 +35,9 @@ theorem multi_value.call.direct_prefix (st : multi_value.State) (data : Slice U8
       have htype : env.func_types.val[idx.val] = ft := by simpa using heq.symm
       have hsmall := Nat.not_le_of_gt hi
       obtain ⟨⟨res, s⟩, hs, hout⟩ := WP.spec_imp_exists
-        (multi_value.apply_func_type.realizes { st.core with pos := next } ft outer segment hvals hbase)
+        (code.apply_func_type.realizes { st.core with pos := next } ft outer segment hvals hbase)
       cases res with
-      | Err e => simp [multi_value.call.eq_core, MultiValue.callCore, hr, lift, hsmall, hft, htype, hs,
+      | Err e => simp [code.call.eq_core, MultiValue.callCore, hr, lift, hsmall, hft, htype, hs,
           core.result.Result.Insts.CoreOpsTry.branch]
       | Ok u =>
         obtain ⟨hc, hp, _, _, rest, hv, _, ht⟩ := hout rfl
@@ -50,15 +50,15 @@ theorem multi_value.call.direct_prefix (st : multi_value.State) (data : Slice U8
           (hC.call idx ft hi htype)
         rw [WP.spec_equiv_exists]
         refine ⟨(.Ok (), ⟨s⟩), ?_, fun _ => ?_⟩
-        · simp [multi_value.call.eq_core, MultiValue.callCore, hr, lift, hsmall, hft, htype, hs,
+        · simp [code.call.eq_core, MultiValue.callCore, hr, lift, hsmall, hft, htype, hs,
             core.result.Result.Insts.CoreOpsTry.branch]
-        · exact ⟨idx, by simpa [hp, Leb128.Post] using hd, hc, multi_value.State.blocks_eq_of_ctrls hc, _, hv, htyping⟩
+        · exact ⟨idx, by simpa [hp, Leb128.Post] using hd, hc, code.BodyState.blocks_eq_of_ctrls hc, _, hv, htyping⟩
     · have hlarge := Nat.le_of_not_gt hi
-      simp [multi_value.call.eq_core, MultiValue.callCore, hr, lift, hlarge, core.result.Result.Insts.CoreOpsTry.branch]
+      simp [code.call.eq_core, MultiValue.callCore, hr, lift, hlarge, core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Direct calls accept independently encoded, in-range function indices and
 compatible operands within the explicit signature and operand capacity limits. -/
-theorem multi_value.call.direct_complete (st : multi_value.State) (data : Slice U8)
+theorem code.call.direct_complete (st : code.BodyState) (data : Slice U8)
     (env : module.Env) (idx : U32) (next : Usize) (ft : types.FuncType)
     (hd : Leb128.Decoded data st.core.pos idx next)
     (hi : idx.val < env.func_types.val.length) (ht : env.func_types.val[idx.val] = ft)
@@ -68,7 +68,7 @@ theorem multi_value.call.direct_complete (st : multi_value.State) (data : Slice 
     (hcap : st.core.vals.val.length + ft.results.val.length ≤ Usize.max)
     (hreal : Sequence.Realizes (Control.polymorphic st.core) segment
       (before ++ ft.params.val.map Translate.valueType)) :
-    multi_value.call st data env false ⦃ r => r.1 = .Ok () ∧
+    code.call st data env false ⦃ r => r.1 = .Ok () ∧
       r.2.core.ctrls = st.core.ctrls ∧ r.2.blocks = st.blocks ∧ r.2.core.pos = next ∧
       ∃ rest, r.2.core.vals.val = outer ++ rest ∧
         rest.length ≤ segment.length + ft.results.val.length ∧
@@ -81,23 +81,23 @@ theorem multi_value.call.direct_complete (st : multi_value.State) (data : Slice 
   have he : ft' = ft := by simpa [ht] using heq
   subst ft'
   obtain ⟨⟨_, s⟩, hs, rfl, hc, hpos, rest, hvs, hlen, hreal'⟩ := WP.spec_imp_exists
-    (multi_value.apply_func_type.complete { st.core with pos := next } ft outer segment before
+    (code.apply_func_type.complete { st.core with pos := next } ft outer segment before
       hp hr hv hb hcap hreal)
   have hsmall := Nat.not_le_of_gt hi
   rw [WP.spec_equiv_exists]
-  refine ⟨(.Ok (), ⟨s⟩), ?_, rfl, hc, multi_value.State.blocks_eq_of_ctrls hc, hpos, rest, hvs, hlen, hreal'⟩
-  simp [multi_value.call.eq_core, MultiValue.callCore, hread, lift, hsmall, hft, ht, hs,
+  refine ⟨(.Ok (), ⟨s⟩), ?_, rfl, hc, code.BodyState.blocks_eq_of_ctrls hc, hpos, rest, hvs, hlen, hreal'⟩
+  simp [code.call.eq_core, MultiValue.callCore, hread, lift, hsmall, hft, ht, hs,
     core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Indirect calls retain the table-zero byte and consume the selector before
 all function parameters; result arity is unrestricted by the proof. -/
-theorem multi_value.call.indirect_prefix (st : multi_value.State) (data : Slice U8)
+theorem code.call.indirect_prefix (st : code.BodyState) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.core.vals.val = outer ++ segment)
     (hbase : (Control.base st.core).val = outer.length)
     (C : context) (hC : EnvTranslation.Matches env ctx C) (inputs : List valtype) (ops : List instr)
     (htyped : MultiValue.TypedPrefix C inputs ops (Control.polymorphic st.core) segment) :
-    multi_value.call st data env true ⦃ r => r.1 = .Ok () →
+    code.call st data env true ⦃ r => r.1 = .Ok () →
       ∃ idx middle, Leb128.Decoded data st.core.pos idx middle ∧
       (∃ hm : middle.val < data.length, data.val[middle.val] = 0#u8 ∧
         r.2.core.pos.val = middle.val + 1) ∧
@@ -107,7 +107,7 @@ theorem multi_value.call.indirect_prefix (st : multi_value.State) (data : Slice 
           (Control.polymorphic st.core) rest ⦄ := by
   obtain ⟨r, hr, hd⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data st.core.pos)
   cases r with
-  | Err e => simp [multi_value.call.eq_core, MultiValue.callCore, hr, core.result.Result.Insts.CoreOpsTry.branch,
+  | Err e => simp [code.call.eq_core, MultiValue.callCore, hr, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok pair =>
     obtain ⟨idx, middle⟩ := pair
@@ -115,7 +115,7 @@ theorem multi_value.call.indirect_prefix (st : multi_value.State) (data : Slice 
     · obtain ⟨_, hz, next, rfl, hn⟩ := WP.spec_imp_exists (reader.read_byte.spec data middle hm)
       by_cases hzbyte : data.val[middle.val] = 0#u8
       · by_cases htable : env.table_types.val = []
-        · simp [multi_value.call.eq_core, MultiValue.callCore, hr, hz, hzbyte, lift, alloc.vec.Vec.is_empty, htable,
+        · simp [code.call.eq_core, MultiValue.callCore, hr, hz, hzbyte, lift, alloc.vec.Vec.is_empty, htable,
             core.result.Result.Insts.CoreOpsTry.branch]
         · by_cases hi : idx.val < env.types.val.length
           · have hix : (UScalar.cast .Usize idx).val < env.types.val.length := by simpa using hi
@@ -127,15 +127,15 @@ theorem multi_value.call.indirect_prefix (st : multi_value.State) (data : Slice 
               (code.pop_with_type.realizes { st.core with pos := next } outer segment .I32 hvals hbase)
             dsimp only at hcc hpc hvc htc
             cases rc with
-            | Err e => simp [multi_value.call.eq_core, MultiValue.callCore, hr, hz, hzbyte, alloc.vec.Vec.is_empty,
+            | Err e => simp [code.call.eq_core, MultiValue.callCore, hr, hz, hzbyte, alloc.vec.Vec.is_empty,
                 htable, lift, hsmall, hcond, core.result.Result.Insts.CoreOpsTry.branch,
                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
             | Ok popped =>
               obtain ⟨⟨res, s⟩, hs, hout⟩ := WP.spec_imp_exists
-                (multi_value.apply_func_type.realizes sc ft outer condrest hvc
+                (code.apply_func_type.realizes sc ft outer condrest hvc
                   (by simpa [Control.base, hcc] using hbase))
               cases res with
-              | Err e => simp [multi_value.call.eq_core, MultiValue.callCore, hr, hz, hzbyte, alloc.vec.Vec.is_empty,
+              | Err e => simp [code.call.eq_core, MultiValue.callCore, hr, hz, hzbyte, alloc.vec.Vec.is_empty,
                   htable, lift, hsmall, hcond, hft, htype, hs, core.result.Result.Insts.CoreOpsTry.branch]
               | Ok u =>
                 obtain ⟨hc, hp, _, _, rest, hv, _, ht⟩ := hout rfl
@@ -153,21 +153,21 @@ theorem multi_value.call.indirect_prefix (st : multi_value.State) (data : Slice 
                   (hC.call_indirect idx ft hi htype (List.length_pos_iff.mpr htable))
                 rw [WP.spec_equiv_exists]
                 refine ⟨(.Ok (), ⟨s⟩), ?_, fun _ => ?_⟩
-                · simp [multi_value.call.eq_core, MultiValue.callCore, hr, hz, hzbyte, alloc.vec.Vec.is_empty,
+                · simp [code.call.eq_core, MultiValue.callCore, hr, hz, hzbyte, alloc.vec.Vec.is_empty,
                     htable, lift, hsmall, hcond, hft, htype, hs, core.result.Result.Insts.CoreOpsTry.branch]
                 · exact ⟨idx, middle, hd, ⟨hm, hzbyte, by simpa [hp, hpc] using hn⟩,
-                    hc.trans hcc, multi_value.State.blocks_eq_of_ctrls (hc.trans hcc), _, hv, htyping⟩
+                    hc.trans hcc, code.BodyState.blocks_eq_of_ctrls (hc.trans hcc), _, hv, htyping⟩
           · have hlarge := Nat.le_of_not_gt hi
-            simp [multi_value.call.eq_core, MultiValue.callCore, hr, hz, hzbyte, lift, alloc.vec.Vec.is_empty, htable,
+            simp [code.call.eq_core, MultiValue.callCore, hr, hz, hzbyte, lift, alloc.vec.Vec.is_empty, htable,
               lift, hlarge, core.result.Result.Insts.CoreOpsTry.branch]
       · have hzval : data.val[middle.val].val ≠ 0 := fun h => hzbyte (UScalar.eq_of_val_eq h)
-        simp [multi_value.call.eq_core, MultiValue.callCore, hr, hz, hzval, lift, core.result.Result.Insts.CoreOpsTry.branch]
-    · simp [multi_value.call.eq_core, MultiValue.callCore, hr, lift, reader.read_byte.eof data middle (by omega),
+        simp [code.call.eq_core, MultiValue.callCore, hr, hz, hzval, lift, core.result.Result.Insts.CoreOpsTry.branch]
+    · simp [code.call.eq_core, MultiValue.callCore, hr, lift, reader.read_byte.eof data middle (by omega),
         core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
 /-- Independent indirect-call bytes and compatible operands force acceptance. -/
-theorem multi_value.call.indirect_complete (st : multi_value.State) (data : Slice U8)
+theorem code.call.indirect_complete (st : code.BodyState) (data : Slice U8)
     (env : module.Env) (idx : U32) (middle next : Usize) (ft : types.FuncType)
     (hd : Leb128.Decoded data st.core.pos idx middle)
     (hm : middle.val < data.length) (hzbyte : data.val[middle.val] = 0#u8)
@@ -180,7 +180,7 @@ theorem multi_value.call.indirect_complete (st : multi_value.State) (data : Slic
     (hcap : st.core.vals.val.length + ft.results.val.length ≤ Usize.max)
     (hreal : Sequence.Realizes (Control.polymorphic st.core) segment
       (before ++ (ft.params.val.map Translate.valueType ++ [.I32]))) :
-    multi_value.call st data env true ⦃ r => r.1 = .Ok () ∧
+    code.call st data env true ⦃ r => r.1 = .Ok () ∧
       r.2.core.ctrls = st.core.ctrls ∧ r.2.blocks = st.blocks ∧ r.2.core.pos = next ∧
       ∃ rest, r.2.core.vals.val = outer ++ rest ∧
         rest.length ≤ segment.length + ft.results.val.length ∧
@@ -204,14 +204,14 @@ theorem multi_value.call.indirect_complete (st : multi_value.State) (data : Slic
     simp only [hvc, hv, List.length_append] at *
     omega
   obtain ⟨⟨_, s⟩, hs, rfl, hc, hpos, rest, hvs, hlen, hreal'⟩ := WP.spec_imp_exists
-    (multi_value.apply_func_type.complete sc ft outer condrest before hp hr hvc
+    (code.apply_func_type.complete sc ft outer condrest before hp hr hvc
       (by simpa [Control.base, hcc] using hb) hcap'
       (by simpa [Control.polymorphic, hcc] using htc))
   have hsmall := Nat.not_le_of_gt hi
   rw [WP.spec_equiv_exists]
-  refine ⟨(.Ok (), ⟨s⟩), ?_, rfl, hc.trans hcc, multi_value.State.blocks_eq_of_ctrls (hc.trans hcc), hpos.trans hpc,
+  refine ⟨(.Ok (), ⟨s⟩), ?_, rfl, hc.trans hcc, code.BodyState.blocks_eq_of_ctrls (hc.trans hcc), hpos.trans hpc,
     rest, hvs, by omega, ?_⟩
-  · simp [multi_value.call.eq_core, MultiValue.callCore, hread, hz, hzbyte, alloc.vec.Vec.is_empty,
+  · simp [code.call.eq_core, MultiValue.callCore, hread, hz, hzbyte, alloc.vec.Vec.is_empty,
       hnonempty, lift, hsmall, hcond, hft, ht, hs, core.result.Result.Insts.CoreOpsTry.branch]
   · simpa [Control.polymorphic, hcc] using hreal'
 

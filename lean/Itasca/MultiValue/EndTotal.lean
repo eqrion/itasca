@@ -34,11 +34,11 @@ namespace Itasca.MultiValue
 
 /-- The common continuation of the extracted `end_frame` branches. The
 handler proof below checks this factorization against the extracted code. -/
-def finishFrame (st : multi_value.State) (env : module.Env) (isElse : Bool)
+def finishFrame (st : code.BodyState) (env : module.Env) (isElse : Bool)
     (bt : signature.BlockType) (frame : code.Ctrl) (i n : Usize) :
-    Result (core.result.Result Unit error.OpError × multi_value.State) := do
+    Result (core.result.Result Unit error.OpError × code.BodyState) := do
   let rt ← signature.BlockType.results bt
-  let (r, ois) ← multi_value.pop_results st.core env rt
+  let (r, ois) ← code.pop_results st.core env rt
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
   match cf with
   | .Continue _ =>
@@ -52,7 +52,7 @@ def finishFrame (st : multi_value.State) (env : module.Env) (isElse : Bool)
         (core.slice.index.SliceIndexUsizeSlice code.Ctrl) v i
       let v1 := back1 { c1 with polymorphic_base := false }
       let rt1 ← signature.BlockType.params bt
-      let (r1, ois1) ← multi_value.push_results { ois with ctrls := v1 } env rt1
+      let (r1, ois1) ← code.push_results { ois with ctrls := v1 } env rt1
       .ok (r1, { st with core := ois1 })
     else
       let (_, v) ← alloc.vec.Vec.pop Global ois.ctrls
@@ -60,7 +60,7 @@ def finishFrame (st : multi_value.State) (env : module.Env) (isElse : Bool)
       if n = 1#usize then
         .ok (.Ok (), { core := { ois with ctrls := v } })
       else
-        let (r1, ois1) ← multi_value.push_results { ois with ctrls := v } env rt
+        let (r1, ois1) ← code.push_results { ois with ctrls := v } env rt
         .ok (r1, { core := ois1 })
   | .Break residual =>
     let r1 ← core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -69,8 +69,8 @@ def finishFrame (st : multi_value.State) (env : module.Env) (isElse : Bool)
 
 set_option maxHeartbeats 1200000 in
 /-- Metadata erasure preserves the original closing continuation exactly. -/
-theorem end_frame_normalized (st : multi_value.State) (env : module.Env) (isElse : Bool) :
-    multi_value.end_frame st env isElse = (do
+theorem end_frame_normalized (st : code.BodyState) (env : module.Env) (isElse : Bool) :
+    code.end_frame st env isElse = (do
       let n := alloc.vec.Vec.len st.blocks
       if n = 0#usize then .ok (.Err .UnknownLabel, st) else
       let i ← n - 1#usize
@@ -85,7 +85,7 @@ theorem end_frame_normalized (st : multi_value.State) (env : module.Env) (isElse
         | .Then =>
           let ins ← signature.BlockType.params bt
           let outs ← signature.BlockType.results bt
-          let r ← multi_value.same_types env ins outs
+          let r ← code.same_types env ins outs
           let cf ← core.result.Result.Insts.CoreOpsTry.branch r
           match cf with
           | .Continue equal =>
@@ -96,8 +96,8 @@ theorem end_frame_normalized (st : multi_value.State) (env : module.Env) (isElse
               Unit (core.convert.FromSame error.OpError) residual
             .ok (r, st)
         | _ => finishFrame st env false bt frame i n) := by
-  simp only [multi_value.end_frame, multi_value.end_frame_info, multi_value.State.blocks_len,
-    multi_value.State.blocks_index, Std.bind_assoc, bind_ok]
+  simp only [code.end_frame, code.end_frame_info, code.BodyState.blocks_len,
+    code.BodyState.blocks_index, Std.bind_assoc, bind_ok]
   split
   · simp [core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -122,7 +122,7 @@ theorem end_frame_normalized (st : multi_value.State) (env : module.Env) (isElse
         | split
 
 @[step]
-theorem finishFrame.total (st : multi_value.State) (env : module.Env) (isElse : Bool)
+theorem finishFrame.total (st : code.BodyState) (env : module.Env) (isElse : Bool)
     (bt : signature.BlockType) (frame : code.Ctrl) (i n : Usize)
     (hs : Control.Shape st.core)
     (ha : st.blocks.val.length = st.core.ctrls.val.length)
@@ -132,7 +132,7 @@ theorem finishFrame.total (st : multi_value.State) (env : module.Env) (isElse : 
       r.2.blocks.val.length ≤ st.blocks.val.length ∧ r.2.core.pos = st.core.pos ⦄ := by
   unfold finishFrame
   simp only [signature.BlockType.results.spec, signature.BlockType.params.spec, bind_ok]
-  step with multi_value.pop_results.total st.core env (outputs bt) hs
+  step with code.pop_results.total st.core env (outputs bt) hs
     as ⟨r, s, hs', hc, hp, hv⟩
   step
   split
@@ -159,10 +159,10 @@ end Itasca.MultiValue
 namespace Itasca
 
 @[step]
-theorem multi_value.end_frame.total (st : multi_value.State) (env : module.Env)
+theorem code.end_frame.total (st : code.BodyState) (env : module.Env)
     (isElse : Bool) (hs : Control.Shape st.core)
     (ha : st.blocks.val.length = st.core.ctrls.val.length) :
-    multi_value.end_frame st env isElse ⦃ r =>
+    code.end_frame st env isElse ⦃ r =>
       Control.Shape r.2.core ∧ r.2.blocks.val.length = r.2.core.ctrls.val.length ∧
       r.2.blocks.val.length ≤ st.blocks.val.length ∧ r.2.core.pos = st.core.pos ⦄ := by
   rw [MultiValue.end_frame_normalized]
@@ -181,7 +181,7 @@ theorem multi_value.end_frame.total (st : multi_value.State) (env : module.Env)
       simp only [Bool.false_eq_true, ↓reduceIte]
     case false.Then =>
       simp only [signature.BlockType.params.spec, signature.BlockType.results.spec, bind_ok]
-      step with multi_value.same_types.spec env (MultiValue.inputs bt) (MultiValue.outputs bt)
+      step with code.same_types.spec env (MultiValue.inputs bt) (MultiValue.outputs bt)
       step
       split
       · split

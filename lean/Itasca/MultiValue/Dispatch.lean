@@ -6,9 +6,9 @@ open Aeneas Aeneas.Std Result
 namespace Itasca.MultiValue
 
 /-- The return arm of the extracted loop, with its state exposed for proofs. -/
-def returnStep (st : multi_value.State) (env : module.Env) (index : U32) :
-    Result (core.result.Result Unit error.OpError × multi_value.State) := do
-  let (r, ois) ← multi_value.pop_results st.core env (.Type index .Results)
+def returnStep (st : code.BodyState) (env : module.Env) (index : U32) :
+    Result (core.result.Result Unit error.OpError × code.BodyState) := do
+  let (r, ois) ← code.pop_results st.core env (.Type index .Results)
   match r with
   | .Err e => .ok (.Err e, { st with core := ois })
   | .Ok () =>
@@ -17,21 +17,21 @@ def returnStep (st : multi_value.State) (env : module.Env) (index : U32) :
 
 /-- Proof adapter for one opcode of the actual multi-value loop. Its exact
 factorization is checked below; this is not a separate validity judgment. -/
-def step (st : multi_value.State) (data : Slice U8) (env : module.Env)
+def step (st : code.BodyState) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (opcode : U8) :
-    Result (core.result.Result Unit error.OpError × multi_value.State) := do
+    Result (core.result.Result Unit error.OpError × code.BodyState) := do
   match opcode with
-  | 2#uscalar => multi_value.enter st data env .Block
-  | 3#uscalar => multi_value.enter st data env .Loop
-  | 4#uscalar => multi_value.enter st data env .Then
-  | 5#uscalar => multi_value.end_frame st env true
-  | 11#uscalar => multi_value.end_frame st env false
-  | 12#uscalar => multi_value.branch st data env false
-  | 13#uscalar => multi_value.branch st data env true
-  | 14#uscalar => multi_value.branch_table st data env
+  | 2#uscalar => code.enter st data env .Block
+  | 3#uscalar => code.enter st data env .Loop
+  | 4#uscalar => code.enter st data env .Then
+  | 5#uscalar => code.end_frame st env true
+  | 11#uscalar => code.end_frame st env false
+  | 12#uscalar => code.branch st data env false
+  | 13#uscalar => code.branch st data env true
+  | 14#uscalar => code.branch_table st data env
   | 15#uscalar => returnStep st env index
-  | 16#uscalar => multi_value.call st data env false
-  | 17#uscalar => multi_value.call st data env true
+  | 16#uscalar => code.call st data env false
+  | 17#uscalar => code.call st data env true
   | _ =>
     if alloc.vec.Vec.len st.core.vals = core.num.Usize.MAX then
       .ok (.Err .StackTooLarge, st)
@@ -41,25 +41,25 @@ def step (st : multi_value.State) (data : Slice U8) (env : module.Env)
       .ok (r, { st with core := ois })
 
 abbrev run (data : Slice U8) (env : module.Env) (ctx : code.Context)
-    (index : U32) (st : multi_value.State) :=
-  multi_value.validate_body_loop data env.types env.imports env.globals env.exports
+    (index : U32) (st : code.BodyState) :=
+  code.validate_multi_value_body_loop data env.types env.imports env.globals env.exports
     env.elements env.start env.func_type_indices env.func_types env.table_types env.mem_types
     env.global_types env.num_imported_funcs env.num_imported_globals index st ctx.locals ctx.results ()
 
 abbrev loopBody (data : Slice U8) (env : module.Env) (ctx : code.Context)
-    (index : U32) (st : multi_value.State) :=
-  multi_value.validate_body_loop.body data env.types env.imports env.globals env.exports
+    (index : U32) (st : code.BodyState) :=
+  code.validate_multi_value_body_loop.body data env.types env.imports env.globals env.exports
     env.elements env.start env.func_type_indices env.func_types env.table_types env.mem_types
     env.global_types env.num_imported_funcs env.num_imported_globals index ctx.locals ctx.results st ()
 
-def continueStep (r : core.result.Result Unit error.OpError × multi_value.State) :
-    ControlFlow (multi_value.State × code.EmptyOpVisitor) (core.result.Result Unit error.OpError) :=
+def continueStep (r : core.result.Result Unit error.OpError × code.BodyState) :
+    ControlFlow (code.BodyState × code.EmptyOpVisitor) (core.result.Result Unit error.OpError) :=
   match r.1 with
   | .Ok () => .cont (r.2, ())
   | .Err e => .done (.Err e)
 
 theorem loopBody_eq (data : Slice U8) (env : module.Env) (ctx : code.Context)
-    (index : U32) (st : multi_value.State) :
+    (index : U32) (st : code.BodyState) :
     loopBody data env ctx index st =
       if st.blocks.val = [] then
         .ok (.done (if st.core.pos = Slice.len data then .Ok () else .Err .TrailingBytes))
@@ -70,7 +70,7 @@ theorem loopBody_eq (data : Slice U8) (env : module.Env) (ctx : code.Context)
         | .Ok (opcode, pos) =>
           let r ← step { st with core := { st.core with pos := pos } } data env ctx index opcode
           .ok (continueStep r)) := by
-  unfold loopBody multi_value.validate_body_loop.body
+  unfold loopBody code.validate_multi_value_body_loop.body
   simp only [alloc.vec.Vec.is_empty, bind_ok, List.isEmpty_iff]
   split
   · by_cases hp : st.core.pos = Slice.len data

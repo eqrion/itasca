@@ -8,12 +8,12 @@ set_option maxHeartbeats 1000000
 
 namespace Itasca
 
-attribute [local step] code.pop_with_type.total multi_value.check_suffix.spec
+attribute [local step] code.pop_with_type.total code.check_suffix.spec
 
 /-- Erasing the active operand segment preserves structural frame bounds,
 including the empty-control-stack case. -/
 @[step]
-theorem multi_value.mark_unreachable_total (st : code.OpIterState)
+theorem code.mark_unreachable_total (st : code.OpIterState)
     (hs : Control.Shape st) :
     code.mark_unreachable st ⦃ s =>
       Control.Shape s ∧ s.ctrls.val.length = st.ctrls.val.length ∧ s.pos = st.pos ∧
@@ -34,30 +34,30 @@ theorem multi_value.mark_unreachable_total (st : code.OpIterState)
       by simp [hv], by simp [hc, he]⟩
 
 @[step]
-theorem multi_value.push_frame.total (st : multi_value.State)
+theorem code.push_frame.total (st : code.BodyState)
     (kind : code.LabelKind) (bt : signature.BlockType)
     (hshape : Control.Shape st.core)
     (halign : st.blocks.val.length = st.core.ctrls.val.length)
     (hcap : st.blocks.val.length < Usize.max) :
-    multi_value.push_frame st kind bt ⦃ s =>
+    code.push_frame st kind bt ⦃ s =>
       Control.Shape s.core ∧ s.blocks.val.length = s.core.ctrls.val.length ∧
       s.core.pos = st.core.pos ∧ s.core.vals = st.core.vals ∧
       s.blocks.val.length = st.blocks.val.length + 1 ⦄ := by
-  apply WP.spec_mono (multi_value.push_frame.spec st kind bt (by omega) hcap)
+  apply WP.spec_mono (code.push_frame.spec st kind bt (by omega) hcap)
   rintro s ⟨hc, hv, hp, hb⟩
   exact ⟨MultiValue.shape_push hshape kind bt hc hv, by simp [hb, hc, halign], hp, hv, by simp [hb]⟩
 
 /-- Branches preserve frame alignment and bounds for arbitrary label bytes and
 arbitrary environments. Conditional branches restore the entire signature. -/
-theorem multi_value.branch.total (st : multi_value.State) (data : Slice U8)
+theorem code.branch.total (st : code.BodyState) (data : Slice U8)
     (env : module.Env) (conditional : Bool) (hs : Control.Shape st.core)
     (ha : st.blocks.val.length = st.core.ctrls.val.length) :
-    multi_value.branch st data env conditional ⦃ r =>
+    code.branch st data env conditional ⦃ r =>
       Control.Shape r.2.core ∧ r.2.blocks.val.length = r.2.core.ctrls.val.length ∧
       r.2.blocks = st.blocks ∧ st.core.pos.val ≤ r.2.core.pos.val ⦄ := by
-  rw [multi_value.branch.eq_core]
+  rw [code.branch.eq_core]
   unfold MultiValue.branchCore
-  step with multi_value.read_label.spec st data ha as ⟨r, st1, hv, hc, hblocks, hpos, hres⟩
+  step with code.read_multi_value_label.spec st data ha as ⟨r, st1, hv, hc, hblocks, hpos, hres⟩
   have hs' : Control.Shape st1.core :=
     ⟨by simpa [hc] using hs.ordered, by simpa [hc, hv] using hs.bounded⟩
   have ha' : st1.blocks.val.length = st1.core.ctrls.val.length := by simp_all
@@ -65,15 +65,15 @@ theorem multi_value.branch.total (st : multi_value.State) (data : Slice U8)
 
 /-- Reading and entering a block is total on arbitrary bytes. Popping block
 parameters before fixing the new base preserves nested frame bounds. -/
-theorem multi_value.enter_info.total (st : multi_value.State) (data : Slice U8)
+theorem code.enter_info.total (st : code.BodyState) (data : Slice U8)
     (env : module.Env) (kind : code.LabelKind) (hs : Control.Shape st.core)
     (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (hcap : st.blocks.val.length < Usize.max) :
-    multi_value.enter_info st data env kind ⦃ r =>
+    code.enter_info st data env kind ⦃ r =>
       Control.Shape r.2.core ∧ r.2.blocks.val.length = r.2.core.ctrls.val.length ∧
       r.2.blocks.val.length ≤ st.blocks.val.length + 1 ∧
       st.core.pos.val ≤ r.2.core.pos.val ⦄ := by
-  unfold multi_value.enter_info
+  unfold code.enter_info
   obtain ⟨res, hr, hdecoded⟩ := WP.spec_imp_exists (signature.read_block_type.spec data st.core.pos)
   rw [hr]
   cases res with
@@ -93,46 +93,46 @@ theorem multi_value.enter_info.total (st : multi_value.State) (data : Slice U8)
     cases bt <;> cases kind <;> step* <;> simp_all
 
 /-- Erasing callback metadata preserves the complete entry-state contract. -/
-theorem multi_value.enter.total (st : multi_value.State) (data : Slice U8)
+theorem code.enter.total (st : code.BodyState) (data : Slice U8)
     (env : module.Env) (kind : code.LabelKind) (hs : Control.Shape st.core)
     (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (hcap : st.blocks.val.length < Usize.max) :
-    multi_value.enter st data env kind ⦃ r =>
+    code.enter st data env kind ⦃ r =>
       Control.Shape r.2.core ∧ r.2.blocks.val.length = r.2.core.ctrls.val.length ∧
       r.2.blocks.val.length ≤ st.blocks.val.length + 1 ∧
       st.core.pos.val ≤ r.2.core.pos.val ⦄ := by
-  unfold multi_value.enter
-  step with multi_value.enter_info.total st data env kind hs ha hcap
+  unfold code.enter
+  step with code.enter_info.total st data env kind hs ha hcap
     as ⟨r, s, hshape, halign, hlen, hpos⟩
   cases r <;> simp_all [core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
 /-- The table loop includes its default target without incrementing the
 possibly maximal encoded count. Every iteration checks the original suffix. -/
-theorem multi_value.branch_table_loop.total (st : multi_value.State) (data : Slice U8)
+theorem code.branch_table_loop.total (st : code.BodyState) (data : Slice U8)
     (env : module.Env) (count : U32) (arity : Option Usize) (i : U32)
     (hs : Control.Shape st.core)
     (ha : st.blocks.val.length = st.core.ctrls.val.length) (hi : i.val ≤ count.val) :
-    multi_value.branch_table_loop st.core st.blocks data env count arity i ⦃ r =>
+    code.branch_table_loop st.core st.blocks data env count arity i ⦃ r =>
       Control.Shape r.2.core ∧ r.2.blocks.val.length = r.2.core.ctrls.val.length ∧
       r.2.blocks = st.blocks ∧ st.core.pos.val ≤ r.2.core.pos.val ⦄ := by
-  have hlo : multi_value.branch_table_with_loop code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+  have hlo : code.branch_table_with_loop code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       st.core data env () count arity i ⦃ r =>
       Control.Shape r.2.1.core ∧ r.2.1.blocks.val.length = r.2.1.core.ctrls.val.length ∧
       r.2.1.blocks = st.blocks ∧ st.core.pos.val ≤ r.2.1.core.pos.val ⦄ := by
-    unfold multi_value.branch_table_with_loop
+    unfold code.branch_table_with_loop
     apply loop.spec_decr_nat (fun p => count.val - p.2.2.2.val)
-      (fun p => Control.Shape p.1 ∧ (multi_value.State.mk p.1).blocks.val.length = p.1.ctrls.val.length ∧
-        (multi_value.State.mk p.1).blocks = st.blocks ∧ p.2.2.2.val ≤ count.val ∧ st.core.pos.val ≤ p.1.pos.val)
+      (fun p => Control.Shape p.1 ∧ (code.BodyState.mk p.1).blocks.val.length = p.1.ctrls.val.length ∧
+        (code.BodyState.mk p.1).blocks = st.blocks ∧ p.2.2.2.val ≤ count.val ∧ st.core.pos.val ≤ p.1.pos.val)
     · rintro ⟨stateCore, visitor, arity, j⟩ ⟨hs', ha', hb', hj, hpos⟩
       cases visitor
       dsimp only at hs' ha' hb' hj hpos
       dsimp only
-      rw [MultiValue.tableBody_eq data env count stateCore (multi_value.State.mk stateCore).blocks arity j]
+      rw [MultiValue.tableBody_eq data env count stateCore (code.BodyState.mk stateCore).blocks arity j]
       apply ResultFacts.map_spec
-      unfold multi_value.branch_table_loop.body
+      unfold code.branch_table_loop.body
       obtain ⟨⟨r, s⟩, hr, hv, hc, hb, hp, hread⟩ := WP.spec_imp_exists
-        (multi_value.read_label.spec ⟨stateCore⟩ data ha')
+        (code.read_multi_value_label.spec ⟨stateCore⟩ data ha')
       rw [hr]
       simp only [bind_ok]
       dsimp only at hv hc hb hp hread
@@ -145,18 +145,18 @@ theorem multi_value.branch_table_loop.total (st : multi_value.State) (data : Sli
       all_goals simp_all [MultiValue.tableFlow, MultiValue.tableCont, MultiValue.tableDone]
       all_goals scalar_tac
     · exact ⟨hs, ha, rfl, hi, le_refl _⟩
-  unfold multi_value.branch_table_loop
+  unfold code.branch_table_loop
   obtain ⟨⟨res, final, visitor⟩, hr, hp⟩ := WP.spec_imp_exists hlo
   simpa [hr] using hp
 
 @[step]
-theorem multi_value.branch_table.total (st : multi_value.State) (data : Slice U8)
+theorem code.branch_table.total (st : code.BodyState) (data : Slice U8)
     (env : module.Env) (hs : Control.Shape st.core)
     (ha : st.blocks.val.length = st.core.ctrls.val.length) :
-    multi_value.branch_table st data env ⦃ r =>
+    code.branch_table st data env ⦃ r =>
       Control.Shape r.2.core ∧ r.2.blocks.val.length = r.2.core.ctrls.val.length ∧
       r.2.blocks = st.blocks ∧ st.core.pos.val ≤ r.2.core.pos.val ⦄ := by
-  rw [multi_value.branch_table.eq_core]
+  rw [code.branch_table.eq_core]
   unfold MultiValue.tableCore
   step with reader.read_u32_leb.spec data st.core.pos as ⟨res, hdecoded⟩
   step
@@ -171,7 +171,7 @@ theorem multi_value.branch_table.total (st : multi_value.State) (data : Slice U8
     step with code.pop_with_type.total _ .I32 hspos as ⟨r, s, hs', hc, hp, hv, he⟩
     step
     split
-    · apply WP.spec_mono (multi_value.branch_table_loop.total ⟨s⟩ data env count none
+    · apply WP.spec_mono (code.branch_table_loop.total ⟨s⟩ data env count none
         0#u32 hs' (by simp_all) (by simp))
       intro result hout
       exact ⟨hout.1, hout.2.1, by simpa [hc] using hout.2.2.1, hpnext.trans (by simpa [hp] using hout.2.2.2)⟩
@@ -179,11 +179,11 @@ theorem multi_value.branch_table.total (st : multi_value.State) (data : Slice U8
   · step* <;> simp_all
 
 @[step]
-theorem multi_value.call.total (st : multi_value.State) (data : Slice U8)
+theorem code.call.total (st : code.BodyState) (data : Slice U8)
     (env : module.Env) (indirect : Bool) (hs : Control.Shape st.core) :
-    multi_value.call st data env indirect ⦃ r =>
+    code.call st data env indirect ⦃ r =>
       Control.Shape r.2.core ∧ r.2.core.ctrls = st.core.ctrls ∧ r.2.blocks = st.blocks ∧ st.core.pos.val ≤ r.2.core.pos.val ⦄ := by
-  rw [multi_value.call.eq_core]
+  rw [code.call.eq_core]
   unfold MultiValue.callCore
   step with reader.read_u32_leb.spec data st.core.pos as ⟨res, hdecoded⟩
   step

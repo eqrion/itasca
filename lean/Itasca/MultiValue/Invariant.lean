@@ -22,7 +22,7 @@ def Validated (data : Slice U8) (env : module.Env) (locals : alloc.vec.Vec types
   ∃ ft ops, env.types.val[index.val]? = some ft ∧ BodyEncoding data ops ∧
     FunctionTyped env locals ft ops
 
-structure Bounds (data : Slice U8) (st : multi_value.State) : Prop where
+structure Bounds (data : Slice U8) (st : code.BodyState) : Prop where
   size : data.length ≤ limits.MAX_FUNCTION_BYTES.val
   pos : st.core.pos.val ≤ data.length
   ctrls : st.blocks.val.length ≤ st.core.pos.val + 1
@@ -30,14 +30,14 @@ structure Bounds (data : Slice U8) (st : multi_value.State) : Prop where
 /-- A running typed zipper or a completed typed body, with exact provenance
 for the consumed prefix. No condition is placed on unread bytes. -/
 inductive State (data : Slice U8) (env : module.Env) (locals : alloc.vec.Vec types.ValueType)
-    (index : U32) : multi_value.State → Prop where
-  | running (st : multi_value.State) (ft : types.FuncType)
+    (index : U32) : code.BodyState → Prop where
+  | running (st : code.BodyState) (ft : types.FuncType)
       (parents : List Frames.Saved) (current : Frames.Saved) :
       env.types.val[index.val]? = some ft → Bounds data st →
       Frames.Open env (bodyContext env locals ft) st parents current →
       Frames.bodyType parents current = some (.TypeIndex index) →
       Consumed data 0#usize (Frames.trace parents current) st.core.pos → State data env locals index st
-  | closed (st : multi_value.State) (ft : types.FuncType) (ops : List instr) (tokens : List Token) :
+  | closed (st : code.BodyState) (ft : types.FuncType) (ops : List instr) (tokens : List Token) :
       env.types.val[index.val]? = some ft → Bounds data st →
       st.core.ctrls.val = [] → st.blocks.val = [] → BodyTokens tokens ops →
       FunctionTyped env locals ft ops → Consumed data 0#usize tokens st.core.pos →
@@ -62,7 +62,7 @@ theorem State.finished {data env locals index st} (h : State data env locals ind
   | closed ft ops tokens hi _ _ _ ht htyped hc =>
     exact ⟨ft, ops, hi, ⟨tokens, st.core.pos, hc, hpos, ht⟩, htyped⟩
 
-def initial (index : U32) : multi_value.State :=
+def initial (index : U32) : code.BodyState :=
   { core := ⟨alloc.vec.Vec.new _,
       alloc.vec.Vec.from [⟨.Body, .Empty, .TypeIndex index, 0#usize, false⟩] (by scalar_tac), 0#usize⟩ }
 
@@ -85,7 +85,7 @@ theorem State.start (data : Slice U8) (env : module.Env) (locals : alloc.vec.Vec
 
 /-- The opcode has been consumed, but its immediate is still arbitrary. -/
 structure Pending (data : Slice U8) (env : module.Env) (locals : alloc.vec.Vec types.ValueType)
-    (index : U32) (st : multi_value.State) where
+    (index : U32) (st : code.BodyState) where
   start : Usize
   ft : types.FuncType
   parents : List Frames.Saved
@@ -111,11 +111,11 @@ theorem State.pending {data env locals index st} (h : State data env locals inde
       hc, hpos, hnext, bounds.ctrls⟩, rfl⟩
 
 def Pending.After {data env locals index st} (_ : Pending data env locals index st)
-    (s : multi_value.State) : Prop :=
+    (s : code.BodyState) : Prop :=
   State data env locals index s ∧ st.core.pos.val ≤ s.core.pos.val ∧ s.core.pos.val ≤ data.length
 
 theorem Pending.running_after {data env locals index st} (p : Pending data env locals index st)
-    (s : multi_value.State) (parents : List Frames.Saved) (current : Frames.Saved)
+    (s : code.BodyState) (parents : List Frames.Saved) (current : Frames.Saved)
     (token : Token) (encoded : At data p.start token s.core.pos)
     (ho : Frames.Open env (bodyContext env locals p.ft) s parents current)
     (hb : Frames.bodyType parents current = some (.TypeIndex index))
@@ -130,7 +130,7 @@ theorem Pending.running_after {data env locals index st} (p : Pending data env l
   exact .snoc p.consumed encoded
 
 theorem Pending.closed_after {data env locals index st} (p : Pending data env locals index st)
-    (s : multi_value.State) (ops : List instr) (encoded : At data p.start .end_ s.core.pos)
+    (s : code.BodyState) (ops : List instr) (encoded : At data p.start .end_ s.core.pos)
     (hc : s.core.ctrls.val = []) (hb : s.blocks.val = [])
     (ht : BodyTokens (Frames.trace p.parents p.current ++ [.end_]) ops)
     (htyped : FunctionTyped env locals p.ft ops) : p.After s := by
@@ -142,7 +142,7 @@ theorem Pending.closed_after {data env locals index st} (p : Pending data env lo
 /-- Closing the root frame recovers the result vector selected by the actual
 function type index, without treating function parameters as operands. -/
 theorem Pending.finish_body {data env locals index st} (p : Pending data env locals index st)
-    (s : multi_value.State) (encoded : At data p.start .end_ s.core.pos)
+    (s : code.BodyState) (encoded : At data p.start .end_ s.core.pos)
     (hform : p.current.form = .body)
     (hresults : Sequence.Realizes p.current.ctrl.polymorphic_base p.current.vals
       (p.current.outs.map Translate.valueType))
@@ -164,7 +164,7 @@ theorem Pending.append_result {data env locals index st} (p : Pending data env l
       p.current.form p.current.ins)
     (header : Frames.Header env C p.current)
     (base : p.current.ctrl.value_stack_base.val = outer.length)
-    (s : multi_value.State) (op : instr) (poly : Bool) (newVals : List code.StackType)
+    (s : code.BodyState) (op : instr) (poly : Bool) (newVals : List code.StackType)
     (hwf : wf_instr op) (encoded : At data p.start (.plain op) s.core.pos)
     (typed : TypedPrefix (Frames.enter C p.current.form p.current.ins p.current.outs)
       ((p.current.form.params p.current.ins).map Translate.valueType)
@@ -187,11 +187,11 @@ end Itasca.MultiValue
 namespace Itasca
 
 /-- The ghost initial state is exactly the extracted frame initialization. -/
-theorem multi_value.push_frame.initial (index : U32) :
-    multi_value.push_frame
+theorem code.push_frame.initial (index : U32) :
+    code.push_frame
       { core := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _, 0#usize⟩ } .Body (.TypeIndex index) =
       .ok (MultiValue.initial index) := by
-  simp [multi_value.push_frame, code.push_ctrl, MultiValue.initial,
+  simp [code.push_frame, code.push_ctrl, MultiValue.initial,
     alloc.vec.Vec.push, U32.max, U32.numBits]
   rfl
 

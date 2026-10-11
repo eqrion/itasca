@@ -7,7 +7,7 @@ namespace Itasca.MultiValue
 
 /-- Returning checks the root function's complete result vector, even within
 nested blocks, and erases only the current active stack segment. -/
-theorem returnStep.prefix (st : multi_value.State) (env : module.Env) (index : U32)
+theorem returnStep.prefix (st : code.BodyState) (env : module.Env) (index : U32)
     (results : List types.ValueType) (cs : List code.Ctrl) (c : code.Ctrl)
     (outer segment : List code.StackType)
     (hctrls : st.core.ctrls.val = cs ++ [c]) (hv : st.core.vals.val = outer ++ segment)
@@ -23,7 +23,7 @@ theorem returnStep.prefix (st : multi_value.State) (env : module.Env) (index : U
   have hbase : (Control.base st.core).val = outer.length := by simp [Control.base, hctrls, hb]
   have hpoly : Control.polymorphic st.core = c.polymorphic_base := by simp [Control.polymorphic, hctrls]
   obtain ⟨⟨res, s⟩, hr, hc, hp, rest, hv', _, ht⟩ := WP.spec_imp_exists
-    (multi_value.pop_results.realizes st.core env (.Type index .Results) results outer segment hts hv hbase)
+    (code.pop_results.realizes st.core env (.Type index .Results) results outer segment hts hv hbase)
   dsimp only at hc hp hv' ht
   cases res with
   | Err e => simp [returnStep, hr]
@@ -40,7 +40,7 @@ theorem returnStep.prefix (st : multi_value.State) (env : module.Env) (index : U
     exact ⟨(.Ok (), ⟨s'⟩), by simp [returnStep, hr, hm],
       fun _ => ⟨by simpa [hv', hb] using hmv, hmc, by simp [hmc, hctrls], hmp.trans hp, htyping⟩⟩
 
-theorem returnStep.complete (st : multi_value.State) (env : module.Env) (index : U32)
+theorem returnStep.complete (st : code.BodyState) (env : module.Env) (index : U32)
     (results : List types.ValueType) (cs : List code.Ctrl) (c : code.Ctrl)
     (outer segment : List code.StackType) (before : List valtype)
     (hctrls : st.core.ctrls.val = cs ++ [c]) (hv : st.core.vals.val = outer ++ segment)
@@ -52,7 +52,7 @@ theorem returnStep.complete (st : multi_value.State) (env : module.Env) (index :
       s.core.ctrls.val = cs ++ [{ c with polymorphic_base := true }] ∧
       s.blocks = st.blocks ∧ s.core.pos = st.core.pos ∧ s.core.vals.val = outer := by
   obtain ⟨⟨_, popped⟩, hpop, rfl, hc, hp, rest, hvals, _, _⟩ := WP.spec_imp_exists
-    (multi_value.pop_results.complete st.core env (.Type index .Results) results outer segment before
+    (code.pop_results.complete st.core env (.Type index .Results) results outer segment before
       hts hv (by simp [Control.base, hctrls, hb]) hreal)
   dsimp only at hc hp hvals
   obtain ⟨s, hm, hv', _, hc', hp'⟩ := WP.spec_imp_exists

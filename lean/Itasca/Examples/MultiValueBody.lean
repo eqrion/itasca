@@ -262,37 +262,37 @@ theorem table_encoded : BodyEncoding tableBytes tableOps := by
 
 /-- Public acceptance comes from independent syntax and generated typing,
 without evaluating or assuming any handler succeeds. -/
-theorem block_accepted : multi_value.validate_body blockBytes env locals 0#u32 = .ok (.Ok ()) :=
-  multi_value.validate_body.wasm_complete_of_typing blockBytes env locals 0#u32 pairResult blockOps
+theorem block_accepted : code.validate_multi_value_body blockBytes env locals 0#u32 = .ok (.Ok ()) :=
+  code.validate_multi_value_body.wasm_complete_of_typing blockBytes env locals 0#u32 pairResult blockOps
     environment_limits (by simp [blockBytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
     rfl block_encoded block_typed
 
-theorem if_accepted : multi_value.validate_body ifBytes env locals 0#u32 = .ok (.Ok ()) :=
-  multi_value.validate_body.wasm_complete_of_typing ifBytes env locals 0#u32 pairResult ifOps
+theorem if_accepted : code.validate_multi_value_body ifBytes env locals 0#u32 = .ok (.Ok ()) :=
+  code.validate_multi_value_body.wasm_complete_of_typing ifBytes env locals 0#u32 pairResult ifOps
     environment_limits (by simp [ifBytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
     rfl if_encoded if_typed
 
-theorem loop_accepted : multi_value.validate_body loopBytes env locals 3#u32 = .ok (.Ok ()) :=
-  multi_value.validate_body.wasm_complete_of_typing loopBytes env locals 3#u32 emptyResult loopOps
+theorem loop_accepted : code.validate_multi_value_body loopBytes env locals 3#u32 = .ok (.Ok ()) :=
+  code.validate_multi_value_body.wasm_complete_of_typing loopBytes env locals 3#u32 emptyResult loopOps
     environment_limits (by simp [loopBytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
     rfl loop_encoded loop_typed
 
-theorem table_accepted : multi_value.validate_body tableBytes env locals 0#u32 = .ok (.Ok ()) :=
-  multi_value.validate_body.wasm_complete_of_typing tableBytes env locals 0#u32 pairResult tableOps
+theorem table_accepted : code.validate_multi_value_body tableBytes env locals 0#u32 = .ok (.Ok ()) :=
+  code.validate_multi_value_body.wasm_complete_of_typing tableBytes env locals 0#u32 pairResult tableOps
     environment_limits (by simp [tableBytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
     rfl table_encoded table_typed
 
 /-- The same actual accepted runs produce independent soundness certificates. -/
 theorem block_validated : Validated blockBytes env locals 0#u32 :=
-  multi_value.validate_body.wasm_sound blockBytes env locals 0#u32 block_accepted
+  code.validate_multi_value_body.wasm_sound blockBytes env locals 0#u32 block_accepted
 
 theorem if_validated : Validated ifBytes env locals 0#u32 :=
-  multi_value.validate_body.wasm_sound ifBytes env locals 0#u32 if_accepted
+  code.validate_multi_value_body.wasm_sound ifBytes env locals 0#u32 if_accepted
 
 theorem loop_validated : Validated loopBytes env locals 3#u32 :=
-  multi_value.validate_body.wasm_sound loopBytes env locals 3#u32 loop_accepted
+  code.validate_multi_value_body.wasm_sound loopBytes env locals 3#u32 loop_accepted
 
 theorem table_validated : Validated tableBytes env locals 0#u32 :=
-  multi_value.validate_body.wasm_sound tableBytes env locals 0#u32 table_accepted
+  code.validate_multi_value_body.wasm_sound tableBytes env locals 0#u32 table_accepted
 
 end Itasca.MultiValueBody

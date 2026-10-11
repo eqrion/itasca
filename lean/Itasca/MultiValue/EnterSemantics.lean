@@ -5,25 +5,25 @@ open Aeneas Aeneas.Std Result
 namespace Itasca.MultiValue
 
 /-- Common parameter pop and frame setup in all extracted entry branches. -/
-def enterParams (st : multi_value.State) (env : module.Env)
+def enterParams (st : code.BodyState) (env : module.Env)
     (kind : code.LabelKind) (bt : signature.BlockType) :
-    Result (core.result.Result Unit error.OpError × multi_value.State) := do
+    Result (core.result.Result Unit error.OpError × code.BodyState) := do
   let rt ← signature.BlockType.params bt
-  let (r, s) ← multi_value.pop_results st.core env rt
+  let (r, s) ← code.pop_results st.core env rt
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
   match cf with
   | .Continue _ =>
-    let st1 ← multi_value.push_frame { st with core := s } kind bt
-    let (r, s1) ← multi_value.push_results st1.core env rt
+    let st1 ← code.push_frame { st with core := s } kind bt
+    let (r, s1) ← code.push_results st1.core env rt
     .ok (r, { st1 with core := s1 })
   | .Break residual =>
     let r ← core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
       Unit (core.convert.FromSame error.OpError) residual
     .ok (r, { st with core := s })
 
-def enterArgs (st : multi_value.State) (env : module.Env)
+def enterArgs (st : code.BodyState) (env : module.Env)
     (kind : code.LabelKind) (bt : signature.BlockType) :
-    Result (core.result.Result Unit error.OpError × multi_value.State) := do
+    Result (core.result.Result Unit error.OpError × code.BodyState) := do
   match kind with
   | .Then =>
     let (r, s) ← code.pop_with_type st.core .I32
@@ -44,11 +44,11 @@ def checkBlock (env : module.Env) (bt : signature.BlockType) :
     if i >= alloc.vec.Vec.len env.types then .ok (.Err .UnknownType)
     else
       let ft ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice types.FuncType) env.types i
-      multi_value.check_func_type ft
+      code.check_func_type ft
   | _ => .ok (.Ok ())
 
-theorem enter_eq (st : multi_value.State) (data : Slice U8) (env : module.Env)
-    (kind : code.LabelKind) : multi_value.enter st data env kind = (do
+theorem enter_eq (st : code.BodyState) (data : Slice U8) (env : module.Env)
+    (kind : code.LabelKind) : code.enter st data env kind = (do
       let r ← signature.read_block_type data st.core.pos
       let cf ← core.result.Result.Insts.CoreOpsTry.branch r
       match cf with
@@ -65,7 +65,7 @@ theorem enter_eq (st : multi_value.State) (data : Slice U8) (env : module.Env)
         let r ← core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
           Unit (core.convert.FromSame error.OpError) residual
         .ok (r, st)) := by
-  simp only [multi_value.enter, multi_value.enter_info, Std.bind_assoc]
+  simp only [code.enter, code.enter_info, Std.bind_assoc]
   congr 1
   funext r
   cases r with
@@ -103,7 +103,7 @@ theorem checkBlock.spec (env : module.Env) (bt : signature.BlockType) :
     split
     · simp
     · step as ⟨ft, hft⟩
-      step with multi_value.check_func_type.spec ft as ⟨r, hr⟩
+      step with code.check_func_type.spec ft as ⟨r, hr⟩
       have hok : r = .Ok () := by assumption
       subst r
       have hi : index.val < env.types.val.length := by scalar_tac
@@ -111,7 +111,7 @@ theorem checkBlock.spec (env : module.Env) (bt : signature.BlockType) :
         by simp [resolve, outputs, hi, hft, r_post], hr⟩
 
 /-- Exact semantic effect of opening a structured frame. -/
-def EnterEffect (st s : multi_value.State) (form : Frames.Form) (bt : signature.BlockType)
+def EnterEffect (st s : code.BodyState) (form : Frames.Form) (bt : signature.BlockType)
     (ins outs : List types.ValueType) (outer segment : List code.StackType) : Prop :=
   ∃ remaining base,
     remaining.length ≤ segment.length ∧ base.val = outer.length + remaining.length ∧
@@ -122,7 +122,7 @@ def EnterEffect (st s : multi_value.State) (form : Frames.Form) (bt : signature.
     s.core.vals.val = outer ++ remaining ++ ins.map code.StackType.Val
 
 /-- Parameter popping preserves the suspended parent's input signature. -/
-theorem enterParams.sound (st : multi_value.State) (env : module.Env)
+theorem enterParams.sound (st : code.BodyState) (env : module.Env)
     (form : Frames.Form) (bt : signature.BlockType) (ins outs : List types.ValueType)
     (outer segment : List code.StackType)
     (hin : resolve env (inputs bt) = some ins)
@@ -139,16 +139,16 @@ theorem enterParams.sound (st : multi_value.State) (env : module.Env)
       r.2.core.vals.val = outer ++ remaining ++ ins.map code.StackType.Val ⦄ := by
   unfold enterParams
   simp only [signature.BlockType.params.spec, bind_ok]
-  step with multi_value.pop_results.realizes st.core env (inputs bt) ins outer segment hin hv hb
+  step with code.pop_results.realizes st.core env (inputs bt) ins outer segment hin hv hb
     as ⟨r, s, hc, hp, remaining, hv', hl, ht⟩
   have hs' : Control.Shape s := hs.replace_operands hc (by simp [hb, hv'])
   step
   split
   · have hok : r = .Ok () := by cases r <;> simp_all
-    step with multi_value.push_frame.spec { st with core := s } form.kind bt (by simpa [hc] using hcap) (by simpa [hc] using hcap)
+    step with code.push_frame.spec { st with core := s } form.kind bt (by simpa [hc] using hcap) (by simpa [hc] using hcap)
       as ⟨s1, hc1, hv1, hp1, hb1⟩
     have hs1 : Control.Shape s1.core := shape_push hs' form.kind bt hc1 hv1
-    step with multi_value.push_results.total s1.core env (inputs bt) hs1
+    step with code.push_results.total s1.core env (inputs bt) hs1
       as ⟨r1, s2, hs2, hc2, hp2, hpush⟩
     intro hok1
     obtain ⟨ts, hts, hvs⟩ := hpush hok1
@@ -159,7 +159,7 @@ theorem enterParams.sound (st : multi_value.State) (env : module.Env)
     · simpa [he, hv1, hv'] using hvs
   · step*
 
-theorem enterArgs.sound (st : multi_value.State) (env : module.Env)
+theorem enterArgs.sound (st : code.BodyState) (env : module.Env)
     (form : Frames.Form) (bt : signature.BlockType) (ins outs : List types.ValueType)
     (outer segment : List code.StackType) (initial : form.Initial)
     (hin : resolve env (inputs bt) = some ins)
@@ -201,13 +201,13 @@ end Itasca.MultiValue
 
 namespace Itasca
 
-theorem multi_value.enter.sound (st : multi_value.State) (data : Slice U8) (env : module.Env)
+theorem code.enter.sound (st : code.BodyState) (data : Slice U8) (env : module.Env)
     (form : MultiValue.Frames.Form) (initial : form.Initial)
     (outer segment : List code.StackType)
     (hv : st.core.vals.val = outer ++ segment) (hb : (Control.base st.core).val = outer.length)
     (hs : Control.Shape st.core) (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (hcap : st.blocks.val.length < Usize.max) :
-    multi_value.enter st data env form.kind ⦃ r => r.1 = .Ok () → ∃ bt ins outs,
+    code.enter st data env form.kind ⦃ r => r.1 = .Ok () → ∃ bt ins outs,
       MultiValue.BlockDecoded data st.core.pos bt r.2.core.pos ∧
       MultiValue.resolve env (MultiValue.inputs bt) = some ins ∧
       MultiValue.resolve env (MultiValue.outputs bt) = some outs ∧

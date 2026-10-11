@@ -1,44 +1,25 @@
-//! Streaming decode and validate for function bodies, and the push interface
-//! a consumer is validated through.
+//! Function-body validation for both supported profiles.
 //!
-//! Nesting lives in an explicit control stack rather than the call stack, so
-//! nothing here recurses and no AST is built. The byte-level reads are in
-//! `reader`, which the module decoder also uses.
-//!
-//! What's public here is the vocabulary a hook is handed -- `OpIterState`,
-//! `Ctrl`, `Context`, `BlockType`, `MemArg`, and the two stack enums -- the
-//! `OP_*` opcode bytes, which belong to the binary format and are inert,
-//! `validate_body`/`validate_body_with`, the raw entry point below the code
-//! section's framing, and the [`OpVisitor`] push interface itself.
-//! `module::validate_code_entry_with` is the one a consumer should call.
-//!
-//! [`OpVisitor`] is one hook per validated operator, so a consumer never
-//! switches on an opcode the validator has already switched on. A hook
-//! receives the operator's immediates already decoded and checked, plus the
-//! validator state, and may decline the body. The many hooks that carry no
-//! immediates beyond a `memarg` come from one table each, below, which also
-//! generates the two fan-out functions dispatch goes through; the rest have
-//! immediates of their own and are written out. Every hook has a default
-//! that does nothing, so a consumer only writes the ones it wants.
+//! One body worker owns initialization and iteration over the shared operand and
+//! control stacks. Wasm 1.0 and multi-value select their control rules; scalar
+//! readers and operator callbacks are shared.
 
 use crate::error::{OpError, VisitError};
-#[cfg(test)]
-use crate::limits::MAX_FUNCTION_BYTES;
-use crate::limits::MAX_RESULTS;
+use crate::limits::{
+    MAX_FUNCTION_BYTES, MAX_MULTI_VALUE_PARAMS, MAX_MULTI_VALUE_RESULTS, MAX_RESULTS,
+};
 use crate::module::Env;
 use crate::reader::{
     read_byte, read_f32_bits, read_f64_bits, read_s32_leb, read_s64_leb, read_u32_leb,
 };
-use crate::types::{GlobalType, Mut, ValueType};
+use crate::signature::{self, BlockType as BlockSignature, ResultType, TypePart};
+use crate::types::{FuncType, GlobalType, Mut, ValueType};
 use alloc::vec::Vec;
 
-/// Mirrors `block_type` (Wasm 1.0: single optional result).
-///
-/// An instruction immediate, so it lives here rather than in `types`: only the
-/// readers in this file produce or consume one.
+/// The Wasm 1.0 block immediate: zero or one result type.
 #[cfg_attr(not(charon), derive(Debug))]
 #[derive(Clone, Copy)]
-pub enum BlockType {
+pub(crate) enum BlockType {
     Empty,
     Value(ValueType),
 }
@@ -55,7 +36,7 @@ impl PartialEq for BlockType {
 
 impl Eq for BlockType {}
 
-/// Memory argument for load and store instructions.
+/// The alignment exponent and byte offset of a memory instruction.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
 pub struct MemArg {
@@ -63,24 +44,19 @@ pub struct MemArg {
     pub offset: u32,
 }
 
-/// The part of the typing context (spec 3.1) that is specific to one
-/// function: its locals and result types. Everything module-wide stays on
-/// the `Env`, so validating a second function costs one of these rather than
-/// a copy of the index spaces.
+/// The parameters, declared locals, and result types of the current function.
 ///
-/// A hook receives one of these built by `validate_code_entry_with` from the
-/// module's own declarations. Building one by hand is only sound as an
-/// argument to `validate_body_with`, whose preconditions say what it has to
-/// hold.
+/// The validator constructs this context from the module declarations before
+/// calling `OpVisitor::on_function_start`.
 pub struct Context {
     pub locals: Vec<ValueType>,
-    /// The function's result types, which `return` branches to.
+    /// The declared function results required by `return`.
     pub results: Vec<ValueType>,
 }
 
 type Result<T> = core::result::Result<T, OpError>;
 
-/// A hook's verdict, translated into a validator verdict.
+/// Converts a callback result into an operator validation result.
 pub(crate) fn visit(r: core::result::Result<(), VisitError>) -> Result<()> {
     match r {
         Ok(()) => Ok(()),
@@ -88,12 +64,9 @@ pub(crate) fn visit(r: core::result::Result<(), VisitError>) -> Result<()> {
     }
 }
 
-/// The type of a value on the operand stack: a value type, or bottom for
-/// unreachable code. Kept separate from `ValueType` so bottom cannot leak
-/// into a function signature; that is why `ValueType` has no `Bot` of its own.
+/// An operand type, including the unknown type used in unreachable code.
 ///
-/// Equality is only derived outside `charon` builds: validation itself
-/// never needs to compare these.
+/// `Bot` is internal to stack typing and cannot occur in a function signature.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
 pub enum StackType {
@@ -101,8 +74,7 @@ pub enum StackType {
     Bot,
 }
 
-/// The kind of control frame on the control stack: the function body itself,
-/// a `block`, a `loop`, or one side of an `if`.
+/// The construct represented by a control frame.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
 pub enum LabelKind {
@@ -113,27 +85,32 @@ pub enum LabelKind {
     Else,
 }
 
-/// A control frame, tracking one nested block, loop, if, or the function body.
+/// A control frame for the function body or a nested control instruction.
 #[cfg_attr(not(charon), derive(Debug))]
 #[derive(Clone, Copy)]
 pub struct Ctrl {
     pub kind: LabelKind,
-    pub block_type: BlockType,
-    /// Full signature used by the shared body engine.
+    pub(crate) block_type: BlockType,
+    /// The complete parameter and result signature of this frame.
     pub signature: crate::signature::BlockType,
-    /// Operand stack height below this frame.
+    /// The operand stack height below this frame.
     pub value_stack_base: usize,
-    /// Set once the frame's remaining code is unreachable.
+    /// Whether the remaining instructions in this frame are unreachable.
     pub polymorphic_base: bool,
 }
 
-/// The running state of a streaming operator validator: the operand stack,
-/// the control stack, and the byte cursor. The cursor is a plain index
-/// rather than a borrowed slice, so it can be threaded through calls freely.
+/// The operand stack, control stack, and body-relative cursor after an operator.
+///
+/// Visitors receive a shared reference and cannot change validation state.
 pub struct OpIterState {
     pub vals: Vec<StackType>,
     pub ctrls: Vec<Ctrl>,
     pub pos: usize,
+}
+
+/// The shared body worker state used by both validation profiles.
+struct BodyState {
+    core: OpIterState,
 }
 
 // --- Opcodes (Wasm 1.0, all single-byte; prefixed opcodes are post-1.0) ---
@@ -363,8 +340,7 @@ fn push_val(st: &mut OpIterState, t: StackType) {
     st.vals.push(t);
 }
 
-/// Pop one operand. In unreachable code an exhausted frame yields `Bot`
-/// instead of failing.
+/// Pops one operand, returning `Bot` at an exhausted unreachable frame.
 fn pop_stack_type(st: &mut OpIterState) -> Result<StackType> {
     if st.vals.len() == cur_base(st) {
         if cur_polymorphic(st) {
@@ -378,8 +354,8 @@ fn pop_stack_type(st: &mut OpIterState) -> Result<StackType> {
     }
 }
 
-/// Pop one operand and require it to match `expected`. `Bot` matches
-/// anything, since it stands for a value of unknown type in unreachable code.
+/// Pops one operand and checks it against `expected`, allowing `Bot` to match any
+/// type.
 pub(crate) fn pop_with_type(st: &mut OpIterState, expected: ValueType) -> Result<StackType> {
     let t = pop_stack_type(st)?;
     match t {
@@ -394,8 +370,7 @@ pub(crate) fn pop_with_type(st: &mut OpIterState, expected: ValueType) -> Result
     }
 }
 
-/// Pop `types` in reverse, since the last one is what sits on top of the
-/// stack.
+/// Pops the expected types in reverse stack order.
 pub(crate) fn pop_types(st: &mut OpIterState, types: &[ValueType]) -> Result<()> {
     let mut i: usize = types.len();
     loop {
@@ -418,7 +393,7 @@ pub(crate) fn push_types(st: &mut OpIterState, types: &[ValueType]) {
     }
 }
 
-/// Lift the Wasm 1.0 immediate into the shared visitor descriptor.
+/// Converts a Wasm 1.0 block immediate into a visitor signature.
 fn visitor_block_type(bt: BlockType) -> crate::signature::BlockType {
     match bt {
         BlockType::Empty => crate::signature::BlockType::Empty,
@@ -433,7 +408,7 @@ fn visitor_result_type(bt: BlockType) -> crate::signature::ResultType {
     }
 }
 
-/// Result types of a block type. Wasm 1.0 allows at most one.
+/// Returns the zero or one result types of a Wasm 1.0 block.
 fn block_results(bt: &BlockType) -> Vec<ValueType> {
     match bt {
         BlockType::Empty => Vec::new(),
@@ -445,13 +420,10 @@ fn block_results(bt: &BlockType) -> Vec<ValueType> {
     }
 }
 
-/// What a branch to this frame must supply, as a block type: a loop's target
-/// is its parameters, everything else's is its results. Wasm 1.0 block types
-/// have no parameters, so a loop target is empty.
+/// Returns the target signature of a Wasm 1.0 frame.
 ///
-/// A block type rather than a list because `br_table` folds one of these per
-/// label: `BlockType` is `Copy`, so the running "every target so far agrees"
-/// state costs no allocation and needs no bound of its own.
+/// Loop labels have no parameters; other labels use the frame's results. The
+/// descriptor avoids allocating a vector for each branch-table target.
 fn branch_target_bt(c: &Ctrl) -> BlockType {
     match c.kind {
         LabelKind::Loop => BlockType::Empty,
@@ -474,7 +446,7 @@ pub(crate) fn push_ctrl(st: &mut OpIterState, kind: LabelKind, bt: BlockType) {
     });
 }
 
-/// Discard the current frame's operands and mark it unreachable.
+/// Discards the current frame's operands and marks it unreachable.
 pub(crate) fn mark_unreachable(st: &mut OpIterState) {
     let base = cur_base(st);
     loop {
@@ -511,7 +483,7 @@ fn control_stack_empty(st: &OpIterState) -> bool {
     st.ctrls.is_empty()
 }
 
-/// Read the next opcode and advance past it.
+/// Reads the next opcode and advances the body cursor.
 #[allow(dead_code)]
 fn read_op(st: &mut OpIterState, data: &[u8]) -> Result<u8> {
     let (b, p) = read_byte(data, st.pos)?;
@@ -540,7 +512,7 @@ fn read_i64_const(st: &mut OpIterState, data: &[u8]) -> Result<i64> {
     Ok(v)
 }
 
-/// `[] -> [f32]`. The immediate's bits are returned; see `read_f32_bits`.
+/// Reads an `f32.const` immediate, pushes its type, and returns its raw bits.
 fn read_f32_const(st: &mut OpIterState, data: &[u8]) -> Result<u32> {
     let (v, p) = read_f32_bits(data, st.pos)?;
     st.pos = p;
@@ -548,7 +520,7 @@ fn read_f32_const(st: &mut OpIterState, data: &[u8]) -> Result<u32> {
     Ok(v)
 }
 
-/// `[] -> [f64]`.
+/// Reads an `f64.const` immediate, pushes its type, and returns its raw bits.
 fn read_f64_const(st: &mut OpIterState, data: &[u8]) -> Result<u64> {
     let (v, p) = read_f64_bits(data, st.pos)?;
     st.pos = p;
@@ -556,10 +528,8 @@ fn read_f64_const(st: &mut OpIterState, data: &[u8]) -> Result<u64> {
     Ok(v)
 }
 
-/// `[ty ty] -> [result]`: the binary operators, where `result == ty`, and the
-/// comparisons, where `result == i32`. Validation cannot tell the two apart:
-/// a comparison has a binary operator's stack effect with a different result
-/// type, so one reader covers both and the opcode table supplies the pair.
+/// Applies the stack effect `[ty ty] -> [result]` of a binary operator or
+/// comparison.
 fn read_binary(st: &mut OpIterState, ty: ValueType, result: ValueType) -> Result<()> {
     pop_with_type(st, ty)?;
     pop_with_type(st, ty)?;
@@ -567,10 +537,7 @@ fn read_binary(st: &mut OpIterState, ty: ValueType, result: ValueType) -> Result
     Ok(())
 }
 
-/// `[from] -> [to]`: the unary operators, where `from == to`, and
-/// `i32.eqz`/`i64.eqz`, where `to == i32`. As with `read_binary`, validation
-/// cannot tell those apart, so one reader covers them and the opcode table
-/// supplies the pair.
+/// Applies the stack effect `[from] -> [to]` of a unary operator or conversion.
 fn read_conversion(st: &mut OpIterState, from: ValueType, to: ValueType) -> Result<()> {
     pop_with_type(st, from)?;
     push_val(st, StackType::Val(to));
@@ -581,9 +548,7 @@ fn read_drop(st: &mut OpIterState) -> Result<StackType> {
     pop_stack_type(st)
 }
 
-/// The common type of two operands, `Bot` absorbing. `select`'s "both
-/// operands are numeric" side condition is vacuous in Wasm 1.0, where every
-/// value type is a number type.
+/// Returns the common operand type, resolving `Bot` to the other type.
 fn join_stack_type(a: StackType, b: StackType) -> Result<StackType> {
     match a {
         StackType::Bot => Ok(b),
@@ -600,14 +565,11 @@ fn join_stack_type(a: StackType, b: StackType) -> Result<StackType> {
     }
 }
 
-/// `[t t i32] -> [t]`, `t` being whatever the two value operands agree on:
-/// the untyped form of `select`, the only one Wasm 1.0 has.
+/// Applies untyped `select`, requiring compatible value operands and an `i32`
+/// condition.
 ///
-/// The two values come off with `pop_stack_type` rather than `pop_with_type`,
-/// because `select` is the one operator whose operand type is not fixed by
-/// the opcode. That also covers unreachable code: an exhausted polymorphic
-/// frame yields `Bot` for both, the join is `Bot`, and `Bot` is what gets
-/// pushed.
+/// The selected type remains `Bot` when both values come from an exhausted
+/// unreachable frame.
 fn read_select(st: &mut OpIterState) -> Result<StackType> {
     pop_with_type(st, ValueType::I32)?;
     // Named t2/t3 because the condition that just came off is conventionally
@@ -619,7 +581,7 @@ fn read_select(st: &mut OpIterState) -> Result<StackType> {
     Ok(t)
 }
 
-/// The declared type of local `idx`.
+/// Returns the declared type of a local, checking its index.
 fn local_type(ctx: &Context, idx: u32) -> Result<ValueType> {
     let i = idx as usize;
     if i >= ctx.locals.len() {
@@ -628,9 +590,7 @@ fn local_type(ctx: &Context, idx: u32) -> Result<ValueType> {
     Ok(ctx.locals[i])
 }
 
-/// The prologue the three local operators share: read the index and look its
-/// type up. They differ only in the stack effect that follows, so this is where
-/// the cursor moves and the context is consulted.
+/// Reads a local index and resolves its declared type.
 fn take_local(st: &mut OpIterState, data: &[u8], ctx: &Context) -> Result<(u32, ValueType)> {
     let (idx, p) = read_u32_leb(data, st.pos)?;
     st.pos = p;
@@ -638,21 +598,21 @@ fn take_local(st: &mut OpIterState, data: &[u8], ctx: &Context) -> Result<(u32, 
     Ok((idx, t))
 }
 
-/// `[] -> [t]`, `t` being local `idx`'s type.
+/// Validates `local.get` and returns its local index.
 fn read_local_get(st: &mut OpIterState, data: &[u8], ctx: &Context) -> Result<u32> {
     let (idx, t) = take_local(st, data, ctx)?;
     push_val(st, StackType::Val(t));
     Ok(idx)
 }
 
-/// `[t] -> []`.
+/// Validates `local.set` and returns its local index.
 fn read_local_set(st: &mut OpIterState, data: &[u8], ctx: &Context) -> Result<u32> {
     let (idx, t) = take_local(st, data, ctx)?;
     pop_with_type(st, t)?;
     Ok(idx)
 }
 
-/// `[t] -> [t]`.
+/// Validates `local.tee` and returns its local index.
 fn read_local_tee(st: &mut OpIterState, data: &[u8], ctx: &Context) -> Result<u32> {
     let (idx, t) = take_local(st, data, ctx)?;
     pop_with_type(st, t)?;
@@ -660,7 +620,7 @@ fn read_local_tee(st: &mut OpIterState, data: &[u8], ctx: &Context) -> Result<u3
     Ok(idx)
 }
 
-/// The declared type of global `idx`.
+/// Returns the declared type and mutability of a global, checking its index.
 fn global_type(env: &Env, idx: u32) -> Result<GlobalType> {
     let i = idx as usize;
     if i >= env.global_types.len() {
@@ -669,9 +629,7 @@ fn global_type(env: &Env, idx: u32) -> Result<GlobalType> {
     Ok(env.global_types[i])
 }
 
-/// `take_local`'s counterpart for the two global operators: the index and the
-/// lookup. It yields the whole `GlobalType` because `global.set` consults the
-/// mutability as well as the value type.
+/// Reads a global index and resolves its type and mutability.
 fn take_global(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<(u32, GlobalType)> {
     let (idx, p) = read_u32_leb(data, st.pos)?;
     st.pos = p;
@@ -679,14 +637,14 @@ fn take_global(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<(u32, Glo
     Ok((idx, g))
 }
 
-/// `[] -> [t]`, `t` being global `idx`'s type.
+/// Validates `global.get` and returns its global index.
 fn read_global_get(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
     let (idx, g) = take_global(st, data, env)?;
     push_val(st, StackType::Val(g.valtype));
     Ok(idx)
 }
 
-/// `[t] -> []`, and only for a mutable global.
+/// Validates `global.set`, requiring a mutable global, and returns its index.
 fn read_global_set(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
     let (idx, g) = take_global(st, data, env)?;
     match g.mutability {
@@ -697,10 +655,7 @@ fn read_global_set(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> 
     Ok(idx)
 }
 
-/// A byte the specification writes out as a literal zero: the memory index of
-/// `memory.size` and `memory.grow` (spec 5.4.6: `0x3F 0x00`) and the table index
-/// of `call_indirect` (spec 5.4.1: `0x11 y:typeidx 0x00`). Both are indices that
-/// only multi-memory and reference types made non-zero.
+/// Reads a reserved zero byte for a memory or indirect-call instruction.
 fn read_reserved_zero(st: &mut OpIterState, data: &[u8]) -> Result<()> {
     let (b, p) = read_byte(data, st.pos)?;
     if b != 0 {
@@ -710,7 +665,7 @@ fn read_reserved_zero(st: &mut OpIterState, data: &[u8]) -> Result<()> {
     Ok(())
 }
 
-/// `[] -> [i32]`.
+/// Validates `memory.size` and pushes an `i32` result.
 fn read_memory_size(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<()> {
     read_reserved_zero(st, data)?;
     require_memory(env)?;
@@ -718,7 +673,7 @@ fn read_memory_size(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<()> 
     Ok(())
 }
 
-/// `[i32] -> [i32]`.
+/// Validates `memory.grow`, consuming and returning an `i32`.
 fn read_memory_grow(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<()> {
     read_reserved_zero(st, data)?;
     require_memory(env)?;
@@ -741,8 +696,7 @@ fn read_loop(st: &mut OpIterState, data: &[u8]) -> Result<BlockType> {
     Ok(bt)
 }
 
-/// Whether a frame is an open then-branch, checked here rather than with
-/// `match` at each call site since `LabelKind` has no `PartialEq`.
+/// Returns whether the frame represents an open then arm.
 fn is_then(kind: LabelKind) -> bool {
     match kind {
         LabelKind::Then => true,
@@ -753,8 +707,7 @@ fn is_then(kind: LabelKind) -> bool {
     }
 }
 
-/// `[i32] -> []`, opening the then-branch: the condition is consumed and a
-/// `Then` frame is opened, exactly like `block` otherwise.
+/// Validates a Wasm 1.0 `if` and opens its then frame.
 fn read_if(st: &mut OpIterState, data: &[u8]) -> Result<BlockType> {
     let (bt, p) = read_block_type(data, st.pos)?;
     st.pos = p;
@@ -763,10 +716,7 @@ fn read_if(st: &mut OpIterState, data: &[u8]) -> Result<BlockType> {
     Ok(bt)
 }
 
-/// Close the then-branch and open the else-branch in its place: the
-/// then-branch's results must be on the stack, nothing else may be, and the
-/// frame is rewritten in place rather than popped, since the block's own
-/// `end` still has to close it.
+/// Checks the then arm's results and resets its frame for the else arm.
 fn read_else(st: &mut OpIterState) -> Result<BlockType> {
     let n = st.ctrls.len();
     if n == 0 {
@@ -786,13 +736,10 @@ fn read_else(st: &mut OpIterState) -> Result<BlockType> {
     Ok(frame.block_type)
 }
 
-/// Close the current frame: its results must be on the stack, nothing else
-/// may be, and the results move onto the enclosing frame.
+/// Checks and closes the current frame, leaving its results on the enclosing
+/// stack.
 ///
-/// A `Then` frame reaching `end` directly means the else-branch is empty, so
-/// it can only supply results the empty sequence already has: none. Wasm 1.0
-/// requires an `if` with a result type to have an `else`; rejecting it here
-/// rather than leaving it to `read_else`'s absence is what keeps this sound.
+/// A Wasm 1.0 then arm without an else must have no results.
 fn read_end(st: &mut OpIterState) -> Result<(LabelKind, BlockType)> {
     let n = st.ctrls.len();
     if n == 0 {
@@ -812,12 +759,7 @@ fn read_end(st: &mut OpIterState) -> Result<(LabelKind, BlockType)> {
     Ok((frame.kind, frame.block_type))
 }
 
-/// Read a label index and resolve it to the control frame it names. Depth 0 is
-/// the innermost frame, so the index counts down from the top of the control
-/// stack.
-///
-/// Separate from the opcode because `br_table` reads a whole vector of these
-/// after one opcode byte.
+/// Reads a label depth and resolves its frame, counting from the innermost frame.
 fn read_label(st: &mut OpIterState, data: &[u8]) -> Result<(u32, Ctrl)> {
     let (depth, p) = read_u32_leb(data, st.pos)?;
     st.pos = p;
@@ -829,8 +771,7 @@ fn read_label(st: &mut OpIterState, data: &[u8]) -> Result<(u32, Ctrl)> {
     Ok((depth, st.ctrls[n - 1 - d]))
 }
 
-/// Unconditional branch: the target's types must be available, and the rest
-/// of the frame becomes unreachable.
+/// Validates an unconditional branch and marks the remaining code unreachable.
 fn read_br(st: &mut OpIterState, data: &[u8]) -> Result<(u32, BlockType)> {
     let (depth, target) = read_label(st, data)?;
     let types = branch_target_types(&target);
@@ -839,18 +780,15 @@ fn read_br(st: &mut OpIterState, data: &[u8]) -> Result<(u32, BlockType)> {
     Ok((depth, branch_target_bt(&target)))
 }
 
-/// Return: the function's results must be on the stack, and the rest of the
-/// frame becomes unreachable, as for `br`. The result list comes from the
-/// context rather than from a control frame, which is the only difference.
+/// Checks the function results and marks the remaining code unreachable.
 fn read_return(st: &mut OpIterState, ctx: &Context) -> Result<()> {
     pop_types(st, &ctx.results)?;
     mark_unreachable(st);
     Ok(())
 }
 
-/// Conditional branch: the condition is consumed and the target's types must
-/// be available, but they stay on the stack, because the fall-through path
-/// continues with them.
+/// Validates a conditional branch while retaining target operands for
+/// fall-through.
 fn read_br_if(st: &mut OpIterState, data: &[u8]) -> Result<(u32, BlockType)> {
     let (depth, target) = read_label(st, data)?;
     let types = branch_target_types(&target);
@@ -860,9 +798,8 @@ fn read_br_if(st: &mut OpIterState, data: &[u8]) -> Result<(u32, BlockType)> {
     Ok((depth, branch_target_bt(&target)))
 }
 
-/// Fold one more branch target into "every target read so far agrees on this
-/// block type". `None` is the state before the first one, which is why the
-/// empty table is not a special case: the default label fills it in.
+/// Checks that a branch-table target agrees with the previously resolved
+/// signature.
 fn merge_target(expect: Option<BlockType>, bt: BlockType) -> Result<BlockType> {
     match expect {
         None => Ok(bt),
@@ -876,11 +813,7 @@ fn merge_target(expect: Option<BlockType>, bt: BlockType) -> Result<BlockType> {
     }
 }
 
-/// The `vec(labelidx)` immediate (spec 5.1.3), folded down to the block type
-/// every one of its `count` entries agrees on.
-///
-/// A function of its own rather than a loop inside `read_br_table`, since
-/// the reader has work to do afterwards.
+/// Reads and checks the non-default branch-table targets in encoded order.
 fn read_table_labels<V: OpVisitor>(
     st: &mut OpIterState,
     data: &[u8],
@@ -904,14 +837,10 @@ fn read_table_labels<V: OpVisitor>(
     }
 }
 
-/// `[t* i32] -> []`, `t*` being the branch target type every label in the
-/// table shares. Otherwise has `br`'s effect: the operands are consumed and
-/// the rest of the frame becomes unreachable.
+/// Validates a Wasm 1.0 branch table with identical target signatures.
 ///
-/// **The depths are not returned.** Returning them means a `Vec` whose only
-/// bound is the byte count, which would put `Vec::push` back on the live
-/// panic list; the common target type is `Copy` and is all validation needs.
-/// The visitor receives each non-default depth during decoding.
+/// Targets are reported individually to the visitor instead of being collected in
+/// a vector. The default target is reported by the closing callback.
 fn read_br_table<V: OpVisitor>(
     st: &mut OpIterState,
     data: &[u8],
@@ -929,20 +858,14 @@ fn read_br_table<V: OpVisitor>(
     Ok((default, common))
 }
 
-/// The index immediate the two call operators share. `take_local` and
-/// `take_global` are the same two lines followed by their own lookup; these two
-/// look up different tables, so this is the whole of what they have in common.
+/// Reads an index immediate and advances the body cursor.
 fn take_index(st: &mut OpIterState, data: &[u8]) -> Result<u32> {
     let (idx, p) = read_u32_leb(data, st.pos)?;
     st.pos = p;
     Ok(idx)
 }
 
-/// Wasm 1.0 function types return at most one value; multi-value arrived later.
-///
-/// Checked here rather than left to the module validator for the reason
-/// `MAX_RESULTS` records: without a bound on `call`'s push count nothing bounds
-/// the operand stack. It only ever rejects, so soundness is unaffected.
+/// Checks the Wasm 1.0 result limit before a call can grow the operand stack.
 fn require_single_result(results: &[ValueType]) -> Result<()> {
     if results.len() > MAX_RESULTS {
         return Err(OpError::TooManyResults);
@@ -950,12 +873,7 @@ fn require_single_result(results: &[ValueType]) -> Result<()> {
     Ok(())
 }
 
-/// `[params] -> [results]`, the callee's signature.
-///
-/// The first reader whose stack effect is a list from the context rather than
-/// a shape fixed by the opcode, which is why `pop_types` and `push_types`
-/// have to handle lists of any length. The type is indexed twice rather than
-/// bound to a local, to avoid cloning the `FuncType`.
+/// Validates a direct call using its cached parameter and result types.
 fn read_call(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
     let idx = take_index(st, data)?;
     let i = idx as usize;
@@ -968,13 +886,8 @@ fn read_call(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
     Ok(idx)
 }
 
-/// `[params i32] -> [results]`, the signature named by the type index, with
-/// the table index on top.
-///
-/// Spec 5.4.1 writes it `0x11 y:typeidx x:tableidx`, and Wasm 1.0's only
-/// table is table 0, so the table index is the reserved zero byte. The table
-/// still has to exist, and its element type is `funcref`, which is the only
-/// one Wasm 1.0 has.
+/// Validates an indirect call using the selected type and the reserved table-zero
+/// byte.
 fn read_call_indirect(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
     let idx = take_index(st, data)?;
     read_reserved_zero(st, data)?;
@@ -992,8 +905,7 @@ fn read_call_indirect(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u3
     Ok(idx)
 }
 
-/// `[i32] -> [ty]`, with a memory and an alignment constraint. One function
-/// for all fourteen load opcodes.
+/// Validates a load, requiring a memory, an `i32` address, and valid alignment.
 fn read_load(
     st: &mut OpIterState,
     data: &[u8],
@@ -1008,7 +920,7 @@ fn read_load(
     Ok(memarg)
 }
 
-/// `[i32 ty] -> []`. One function for all nine store opcodes.
+/// Validates a store, requiring a memory, typed operands, and valid alignment.
 fn read_store(
     st: &mut OpIterState,
     data: &[u8],
@@ -1030,8 +942,7 @@ fn read_memarg(st: &mut OpIterState, data: &[u8]) -> Result<MemArg> {
     Ok(MemArg { align, offset })
 }
 
-/// Every memory operator needs a memory to operate on: Wasm 1.0 has at most
-/// one, so the context either has it or the body is rejected.
+/// Checks that the module declares or imports a memory.
 fn require_memory(env: &Env) -> Result<()> {
     if env.mem_types.is_empty() {
         return Err(OpError::UnknownMemory);
@@ -1039,7 +950,8 @@ fn require_memory(env: &Env) -> Result<()> {
     Ok(())
 }
 
-/// Spec 3.3.7: the alignment may not exceed the access's natural alignment.
+/// Checks that a memory exists and the alignment does not exceed the natural
+/// alignment.
 fn check_memory_and_alignment(env: &Env, memarg: &MemArg, natural_align: u32) -> Result<()> {
     require_memory(env)?;
     if memarg.align > natural_align {
@@ -1055,14 +967,7 @@ fn check_memory_and_alignment(env: &Env, memarg: &MemArg, natural_align: u32) ->
 // in a dispatch switch. That keeps the correspondence proof one branch per
 // *shape* rather than one per opcode.
 
-/// `[from] -> [to]`: the unary operators, `eqz`, and the conversions.
-///
-/// Wasm 1.0 sections 5.4.5. Ranges: `0x45`/`0x50` eqz, `0x67`-`0x69` and
-/// `0x79`-`0x7b` integer unary, `0x8b`-`0x91` and `0x99`-`0x9f` float unary,
-/// `0xa7`-`0xbf` conversions.
-///
-/// Grouped by shared `(from, to)` pair rather than one arm per opcode. Every
-/// opcode still appears exactly once, under the pair it has.
+/// Returns the input and output types of a supported unary or conversion opcode.
 pub(crate) fn convert_types(opcode: u8) -> Option<(ValueType, ValueType)> {
     match opcode {
         OP_I32_EQZ | OP_I32_CLZ | OP_I32_CTZ | OP_I32_POPCNT => {
@@ -1097,12 +1002,8 @@ pub(crate) fn convert_types(opcode: u8) -> Option<(ValueType, ValueType)> {
     }
 }
 
-/// `[ty ty] -> [result]`: the binary operators (`result == ty`) and the
-/// comparisons (`result == i32`).
-///
-/// Wasm 1.0 section 5.4.5. Ranges: `0x46`-`0x4F`, `0x51`-`0x5A`, `0x5B`-`0x60`
-/// and `0x61`-`0x66` comparisons, `0x6A`-`0x78`, `0x7C`-`0x8A`, `0x92`-`0x98`
-/// and `0xA0`-`0xA6` binary.
+/// Returns the operand and result types of a supported binary or comparison
+/// opcode.
 pub(crate) fn binary_types(opcode: u8) -> Option<(ValueType, ValueType)> {
     match opcode {
         OP_I32_EQ | OP_I32_NE | OP_I32_LT_S | OP_I32_LT_U | OP_I32_GT_S | OP_I32_GT_U
@@ -1133,11 +1034,10 @@ pub(crate) fn binary_types(opcode: u8) -> Option<(ValueType, ValueType)> {
 
 // --- Dispatch ---
 
-/// Dispatch one operator: its reader, then the consumer's hook for it.
+/// Decodes and validates an operator before invoking its visitor hook.
 ///
-/// The hook runs after the reader, so it sees the immediates the reader
-/// decoded, the checks it made, and the state its effect left behind. A hook
-/// that declines stops the loop, reported as `OpError::Visitor`.
+/// The hook observes the resulting state. A callback error stops validation as
+/// `OpError::Visitor`.
 pub(crate) fn step<V: OpVisitor>(
     st: &mut OpIterState,
     data: &[u8],
@@ -1382,9 +1282,7 @@ fn step_memory<V: OpVisitor>(
     }
 }
 
-/// The numeric operators, dispatched through the opcode table rather than
-/// through a branch each. `visit_numeric` is the one place that turns an opcode
-/// into a hook, so it is where a wrong row would show up.
+/// Validates a numeric opcode and invokes its corresponding visitor hook.
 fn step_numeric<V: OpVisitor>(st: &mut OpIterState, opcode: u8, v: &mut V) -> Result<()> {
     match convert_types(opcode) {
         Some((from, to)) => {
@@ -1405,64 +1303,565 @@ fn step_numeric<V: OpVisitor>(st: &mut OpIterState, opcode: u8, v: &mut V) -> Re
     Err(OpError::UnrecognizedOpcode)
 }
 
-/// Validate one function body, pushing each operator to `v` as it is accepted.
+// --- Multi-value control and signature handling ---
+
+fn check_func_type(ft: &FuncType) -> Result<()> {
+    if ft.params.len() > MAX_MULTI_VALUE_PARAMS {
+        return Err(OpError::TooManyParams);
+    }
+    if ft.results.len() > MAX_MULTI_VALUE_RESULTS {
+        return Err(OpError::TooManyResults);
+    }
+    Ok(())
+}
+
+fn pop_results(st: &mut OpIterState, env: &Env, ts: ResultType) -> Result<()> {
+    match ts {
+        ResultType::Empty => Ok(()),
+        ResultType::One(t) => {
+            pop_with_type(st, t)?;
+            Ok(())
+        }
+        ResultType::Type { index, part } => {
+            let i = index as usize;
+            if i >= env.types.len() {
+                return Err(OpError::UnknownType);
+            }
+            match part {
+                TypePart::Params => pop_types(st, &env.types[i].params),
+                TypePart::Results => pop_types(st, &env.types[i].results),
+            }
+        }
+    }
+}
+
+fn push_results(st: &mut OpIterState, env: &Env, ts: ResultType) -> Result<()> {
+    let n = ts.len(env)?;
+    if n > usize::MAX - st.vals.len() {
+        return Err(OpError::StackTooLarge);
+    }
+    match ts {
+        ResultType::Empty => {}
+        ResultType::One(t) => st.vals.push(StackType::Val(t)),
+        ResultType::Type { index, part } => {
+            let i = index as usize;
+            if i >= env.types.len() {
+                return Err(OpError::UnknownType);
+            }
+            match part {
+                TypePart::Params => push_types(st, &env.types[i].params),
+                TypePart::Results => push_types(st, &env.types[i].results),
+            }
+        }
+    }
+    Ok(())
+}
+
+fn same_types(env: &Env, a: ResultType, b: ResultType) -> Result<bool> {
+    let n = a.len(env)?;
+    if n != b.len(env)? {
+        return Ok(false);
+    }
+    let mut i = 0;
+    loop {
+        if i >= n {
+            return Ok(true);
+        }
+        match (a.get(env, i)?, b.get(env, i)?) {
+            (Some(x), Some(y)) => {
+                if x != y {
+                    return Ok(false);
+                }
+            }
+            _ => return Err(OpError::TypeMismatch),
+        }
+        i += 1;
+    }
+}
+
+fn push_frame(st: &mut BodyState, kind: LabelKind, bt: BlockSignature) {
+    st.core.ctrls.push(Ctrl {
+        kind,
+        block_type: BlockType::Empty,
+        signature: bt,
+        value_stack_base: st.core.vals.len(),
+        polymorphic_base: false,
+    });
+}
+
+fn enter_info(
+    st: &mut BodyState,
+    data: &[u8],
+    env: &Env,
+    kind: LabelKind,
+) -> Result<BlockSignature> {
+    let (bt, end) = signature::read_block_type(data, st.core.pos)?;
+    st.core.pos = end;
+    if let BlockSignature::TypeIndex(index) = bt {
+        let i = index as usize;
+        if i >= env.types.len() {
+            return Err(OpError::UnknownType);
+        }
+        check_func_type(&env.types[i])?;
+    }
+    if let LabelKind::Then = kind {
+        pop_with_type(&mut st.core, ValueType::I32)?;
+    }
+    pop_results(&mut st.core, env, bt.params())?;
+    // The base excludes the inputs; both arms start with their declared inputs.
+    push_frame(st, kind, bt);
+    push_results(&mut st.core, env, bt.params())?;
+    Ok(bt)
+}
+
+// Stable no-op projection used by the extracted semantic contracts.
+#[allow(dead_code)]
+fn enter(st: &mut BodyState, data: &[u8], env: &Env, kind: LabelKind) -> Result<()> {
+    enter_info(st, data, env, kind)?;
+    Ok(())
+}
+
+fn end_frame_info(
+    st: &mut BodyState,
+    env: &Env,
+    is_else: bool,
+) -> Result<(LabelKind, BlockSignature)> {
+    let n = st.core.ctrls.len();
+    if n == 0 {
+        return Err(OpError::UnknownLabel);
+    }
+    let bt = st.core.ctrls[n - 1].signature;
+    let frame = st.core.ctrls[n - 1];
+    if is_else {
+        match frame.kind {
+            LabelKind::Then => {}
+            _ => return Err(OpError::TypeMismatch),
+        }
+    } else if let LabelKind::Then = frame.kind {
+        // An omitted else is the identity on the block's input values.
+        if !same_types(env, bt.params(), bt.results())? {
+            return Err(OpError::TypeMismatch);
+        }
+    }
+    pop_results(&mut st.core, env, bt.results())?;
+    if st.core.vals.len() != frame.value_stack_base {
+        return Err(OpError::StackMismatch);
+    }
+    if is_else {
+        st.core.ctrls[n - 1].kind = LabelKind::Else;
+        st.core.ctrls[n - 1].polymorphic_base = false;
+        push_results(&mut st.core, env, bt.params())?;
+    } else {
+        let _ = st.core.ctrls.pop();
+        // There is no enclosing operand stack at function end.
+        if n != 1 {
+            push_results(&mut st.core, env, bt.results())?;
+        }
+    }
+    Ok((frame.kind, bt))
+}
+
+// Stable no-op projection used by the extracted semantic contracts.
+#[allow(dead_code)]
+fn end_frame(st: &mut BodyState, env: &Env, is_else: bool) -> Result<()> {
+    end_frame_info(st, env, is_else)?;
+    Ok(())
+}
+
+fn label(st: &BodyState, depth: u32) -> Result<ResultType> {
+    let n = st.core.ctrls.len();
+    let d = depth as usize;
+    if d >= n {
+        return Err(OpError::UnknownLabel);
+    }
+    let i = n - 1 - d;
+    match st.core.ctrls[i].kind {
+        LabelKind::Loop => Ok(st.core.ctrls[i].signature.params()),
+        _ => Ok(st.core.ctrls[i].signature.results()),
+    }
+}
+
+fn read_label_info(st: &mut BodyState, data: &[u8]) -> Result<(u32, ResultType)> {
+    let (depth, end) = read_u32_leb(data, st.core.pos)?;
+    st.core.pos = end;
+    let types = label(st, depth)?;
+    Ok((depth, types))
+}
+
+// Stable no-op projection used by the extracted semantic contracts.
+#[allow(dead_code)]
+fn read_multi_value_label(st: &mut BodyState, data: &[u8]) -> Result<ResultType> {
+    let (_, types) = read_label_info(st, data)?;
+    Ok(types)
+}
+
+fn branch_info(
+    st: &mut BodyState,
+    data: &[u8],
+    env: &Env,
+    conditional: bool,
+) -> Result<(u32, ResultType)> {
+    let (depth, ts) = read_label_info(st, data)?;
+    if conditional {
+        pop_with_type(&mut st.core, ValueType::I32)?;
+    }
+    pop_results(&mut st.core, env, ts)?;
+    if conditional {
+        push_results(&mut st.core, env, ts)?;
+    } else {
+        mark_unreachable(&mut st.core);
+    }
+    Ok((depth, ts))
+}
+
+// Stable no-op projection used by the extracted semantic contracts.
+#[allow(dead_code)]
+fn branch(st: &mut BodyState, data: &[u8], env: &Env, conditional: bool) -> Result<()> {
+    branch_info(st, data, env, conditional)?;
+    Ok(())
+}
+
+/// Checks the unchanged operand suffix against a branch-table target.
 ///
-/// Terminates because `read_op` advances `pos` by at least one byte per
-/// iteration and `pos` is bounded by `data.len()`, provided the hooks
-/// themselves return.
+/// Keeping `Bot` unresolved allows it to match different concrete target types
+/// under the Wasm 2.0 common-subtype rule.
+fn check_suffix(st: &OpIterState, env: &Env, ts: ResultType) -> Result<()> {
+    let base = cur_base(st);
+    let mut stack = st.vals.len();
+    let mut i = ts.len(env)?;
+    loop {
+        if i == 0 {
+            return Ok(());
+        }
+        i -= 1;
+        let expected = match ts.get(env, i)? {
+            Some(t) => t,
+            None => return Err(OpError::TypeMismatch),
+        };
+        if stack == base {
+            if !cur_polymorphic(st) {
+                return Err(OpError::EmptyStack);
+            }
+        } else {
+            stack -= 1;
+            if let StackType::Val(actual) = st.vals[stack] {
+                if actual != expected {
+                    return Err(OpError::TypeMismatch);
+                }
+            }
+        }
+    }
+}
+
+fn branch_table_with<V: OpVisitor>(
+    st: &mut BodyState,
+    data: &[u8],
+    env: &Env,
+    visitor: &mut V,
+) -> Result<()> {
+    let (count, end) = read_u32_leb(data, st.core.pos)?;
+    st.core.pos = end;
+    pop_with_type(&mut st.core, ValueType::I32)?;
+    let mut arity = None;
+    let mut i = 0;
+    loop {
+        let (depth, ts) = read_label_info(st, data)?;
+        if i != count {
+            visit(visitor.on_br_table_label(&st.core, depth))?;
+        }
+        let n = ts.len(env)?;
+        match arity {
+            Some(expected) => {
+                if expected != n {
+                    return Err(OpError::TypeMismatch);
+                }
+            }
+            None => arity = Some(n),
+        }
+        check_suffix(&st.core, env, ts)?;
+        // Includes the default, without adding one to a possibly-maximal count.
+        if i == count {
+            mark_unreachable(&mut st.core);
+            visit(visitor.on_br_table(&st.core, depth, ts))?;
+            return Ok(());
+        }
+        i += 1;
+    }
+}
+
+// Stable no-op projection used by the extracted semantic contracts.
+#[allow(dead_code)]
+fn branch_table(st: &mut BodyState, data: &[u8], env: &Env) -> Result<()> {
+    let mut visitor = EmptyOpVisitor;
+    branch_table_with(st, data, env, &mut visitor)
+}
+
+fn apply_func_type(st: &mut OpIterState, ft: &FuncType) -> Result<()> {
+    check_func_type(ft)?;
+    pop_types(st, &ft.params)?;
+    if ft.results.len() > usize::MAX - st.vals.len() {
+        return Err(OpError::StackTooLarge);
+    }
+    push_types(st, &ft.results);
+    Ok(())
+}
+
+fn call_info(st: &mut BodyState, data: &[u8], env: &Env, indirect: bool) -> Result<u32> {
+    let (index, end) = read_u32_leb(data, st.core.pos)?;
+    st.core.pos = end;
+    let i = index as usize;
+    if indirect {
+        let (reserved, end) = read_byte(data, st.core.pos)?;
+        if reserved != 0 {
+            return Err(OpError::ReservedByteNotZero);
+        }
+        st.core.pos = end;
+        if env.table_types.is_empty() {
+            return Err(OpError::UnknownTable);
+        }
+        if i >= env.types.len() {
+            return Err(OpError::UnknownType);
+        }
+        pop_with_type(&mut st.core, ValueType::I32)?;
+        apply_func_type(&mut st.core, &env.types[i])?;
+    } else {
+        if i >= env.func_types.len() {
+            return Err(OpError::UnknownFunc);
+        }
+        apply_func_type(&mut st.core, &env.func_types[i])?;
+    }
+    Ok(index)
+}
+
+// Stable no-op projection used by the extracted semantic contracts.
+#[allow(dead_code)]
+fn call(st: &mut BodyState, data: &[u8], env: &Env, indirect: bool) -> Result<()> {
+    call_info(st, data, env, indirect)?;
+    Ok(())
+}
+
+// --- Shared body execution and profile entry points ---
+
+/// Initializes the shared state from the selected profile and function signature.
+fn initial_state(
+    env: &Env,
+    ctx: &Context,
+    type_index: u32,
+    profile: crate::ValidationProfile,
+) -> Result<BodyState> {
+    match profile {
+        crate::ValidationProfile::Wasm1 => Ok(BodyState {
+            core: start_function(&ctx.results),
+        }),
+        crate::ValidationProfile::MultiValue => {
+            let i = type_index as usize;
+            if i >= env.types.len() {
+                return Err(OpError::UnknownType);
+            }
+            check_func_type(&env.types[i])?;
+            let mut st = BodyState {
+                core: OpIterState {
+                    vals: Vec::new(),
+                    ctrls: Vec::new(),
+                    pos: 0,
+                },
+            };
+            push_frame(
+                &mut st,
+                LabelKind::Body,
+                BlockSignature::TypeIndex(type_index),
+            );
+            Ok(st)
+        }
+    }
+}
+
+/// Runs the shared body loop with the selected profile's control rules.
+fn body_loop<V: OpVisitor>(
+    data: &[u8],
+    env: &Env,
+    ctx: &Context,
+    type_index: u32,
+    profile: crate::ValidationProfile,
+    visitor: &mut V,
+    mut st: BodyState,
+) -> Result<()> {
+    loop {
+        if st.core.ctrls.is_empty() {
+            if st.core.pos != data.len() {
+                return Err(OpError::TrailingBytes);
+            }
+            return Ok(());
+        }
+        let (op, end) = read_byte(data, st.core.pos)?;
+        st.core.pos = end;
+        step_profile(&mut st, data, env, ctx, type_index, profile, op, visitor)?;
+    }
+}
+
+/// Selects profile-specific control handling or shared scalar dispatch.
+fn step_profile<V: OpVisitor>(
+    st: &mut BodyState,
+    data: &[u8],
+    env: &Env,
+    ctx: &Context,
+    type_index: u32,
+    profile: crate::ValidationProfile,
+    op: u8,
+    visitor: &mut V,
+) -> Result<()> {
+    match profile {
+        crate::ValidationProfile::Wasm1 => step(&mut st.core, data, env, ctx, op, visitor),
+        crate::ValidationProfile::MultiValue => {
+            match op {
+                OP_BLOCK => {
+                    let bt = enter_info(st, data, env, LabelKind::Block)?;
+                    visit(visitor.on_block(&st.core, bt))?;
+                }
+                OP_LOOP => {
+                    let bt = enter_info(st, data, env, LabelKind::Loop)?;
+                    visit(visitor.on_loop(&st.core, bt))?;
+                }
+                OP_IF => {
+                    let bt = enter_info(st, data, env, LabelKind::Then)?;
+                    visit(visitor.on_if(&st.core, bt))?;
+                }
+                OP_ELSE => {
+                    let (_, bt) = end_frame_info(st, env, true)?;
+                    visit(visitor.on_else(&st.core, bt))?;
+                }
+                OP_END => {
+                    let (kind, bt) = end_frame_info(st, env, false)?;
+                    visit(visitor.on_end(&st.core, kind, bt))?;
+                }
+                OP_BR => {
+                    let (depth, ts) = branch_info(st, data, env, false)?;
+                    visit(visitor.on_br(&st.core, depth, ts))?;
+                }
+                OP_BR_IF => {
+                    let (depth, ts) = branch_info(st, data, env, true)?;
+                    visit(visitor.on_br_if(&st.core, depth, ts))?;
+                }
+                OP_BR_TABLE => branch_table_with(st, data, env, visitor)?,
+                OP_RETURN => {
+                    pop_results(
+                        &mut st.core,
+                        env,
+                        ResultType::Type {
+                            index: type_index,
+                            part: TypePart::Results,
+                        },
+                    )?;
+                    mark_unreachable(&mut st.core);
+                    visit(visitor.on_return(&st.core))?;
+                }
+                OP_CALL => {
+                    let idx = call_info(st, data, env, false)?;
+                    visit(visitor.on_call(&st.core, idx))?;
+                }
+                OP_CALL_INDIRECT => {
+                    let idx = call_info(st, data, env, true)?;
+                    visit(visitor.on_call_indirect(&st.core, idx))?;
+                }
+                _ => {
+                    // Every scalar instruction pushes at most one value.
+                    if st.core.vals.len() == usize::MAX {
+                        return Err(OpError::StackTooLarge);
+                    }
+                    step(&mut st.core, data, env, ctx, op, visitor)?;
+                }
+            }
+            Ok(())
+        }
+    }
+}
+
+/// Validates a body through the common worker under the selected profile.
+pub(crate) fn validate_body_with_profile<V: OpVisitor>(
+    data: &[u8],
+    env: &Env,
+    ctx: &Context,
+    type_index: u32,
+    profile: crate::ValidationProfile,
+    visitor: &mut V,
+) -> Result<()> {
+    if data.len() > MAX_FUNCTION_BYTES {
+        return Err(OpError::BodyTooLarge);
+    }
+    let st = initial_state(env, ctx, type_index, profile)?;
+    body_loop(data, env, ctx, type_index, profile, visitor, st)
+}
+
+/// Validates a multi-value body with operator callbacks.
 ///
-/// # Preconditions
+/// `ctx.locals` contains the parameters followed by declared locals; `type_index`
+/// selects the function's results from `env`. Parameters enter the local space,
+/// not the operand stack. The enclosing entry validator reports the
+/// function-start callback. Full control signatures are stored in
+/// `Ctrl.signature`.
+pub(crate) fn validate_multi_value_body_with<V: OpVisitor>(
+    data: &[u8],
+    env: &Env,
+    ctx: &Context,
+    type_index: u32,
+    visitor: &mut V,
+) -> Result<()> {
+    validate_body_with_profile(
+        data,
+        env,
+        ctx,
+        type_index,
+        crate::ValidationProfile::MultiValue,
+        visitor,
+    )
+}
+
+/// Validates a multi-value body with accepting operator callbacks.
+#[allow(dead_code)] // Retained as an extracted proof entry point.
+pub(crate) fn validate_multi_value_body(
+    data: &[u8],
+    env: &Env,
+    locals: Vec<ValueType>,
+    type_index: u32,
+) -> Result<()> {
+    let ctx = Context {
+        locals,
+        results: Vec::new(),
+    };
+    let mut visitor = EmptyOpVisitor;
+    validate_multi_value_body_with(data, env, &ctx, type_index, &mut visitor)
+}
+
+/// Validates a Wasm 1.0 instruction body with operator callbacks.
 ///
-/// This is the raw entry point below the code section's framing.
-/// [`module::validate_code_entry_with`] establishes all of these from a
-/// position and an index, and is what a consumer should call instead.
-///
-/// - `data` is *exactly* the body's bytes: locals declarations already
-///   stripped, and nothing after the terminating `end`. This function is
-///   what decides the last byte is that `end`, so a slice that's one byte
-///   too long or short is validating a different body.
-/// - `ctx.locals` is the function's parameters followed by its declared
-///   locals, in that order.
-/// - `ctx.results` is the function's declared result types, at most one of
-///   them (Wasm 1.0 has no multi-value).
-/// - `env` is the decoded environment of the module this body belongs to.
-///
-/// [`module::validate_code_entry_with`]: crate::module::validate_code_entry_with
-pub fn validate_body_with<V: OpVisitor>(
+/// `data` contains exactly the instruction bytes, including the final `end` and
+/// excluding local declarations. `ctx` contains the actual parameters, declared
+/// locals, and zero or one function results. `env` is the decoded environment of
+/// that module. The module entry validator establishes these conditions.
+pub(crate) fn validate_body_with<V: OpVisitor>(
     data: &[u8],
     env: &Env,
     ctx: &Context,
     v: &mut V,
 ) -> Result<()> {
-    crate::multi_value::validate_body_with_profile(
-        data,
-        env,
-        ctx,
-        0,
-        crate::ValidationProfile::Wasm1,
-        v,
-    )
+    validate_body_with_profile(data, env, ctx, 0, crate::ValidationProfile::Wasm1, v)
 }
 
-/// Validate one function body and nothing else. [`validate_body_with`] with
-/// a visitor that does nothing, and the same four preconditions.
-pub fn validate_body(data: &[u8], env: &Env, ctx: &Context) -> Result<()> {
+/// Validates a Wasm 1.0 body with accepting callbacks and the same component
+/// preconditions.
+#[allow(dead_code)] // Retained as an extracted proof entry point.
+pub(crate) fn validate_body(data: &[u8], env: &Env, ctx: &Context) -> Result<()> {
     let mut nop = EmptyOpVisitor;
     validate_body_with(data, env, ctx, &mut nop)
 }
 
-/// What a hook returns. `Ok` is "carry on", and it is the only answer that
-/// lets validation finish.
+// --- Operator visitors and dispatch tables ---
+
+/// The result of a visitor callback; an error stops validation.
 pub type VisitResult = core::result::Result<(), VisitError>;
 
-/// The numeric operators: 123 rows, no immediates. One table, used twice.
-///
-/// `#[macro_export]`ed so a consumer building a C ABI on top of this crate
-/// -- SpiderMonkey's `itasca_glue` is one -- can build its vtable from
-/// this table rather than transcribing it by hand. This is the only place
-/// the opcode-to-hook mapping lives; a hand-transcribed second copy could
-/// drift out of sync with it.
-#[macro_export]
+/// Defines the numeric opcode-to-hook mapping shared by hook declarations and
+/// dispatch.
 macro_rules! numeric_table {
     ($callback:ident) => {
         $callback! {
@@ -1593,9 +1992,8 @@ macro_rules! numeric_table {
     };
 }
 
-/// The memory operators: 23 rows, each with a `memarg`. `#[macro_export]`ed
-/// for the same reason `numeric_table!` is.
-#[macro_export]
+/// Defines the memory opcode-to-hook mapping shared by hook declarations and
+/// dispatch.
 macro_rules! memory_table {
     ($callback:ident) => {
         $callback! {
@@ -1642,37 +2040,25 @@ macro_rules! memory_hooks {
     };
 }
 
-/// Hooks, one per opcode, fired once the operator has been decoded and
-/// validated. `st` is the state after the operator's effect, so its stacks,
-/// its cursor and the innermost frame's `polymorphic_base` are what a consumer
-/// reads to know the operand types and whether the code is reachable.
+/// Callbacks for function context and decoded operators during batch validation.
 ///
-/// # What an implementation owes
+/// Operator hooks receive the state after the operator's validation effects, with
+/// a cursor relative to the instruction body. Hooks default to accepting. They
+/// cannot mutate validator state or bypass checks.
 ///
-/// A hook must always return -- no panicking, no looping forever -- or
-/// nothing says the validator terminates either. And every hook must return
-/// `Ok` for a well-typed body to be accepted: returning `Err` rejects the
-/// body (reported as `OpError::Visitor`, not a validity verdict).
-///
-/// Whether a body is well-typed is decided independently of the hooks, so a
-/// hostile implementation can refuse a valid body or fail to terminate, but
-/// it can never make an invalid body pass.
-///
-/// `st` is a shared borrow, so no hook can move the cursor or either stack.
+/// Callbacks must return normally for termination and accept for completeness. An
+/// error stops validation and may reject an otherwise valid module. Branch-table
+/// label hooks run after label decoding and bounds checks but before all target
+/// compatibility checks finish.
 pub trait OpVisitor {
     // --- The function around the operators ---
 
-    /// One code-section entry is about to be validated, with the locals and
-    /// results the module declared for it and its type index. A consumer needs
-    /// this to size a frame, and `validate_code_entry_with` is what decodes it,
-    /// so nothing has to decode the locals twice.
+    /// Reports the function context before validating its instruction body.
     ///
-    /// `_body_begin` and `_body_end` bracket the operators within the module's
-    /// own bytes: the first is just past the locals declaration, the second is
-    /// the entry's end. A consumer that records a byte offset per operator
-    /// needs the first to make those offsets module-wide, and it cannot work it
-    /// out for itself, because the locals arrive here flattened and their
-    /// encoded length is not recoverable from them.
+    /// `_body_begin.._body_end` identifies instruction bytes within
+    /// `CodeBatch::code`, excluding local declarations. Operator-state
+    /// cursors are relative to `_body_begin`. `_type_idx` selects the function's
+    /// declared signature.
     fn on_function_start(
         &mut self,
         _ctx: &Context,
@@ -1705,14 +2091,15 @@ pub trait OpVisitor {
         Ok(())
     }
 
-    /// `_bt` is the block type of the `if` this switches sides on.
+    /// Reports the transition to an else arm with the enclosing if signature.
     fn on_else(&mut self, _st: &OpIterState, _bt: crate::signature::BlockType) -> VisitResult {
         Ok(())
     }
 
-    /// `_kind` says what closed: the body, a block, a loop, or one side of an
-    /// `if`. A bare `if` closes as `Then`, so a consumer that needs the elided
-    /// empty `else` knows to supply it.
+    /// Reports a closed frame and its signature.
+    ///
+    /// A bare if closes with `LabelKind::Then`, identifying its implicit empty
+    /// else arm.
     fn on_end(
         &mut self,
         _st: &OpIterState,
@@ -1722,8 +2109,7 @@ pub trait OpVisitor {
         Ok(())
     }
 
-    /// `_types` is the target label's operand signature: loop parameters, or
-    /// the results of another target frame.
+    /// Reports a branch target: loop parameters or the results of another frame.
     fn on_br(
         &mut self,
         _st: &OpIterState,
@@ -1742,17 +2128,19 @@ pub trait OpVisitor {
         Ok(())
     }
 
-    /// One entry of a `br_table`'s label vector, in the order they are
-    /// encoded. The vector is not collected first: it has no bound but the byte
-    /// count, so collecting it would put `Vec::push` back on the live panic
-    /// list. `on_br_table` closes the operator once they have all gone by.
+    /// Reports a non-default branch-table label after decoding and bounds checks.
+    ///
+    /// Labels arrive in encoded order, before all target compatibility checks
+    /// finish. `on_br_table` reports the default label and completes the
+    /// operator.
     fn on_br_table_label(&mut self, _st: &OpIterState, _depth: u32) -> VisitResult {
         Ok(())
     }
 
-    /// The end of a `br_table`: its default label and that label's operand
-    /// signature. Every target has the same arity; under the multi-value
-    /// profile, unreachable operands can match distinct concrete signatures.
+    /// Reports the completed branch table and its default target signature.
+    ///
+    /// Targets have equal arity. In the multi-value profile, unreachable operands
+    /// may match different concrete target types.
     fn on_br_table(
         &mut self,
         _st: &OpIterState,
@@ -1776,13 +2164,13 @@ pub trait OpVisitor {
 
     // --- Parametric ---
 
-    /// `_ty` is what came off the stack: `Bot` in unreachable code.
+    /// Reports the dropped operand type, which may be `StackType::Bot` in
+    /// unreachable code.
     fn on_drop(&mut self, _st: &OpIterState, _ty: StackType) -> VisitResult {
         Ok(())
     }
 
-    /// `_ty` is the common type of the two operands, which is also what was
-    /// pushed.
+    /// Reports the common operand type selected and pushed by `select`.
     fn on_select(&mut self, _st: &OpIterState, _ty: StackType) -> VisitResult {
         Ok(())
     }
@@ -1829,8 +2217,8 @@ pub trait OpVisitor {
         Ok(())
     }
 
-    /// The immediate's bits, not a float: a consumer that wants the value
-    /// converts it with `f32::from_bits`.
+    /// Reports the exact floating-point immediate bits, preserving signed zero
+    /// and NaN payloads.
     fn on_f32_const(&mut self, _st: &OpIterState, _bits: u32) -> VisitResult {
         Ok(())
     }
@@ -1848,18 +2236,14 @@ pub trait OpVisitor {
     numeric_table!(numeric_hooks);
 }
 
-/// The validating-only consumer: every hook is the default. `validate_body` is
-/// `validate_body_with` at this instance, which is why the two agree.
+/// An operator visitor whose default hooks all accept.
 pub struct EmptyOpVisitor;
 
 impl OpVisitor for EmptyOpVisitor {}
 
 macro_rules! numeric_fanout {
     ($($op:ident => $hook:ident;)*) => {
-        /// Generated from `numeric_table!`: hand a validated numeric operator
-        /// to its hook. It cannot touch the validator state, having only a
-        /// shared borrow of it, and it is the only place the opcode-to-hook
-        /// mapping lives.
+        /// Invokes the numeric hook selected by the shared opcode table.
         pub(crate) fn visit_numeric<V: OpVisitor>(
             v: &mut V,
             st: &OpIterState,
@@ -1875,7 +2259,7 @@ macro_rules! numeric_fanout {
 
 macro_rules! memory_fanout {
     ($($op:ident => $hook:ident;)*) => {
-        /// Generated from `memory_table!`, as `visit_numeric` is.
+        /// Invokes the memory hook selected by the shared opcode table.
         pub(crate) fn visit_memory<V: OpVisitor>(
             v: &mut V,
             st: &OpIterState,
@@ -1892,130 +2276,3 @@ macro_rules! memory_fanout {
 
 numeric_table!(numeric_fanout);
 memory_table!(memory_fanout);
-
-// Public so a consumer building a C ABI on top of this crate -- SpiderMonkey's
-// itasca_glue, for instance -- can build its vtable from these two tables
-// rather than transcribing them. They are the only place the opcode-to-hook
-// mapping lives and Lean's visitor trace proofs check their dispatch, so
-// a second copy would be a copy that proof does not cover.
-//
-// Declared here at the bottom, rather than next to the tables, so that adding
-// it moved no line above it: the extraction records a source line per
-// definition, and `lean/Itasca/Generated/Funs.lean` is generated and committed.
-pub use {memory_table, numeric_table};
-
-// Declared here at the bottom so that adding them moved no line above: the
-// extraction records a source line per definition and Lean's `Funs.lean` is
-// generated and committed.
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn the_table_covers_every_numeric_opcode_in_its_ranges() {
-        // 0x45, 0x50, 0x67-0x69, 0x79-0x7b, 0x8b-0x91, 0x99-0x9f, 0xa7-0xbf.
-        let mut covered = 0;
-        for op in 0u8..=0xffu8 {
-            if convert_types(op).is_some() {
-                covered += 1;
-            }
-        }
-        assert_eq!(covered, 47);
-    }
-
-    #[test]
-    fn the_table_has_no_row_outside_the_numeric_block() {
-        for op in 0u8..=0xffu8 {
-            let in_range = op == 0x45
-                || op == 0x50
-                || (0x67..=0x69).contains(&op)
-                || (0x79..=0x7b).contains(&op)
-                || (0x8b..=0x91).contains(&op)
-                || (0x99..=0x9f).contains(&op)
-                || (0xa7..=0xbf).contains(&op);
-            assert_eq!(convert_types(op).is_some(), in_range, "opcode {op:#x}");
-        }
-    }
-
-    #[test]
-    fn the_binary_table_covers_its_ranges_exactly() {
-        // 0x46-0x4f, 0x51-0x5a, 0x5b-0x60, 0x61-0x66 comparisons;
-        // 0x6a-0x78, 0x7c-0x8a, 0x92-0x98, 0xa0-0xa6 binary.
-        for op in 0u8..=0xffu8 {
-            let in_range = (0x46..=0x4f).contains(&op)
-                || (0x51..=0x66).contains(&op)
-                || (0x6a..=0x78).contains(&op)
-                || (0x7c..=0x8a).contains(&op)
-                || (0x92..=0x98).contains(&op)
-                || (0xa0..=0xa6).contains(&op);
-            assert_eq!(binary_types(op).is_some(), in_range, "opcode {op:#x}");
-        }
-    }
-
-    #[test]
-    fn the_two_tables_do_not_overlap() {
-        for op in 0u8..=0xffu8 {
-            assert!(
-                !(convert_types(op).is_some() && binary_types(op).is_some()),
-                "opcode {op:#x} is in both tables"
-            );
-        }
-    }
-
-    #[test]
-    fn every_opcode_from_0x45_to_0xbf_is_in_one_of_the_tables() {
-        for op in 0x45u8..=0xbfu8 {
-            assert!(
-                convert_types(op).is_some() || binary_types(op).is_some(),
-                "opcode {op:#x} is in neither table"
-            );
-        }
-    }
-
-    // MAX_FUNCTION_BYTES is private, so these live here rather than in
-    // tests/code_tests.rs.
-    #[test]
-    fn a_body_at_the_size_limit_is_still_validated() {
-        // MAX_FUNCTION_BYTES nops followed by the closing end would be one
-        // byte over, so stop one short. This is the largest body the
-        // validator accepts, and it must be accepted on its merits rather
-        // than rejected for size.
-        let mut body = alloc::vec![OP_NOP; MAX_FUNCTION_BYTES - 1];
-        body.push(OP_END);
-        assert_eq!(body.len(), MAX_FUNCTION_BYTES);
-        let ctx = Context {
-            locals: Vec::new(),
-            results: Vec::new(),
-        };
-        assert!(validate_body(&body, &Env::new(), &ctx).is_ok());
-    }
-
-    #[test]
-    fn a_body_over_the_size_limit_is_rejected_for_size() {
-        let mut body = alloc::vec![OP_NOP; MAX_FUNCTION_BYTES];
-        body.push(OP_END);
-        let ctx = Context {
-            locals: Vec::new(),
-            results: Vec::new(),
-        };
-        assert!(matches!(
-            validate_body(&body, &Env::new(), &ctx),
-            Err(OpError::BodyTooLarge)
-        ));
-    }
-
-    #[test]
-    fn the_size_limit_is_checked_before_anything_else() {
-        // An oversized body that is also ill-typed is rejected for size, so
-        // the check cannot be reached only on otherwise-valid input.
-        let body = alloc::vec![OP_I32_ADD; MAX_FUNCTION_BYTES + 1];
-        let ctx = Context {
-            locals: Vec::new(),
-            results: Vec::new(),
-        };
-        assert!(matches!(
-            validate_body(&body, &Env::new(), &ctx),
-            Err(OpError::BodyTooLarge)
-        ));
-    }
-}

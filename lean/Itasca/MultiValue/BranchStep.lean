@@ -31,13 +31,13 @@ theorem Frames.Open.branchLabels {env root st parents current}
 
 theorem Pending.call {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x10#u8) :
-    multi_value.call st data env false ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
+    code.call st data env false ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
   obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, vals⟩ := id p.opened
   have hpoly : Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
   have hC := (spine.matches (EnvTranslation.Matches.root env ⟨locals, p.ft.results⟩)).enter
     (p.current.form.label p.current.ins p.current.outs)
-  apply WP.spec_mono (multi_value.call.direct_prefix st data env ⟨locals, p.ft.results⟩ outer
+  apply WP.spec_mono (code.call.direct_prefix st data env ⟨locals, p.ft.results⟩ outer
     p.current.vals vals (by simp [Control.base, ctrls, base]) _ hC _ p.current.ops
     (by simpa [hpoly, Frames.enter] using typed))
   intro r hr hok
@@ -50,13 +50,13 @@ theorem Pending.call {data env locals index st} (p : Pending data env locals ind
 
 theorem Pending.call_indirect {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x11#u8) :
-    multi_value.call st data env true ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
+    code.call st data env true ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
   obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, vals⟩ := id p.opened
   have hpoly : Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
   have hC := (spine.matches (EnvTranslation.Matches.root env ⟨locals, p.ft.results⟩)).enter
     (p.current.form.label p.current.ins p.current.outs)
-  apply WP.spec_mono (multi_value.call.indirect_prefix st data env ⟨locals, p.ft.results⟩ outer
+  apply WP.spec_mono (code.call.indirect_prefix st data env ⟨locals, p.ft.results⟩ outer
     p.current.vals vals (by simp [Control.base, ctrls, base]) _ hC _ p.current.ops
     (by simpa [hpoly, Frames.enter] using typed))
   intro r hr hok
@@ -70,12 +70,12 @@ theorem Pending.call_indirect {data env locals index st} (p : Pending data env l
 
 theorem Pending.branch {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x0C#u8) :
-    multi_value.branch st data env false ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
+    code.branch st data env false ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
   obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, vals⟩ := id p.opened
   have hC := Frames.enter_wf C (spine.context_wf (EnvTranslation.context_wf env ⟨locals, p.ft.results⟩))
     p.current.form p.current.ins p.current.outs
   have hl := p.opened.branchLabels rfl C outer spine
-  apply WP.spec_mono (multi_value.branch.prefix st data env (p.parents.map Frames.Saved.ctrl)
+  apply WP.spec_mono (code.branch.prefix st data env (p.parents.map Frames.Saved.ctrl)
     p.current.ctrl outer p.current.vals ctrls vals base p.opened.shape.aligned
     _ hC _ p.current.ops typed hl)
   intro r hr hok
@@ -87,14 +87,14 @@ theorem Pending.branch {data env locals index st} (p : Pending data env locals i
 
 theorem Pending.branch_if {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x0D#u8) :
-    multi_value.branch st data env true ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
+    code.branch st data env true ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
   obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, vals⟩ := id p.opened
   have hC := Frames.enter_wf C (spine.context_wf (EnvTranslation.context_wf env ⟨locals, p.ft.results⟩))
     p.current.form p.current.ins p.current.outs
   have hl := p.opened.branchLabels rfl C outer spine
   have hpoly : Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
-  apply WP.spec_mono (multi_value.branch.conditional_prefix st data env outer p.current.vals vals
+  apply WP.spec_mono (code.branch.conditional_prefix st data env outer p.current.vals vals
     (by simp [Control.base, ctrls, base]) p.opened.shape.core p.opened.shape.aligned
     _ hC _ p.current.ops (by simpa [hpoly, Frames.enter] using typed) hl)
   intro r hr hok

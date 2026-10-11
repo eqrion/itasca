@@ -22,7 +22,7 @@ Four positive modules require proposals beyond multi-value and are excluded:
 `br_table.wast:3`, `call_indirect.wast:623`, `select.wast:1`, and
 `select.wast:518`. Each must pass wasmparser's Wasm 2.0 validation and fail its
 Wasm 1.0 + multi-value feature selection. Exclusions are classified independently
-of itasca and included in the frozen totals. The focused Rust tests separately
-exercise multi-value branch tables, including bottom-compatible mixed targets.
+of itasca and included in the frozen totals. The Lean examples separately
+check multi-value branch tables, including bottom-compatible mixed targets.
 
 This is the control-flow subset of the 2.0 suite, not full Wasm 2.0 coverage.

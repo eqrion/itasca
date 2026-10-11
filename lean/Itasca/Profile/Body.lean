@@ -79,13 +79,13 @@ def run (profile : ValidationProfile) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) :=
   match profile with
   | .Wasm1 => code.validate_body data env ctx
-  | .MultiValue => multi_value.validate_body data env ctx.locals index
+  | .MultiValue => code.validate_multi_value_body data env ctx.locals index
 
 theorem run.total (profile : ValidationProfile) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) : ∃ r, run profile data env ctx index = .ok r := by
   cases profile with
   | Wasm1 => exact code.validate_body.wasm_total data env ctx
-  | MultiValue => exact multi_value.validate_body.wasm_total data env ctx.locals index
+  | MultiValue => exact code.validate_multi_value_body.wasm_total data env ctx.locals index
 
 theorem run.sound (profile : ValidationProfile) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (ft : types.FuncType)
@@ -108,7 +108,7 @@ theorem run.sound (profile : ValidationProfile) (data : Slice U8) (env : module.
       (code.validate_body.wasm1_sound data env ctx bt (hr.trans hb) haccepted)
   | MultiValue =>
     exact (Body.multiValue_iff data env ctx.locals index).mpr
-      (multi_value.validate_body.wasm_sound data env ctx.locals index haccepted)
+      (code.validate_multi_value_body.wasm_sound data env ctx.locals index haccepted)
 
 theorem run.complete (profile : ValidationProfile) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (ft : types.FuncType)
@@ -135,11 +135,11 @@ theorem run.complete (profile : ValidationProfile) (data : Slice U8) (env : modu
   | MultiValue =>
     have hcap : MultiValue.EnvironmentWithinLimits env := by
       constructor
-      · simpa [FuncTypeWithinLimits, multi_value.MAX_PARAMS,
-          multi_value.MAX_RESULTS] using hlimits.1
-      · simpa [FuncTypeWithinLimits, multi_value.MAX_PARAMS,
-          multi_value.MAX_RESULTS] using hlimits.2
-    exact multi_value.validate_body.wasm_complete data env ctx.locals index hcap hsize
+      · simpa [FuncTypeWithinLimits, limits.MAX_MULTI_VALUE_PARAMS,
+          limits.MAX_MULTI_VALUE_RESULTS] using hlimits.1
+      · simpa [FuncTypeWithinLimits, limits.MAX_MULTI_VALUE_PARAMS,
+          limits.MAX_MULTI_VALUE_RESULTS] using hlimits.2
+    exact code.validate_multi_value_body.wasm_complete data env ctx.locals index hcap hsize
       ((Body.multiValue_iff data env ctx.locals index).mp hbody)
 
 end Itasca.Profile

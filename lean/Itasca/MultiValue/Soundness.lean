@@ -41,18 +41,18 @@ namespace Itasca
 
 /-- The actual public multi-value body validator is sound for independent
 binary grammar and generated Wasm 2.0 typing, on arbitrary bytes and contexts. -/
-theorem multi_value.validate_body.wasm_spec (data : Slice U8) (env : module.Env)
+theorem code.validate_multi_value_body.wasm_spec (data : Slice U8) (env : module.Env)
     (locals : alloc.vec.Vec types.ValueType) (index : U32) :
-    multi_value.validate_body data env locals index ⦃ r =>
+    code.validate_multi_value_body data env locals index ⦃ r =>
       r = .Ok () → MultiValue.Validated data env locals index ⦄ :=
   MultiValue.public_spec_of_steps data env locals index
     (MultiValue.steps data env locals ⟨locals, alloc.vec.Vec.new _⟩ index rfl)
 
-theorem multi_value.validate_body.wasm_sound (data : Slice U8) (env : module.Env)
+theorem code.validate_multi_value_body.wasm_sound (data : Slice U8) (env : module.Env)
     (locals : alloc.vec.Vec types.ValueType) (index : U32)
-    (haccepted : multi_value.validate_body data env locals index = .ok (.Ok ())) :
+    (haccepted : code.validate_multi_value_body data env locals index = .ok (.Ok ())) :
     MultiValue.Validated data env locals index := by
-  have hs := multi_value.validate_body.wasm_spec data env locals index
+  have hs := code.validate_multi_value_body.wasm_spec data env locals index
   simpa [haccepted] using hs
 
 end Itasca

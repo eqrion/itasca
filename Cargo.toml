@@ -2,7 +2,7 @@
 name = "itasca"
 version = "0.1.0"
 edition = "2021"
-description = "Formally verified WebAssembly 1.0 module validator"
+description = "Formally verified WebAssembly validator"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/eqrion/itasca"
 include = [
@@ -23,6 +23,4 @@ unexpected_cfgs = { level = "warn", check-cfg = ['cfg(charon)'] }
 [dev-dependencies]
 wasmparser = "=0.252.0"
 wast = "=252.0.0"
-wasm-smith = "=0.252.0"
-arbitrary = "1"
 anyhow = "1"

@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std Result ControlFlow
 namespace Itasca.MultiValue.Visitor
 
 /-- The silent suffix check, factored from the generated table loop. -/
-def tableCheck (st : multi_value.State) (env : module.Env) (ts : signature.ResultType)
+def tableCheck (st : code.BodyState) (env : module.Env) (ts : signature.ResultType)
     (arity : Option Usize) : Result (core.result.Result (Option Usize) error.OpError) := do
   let r ← signature.ResultType.len ts env
   match r with
@@ -15,23 +15,23 @@ def tableCheck (st : multi_value.State) (env : module.Env) (ts : signature.Resul
   | .Ok n =>
     match arity with
     | none =>
-      let r ← multi_value.check_suffix st.core env ts
+      let r ← code.check_suffix st.core env ts
       match r with
       | .Err e => .ok (.Err e)
       | .Ok () => .ok (.Ok (some n))
     | some expected =>
       if expected != n then .ok (.Err .TypeMismatch) else
-        let r ← multi_value.check_suffix st.core env ts
+        let r ← code.check_suffix st.core env ts
         match r with
         | .Err e => .ok (.Err e)
         | .Ok () => .ok (.Ok arity)
 
 /-- An iteration after its label callback. -/
-def tableRest {V : Type} (visitor : code.OpVisitor V) (st : multi_value.State)
+def tableRest {V : Type} (visitor : code.OpVisitor V) (st : code.BodyState)
     (env : module.Env) (count i depth : U32) (ts : signature.ResultType)
     (arity : Option Usize) (v : V) :
     Result (ControlFlow (code.OpIterState × V × Option Usize × U32)
-      (core.result.Result Unit error.OpError × multi_value.State × V)) := do
+      (core.result.Result Unit error.OpError × code.BodyState × V)) := do
   let r ← tableCheck st env ts arity
   match r with
   | .Err e => .ok (.done (.Err e, st, v))
@@ -46,11 +46,11 @@ def tableRest {V : Type} (visitor : code.OpVisitor V) (st : multi_value.State)
       .ok (.cont (st.core, v, nextArity, j))
 
 def tableBody {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
-    (env : module.Env) (count : U32) (st : multi_value.State)
+    (env : module.Env) (count : U32) (st : code.BodyState)
     (v : V) (arity : Option Usize) (i : U32) :
     Result (ControlFlow (code.OpIterState × V × Option Usize × U32)
-      (core.result.Result Unit error.OpError × multi_value.State × V)) := do
-  let (r, s) ← multi_value.read_label_info st data
+      (core.result.Result Unit error.OpError × code.BodyState × V)) := do
+  let (r, s) ← code.read_label_info st data
   match r with
   | .Err e => .ok (.done (.Err e, s, v))
   | .Ok (depth, ts) =>
@@ -65,11 +65,11 @@ def tableBody {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
 set_option maxHeartbeats 1000000 in
 /-- The transfer adapter is an exact factorization of the extracted loop body. -/
 theorem tableBody_eq {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
-    (env : module.Env) (count : U32) (st : multi_value.State)
+    (env : module.Env) (count : U32) (st : code.BodyState)
     (v : V) (arity : Option Usize) (i : U32) :
-    multi_value.branch_table_with_loop.body visitor data env count st.core v arity i =
+    code.branch_table_with_loop.body visitor data env count st.core v arity i =
       tableBody visitor data env count st v arity i := by
-  simp only [multi_value.branch_table_with_loop.body, tableBody, tableRest, tableCheck,
+  simp only [code.branch_table_with_loop.body, tableBody, tableRest, tableCheck,
     Std.bind_assoc]
   congr 1
   funext pair
@@ -106,15 +106,15 @@ theorem tableBody_eq {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
 /-- State observation of one table iteration, excluding callback bookkeeping. -/
 def tableObserve {V : Type} :
     ControlFlow (code.OpIterState × V × Option Usize × U32)
-      (core.result.Result Unit error.OpError × multi_value.State × V) →
+      (core.result.Result Unit error.OpError × code.BodyState × V) →
     ControlFlow (code.OpIterState × Option Usize × U32)
-      (core.result.Result Unit error.OpError × multi_value.State)
+      (core.result.Result Unit error.OpError × code.BodyState)
   | .cont (core, _, arity, i) => .cont (core, arity, i)
   | .done (r, st, _) => .done (r, st)
 
 def tableGood {V : Type} (cf :
     ControlFlow (code.OpIterState × V × Option Usize × U32)
-      (core.result.Result Unit error.OpError × multi_value.State × V)) : Prop :=
+      (core.result.Result Unit error.OpError × code.BodyState × V)) : Prop :=
   match cf with
   | .cont _ => True
   | .done (r, _, _) => r = .Ok ()
@@ -122,7 +122,7 @@ def tableGood {V : Type} (cf :
 /-- Accepting replacements preserve each successful table continuation. -/
 theorem tableRest.transfer {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (ha : FullVisitor.Accepts replacement)
-    (st : multi_value.State) (env : module.Env) (count i depth : U32)
+    (st : code.BodyState) (env : module.Env) (count i depth : U32)
     (ts : signature.ResultType) (arity : Option Usize) (v : V) (w : W) (cf)
     (h : tableRest visitor st env count i depth ts arity v = .ok cf)
     (hg : tableGood cf) :
@@ -164,7 +164,7 @@ theorem tableRest.transfer {V W : Type} (visitor : code.OpVisitor V)
 returning on any unrelated execution. -/
 theorem tableBody.transfer {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (ha : FullVisitor.Accepts replacement)
-    (data : Slice U8) (env : module.Env) (count : U32) (st : multi_value.State)
+    (data : Slice U8) (env : module.Env) (count : U32) (st : code.BodyState)
     (v : V) (w : W) (arity : Option Usize) (i : U32) (cf)
     (h : tableBody visitor data env count st v arity i = .ok cf)
     (hg : tableGood cf) :
@@ -199,7 +199,7 @@ theorem tableBody.transfer {V W : Type} (visitor : code.OpVisitor V)
 
 
 private theorem tableRest.cont_progress {V : Type} (visitor : code.OpVisitor V)
-    (st : multi_value.State) (env : module.Env) (count i depth : U32)
+    (st : code.BodyState) (env : module.Env) (count i depth : U32)
     (ts : signature.ResultType) (arity : Option Usize) (v : V)
     (ois : code.OpIterState)
     (v' : V) (arity' : Option Usize) (j : U32) (hi : i.val ≤ count.val)
@@ -228,7 +228,7 @@ private theorem tableRest.cont_progress {V : Type} (visitor : code.OpVisitor V)
       scalar_tac
 
 private theorem tableBody.cont_progress {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (env : module.Env) (count : U32) (st : multi_value.State)
+    (data : Slice U8) (env : module.Env) (count : U32) (st : code.BodyState)
     (v : V) (arity : Option Usize) (i : U32)
     (ois : code.OpIterState)
     (v' : V) (arity' : Option Usize) (j : U32) (hi : i.val ≤ count.val)
@@ -264,20 +264,20 @@ open MultiValue.Visitor
 
 /-- Successful branch-table execution transfers to every accepting replacement,
 with exactly the same validation state. -/
-theorem multi_value.branch_table_with_loop.accepted_transfer {V W : Type}
+theorem code.branch_table_with_loop.accepted_transfer {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
-    (ha : FullVisitor.Accepts replacement) (st : multi_value.State)
+    (ha : FullVisitor.Accepts replacement) (st : code.BodyState)
     (data : Slice U8) (env : module.Env) (v : V) (w : W)
     (count : U32) (arity : Option Usize) (i : U32) (hi : i.val ≤ count.val)
-    (final : multi_value.State) (v' : V)
-    (h : multi_value.branch_table_with_loop visitor st.core data env v count arity i =
+    (final : code.BodyState) (v' : V)
+    (h : code.branch_table_with_loop visitor st.core data env v count arity i =
       .ok (.Ok (), final, v')) :
-    ∃ w', multi_value.branch_table_with_loop replacement st.core data env w count arity i =
+    ∃ w', code.branch_table_with_loop replacement st.core data env w count arity i =
       .ok (.Ok (), final, w') := by
   generalize hn : count.val - i.val = n
   induction n using Nat.strong_induction_on generalizing st v w arity i with
   | h n ih =>
-    unfold multi_value.branch_table_with_loop at h ⊢
+    unfold code.branch_table_with_loop at h ⊢
     rw [loop] at h ⊢
     simp only [tableBody_eq visitor data env count st v arity i] at h
     simp only [tableBody_eq replacement data env count st w arity i]
@@ -310,21 +310,21 @@ theorem multi_value.branch_table_with_loop.accepted_transfer {V W : Type}
         obtain ⟨ois', w1, arity1', j'⟩ := p
         simp only [tableObserve, ControlFlow.cont.injEq, Prod.mk.injEq] at ho
         obtain ⟨rfl, rfl, rfl⟩ := ho
-        have hrec : multi_value.branch_table_with_loop visitor ois' data env v1 count arity1' j' =
+        have hrec : code.branch_table_with_loop visitor ois' data env v1 count arity1' j' =
             .ok (.Ok (), final, v') := ht
         obtain ⟨w', hw'⟩ := ih (count.val - j'.val) (by omega)
           ⟨ois'⟩ v1 w1 arity1' j' hp.2 hrec rfl
-        exact ⟨w', by simpa only [bind_ok, multi_value.branch_table_with_loop] using hw'⟩
+        exact ⟨w', by simpa only [bind_ok, code.branch_table_with_loop] using hw'⟩
 
 /-- The wrapper's shared selector decoding preserves visitor transfer. -/
-theorem multi_value.branch_table_with.accepted_transfer {V W : Type}
+theorem code.branch_table_with.accepted_transfer {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
-    (ha : FullVisitor.Accepts replacement) (st : multi_value.State)
+    (ha : FullVisitor.Accepts replacement) (st : code.BodyState)
     (data : Slice U8) (env : module.Env) (v : V) (w : W)
-    (final : multi_value.State) (v' : V)
-    (h : multi_value.branch_table_with visitor st data env v = .ok (.Ok (), final, v')) :
-    ∃ w', multi_value.branch_table_with replacement st data env w = .ok (.Ok (), final, w') := by
-  unfold multi_value.branch_table_with at h ⊢
+    (final : code.BodyState) (v' : V)
+    (h : code.branch_table_with visitor st data env v = .ok (.Ok (), final, v')) :
+    ∃ w', code.branch_table_with replacement st data env w = .ok (.Ok (), final, w') := by
+  unfold code.branch_table_with at h ⊢
   obtain ⟨r, hr, h⟩ := ResultFacts.bind_ok_inv _ _ _ h
   rw [hr]
   cases r with
@@ -340,7 +340,7 @@ theorem multi_value.branch_table_with.accepted_transfer {V W : Type}
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
     | Ok u =>
       simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, Std.uncurry] at h ⊢
-      exact multi_value.branch_table_with_loop.accepted_transfer visitor replacement ha
+      exact code.branch_table_with_loop.accepted_transfer visitor replacement ha
         ⟨ois⟩ data env v w count none 0#u32 (by simp) final v' h
 
 end Itasca

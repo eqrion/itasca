@@ -22,12 +22,12 @@ actual block/loop/if handlers in whole-body soundness. -/
 theorem Pending.enter_after {data env locals index st} (p : Pending data env locals index st)
     (form : Frames.Form) (initial : form.Initial)
     (hbyte : data.val[p.start.val]'p.inbounds = form.opcode) :
-    multi_value.enter st data env form.kind ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
+    code.enter st data env form.kind ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
   obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, vals⟩ := p.opened
   have hcap : st.blocks.val.length < Usize.max := by
     have := p.ctrls; have := p.inbounds; have := p.size; have := Body.byte_limit_room
     omega
-  apply WP.spec_mono (multi_value.enter.sound st data env form initial outer p.current.vals vals
+  apply WP.spec_mono (code.enter.sound st data env form initial outer p.current.vals vals
     (by simp [Control.base, ctrls, base]) p.opened.shape.core p.opened.shape.aligned hcap)
   intro r hr hok
   obtain ⟨bt, ins, outs, hdecoded, hin, hout, hip, hop, remaining, newBase,

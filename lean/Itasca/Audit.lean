@@ -1,4 +1,3 @@
-import Itasca.MultiValue.Profile
 import Itasca.MultiValue.BlockDecode
 import Itasca.MultiValue.Typing
 import Itasca.MultiValue.Stack

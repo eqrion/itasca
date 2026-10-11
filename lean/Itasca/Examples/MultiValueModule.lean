@@ -52,7 +52,7 @@ private theorem cache : ModuleEnv.Cache env [] [] := by
 
 private theorem environment_valid : ModuleEnv.Valid env .MultiValue := by
   constructor <;> simp [env, ModuleExamples.emptyEnv, Itasca.Profile.FuncTypeAdmissible,
-    functionType, multi_value.MAX_PARAMS, multi_value.MAX_RESULTS]
+    functionType, limits.MAX_MULTI_VALUE_PARAMS, limits.MAX_MULTI_VALUE_RESULTS]
 
 private theorem entry_typed : CodeEntry.Typed env 0#u32 entry .MultiValue := by
   refine ⟨by simp [env], ?_, trivial⟩
@@ -140,7 +140,7 @@ theorem accepted : ∃ decoded, module.validate_module input .MultiValue = .ok (
     Matches decoded.env decoded.tail raw ∧ AccessorTypes decoded.env raw := by
   exact module.validate_module.profile_complete_with_metadata input raw .MultiValue (encoded .MultiValue)
     (by simp [ModuleSignaturesWithinLimits, raw, fromEnv, env, functionType,
-      Itasca.Profile.FuncTypeWithinLimits, multi_value.MAX_PARAMS, multi_value.MAX_RESULTS])
+      Itasca.Profile.FuncTypeWithinLimits, limits.MAX_MULTI_VALUE_PARAMS, limits.MAX_MULTI_VALUE_RESULTS])
     (ModuleElaboration.elaborates cache codes_typed) typed
     (ModuleElaboration.profile cache environment_valid codes_typed)
 

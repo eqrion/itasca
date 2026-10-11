@@ -14,7 +14,7 @@ theorem ResultFacts.map_spec {A B : Type} (m : Result A) (f : A → B) (P : B �
 /- Proof-only no-op projections of the shared visiting table loop. The equations
 below connect these state views to the actual extracted generic worker. -/
 
-def multi_value.branch_table_loop.body
+def code.branch_table_loop.body
   (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
   (ois : _root_.Itasca.code.OpIterState)
   (v : alloc.vec.Vec _root_.Itasca.signature.BlockType)
@@ -22,9 +22,9 @@ def multi_value.branch_table_loop.body
   Result (ControlFlow (_root_.Itasca.code.OpIterState × (alloc.vec.Vec
     _root_.Itasca.signature.BlockType) × (Option Std.Usize) × Std.U32)
     ((core.result.Result Unit _root_.Itasca.error.OpError) ×
-    _root_.Itasca.multi_value.State))
+    _root_.Itasca.code.BodyState))
   := do
-  let (r, st) ← multi_value.read_label { core := ois } data
+  let (r, st) ← code.read_multi_value_label { core := ois } data
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
@@ -34,7 +34,7 @@ def multi_value.branch_table_loop.body
     | core.ops.control_flow.ControlFlow.Continue val1 =>
       match arity with
       | none =>
-        let r2 ← multi_value.check_suffix st.core env val
+        let r2 ← code.check_suffix st.core env val
         let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
         match cf2 with
         | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -54,7 +54,7 @@ def multi_value.branch_table_loop.body
         if expected != val1
         then ok (done (core.result.Result.Err error.OpError.TypeMismatch, st))
         else
-          let r2 ← multi_value.check_suffix st.core env val
+          let r2 ← code.check_suffix st.core env val
           let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
           match cf2 with
           | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -82,19 +82,19 @@ def multi_value.branch_table_loop.body
     ok (done (r1, st))
 
 /-- The legacy state view is a projection of the actual visiting loop. -/
-def multi_value.branch_table_loop
+def code.branch_table_loop
   (ois : code.OpIterState) (blocks : alloc.vec.Vec signature.BlockType)
   (data : Slice U8) (env : module.Env) (count : U32) (arity : Option Usize) (i : U32) :
-  Result (core.result.Result Unit error.OpError × multi_value.State) := do
-  let (r, s, _) ← multi_value.branch_table_with_loop
+  Result (core.result.Result Unit error.OpError × code.BodyState) := do
+  let (r, s, _) ← code.branch_table_with_loop
     code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor ois data env () count arity i
   .ok (r, s)
 
 def MultiValue.tableCore
-  (st : _root_.Itasca.multi_value.State) (data : Slice Std.U8)
+  (st : _root_.Itasca.code.BodyState) (data : Slice Std.U8)
   (env : _root_.Itasca.module.Env) :
   Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
-    _root_.Itasca.multi_value.State)
+    _root_.Itasca.code.BodyState)
   := do
   let r ← reader.read_u32_leb data st.core.pos
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
@@ -106,7 +106,7 @@ def MultiValue.tableCore
     let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue _ =>
-      multi_value.branch_table_loop ois st.blocks data env count none 0#u32
+      code.branch_table_loop ois st.blocks data env count none 0#u32
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r2 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -124,14 +124,14 @@ namespace MultiValue
 @[simp] def tableCont (p : code.OpIterState × alloc.vec.Vec signature.BlockType × Option Usize × U32) :=
   (p.1, (), p.2.2.1, p.2.2.2)
 
-@[simp] def tableDone (p : core.result.Result Unit error.OpError × multi_value.State) :=
+@[simp] def tableDone (p : core.result.Result Unit error.OpError × code.BodyState) :=
   (p.1, p.2, ())
 
 @[simp] def tableFlow :
     ControlFlow (code.OpIterState × alloc.vec.Vec signature.BlockType × Option Usize × U32)
-      (core.result.Result Unit error.OpError × multi_value.State) →
+      (core.result.Result Unit error.OpError × code.BodyState) →
     ControlFlow (code.OpIterState × Unit × Option Usize × U32)
-      (core.result.Result Unit error.OpError × multi_value.State × Unit)
+      (core.result.Result Unit error.OpError × code.BodyState × Unit)
   | .cont p => .cont (tableCont p)
   | .done p => .done (tableDone p)
 
@@ -140,12 +140,12 @@ set_option maxHeartbeats 800000 in
 theorem tableBody_eq (data : Slice U8) (env : module.Env) (count : U32)
     (ois : code.OpIterState) (blocks : alloc.vec.Vec signature.BlockType)
     (arity : Option Usize) (i : U32) :
-    multi_value.branch_table_with_loop.body code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+    code.branch_table_with_loop.body code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       data env count ois () arity i =
-      (do let cf ← multi_value.branch_table_loop.body data env count ois blocks arity i
+      (do let cf ← code.branch_table_loop.body data env count ois blocks arity i
           .ok (tableFlow cf)) := by
-  simp only [multi_value.branch_table_with_loop.body, multi_value.branch_table_loop.body,
-    multi_value.read_label, Std.bind_assoc]
+  simp only [code.branch_table_with_loop.body, code.branch_table_loop.body,
+    code.read_multi_value_label, Std.bind_assoc]
   congr 1
   funext x
   obtain ⟨r, st⟩ := x
@@ -175,10 +175,10 @@ theorem tableBody_eq (data : Slice U8) (env : module.Env) (count : U32)
 end MultiValue
 
 /-- The non-visiting table wrapper executes the same generic reader and loop. -/
-theorem multi_value.branch_table.eq_core (st : multi_value.State) (data : Slice U8) (env : module.Env) :
-    multi_value.branch_table st data env = MultiValue.tableCore st data env := by
-  simp only [multi_value.branch_table, multi_value.branch_table_with, MultiValue.tableCore,
-    multi_value.branch_table_loop, Std.bind_assoc]
+theorem code.branch_table.eq_core (st : code.BodyState) (data : Slice U8) (env : module.Env) :
+    code.branch_table st data env = MultiValue.tableCore st data env := by
+  simp only [code.branch_table, code.branch_table_with, MultiValue.tableCore,
+    code.branch_table_loop, Std.bind_assoc]
   congr 1
   funext r
   cases r with

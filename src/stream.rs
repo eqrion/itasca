@@ -1,39 +1,25 @@
-//! Streaming and parallel module validation, verified in Lean.
+//! Streaming module validation with bounded, independently scheduled workers.
 //!
-//! [`validate_streaming`] owns the whole module. It decodes the environment,
-//! frames the code section into [`CodeBatch`]es as the bytes arrive, validates
-//! the tail at EOF, and accepts only after every batch it issued has come back
-//! fully validated. The embedding supplies the module split into three regions
-//! through a [`Source`] and schedules function validation through a
-//! [`StreamingVisitor`], but neither can replace a phase or certify success:
-//! only an `Ok` from [`validate_streaming`] does.
+//! `validate_streaming` decodes the environment, issues `CodeBatch` work, validates
+//! the tail, and retires every outstanding batch before accepting. Workers may
+//! complete in any order. `Source` defines the byte-coherence obligation;
+//! `StreamingVisitor` defines callback order and worker ownership.
 //!
-//! The driver checks that the regions are split where [`Source`] says, so an
-//! `Ok` means the environment, the code section and the tail, concatenated, are
-//! a valid module. A wrong split can only cause a rejection. The embedding
-//! still owes:
-//!
-//! - Successful calls expose coherent views of fixed environment, code and tail
-//!   bytes. Rust borrows protect each immutable view; they do not force separate
-//!   calls to return matching ranges. The source implementation owes coherence.
-//! - `module_id` is unique among invocations whose batches can reach the same
-//!   visitor, so a batch from one module cannot be returned to another.
-//! - Returned batches come from the corresponding submissions and are advanced
-//!   only through their batch operations. The driver checks pending IDs and
-//!   successful completion; submission alone does not establish validation.
-//! - Callbacks return normally for totality. Acceptance soundness does not
-//!   require unexecuted callbacks to return or accept.
-//! - The environment and source outlive every worker holding a batch,
-//!   including after `validate_streaming` returns an error.
+//! The source and environment must outlive every worker. Invocation IDs must be
+//! unique among batches that can reach the same scheduler. Returned workers must
+//! derive from the corresponding issued batches through their batch operations.
+//! Callbacks must return normally for termination and accept for completeness.
+//! Only a successful driver result certifies whole-module validity.
 
 use crate::limits::{add_offset, MAX_CODE_HEADER_BYTES, MAX_LEB_BYTES};
 use crate::module::{self, SECTION_CODE};
 use crate::{Env, Error, OpError, OpVisitor, Tail, ValidationProfile};
 use alloc::vec::Vec;
 
+/// A module validation or streaming-protocol result.
 pub type Result<T> = core::result::Result<T, Error>;
 
-/// Which part of the module a custom section was found in.
+/// The source region containing a reported custom section.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
 pub enum Region {
@@ -41,147 +27,164 @@ pub enum Region {
     Tail,
 }
 
-/// How the visitor wants the code section divided.
+/// The target batch size and maximum number of outstanding batches.
+///
+/// Both fields must be positive; the driver rejects zero values.
 pub struct Config {
-    /// Target entry-content bytes, including locals. One entry may exceed it.
+    /// The target entry-content bytes per batch, including locals. One entry may
+    /// exceed it.
     pub batch_bytes: usize,
-    /// Most batches submitted and not yet returned by
-    /// [`StreamingVisitor::poll_code_batch`].
+    /// The maximum number of submitted batches awaiting return from the visitor.
     pub max_batches: usize,
 }
 
-/// One module, split into three regions at its first section whose id is not
-/// below the code section's.
+/// A coherent module source split into environment, code, and tail regions.
 ///
-/// The environment is every byte before that section. The code region is that
-/// section if it is the code section, from its id byte to its end, and empty
-/// otherwise. The tail is every byte after the code region. A module without
-/// such a section is entirely environment. Each region may be a separate
-/// allocation.
+/// The canonical split starts the code region at the first section whose ID is at
+/// least 10. That region contains the complete code section if present, otherwise
+/// it is empty. The tail follows it; preceding bytes belong to the environment.
+/// If no such section exists, all bytes belong to the environment.
+///
+/// Regions may use separate allocations. Every successful read must agree with
+/// the same fixed logical bytes; immutable Rust borrows alone do not ensure
+/// coherence across calls. Read errors may reject otherwise valid input.
 pub trait Source {
+    /// Returns the complete environment region, including the module header.
     fn environment(&self) -> Result<&[u8]>;
 
-    /// The code region's length, known before any of it arrives.
+    /// Returns the fixed length of the code region before its bytes are
+    /// requested.
     fn code_len(&self) -> usize;
 
-    /// Waits for and returns exactly `start..end` of the code region, where
-    /// `start <= end <= code_len()`.
+    /// Waits for and returns the exact code-region range `start..end`.
+    ///
+    /// The driver requests `start <= end <= code_len()`. Successful reads must
+    /// agree with the same logical code bytes, including overlapping reads.
     fn code(&self, start: usize, end: usize) -> Result<&[u8]>;
 
-    /// Waits for EOF and returns the tail.
+    /// Waits for end of input and returns the complete tail region.
     fn tail(&self) -> Result<&[u8]>;
 }
 
-/// The embedding's side of [`validate_streaming`], called in this order:
+/// Callbacks for scheduling workers and consuming module metadata.
 ///
-/// 1. `custom_region(Environment)`, then custom sections before the code.
-/// 2. `environment_ready` once, with the decoded environment.
-/// 3. `submit_code_batch` for each batch, in module order, interleaved with
-///    `poll_code_batch` whenever [`Config::max_batches`] are outstanding.
-/// 4. `code_end` once every batch has been submitted.
-/// 5. `custom_region(Tail)`, custom sections after the code, then
-///    `tail_ready` with the decoded tail.
-/// 6. `poll_code_batch` until every outstanding batch has returned.
+/// The driver reports environment custom sections, calls `environment_ready`,
+/// submits batches in module order, and calls `code_end`. It then reports tail
+/// custom sections, calls `tail_ready`, and drains outstanding batches. Polls may
+/// also occur during submission when the configured limit is reached.
 ///
-/// Any error stops validation and is the module's result. The visitor may
-/// still hold batches at that point and must release them before the
-/// environment and source storage they borrow.
+/// An error stops the driver. The visitor must still release or join every worker
+/// before its borrowed source and environment storage are released. Only a
+/// successful driver result certifies the complete module.
 pub trait StreamingVisitor<'a>: module::ModuleVisitor {
-    /// Later `on_custom_section` offsets are relative to `region`'s bytes.
+    /// Selects the source region used by subsequent custom-section offsets.
     fn custom_region(&mut self, region: Region);
 
-    /// The environment is decoded and the code section header checked.
+    /// Reports the decoded environment and checked code header, then selects
+    /// batch settings.
     fn environment_ready(&mut self, env: &Env) -> Result<Config>;
 
-    /// Takes ownership of a batch to validate with
-    /// [`CodeBatch::validate_func`].
+    /// Takes ownership of an issued batch for validation through its batch
+    /// methods.
     fn submit_code_batch(&mut self, batch: CodeBatch<'a>) -> Result<()>;
 
-    /// Blocks until any submitted batch is returned, finished or not.
+    /// Waits for and returns an issued batch in any completion order.
+    ///
+    /// The driver rejects foreign, duplicate, or unfinished batches. To accept
+    /// valid input, the scheduler must return each outstanding batch after
+    /// successful validation.
     fn poll_code_batch(&mut self) -> Result<CodeBatch<'a>>;
 
-    /// Every batch has been submitted.
+    /// Reports that all code batches have been submitted.
     fn code_end(&mut self) -> Result<()>;
 
+    /// Reports the decoded tail before the driver drains remaining workers.
     fn tail_ready(&mut self, tail: Tail) -> Result<()>;
 }
 
-/// One code section entry, as offsets into the code region.
+/// The function index and byte extent of a framed code entry.
+///
+/// Offsets refer to the complete code region. Framing alone does not validate the
+/// entry.
 #[cfg_attr(not(charon), derive(Debug))]
 #[derive(Clone, Copy)]
 pub struct CodeEntry {
-    /// The defined function's index, excluding imports.
+    /// The defined-function index, excluding imported functions.
     pub index: usize,
-    /// The entry's size prefix.
+    /// The offset of the entry's size prefix.
     pub start: usize,
-    /// The local declarations, just past the size prefix.
+    /// The offset of the local declarations, immediately after the size prefix.
     pub contents: usize,
+    /// The exclusive end offset of the entry.
     pub end: usize,
 }
 
-/// A run of consecutive code section entries, validated by a worker.
+/// An issued batch of consecutive function entries with private validation state.
 ///
-/// A batch has two independent cursors. The dispatch cursor, advanced by
-/// [`CodeBatch::next_entry`], frames entries for the worker's own use. The
-/// validation cursor is advanced only by a successful
-/// [`CodeBatch::validate_func`], and the first failure is kept in the batch so
-/// a worker cannot drop it. The driver accepts a returned batch only if its
-/// validation cursor reached the end and it carries this invocation's
-/// identity.
+/// `next_entry` advances only the dispatch cursor. `validate_func` advances the
+/// independent validation cursor and stores the first error. The driver accepts a
+/// returned batch only when its identity is outstanding and every byte and
+/// function has been validated.
 pub struct CodeBatch<'a> {
-    /// The invocation that issued this batch.
+    /// The module invocation that issued this batch.
     module_id: u64,
-    /// This batch's position in submission order within that invocation.
+    /// The batch's submission index within its invocation.
     batch_id: usize,
-    /// Validation rules fixed by the invocation that issued the batch.
+    /// The issuing invocation's fixed validation profile.
     profile: ValidationProfile,
     env: &'a Env,
-    /// The batch's entries, framed back to back.
+    /// The consecutive size-prefixed function entries in this batch.
     code: &'a [u8],
-    /// Offset of `code` within the code region.
+    /// The batch's starting offset within the code region.
     code_offset: usize,
-    /// Defined-function index of the first entry.
+    /// The defined-function index of the first entry.
     first_func: usize,
     num_funcs: usize,
-    /// Entries framed by `next_entry`, and the offset in `code` after them.
+    /// The number of entries framed for dispatch.
     num_dispatched: usize,
     dispatch_end: usize,
-    /// Entries validated, and the offset in `code` after them.
+    /// The number of successfully validated entries.
     num_validated: usize,
     validated_end: usize,
     error: Option<Error>,
 }
 
 impl CodeBatch<'_> {
-    /// The validation rules selected by the issuing invocation.
+    /// Returns the validation profile fixed by the issuing driver.
     pub fn profile(&self) -> ValidationProfile {
         self.profile
     }
 
+    /// Returns the number of functions in this batch.
     pub fn len(&self) -> usize {
         self.num_funcs
     }
 
+    /// Returns whether the batch contains no functions.
     pub fn is_empty(&self) -> bool {
         self.num_funcs == 0
     }
 
-    /// Whether this batch ends with the module's last function.
+    /// Returns whether the batch contains the module's last defined function.
     pub fn is_last(&self) -> bool {
         self.first_func + self.num_funcs == self.env.func_type_indices.len()
     }
 
-    /// The batch's entries, beginning at [`CodeBatch::code_offset`].
+    /// Returns the batch's encoded entries, including size prefixes and local
+    /// declarations.
     pub fn code(&self) -> &[u8] {
         self.code
     }
 
-    /// Offset of [`CodeBatch::code`] within the code region.
+    /// Returns the starting offset of the batch's bytes within the code region.
     pub fn code_offset(&self) -> usize {
         self.code_offset
     }
 
-    /// Frames the next entry for dispatch. Does not validate anything.
+    /// Frames the next entry and advances the dispatch cursor without validating
+    /// it.
+    ///
+    /// Returns `Error::Host` when no undispatched entries remain.
     pub fn next_entry(&mut self) -> Result<CodeEntry> {
         if self.num_dispatched >= self.num_funcs {
             return Err(Error::Host);
@@ -193,10 +196,14 @@ impl CodeBatch<'_> {
         Ok(entry)
     }
 
-    /// Validates the next entry, which must be function `index`, reporting
-    /// its operators to `visitor` with positions relative to
-    /// [`CodeBatch::code`]. After a failure every call returns the first
-    /// error.
+    /// Validates the next function and reports its context and operators to
+    /// `visitor`.
+    ///
+    /// `index` is the defined-function index, excluding imports, and must match
+    /// the next validation entry. Function bounds are relative to
+    /// `CodeBatch::code`; operator cursors are relative to the instruction body.
+    /// The first error remains stored and is returned by all later validation
+    /// calls.
     pub fn validate_func<V: OpVisitor>(&mut self, index: usize, visitor: &mut V) -> Result<()> {
         if self.error.is_none() {
             match self.validate_next(index, visitor) {
@@ -213,6 +220,7 @@ impl CodeBatch<'_> {
         }
     }
 
+    /// Validates every remaining entry with accepting operator callbacks.
     fn validate_all(&mut self) {
         let mut ok = true;
         while self.num_validated < self.num_funcs && ok {
@@ -250,17 +258,19 @@ impl CodeBatch<'_> {
     }
 }
 
-/// Validates one module. See the [module documentation](self).
+/// Validates one module using a source and scheduler under the selected profile.
 ///
-/// `profile` selects the rules for environment decoding, every issued batch,
-/// and tail decoding. A worker cannot change its batch's profile.
+/// `env` is output storage filled before workers borrow it. The source and
+/// environment must outlive all workers, including after a driver error.
+/// `module_id` must be unique among invocations whose batches can reach the same
+/// scheduler.
 ///
-/// `env` is output storage, overwritten with the decoded environment. Batches
-/// borrow it and the source, so both must outlive the visitor's workers.
-///
-/// `'data: 'visitor` says that storage outlives the visitor borrow. Aeneas
-/// needs the relation in this signature to return the updated visitor and
-/// environment when the visitor stores batches.
+/// Soundness requires coherent source views and workers derived from issued
+/// batches through their batch operations. Termination requires callbacks to
+/// return normally. Completeness additionally requires available canonical
+/// regions, positive batch settings, and callbacks and workers that accept valid
+/// input. Only `Ok(())` certifies the complete module; earlier callbacks can
+/// observe metadata from a module later rejected.
 pub fn validate_streaming<'visitor, 'data: 'visitor, S: Source, V: StreamingVisitor<'data>>(
     module_id: u64,
     profile: ValidationProfile,
@@ -279,7 +289,7 @@ pub fn validate_streaming<'visitor, 'data: 'visitor, S: Source, V: StreamingVisi
     validate_remaining(module_id, profile, source, env, env_len, visitor)
 }
 
-/// The code section and tail, once `env` is decoded and immutable.
+/// Validates the code region and tail using the decoded immutable environment.
 fn validate_remaining<'a, S: Source, V: StreamingVisitor<'a>>(
     module_id: u64,
     profile: ValidationProfile,
@@ -308,8 +318,8 @@ fn validate_remaining<'a, S: Source, V: StreamingVisitor<'a>>(
     retire_all_code_batches(module_id, visitor, &mut pending)
 }
 
-/// Checks the code section header against the code region and `env`,
-/// returning where its entries begin.
+/// Checks the code header against the region size and declared functions,
+/// returning the first entry offset.
 fn read_code_header<S: Source>(source: &S, code_len: usize, env: &Env) -> Result<usize> {
     if code_len == 0 {
         if !env.func_type_indices.is_empty() {
@@ -339,8 +349,7 @@ fn read_code_header<S: Source>(source: &S, code_len: usize, env: &Env) -> Result
     Ok(entries)
 }
 
-/// Submits every entry from `pos` to the end of the code region, returning
-/// the IDs of the batches still outstanding.
+/// Submits every function entry and returns the remaining outstanding batch IDs.
 fn submit_code_batches<'a, S: Source, V: StreamingVisitor<'a>>(
     module_id: u64,
     profile: ValidationProfile,
@@ -389,10 +398,9 @@ fn submit_code_batches<'a, S: Source, V: StreamingVisitor<'a>>(
     Ok(pending)
 }
 
-/// Frames entries from `start` until their bodies reach `threshold` bytes,
-/// returning where the batch ends and the function after its last. Always
-/// takes at least one entry. Only locates the batch: the batch revalidates
-/// its own framing.
+/// Frames at least one entry and extends the batch toward its target byte size.
+///
+/// Workers revalidate framing while validating their entries.
 fn get_next_batch<S: Source>(
     source: &S,
     code_len: usize,
@@ -424,8 +432,8 @@ fn get_next_batch<S: Source>(
     Ok((pos, func))
 }
 
-/// Polls one batch, checks that it belongs to this invocation and is
-/// outstanding, removes it from `pending`, and returns its result.
+/// Checks a returned batch's invocation and pending ID, removes that ID, and
+/// checks completion.
 fn retire_code_batch<'a, V: StreamingVisitor<'a>>(
     module_id: u64,
     visitor: &mut V,
@@ -448,8 +456,9 @@ fn retire_code_batch<'a, V: StreamingVisitor<'a>>(
     batch.finish()
 }
 
-/// Retires every outstanding batch. A separate function because Aeneas
-/// cannot join this loop's contexts inside `validate_remaining`.
+/// Retires every outstanding batch, stopping at the first error.
+///
+/// The separate loop keeps Aeneas's borrowed contexts joinable.
 fn retire_all_code_batches<'a, V: StreamingVisitor<'a>>(
     module_id: u64,
     visitor: &mut V,
@@ -461,8 +470,8 @@ fn retire_all_code_batches<'a, V: StreamingVisitor<'a>>(
     Ok(())
 }
 
-/// The entry whose size prefix is at `pos` in `code`, which starts at
-/// `code_offset` in the code region.
+/// Frames an entry and translates its batch-relative offsets into code-region
+/// offsets.
 fn frame_entry(code: &[u8], pos: usize, index: usize, code_offset: usize) -> Result<CodeEntry> {
     let (contents, end) = module::code_entry_extent(code, pos)?;
     Ok(CodeEntry {
@@ -473,8 +482,8 @@ fn frame_entry(code: &[u8], pos: usize, index: usize, code_offset: usize) -> Res
     })
 }
 
-/// A `u32` length and the position after it. Running out of bytes is
-/// [`Error::UnexpectedEof`], since more of the module may never arrive.
+/// Reads a `u32` length and returns the next cursor, mapping truncated reads to
+/// module EOF errors.
 fn read_len(data: &[u8], pos: usize) -> Result<(usize, usize)> {
     match crate::reader::read_u32_leb(data, pos) {
         Ok((value, end)) => Ok((value as usize, end)),
@@ -493,8 +502,8 @@ fn read_exact<S: Source>(source: &S, start: usize, end: usize) -> Result<&[u8]> 
 
 // --- Contiguous validation ---
 
-/// [`validate_streaming`] over one buffer, validating each batch as it is
-/// submitted. This internal adapter implements [`module::validate_module`].
+/// Validates one contiguous module using the shared driver and synchronous
+/// worker.
 pub(crate) fn validate_module_slice(
     bytes: &[u8],
     profile: ValidationProfile,
@@ -517,9 +526,10 @@ pub(crate) fn validate_module_slice(
     }
 }
 
-/// Where the [`Source`] code region begins and ends in `bytes`. Only frames
-/// section headers, and leaves malformed or truncated sections in a region
-/// whose validation reports them.
+/// Locates the code region by framing section headers.
+///
+/// Malformed or truncated sections remain in a region whose validation reports
+/// the error.
 fn find_code_region(bytes: &[u8]) -> (usize, usize) {
     let len = bytes.len();
     let mut pos = 8;
@@ -545,7 +555,7 @@ fn find_code_region(bytes: &[u8]) -> (usize, usize) {
     }
 }
 
-/// A complete module, split into its regions.
+/// Immutable slices of a contiguous module's three source regions.
 struct SliceSource<'a> {
     env: &'a [u8],
     code: &'a [u8],
@@ -553,6 +563,7 @@ struct SliceSource<'a> {
 }
 
 impl Source for SliceSource<'_> {
+    /// Returns the complete environment region, including the module header.
     fn environment(&self) -> Result<&[u8]> {
         Ok(self.env)
     }
@@ -573,8 +584,9 @@ impl Source for SliceSource<'_> {
     }
 }
 
-/// Validates each batch on submission and holds at most one, so a constant
-/// module ID is enough.
+/// A synchronous worker that validates on submission and holds at most one batch.
+///
+/// Batches stay within one invocation, so a constant module ID is sufficient.
 struct SyncVisitor<'a> {
     completed: Option<CodeBatch<'a>>,
     tail: Option<Tail>,

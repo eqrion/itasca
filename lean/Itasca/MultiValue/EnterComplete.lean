@@ -26,7 +26,7 @@ theorem checkBlock.complete (env : module.Env) (bt : signature.BlockType)
       · scalar_tac
       · step as ⟨ft, hft⟩
         have hf : ft = env.types.val[index.val] := by simpa [r_post] using hft
-        rw [multi_value.check_func_type.complete ft (by simpa [hf, hins] using hip)
+        rw [code.check_func_type.complete ft (by simpa [hf, hins] using hip)
           (by simpa [hf, houts] using hop)]
         simp
     obtain ⟨r, hr, rfl⟩ := WP.spec_imp_exists hspec
@@ -34,7 +34,7 @@ theorem checkBlock.complete (env : module.Env) (bt : signature.BlockType)
 
 /-- Forward realization and exact effects after opening, used by recursive
 independent completeness rather than assuming an accepted handler. -/
-def EnterForward (st s : multi_value.State) (form : Frames.Form) (bt : signature.BlockType)
+def EnterForward (st s : code.BodyState) (form : Frames.Form) (bt : signature.BlockType)
     (ins outs : List types.ValueType) (outer segment : List code.StackType) (ts : List valtype) : Prop :=
   ∃ remaining base,
     remaining.length ≤ segment.length ∧ base.val = outer.length + remaining.length ∧
@@ -43,7 +43,7 @@ def EnterForward (st s : multi_value.State) (form : Frames.Form) (bt : signature
     s.blocks.val = st.blocks.val ++ [bt] ∧
     s.core.vals.val = outer ++ remaining ++ ins.map code.StackType.Val
 
-theorem enterParams.complete (st : multi_value.State) (env : module.Env)
+theorem enterParams.complete (st : code.BodyState) (env : module.Env)
     (form : Frames.Form) (bt : signature.BlockType) (ins outs : List types.ValueType)
     (outer segment : List code.StackType) (ts : List valtype)
     (hin : resolve env (inputs bt) = some ins)
@@ -56,12 +56,12 @@ theorem enterParams.complete (st : multi_value.State) (env : module.Env)
       EnterForward st r.2 form bt ins outs outer segment ts ⦄ := by
   unfold enterParams
   simp only [signature.BlockType.params.spec, bind_ok]
-  step with multi_value.pop_results.complete st.core env (inputs bt) ins outer segment ts hin hv hb ht
+  step with code.pop_results.complete st.core env (inputs bt) ins outer segment ts hin hv hb ht
     as ⟨r, s, hr, hc, hp, remaining, hv', hl, ht'⟩
   simp only [hr, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-  step with multi_value.push_frame.spec { st with core := s } form.kind bt (by simpa [hc] using hcap) (by simpa [hc] using hcap)
+  step with code.push_frame.spec { st with core := s } form.kind bt (by simpa [hc] using hcap) (by simpa [hc] using hcap)
     as ⟨s1, hc1, hv1, hp1, hb1⟩
-  step with multi_value.push_results.spec s1.core env (inputs bt) ins hin (by
+  step with code.push_results.spec s1.core env (inputs bt) ins hin (by
     simp only [hv1, hv', hv, List.length_append] at *; omega)
     as ⟨r1, s2, hok, hvs, hc2, hp2⟩
   refine ⟨hok, hp2.trans (hp1.trans hp), remaining, alloc.vec.Vec.len s.vals, hl,
@@ -69,7 +69,7 @@ theorem enterParams.complete (st : multi_value.State) (env : module.Env)
   · simp [hc2, hc1, hc, Frames.Saved.fresh, MultiValue.frame]
   · simpa [hv1, hv'] using hvs
 
-theorem enterArgs.complete (st : multi_value.State) (env : module.Env)
+theorem enterArgs.complete (st : code.BodyState) (env : module.Env)
     (form : Frames.Form) (bt : signature.BlockType) (ins outs : List types.ValueType)
     (outer segment : List code.StackType) (ts : List valtype) (initial : form.Initial)
     (hin : resolve env (inputs bt) = some ins)
@@ -106,7 +106,7 @@ namespace Itasca
 
 /-- Every compatible independently encoded structured entry is accepted,
 including indexed parameters/results and the if condition. -/
-theorem multi_value.enter.complete (st : multi_value.State) (data : Slice U8) (env : module.Env)
+theorem code.enter.complete (st : code.BodyState) (data : Slice U8) (env : module.Env)
     (form : MultiValue.Frames.Form) (initial : form.Initial)
     (bt : signature.BlockType) (next : Usize) (ins outs : List types.ValueType)
     (outer segment : List code.StackType) (ts : List valtype)
@@ -119,7 +119,7 @@ theorem multi_value.enter.complete (st : multi_value.State) (data : Slice U8) (e
     (hcap : st.blocks.val.length < Usize.max)
     (hvalsCap : st.core.vals.val.length + ins.length ≤ Usize.max)
     (ht : Sequence.Realizes (Control.polymorphic st.core) segment (ts ++ form.args ins)) :
-    multi_value.enter st data env form.kind ⦃ r => r.1 = .Ok () ∧ r.2.core.pos = next ∧
+    code.enter st data env form.kind ⦃ r => r.1 = .Ok () ∧ r.2.core.pos = next ∧
       MultiValue.EnterForward st r.2 form bt ins outs outer segment ts ⦄ := by
   rw [MultiValue.enter_eq, signature.read_block_type.complete data st.core.pos bt next hdecoded]
   simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]

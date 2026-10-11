@@ -16,7 +16,7 @@ theorem body_of_programs (data : Slice U8) (env : module.Env)
       Program data env ⟨locals, ft.results⟩ index tokens ops)
     (ops : List instr) (hencoding : BodyEncoding data ops)
     (htyped : FunctionTyped env locals ft ops) :
-    multi_value.validate_body data env locals index = .ok (.Ok ()) := by
+    code.validate_multi_value_body data env locals index = .ok (.Ok ()) := by
   obtain ⟨tokens, next, hbytes, hfinish, inner, heq, hemits⟩ := hencoding
   subst tokens
   obtain ⟨middle, hinner, hend⟩ := Consumed.split hbytes

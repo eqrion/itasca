@@ -174,10 +174,10 @@ theorem module.decode_func_type.profile_complete (data : Slice U8) (pos : Usize)
         (show Wasm.BytesAt data pos ([0x60#u8] ++ (params ++ results)) next from hs).split
       obtain ⟨middle, hparams, hresultsBytes⟩ := hbytes.split
       have hp' := module.decode_value_types.profile_complete data first ty.params middle
-        (some (multi_value.MAX_PARAMS, error.OpError.TooManyParams)) ⟨params, hp, hparams⟩
+        (some (limits.MAX_MULTI_VALUE_PARAMS, error.OpError.TooManyParams)) ⟨params, hp, hparams⟩
         (by intro limit err he; cases he; exact hlimits.1)
       have hr' := module.decode_value_types.profile_complete data middle ty.results next
-        (some (multi_value.MAX_RESULTS, error.OpError.TooManyResults)) ⟨results, hr, hresultsBytes⟩
+        (some (limits.MAX_MULTI_VALUE_RESULTS, error.OpError.TooManyResults)) ⟨results, hr, hresultsBytes⟩
         (by intro limit err he; cases he; exact hlimits.2)
       cases ty
       simp [module.decode_func_type, htag.read_byte, hp', hr',

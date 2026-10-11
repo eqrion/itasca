@@ -14,7 +14,7 @@ def Steps (data : Slice U8) (env : module.Env) (locals : alloc.vec.Vec types.Val
 invariant. Its strictly increasing cursor justifies the whole-body induction. -/
 theorem run.sound (data : Slice U8) (env : module.Env)
     (locals : alloc.vec.Vec types.ValueType) (ctx : code.Context) (index : U32)
-    (hsteps : Steps data env locals ctx index) (st : multi_value.State)
+    (hsteps : Steps data env locals ctx index) (st : code.BodyState)
     (hi : State data env locals index st)
     (haccepted : run data env ctx index st = .ok (.Ok ())) :
     Validated data env locals index := by
@@ -54,11 +54,11 @@ theorem run.sound (data : Slice U8) (env : module.Env)
 
 theorem run.spec (data : Slice U8) (env : module.Env)
     (locals : alloc.vec.Vec types.ValueType) (ctx : code.Context) (index : U32)
-    (hsteps : Steps data env locals ctx index) (st : multi_value.State)
+    (hsteps : Steps data env locals ctx index) (st : code.BodyState)
     (hi : State data env locals index st) :
     run data env ctx index st ⦃ r => r = .Ok () → Validated data env locals index ⦄ := by
   obtain ⟨r, hr, _⟩ := WP.spec_imp_exists
-    (multi_value.validate_body_loop.total data env ctx.locals ctx.results index st ()
+    (code.validate_multi_value_body_loop.total data env ctx.locals ctx.results index st ()
       hi.bounds.size hi.shape.core hi.shape.aligned hi.bounds.ctrls)
   change run data env ctx index st = .ok r at hr
   rw [hr]
@@ -69,10 +69,10 @@ theorem run.spec (data : Slice U8) (env : module.Env)
 theorem public_spec_of_steps (data : Slice U8) (env : module.Env)
     (locals : alloc.vec.Vec types.ValueType) (index : U32)
     (hsteps : Steps data env locals ⟨locals, alloc.vec.Vec.new _⟩ index) :
-    multi_value.validate_body data env locals index ⦃ r =>
+    code.validate_multi_value_body data env locals index ⦃ r =>
       r = .Ok () → Validated data env locals index ⦄ := by
-  rw [multi_value.validate_body.eq_core]
-  unfold multi_value.bodyCore
+  rw [code.validate_multi_value_body.eq_core]
+  unfold code.bodyCore
   dsimp only
   split
   · simp
@@ -92,7 +92,7 @@ theorem public_spec_of_steps (data : Slice U8) (env : module.Env)
       | Ok v =>
         cases v
         simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-          multi_value.push_frame.initial]
+          code.push_frame.initial]
         exact run.spec data env locals ⟨locals, alloc.vec.Vec.new _⟩ index hsteps
           (initial index) (State.start data env locals index ft hi (by scalar_tac))
 

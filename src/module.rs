@@ -1,24 +1,19 @@
-//! Module metadata and shared environment, entry, and tail validators.
+//! Module metadata and internal environment, entry, and tail validation.
 //!
-//! [`validate_module`] is the synchronous contiguous-buffer wrapper around
-//! [`crate::stream::validate_streaming`], the sole module orchestrator. The
-//! component validators remain available for callers that need their separate
-//! contracts. A component call alone does not certify a complete module.
-//!
-//! Sections are delimited by an `end` position threaded alongside `pos`.
-//! Reads are checked against `end` rather than bounded by it: the section's
-//! closing equality check rejects reads that cross its declared boundary.
+//! The streaming driver composes these components. `validate_module` supplies its
+//! contiguous source and synchronous worker. Section parsers carry declared end
+//! positions and require exact consumption before accepting each section.
 
 use alloc::vec::Vec;
 
-use crate::error::{Error, OpError};
-use crate::limits::{
-    validate_limits, MAX_LOCALS, MAX_MEMORIES,
-    MAX_MEMORY_PAGES, MAX_RESULTS, MAX_TABLES, MAX_TABLE_ELEMS,
-};
 use crate::code::{
     self, Context, EmptyOpVisitor, OpVisitor, VisitResult, OP_END, OP_F32_CONST, OP_F64_CONST,
     OP_GLOBAL_GET, OP_I32_CONST, OP_I64_CONST,
+};
+use crate::error::{Error, OpError};
+use crate::limits::{
+    validate_limits, MAX_LOCALS, MAX_MEMORIES, MAX_MEMORY_PAGES, MAX_RESULTS, MAX_TABLES,
+    MAX_TABLE_ELEMS,
 };
 use crate::reader::{
     read_byte, read_f32_bits, read_f64_bits, read_s32_leb, read_s64_leb, read_u32_leb,
@@ -46,7 +41,7 @@ const SECTION_DATA: u8 = 11;
 
 // --- The environment: everything before the code section ---
 
-/// A global this module defines, with its initialiser.
+/// A defined global and its initializer.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
 pub struct Global {
@@ -54,7 +49,7 @@ pub struct Global {
     pub init: ConstExpr,
 }
 
-/// What an import asks for.
+/// The declared type or type index of an import.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
 pub enum ImportDesc {
@@ -64,8 +59,7 @@ pub enum ImportDesc {
     Global(GlobalType),
 }
 
-/// An import entry. Names are raw bytes rather than `str`, even though they
-/// are checked for UTF-8 validity (spec 5.2.4) as they are decoded.
+/// An import declaration with UTF-8 module and field names stored as bytes.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone)]
 pub struct Import {
@@ -74,7 +68,7 @@ pub struct Import {
     pub desc: ImportDesc,
 }
 
-/// What an export names, as an index into the matching index space.
+/// An exported index in the corresponding module index space.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
 pub enum ExportDesc {
@@ -84,7 +78,7 @@ pub enum ExportDesc {
     Global(u32),
 }
 
-/// An export entry.
+/// An export declaration with its UTF-8 name stored as bytes.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone)]
 pub struct Export {
@@ -92,7 +86,7 @@ pub struct Export {
     pub desc: ExportDesc,
 }
 
-/// An element segment: a table, an offset into it, and the functions to write.
+/// An active element segment with its table index, offset, and function indices.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone)]
 pub struct Element {
@@ -101,57 +95,46 @@ pub struct Element {
     pub init: Vec<u32>,
 }
 
-/// Everything the binary declares before the code section.
+/// Read-only declarations and index spaces decoded before the code section.
 ///
-/// The accessor half of the interface: every field is what `validate_env`
-/// read out of the binary, and reading them is what a compiler builds its
-/// metadata from. Fields are public and writable, but the code section's
-/// entry points are only validated against an `Env` that actually came from
-/// `validate_env` -- a hand-built or edited one isn't backed by the same
-/// guarantees.
+/// Streaming callers allocate storage with `Env::new`. The driver replaces it
+/// before issuing batches. Metadata observed before the driver succeeds does not
+/// certify a complete module.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone)]
 pub struct Env {
-    /// Section 1. Also the type index space.
-    pub types: Vec<FuncType>,
-    /// Section 2.
-    pub imports: Vec<Import>,
-    /// Section 6, the globals this module defines.
-    pub globals: Vec<Global>,
-    /// Section 7.
-    pub exports: Vec<Export>,
-    /// Section 9.
-    pub elements: Vec<Element>,
-    /// Section 8.
-    pub start: Option<u32>,
-    /// Section 3: one type index per code-section entry, in order. Redundant
-    /// with `func_types`, but a consumer wants the index and not just the
-    /// type.
-    pub func_type_indices: Vec<u32>,
+    /// The declared function types, in type-index order.
+    pub(crate) types: Vec<FuncType>,
+    /// The import declarations, in binary order.
+    pub(crate) imports: Vec<Import>,
+    /// The defined globals and their initializers.
+    pub(crate) globals: Vec<Global>,
+    /// The export declarations, in binary order.
+    pub(crate) exports: Vec<Export>,
+    /// The active element segments.
+    pub(crate) elements: Vec<Element>,
+    /// The optional start-function index.
+    pub(crate) start: Option<u32>,
+    /// The type index of each defined function, in code-section order.
+    pub(crate) func_type_indices: Vec<u32>,
 
-    /// The index spaces of spec 3.1.1: imported entries first, then the ones
-    /// this module defines. Body validation is a lookup in these rather than a
-    /// walk over the import list.
-    pub func_types: Vec<FuncType>,
-    pub table_types: Vec<TableType>,
-    pub mem_types: Vec<MemType>,
-    pub global_types: Vec<GlobalType>,
+    /// The function index space, with imports preceding definitions.
+    pub(crate) func_types: Vec<FuncType>,
+    pub(crate) table_types: Vec<TableType>,
+    pub(crate) mem_types: Vec<MemType>,
+    pub(crate) global_types: Vec<GlobalType>,
 
-    /// Where the imported entries end and the defined ones start. Only the
-    /// two index spaces something consults the boundary of are tracked:
-    /// initialisers may name an imported global and no other, and a consumer
-    /// needs to know which functions it has to supply.
-    pub num_imported_funcs: usize,
-    pub num_imported_globals: usize,
+    /// The number of imported functions preceding defined functions.
+    pub(crate) num_imported_funcs: usize,
+    pub(crate) num_imported_globals: usize,
 }
 
 impl Env {
-    /// The empty environment `validate_env` starts from.
+    /// Creates empty output storage for `validate_streaming`.
     ///
-    /// Public only so the crate's own tests can build environments to drive
-    /// `code::validate_body` directly. An `Env` built this way, rather than
-    /// by `validate_env`, isn't backed by the guarantees the code-section
-    /// entry points normally carry.
+    /// The driver fills this storage with the decoded environment. An empty or
+    /// partially validated environment is not evidence of whole-module
+    /// acceptance.
     #[allow(clippy::new_without_default)]
     pub fn new() -> Env {
         Env {
@@ -170,9 +153,75 @@ impl Env {
             num_imported_globals: 0,
         }
     }
+
+    /// Returns the declared function types in type-index order.
+    pub fn types(&self) -> &[FuncType] {
+        &self.types
+    }
+
+    /// Returns the import declarations in binary order.
+    pub fn imports(&self) -> &[Import] {
+        &self.imports
+    }
+
+    /// Returns the defined globals and their initializers.
+    pub fn globals(&self) -> &[Global] {
+        &self.globals
+    }
+
+    /// Returns the export declarations in binary order.
+    pub fn exports(&self) -> &[Export] {
+        &self.exports
+    }
+
+    /// Returns the active element segments.
+    pub fn elements(&self) -> &[Element] {
+        &self.elements
+    }
+
+    /// Returns the optional start-function index.
+    pub fn start(&self) -> Option<u32> {
+        self.start
+    }
+
+    /// Returns the type index of each defined function in code-section order.
+    pub fn func_type_indices(&self) -> &[u32] {
+        &self.func_type_indices
+    }
+
+    /// Returns the function index space, with imports preceding definitions.
+    pub fn func_types(&self) -> &[FuncType] {
+        &self.func_types
+    }
+
+    /// Returns the table index space, with imports preceding definitions.
+    pub fn table_types(&self) -> &[TableType] {
+        &self.table_types
+    }
+
+    /// Returns the memory index space, with imports preceding definitions.
+    pub fn mem_types(&self) -> &[MemType] {
+        &self.mem_types
+    }
+
+    /// Returns the global index space, with imports preceding definitions.
+    pub fn global_types(&self) -> &[GlobalType] {
+        &self.global_types
+    }
+
+    /// Returns the number of imported functions.
+    pub fn num_imported_funcs(&self) -> usize {
+        self.num_imported_funcs
+    }
+
+    /// Returns the number of imported globals.
+    pub fn num_imported_globals(&self) -> usize {
+        self.num_imported_globals
+    }
 }
 
-/// A data segment: a memory, an offset into it, and the bytes to write.
+/// An active data segment with its memory index, offset, and initialization
+/// bytes.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 pub struct Data {
     pub memory_idx: u32,
@@ -180,38 +229,48 @@ pub struct Data {
     pub init: Vec<u8>,
 }
 
-/// Everything after the code section. Only data segments, in Wasm 1.0.
+/// The data segments decoded after the code section.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 pub struct Tail {
     pub data: Vec<Data>,
 }
 
-/// A module that has been decoded and validated.
+/// Read-only metadata returned after successful whole-module validation.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 pub struct Module {
-    pub env: Env,
-    pub tail: Tail,
+    pub(crate) env: Env,
+    pub(crate) tail: Tail,
 }
 
-/// Decode and validate a module under the selected profile.
+impl Module {
+    /// Returns the validated declarations and index spaces.
+    pub fn env(&self) -> &Env {
+        &self.env
+    }
+
+    /// Returns the validated data segments.
+    pub fn tail(&self) -> &Tail {
+        &self.tail
+    }
+}
+
+/// Validates a complete module under the selected profile and returns its
+/// metadata.
 ///
-/// No preconditions: any byte string is a valid argument, and the size
-/// check is done internally. Returns `Ok` with the decoded module for a
-/// well-typed binary in that profile, and `Err` otherwise.
+/// Accepts arbitrary bytes with no caller preconditions. Both profiles have
+/// termination, soundness, and completeness guarantees within the implementation
+/// limits, assuming allocation succeeds. `ValidationProfile::MultiValue` enables
+/// the supported extension subset.
 pub fn validate_module(data: &[u8], profile: ValidationProfile) -> Result<Module> {
     crate::stream::validate_module_slice(data, profile)
 }
 
 // --- The module's external types ---
 
-/// The type of every import the module declares (spec 3.2.7), in declaration
-/// order. This is the list an embedder matches the values it supplies against.
+/// Resolves import types in declaration order.
 ///
-/// `env` must come from a module that validated, either through
-/// [`validate_module`] or [`crate::stream::validate_streaming`]. Given that, this
-/// never returns `Err`: every import's type index was already resolved while
-/// decoding the import section. Passing a hand-built or partial `Env` gives
-/// a result that isn't backed by that guarantee.
+/// For an environment returned by successful module validation, every type index
+/// is valid and resolution succeeds.
 pub fn import_types(env: &Env) -> Result<Vec<ExternType>> {
     let mut out: Vec<ExternType> = Vec::new();
     let mut i: usize = 0;
@@ -233,13 +292,10 @@ pub fn import_types(env: &Env) -> Result<Vec<ExternType>> {
     }
 }
 
-/// The type of every export the module declares (spec 3.2.7), in declaration
-/// order. An export names an index-space entry, so its type comes from that
-/// index space rather than from the export itself.
+/// Resolves export types in declaration order.
 ///
-/// Same expectation on `env` as [`import_types`]: for a module that
-/// validated, this never returns `Err`, since `export_desc` range-checked
-/// every index while decoding the export section.
+/// For an environment returned by successful module validation, every exported
+/// index is valid and resolution succeeds.
 pub fn export_types(env: &Env) -> Result<Vec<ExternType>> {
     let mut out: Vec<ExternType> = Vec::new();
     let mut i: usize = 0;
@@ -284,9 +340,7 @@ pub fn export_types(env: &Env) -> Result<Vec<ExternType>> {
 
 // --- Cursor helpers ---
 
-/// The bytes in `[from, to)`, copied out. Only for the two things a module
-/// keeps: a name and a data segment's contents. A byte range that is merely
-/// read, like a function body, is passed as a sub-slice instead.
+/// Copies `data[from..to]` using the extraction-compatible byte loop.
 pub(crate) fn copy_bytes(data: &[u8], from: usize, to: usize) -> Vec<u8> {
     let mut out = Vec::new();
     let mut i: usize = from;
@@ -299,8 +353,7 @@ pub(crate) fn copy_bytes(data: &[u8], from: usize, to: usize) -> Vec<u8> {
     }
 }
 
-/// `n` bytes are available at `pos`. Written as a subtraction rather than
-/// `pos + n <= data.len()` so that the sum cannot overflow.
+/// Checks that `n` bytes are available at `pos` without overflowing the offset.
 pub(crate) fn have_bytes(data: &[u8], pos: usize, n: usize) -> Result<()> {
     if n > data.len() - pos {
         return Err(Error::UnexpectedEof);
@@ -310,7 +363,7 @@ pub(crate) fn have_bytes(data: &[u8], pos: usize, n: usize) -> Result<()> {
 
 // --- Header and section framing ---
 
-/// Spec 5.5.16: the magic number and the version, eight bytes.
+/// Checks the module magic and version and returns the first section position.
 pub(crate) fn read_header(data: &[u8]) -> Result<usize> {
     let (m0, p1) = read_byte(data, 0)?;
     let (m1, p2) = read_byte(data, p1)?;
@@ -329,8 +382,8 @@ pub(crate) fn read_header(data: &[u8]) -> Result<usize> {
     Ok(p8)
 }
 
-/// Spec 5.5.2: a section is an id, a byte count, and that many bytes.
-/// Returns the id, where the contents start, and where they end.
+/// Reads a section's ID and byte extent, checking that its declared contents
+/// exist.
 pub(crate) fn read_section_header(data: &[u8], pos: usize) -> Result<(u8, usize, usize)> {
     let (id, p) = read_byte(data, pos)?;
     let (size, q) = read_u32_leb(data, p)?;
@@ -377,7 +430,7 @@ fn decode_value_types(
     }
 }
 
-/// Decode signature vectors with the selected profile's arity restrictions.
+/// Decodes a function type and enforces the selected profile's signature limits.
 fn decode_func_type(
     data: &[u8],
     pos: usize,
@@ -390,8 +443,14 @@ fn decode_func_type(
     let (params_bound, results_bound) = match profile {
         ValidationProfile::Wasm1 => (None, None),
         ValidationProfile::MultiValue => (
-            Some((crate::multi_value::MAX_PARAMS, OpError::TooManyParams)),
-            Some((crate::multi_value::MAX_RESULTS, OpError::TooManyResults)),
+            Some((
+                crate::limits::MAX_MULTI_VALUE_PARAMS,
+                OpError::TooManyParams,
+            )),
+            Some((
+                crate::limits::MAX_MULTI_VALUE_RESULTS,
+                OpError::TooManyResults,
+            )),
         ),
     };
     let (params, p1) = decode_value_types(data, p, params_bound)?;
@@ -407,7 +466,7 @@ fn decode_func_type(
     Ok((FuncType { params, results }, p2))
 }
 
-/// Spec 5.3.7.
+/// Decodes minimum and optional maximum limits.
 fn decode_limits(data: &[u8], pos: usize) -> Result<(Limits, usize)> {
     let (flag, p) = read_byte(data, pos)?;
     match flag {
@@ -430,7 +489,7 @@ fn decode_limits(data: &[u8], pos: usize) -> Result<(Limits, usize)> {
     }
 }
 
-/// Spec 5.3.9. `funcref` is the only element type Wasm 1.0 has.
+/// Decodes a funcref table type and checks its size limits.
 fn decode_table_type(data: &[u8], pos: usize) -> Result<(TableType, usize)> {
     let (elem, p) = read_byte(data, pos)?;
     if elem != 0x70 {
@@ -447,14 +506,14 @@ fn decode_table_type(data: &[u8], pos: usize) -> Result<(TableType, usize)> {
     ))
 }
 
-/// Spec 5.3.8.
+/// Decodes a memory type and checks its page limits.
 fn decode_mem_type(data: &[u8], pos: usize) -> Result<(MemType, usize)> {
     let (limits, p) = decode_limits(data, pos)?;
     validate_limits(&limits, MAX_MEMORY_PAGES)?;
     Ok((MemType { limits }, p))
 }
 
-/// Spec 5.3.10.
+/// Decodes a global's value type and mutability.
 fn decode_global_type(data: &[u8], pos: usize) -> Result<(GlobalType, usize)> {
     let (valtype, p) = decode_value_type(data, pos)?;
     let (m, p1) = read_byte(data, p)?;
@@ -479,7 +538,7 @@ fn decode_global_type(data: &[u8], pos: usize) -> Result<(GlobalType, usize)> {
 
 // --- Names (spec 5.2.4) ---
 
-/// A continuation byte in `[lo, hi]`.
+/// Checks a UTF-8 continuation byte against the required interval.
 fn utf8_cont(bytes: &[u8], i: usize, lo: u8, hi: u8) -> Result<()> {
     if i >= bytes.len() {
         return Err(Error::InvalidUtf8);
@@ -491,10 +550,7 @@ fn utf8_cont(bytes: &[u8], i: usize, lo: u8, hi: u8) -> Result<()> {
     Ok(())
 }
 
-/// The length of the well-formed UTF-8 sequence starting at `i`, or an error.
-///
-/// The ranges are Unicode's well-formed byte sequence table, which is what
-/// excludes overlong encodings and the surrogate range.
+/// Checks one Unicode scalar encoding and returns its byte length.
 fn utf8_sequence_len(bytes: &[u8], i: usize) -> Result<usize> {
     let b = bytes[i];
     match b {
@@ -551,7 +607,7 @@ fn validate_utf8(bytes: &[u8]) -> Result<()> {
     }
 }
 
-/// Spec 5.2.4: a name is a byte vector that has to be valid UTF-8.
+/// Decodes a length-prefixed name and checks strict UTF-8 validity.
 fn decode_name(data: &[u8], pos: usize) -> Result<(Vec<u8>, usize)> {
     let (len, p) = read_u32_leb(data, pos)?;
     let n = len as usize;
@@ -561,15 +617,7 @@ fn decode_name(data: &[u8], pos: usize) -> Result<(Vec<u8>, usize)> {
     Ok((bytes, p + n))
 }
 
-/// Spec 5.5.3: `custom ::= nm:name b*:byte*`.
-///
-/// The trailing bytes aren't read: a custom section's contents are opaque to
-/// validation. The name still has to be there, has to be valid UTF-8, and
-/// has to fit inside the section.
-///
-/// Returns where the section's contents are, not what its name says: the
-/// name is read, checked, and dropped, and its length is what locates the
-/// contents.
+/// Checks a custom section's name and returns its name and payload bounds.
 pub(crate) fn decode_custom_section(data: &[u8], pos: usize, end: usize) -> Result<CustomSection> {
     let (name, p) = decode_name(data, pos)?;
     if p > end {
@@ -599,8 +647,7 @@ fn read_expr_end(data: &[u8], pos: usize) -> Result<usize> {
     Ok(p)
 }
 
-/// The global an initialiser may name: an imported one, and immutable, because
-/// the globals this module defines are not initialised yet.
+/// Resolves an immutable imported global for a constant expression.
 fn const_global(env: &Env, idx: u32) -> Result<GlobalType> {
     let i = idx as usize;
     if i >= env.global_types.len() {
@@ -616,8 +663,7 @@ fn const_global(env: &Env, idx: u32) -> Result<GlobalType> {
     Ok(gt)
 }
 
-/// Decode a constant expression and check that it has the type the context
-/// wants, both in one read.
+/// Decodes a single-instruction constant expression of the expected type.
 pub(crate) fn decode_const_expr(
     data: &[u8],
     pos: usize,
@@ -682,7 +728,7 @@ fn copy_func_type(ft: &FuncType) -> FuncType {
     }
 }
 
-/// The type section entry at `idx`, copied out.
+/// Checks a function type index and copies its signature.
 fn lookup_type(env: &Env, idx: u32) -> Result<FuncType> {
     let i = idx as usize;
     if i >= env.types.len() {
@@ -694,7 +740,10 @@ fn lookup_type(env: &Env, idx: u32) -> Result<FuncType> {
 // --- The environment's sections ---
 
 fn decode_type_section(
-    data: &[u8], pos: usize, env: &mut Env, profile: ValidationProfile,
+    data: &[u8],
+    pos: usize,
+    env: &mut Env,
+    profile: ValidationProfile,
 ) -> Result<usize> {
     let (count, p) = read_u32_leb(data, pos)?;
     let mut q = p;
@@ -710,7 +759,7 @@ fn decode_type_section(
     }
 }
 
-/// One import, pushed onto both the import list and its index space.
+/// Decodes an import and appends it to the corresponding index space.
 fn decode_import(data: &[u8], pos: usize, env: &mut Env) -> Result<usize> {
     let (module, p1) = decode_name(data, pos)?;
     let (name, p2) = decode_name(data, p1)?;
@@ -868,8 +917,7 @@ fn names_equal(a: &[u8], b: &[u8]) -> bool {
     }
 }
 
-/// Spec 3.4.11: export names are unique. Checked as each one is decoded, so
-/// there is no second pass over the export list.
+/// Returns whether an earlier export has the same decoded name bytes.
 fn export_name_taken(env: &Env, name: &[u8]) -> bool {
     let mut i: usize = 0;
     loop {
@@ -935,7 +983,8 @@ fn decode_export_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize
     }
 }
 
-/// Spec 3.4.13: the start function takes nothing and returns nothing.
+/// Decodes the start-function index and requires an empty parameter and result
+/// signature.
 fn decode_start_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize> {
     let (idx, p) = read_u32_leb(data, pos)?;
     let i = idx as usize;
@@ -968,10 +1017,12 @@ pub(crate) fn decode_func_indices(data: &[u8], pos: usize, env: &Env) -> Result<
     }
 }
 
-/// Interpret an active-segment prefix without enabling passive or declarative
-/// segments. Wasm 1.0 encodes an index; the multi-value profile uses Core 2 flags.
+/// Decodes a Wasm 1.0 segment index or multi-value active-segment flags.
 fn decode_segment_index(
-    data: &[u8], pos: usize, index_or_flags: u32, profile: ValidationProfile,
+    data: &[u8],
+    pos: usize,
+    index_or_flags: u32,
+    profile: ValidationProfile,
 ) -> Result<(u32, usize, bool)> {
     match profile {
         ValidationProfile::Wasm1 => Ok((index_or_flags, pos, false)),
@@ -987,7 +1038,10 @@ fn decode_segment_index(
 }
 
 fn decode_element_section(
-    data: &[u8], pos: usize, env: &mut Env, profile: ValidationProfile,
+    data: &[u8],
+    pos: usize,
+    env: &mut Env,
+    profile: ValidationProfile,
 ) -> Result<usize> {
     let (count, p) = read_u32_leb(data, pos)?;
     let mut q = p;
@@ -1021,7 +1075,11 @@ fn decode_element_section(
 }
 
 pub(crate) fn decode_env_section(
-    data: &[u8], pos: usize, id: u8, env: &mut Env, profile: ValidationProfile,
+    data: &[u8],
+    pos: usize,
+    id: u8,
+    env: &mut Env,
+    profile: ValidationProfile,
 ) -> Result<usize> {
     match id {
         SECTION_TYPE => decode_type_section(data, pos, env, profile),
@@ -1037,24 +1095,21 @@ pub(crate) fn decode_env_section(
     }
 }
 
-/// [`validate_env_with`] with a visitor that does nothing.
-pub fn validate_env(data: &[u8], profile: ValidationProfile) -> Result<(Env, usize)> {
+/// Validates the environment with accepting custom-section callbacks.
+#[allow(dead_code)] // Retained as an extracted proof entry point.
+pub(crate) fn validate_env(data: &[u8], profile: ValidationProfile) -> Result<(Env, usize)> {
     let mut nop = EmptyModuleVisitor;
     validate_env_with(data, profile, &mut nop)
 }
 
-/// Decode and validate everything before the code section, reporting each
-/// custom section to `v`.
+/// Decodes the declarations before the code section and reports custom sections.
 ///
-/// Returns the environment and the position of the next section's header,
-/// where code framing begins. The returned environment supplies the shared
-/// signature and index spaces used by entry and tail validation.
-///
-/// **Precondition.** `data.len()` must be at most `limits::MAX_MODULE_BYTES`.
-/// [`validate_module`] and [`crate::stream::validate_streaming`] enforce the
-/// relevant region and whole-module bounds; direct callers supply this bound.
-pub fn validate_env_with<V: ModuleVisitor>(
-    data: &[u8], profile: ValidationProfile, v: &mut V,
+/// Returns the environment and the next section position. The caller must bound
+/// `data` by `MAX_MODULE_BYTES`; the streaming driver establishes this bound.
+pub(crate) fn validate_env_with<V: ModuleVisitor>(
+    data: &[u8],
+    profile: ValidationProfile,
+    v: &mut V,
 ) -> Result<(Env, usize)> {
     let mut env = Env::new();
     let mut q = read_header(data)?;
@@ -1101,7 +1156,8 @@ fn push_locals(out: &mut Vec<ValueType>, count: u32, vt: ValueType) {
     }
 }
 
-/// Spec 5.5.13's `locals`: run-length encoded, flattened here.
+/// Decodes grouped local declarations, enforcing the declared-local limit before
+/// expansion.
 pub(crate) fn decode_locals(data: &[u8], pos: usize) -> Result<(Vec<ValueType>, usize)> {
     let (groups, p) = read_u32_leb(data, pos)?;
     let mut out = Vec::new();
@@ -1136,20 +1192,13 @@ pub(crate) fn build_func_locals(params: &[ValueType], declared: &[ValueType]) ->
     }
 }
 
-/// Validate one code-section entry, reporting each accepted operator to `v`.
+/// Validates a framed function entry and reports its context and operators.
 ///
-/// `pos` is the entry's size prefix and `index` selects its signature from
-/// `env.func_type_indices`; returns the position just past the entry. A
-/// consumer can invoke this component on a separately supplied entry buffer.
-/// The environment must come from an accepted bounded [`validate_env`] call;
-/// `pos` identifies the entry's size prefix in `data`. The buffer may be in a
-/// different allocation from the environment region.
-///
-/// Workers in [`crate::stream::validate_streaming`] use
-/// [`crate::stream::CodeBatch::validate_func`] to advance the batch's validation
-/// cursor. A direct call to this component does not complete a batch or certify
-/// the enclosing module.
-pub fn validate_code_entry_with<V: OpVisitor>(
+/// `pos` points to the size prefix; `index` selects the defined function in
+/// `env`. The environment must come from an accepted bounded decode of the same
+/// logical module and profile. The returned position is the entry end. The
+/// streaming batch wrapper establishes these conditions and records the result.
+pub(crate) fn validate_code_entry_with<V: OpVisitor>(
     data: &[u8],
     pos: usize,
     env: &Env,
@@ -1192,7 +1241,7 @@ pub fn validate_code_entry_with<V: OpVisitor>(
     let body_result = match profile {
         ValidationProfile::Wasm1 => code::validate_body_with(&data[p1..end], env, &ctx, v),
         ValidationProfile::MultiValue => {
-            crate::multi_value::validate_body_with(&data[p1..end], env, &ctx, type_idx, v)
+            code::validate_multi_value_body_with(&data[p1..end], env, &ctx, type_idx, v)
         }
     };
     match body_result {
@@ -1201,11 +1250,9 @@ pub fn validate_code_entry_with<V: OpVisitor>(
     }
 }
 
-/// Validate one code-section entry and nothing else.
-///
-/// [`validate_code_entry_with`] with a visitor that does nothing, and the
-/// same preconditions.
-pub fn validate_code_entry(
+/// Validates a framed function entry with accepting operator callbacks.
+#[allow(dead_code)] // Retained as an extracted proof entry point.
+pub(crate) fn validate_code_entry(
     data: &[u8],
     pos: usize,
     env: &Env,
@@ -1219,7 +1266,10 @@ pub fn validate_code_entry(
 // --- The tail ---
 
 fn decode_data_segment(
-    data: &[u8], pos: usize, env: &Env, profile: ValidationProfile,
+    data: &[u8],
+    pos: usize,
+    env: &Env,
+    profile: ValidationProfile,
 ) -> Result<(Data, usize)> {
     let (index_or_flags, p1) = read_u32_leb(data, pos)?;
     let (memory_idx, p1, _) = decode_segment_index(data, p1, index_or_flags, profile)?;
@@ -1242,7 +1292,10 @@ fn decode_data_segment(
 }
 
 fn decode_data_section(
-    data: &[u8], pos: usize, env: &Env, profile: ValidationProfile,
+    data: &[u8],
+    pos: usize,
+    env: &Env,
+    profile: ValidationProfile,
 ) -> Result<(Vec<Data>, usize)> {
     let (count, p) = read_u32_leb(data, pos)?;
     let mut out = Vec::new();
@@ -1259,22 +1312,23 @@ fn decode_data_section(
     }
 }
 
-/// [`validate_tail_with`] with a visitor that does nothing.
-pub fn validate_tail(
-    data: &[u8], pos: usize, env: &Env, profile: ValidationProfile,
+/// Validates the tail with accepting custom-section callbacks.
+#[allow(dead_code)] // Retained as an extracted proof entry point.
+pub(crate) fn validate_tail(
+    data: &[u8],
+    pos: usize,
+    env: &Env,
+    profile: ValidationProfile,
 ) -> Result<Tail> {
     let mut nop = EmptyModuleVisitor;
     validate_tail_with(data, pos, env, profile, &mut nop)
 }
 
-/// Decode and validate everything after the code section: the data section,
-/// and any custom sections.
+/// Decodes data and custom sections after the code section.
 ///
-/// `pos` is the start of the tail in `data`, and `env` comes from an accepted
-/// environment decode for the same logical module. The streaming driver calls
-/// this on its tail region at offset zero. This component does not check the
-/// module's code or establish that the supplied regions form a whole module.
-pub fn validate_tail_with<V: ModuleVisitor>(
+/// `pos` starts the tail and `env` belongs to the same logical module and
+/// profile. The streaming driver checks the complete region framing separately.
+pub(crate) fn validate_tail_with<V: ModuleVisitor>(
     data: &[u8],
     pos: usize,
     env: &Env,
@@ -1310,14 +1364,7 @@ pub fn validate_tail_with<V: ModuleVisitor>(
     }
 }
 
-/// The extent of one code-section entry, without validating it. `pos` is at
-/// the entry's size prefix; returns the first byte of its contents and the
-/// position just past it.
-///
-/// Reads the size prefix and nothing else -- it decides nothing about
-/// validity. Streaming batches use this to locate entries before their bodies
-/// have been validated; complete byte coverage and worker validation are checked
-/// separately before the module can be accepted.
+/// Returns the contents and end positions of a size-prefixed function entry.
 pub(crate) fn code_entry_extent(data: &[u8], pos: usize) -> Result<(usize, usize)> {
     let (size, p) = read_u32_leb(data, pos)?;
     let n = size as usize;
@@ -1325,44 +1372,20 @@ pub(crate) fn code_entry_extent(data: &[u8], pos: usize) -> Result<(usize, usize
     Ok((p, p + n))
 }
 
-
-/// What a consumer is told as a module is decoded around its code section.
+/// Callbacks for custom sections during module validation.
 ///
-/// One hook, shared by both ends of the module rather than split into two
-/// traits: a custom section is legal between any two other sections and the
-/// code section can't hold one, so the same consumer hears about the ones
-/// before the code section from `validate_env_with` and the ones after it
-/// from `validate_tail_with`, in module order, regardless of which side
-/// reported them.
-///
-/// Custom sections are reported through this hook rather than stored on
-/// `Env` or `Tail`, since they aren't part of the module a binary declares
-/// -- the format treats them as padding.
-///
-/// Every hook has a default that does nothing, so a consumer only pays for
-/// the ones it overrides.
-///
-/// # What an implementation owes
-///
-/// A hook must always return: it may not panic and it may not loop forever,
-/// or `validate_env_with` and `validate_tail_with` have no guarantee of
-/// terminating either. And returning `Err` from a hook is the only way it
-/// can affect the outcome -- doing so rejects an otherwise-valid module
-/// (reported as `Error::Visitor`), but a hook can never turn a rejection
-/// into an acceptance.
+/// The default hook accepts. Callback errors reject the module; termination
+/// requires callbacks to return normally.
 pub trait ModuleVisitor {
-    /// One custom section, framed and its name checked, but not otherwise
-    /// read. Positions are into the bytes the decoder was handed.
+    /// Reports a custom section after checking its framing and UTF-8 name.
     ///
-    /// A report, not part of the verdict: a custom section isn't part of the
-    /// module a binary declares, so nothing guarantees the ranges reported
-    /// here are the only custom sections present.
+    /// Offsets refer to the current `Region` selected by the streaming
+    /// visitor. Payload bytes are opaque to validation.
     fn on_custom_section(&mut self, _section: CustomSection) -> VisitResult {
         Ok(())
     }
 }
 
-/// A visitor that ignores everything it's shown. [`validate_env`] and
-/// [`validate_tail`] are their `_with` counterparts run against this.
+/// A module visitor whose default custom-section hook accepts.
 pub struct EmptyModuleVisitor;
 impl ModuleVisitor for EmptyModuleVisitor {}
