@@ -16,11 +16,11 @@ theorem padded_prepend_custom {α : Type} {id : U8} {R : α → List U8 → Prop
     hsection, by simp [he, List.append_assoc]⟩
 
 /-- The three independent byte grammars compose into exactly one module. -/
-theorem encoding {decls : ModuleEnv.Declarations} {codes segments before codeBytes tailBytes}
-    (henv : ModuleEnv.PrefixEncoding decls before)
-    (hcode : PaddedEncoding 10#u8 (VecEncoding CodeEncoding) [] codes codeBytes)
-    (htail : ModuleTail.Encoding segments tailBytes) :
-    ModuleEncoding (decls.module codes segments) (before ++ codeBytes ++ tailBytes) := by
+theorem encoding {profile : ValidationProfile} {codeRel : Code → List U8 → Prop} {decls : ModuleEnv.Declarations} {codes segments before codeBytes tailBytes}
+    (henv : ModuleEnv.PrefixEncoding decls before profile)
+    (hcode : PaddedEncoding 10#u8 (VecEncoding codeRel) [] codes codeBytes)
+    (htail : ModuleTail.Encoding segments tailBytes profile) :
+    ModuleEncodingWith codeRel (decls.module codes segments) (before ++ codeBytes ++ tailBytes) profile := by
   obtain ⟨types, imports, functions, tables, memories, globals, exports, start,
     elements, customs, htypes, himports, hfunctions, htables, hmemories, hglobals,
     hexports, hstart, helements, hcustoms, he⟩ := henv
@@ -32,11 +32,11 @@ theorem encoding {decls : ModuleEnv.Declarations} {codes segments before codeByt
   simp only [he, ht, List.append_assoc]
 
 /-- Exact adjacent spans plus the tail's EOF guarantee reconstruct the input. -/
-theorem whole_bytes {data : Slice U8} {codePos tailPos decls codes segments}
-    (henv : At ModuleEnv.PrefixEncoding data 0#usize decls codePos)
-    (hcode : At (PaddedEncoding 10#u8 (VecEncoding CodeEncoding) []) data codePos codes tailPos)
-    (htail : At ModuleTail.Encoding data tailPos segments (Slice.len data)) :
-    ModuleEncoding (decls.module codes segments) data.val := by
+theorem whole_bytes {profile : ValidationProfile} {codeRel : Code → List U8 → Prop} {data : Slice U8} {codePos tailPos decls codes segments}
+    (henv : At (fun decls bytes => ModuleEnv.PrefixEncoding decls bytes profile) data 0#usize decls codePos)
+    (hcode : At (PaddedEncoding 10#u8 (VecEncoding codeRel) []) data codePos codes tailPos)
+    (htail : At (fun segments bytes => ModuleTail.Encoding segments bytes profile) data tailPos segments (Slice.len data)) :
+    ModuleEncodingWith codeRel (decls.module codes segments) data.val profile := by
   obtain ⟨before, he, hs⟩ := henv
   obtain ⟨codeBytes, hc, hcs⟩ := hcode
   obtain ⟨tailBytes, ht, hts⟩ := htail

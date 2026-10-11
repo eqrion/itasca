@@ -125,8 +125,8 @@ theorem code.read_br.prefix (st : code.OpIterState) (data : Slice U8)
             simpa [hpoly, alloc.vec.Vec.deref, htypesval, htarget] using hargs
           have htyping := htyped.branch hC st.ctrls.val hlabels depth hdepth _ hargs'
           rw [WP.spec_equiv_exists]
-          refine ⟨(.Ok (depth, target.block_type), s''), ?_, ?_⟩
-          · simp [code.read_br, hr, htypes, hr', core.result.Result.Insts.CoreOpsTry.branch, hm]
+          refine ⟨(.Ok (depth, Control.targetBlockType target), s''), ?_, ?_⟩
+          · simp [code.read_br, hr, htypes, hr', core.result.Result.Insts.CoreOpsTry.branch, hm, code.branch_target_bt.eq]
           · intro d bt heq
             cases heq
             refine ⟨?_, ?_, hc'', htyping⟩
@@ -200,8 +200,8 @@ theorem code.read_br_if.prefix (st : code.OpIterState) (data : Slice U8)
               have htyping := (Frames.ResumePrefix.after_pop htyped htransfer).finish hC
                 (.BR_IF (.mk_uN depth.val)) types.val (.instr_case_8 _ (Core.label_wf depth)) hop
               rw [WP.spec_equiv_exists]
-              refine ⟨(.Ok (depth, target.block_type), s₃), ?_, ?_⟩
-              · simp [code.read_br_if, hr, htypes, hr₁, hr₂, core.result.Result.Insts.CoreOpsTry.branch, hpush]
+              refine ⟨(.Ok (depth, Control.targetBlockType target), s₃), ?_, ?_⟩
+              · simp [code.read_br_if, hr, htypes, hr₁, hr₂, core.result.Result.Insts.CoreOpsTry.branch, hpush, code.branch_target_bt.eq]
               · intro d bt heq
                 cases heq
                 refine ⟨?_, hc₃.trans (hc₂.trans (hc₁.trans hc)), rest ++ types.val.map code.StackType.Val,

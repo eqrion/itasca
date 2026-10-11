@@ -72,13 +72,13 @@ theorem module.decode_table_type.complete (data : Slice U8) (pos : Usize)
 
 /-- The counted reader accepts an independently encoded suffix while preserving
 an arbitrary already accumulated prefix. -/
-theorem module.decode_value_types_loop.complete (data : Slice U8) (count : U32)
+theorem module.decode_value_types_loop0.complete (data : Slice U8) (count : U32)
     (out : alloc.vec.Vec types.ValueType) (pos : Usize) (i : U32)
     (values : List types.ValueType) (next : Usize)
     (hbytes : At (Rep ValueTypeEncoding) data pos values next)
     (hcount : i.val + values.length = count.val)
     (hcapacity : out.val.length + values.length ≤ Usize.max) :
-    ∃ final, module.decode_value_types_loop data count out pos i = .ok (.Ok (final, next)) ∧
+    ∃ final, module.decode_value_types_loop0 data count out pos i = .ok (.Ok (final, next)) ∧
       final.val = out.val ++ values := by
   induction values generalizing out pos i with
   | nil =>
@@ -86,9 +86,9 @@ theorem module.decode_value_types_loop.complete (data : Slice U8) (count : U32)
       subst next
       have hstop : i ≥ count := by simpa using (show count.val ≤ i.val by simpa using hcount.symm.le)
       refine ⟨out, ?_, by simp⟩
-      unfold module.decode_value_types_loop
+      unfold module.decode_value_types_loop0
       rw [loop]
-      simp [module.decode_value_types_loop.body, hstop]
+      simp [module.decode_value_types_loop0.body, hstop]
   | cons value values ih =>
       obtain ⟨middle, hfirst, hrest⟩ := hbytes.rep_cons
       have hread := module.decode_value_type.complete data pos value middle hfirst
@@ -101,11 +101,11 @@ theorem module.decode_value_types_loop.complete (data : Slice U8) (count : U32)
         (by simp only [List.length_cons] at hcount; scalar_tac)
         (by simp only [hout, List.length_append, List.length_cons, List.length_nil] at *; omega)
       refine ⟨final, ?_, by simpa [hout, List.append_assoc] using hfinal⟩
-      have hbody : module.decode_value_types_loop.body data count out pos i =
+      have hbody : module.decode_value_types_loop0.body data count out pos i =
           .ok (.cont (updated, middle, j)) := by
-        simp [module.decode_value_types_loop.body, hmore, hread,
+        simp [module.decode_value_types_loop0.body, hmore, hread,
           core.result.Result.Insts.CoreOpsTry.branch, hpush, hj]
-      unfold module.decode_value_types_loop at hloop ⊢
+      unfold module.decode_value_types_loop0 at hloop ⊢
       rw [loop]
       dsimp only
       rw [hbody]
@@ -114,19 +114,41 @@ theorem module.decode_value_types_loop.complete (data : Slice U8) (count : U32)
 theorem module.decode_value_types.complete (data : Slice U8) (pos : Usize)
     (values : alloc.vec.Vec types.ValueType) (next : Usize)
     (h : At (VecEncoding ValueTypeEncoding) data pos values.val next) :
-    module.decode_value_types data pos = .ok (.Ok (values, next)) := by
+    module.decode_value_types data pos none = .ok (.Ok (values, next)) := by
   obtain ⟨count, middle, hcount, hlen, hbytes⟩ := h.vector_split
   have hr := reader.read_u32_leb.complete data pos count middle hlen
-  obtain ⟨final, hf, he⟩ := module.decode_value_types_loop.complete data count
+  obtain ⟨final, hf, he⟩ := module.decode_value_types_loop0.complete data count
     (alloc.vec.Vec.new _) middle 0#u32 values.val next hbytes
     (by simpa using hcount.symm) (by simp)
   have heq : final = values := alloc.vec.Vec.ext _ _ (by simpa using he)
   simp [module.decode_value_types, hr, hf, heq, core.result.Result.Insts.CoreOpsTry.branch]
 
+theorem module.decode_value_types.profile_complete (data : Slice U8) (pos : Usize)
+    (values : alloc.vec.Vec types.ValueType) (next : Usize)
+    (bound : Option (Usize × error.OpError))
+    (h : At (VecEncoding ValueTypeEncoding) data pos values.val next)
+    (hbound : ∀ limit err, bound = some (limit, err) → values.val.length ≤ limit.val) :
+    module.decode_value_types data pos bound = .ok (.Ok (values, next)) := by
+  cases bound with
+  | none => exact module.decode_value_types.complete data pos values next h
+  | some pair =>
+      obtain ⟨limit, err⟩ := pair
+      obtain ⟨count, middle, hcount, hlen, hbytes⟩ := h.vector_split
+      have hr := reader.read_u32_leb.complete data pos count middle hlen
+      obtain ⟨final, hf, he⟩ := module.decode_value_types_loop0.complete data count
+        (alloc.vec.Vec.new _) middle 0#u32 values.val next hbytes
+        (by simpa using hcount.symm) (by simp)
+      have heq : final = values := alloc.vec.Vec.ext _ _ (by simpa using he)
+      have hfits : ¬ count.val > limit.val := by
+        have := hbound limit err rfl
+        omega
+      simp [module.decode_value_types, hr, hf, heq, core.result.Result.Insts.CoreOpsTry.branch,
+        lift, hfits, module.decode_value_types_loop1.eq_loop0]
+
 theorem module.decode_func_type.complete (data : Slice U8) (pos : Usize)
     (ty : types.FuncType) (next : Usize) (h : At FuncTypeEncoding data pos ty next)
     (hresults : ty.results.val.length ≤ 1) :
-    module.decode_func_type data pos = .ok (.Ok (ty, next)) := by
+    module.decode_func_type data pos .Wasm1 = .ok (.Ok (ty, next)) := by
   obtain ⟨bytes, ⟨params, results, hp, hr, rfl⟩, hs⟩ := h
   obtain ⟨first, htag, hbytes⟩ :=
     (show Wasm.BytesAt data pos ([0x60#u8] ++ (params ++ results)) next from hs).split
@@ -138,5 +160,27 @@ theorem module.decode_func_type.complete (data : Slice U8) (pos : Usize)
   cases ty
   simp [module.decode_func_type, htag.read_byte, hp', hr', limits.MAX_RESULTS, hresults,
     core.result.Result.Insts.CoreOpsTry.branch]
+
+theorem module.decode_func_type.profile_complete (data : Slice U8) (pos : Usize)
+    (ty : types.FuncType) (next : Usize) (profile : ValidationProfile)
+    (h : At FuncTypeEncoding data pos ty next)
+    (hprofile : Profile.FuncType profile ty) (hlimits : Profile.FuncTypeWithinLimits profile ty) :
+    module.decode_func_type data pos profile = .ok (.Ok (ty, next)) := by
+  cases profile with
+  | Wasm1 => exact module.decode_func_type.complete data pos ty next h hprofile
+  | MultiValue =>
+      obtain ⟨bytes, ⟨params, results, hp, hr, rfl⟩, hs⟩ := h
+      obtain ⟨first, htag, hbytes⟩ :=
+        (show Wasm.BytesAt data pos ([0x60#u8] ++ (params ++ results)) next from hs).split
+      obtain ⟨middle, hparams, hresultsBytes⟩ := hbytes.split
+      have hp' := module.decode_value_types.profile_complete data first ty.params middle
+        (some (multi_value.MAX_PARAMS, error.OpError.TooManyParams)) ⟨params, hp, hparams⟩
+        (by intro limit err he; cases he; exact hlimits.1)
+      have hr' := module.decode_value_types.profile_complete data middle ty.results next
+        (some (multi_value.MAX_RESULTS, error.OpError.TooManyResults)) ⟨results, hr, hresultsBytes⟩
+        (by intro limit err he; cases he; exact hlimits.2)
+      cases ty
+      simp [module.decode_func_type, htag.read_byte, hp', hr',
+        core.result.Result.Insts.CoreOpsTry.branch]
 
 end Itasca

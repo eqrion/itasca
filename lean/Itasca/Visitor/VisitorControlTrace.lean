@@ -16,12 +16,12 @@ theorem step_block {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
     StepRecords p visitor observe code.OP_BLOCK := by
   intro v result final v' h
   rw [dispatch_block] at h
-  apply run_step_trace data p.start _ visitor observe hrecords .block ?_ v result final v' h
+  apply run_step_trace data p.start _ visitor observe hrecords (fun a => .block (Control.signature a)) ?_ v result final v' h
   intro s a hr
   have hs := code.read_block.raw_spec st data p.ctrl_capacity
   rw [hr, WP.spec_ok] at hs
   obtain ⟨hd, _, _⟩ := hs a rfl
-  exact ⟨.block a, rfl, by simp [Action.opcode],
+  exact ⟨.block a, by cases a <;> rfl, by simp [Action.opcode],
     .of_block_type a p.inbounds (by simpa [global_simps] using hbyte) p.pos (.block a) hd⟩
 
 theorem step_loop {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
@@ -31,12 +31,12 @@ theorem step_loop {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
     StepRecords p visitor observe code.OP_LOOP := by
   intro v result final v' h
   rw [dispatch_loop] at h
-  apply run_step_trace data p.start _ visitor observe hrecords .loop ?_ v result final v' h
+  apply run_step_trace data p.start _ visitor observe hrecords (fun a => .loop (Control.signature a)) ?_ v result final v' h
   intro s a hr
   have hs := code.read_loop.raw_spec st data p.ctrl_capacity
   rw [hr, WP.spec_ok] at hs
   obtain ⟨hd, _, _⟩ := hs a rfl
-  exact ⟨.loop a, rfl, by simp [Action.opcode],
+  exact ⟨.loop a, by cases a <;> rfl, by simp [Action.opcode],
     .of_block_type a p.inbounds (by simpa [global_simps] using hbyte) p.pos (.loop a) hd⟩
 
 theorem step_if {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
@@ -46,14 +46,14 @@ theorem step_if {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
     StepRecords p visitor observe code.OP_IF := by
   intro v result final v' h
   rw [dispatch_if] at h
-  apply run_step_trace data p.start _ visitor observe hrecords .if_ ?_ v result final v' h
+  apply run_step_trace data p.start _ visitor observe hrecords (fun a => .if_ (Control.signature a)) ?_ v result final v' h
   intro s a hr
   obtain ⟨C, outer, spine, header, base, typed, ctrls, vals⟩ := id p.opened
   have hs := code.read_if.raw_spec st data outer p.current.vals vals
     (by simp [Control.base, ctrls, base]) p.ctrl_capacity
   rw [hr, WP.spec_ok] at hs
   obtain ⟨hd, _⟩ := hs a rfl
-  exact ⟨.if_ a, rfl, by simp [Action.opcode],
+  exact ⟨.if_ a, by cases a <;> rfl, by simp [Action.opcode],
     .of_block_type a p.inbounds (by simpa [global_simps] using hbyte) p.pos (.if_ a) hd⟩
 
 theorem step_else {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
@@ -63,7 +63,7 @@ theorem step_else {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
     StepRecords p visitor observe code.OP_ELSE := by
   intro v result final v' h
   rw [dispatch_else] at h
-  apply run_step_trace data p.start _ visitor observe hrecords .else_ ?_ v result final v' h
+  apply run_step_trace data p.start _ visitor observe hrecords (fun a => .else_ (Control.signature a)) ?_ v result final v' h
   intro s a hr
   obtain ⟨C, outer, spine, header, base, typed, ctrls, vals⟩ := id p.opened
   have hs := code.read_else.realizes st (p.parents.map WasmFrames.Saved.ctrl)
@@ -80,7 +80,7 @@ theorem step_end {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
     StepRecords p visitor observe code.OP_END := by
   intro v result final v' h
   rw [dispatch_end] at h
-  apply run_step_trace data p.start _ visitor observe hrecords (fun a : code.LabelKind × code.BlockType => .end_ a.1 a.2) ?_ v result final v' h
+  apply run_step_trace data p.start _ visitor observe hrecords (fun a : code.LabelKind × code.BlockType => .end_ a.1 (Control.signature a.2)) ?_ v result final v' h
   intro s a hr
   obtain ⟨C, outer, spine, header, base, typed, ctrls, vals⟩ := id p.opened
   have hs := code.read_end.realizes st (p.parents.map WasmFrames.Saved.ctrl)
@@ -97,7 +97,7 @@ theorem step_br {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
     StepRecords p visitor observe code.OP_BR := by
   intro v result final v' h
   rw [dispatch_br] at h
-  apply run_step_trace data p.start _ visitor observe hrecords (fun a : U32 × code.BlockType => .br a.1 a.2) ?_ v result final v' h
+  apply run_step_trace data p.start _ visitor observe hrecords (fun a : U32 × code.BlockType => .br a.1 (Control.resultView a.2)) ?_ v result final v' h
   rintro s ⟨depth, resultBt⟩ hr
   obtain ⟨C, outer, spine, header, base, typed, ctrls, vals, hC, labels, returns⟩ :=
     p.opened.context (EnvTranslation.context_wf env ctx)
@@ -116,7 +116,7 @@ theorem step_br_if {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
     StepRecords p visitor observe code.OP_BR_IF := by
   intro v result final v' h
   rw [dispatch_br_if] at h
-  apply run_step_trace data p.start _ visitor observe hrecords (fun a : U32 × code.BlockType => .br_if a.1 a.2) ?_ v result final v' h
+  apply run_step_trace data p.start _ visitor observe hrecords (fun a : U32 × code.BlockType => .br_if a.1 (Control.resultView a.2)) ?_ v result final v' h
   rintro s ⟨depth, resultBt⟩ hr
   obtain ⟨C, outer, spine, header, base, typed, ctrls, vals, hC, labels, returns⟩ :=
     p.opened.context (EnvTranslation.context_wf env ctx)
@@ -168,7 +168,7 @@ theorem step_br_table {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
   have hopcode : Wasm.BytesAt data p.start [0x0E#u8] st.pos :=
     .byte data p.start st.pos 0x0E#u8 p.inbounds (by simpa [global_simps] using hbyte) p.pos
   rcases (CoreVisitor.run.returned_iff (.ok (res, s))
-      (fun v s (a : U32 × code.BlockType) => visitor.on_br_table v s a.1 a.2)
+      (fun v s (a : U32 × code.BlockType) => visitor.on_br_table v s a.1 (Control.resultView a.2))
       w result final v').mp hrun with
     ⟨e, herr, rfl, rfl⟩ | ⟨a, reply, hok, hhook, rfl⟩
   · simp only [Result.ok.injEq, Prod.mk.injEq] at herr
@@ -183,12 +183,12 @@ theorem step_br_table {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
     obtain ⟨rfl, rfl⟩ := hok
     obtain ⟨fallback, common⟩ := a
     obtain ⟨count, first, depths, last, hcount, hlabels, hlen, hdefault, hall⟩ := htrace
-    have hrecord := hrecords w (.op s (.br_table fallback common)) reply v' hhook
-    refine ⟨observations ++ [⟨.op s (.br_table fallback common), reply⟩], ?_, ?_⟩
+    have hrecord := hrecords w (.op s (.br_table fallback (Control.resultView common))) reply v' hhook
+    refine ⟨observations ++ [⟨.op s (.br_table fallback (Control.resultView common)), reply⟩], ?_, ?_⟩
     · simpa [hlog, List.append_assoc] using hrecord
     · refine .complete (.table hopcode hcount hlabels.labelsAt hlen hdefault ?_) ?_
       · exact .of_br_table count depths fallback p.inbounds
           (by simpa [global_simps] using hbyte) p.pos hcount hlen hlabels.decoded hdefault
-      · exact (Outcomes.single (.op s (.br_table fallback common)) reply).prepend hall
+      · exact (Outcomes.single (.op s (.br_table fallback (Control.resultView common))) reply).prepend hall
 
 end Itasca.VisitorTrace

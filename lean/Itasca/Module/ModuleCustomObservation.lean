@@ -14,12 +14,14 @@ end Itasca.ModuleTail
 
 namespace Itasca
 
+variable {profile : ValidationProfile}
+
 theorem module.validate_tail_with_loop.accepted_preserves {V A : Type}
     (visitor : module.ModuleVisitor V) (observe : V → A) (hp : ModuleTail.Preserves visitor observe)
     (data : Slice U8) (env : module.Env) (v : V)
     (segments : alloc.vec.Vec module.Data) (pos : Usize) (seen : Bool)
     (result : module.Tail) (v' : V)
-    (h : module.validate_tail_with_loop visitor data env v segments pos seen = .ok (.Ok result, v')) :
+    (h : module.validate_tail_with_loop visitor data env profile v segments pos seen = .ok (.Ok result, v')) :
     observe v' = observe v := by
   generalize hn : data.length - pos.val = n
   induction n using Nat.strong_induction_on generalizing v segments pos seen with
@@ -86,7 +88,7 @@ callbacks do. This speaks only about the actual successful run. -/
 theorem module.validate_tail_with.accepted_preserves {V A : Type}
     (visitor : module.ModuleVisitor V) (observe : V → A) (hp : ModuleTail.Preserves visitor observe)
     (data : Slice U8) (pos : Usize) (env : module.Env) (v : V) (result : module.Tail) (v' : V)
-    (h : module.validate_tail_with visitor data pos env v = .ok (.Ok result, v')) :
+    (h : module.validate_tail_with visitor data pos env profile v = .ok (.Ok result, v')) :
     observe v' = observe v :=
   module.validate_tail_with_loop.accepted_preserves visitor observe hp data env v
     (alloc.vec.Vec.new _) pos false result v' h

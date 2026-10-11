@@ -1,6 +1,10 @@
+use itasca::signature::{BlockType, ResultType, TypePart};
 use itasca::stream::{self, CodeBatch, Config, Region, Result, Source, StreamingVisitor};
-use itasca::{module, CustomSection, EmptyOpVisitor, Env, Error, OpError, Tail, VisitError};
+use itasca::{
+    module, CustomSection, EmptyOpVisitor, Env, Error, OpError, Tail, ValidationProfile, VisitError,
+};
 use std::cell::{Cell, RefCell};
+use std::sync::{Arc, Mutex};
 use std::thread::{Scope, ScopedJoinHandle};
 use wasmparser::{Validator, WasmFeatures};
 
@@ -22,7 +26,11 @@ impl SplitSource {
     /// clamping a truncated code section. A module whose environment does not
     /// validate stays in `env`.
     fn new(bytes: &[u8]) -> Self {
-        let (start, end) = code_region(bytes).unwrap_or((bytes.len(), bytes.len()));
+        Self::with_profile(bytes, ValidationProfile::Wasm1)
+    }
+
+    fn with_profile(bytes: &[u8], profile: ValidationProfile) -> Self {
+        let (start, end) = code_region(bytes, profile).unwrap_or((bytes.len(), bytes.len()));
         SplitSource {
             env: bytes[..start].to_vec(),
             code: bytes[start..end].to_vec(),
@@ -32,8 +40,8 @@ impl SplitSource {
     }
 }
 
-fn code_region(bytes: &[u8]) -> Option<(usize, usize)> {
-    let (_, start) = module::validate_env(bytes).ok()?;
+fn code_region(bytes: &[u8], profile: ValidationProfile) -> Option<(usize, usize)> {
+    let (_, start) = module::validate_env(bytes, profile).ok()?;
     if bytes.get(start) != Some(&10) {
         return Some((start, start));
     }
@@ -81,6 +89,9 @@ impl Source for SplitSource {
 struct Harness {
     source: SplitSource,
     parallel: bool,
+    profile: Option<ValidationProfile>,
+    callbacks: Arc<Mutex<Vec<WorkerEvent>>>,
+    refuse_control: bool,
     /// Return batches without validating them.
     skip: bool,
     /// Validate each function twice.
@@ -111,13 +122,22 @@ impl Harness {
         }
     }
 
+    fn with_profile(bytes: &[u8], profile: ValidationProfile) -> Self {
+        Harness {
+            source: SplitSource::with_profile(bytes, profile),
+            profile: Some(profile),
+            ..Default::default()
+        }
+    }
+
     fn validate(&mut self) -> Result<Env> {
         let source = std::mem::take(&mut self.source);
         self.tail_base = source.env.len() + source.code.len();
         let mut env = Env::new();
+        let profile = self.profile.unwrap_or(ValidationProfile::Wasm1);
         let result = std::thread::scope(|threads| {
             let mut scheduler = TestScheduler::new(self, threads);
-            stream::validate_streaming(1, &source, &mut scheduler, &mut env)
+            stream::validate_streaming(1, profile, &source, &mut scheduler, &mut env)
         });
         self.source = source;
         result.map(|()| env)
@@ -161,6 +181,82 @@ impl itasca::OpVisitor for RefusingWorker {
         _body_end: usize,
     ) -> itasca::VisitResult {
         Err(VisitError::OutOfMemory)
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+enum WorkerEvent {
+    FunctionStart(u32, usize),
+    Block(BlockType),
+    Loop(BlockType),
+    Branch(u32, ResultType),
+    BranchIf(u32, ResultType),
+    I32(i32),
+}
+
+struct RecordingWorker {
+    callbacks: Arc<Mutex<Vec<WorkerEvent>>>,
+    refuse_control: bool,
+}
+
+impl itasca::OpVisitor for RecordingWorker {
+    fn on_function_start(
+        &mut self,
+        ctx: &itasca::Context,
+        type_idx: u32,
+        _begin: usize,
+        _end: usize,
+    ) -> itasca::VisitResult {
+        self.callbacks
+            .lock()
+            .unwrap()
+            .push(WorkerEvent::FunctionStart(type_idx, ctx.results.len()));
+        Ok(())
+    }
+
+    fn on_block(&mut self, _st: &itasca::OpIterState, bt: BlockType) -> itasca::VisitResult {
+        self.callbacks.lock().unwrap().push(WorkerEvent::Block(bt));
+        if self.refuse_control {
+            Err(VisitError::OutOfMemory)
+        } else {
+            Ok(())
+        }
+    }
+
+    fn on_loop(&mut self, _st: &itasca::OpIterState, bt: BlockType) -> itasca::VisitResult {
+        self.callbacks.lock().unwrap().push(WorkerEvent::Loop(bt));
+        Ok(())
+    }
+
+    fn on_br(
+        &mut self,
+        _st: &itasca::OpIterState,
+        depth: u32,
+        target: ResultType,
+    ) -> itasca::VisitResult {
+        self.callbacks
+            .lock()
+            .unwrap()
+            .push(WorkerEvent::Branch(depth, target));
+        Ok(())
+    }
+
+    fn on_br_if(
+        &mut self,
+        _st: &itasca::OpIterState,
+        depth: u32,
+        target: ResultType,
+    ) -> itasca::VisitResult {
+        self.callbacks
+            .lock()
+            .unwrap()
+            .push(WorkerEvent::BranchIf(depth, target));
+        Ok(())
+    }
+
+    fn on_i32_const(&mut self, _st: &itasca::OpIterState, value: i32) -> itasca::VisitResult {
+        self.callbacks.lock().unwrap().push(WorkerEvent::I32(value));
+        Ok(())
     }
 }
 
@@ -211,6 +307,10 @@ impl<'a> StreamingVisitor<'a> for TestScheduler<'_, '_, 'a> {
             return Err(Error::Visitor(VisitError::OutOfMemory));
         }
         assert!(!batch.is_empty());
+        assert_eq!(
+            batch.profile(),
+            self.harness.profile.unwrap_or(ValidationProfile::Wasm1)
+        );
         self.harness.batches.push((
             batch.code_offset(),
             batch.code().to_vec(),
@@ -228,13 +328,21 @@ impl<'a> StreamingVisitor<'a> for TestScheduler<'_, '_, 'a> {
         let skip = self.harness.skip;
         let repeat = self.harness.repeat;
         let refuse = self.harness.refuse_worker;
+        let refuse_control = self.harness.refuse_control;
+        let callbacks = Arc::clone(&self.harness.callbacks);
         let validate = move || {
             if !skip {
                 for index in indices {
                     let result = if refuse {
                         batch.validate_func(index, &mut RefusingWorker)
                     } else {
-                        batch.validate_func(index, &mut EmptyOpVisitor)
+                        batch.validate_func(
+                            index,
+                            &mut RecordingWorker {
+                                callbacks: Arc::clone(&callbacks),
+                                refuse_control,
+                            },
+                        )
                     };
                     if let Err(error) = result {
                         // A later accepting worker cannot erase the first failure.
@@ -318,7 +426,7 @@ fn corpus_matches_spec_expectations() {
             let bytes = std::fs::read(&path).unwrap();
             let expected = kind == "valid";
 
-            let contiguous = itasca::validate_module(&bytes);
+            let contiguous = itasca::validate_module(&bytes, ValidationProfile::Wasm1);
             assert_eq!(
                 contiguous.is_ok(),
                 expected,
@@ -432,7 +540,7 @@ fn zero_batch_configuration_rejects_before_submission() {
 #[test]
 fn declining_submission_stops_the_driver() {
     let bytes = functions(1, 1);
-    assert!(itasca::validate_module(&bytes).is_ok());
+    assert!(itasca::validate_module(&bytes, ValidationProfile::Wasm1).is_ok());
     let mut harness = Harness::new(&bytes);
     harness.refuse_submit = true;
     assert_eq!(
@@ -446,7 +554,7 @@ fn declining_submission_stops_the_driver() {
 #[test]
 fn declining_worker_cannot_be_overridden_by_the_scheduler() {
     let bytes = functions(1, 1);
-    assert!(itasca::validate_module(&bytes).is_ok());
+    assert!(itasca::validate_module(&bytes, ValidationProfile::Wasm1).is_ok());
     let mut harness = Harness::new(&bytes);
     harness.refuse_worker = true;
     assert_eq!(
@@ -466,7 +574,7 @@ fn declining_custom_hook_stops_either_region() {
         } else {
             bytes.extend([0, 1, 0]);
         }
-        assert!(itasca::validate_module(&bytes).is_ok());
+        assert!(itasca::validate_module(&bytes, ValidationProfile::Wasm1).is_ok());
         let mut harness = Harness::new(&bytes);
         harness.refuse_custom = true;
         assert_eq!(
@@ -530,14 +638,27 @@ fn completion_from_another_module_rejects() {
     std::thread::scope(|threads| {
         let mut scheduler = TestScheduler::new(&mut harness, threads);
         // Keep a genuinely validated batch from an earlier invocation.
-        assert!(stream::validate_streaming(1, &good, &mut scheduler, &mut good_env).is_err());
+        assert!(stream::validate_streaming(
+            1,
+            ValidationProfile::Wasm1,
+            &good,
+            &mut scheduler,
+            &mut good_env
+        )
+        .is_err());
         scheduler.foreign = scheduler.pending.pop();
         assert!(scheduler.foreign.is_some());
         scheduler.harness.fail_poll = false;
         // Both batches have serial zero and the same function and byte ranges,
         // so only the module ID tells them apart.
         assert_eq!(
-            stream::validate_streaming(2, &bad, &mut scheduler, &mut bad_env),
+            stream::validate_streaming(
+                2,
+                ValidationProfile::Wasm1,
+                &bad,
+                &mut scheduler,
+                &mut bad_env
+            ),
             Err(Error::Host)
         );
     });
@@ -661,12 +782,104 @@ fn every_truncated_slice_matches_independent_validator() {
         for end in 0..bytes.len() {
             let prefix = &bytes[..end];
             assert_eq!(
-                itasca::validate_module(prefix).is_ok(),
+                itasca::validate_module(prefix, ValidationProfile::Wasm1).is_ok(),
                 Validator::new_with_features(WasmFeatures::WASM1)
                     .validate_all(prefix)
                     .is_ok(),
                 "truncated at {end}: {prefix:?}",
             );
         }
+    }
+}
+
+fn encode(wat: &str) -> Vec<u8> {
+    let buf = wast::parser::ParseBuffer::new(wat).unwrap();
+    let mut module = wast::parser::parse::<wast::Wat>(&buf).unwrap();
+    module.encode().unwrap()
+}
+
+#[test]
+fn multivalue_profile_reaches_split_parallel_workers_and_callbacks() {
+    let body = "(func (type $pair) block (type $pair) i32.const 1 i64.const 2 br 0 end)";
+    let wat = format!(
+        "(module (type $pair (func (result i32 i64))) {})",
+        body.repeat(6)
+    );
+    let mut bytes = encode(&wat);
+    bytes.splice(8..8, [0, 1, 0]);
+    bytes.extend([0, 1, 0]);
+    let mut features = WasmFeatures::WASM1;
+    features.set(WasmFeatures::MULTI_VALUE, true);
+    Validator::new_with_features(features)
+        .validate_all(&bytes)
+        .unwrap();
+    assert!(itasca::validate_module(&bytes, ValidationProfile::Wasm1).is_err());
+    let expected = itasca::validate_module(&bytes, ValidationProfile::MultiValue).unwrap();
+    for parallel in [false, true] {
+        let mut harness = Harness::with_profile(&bytes, ValidationProfile::MultiValue);
+        harness.parallel = parallel;
+        assert_eq!(harness.validate().unwrap(), expected.env);
+        assert_eq!(harness.decoded_tail.as_ref().unwrap(), &expected.tail);
+        assert_eq!((harness.submitted, harness.polled, harness.peak), (6, 6, 2));
+        assert!(harness.custom_offsets.contains(&(11, 11)));
+        assert!(harness.custom_offsets.contains(&(bytes.len(), bytes.len())));
+        let events = harness.callbacks.lock().unwrap();
+        for event in [
+            WorkerEvent::FunctionStart(0, 2),
+            WorkerEvent::Block(BlockType::TypeIndex(0)),
+            WorkerEvent::Branch(
+                0,
+                ResultType::Type {
+                    index: 0,
+                    part: TypePart::Results,
+                },
+            ),
+            WorkerEvent::I32(1),
+        ] {
+            assert_eq!(
+                events.iter().filter(|seen| **seen == event).count(),
+                6,
+                "{event:?}"
+            );
+        }
+    }
+}
+
+#[test]
+fn multivalue_loop_callback_reports_parameter_label() {
+    let bytes = encode("(module (type $loop (func (param i32) (result i64))) (func (result i64) i32.const 7 loop (type $loop) i32.const 0 br_if 0 drop i64.const 9 end))");
+    let mut harness = Harness::with_profile(&bytes, ValidationProfile::MultiValue);
+    harness.parallel = true;
+    harness.validate().unwrap();
+    let events = harness.callbacks.lock().unwrap();
+    assert!(events.contains(&WorkerEvent::Loop(BlockType::TypeIndex(0))));
+    assert!(events.contains(&WorkerEvent::BranchIf(
+        0,
+        ResultType::Type {
+            index: 0,
+            part: TypePart::Params
+        }
+    )));
+}
+
+#[test]
+fn multivalue_control_callback_failure_is_sticky() {
+    let bytes = encode(
+        "(module (func (result i32 i64) block (result i32 i64) i32.const 1 i64.const 2 end))",
+    );
+    for parallel in [false, true] {
+        let mut harness = Harness::with_profile(&bytes, ValidationProfile::MultiValue);
+        harness.parallel = parallel;
+        harness.refuse_control = true;
+        assert_eq!(
+            harness.validate(),
+            Err(Error::Body(OpError::Visitor(VisitError::OutOfMemory)))
+        );
+        assert_eq!((harness.submitted, harness.polled), (1, 1));
+        let events = harness.callbacks.lock().unwrap();
+        assert!(matches!(events.last(), Some(WorkerEvent::Block(_))));
+        assert!(!events
+            .iter()
+            .any(|event| matches!(event, WorkerEvent::I32(_))));
     }
 }

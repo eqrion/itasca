@@ -71,7 +71,7 @@ private theorem functions_context {last decls env} (h : Ready raw last decls env
 theorem requirements : Requirements raw := by
   intro id decls env hlo hhi hr
   interval_cases id
-  · simp [SectionValid, raw, declarations, Declarations.module, functionType]
+  · simp [SectionValid, Profile.FuncTypeAdmissible, raw, declarations, Declarations.module, functionType]
   · constructor
     · intro e he
       have he : e = imported := by simpa [raw, declarations, Declarations.module] using he
@@ -151,7 +151,7 @@ theorem code_at : At (SectionEncoding 10#u8 (VecEncoding CodeEncodingWithinLimit
 
 /-- The parsed prefix has one imported and one defined function, and stops
 exactly before the code section. This witness is reusable for visitor tests. -/
-theorem environment : ∃ env decls, module.validate_env input = .ok (.Ok (env, 37#usize)) ∧
+theorem environment : ∃ env decls, module.validate_env input .Wasm1 = .ok (.Ok (env, 37#usize)) ∧
     Ready raw 9 decls env := by
   obtain ⟨first, hh, _⟩ := code_at.section_split
   exact module.validate_env.complete input raw declarations 37#usize prefix_encoding rfl
@@ -159,7 +159,7 @@ theorem environment : ∃ env decls, module.validate_env input = .ok (.Ok (env, 
 
 /-- Public acceptance checks the declared local vector and a direct call into
 the imported function space, together with the export and start declaration. -/
-theorem functions_accepted : ∃ decoded, module.validate_module input = .ok (.Ok decoded) := by
+theorem functions_accepted : ∃ decoded, module.validate_module input .Wasm1 = .ok (.Ok decoded) := by
   let tail : module.Tail := ⟨alloc.vec.Vec.new _⟩
   have ht : At ModuleTail.Encoding input 47#usize raw.data (Slice.len input) := by
     refine ⟨[], ⟨[], [], ⟨[], [], .nil, .absent, rfl⟩, .nil, rfl⟩, ?_⟩
@@ -181,7 +181,7 @@ theorem functions_accepted : ∃ decoded, module.validate_module input = .ok (.O
   exact ⟨⟨env, tail⟩, ha⟩
 
 /-- Whole-module soundness certifies these exact import/code/export/start bytes. -/
-theorem functions_validated : ∃ decoded, module.validate_module input = .ok (.Ok decoded) ∧
+theorem functions_validated : ∃ decoded, module.validate_module input .Wasm1 = .ok (.Ok decoded) ∧
     ModuleSound.Validated input decoded := by
   obtain ⟨decoded, ha⟩ := functions_accepted
   exact ⟨decoded, ha, module.validate_module.wasm_sound _ _ ha⟩

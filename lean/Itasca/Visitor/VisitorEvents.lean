@@ -165,15 +165,15 @@ inductive MemoryHook where
 inductive Action where
   | unreachable
   | nop
-  | block : code.BlockType → Action
-  | loop : code.BlockType → Action
-  | if_ : code.BlockType → Action
-  | else_ : code.BlockType → Action
-  | end_ : code.LabelKind → code.BlockType → Action
-  | br : U32 → code.BlockType → Action
-  | br_if : U32 → code.BlockType → Action
+  | block : signature.BlockType → Action
+  | loop : signature.BlockType → Action
+  | if_ : signature.BlockType → Action
+  | else_ : signature.BlockType → Action
+  | end_ : code.LabelKind → signature.BlockType → Action
+  | br : U32 → signature.ResultType → Action
+  | br_if : U32 → signature.ResultType → Action
   | br_table_label : U32 → Action
-  | br_table : U32 → code.BlockType → Action
+  | br_table : U32 → signature.ResultType → Action
   | return_
   | call : U32 → Action
   | call_indirect : U32 → Action

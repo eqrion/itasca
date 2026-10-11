@@ -13,7 +13,7 @@ private theorem public_of_loop (data : Slice U8) (env : module.Env) (ctx : code.
       data env ctx.locals ctx.results () (Body.initial bt) = .ok (result, ())) :
     code.validate_body data env ctx = .ok result := by
   have hguard : ¬ Slice.len data > limits.MAX_FUNCTION_BYTES := by scalar_tac
-  simp [code.validate_body, code.validate_body_with, hguard,
+  simp [code.validate_body, code.validate_body_with.eq_model, code.validate_body_with_model, hguard,
     code.start_function.spec (alloc.vec.Vec.deref ctx.results) bt
       (by simpa [alloc.vec.Vec.deref] using hresults), hloop]
 
@@ -103,13 +103,13 @@ theorem i64_body_accepted (env : module.Env) :
       (by simp [first, initial, Body.initial]; scalar_tac))
   dsimp only at hv hc hp
   let last := { pushed with pos := 4#usize }
-  have hctrls : last.ctrls.val = [⟨.Body, .Value .I64, 0#usize, false⟩] := by
+  have hctrls : last.ctrls.val = [⟨.Body, .Value .I64, Control.signature (.Value .I64), 0#usize, false⟩] := by
     simp [last, hc, first, initial, Body.initial]
   have hvals : last.vals.val = [] ++
       (Control.results (code.BlockType.Value .I64)).map code.StackType.Val := by
     simpa [last, first, initial, Body.initial, Control.results] using hv
   obtain ⟨⟨_, finished⟩, hend, rfl, hfc, hfv, hfp⟩ := WP.spec_imp_exists
-    (code.read_end.concrete last [] ⟨.Body, .Value .I64, 0#usize, false⟩ [] hctrls hvals rfl
+    (code.read_end.concrete last [] ⟨.Body, .Value .I64, Control.signature (.Value .I64), 0#usize, false⟩ [] hctrls hvals rfl
       (by simp))
   dsimp only at hfc hfv hfp
   have hstep : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor first i64Bytes env
@@ -147,13 +147,13 @@ theorem f32_body_accepted (env : module.Env) :
       (by simp [first, initial, Body.initial]; scalar_tac))
   dsimp only at hv hc hp
   let last := { pushed with pos := 6#usize }
-  have hctrls : last.ctrls.val = [⟨.Body, .Value .F32, 0#usize, false⟩] := by
+  have hctrls : last.ctrls.val = [⟨.Body, .Value .F32, Control.signature (.Value .F32), 0#usize, false⟩] := by
     simp [last, hc, first, initial, Body.initial]
   have hvals : last.vals.val = [] ++
       (Control.results (code.BlockType.Value .F32)).map code.StackType.Val := by
     simpa [last, first, initial, Body.initial, Control.results] using hv
   obtain ⟨⟨_, finished⟩, hend, rfl, hfc, hfv, hfp⟩ := WP.spec_imp_exists
-    (code.read_end.concrete last [] ⟨.Body, .Value .F32, 0#usize, false⟩ [] hctrls hvals rfl
+    (code.read_end.concrete last [] ⟨.Body, .Value .F32, Control.signature (.Value .F32), 0#usize, false⟩ [] hctrls hvals rfl
       (by simp))
   dsimp only at hfc hfv hfp
   have hstep : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor first f32Bytes env
@@ -191,13 +191,13 @@ theorem f64_body_accepted (env : module.Env) :
       (by simp [first, initial, Body.initial]; scalar_tac))
   dsimp only at hv hc hp
   let last := { pushed with pos := 10#usize }
-  have hctrls : last.ctrls.val = [⟨.Body, .Value .F64, 0#usize, false⟩] := by
+  have hctrls : last.ctrls.val = [⟨.Body, .Value .F64, Control.signature (.Value .F64), 0#usize, false⟩] := by
     simp [last, hc, first, initial, Body.initial]
   have hvals : last.vals.val = [] ++
       (Control.results (code.BlockType.Value .F64)).map code.StackType.Val := by
     simpa [last, first, initial, Body.initial, Control.results] using hv
   obtain ⟨⟨_, finished⟩, hend, rfl, hfc, hfv, hfp⟩ := WP.spec_imp_exists
-    (code.read_end.concrete last [] ⟨.Body, .Value .F64, 0#usize, false⟩ [] hctrls hvals rfl
+    (code.read_end.concrete last [] ⟨.Body, .Value .F64, Control.signature (.Value .F64), 0#usize, false⟩ [] hctrls hvals rfl
       (by simp))
   dsimp only at hfc hfv hfp
   have hstep : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor first f64Bytes env

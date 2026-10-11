@@ -9,7 +9,7 @@ namespace Itasca.OpDispatch
 theorem dispatch_block {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_BLOCK v =
-      CoreVisitor.run (code.read_block st data) visitor.on_block v := by
+      CoreVisitor.run (code.read_block st data) (fun v s bt => visitor.on_block v s (Control.signature bt)) v := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -22,7 +22,7 @@ theorem dispatch_block {V : Type} (visitor : code.OpVisitor V)
 theorem dispatch_loop {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_LOOP v =
-      CoreVisitor.run (code.read_loop st data) visitor.on_loop v := by
+      CoreVisitor.run (code.read_loop st data) (fun v s bt => visitor.on_loop v s (Control.signature bt)) v := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -35,7 +35,7 @@ theorem dispatch_loop {V : Type} (visitor : code.OpVisitor V)
 theorem dispatch_if {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_IF v =
-      CoreVisitor.run (code.read_if st data) visitor.on_if v := by
+      CoreVisitor.run (code.read_if st data) (fun v s bt => visitor.on_if v s (Control.signature bt)) v := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -48,7 +48,7 @@ theorem dispatch_if {V : Type} (visitor : code.OpVisitor V)
 theorem dispatch_else {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_ELSE v =
-      CoreVisitor.run (code.read_else st) visitor.on_else v := by
+      CoreVisitor.run (code.read_else st) (fun v s bt => visitor.on_else v s (Control.signature bt)) v := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -61,7 +61,7 @@ theorem dispatch_else {V : Type} (visitor : code.OpVisitor V)
 theorem dispatch_end {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_END v =
-      CoreVisitor.run (code.read_end st) (fun v s arg => visitor.on_end v s arg.1 arg.2) v := by
+      CoreVisitor.run (code.read_end st) (fun v s arg => visitor.on_end v s arg.1 (Control.signature arg.2)) v := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -74,7 +74,7 @@ theorem dispatch_end {V : Type} (visitor : code.OpVisitor V)
 theorem dispatch_br {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_BR v =
-      CoreVisitor.run (code.read_br st data) (fun v s arg => visitor.on_br v s arg.1 arg.2) v := by
+      CoreVisitor.run (code.read_br st data) (fun v s arg => visitor.on_br v s arg.1 (Control.resultView arg.2)) v := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -87,7 +87,7 @@ theorem dispatch_br {V : Type} (visitor : code.OpVisitor V)
 theorem dispatch_br_if {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_BR_IF v =
-      CoreVisitor.run (code.read_br_if st data) (fun v s arg => visitor.on_br_if v s arg.1 arg.2) v := by
+      CoreVisitor.run (code.read_br_if st data) (fun v s arg => visitor.on_br_if v s arg.1 (Control.resultView arg.2)) v := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1

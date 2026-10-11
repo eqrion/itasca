@@ -173,4 +173,8 @@ theorem module.read_section_header.spec (data : Slice U8) (start : Usize) :
               step*
               exact ⟨pos, size, hp, hd, by scalar_tac, by scalar_tac⟩
 
+@[simp]
+theorem module.decode_segment_index.wasm1 (data : Slice U8) (pos : Usize) (idx : U32) :
+    module.decode_segment_index data pos idx .Wasm1 = .ok (.Ok (idx, pos, false)) := rfl
+
 end Itasca

@@ -51,7 +51,7 @@ fn check_module(
         "{}:{line}: reference disagrees with WAST assertion",
         path.display()
     );
-    let result = itasca::multi_value::validate_module(&bytes);
+    let result = itasca::validate_module(&bytes, itasca::ValidationProfile::MultiValue);
     assert_eq!(
         result.is_ok(),
         valid,

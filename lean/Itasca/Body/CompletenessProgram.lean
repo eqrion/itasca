@@ -40,13 +40,14 @@ theorem Frame.Output.transfer {st s t} {f : Frame st} {g : Frame s}
     (hp : g.parents = f.parents) (ho : g.outer = f.outer)
     (hk : g.current.kind = f.current.kind)
     (hb : g.current.block_type = f.current.block_type)
+    (hsig : g.current.signature = f.current.signature)
     (hbase : g.current.value_stack_base = f.current.value_stack_base) : f.Output out t := by
   obtain ⟨poly, operands, hc, hv, ht⟩ := h
   have he : {g.current with polymorphic_base := poly} =
       {f.current with polymorphic_base := poly} := by
     cases hg : g.current
     cases hf : f.current
-    simp only [hg, hf] at hk hb hbase
+    simp only [hg, hf] at hk hb hsig hbase
     simp_all
   exact ⟨poly, operands, by simpa [hp, he] using hc, by simpa [ho] using hv, ht⟩
 
@@ -90,13 +91,13 @@ theorem program_of_atoms (data : Slice U8) (env : module.Env) (ctx : code.Contex
         obtain ⟨mid, hrun, hpos, hout, hbound⟩ :=
           hatom first op hfirst hsmaller C st f middle front ins outs hmatch hlabels
             hbounds hfirstbytes hinput hop hfirstprofile
-        obtain ⟨g, hgp, hgo, hgk, hgb, hgba, hgr⟩ := hout.next
+        obtain ⟨g, hgp, hgo, hgk, hgb, hgsig, hgba, hgr⟩ := hout.next
         have hrestbytes' : Wasm.Consumed data mid.pos rest next := by simpa [hpos] using hrestbytes
         have hlabels' : C.LABELS = Control.labels mid.ctrls.val := hlabels.trans hout.labels.symm
         obtain ⟨last, hrun', hpos', hout', hbound'⟩ :=
           ih rest.length hrest_len rest ops hrest rfl C mid g next _ _
             hmatch hlabels' hbound hrestbytes' hgr htail hrestprofile
         exact ⟨last, hrun.append hrun', hpos',
-          hout'.transfer hgp hgo hgk hgb hgba, hbound'⟩
+          hout'.transfer hgp hgo hgk hgb hgsig hgba, hbound'⟩
 
 end Itasca.Completeness

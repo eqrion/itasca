@@ -118,7 +118,7 @@ private theorem data_encoding : SectionEncoding 11#u8 (VecEncoding DataEncoding)
 
 /-- A real 51-byte module exercises ordered sections, immutable initialization,
 a named global export, and both kinds of active segment. -/
-theorem sections_accepted : ∃ decoded, module.validate_module input = .ok (.Ok decoded) := by
+theorem sections_accepted : ∃ decoded, module.validate_module input .Wasm1 = .ok (.Ok decoded) := by
   have hp : At PrefixEncoding input 0#usize declarations 42#usize := by
     refine ⟨magicVersion ++ layout.bytes, layout_valid.encoding, ?_⟩
     constructor <;> simp [input, ModuleExamples.bytes, alloc.vec.Vec.deref,
@@ -159,7 +159,7 @@ theorem sections_accepted : ∃ decoded, module.validate_module input = .ok (.Ok
 
 /-- The certificate refers to the exact fixture bytes and includes generated
 module typing, the Wasm 1.0 profile, and ordered external metadata. -/
-theorem sections_validated : ∃ decoded, module.validate_module input = .ok (.Ok decoded) ∧
+theorem sections_validated : ∃ decoded, module.validate_module input .Wasm1 = .ok (.Ok decoded) ∧
     ModuleSound.Validated input decoded := by
   obtain ⟨decoded, ha⟩ := sections_accepted
   exact ⟨decoded, ha, module.validate_module.wasm_sound _ _ ha⟩

@@ -8,13 +8,13 @@ namespace Itasca.ModuleLayout
 
 open ModuleBinary ModuleElaboration
 
-/-- Generated function typing and the independent Wasm 1.0 profile transport
+/-- Generated function typing and the selected independent profile transport
 into the exact decoded environment; no entry-validation premise is used. -/
-theorem CodeAt.typed {data start finish raw decls env}
-    (h : CodeAt data start raw.codes finish)
+theorem CodeAt.typed {profile data start finish raw decls env}
+    (h : CodeAt data start raw.codes finish profile)
     (hr : ModuleEnv.Ready raw 9 decls env)
-    (ht : SectionsTyped raw) (hp : Profile raw) :
-    List.Forall₂ (CodeEntry.Typed env) env.func_type_indices.val raw.codes := by
+    (ht : SectionsTyped raw) (hp : Profile raw profile) :
+    List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry profile) env.func_type_indices.val raw.codes := by
   rw [hr.functions_eq (by omega)]
   refine List.forall₂_iff_zip.mpr ⟨ht.functions.length_eq, ?_⟩
   intro idx entry hm

@@ -8,6 +8,8 @@ import Itasca.Examples.CoreExamples
 
 open Aeneas Aeneas.Std
 
+attribute [local simp] Itasca.Control.signature Itasca.Control.resultView
+
 namespace Itasca.VisitorTraceExamples
 
 open VisitorTrace
@@ -24,7 +26,7 @@ private theorem public_of_loop {V : Type} (visitor : code.OpVisitor V)
       .ok (result, v')) :
     code.validate_body_with visitor data env ctx v = .ok (result, v') := by
   have hguard : ¬ Slice.len data > limits.MAX_FUNCTION_BYTES := by scalar_tac
-  simp [code.validate_body_with, hguard,
+  simp [code.validate_body_with.eq_model, code.validate_body_with_model, hguard,
     code.start_function.spec (alloc.vec.Vec.deref ctx.results) bt
       (by simpa [alloc.vec.Vec.deref] using hresults), hloop]
 
@@ -83,7 +85,7 @@ private theorem step_end (data : Slice U8) (env : module.Env) (ctx : code.Contex
     (log : List Observation) (st next : code.OpIterState) (kind : code.LabelKind) (bt : code.BlockType)
     (hr : code.read_end st = .ok (.Ok (kind, bt), next)) :
     code.step recorder st data env ctx code.OP_END log =
-      .ok (.Ok (), next, log ++ [observation next (.end_ kind bt)]) := by
+      .ok (.Ok (), next, log ++ [observation next (.end_ kind (Control.signature bt))]) := by
   simp [hr, recorder, ofHandler, observation,
     code.visit, core.result.Result.Insts.CoreOpsTry.branch]
 
@@ -104,13 +106,13 @@ theorem f32_signed_zero_trace (env : module.Env) :
       (by simp [first, initial, Body.initial]; scalar_tac))
   dsimp only at hv hc hp
   let last := { pushed with pos := 6#usize }
-  have hctrls : last.ctrls.val = [⟨.Body, .Value .F32, 0#usize, false⟩] := by
+  have hctrls : last.ctrls.val = [⟨.Body, .Value .F32, Control.signature (.Value .F32), 0#usize, false⟩] := by
     simp [last, hc, first, initial, Body.initial]
   have hvals : last.vals.val = [] ++
       (Control.results (code.BlockType.Value .F32)).map code.StackType.Val := by
     simpa [last, first, initial, Body.initial, Control.results] using hv
   obtain ⟨⟨_, finished⟩, hend, rfl, hfc, hfv, hfp⟩ := WP.spec_imp_exists
-    (code.read_end.concrete last [] ⟨.Body, .Value .F32, 0#usize, false⟩ [] hctrls hvals rfl
+    (code.read_end.concrete last [] ⟨.Body, .Value .F32, Control.signature (.Value .F32), 0#usize, false⟩ [] hctrls hvals rfl
       (by simp))
   dsimp only at hfc hfv hfp
   have hstep : code.step recorder first f32Bytes env (resultContext .F32) code.OP_F32_CONST [] =
@@ -148,13 +150,13 @@ theorem f64_nan_payload_trace (env : module.Env) :
       (by simp [first, initial, Body.initial]; scalar_tac))
   dsimp only at hv hc hp
   let last := { pushed with pos := 10#usize }
-  have hctrls : last.ctrls.val = [⟨.Body, .Value .F64, 0#usize, false⟩] := by
+  have hctrls : last.ctrls.val = [⟨.Body, .Value .F64, Control.signature (.Value .F64), 0#usize, false⟩] := by
     simp [last, hc, first, initial, Body.initial]
   have hvals : last.vals.val = [] ++
       (Control.results (code.BlockType.Value .F64)).map code.StackType.Val := by
     simpa [last, first, initial, Body.initial, Control.results] using hv
   obtain ⟨⟨_, finished⟩, hend, rfl, hfc, hfv, hfp⟩ := WP.spec_imp_exists
-    (code.read_end.concrete last [] ⟨.Body, .Value .F64, 0#usize, false⟩ [] hctrls hvals rfl
+    (code.read_end.concrete last [] ⟨.Body, .Value .F64, Control.signature (.Value .F64), 0#usize, false⟩ [] hctrls hvals rfl
       (by simp))
   dsimp only at hfc hfv hfp
   have hstep : code.step recorder first f64Bytes env (resultContext .F64) code.OP_F64_CONST [] =
@@ -182,7 +184,7 @@ theorem trailing_bytes_after_end_trace (env : module.Env) :
       .ok (.Err .TrailingBytes, [observation finished (.end_ .Body .Empty)]) := by
   let st := { Body.initial .Empty with pos := 1#usize }
   obtain ⟨⟨_, finished⟩, hend, rfl, hc, hv, hp⟩ := WP.spec_imp_exists
-    (code.read_end.empty st [] ⟨.Body, .Empty, 0#usize, false⟩ rfl rfl rfl)
+    (code.read_end.empty st [] ⟨.Body, .Empty, Control.signature (.Empty), 0#usize, false⟩ rfl rfl rfl)
   dsimp only at hc hv hp
   refine ⟨finished, ?_⟩
   apply public_of_loop recorder trailingBytes env emptyContext .Empty (.Err .TrailingBytes) [] _
@@ -214,7 +216,7 @@ theorem rejecting_first_hook_stops (env : module.Env) :
     core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-private def frame (kind : code.LabelKind) : code.Ctrl := ⟨kind, .Empty, 0#usize, false⟩
+private def frame (kind : code.LabelKind) : code.Ctrl := ⟨kind, .Empty, Control.signature (.Empty), 0#usize, false⟩
 
 private def state (pos : Usize) (frames : List code.Ctrl) (vals : List code.StackType := [])
     (hc : frames.length ≤ 8 := by decide) (hv : vals.length ≤ 8 := by decide) : code.OpIterState :=

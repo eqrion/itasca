@@ -17,11 +17,11 @@ theorem function_body {C : context} {f ft} (h : Func_ok C f ft) :
   cases h
   exact ⟨_, _, _, rfl, rfl, by assumption⟩
 
-theorem Typed.of_func_ok {env : module.Env} {C : context} {idx : U32}
+theorem Typed.of_func_ok {profile} {env : module.Env} {C : context} {idx : U32}
     {entry : ModuleBinary.Code} {ft : functype}
     (hc : ModuleContext env C) (hs : Forall BodyContext.SegmentFree entry.body)
-    (hp : ModuleElaboration.FunctionProfile env.types.val idx entry)
-    (hf : Func_ok C (function idx entry) ft) : Typed env idx entry := by
+    (hp : ModuleElaboration.FunctionProfile env.types.val idx entry profile)
+    (hf : Func_ok C (function idx entry) ft) : Typed env idx entry profile := by
   have hi : idx.val < env.types.val.length := by
     simpa [function, hc.types, proj_uN_0] using ModuleElaboration.func_index_bound hf
   have hft := ModuleElaboration.function_type_of_typing hf hc.types

@@ -17,14 +17,16 @@ end Itasca.StreamFraming
 
 namespace Itasca
 
+variable {profile : ValidationProfile}
+
 /-- After a decoded environment, all remaining phases return ordinarily under
 returning source and visitor callbacks. Worker provenance is unnecessary. -/
 theorem stream.validate_remaining.total_spec {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
     (env : module.Env) (envLen : Usize) (v : V)
-    (hs : StreamSource.CallbacksTotal source state) (hv : StreamScheduler.CallbacksTotal visitor)
+    (hs : StreamSource.CallbacksTotal source state) (hv : StreamScheduler.CallbacksTotal visitor profile)
     (henv : CodeEntry.Bounds env) :
-    stream.validate_remaining source visitor moduleId state env envLen v ⦃ _ => True ⦄ := by
+    stream.validate_remaining source visitor moduleId profile state env envLen v ⦃ _ => True ⦄ := by
   obtain ⟨codeLen, hlen⟩ := hs.code_len_returns
   unfold stream.validate_remaining
   rw [hlen]
@@ -86,7 +88,7 @@ theorem stream.validate_remaining.total_spec {S V : Type} (source : stream.Sourc
                     simp only [bind_ok]
                     obtain ⟨⟨r, v5⟩, hparsed, _⟩ := WP.spec_imp_exists
                       (module.validate_tail_with.spec visitor.moduleModuleVisitorInst hv.custom
-                        bytes 0#usize env v4 (by simp))
+                        bytes 0#usize env v4 (by simp) (profile := profile))
                     rw [hparsed]
                     cases r with
                     | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -107,9 +109,9 @@ theorem stream.validate_remaining.total_spec {S V : Type} (source : stream.Sourc
 theorem stream.validate_remaining.total {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
     (env : module.Env) (envLen : Usize) (v : V)
-    (hs : StreamSource.CallbacksTotal source state) (hv : StreamScheduler.CallbacksTotal visitor)
+    (hs : StreamSource.CallbacksTotal source state) (hv : StreamScheduler.CallbacksTotal visitor profile)
     (henv : CodeEntry.Bounds env) :
-    ∃ r, stream.validate_remaining source visitor moduleId state env envLen v = .ok r := by
+    ∃ r, stream.validate_remaining source visitor moduleId profile state env envLen v = .ok r := by
   obtain ⟨r, hr, _⟩ := WP.spec_imp_exists
     (stream.validate_remaining.total_spec source visitor moduleId state env envLen v hs hv henv)
   exact ⟨r, hr⟩
@@ -117,12 +119,12 @@ theorem stream.validate_remaining.total {S V : Type} (source : stream.Source S)
 /-- Actual generic streaming validation returns ordinary success or error on
 arbitrary bytes under returning callbacks. Successful batches are not assumed,
 and neither source coherence nor scheduler provenance is a termination premise. -/
-theorem stream.validate_streaming.wasm_total {S V : Type} (source : stream.Source S)
+theorem stream.validate_streaming.profile_total {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
     (v : V) (storage : module.Env)
-    (hs : StreamSource.CallbacksTotal source state) (hv : StreamScheduler.CallbacksTotal visitor) :
-    ∃ r, stream.validate_streaming source visitor moduleId state v storage = .ok r := by
-  have hspec : stream.validate_streaming source visitor moduleId state v storage ⦃ _ => True ⦄ := by
+    (hs : StreamSource.CallbacksTotal source state) (hv : StreamScheduler.CallbacksTotal visitor profile) :
+    ∃ r, stream.validate_streaming source visitor moduleId profile state v storage = .ok r := by
+  have hspec : stream.validate_streaming source visitor moduleId profile state v storage ⦃ _ => True ⦄ := by
     unfold stream.validate_streaming
     obtain ⟨r, hread⟩ := hs.environment_returns
     rw [hread]
@@ -142,7 +144,7 @@ theorem stream.validate_streaming.wasm_total {S V : Type} (source : stream.Sourc
         rw [hregion]
         simp only [bind_ok]
         obtain ⟨⟨r, v2⟩, hparsed, _⟩ := WP.spec_imp_exists
-          (module.validate_env_with.spec visitor.moduleModuleVisitorInst hv.custom bytes v1)
+          (module.validate_env_with.profile_spec visitor.moduleModuleVisitorInst hv.custom bytes profile v1)
         rw [hparsed]
         cases r with
         | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -150,7 +152,7 @@ theorem stream.validate_streaming.wasm_total {S V : Type} (source : stream.Sourc
           obtain ⟨env, envEnd⟩ := pair
           have herase := module.validate_env_with.accepted_erase
             visitor.moduleModuleVisitorInst bytes v1 env envEnd v2 hparsed
-          have henv := (ModuleEnv.accepted_entry_conditions bytes env envEnd hsize herase).1
+          have henv := (ModuleEnv.profile_accepted_entry_conditions bytes env envEnd profile hsize herase).1
           simp
           split
           · obtain ⟨⟨r, v3⟩, hr⟩ := stream.validate_remaining.total source visitor moduleId state
@@ -160,5 +162,13 @@ theorem stream.validate_streaming.wasm_total {S V : Type} (source : stream.Sourc
           · simp
   obtain ⟨r, hr, _⟩ := WP.spec_imp_exists hspec
   exact ⟨r, hr⟩
+
+/-- Compatibility specialization of profile-independent driver totality. -/
+theorem stream.validate_streaming.wasm_total {S V : Type} (source : stream.Source S)
+    (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
+    (v : V) (storage : module.Env)
+    (hs : StreamSource.CallbacksTotal source state) (hv : StreamScheduler.CallbacksTotal visitor) :
+    ∃ r, stream.validate_streaming source visitor moduleId .Wasm1 state v storage = .ok r :=
+  stream.validate_streaming.profile_total source visitor moduleId state v storage hs hv
 
 end Itasca

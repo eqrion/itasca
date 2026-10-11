@@ -64,7 +64,8 @@ theorem code.validate_body_with.of_wasm1_steps {V : Type} (visitor : code.OpVisi
     (hsteps : Wasm.Steps visitor data env ctx bt) (v : V) :
     code.validate_body_with visitor data env ctx v ⦃ r =>
       r.1 = .Ok () → Wasm.Profiled data env ctx bt ⦄ := by
-  unfold code.validate_body_with
+  simp only [code.validate_body_with.eq_model]
+  unfold code.validate_body_with_model
   dsimp only
   split
   · simp [WP.spec_ok]

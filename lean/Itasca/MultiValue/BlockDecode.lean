@@ -20,6 +20,15 @@ def BlockDecoded (data : Slice U8) (pos : Usize) (bt : signature.BlockType) (nex
       data.val[pos.val] = valueByte t ∧ next.val = pos.val + 1
   | .TypeIndex index => SignedLeb33.Decoded data pos (index.val : Int) next
 
+theorem BlockDecoded.span {data : Slice U8} {pos next : Usize} {bt : signature.BlockType}
+    (h : BlockDecoded data pos bt next) : pos.val < next.val ∧ next.val ≤ data.length := by
+  cases bt with
+  | Empty => obtain ⟨hp, _, hn⟩ := h; omega
+  | Value t => obtain ⟨hp, _, hn⟩ := h; omega
+  | TypeIndex i =>
+    have hs := SignedLeb33.Decoded.span data pos i.val next h
+    exact ⟨hs.1, hs.2.2⟩
+
 private theorem indexed_first_not_negative_tag (data : Slice U8) (pos : Usize)
     (index : U32) (next : Usize)
     (h : SignedLeb33.Decoded data pos (index.val : Int) next)

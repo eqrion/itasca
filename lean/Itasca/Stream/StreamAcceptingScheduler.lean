@@ -5,24 +5,31 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.StreamAcceptingScheduler
 
+variable {validationProfile : ValidationProfile}
+
 /-- Independent byte, typing, and size premises for an issued batch. -/
-structure Valid (issued : StreamBatch.Issued) : Prop where
+structure Valid (issued : StreamBatch.Issued)
+    (validationProfile : ValidationProfile := .Wasm1) : Prop where
+  validation_profile : issued.profile = validationProfile
   bounded : issued.Bounded
   entry_bounds : CodeEntry.Bounds issued.env
-  profile : Wasm1.Environment issued.env
+  profile : Profile.Environment validationProfile issued.env
+  limits : Profile.EnvironmentWithinLimits validationProfile issued.env
   entries : ∃ entries, entries.length = issued.num_funcs.val ∧
-    ModuleCode.EntriesTyped issued.env issued.first_func.val entries ∧
-    ModuleBinary.Rep ModuleBinary.CodeEncodingWithinLimits entries issued.code.val
+    ModuleCode.EntriesTyped (profile := validationProfile) issued.env issued.first_func.val entries ∧
+    ModuleBinary.Rep (Profile.CodeEncodingWithinLimits validationProfile) entries issued.code.val
 
-def ValidQueue (id : U64) (queue : List StreamBatch.Issued) : Prop :=
-  ∀ issued ∈ queue, issued.module_id = id ∧ Valid issued
+def ValidQueue (id : U64) (queue : List StreamBatch.Issued)
+    (validationProfile : ValidationProfile := .Wasm1) : Prop :=
+  ∀ issued ∈ queue, issued.module_id = id ∧ Valid issued validationProfile
 
 /-- One accepting worker policy: each returned worker is the actual result of
 `validate_all` on an issued seed. The policy permits arbitrary return order and
 any positive batching configuration; successful finish is derived from `Valid`,
 not required of polling. It does not characterize every possible worker strategy. -/
 structure Accepts {V : Type} (visitor : stream.StreamingVisitor V)
-    (config : stream.Config) (Queued : U64 → List StreamBatch.Issued → V → Prop) : Prop where
+    (config : stream.Config) (Queued : U64 → List StreamBatch.Issued → V → Prop)
+    (validationProfile : ValidationProfile := .Wasm1) : Prop where
   batch_positive : 0 < config.batch_bytes.val
   capacity_positive : 0 < config.max_batches.val
   custom_accepts : ModuleTail.HooksAccept visitor.moduleModuleVisitorInst
@@ -32,11 +39,11 @@ structure Accepts {V : Type} (visitor : stream.StreamingVisitor V)
     ∃ v', visitor.custom_region v region = .ok v' ∧ Queued id queue v'
   environment : ∀ id queue v env, Queued id queue v →
     ∃ v', visitor.environment_ready v env = .ok (.Ok config, v') ∧ Queued id queue v'
-  submit : ∀ id queue issued v, Queued id queue v → Valid issued →
+  submit : ∀ id queue issued v, Queued id queue v → Valid issued validationProfile →
     issued.module_id = id → queue.length < config.max_batches.val →
     ∃ v', visitor.submit_code_batch v issued.seed = .ok (.Ok (), v') ∧
       Queued id (queue ++ [issued]) v'
-  poll : ∀ id queue v, Queued id queue v → ValidQueue id queue → queue ≠ [] →
+  poll : ∀ id queue v, Queued id queue v → ValidQueue id queue validationProfile → queue ≠ [] →
     ∃ issued rest after v', (issued :: rest).Perm queue ∧
       visitor.poll_code_batch v = .ok (.Ok after, v') ∧
       stream.CodeBatch.validate_all issued.seed = .ok after ∧ Queued id rest v'
@@ -45,12 +52,12 @@ structure Accepts {V : Type} (visitor : stream.StreamingVisitor V)
   tail_ready : ∀ id queue v tail, Queued id queue v →
     ∃ v', visitor.tail_ready v tail = .ok (.Ok (), v') ∧ Queued id queue v'
 
-theorem Valid.finished {issued : StreamBatch.Issued} (h : Valid issued)
+theorem Valid.finished {issued : StreamBatch.Issued} (h : Valid issued validationProfile)
     {after : stream.CodeBatch} (hr : stream.CodeBatch.validate_all issued.seed = .ok after) :
     StreamBatch.Identity issued after ∧ stream.CodeBatch.finish after = .ok (.Ok ()) := by
   obtain ⟨entries, hn, ht, hb⟩ := h.entries
   obtain ⟨result, hrun, hreachable, hfinish⟩ := stream.CodeBatch.validate_all.complete_seed
-    issued entries h.bounded hn ht h.profile h.entry_bounds hb
+    issued entries h.bounded hn ht h.profile h.limits h.entry_bounds hb h.validation_profile
   have he : result = after := by simpa using hrun.symm.trans hr
   subst result
   exact ⟨hreachable.validation.1, hfinish⟩
@@ -100,18 +107,20 @@ end Itasca
 
 namespace Itasca.StreamAcceptingScheduler
 
+variable {validationProfile : ValidationProfile}
+
 /-- Valid pending work retires in any scheduler-selected order. Successful
 finish follows from actual worker execution on independent typed encodings. -/
 theorem retire_complete {V : Type} (visitor : stream.StreamingVisitor V)
     (config : stream.Config) (Queued : U64 → List StreamBatch.Issued → V → Prop)
-    (hp : Accepts visitor config Queued) (id : U64)
+    (hp : Accepts visitor config Queued validationProfile) (id : U64)
     (queue : List StreamBatch.Issued) (v : V) (pending : alloc.vec.Vec Usize)
-    (hv : Queued id queue v) (hvalid : ValidQueue id queue)
+    (hv : Queued id queue v) (hvalid : ValidQueue id queue validationProfile)
     (hids : pending.val.Perm (queue.map StreamBatch.Issued.batch_id))
     (hnonempty : pending.val ≠ []) :
     ∃ v' remaining rest,
       stream.retire_code_batch visitor id v pending = .ok (.Ok (), v', remaining) ∧
-      Queued id rest v' ∧ ValidQueue id rest ∧
+      Queued id rest v' ∧ ValidQueue id rest validationProfile ∧
       remaining.val.Perm (rest.map StreamBatch.Issued.batch_id) ∧
       remaining.length + 1 = pending.length := by
   have hqueue : queue ≠ [] := by
@@ -140,9 +149,9 @@ theorem retire_complete {V : Type} (visitor : stream.StreamingVisitor V)
 /-- Draining a valid queue terminates successfully and leaves no queued work. -/
 theorem drain_complete {V : Type} (visitor : stream.StreamingVisitor V)
     (config : stream.Config) (Queued : U64 → List StreamBatch.Issued → V → Prop)
-    (hp : Accepts visitor config Queued) (id : U64)
+    (hp : Accepts visitor config Queued validationProfile) (id : U64)
     (queue : List StreamBatch.Issued) (v : V) (pending : alloc.vec.Vec Usize)
-    (hv : Queued id queue v) (hvalid : ValidQueue id queue)
+    (hv : Queued id queue v) (hvalid : ValidQueue id queue validationProfile)
     (hids : pending.val.Perm (queue.map StreamBatch.Issued.batch_id)) :
     ∃ v' remaining,
       stream.retire_all_code_batches visitor id v pending = .ok (.Ok (), v', remaining) ∧

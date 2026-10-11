@@ -3,6 +3,8 @@ import Itasca.Visitor.VisitorLeafDispatch
 
 open Aeneas Aeneas.Std
 
+attribute [local simp] Itasca.Control.signature Itasca.Control.resultView
+
 namespace Itasca.BrTableTraceExamples
 
 open VisitorTrace
@@ -10,7 +12,7 @@ open VisitorTrace
 def emptyContext : code.Context := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _⟩
 
 def bodyState (poly : Bool) (pos : Usize) : code.OpIterState :=
-  ⟨alloc.vec.Vec.new _, alloc.vec.Vec.from [⟨.Body, .Empty, 0#usize, poly⟩] (by scalar_tac), pos⟩
+  ⟨alloc.vec.Vec.new _, alloc.vec.Vec.from [⟨.Body, .Empty, Control.signature (.Empty), 0#usize, poly⟩] (by scalar_tac), pos⟩
 
 private theorem state_eq (a b : code.OpIterState)
     (hv : a.vals.val = b.vals.val) (hc : a.ctrls.val = b.ctrls.val) (hp : a.pos = b.pos) : a = b := by
@@ -21,7 +23,7 @@ private theorem state_eq (a b : code.OpIterState)
 private theorem mark_body (poly : Bool) (pos : Usize) :
     code.mark_unreachable (bodyState poly pos) = .ok (bodyState true pos) := by
   obtain ⟨s, hr, hv, _, hc, hp⟩ := WP.spec_imp_exists
-    (code.mark_unreachable.spec (bodyState poly pos) [] ⟨.Body, .Empty, 0#usize, poly⟩ rfl (by simp))
+    (code.mark_unreachable.spec (bodyState poly pos) [] ⟨.Body, .Empty, Control.signature (.Empty), 0#usize, poly⟩ rfl (by simp))
   have hs : s = bodyState true pos := state_eq _ _ (by simpa [bodyState] using hv)
     (by simpa [bodyState] using hc) hp
   simpa [hs] using hr
@@ -34,7 +36,7 @@ private theorem public_of_loop {V : Type} (visitor : code.OpVisitor V) (data : S
     code.validate_body_with visitor data env emptyContext v = .ok (result, log) := by
   have hguard : ¬ Slice.len data > limits.MAX_FUNCTION_BYTES := by scalar_tac
   have hi : Body.initial .Empty = bodyState false 0#usize := rfl
-  simp [code.validate_body_with, hguard,
+  simp [code.validate_body_with.eq_model, code.validate_body_with_model, hguard,
     code.start_function.spec (alloc.vec.Vec.deref emptyContext.results) .Empty rfl, hi, hloop]
 
 private theorem loop_step {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
@@ -83,7 +85,7 @@ private theorem leb_at (data : Slice U8) (pos next : Usize) (value : U32)
 private theorem label_at (data : Slice U8) (pos next : Usize)
     (hr : reader.read_u32_leb data pos = .ok (.Ok (0#u32, next))) :
     code.read_label (bodyState true pos) data =
-      .ok (.Ok (0#u32, ⟨.Body, .Empty, 0#usize, true⟩), bodyState true next) := by
+      .ok (.Ok (0#u32, ⟨.Body, .Empty, Control.signature (.Empty), 0#usize, true⟩), bodyState true next) := by
   obtain ⟨_, hs, rfl⟩ := WP.spec_imp_exists
     (code.read_label.from_leb (bodyState true pos) data 0#u32 next hr (by simp [bodyState]))
   simpa [bodyState] using hs
@@ -133,7 +135,7 @@ private theorem partial_body (data : Slice U8) (env : module.Env) (e : error.OpE
   have htail := labels_error recorder data (bodyState true 4#usize) last partialLog
     2#u32 1#u32 (some .Empty) e (by decide) hbad
   have hlabels := labels_next recorder data (bodyState true 3#usize) (bodyState true 4#usize) last
-    firstLog partialLog partialLog 2#u32 0#u32 1#u32 0#u32 none ⟨.Body, .Empty, 0#usize, true⟩
+    firstLog partialLog partialLog 2#u32 0#u32 1#u32 0#u32 none ⟨.Body, .Empty, Control.signature (.Empty), 0#usize, true⟩
     .Empty (.Err e) (by decide) hlabel (by rfl) rfl rfl add_zero htail
   have ht : code.read_br_table recorder (bodyState true 2#usize) data firstLog =
       .ok (.Err e, last, partialLog) := by
@@ -264,7 +266,7 @@ private theorem read_one_table {V : Type} (visitor : code.OpVisitor V) (v w : V)
     rw [loop]
     simp [code.read_table_labels_loop.body]
   have hlabels := labels_next visitor tableBytes (bodyState true 3#usize) (bodyState true 4#usize)
-    (bodyState true 4#usize) v w w 1#u32 0#u32 1#u32 0#u32 none ⟨.Body, .Empty, 0#usize, true⟩
+    (bodyState true 4#usize) v w w 1#u32 0#u32 1#u32 0#u32 none ⟨.Body, .Empty, Control.signature (.Empty), 0#usize, true⟩
     .Empty (.Ok (some .Empty)) (by decide) hread hh rfl rfl add_zero hdone
   have hc := leb_at tableBytes 2#usize 3#usize 1#u32 (by decide) rfl rfl (by decide)
   have hd := label_at tableBytes 4#usize 5#usize
@@ -312,7 +314,7 @@ theorem default_has_no_callback (env : module.Env) :
     simp [CoreVisitor.run, recorder, ofHandler, code.visit,
       tableLog, core.result.Result.Insts.CoreOpsTry.branch]
   obtain ⟨⟨_, ended⟩, he, hok, hc, hv, hp⟩ := WP.spec_imp_exists
-    (code.read_end.empty (bodyState true 6#usize) [] ⟨.Body, .Empty, 0#usize, true⟩ rfl rfl rfl)
+    (code.read_end.empty (bodyState true 6#usize) [] ⟨.Body, .Empty, Control.signature (.Empty), 0#usize, true⟩ rfl rfl rfl)
   dsimp only at hok hc hv hp
   have heq : ended = closedState := state_eq _ _ (by simpa [closedState, bodyState] using congrArg alloc.vec.Vec.val hv)
     (by simpa [closedState] using hc) hp
@@ -340,15 +342,15 @@ theorem default_has_no_callback (env : module.Env) :
     closedState, show Slice.len tableBytes = 6#usize from rfl]
 
 def nestedFrame (kind : code.LabelKind) (poly : Bool) : code.Ctrl :=
-  ⟨kind, .Value .I64, 0#usize, poly⟩
+  ⟨kind, .Value .I64, Control.signature (.Value .I64), 0#usize, poly⟩
 def nestedState (kind : code.LabelKind) (poly : Bool) (pos : Usize) : code.OpIterState :=
-  ⟨alloc.vec.Vec.new _, alloc.vec.Vec.from [⟨.Body, .Empty, 0#usize, false⟩, nestedFrame kind poly]
+  ⟨alloc.vec.Vec.new _, alloc.vec.Vec.from [⟨.Body, .Empty, Control.signature (.Empty), 0#usize, false⟩, nestedFrame kind poly]
     (by scalar_tac), pos⟩
 
 private theorem mark_nested (kind : code.LabelKind) (poly : Bool) (pos : Usize) :
     code.mark_unreachable (nestedState kind poly pos) = .ok (nestedState kind true pos) := by
   obtain ⟨s, hr, hv, _, hc, hp⟩ := WP.spec_imp_exists
-    (code.mark_unreachable.spec (nestedState kind poly pos) [⟨.Body, .Empty, 0#usize, false⟩]
+    (code.mark_unreachable.spec (nestedState kind poly pos) [⟨.Body, .Empty, Control.signature (.Empty), 0#usize, false⟩]
       (nestedFrame kind poly) rfl (by simp [nestedFrame]))
   have hs : s = nestedState kind true pos := state_eq _ _ (by simpa [nestedState, nestedFrame] using hv)
     (by simpa [nestedState, nestedFrame] using hc) hp
@@ -380,7 +382,7 @@ theorem mismatching_observed_label (env : module.Env) :
     (code.read_label.from_leb (nestedState .Block true 6#usize) mismatchBytes 1#u32 7#usize hsecond
       (by simp [nestedState]))
   have hlabel1' : code.read_label (nestedState .Block true 6#usize) mismatchBytes =
-      .ok (.Ok (1#u32, ⟨.Body, .Empty, 0#usize, false⟩), nestedState .Block true 7#usize) := by
+      .ok (.Ok (1#u32, ⟨.Body, .Empty, Control.signature (.Empty), 0#usize, false⟩), nestedState .Block true 7#usize) := by
     simpa [nestedState] using hlabel1
   let before := nestedLog .Block (.block (.Value .I64))
   let afterFirst := before ++ [⟨.op (nestedState .Block true 6#usize) (.br_table_label 0#u32), .Ok ()⟩]
@@ -453,24 +455,24 @@ theorem mismatching_observed_label (env : module.Env) :
 def loopBytes : Slice U8 := alloc.vec.Vec.deref
   (alloc.vec.Vec.from [0x03#u8, 0x7E#u8, 0#u8, 0x0C#u8, 0#u8] (by scalar_tac))
 def loopLog : List Observation := nestedLog .Loop (.loop (.Value .I64)) ++
-  [⟨.op (nestedState .Loop true 5#usize) (.br 0#u32 (.Value .I64)), .Ok ()⟩]
+  [⟨.op (nestedState .Loop true 5#usize) (.br 0#u32 .Empty), .Ok ()⟩]
 
-/-- A result-bearing loop's ordinary branch callback reports its raw declared
-block type although its branch target signature is empty. The eventual missing
+/-- A result-bearing loop's ordinary branch callback reports its empty label
+signature. The eventual missing
 end rejects the public body after this exact three-callback prefix. -/
-theorem loop_branch_raw_block_type (env : module.Env) :
+theorem loop_branch_label_type (env : module.Env) :
     code.validate_body_with recorder loopBytes env emptyContext [] = .ok (.Err .UnexpectedEof, loopLog) ∧
       Control.targetBlockType (nestedFrame .Loop true) = .Empty := by
   refine ⟨?_, rfl⟩
   obtain ⟨branched, hbr, hv, hc, hp, _⟩ := code.read_br.loop_backedge
-    (nestedState .Loop true 4#usize) loopBytes [⟨.Body, .Empty, 0#usize, false⟩]
+    (nestedState .Loop true 4#usize) loopBytes [⟨.Body, .Empty, Control.signature (.Empty), 0#usize, false⟩]
     (nestedFrame .Loop true) rfl rfl (by simp [nestedFrame]) (by decide) rfl
   have hbrEq : branched = nestedState .Loop true 5#usize := state_eq _ _
     (by simpa [nestedState, nestedFrame] using hv)
     (by simpa [nestedState, nestedFrame] using hc)
     (by apply UScalar.eq_of_val_eq; simpa [nestedState] using hp)
   have hbr' : code.read_br (nestedState .Loop true 4#usize) loopBytes =
-      .ok (.Ok (0#u32, .Value .I64), nestedState .Loop true 5#usize) := by
+      .ok (.Ok (0#u32, .Empty), nestedState .Loop true 5#usize) := by
     simpa [hbrEq, nestedFrame] using hbr
   let before := nestedLog .Loop (.loop (.Value .I64))
   have hsBr : code.step recorder (nestedState .Loop true 4#usize) loopBytes env emptyContext code.OP_BR before =

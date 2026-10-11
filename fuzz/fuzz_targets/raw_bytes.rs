@@ -19,7 +19,7 @@ fuzz_target!(|data: &[u8]| {
     let wasmparser_valid = Validator::new_with_features(WasmFeatures::WASM1)
         .validate_all(data)
         .is_ok();
-    let itasca_valid = itasca::validate_module(data).is_ok();
+    let itasca_valid = itasca::validate_module(data, itasca::ValidationProfile::Wasm1).is_ok();
 
     assert!(
         !itasca_valid || wasmparser_valid,

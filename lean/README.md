@@ -6,17 +6,62 @@ This is itasca's active verification pipeline, implementing the
 [final validation record](baseline/VALIDATION.md), and
 [upstream change tracker](../UPSTREAM.md).
 
-Multi-value work is in progress. `Itasca/Binary/SignedLeb33.lean` proves the
-signed block-index reader; `Itasca/MultiValue/` proves descriptor lookup, block
-immediate decoding, and its connection to generated `Blocktype_ok`. These are
-foundation proofs, not a whole-body or whole-module multi-value theorem.
-The extracted experimental runtime is in `src/multi_value.rs`; its control
-invariant, independent body grammar, soundness/completeness, and visitor/stream
-integration remain to be completed. The trust base is unchanged.
+Multi-value body and whole-module verification is complete for the supported
+subset. Both profiles use the same Rust streaming module driver and shared
+profile-parameterized module proofs. `Itasca/Binary/SignedLeb33.lean` proves the
+signed block-index reader; `Itasca/MultiValue/` connects block decoding to
+generated `Blocktype_ok` and provides the following checked contracts:
+
+| Module | Checked multi-value claim |
+| --- | --- |
+| [SignatureEquality](Itasca/MultiValue/SignatureEquality.lean) | Descriptor comparison terminates and decides equality of the resolved type vectors, including distinct indices with equal signatures. |
+| [StackSemantics](Itasca/MultiValue/StackSemantics.lean) | Descriptor pops preserve stack interpretation and accept compatible operands; pops and guarded pushes terminate on structurally bounded stacks. |
+| [SuffixTyping](Itasca/MultiValue/SuffixTyping.lean) | `check_suffix.wasm_spec` combines totality with acceptance exactly when independent stack realization and generated `Resulttype_sub` hold. Equal-arity targets share a common subtype, including `BOT`. |
+| [Calls](Itasca/MultiValue/Calls.lean) | Applying a function signature terminates, consumes all parameters, and appends all results; compatible operands imply acceptance within signature and capacity limits. |
+| [ControlTotal](Itasca/MultiValue/ControlTotal.lean), [EndTotal](Itasca/MultiValue/EndTotal.lean) | Entry, branches, branch tables, calls, and frame closing preserve structural bounds without moving the cursor backward, including their error paths. Entry additionally requires room for a frame. |
+| [ScalarTotal](Itasca/MultiValue/ScalarTotal.lean) | The shared scalar dispatcher terminates on structurally bounded multi-value frames with room for one operand, preserving control depth and cursor progress. |
+| [BodyTotal](Itasca/MultiValue/BodyTotal.lean) | `multi_value.validate_body.wasm_total` proves that every byte sequence, environment, locals vector, and type index returns an ordinary success/error result without modeled panic or divergence. The actual extracted loop uses cursor progress and a control-depth bound derived from consumed bytes. |
+| [Syntax](Itasca/MultiValue/Syntax.lean), [Binary](Itasca/MultiValue/Binary.lean) | Independent structured body grammar with indexed block signatures, nonminimal signed s33 indices, shared scalar immediates, and exact consumption including the final `end`. Block byte spans are equivalent to `BlockDecoded`; encoding does not assume that indices resolve. |
+| [Prefix](Itasca/MultiValue/Prefix.lean), [Frames](Itasca/MultiValue/Frames.lean) | Semantic control invariant with arbitrary block parameters/results, saved parent arguments, generated label correspondence, and signatures projected from the shared control stack. Entry, child closing, else reset, and function closing preserve the ghost typing derivations. An omitted else uses equal resolved parameter/result vectors, including nonempty ones. |
+| [Invariant](Itasca/MultiValue/Invariant.lean) | Consumed-byte invariant, exact extracted initialization, and completion certificate combining independent encoding with generated body typing. The selected function signature supplies return types; function parameters remain locals. |
+| [Soundness](Itasca/MultiValue/Soundness.lean) | `multi_value.validate_body.wasm_sound` proves that acceptance by the actual extracted public body validator yields `MultiValue.Validated`: independent binary provenance and generated SpecTec body typing. `wasm_spec` combines this with termination. Neither theorem assumes valid bytes, an environment profile, or a valid type index. |
+| [Complete](Itasca/MultiValue/Complete.lean) | `multi_value.validate_body.wasm_complete` derives acceptance from `MultiValue.Validated`, the body-byte limit, and `EnvironmentWithinLimits`. `wasm_complete_of_typing` exposes the instruction tree; `wasm_accepts_iff` gives the equivalence within those limits. No handler-success, execution, or abstract preservation premise is exposed. |
+
+Whole-body proofs cover the actual extracted `multi_value.validate_body`,
+including initialization, all opcode arms, final `end`, and exact byte consumption.
+Completeness follows independent declarative derivations through parameterized
+blocks and loops, both binary forms of `if`, calls, returns, and branch tables
+with a common `BOT` subtype. `EnvironmentWithinLimits` requires at most 1000
+parameters and 1000 results per stored type and direct-call signature; the body
+must fit `MAX_FUNCTION_BYTES`. A byte-based operand bound discharges vector
+capacity checks on both 32-bit and 64-bit platforms. The grammar reuses scalar
+instruction encodings and does not cover other Wasm 2.0 proposals.
+
+[Grammar and control regressions](Itasca/Examples/MultiValueGrammar.lean) cover
+padded type indices and a multi-value identity if without an explicit else.
+[Whole-body regressions](Itasca/Examples/MultiValueBody.lean) derive public
+acceptance from independent encoding and typing for two-result identity blocks,
+omitted else arms, branches to loop parameters, and differently typed branch-table
+targets sharing a `BOT` subtype. A [whole-module regression](Itasca/Examples/MultiValueModule.lean)
+derives acceptance and metadata for a two-result function from the shared
+module completeness theorem, then proves the same bytes are rejected under
+Wasm 1.0.
+Both profiles execute the visiting body loop in `src/multi_value.rs`, with one
+control stack storing full signatures. Profile dispatch preserves their
+different control rules and callback order. There is no separate multi-value
+module driver. [Checked loop refinement](Itasca/Body/SharedLoop.lean) connects
+the shared runtime to the existing Wasm 1.0 proofs, using a
+[proof-only execution model](Itasca/Body/LegacyExecution.lean); multi-value
+adapters connect the same runtime to its semantic body proofs.
+The [shared body/entry contracts](Itasca/Profile/Body.lean) connect both
+specializations to one module proof chain. [Visitor adapters](Itasca/Profile/BodyVisitor.lean)
+provide termination, soundness, and accepting-hook completeness for both. All
+multi-value proof modules, including proof-bearing adapters, are covered by
+`Itasca.Audit`; the trust base is unchanged.
 
 The whole-module claims cover the actual streaming driver and its synchronous
-`validate_module` wrapper, with shared environment, entry, body, and tail
-components. Generic streaming theorems separate source coherence, callback
+`validate_module` wrapper for either explicit profile, with shared environment,
+entry, and tail composition. `MultiValue` does not include other Wasm 2.0 proposals. Generic streaming theorems separate source coherence, callback
 returning behavior, worker provenance, and accepting scheduler premises. See the
 [embedding obligations](../DEVELOPMENT.md#embedding-obligations).
 
@@ -112,26 +157,31 @@ The profile preserves existing Wasm 1.0 behavior without changing Rust or the
 upstream specification.
 
 The public whole-module API is a synchronous wrapper over the sole module
-driver, `stream.validate_streaming`. Its preserved theorem statements are
-corollaries of the concrete slice and synchronous-worker proofs:
+driver, `stream.validate_streaming`. The `profile_*` theorems quantify over
+`ValidationProfile`; the existing `wasm_*` names remain Wasm 1.0 specializations
+with their prior premises. Both are corollaries of the concrete slice and
+synchronous-worker proofs:
 
 | Theorem | Checked claim |
 | --- | --- |
-| [`module.validate_module.wasm_spec`, `wasm_total`, `wasm_sound`](Itasca/Module/ModuleValidation.lean) | Every input returns an ordinary result; acceptance establishes the complete module certificate without source, scheduler, or body-validation assumptions. |
-| [`module.validate_module.wasm_complete`, `wasm_complete_with_metadata`](Itasca/Module/ModuleCompleteness.lean) | Independent module encoding within limits, elaboration, generated typing, and the Wasm 1.0 profile imply acceptance and exact returned metadata. |
-| [`stream.validate_streaming.wasm_sound`](Itasca/Stream/StreamValidation.lean) | An accepted run, coherent source views, and worker provenance establish `ModuleSound.Validated` for the concatenated bytes, returned environment, and exact tail from the actual `tail_ready` call. |
-| [`stream.validate_streaming.wasm_total`](Itasca/Stream/StreamDriverTotal.lean) | Returning source and scheduler callbacks imply an ordinary result on arbitrary bytes. Unfinished or malformed returned batches need no provenance premise. |
-| [`stream.validate_streaming.wasm_complete`](Itasca/Stream/StreamDriverComplete.lean) | The same independent valid-module premises, canonical available source regions, and an accepting scheduler policy imply actual acceptance and metadata for that same raw module. |
-| [`stream.validate_module_slice.wasm_total`, `wasm_sound`, `wasm_spec`](Itasca/Stream/StreamSlice.lean) | The private contiguous adapter discharges source coherence, callback totality, and worker provenance. |
-| [`stream.validate_module_slice.wasm_complete`, `wasm_complete_with_metadata`](Itasca/Stream/StreamSliceCompleteness.lean) | The concrete source and synchronous worker discharge generic completeness obligations, returning the exact environment/tail pair. |
+| [`module.validate_module.profile_spec`, `profile_total`, `profile_sound`](Itasca/Module/ModuleValidation.lean) | Every input returns an ordinary result; acceptance establishes the complete module certificate without source, scheduler, or body-validation assumptions. |
+| [`module.validate_module.profile_complete`, `profile_complete_with_metadata`](Itasca/Module/ModuleCompleteness.lean) | Independent module encoding within limits, elaboration, generated typing, signature caps, and the selected profile imply acceptance and exact returned metadata. |
+| [`stream.validate_streaming.profile_sound`](Itasca/Stream/StreamValidation.lean) | An accepted run, coherent source views, and worker provenance establish `ModuleSound.Validated` for the concatenated bytes, returned environment, and exact tail from the actual `tail_ready` call. |
+| [`stream.validate_streaming.profile_total`](Itasca/Stream/StreamDriverTotal.lean) | Returning source and scheduler callbacks imply an ordinary result on arbitrary bytes. Unfinished or malformed returned batches need no provenance premise. |
+| [`stream.validate_streaming.profile_complete`](Itasca/Stream/StreamDriverComplete.lean) | The same independent valid-module premises, canonical available source regions, and an accepting scheduler policy imply actual acceptance and metadata for that same raw module. |
+| [`stream.validate_module_slice.profile_total`, `profile_sound`, `profile_spec`](Itasca/Stream/StreamSlice.lean) | The private contiguous adapter discharges source coherence, callback totality, and worker provenance. |
+| [`stream.validate_module_slice.profile_complete`, `profile_complete_with_metadata`](Itasca/Stream/StreamSliceCompleteness.lean) | The concrete source and synchronous worker discharge generic completeness obligations, returning the exact environment/tail pair. |
 
-`ModuleSound.Validated` supplies one raw module whose independent
-`ModuleBinary.ModuleEncoding` accounts for the whole input. `Elaborates`
+`ModuleSound.Validated data decoded profile` supplies one raw module whose
+independent `ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile)`
+uses the same profile to account for the whole input. `Elaborates`
 connects that same module to generated SpecTec syntax, excluding out-of-range
 function-type fallback and truncated function/code pairing. The generated
 `Module_ok` derivation uses imported and defined index spaces in their actual
-order. `Profile` additionally establishes unique decoded export names,
-Wasm 1.0 table/memory/result limits, and the recursive body profile.
+order. `ModuleElaboration.Profile raw profile` additionally establishes unique
+decoded export names, the supported table/memory counts, and the selected
+signature and instruction restrictions. The independent byte grammar selects
+Wasm 1.0 or multi-value control forms and active-segment encodings.
 
 The certificate identifies the decoded environment and data segments, proves
 cache coherence, and proves that the actual `import_types` and `export_types`
@@ -143,13 +193,17 @@ and `()`, so its `StreamRun.Accepted` witness records the actual delivered tail;
 it does not assume arbitrary visitor state stores that tail. The concrete
 synchronous adapter proves its returned `Module` contains exactly that pair.
 
-Completeness starts from `ModuleEncodingWithinLimits`, `Elaborates`, generated
-`Module_ok`, and `Profile` for the same independent raw module. No parser-success,
+Completeness starts from `ModuleEncodingWithinLimits raw bytes profile`,
+`ModuleSignaturesWithinLimits raw profile`, `Elaborates`, generated `Module_ok`,
+and `ModuleElaboration.Profile raw profile` for the same independent raw module. No parser-success,
 decoded-cache, local checker, or prevalidated-entry premise is exposed. Limits
 constrain actual module bytes, encoded instruction bodies including their final
 `end`, and declared locals excluding parameters. Nonminimal valid LEB encodings,
 empty/absent code sections, strict UTF-8, and exact input consumption remain part
-of the binary grammar and framing proofs.
+of the binary grammar and framing proofs. Multi-value signature caps require at
+most 1000 parameters and 1000 results; the corresponding Wasm 1.0 bound predicate
+is `True`, preserving its prior parameter behavior. Caps do not redefine
+`ModuleConditions` or language validity.
 
 The streaming assumptions deliberately separate three claims:
 
@@ -178,12 +232,16 @@ progress, FFI safety, and compiler IR correctness remain embedding obligations.
 
 `ModuleCodeEntry`, `ModuleEnvSemantics`, `ModuleTail`, `ModuleCodeSemantic`, and
 `ModuleSoundness` provide shared component facts and driver-independent certificate
-assembly. `ModuleDecomposed` derives per-entry bounds and arity from an actual
-accepted environment decode, including entries in another buffer.
+assembly. `Profile/Types`, `Profile/Body`, and `Profile/CodeEntry` separate
+language restrictions, resource bounds, independent encodings, and generated
+typing. `ModuleEnv.profile_accepted_entry_conditions` derives per-entry
+bounds, `Profile.Environment`, and `Profile.EnvironmentWithinLimits` from an
+actual accepted environment decode, including entries in another buffer.
 `ModuleEntryVisitor` and `ModuleCustomVisitor` preserve acceptance under callback
 replacement. Successful custom/opcode visitor erasure has no termination premise
-for unrelated callback executions. `ModuleCodeEntryComplete` derives actual
-entry acceptance from independent typed bounded encodings.
+for unrelated callback executions. `Profile/EntryComplete` derives actual entry acceptance from independent typed
+bounded encodings for either profile; `ModuleCodeEntryComplete` retains the
+Wasm 1.0 wrapper.
 
 The legacy `validate_module_with`, `validate_code_with`, `validate_code`,
 `CodeVisitor`, `ValidatingCodeVisitor`, and `code_section`/`CodeSection` APIs and
@@ -194,7 +252,7 @@ entry/body hooks remain. Body and entry callback traces retain their guarantees:
 
 | Consumer interface | Retained theorem |
 | --- | --- |
-| Separate entry after decoding the environment | `module.validate_code_entry.spec_of_env` |
+| Separate entry after decoding the environment, either profile | `module.validate_code_entry.profile_spec_of_env` |
 | Accepted entry with original callback trace | `module.validate_code_entry_with.trace_sound` |
 | Arbitrary accepted opcode visitor | `code.validate_body_with.wasm_sound` |
 | Accepted body with exact callbacks | `code.validate_body_with.trace_sound` |
@@ -276,6 +334,8 @@ Internal imports use the directories below.
 | --- | --- |
 | `Binary/` | Independent body/module grammars; unsigned and signed LEB, floating bits and UTF-8; prefix, structured-body and raw-module uniqueness. `SignedLebGeneric` supplies one signed-reader proof specialized by `SignedLeb` and `SignedLeb64`. |
 | `Body/` | Stack/control/environment semantics, generated typing, the recursive Wasm 1.0 profile, soundness and completeness. `WasmFrames`, `WasmInvariant`, and `WasmStep*` share the stronger profile-preserving invariant; both public soundness contracts project from this proof. |
+| `Profile/` | Shared language/resource predicates and body/entry certificates; adapters connect both implementations to the same module/streaming proof chain. |
+| `MultiValue/` | Indexed signatures, stack/control semantics, independent multi-value grammar, body totality/soundness/completeness, and visitor adapters. |
 | `Visitor/` | Total/accepting hooks, erasure, instrumentation, and exact callback traces. `OpDispatch` supplies common dispatcher equations to erasure, completeness, and trace proofs. |
 | `Module/` | Environment/entry/tail parsing, elaboration, index spaces, metadata, independent module certificates, and public whole-module corollaries. |
 | `Stream/` | Source contracts, framing, worker provenance, scheduler policy, the driver, and concrete synchronous slice adapters. |

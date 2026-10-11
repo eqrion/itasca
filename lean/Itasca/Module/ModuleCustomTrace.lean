@@ -6,6 +6,8 @@ open Aeneas Aeneas.Std
 
 namespace Itasca
 
+variable {profile : ValidationProfile}
+
 open ModuleTrace
 
 /-- An accepted environment walk reports each custom section exactly where
@@ -16,7 +18,7 @@ theorem module.validate_env_with_loop.accepted_trace {V : Type}
     (v : V) (env : module.Env) (pos : Usize) (lastId : U8)
     (result : module.Env) (next : Usize) (v' : V)
     (hpos : pos.val ≤ data.length)
-    (h : module.validate_env_with_loop visitor data v env pos lastId =
+    (h : module.validate_env_with_loop visitor data profile v env pos lastId =
       .ok (.Ok (result, next), v')) :
     ∃ events, observe v' = observe v ++ events ∧
       SectionTrace data (fun id => 1 ≤ id.val ∧ id.val < 10) pos next events := by
@@ -94,7 +96,7 @@ theorem module.validate_env_with.accepted_trace {V : Type}
     (visitor : module.ModuleVisitor V) (observe : V → List Event)
     (hrecords : RecordsCustom visitor observe) (data : Slice U8)
     (v : V) (result : module.Env) (next : Usize) (v' : V)
-    (h : module.validate_env_with visitor data v = .ok (.Ok (result, next), v')) :
+    (h : module.validate_env_with visitor data profile v = .ok (.Ok (result, next), v')) :
     ∃ events, observe v' = observe v ++ events ∧ EnvTrace data next events := by
   unfold module.validate_env_with at h
   obtain ⟨initial, _, ht⟩ := ResultFacts.bind_ok_inv _ _ _ h
@@ -116,7 +118,7 @@ theorem module.validate_tail_with_loop.accepted_trace {V : Type}
     (hrecords : RecordsCustom visitor observe) (data : Slice U8) (env : module.Env)
     (v : V) (segments : alloc.vec.Vec module.Data) (pos : Usize) (seen : Bool)
     (result : module.Tail) (v' : V) (hpos : pos.val ≤ data.length)
-    (h : module.validate_tail_with_loop visitor data env v segments pos seen = .ok (.Ok result, v')) :
+    (h : module.validate_tail_with_loop visitor data env profile v segments pos seen = .ok (.Ok result, v')) :
     ∃ events, observe v' = observe v ++ events ∧ TailTrace data pos events := by
   generalize hn : data.length - pos.val = n
   induction n using Nat.strong_induction_on generalizing v segments pos seen with
@@ -190,7 +192,7 @@ theorem module.validate_tail_with.accepted_trace {V : Type}
     (visitor : module.ModuleVisitor V) (observe : V → List Event)
     (hrecords : RecordsCustom visitor observe) (data : Slice U8) (pos : Usize) (env : module.Env)
     (v : V) (result : module.Tail) (v' : V) (hpos : pos.val ≤ data.length)
-    (h : module.validate_tail_with visitor data pos env v = .ok (.Ok result, v')) :
+    (h : module.validate_tail_with visitor data pos env profile v = .ok (.Ok result, v')) :
     ∃ events, observe v' = observe v ++ events ∧ TailTrace data pos events :=
   module.validate_tail_with_loop.accepted_trace visitor observe hrecords data env v (alloc.vec.Vec.new _)
     pos false result v' hpos h

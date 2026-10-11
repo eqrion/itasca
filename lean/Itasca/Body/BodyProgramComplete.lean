@@ -18,7 +18,7 @@ theorem body_of_programs (data : Slice U8) (env : module.Env) (ctx : code.Contex
   obtain ⟨middle, hinner, hend⟩ := Wasm.Consumed.split hbytes
   let st := Body.initial bt
   let f : Frame st :=
-    ⟨[], ⟨.Body, bt, 0#usize, false⟩, [], [], rfl, rfl, rfl⟩
+    ⟨[], ⟨.Body, bt, Control.signature bt, 0#usize, false⟩, [], [], rfl, rfl, rfl⟩
   let C := WasmFrames.enter (EnvTranslation.context env ctx) .body bt
   have hmatch : EnvTranslation.Matches env ctx C :=
     (EnvTranslation.Matches.root env ctx).enter _
@@ -30,7 +30,7 @@ theorem body_of_programs (data : Slice U8) (env : module.Env) (ctx : code.Contex
   obtain ⟨s, hrun, hp, hout, hb⟩ := hprograms inner ops hemits C st f middle []
     (Control.resultTypes bt) hmatch hlabels hbounds hinner
       (Sequence.realizes_default false []) htyped hprofile
-  obtain ⟨g, hgp, hgo, hgk, hgb, hgba, hgr⟩ := hout.next
+  obtain ⟨g, hgp, hgo, hgk, hgb, hgsig, hgba, hgr⟩ := hout.next
   have hend' : Wasm.At data s.pos .end_ next := by simpa [hp] using hend.single
   have hthen : g.current.kind = .Then → g.current.block_type = .Empty := by
     simp [hgk, f]

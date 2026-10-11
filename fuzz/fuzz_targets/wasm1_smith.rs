@@ -58,7 +58,7 @@ fuzz_target!(|data: &[u8]| {
         "wasm-smith (or the Wasm 1.0 re-encoding) produced a module wasmparser rejects"
     );
     assert!(
-        itasca::validate_module(&bytes).is_ok(),
+        itasca::validate_module(&bytes, itasca::ValidationProfile::Wasm1).is_ok(),
         "itasca rejected a module wasm-smith generated and wasmparser accepts"
     );
 });

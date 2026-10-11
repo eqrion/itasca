@@ -66,12 +66,12 @@ structure Elaborates (raw : ModuleBinary.Module) (spec : _root_.module) : Prop w
 
 /-- The additional module-level conditions missing from the generated 2.0
 judgment. Instruction syntax itself is restricted by `ModuleBinary`. -/
-structure ModuleConditions (raw : ModuleBinary.Module) : Prop where
+structure ModuleConditions (raw : ModuleBinary.Module) (profile : ValidationProfile := .Wasm1) : Prop where
   unique_exports : (raw.exports.map (fun entry => ModuleBinary.nameOfBytes entry.name)).Nodup
   table_count : (ModuleTranslation.tables (raw.imports.map (fun entry => importType raw.types entry.desc))).length +
     raw.tables.length ≤ 1
   memory_count : (ModuleTranslation.mems (raw.imports.map (fun entry => importType raw.types entry.desc))).length +
     raw.memories.length ≤ 1
-  arity : ∀ ft ∈ raw.types, ft.results.val.length ≤ 1
+  arity : ∀ ft ∈ raw.types, Itasca.Profile.FuncType profile ft
 
 end Itasca.ModuleElaboration

@@ -14,8 +14,8 @@ theorem module.validate_code_entry_with.accepted_transfer {V W : Type}
     (haccept : FullVisitor.Accepts replacement)
     (data : Slice U8) (pos : Usize) (env : module.Env) (index finish : Usize)
     (v v' : V) (w : W)
-    (h : module.validate_code_entry_with visitor data pos env index v = .ok (.Ok finish, v')) :
-    ∃ w', module.validate_code_entry_with replacement data pos env index w = .ok (.Ok finish, w') := by
+    (h : module.validate_code_entry_with visitor data pos env index .Wasm1 v = .ok (.Ok finish, v')) :
+    ∃ w', module.validate_code_entry_with replacement data pos env index .Wasm1 w = .ok (.Ok finish, w') := by
   unfold module.validate_code_entry_with at h ⊢
   try dsimp only at h ⊢
   by_cases hi : index ≥ alloc.vec.Vec.len env.func_type_indices
@@ -107,8 +107,8 @@ without requiring its other callback runs to terminate. -/
 theorem module.validate_code_entry_with.accepted_erase {V : Type}
     (visitor : code.OpVisitor V) (data : Slice U8) (pos : Usize) (env : module.Env)
     (index finish : Usize) (v v' : V)
-    (h : module.validate_code_entry_with visitor data pos env index v = .ok (.Ok finish, v')) :
-    module.validate_code_entry data pos env index = .ok (.Ok finish) := by
+    (h : module.validate_code_entry_with visitor data pos env index .Wasm1 v = .ok (.Ok finish, v')) :
+    module.validate_code_entry data pos env index .Wasm1 = .ok (.Ok finish) := by
   obtain ⟨w, hw⟩ := module.validate_code_entry_with.accepted_transfer visitor
     code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_accepts data pos env index finish v v' () h
   simp [module.validate_code_entry, hw]
@@ -117,8 +117,8 @@ theorem module.validate_code_entry_with.accepted_erase {V : Type}
 theorem module.validate_code_entry_with.accepted_lift {V : Type}
     (visitor : code.OpVisitor V) (haccept : FullVisitor.Accepts visitor)
     (data : Slice U8) (pos : Usize) (env : module.Env) (index finish : Usize) (v : V)
-    (h : module.validate_code_entry data pos env index = .ok (.Ok finish)) :
-    ∃ v', module.validate_code_entry_with visitor data pos env index v = .ok (.Ok finish, v') := by
+    (h : module.validate_code_entry data pos env index .Wasm1 = .ok (.Ok finish)) :
+    ∃ v', module.validate_code_entry_with visitor data pos env index .Wasm1 v = .ok (.Ok finish, v') := by
   unfold module.validate_code_entry at h
   obtain ⟨⟨r, w⟩, hr, h⟩ := ResultFacts.bind_ok_inv _ _ _ h
   have he : r = .Ok finish := by simpa using h
@@ -129,8 +129,8 @@ theorem module.validate_code_entry_with.accepted_lift {V : Type}
 theorem module.validate_code_entry_with.accepted_iff {V : Type}
     (visitor : code.OpVisitor V) (haccept : FullVisitor.Accepts visitor)
     (data : Slice U8) (pos : Usize) (env : module.Env) (index finish : Usize) (v : V) :
-    (∃ v', module.validate_code_entry_with visitor data pos env index v = .ok (.Ok finish, v')) ↔
-      module.validate_code_entry data pos env index = .ok (.Ok finish) := by
+    (∃ v', module.validate_code_entry_with visitor data pos env index .Wasm1 v = .ok (.Ok finish, v')) ↔
+      module.validate_code_entry data pos env index .Wasm1 = .ok (.Ok finish) := by
   constructor
   · rintro ⟨v', h⟩
     exact module.validate_code_entry_with.accepted_erase visitor data pos env index finish v v' h
@@ -142,7 +142,7 @@ theorem module.validate_code_entry_with.wasm_sound {V : Type}
     (visitor : code.OpVisitor V) (data : Slice U8) (pos : Usize) (env : module.Env)
     (index finish : Usize) (v v' : V) (hbound : CodeEntry.Bounds env)
     (hresults : ∀ ft ∈ env.types.val, ft.results.val.length ≤ 1)
-    (h : module.validate_code_entry_with visitor data pos env index v = .ok (.Ok finish, v')) :
+    (h : module.validate_code_entry_with visitor data pos env index .Wasm1 v = .ok (.Ok finish, v')) :
     CodeEntry.Validated data env index pos finish := by
   have he := module.validate_code_entry_with.accepted_erase visitor data pos env index finish v v' h
   have hs := module.validate_code_entry.spec data pos env index hbound hresults

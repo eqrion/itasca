@@ -36,7 +36,8 @@ structure Represents (env : module.Env) (decls : Declarations) : Prop where
 
 /-- The independently encoded prefix ends immediately before code/data, with
 all custom sections encountered before that boundary included. -/
-def PrefixEncoding (value : Declarations) (bytes : List U8) : Prop :=
+def PrefixEncoding (value : Declarations) (bytes : List U8)
+    (profile : ValidationProfile := .Wasm1) : Prop :=
   ∃ types imports functions tables memories globals exports start elements customs,
     ModuleBinary.PaddedEncoding 1#u8 (ModuleBinary.VecEncoding ModuleBinary.FuncTypeEncoding)
       [] value.types types ∧
@@ -53,7 +54,7 @@ def PrefixEncoding (value : Declarations) (bytes : List U8) : Prop :=
     ModuleBinary.PaddedEncoding 7#u8 (ModuleBinary.VecEncoding ModuleBinary.ExportEncoding)
       [] value.exports exports ∧
     ModuleBinary.PaddedEncoding 8#u8 ModuleBinary.StartEncoding none value.start start ∧
-    ModuleBinary.PaddedEncoding 9#u8 (ModuleBinary.VecEncoding ModuleBinary.ElementEncoding)
+    ModuleBinary.PaddedEncoding 9#u8 (ModuleBinary.VecEncoding (ModuleBinary.ElementEncodingFor profile))
       [] value.elements elements ∧
     ModuleBinary.CustomsEncoding customs ∧
     bytes = ModuleBinary.magicVersion ++ types ++ imports ++ functions ++ tables ++ memories ++

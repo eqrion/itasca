@@ -198,14 +198,14 @@ theorem code.step_br_table.accepted_lift {V : Type} (visitor : code.OpVisitor V)
   cases w
   dsimp only at hnext
   obtain ⟨args, hhandler, _⟩ := CoreVisitor.run.accepted (.ok (res, s))
-    (fun v s a => code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor.on_br_table v s a.1 a.2)
+    (fun v s a => code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor.on_br_table v s a.1 (Control.resultView a.2))
     () st' () hnext
   have heq : res = .Ok args ∧ s = st' := by simpa using hhandler
   obtain ⟨hres, hs⟩ := heq
   subst res
   subst s
   obtain ⟨v1, hlift⟩ := code.read_br_table.accepted_lift visitor haccept st data v args st' hr
-  obtain ⟨v2, hv⟩ := haccept.on_br_table v1 st' args.1 args.2
+  obtain ⟨v2, hv⟩ := haccept.on_br_table v1 st' args.1 (Control.resultView args.2)
   refine ⟨v2, ?_⟩
   rw [code.step_br_table.dispatch]
   simp [hlift, CoreVisitor.run, hv, code.visit, core.result.Result.Insts.CoreOpsTry.branch]
@@ -280,43 +280,43 @@ theorem code.step.accepted_lift {V : Type} (visitor : code.OpVisitor V)
       rw [OpDispatch.dispatch_block _ st data env ctx ()] at h
       rw [OpDispatch.dispatch_block visitor st data env ctx v]
       exact CoreVisitor.run.accepted_lift _ _ _ () v st' () h
-        (fun a => haccept.on_block v st' a)
+        (fun a => haccept.on_block v st' (Control.signature a))
     by_cases h_loop : opcode = code.OP_LOOP
     · subst opcode
       rw [OpDispatch.dispatch_loop _ st data env ctx ()] at h
       rw [OpDispatch.dispatch_loop visitor st data env ctx v]
       exact CoreVisitor.run.accepted_lift _ _ _ () v st' () h
-        (fun a => haccept.on_loop v st' a)
+        (fun a => haccept.on_loop v st' (Control.signature a))
     by_cases h_if : opcode = code.OP_IF
     · subst opcode
       rw [OpDispatch.dispatch_if _ st data env ctx ()] at h
       rw [OpDispatch.dispatch_if visitor st data env ctx v]
       exact CoreVisitor.run.accepted_lift _ _ _ () v st' () h
-        (fun a => haccept.on_if v st' a)
+        (fun a => haccept.on_if v st' (Control.signature a))
     by_cases h_else : opcode = code.OP_ELSE
     · subst opcode
       rw [OpDispatch.dispatch_else _ st data env ctx ()] at h
       rw [OpDispatch.dispatch_else visitor st data env ctx v]
       exact CoreVisitor.run.accepted_lift _ _ _ () v st' () h
-        (fun a => haccept.on_else v st' a)
+        (fun a => haccept.on_else v st' (Control.signature a))
     by_cases h_end : opcode = code.OP_END
     · subst opcode
       rw [OpDispatch.dispatch_end _ st data env ctx ()] at h
       rw [OpDispatch.dispatch_end visitor st data env ctx v]
       exact CoreVisitor.run.accepted_lift _ _ _ () v st' () h
-        (fun a => haccept.on_end v st' a.1 a.2)
+        (fun a => haccept.on_end v st' a.1 (Control.signature a.2))
     by_cases h_br : opcode = code.OP_BR
     · subst opcode
       rw [OpDispatch.dispatch_br _ st data env ctx ()] at h
       rw [OpDispatch.dispatch_br visitor st data env ctx v]
       exact CoreVisitor.run.accepted_lift _ _ _ () v st' () h
-        (fun a => haccept.on_br v st' a.1 a.2)
+        (fun a => haccept.on_br v st' a.1 (Control.resultView a.2))
     by_cases h_br_if : opcode = code.OP_BR_IF
     · subst opcode
       rw [OpDispatch.dispatch_br_if _ st data env ctx ()] at h
       rw [OpDispatch.dispatch_br_if visitor st data env ctx v]
       exact CoreVisitor.run.accepted_lift _ _ _ () v st' () h
-        (fun a => haccept.on_br_if v st' a.1 a.2)
+        (fun a => haccept.on_br_if v st' a.1 (Control.resultView a.2))
     by_cases h_br_table : opcode = code.OP_BR_TABLE
     · subst opcode
       exact code.step_br_table.accepted_lift visitor haccept st st' data env ctx v h

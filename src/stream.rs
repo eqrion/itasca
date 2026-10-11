@@ -28,7 +28,7 @@
 
 use crate::limits::{add_offset, MAX_CODE_HEADER_BYTES, MAX_LEB_BYTES};
 use crate::module::{self, SECTION_CODE};
-use crate::{Env, Error, OpError, OpVisitor, Tail};
+use crate::{Env, Error, OpError, OpVisitor, Tail, ValidationProfile};
 use alloc::vec::Vec;
 
 pub type Result<T> = core::result::Result<T, Error>;
@@ -133,6 +133,8 @@ pub struct CodeBatch<'a> {
     module_id: u64,
     /// This batch's position in submission order within that invocation.
     batch_id: usize,
+    /// Validation rules fixed by the invocation that issued the batch.
+    profile: ValidationProfile,
     env: &'a Env,
     /// The batch's entries, framed back to back.
     code: &'a [u8],
@@ -151,6 +153,11 @@ pub struct CodeBatch<'a> {
 }
 
 impl CodeBatch<'_> {
+    /// The validation rules selected by the issuing invocation.
+    pub fn profile(&self) -> ValidationProfile {
+        self.profile
+    }
+
     pub fn len(&self) -> usize {
         self.num_funcs
     }
@@ -220,7 +227,14 @@ impl CodeBatch<'_> {
         if self.num_validated >= self.num_funcs || index != self.first_func + self.num_validated {
             return Err(Error::Host);
         }
-        module::validate_code_entry_with(self.code, self.validated_end, self.env, index, visitor)
+        module::validate_code_entry_with(
+            self.code,
+            self.validated_end,
+            self.env,
+            index,
+            self.profile,
+            visitor,
+        )
     }
 
     fn finish(self) -> Result<()> {
@@ -238,6 +252,9 @@ impl CodeBatch<'_> {
 
 /// Validates one module. See the [module documentation](self).
 ///
+/// `profile` selects the rules for environment decoding, every issued batch,
+/// and tail decoding. A worker cannot change its batch's profile.
+///
 /// `env` is output storage, overwritten with the decoded environment. Batches
 /// borrow it and the source, so both must outlive the visitor's workers.
 ///
@@ -246,6 +263,7 @@ impl CodeBatch<'_> {
 /// environment when the visitor stores batches.
 pub fn validate_streaming<'visitor, 'data: 'visitor, S: Source, V: StreamingVisitor<'data>>(
     module_id: u64,
+    profile: ValidationProfile,
     source: &'data S,
     visitor: &'visitor mut V,
     env: &'data mut Env,
@@ -253,17 +271,18 @@ pub fn validate_streaming<'visitor, 'data: 'visitor, S: Source, V: StreamingVisi
     let bytes = source.environment()?;
     let env_len = add_offset(0, bytes.len())?;
     visitor.custom_region(Region::Environment);
-    let (decoded, env_end) = module::validate_env_with(bytes, visitor)?;
+    let (decoded, env_end) = module::validate_env_with(bytes, profile, visitor)?;
     if env_end != env_len {
         return Err(Error::Host);
     }
     *env = decoded;
-    validate_remaining(module_id, source, env, env_len, visitor)
+    validate_remaining(module_id, profile, source, env, env_len, visitor)
 }
 
 /// The code section and tail, once `env` is decoded and immutable.
 fn validate_remaining<'a, S: Source, V: StreamingVisitor<'a>>(
     module_id: u64,
+    profile: ValidationProfile,
     source: &'a S,
     env: &'a Env,
     env_len: usize,
@@ -276,14 +295,15 @@ fn validate_remaining<'a, S: Source, V: StreamingVisitor<'a>>(
     if config.batch_bytes == 0 || config.max_batches == 0 {
         return Err(Error::Host);
     }
-    let mut pending =
-        submit_code_batches(module_id, source, env, code_len, entries, &config, visitor)?;
+    let mut pending = submit_code_batches(
+        module_id, profile, source, env, code_len, entries, &config, visitor,
+    )?;
     visitor.code_end()?;
 
     let tail_bytes = source.tail()?;
     add_offset(code_end, tail_bytes.len())?;
     visitor.custom_region(Region::Tail);
-    let tail = module::validate_tail_with(tail_bytes, 0, env, visitor)?;
+    let tail = module::validate_tail_with(tail_bytes, 0, env, profile, visitor)?;
     visitor.tail_ready(tail)?;
     retire_all_code_batches(module_id, visitor, &mut pending)
 }
@@ -323,6 +343,7 @@ fn read_code_header<S: Source>(source: &S, code_len: usize, env: &Env) -> Result
 /// the IDs of the batches still outstanding.
 fn submit_code_batches<'a, S: Source, V: StreamingVisitor<'a>>(
     module_id: u64,
+    profile: ValidationProfile,
     source: &'a S,
     env: &'a Env,
     code_len: usize,
@@ -346,6 +367,7 @@ fn submit_code_batches<'a, S: Source, V: StreamingVisitor<'a>>(
         visitor.submit_code_batch(CodeBatch {
             module_id,
             batch_id,
+            profile,
             env,
             code: bytes,
             code_offset: pos,
@@ -473,7 +495,10 @@ fn read_exact<S: Source>(source: &S, start: usize, end: usize) -> Result<&[u8]> 
 
 /// [`validate_streaming`] over one buffer, validating each batch as it is
 /// submitted. This internal adapter implements [`module::validate_module`].
-pub(crate) fn validate_module_slice(bytes: &[u8]) -> Result<module::Module> {
+pub(crate) fn validate_module_slice(
+    bytes: &[u8],
+    profile: ValidationProfile,
+) -> Result<module::Module> {
     let (code_start, code_end) = find_code_region(bytes);
     let source = SliceSource {
         env: &bytes[0..code_start],
@@ -485,7 +510,7 @@ pub(crate) fn validate_module_slice(bytes: &[u8]) -> Result<module::Module> {
         completed: None,
         tail: None,
     };
-    validate_streaming(0, &source, &mut visitor, &mut env)?;
+    validate_streaming(0, profile, &source, &mut visitor, &mut env)?;
     match visitor.tail {
         Some(tail) => Ok(module::Module { env, tail }),
         None => Err(Error::Host),

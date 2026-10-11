@@ -49,12 +49,12 @@ private theorem bad_body_with : code.validate_body_with code.EmptyOpVisitor.Inst
   simpa [he] using hr
 
 /-- The entry validator rejects the unknown opcode inside the framed body. -/
-theorem bad_body_entry_rejected : module.validate_code_entry badBytes 0#usize badEnv 0#usize =
+theorem bad_body_entry_rejected : module.validate_code_entry badBytes 0#usize badEnv 0#usize .Wasm1 =
     .ok (.Err (.Body .UnrecognizedOpcode)) := by
   have hread := reader.read_u32_leb.complete badBytes 0#usize 2#u32 1#usize bad_size
   have htypes : badEnv.types.val = [WasmExamples.voidFunction] := rfl
   have hfuncs : badEnv.func_type_indices.val = [0#u32] := rfl
-  have hs : module.validate_code_entry badBytes 0#usize badEnv 0#usize ⦃ r =>
+  have hs : module.validate_code_entry badBytes 0#usize badEnv 0#usize .Wasm1 ⦃ r =>
       r = .Err (.Body .UnrecognizedOpcode) ⦄ := by
     unfold module.validate_code_entry module.validate_code_entry_with
     simp [hfuncs, hread, core.result.Result.Insts.CoreOpsTry.branch]
@@ -98,7 +98,7 @@ theorem bad_body_entry_rejected : module.validate_code_entry badBytes 0#usize ba
   exact hr
 
 /-- The batch starts with the driver's exact zeroed validation cursors. -/
-def badIssued : StreamBatch.Issued := ⟨0#u64, 0#usize, badEnv, badBytes, 0#usize, 0#usize, 1#usize⟩
+def badIssued : StreamBatch.Issued := ⟨0#u64, 0#usize, badEnv, badBytes, 0#usize, 0#usize, 1#usize, .Wasm1⟩
 
 private theorem bad_bounds : CodeEntry.Bounds badEnv := by
   intro ft hm
@@ -142,7 +142,7 @@ def tailBuffer : Slice U8 := ModuleExamples.bytes [0#u8,1#u8,0#u8]
 def emptyTail : module.Tail := ⟨alloc.vec.Vec.new _⟩
 
 private theorem good_tail (env : module.Env) :
-    module.validate_tail tailBuffer 0#usize env = .ok (.Ok emptyTail) := by
+    module.validate_tail tailBuffer 0#usize env .Wasm1 = .ok (.Ok emptyTail) := by
   apply module.validate_tail.complete emptyTail
   · refine ⟨[0#u8,1#u8,0#u8], ?_, ?_⟩
     · refine ⟨[], [0#u8,1#u8,0#u8], ⟨[], [], .nil, .absent, rfl⟩, ?_, rfl⟩
@@ -168,7 +168,7 @@ private theorem observe_customs_preserve : ModuleTail.Preserves observeCustoms i
 
 /-- The final custom section cannot erase the outstanding batch obligation. -/
 theorem tail_custom_preserves_work (env : module.Env) :
-    module.validate_tail_with observeCustoms tailBuffer 0#usize env [badIssued] =
+    module.validate_tail_with observeCustoms tailBuffer 0#usize env .Wasm1 [badIssued] =
       .ok (.Ok emptyTail, [badIssued]) := by
   obtain ⟨v', hv⟩ := module.validate_tail_with.accepted_lift observeCustoms observe_customs_accept
     tailBuffer 0#usize env [badIssued] emptyTail (good_tail env)

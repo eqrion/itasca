@@ -19,7 +19,7 @@ theorem Reachable.dispatched {issued : Issued} {batch : stream.CodeBatch}
       have hframe := stream.frame_entry.sound before.code before.dispatch_end index before.code_offset entry hf
       obtain ⟨content, finish, hext, _, _, _, hend, _⟩ := hframe
       have hspan := hext.span
-      obtain ⟨_, _, _, hcode, _, _, hnum⟩ := previous.validation.1
+      obtain ⟨_, _, _, hcode, _, _, hnum, _⟩ := previous.validation.1
       dsimp only
       rw [hnum] at hc
       rw [hcode] at hspan
@@ -36,15 +36,16 @@ theorem Reachable.dispatched {issued : Issued} {batch : stream.CodeBatch}
 
 /-- Both cursors are bounded independently. Validation bytes are bounded by
 actual entry soundness; dispatch contributes no validation evidence. -/
-theorem Reachable.cursor_bounds {issued : Issued} {batch : stream.CodeBatch}
+theorem Reachable.cursor_bounds {profile : ValidationProfile} {issued : Issued} {batch : stream.CodeBatch}
     (h : Reachable issued batch) (hbound : CodeEntry.Bounds issued.env)
-    (hresults : ∀ ft ∈ issued.env.types.val, ft.results.val.length ≤ 1) :
+    (hresults : ∀ ft ∈ issued.env.types.val, Profile.FuncType profile ft)
+    (hprofile : issued.profile = profile) :
     batch.num_dispatched.val ≤ issued.num_funcs.val ∧
     batch.dispatch_end.val ≤ issued.code.length ∧
     batch.num_validated.val ≤ issued.num_funcs.val ∧
     batch.validated_end.val ≤ issued.code.length := by
   obtain ⟨_, hp, hn⟩ := h.validation
-  obtain ⟨_, _, he, _⟩ := hp.typed hbound hresults
+  obtain ⟨_, _, he, _⟩ := hp.typed hbound hresults hprofile
   exact ⟨h.dispatched.1, h.dispatched.2, hn, he.span.2⟩
 
 end Itasca.StreamBatch
@@ -82,14 +83,21 @@ theorem stream.CodeBatch.accessors {issued : StreamBatch.Issued} {batch : stream
     stream.CodeBatch.impl.code batch = .ok issued.code ∧
     stream.CodeBatch.impl.code_offset batch = .ok issued.code_offset ∧
     stream.CodeBatch.is_empty batch = .ok (decide (issued.num_funcs = 0#usize)) := by
-  obtain ⟨_, _, _, hcode, hoffset, _, hnum⟩ := h.validation.1
+  obtain ⟨_, _, _, hcode, hoffset, _, hnum, _⟩ := h.validation.1
   simp [stream.CodeBatch.len, stream.CodeBatch.impl.code, stream.CodeBatch.impl.code_offset,
     stream.CodeBatch.is_empty, hcode, hoffset, hnum]
+
+/-- A worker observes the same policy selected when its batch was issued. -/
+theorem stream.CodeBatch.profile_preserved {issued : StreamBatch.Issued} {batch : stream.CodeBatch}
+    (h : StreamBatch.Reachable issued batch) :
+    stream.CodeBatch.impl.profile batch = .ok issued.profile := by
+  obtain ⟨_, _, _, _, _, _, _, hp⟩ := h.validation.1
+  simp [stream.CodeBatch.impl.profile, hp]
 
 theorem stream.CodeBatch.is_last.total {issued : StreamBatch.Issued} {batch : stream.CodeBatch}
     (hb : issued.Bounded) (h : StreamBatch.Reachable issued batch) :
     ∃ r, stream.CodeBatch.is_last batch = .ok r := by
-  obtain ⟨_, _, henv, _, _, hfirst, hnum⟩ := h.validation.1
+  obtain ⟨_, _, henv, _, _, hfirst, hnum, _⟩ := h.validation.1
   have ht : stream.CodeBatch.is_last batch ⦃ _ => True ⦄ := by
     unfold stream.CodeBatch.is_last
     rw [hfirst, hnum]

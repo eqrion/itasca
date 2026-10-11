@@ -33,7 +33,7 @@ theorem step_br {st : code.OpIterState} (f : Frame st) (data : Slice U8)
         (by simpa [htypes, List.append_assoc] using ht))
     dsimp only at hv hc hp
     refine ⟨s, ?_, hp, f.output_unreachable hc hv _, ?_⟩
-    · exact code.step_br _ st s data env ctx idx targetCtrl.block_type () () hr rfl
+    · exact code.step_br _ st s data env ctx idx (Control.targetBlockType targetCtrl) () () hr rfl
     · simp only [hv, f.vals, List.length_append]
       omega
 

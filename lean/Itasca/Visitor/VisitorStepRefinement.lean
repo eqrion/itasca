@@ -29,7 +29,7 @@ theorem code.step_br_table.refines {V W : Type}
   rw [hw]
   simp only [bind_ok]
   exact CoreVisitor.run.refines (.ok (args, s)) visitor replacement related hrefines
-    (fun st a => .op st (.br_table a.1 a.2)) v1 w1 hr1 res st' v' hh
+    (fun st a => .op st (.br_table a.1 (Control.resultView a.2))) v1 w1 hr1 res st' v' hh
 
 /-- Hook refinement preserves every ordinary result of the actual full dispatcher,
 with identical validator state, including rejection and malformed instructions. -/

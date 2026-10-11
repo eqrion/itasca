@@ -106,7 +106,7 @@ private theorem small_leb (b : U8) (h : b.val < 128) : Leb128.Encoding [b] b.val
 section name; successful callbacks leave the otherwise empty module unchanged. -/
 private theorem four_byte_custom_reply (a b c d : U8) (reply : core.result.Result Unit error.Error)
     (hutf8 : module.validate_utf8 (bytes [a,b,c,d]) = .ok reply) :
-    module.validate_module (fourByteCustom a b c d) = .ok (match reply with
+    module.validate_module (fourByteCustom a b c d) .Wasm1 = .ok (match reply with
       | .Ok _ => .Ok ModuleExamples.emptyModule
       | .Err e => .Err e) := by
   let data := fourByteCustom a b c d
@@ -124,7 +124,7 @@ private theorem four_byte_custom_reply (a b c d : U8) (reply : core.result.Resul
     refine ⟨[4#u8,a,b,c,d], ModuleBinary.ByteVecEncoding.iff.mpr ⟨[4#u8], small_leb 4#u8 (by decide), rfl⟩, ?_⟩
     constructor <;> simp [data, fourByteCustom, bytes, alloc.vec.Vec.deref, ModuleBinary.magicVersion]
   have hname := module.decode_name.from_utf8 data 10#usize nm 15#usize hnamebytes reply hutf8
-  have henv : module.validate_env data = .ok (match reply with
+  have henv : module.validate_env data .Wasm1 = .ok (match reply with
       | .Ok _ => .Ok (ModuleExamples.emptyEnv, 15#usize)
       | .Err e => .Err e) := by
     simp [module.validate_env, module.validate_env_with, module.Env.new, hheader,
@@ -157,7 +157,7 @@ private theorem four_byte_custom_reply (a b c d : U8) (reply : core.result.Resul
       exact ModuleExamples.accepted_at_end data ModuleExamples.emptyEnv hsize rfl (by simpa [hlen] using henv)
 
 theorem last_scalar_module_accepted :
-    module.validate_module (fourByteCustom 0xF4#u8 0x8F#u8 0xBF#u8 0xBF#u8) =
+    module.validate_module (fourByteCustom 0xF4#u8 0x8F#u8 0xBF#u8 0xBF#u8) .Wasm1 =
       .ok (.Ok ModuleExamples.emptyModule) :=
   four_byte_custom_reply _ _ _ _ (.Ok ()) last_scalar_accepted
 
@@ -166,7 +166,7 @@ theorem last_scalar_module_validated :
   module.validate_module.wasm_sound _ _ last_scalar_module_accepted
 
 theorem beyond_unicode_module_rejected :
-    module.validate_module (fourByteCustom 0xF4#u8 0x90#u8 0x80#u8 0x80#u8) =
+    module.validate_module (fourByteCustom 0xF4#u8 0x90#u8 0x80#u8 0x80#u8) .Wasm1 =
       .ok (.Err .InvalidUtf8) :=
   four_byte_custom_reply _ _ _ _ (.Err .InvalidUtf8) beyond_unicode_rejected
 

@@ -1,4 +1,5 @@
 import Itasca.Body.ScalarMatch
+import Itasca.Body.Control
 
 open Aeneas Aeneas.Std
 
@@ -80,7 +81,7 @@ namespace Itasca
 private theorem block_dispatch {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_BLOCK v =
-      CoreVisitor.run (code.read_block st data) visitor.on_block v := by
+      CoreVisitor.run (code.read_block st data) (fun v s bt => visitor.on_block v s (Control.signature bt)) v := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -98,12 +99,12 @@ theorem code.step_block.of_read {V : Type} (visitor : code.OpVisitor V)
     code.step visitor st data env ctx code.OP_BLOCK v ⦃ r =>
       Q r.2.1 ∧ (r.1 = .Ok () → ∃ a, P a r.2.1) ⦄ := by
   rw [block_dispatch]
-  exact CoreVisitor.run.spec _ _ v Q P hread (hvisitor.block v)
+  exact CoreVisitor.run.spec _ _ v Q P hread (fun s bt => hvisitor.block v s (Control.signature bt))
 
 private theorem loop_dispatch {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_LOOP v =
-      CoreVisitor.run (code.read_loop st data) visitor.on_loop v := by
+      CoreVisitor.run (code.read_loop st data) (fun v s bt => visitor.on_loop v s (Control.signature bt)) v := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -121,12 +122,12 @@ theorem code.step_loop.of_read {V : Type} (visitor : code.OpVisitor V)
     code.step visitor st data env ctx code.OP_LOOP v ⦃ r =>
       Q r.2.1 ∧ (r.1 = .Ok () → ∃ a, P a r.2.1) ⦄ := by
   rw [loop_dispatch]
-  exact CoreVisitor.run.spec _ _ v Q P hread (hvisitor.loop v)
+  exact CoreVisitor.run.spec _ _ v Q P hread (fun s bt => hvisitor.loop v s (Control.signature bt))
 
 private theorem if_dispatch {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_IF v =
-      CoreVisitor.run (code.read_if st data) visitor.on_if v := by
+      CoreVisitor.run (code.read_if st data) (fun v s bt => visitor.on_if v s (Control.signature bt)) v := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -144,12 +145,12 @@ theorem code.step_if.of_read {V : Type} (visitor : code.OpVisitor V)
     code.step visitor st data env ctx code.OP_IF v ⦃ r =>
       Q r.2.1 ∧ (r.1 = .Ok () → ∃ a, P a r.2.1) ⦄ := by
   rw [if_dispatch]
-  exact CoreVisitor.run.spec _ _ v Q P hread (hvisitor.if_ v)
+  exact CoreVisitor.run.spec _ _ v Q P hread (fun s bt => hvisitor.if_ v s (Control.signature bt))
 
 private theorem else_dispatch {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_ELSE v =
-      CoreVisitor.run (code.read_else st) visitor.on_else v := by
+      CoreVisitor.run (code.read_else st) (fun v s bt => visitor.on_else v s (Control.signature bt)) v := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -167,12 +168,12 @@ theorem code.step_else.of_read {V : Type} (visitor : code.OpVisitor V)
     code.step visitor st data env ctx code.OP_ELSE v ⦃ r =>
       Q r.2.1 ∧ (r.1 = .Ok () → ∃ a, P a r.2.1) ⦄ := by
   rw [else_dispatch]
-  exact CoreVisitor.run.spec _ _ v Q P hread (hvisitor.else_ v)
+  exact CoreVisitor.run.spec _ _ v Q P hread (fun s bt => hvisitor.else_ v s (Control.signature bt))
 
 private theorem end_dispatch {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_END v =
-      CoreVisitor.run (code.read_end st) (fun v s arg => visitor.on_end v s arg.1 arg.2) v := by
+      CoreVisitor.run (code.read_end st) (fun v s arg => visitor.on_end v s arg.1 (Control.signature arg.2)) v := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -190,12 +191,12 @@ theorem code.step_end.of_read {V : Type} (visitor : code.OpVisitor V)
     code.step visitor st data env ctx code.OP_END v ⦃ r =>
       Q r.2.1 ∧ (r.1 = .Ok () → ∃ a, P a r.2.1) ⦄ := by
   rw [end_dispatch]
-  exact CoreVisitor.run.spec _ _ v Q P hread ((fun s arg => hvisitor.end_ v s arg.1 arg.2))
+  exact CoreVisitor.run.spec _ _ v Q P hread ((fun s arg => hvisitor.end_ v s arg.1 (Control.signature arg.2)))
 
 private theorem br_dispatch {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_BR v =
-      CoreVisitor.run (code.read_br st data) (fun v s arg => visitor.on_br v s arg.1 arg.2) v := by
+      CoreVisitor.run (code.read_br st data) (fun v s arg => visitor.on_br v s arg.1 (Control.resultView arg.2)) v := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -213,12 +214,12 @@ theorem code.step_br.of_read {V : Type} (visitor : code.OpVisitor V)
     code.step visitor st data env ctx code.OP_BR v ⦃ r =>
       Q r.2.1 ∧ (r.1 = .Ok () → ∃ a, P a r.2.1) ⦄ := by
   rw [br_dispatch]
-  exact CoreVisitor.run.spec _ _ v Q P hread ((fun s arg => hvisitor.br v s arg.1 arg.2))
+  exact CoreVisitor.run.spec _ _ v Q P hread ((fun s arg => hvisitor.br v s arg.1 (Control.resultView arg.2)))
 
 private theorem br_if_dispatch {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_BR_IF v =
-      CoreVisitor.run (code.read_br_if st data) (fun v s arg => visitor.on_br_if v s arg.1 arg.2) v := by
+      CoreVisitor.run (code.read_br_if st data) (fun v s arg => visitor.on_br_if v s arg.1 (Control.resultView arg.2)) v := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -236,7 +237,7 @@ theorem code.step_br_if.of_read {V : Type} (visitor : code.OpVisitor V)
     code.step visitor st data env ctx code.OP_BR_IF v ⦃ r =>
       Q r.2.1 ∧ (r.1 = .Ok () → ∃ a, P a r.2.1) ⦄ := by
   rw [br_if_dispatch]
-  exact CoreVisitor.run.spec _ _ v Q P hread ((fun s arg => hvisitor.brIf v s arg.1 arg.2))
+  exact CoreVisitor.run.spec _ _ v Q P hread ((fun s arg => hvisitor.brIf v s arg.1 (Control.resultView arg.2)))
 
 private theorem return_dispatch {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :

@@ -42,7 +42,7 @@ def AccessorTypes (env : module.Env) (raw : ModuleBinary.Module) : Prop :=
       (exports.val.map ModuleExternals.externalType)
 
 theorem accessorTypes {env tables memories codes segments}
-    (hc : ModuleEnv.Cache env tables memories) (hv : ModuleEnv.Valid env)
+    (hc : ModuleEnv.Cache env tables memories) {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile)
     (hn : ∀ entry ∈ env.exports.val, wf_name (ModuleBinary.nameOfBytes entry.name.val)) :
     AccessorTypes env (fromEnv env tables memories codes segments) := by
   obtain ⟨ixts, hi⟩ := hc.imports_resolve

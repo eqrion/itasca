@@ -34,14 +34,29 @@ theorem DataEncoding.materialize {entry bytes} (h : DataEncoding entry bytes) :
   refine ⟨⟨entry.memoryIdx, entry.offset, Vec.from entry.init h.init_bounded⟩, ?_⟩
   simp [ModuleData.raw]
 
+
+theorem DataEncodingFor.init_bounded {profile entry bytes}
+    (h : DataEncodingFor profile entry bytes) : entry.init.length ≤ Usize.max := by
+  cases profile with
+  | Wasm1 => exact DataEncoding.init_bounded h
+  | MultiValue =>
+    obtain ⟨_, _, _, _, _, _, hi, _⟩ := h
+    exact hi.length_bounded
+
+theorem DataEncodingFor.materialize {profile entry bytes}
+    (h : DataEncodingFor profile entry bytes) :
+    ∃ segment : module.Data, ModuleData.raw segment = entry := by
+  refine ⟨⟨entry.memoryIdx, entry.offset, Vec.from entry.init h.init_bounded⟩, ?_⟩
+  simp [ModuleData.raw]
+
 end Itasca.ModuleBinary
 
 namespace Itasca.ModuleTail
 
 open ModuleBinary
 
-private theorem materialize_list (entries : List ModuleBinary.Data)
-    (h : ∀ entry ∈ entries, ∃ bytes, DataEncoding entry bytes) :
+private theorem materialize_list {profile} (entries : List ModuleBinary.Data)
+    (h : ∀ entry ∈ entries, ∃ bytes, DataEncodingFor profile entry bytes) :
     ∃ segments : List module.Data, segments.map ModuleData.raw = entries := by
   induction entries with
   | nil => exact ⟨[], rfl⟩
@@ -53,7 +68,7 @@ private theorem materialize_list (entries : List ModuleBinary.Data)
 
 /-- Both allocation bounds come from the binary grammar: the data count and
 each segment's byte-vector count. No parser acceptance is assumed. -/
-theorem Encoding.materialize {entries bytes} (h : Encoding entries bytes) :
+theorem Encoding.materialize {profile entries bytes} (h : Encoding entries bytes profile) :
     ∃ segments : Vec module.Data, segments.val.map ModuleData.raw = entries := by
   obtain ⟨_, _, hp, _, _⟩ := h
   obtain ⟨segments, hs⟩ := materialize_list entries (fun entry hm => hp.member hm)
@@ -86,9 +101,9 @@ namespace Itasca.ModuleTail
 
 /-- The independent tail bytes and generated section typing determine runtime
 segments suitable for the actual tail-completeness theorem. -/
-theorem materialize (data : Slice U8) (start next : Usize)
+theorem materialize {profile} (data : Slice U8) (start next : Usize)
     (raw : ModuleBinary.Module) (decls : ModuleEnv.Declarations) (env : module.Env)
-    (hb : ModuleBinary.At Encoding data start raw.data next)
+    (hb : ModuleBinary.At (fun es bs => Encoding es bs profile) data start raw.data next)
     (htyped : ModuleElaboration.SectionsTyped raw)
     (hready : ModuleEnv.Ready raw 9 decls env) :
     ∃ segments : Vec module.Data, segments.val.map ModuleData.raw = raw.data ∧

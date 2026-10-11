@@ -71,9 +71,13 @@ theorem ModuleEncoding.sections {raw bytes} (h : ModuleEncoding raw bytes) :
     · simpa [lookup 6#u8 (by decide)] using hf6
     · simpa [lookup 7#u8 (by decide)] using hf7
     · simpa [lookup 8#u8 (by decide)] using hf8
-    · simpa [lookup 9#u8 (by decide)] using hf9
+    · have he : ElementEncodingFor .Wasm1 = ElementEncoding := by funext entry bytes; rfl
+      rw [he] at hf9
+      simpa [lookup 9#u8 (by decide)] using hf9
     · simpa [lookup 10#u8 (by decide)] using hf10
-    · simpa [lookup 11#u8 (by decide)] using hf11
+    · have he : DataEncodingFor .Wasm1 = DataEncoding := by funext entry bytes; rfl
+      rw [he] at hf11
+      simpa [lookup 11#u8 (by decide)] using hf11
 
 /-- Raw modules have a unique decoding, independently of typing and implementation caps.
 Custom-section placement and omitted empty fields do not introduce ambiguity. -/

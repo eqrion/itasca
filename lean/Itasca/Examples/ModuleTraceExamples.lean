@@ -21,7 +21,7 @@ private theorem leb (b : U8) (h : b.val < 128 := by decide) : Leb128.Encoding [b
 
 private theorem unicode_length : Slice.len unicodeInput = 15#usize := UScalar.eq_of_val_eq rfl
 
-private theorem unicode_environment : module.validate_env_with customRecorder unicodeInput [] =
+private theorem unicode_environment : module.validate_env_with customRecorder unicodeInput .Wasm1 [] =
     .ok (.Ok (ModuleExamples.emptyEnv, 15#usize), [.custom unicodeChunk]) := by
   let nm := alloc.vec.Vec.from [0xF4#u8, 0x8F#u8, 0xBF#u8, 0xBF#u8] (by simp; scalar_tac)
   have hheader := module.read_header.complete unicodeInput 8#usize (by
@@ -56,7 +56,7 @@ private theorem unicode_environment : module.validate_env_with customRecorder un
   simp
 
 /-- Exact component callback execution for a custom section named U+10FFFF. -/
-theorem unicode_recorded : module.validate_env_with customRecorder unicodeInput [] =
+theorem unicode_recorded : module.validate_env_with customRecorder unicodeInput .Wasm1 [] =
     .ok (.Ok (ModuleExamples.emptyEnv, 15#usize), unicodeEvents) := unicode_environment
 
 /-- The custom callback has independent section/name provenance, and the same

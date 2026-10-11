@@ -7,11 +7,11 @@ namespace Itasca
 
 /-- An accepted entry retains its original visitor calls and exact parser
 witnesses. Other executions of the visitor need not terminate. -/
-theorem module.validate_code_entry_with.witness {V : Type} (visitor : code.OpVisitor V)
+theorem module.validate_code_entry_with.witness_profile {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (pos : Usize) (env : module.Env) (index finish : Usize)
-    (v v' : V) (hbound : CodeEntry.Bounds env)
-    (h : module.validate_code_entry_with visitor data pos env index v = .ok (.Ok finish, v')) :
-    Nonempty (CodeEntry.Witness visitor data env index pos finish v v') := by
+    (v v' : V) (hbound : CodeEntry.Bounds env) (profile : ValidationProfile)
+    (h : module.validate_code_entry_with visitor data pos env index profile v = .ok (.Ok finish, v')) :
+    Nonempty (CodeEntry.Witness visitor data env index pos finish v v' profile) := by
   unfold module.validate_code_entry_with at h
   dsimp only at h
   by_cases hi : index ≥ alloc.vec.Vec.len env.func_type_indices
@@ -83,32 +83,43 @@ theorem module.validate_code_entry_with.witness {V : Type} (visitor : code.OpVis
         | Err e => simp at ht
         | Ok u =>
           cases u
-          have hslice : core.slice.index.Slice.index (core.slice.index.SliceIndexRangeUsizeSlice U8)
-              data ⟨bodyStart, last⟩ ⦃ body => body.val = data.val.slice bodyStart.val last.val ⦄ := by
-            step*
-          obtain ⟨body, hbody, hbodyval⟩ := WP.spec_imp_exists hslice
-          have hbody : core.slice.index.SliceIndexRangeUsizeSlice.index
-              ⟨bodyStart, last⟩ data = .ok body := by simpa using hbody
-          simp only [hbody, bind_ok] at ht
-          obtain ⟨⟨reply, ended⟩, hrun, ht⟩ := ResultFacts.bind_ok_inv _ _ _ ht
-          cases reply with
-          | Err e => simp at ht
-          | Ok u =>
-            cases u
-            have he : last = finish ∧ ended = v' := by simpa using ht
-            obtain ⟨rfl, rfl⟩ := he
-            refine ⟨{
-              typeIdx := typeIdx, ft := ft, groups := groups, ctx := ⟨locals, results⟩
-              content := content, bodyStart := bodyStart, body := body, size := size
-              startedState := started, index_lt := hindex, index_type := htypeIdx.symm
-              type_lt := htype_lt, function_type := hft.symm, header := hp
-              extent := ?_, locals_bytes := hg, locals_bound := ?_
-              context_locals := ?_, context_results := ?_, body_bytes := ?_
-              function_start := hstart, body_accepted := hrun }⟩
-            · scalar_tac
-            · simpa [hd] using hcap
-            · simpa [alloc.vec.Vec.deref, hd] using hlocalsval
-            · simpa [alloc.vec.Vec.deref] using hresultsval
-            · exact ModuleBinary.slice_bytes (by omega) (by scalar_tac) hbodyval
+          cases profile
+          all_goals
+            try dsimp only at ht
+            have hslice : core.slice.index.Slice.index (core.slice.index.SliceIndexRangeUsizeSlice U8)
+                data ⟨bodyStart, last⟩ ⦃ body => body.val = data.val.slice bodyStart.val last.val ⦄ := by
+              step*
+            obtain ⟨body, hbody, hbodyval⟩ := WP.spec_imp_exists hslice
+            have hbody : core.slice.index.SliceIndexRangeUsizeSlice.index
+                ⟨bodyStart, last⟩ data = .ok body := by simpa using hbody
+            simp [hbody, Std.bind_assoc] at ht
+            obtain ⟨⟨reply, ended⟩, hrun, ht⟩ := ResultFacts.bind_ok_inv _ _ _ ht
+            cases reply with
+            | Err e => simp at ht
+            | Ok u =>
+              cases u
+              have he : last = finish ∧ ended = v' := by simpa using ht
+              obtain ⟨rfl, rfl⟩ := he
+              refine ⟨{
+                typeIdx := typeIdx, ft := ft, groups := groups, ctx := ⟨locals, results⟩
+                content := content, bodyStart := bodyStart, body := body, size := size
+                startedState := started, index_lt := hindex, index_type := htypeIdx.symm
+                type_lt := htype_lt, function_type := hft.symm, header := hp
+                extent := ?_, locals_bytes := hg, locals_bound := ?_
+                context_locals := ?_, context_results := ?_, body_bytes := ?_
+                function_start := hstart, body_accepted := hrun }⟩
+              · scalar_tac
+              · simpa [hd] using hcap
+              · simpa [alloc.vec.Vec.deref, hd] using hlocalsval
+              · simpa [alloc.vec.Vec.deref] using hresultsval
+              · exact ModuleBinary.slice_bytes (by omega) (by scalar_tac) hbodyval
+
+/-- Compatibility specialization of the profile-independent entry witness. -/
+theorem module.validate_code_entry_with.witness {V : Type} (visitor : code.OpVisitor V)
+    (data : Slice U8) (pos : Usize) (env : module.Env) (index finish : Usize)
+    (v v' : V) (hbound : CodeEntry.Bounds env)
+    (h : module.validate_code_entry_with visitor data pos env index .Wasm1 v = .ok (.Ok finish, v')) :
+    Nonempty (CodeEntry.Witness visitor data env index pos finish v v') :=
+  module.validate_code_entry_with.witness_profile visitor data pos env index finish v v' hbound .Wasm1 h
 
 end Itasca

@@ -29,7 +29,7 @@ fn function_results_and_profile_selection() {
     let wat = "(module (func (result i32 i64) i32.const 1 i64.const 2))";
     check(wat, true);
     assert!(validate_module_with_profile(&encode(wat), ValidationProfile::Wasm1).is_err());
-    assert!(itasca::validate_module(&encode(wat)).is_err());
+    assert!(itasca::validate_module(&encode(wat), itasca::ValidationProfile::Wasm1).is_err());
     check("(module (func (param i32) (result i32) local.get 0))", true);
     check("(module (func (param i32) (result i32)))", false);
     check(
@@ -112,21 +112,53 @@ fn signature_limits_at_decode_time() {
         let wat = format!("(module (func (result {results}) unreachable))");
         let bytes = encode(&wat);
         assert_eq!(
-            itasca::multi_value::validate_module(&bytes).is_ok(),
+            itasca::validate_module(&bytes, itasca::ValidationProfile::MultiValue).is_ok(),
             n <= 1000
         );
         let wat = format!("(module (type (func (param {results}))))");
+        assert!(itasca::validate_module(&encode(&wat), ValidationProfile::Wasm1).is_ok());
         assert_eq!(
-            itasca::multi_value::validate_module(&encode(&wat)).is_ok(),
+            itasca::validate_module(&encode(&wat), itasca::ValidationProfile::MultiValue).is_ok(),
             n <= 1000
         );
     }
     // Truncated type payload with an excessive result count: reject the count.
     let bytes = b"\0asm\x01\0\0\0\x01\x05\x01\x60\x00\xe9\x07";
     assert_eq!(
-        itasca::multi_value::validate_module(bytes).unwrap_err(),
+        itasca::validate_module(bytes, itasca::ValidationProfile::MultiValue).unwrap_err(),
         itasca::Error::Read(itasca::OpError::TooManyResults)
     );
+    assert_eq!(
+        itasca::validate_module(bytes, ValidationProfile::Wasm1).unwrap_err(),
+        itasca::Error::Read(itasca::OpError::UnexpectedEof)
+    );
+    let bytes = b"\0asm\x01\0\0\0\x01\x04\x01\x60\xe9\x07";
+    assert_eq!(
+        itasca::validate_module(bytes, ValidationProfile::MultiValue).unwrap_err(),
+        itasca::Error::Read(itasca::OpError::TooManyParams)
+    );
+    assert_eq!(
+        itasca::validate_module(bytes, ValidationProfile::Wasm1).unwrap_err(),
+        itasca::Error::Read(itasca::OpError::UnexpectedEof)
+    );
+}
+
+#[test]
+fn active_segment_encodings_follow_the_selected_profile() {
+    // Empty active segments using the Core 2 explicit index-zero spelling.
+    let element = b"\0asm\x01\0\0\0\x04\x04\x01\x70\x00\x01\x09\x08\x01\x02\x00\x41\x00\x0b\x00\x00";
+    let data = b"\0asm\x01\0\0\0\x05\x03\x01\x00\x01\x0b\x07\x01\x02\x00\x41\x00\x0b\x00";
+    for bytes in [&element[..], &data[..]] {
+        assert!(itasca::validate_module(bytes, ValidationProfile::MultiValue).is_ok());
+        assert!(itasca::validate_module(bytes, ValidationProfile::Wasm1).is_err());
+    }
+    // Passive/declarative segments still require disabled proposals.
+    let passive_element = b"\0asm\x01\0\0\0\x09\x04\x01\x01\x00\x00";
+    let declarative_element = b"\0asm\x01\0\0\0\x09\x04\x01\x03\x00\x00";
+    let passive_data = b"\0asm\x01\0\0\0\x0b\x03\x01\x01\x00";
+    for bytes in [&passive_element[..], &declarative_element[..], &passive_data[..]] {
+        assert!(itasca::validate_module(bytes, ValidationProfile::MultiValue).is_err());
+    }
 }
 
 fn multivalue_config() -> wasm_smith::Config {
@@ -181,7 +213,7 @@ fn generated_modules_and_mutations() {
             .validate_all(&bytes)
             .unwrap();
         assert!(
-            itasca::multi_value::validate_module(&bytes).is_ok(),
+            itasca::validate_module(&bytes, itasca::ValidationProfile::MultiValue).is_ok(),
             "generated module {generated}"
         );
         for i in (0..bytes.len()).step_by((bytes.len() / 24).max(1)) {
@@ -190,7 +222,7 @@ fn generated_modules_and_mutations() {
             let expected = wasmparser::Validator::new_with_features(features)
                 .validate_all(&changed)
                 .is_ok();
-            let actual = itasca::multi_value::validate_module(&changed);
+            let actual = itasca::validate_module(&changed, itasca::ValidationProfile::MultiValue);
             assert_eq!(
                 actual.is_ok(),
                 expected,

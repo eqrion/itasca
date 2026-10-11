@@ -28,7 +28,7 @@ private theorem public_of_loop (data : Slice U8) (env : module.Env) (ctx : code.
       data env ctx.locals ctx.results () (Body.initial bt) = .ok (result, ())) :
     code.validate_body data env ctx = .ok result := by
   have hguard : ¬ Slice.len data > limits.MAX_FUNCTION_BYTES := by scalar_tac
-  simp [code.validate_body, code.validate_body_with, hguard,
+  simp [code.validate_body, code.validate_body_with.eq_model, code.validate_body_with_model, hguard,
     code.start_function.spec (alloc.vec.Vec.deref ctx.results) bt
       (by simpa [alloc.vec.Vec.deref] using hresults), hloop]
 
@@ -98,7 +98,7 @@ theorem empty_body_accepted (env : module.Env) :
     code.validate_body endBytes env emptyContext = .ok (.Ok ()) := by
   let st := { Body.initial .Empty with pos := 1#usize }
   obtain ⟨⟨_, finished⟩, hend, rfl, hc, hv, hp⟩ := WP.spec_imp_exists
-    (code.read_end.empty st [] ⟨.Body, .Empty, 0#usize, false⟩ rfl rfl rfl)
+    (code.read_end.empty st [] ⟨.Body, .Empty, Control.signature (.Empty), 0#usize, false⟩ rfl rfl rfl)
   dsimp only at hc hv hp
   apply public_of_loop endBytes env emptyContext .Empty (.Ok ())
     (by simp [endBytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
@@ -115,7 +115,7 @@ theorem nop_body_accepted (env : module.Env) :
   let first := { Body.initial .Empty with pos := 1#usize }
   let last := { Body.initial .Empty with pos := 2#usize }
   obtain ⟨⟨_, finished⟩, hend, rfl, hc, hv, hp⟩ := WP.spec_imp_exists
-    (code.read_end.empty last [] ⟨.Body, .Empty, 0#usize, false⟩ rfl rfl rfl)
+    (code.read_end.empty last [] ⟨.Body, .Empty, Control.signature (.Empty), 0#usize, false⟩ rfl rfl rfl)
   dsimp only at hc hv hp
   apply public_of_loop nopBytes env emptyContext .Empty (.Ok ())
     (by simp [nopBytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
@@ -136,7 +136,7 @@ theorem trailing_body_rejected (env : module.Env) :
     code.validate_body trailingBytes env emptyContext = .ok (.Err .TrailingBytes) := by
   let st := { Body.initial .Empty with pos := 1#usize }
   obtain ⟨⟨_, finished⟩, hend, rfl, hc, hv, hp⟩ := WP.spec_imp_exists
-    (code.read_end.empty st [] ⟨.Body, .Empty, 0#usize, false⟩ rfl rfl rfl)
+    (code.read_end.empty st [] ⟨.Body, .Empty, Control.signature (.Empty), 0#usize, false⟩ rfl rfl rfl)
   dsimp only at hc hv hp
   apply public_of_loop trailingBytes env emptyContext .Empty (.Err .TrailingBytes)
     (by simp [trailingBytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
@@ -169,13 +169,13 @@ theorem i32_const_body_accepted (env : module.Env) :
       (by simp [first, initial, Body.initial]; scalar_tac))
   dsimp only at hv hc hp
   let last := { pushed with pos := 3#usize }
-  have hctrls : last.ctrls.val = [⟨.Body, .Value .I32, 0#usize, false⟩] := by
+  have hctrls : last.ctrls.val = [⟨.Body, .Value .I32, Control.signature (.Value .I32), 0#usize, false⟩] := by
     simp [last, hc, first, initial, Body.initial]
   have hvals : last.vals.val = [] ++
       (Control.results (code.BlockType.Value .I32)).map code.StackType.Val := by
     simpa [last, first, initial, Body.initial, Control.results] using hv
   obtain ⟨⟨_, finished⟩, hend, rfl, hfc, hfv, hfp⟩ := WP.spec_imp_exists
-    (code.read_end.concrete last [] ⟨.Body, .Value .I32, 0#usize, false⟩ [] hctrls hvals rfl
+    (code.read_end.concrete last [] ⟨.Body, .Value .I32, Control.signature (.Value .I32), 0#usize, false⟩ [] hctrls hvals rfl
       (by simp))
   dsimp only at hfc hfv hfp
   have hstep : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor first constBytes env

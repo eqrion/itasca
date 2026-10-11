@@ -16,51 +16,52 @@ open ModuleBinary ModuleSections
 state update. Later-section emptiness supplies the distinction between an
 initial declaration vector and an append performed by the extracted parser. -/
 inductive Effect (data : Slice U8) (pos : Usize) (env : module.Env)
-    (before : Declarations) : U8 → Usize → module.Env → Declarations → Prop where
-  | types {result next added} : TypesAdded env result added →
+    (before : Declarations) : U8 → Usize → module.Env → Declarations →
+      (profile : optParam ValidationProfile .Wasm1) → Prop where
+  | types {profile} {result next added} : TypesAdded env result added →
       At (VecEncoding FuncTypeEncoding) data pos added next →
-      (∀ ft ∈ added, ft.results.val.length ≤ 1) →
-      Effect data pos env before 1#u8 next result { before with types := added }
-  | imports {result next added} : ImportsAdded env added result →
+      (∀ ft ∈ added, Profile.FuncTypeAdmissible profile ft) →
+      Effect (profile := profile) data pos env before 1#u8 next result { before with types := added }
+  | imports {profile} {result next added} : ImportsAdded env added result →
       At (VecEncoding ImportEncoding) data pos (added.map rawImport) next →
-      Effect data pos env before 2#u8 next result { before with imports := added.map rawImport }
-  | functions {result next indices signatures} : FunctionsAdded env result indices signatures →
+      Effect (profile := profile) data pos env before 2#u8 next result { before with imports := added.map rawImport }
+  | functions {profile} {result next indices signatures} : FunctionsAdded env result indices signatures →
       At (VecEncoding IndexEncoding) data pos indices next →
-      Effect data pos env before 3#u8 next result { before with functions := indices }
-  | tables {result next added} : TablesAdded env result added →
+      Effect (profile := profile) data pos env before 3#u8 next result { before with functions := indices }
+  | tables {profile} {result next added} : TablesAdded env result added →
       At (VecEncoding TableTypeEncoding) data pos added next →
       (∀ tt ∈ added, ModuleTranslation.LimitsValid tt.limits (2 ^ 32 - 1)) →
       result.table_types.val.length ≤ max env.table_types.val.length 1 →
-      Effect data pos env before 4#u8 next result { before with tables := added }
-  | memories {result next added} : MemoriesAdded env result added →
+      Effect (profile := profile) data pos env before 4#u8 next result { before with tables := added }
+  | memories {profile} {result next added} : MemoriesAdded env result added →
       At (VecEncoding MemTypeEncoding) data pos added next →
       (∀ mt ∈ added, ModuleTranslation.LimitsValid mt.limits (2 ^ 16)) →
       result.mem_types.val.length ≤ max env.mem_types.val.length 1 →
-      Effect data pos env before 5#u8 next result { before with memories := added }
-  | globals {result next added} : GlobalsAdded env result added →
+      Effect (profile := profile) data pos env before 5#u8 next result { before with memories := added }
+  | globals {profile} {result next added} : GlobalsAdded env result added →
       At (VecEncoding GlobalEncoding) data pos added next →
       (∀ g ∈ added, ModuleConstants.Valid result g.init g.gtype.valtype) →
-      Effect data pos env before 6#u8 next result { before with globals := added }
-  | exports {result next added} : ExportsAdded env added result →
+      Effect (profile := profile) data pos env before 6#u8 next result { before with globals := added }
+  | exports {profile} {result next added} : ExportsAdded env added result →
       At (VecEncoding ExportEncoding) data pos (added.map rawExport) next →
-      Effect data pos env before 7#u8 next result { before with exports := added.map rawExport }
-  | start {result next idx} : result = { env with start := some idx } →
+      Effect (profile := profile) data pos env before 7#u8 next result { before with exports := added.map rawExport }
+  | start {profile} {result next idx} : result = { env with start := some idx } →
       At StartEncoding data pos (some idx) next →
       (∃ hi : idx.val < env.func_types.val.length,
         env.func_types.val[idx.val].params.val = [] ∧ env.func_types.val[idx.val].results.val = []) →
-      Effect data pos env before 8#u8 next result { before with start := some idx }
-  | elements {result next added} : ElementsAdded env result added →
-      At (VecEncoding ElementEncoding) data pos (added.map rawElement) next →
+      Effect (profile := profile) data pos env before 8#u8 next result { before with start := some idx }
+  | elements {profile} {result next added} : ElementsAdded env result added →
+      At (VecEncoding (ElementEncodingFor profile)) data pos (added.map rawElement) next →
       (∀ entry ∈ added, ElementValid env entry) →
-      Effect data pos env before 9#u8 next result { before with elements := added.map rawElement }
+      Effect (profile := profile) data pos env before 9#u8 next result { before with elements := added.map rawElement }
 
-theorem Effect.span {data pos env before id next result after}
-    (h : Effect data pos env before id next result after) :
+theorem Effect.span {profile} {data pos env before id next result after}
+    (h : Effect (profile := profile) data pos env before id next result after) :
     pos.val ≤ next.val ∧ next.val ≤ data.length := by
   cases h <;> apply At.span <;> assumption
 
-theorem Effect.id_range {data pos env before id next result after}
-    (h : Effect data pos env before id next result after) : 1 ≤ id.val ∧ id.val ≤ 9 := by
+theorem Effect.id_range {profile} {data pos env before id next result after}
+    (h : Effect (profile := profile) data pos env before id next result after) : 1 ≤ id.val ∧ id.val ≤ 9 := by
   cases h <;> decide
 
 /-- This phase condition excludes duplicate sections and keeps future raw fields empty. -/
@@ -75,8 +76,8 @@ def Phase (last : Nat) (decls : Declarations) : Prop :=
   (last < 8 → decls.start = none) ∧
   (last < 9 → decls.elements = [])
 
-theorem Effect.phase {data pos env before id next result after last}
-    (h : Effect data pos env before id next result after)
+theorem Effect.phase {profile} {data pos env before id next result after last}
+    (h : Effect (profile := profile) data pos env before id next result after)
     (hp : Phase last before) (horder : last < id.val) : Phase id.val after := by
   rcases hp with ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9⟩
   cases h <;> simp [Phase] at *

@@ -57,4 +57,23 @@ theorem codeEncoding_of_parts {data start content localEnd last size groups body
   · simpa [hlen] using he
   · exact ((⟨hh, hn, hb⟩ : Wasm.BytesAt data start header content).append hls).append hbodybytes
 
+
+theorem rep_consumed {data start next tokens bytes}
+    (he : Rep Wasm.TokenEncoding tokens bytes) (hs : Wasm.BytesAt data start bytes next) :
+    Wasm.Consumed data start tokens next := by
+  induction he generalizing start with
+  | nil =>
+    have hn := hs.empty
+    subst next
+    exact .nil _ hs.bound
+  | cons ht hrest ih =>
+    obtain ⟨middle, hfirst, hrest⟩ := hs.split
+    exact Wasm.Consumed.cons_iff.mpr ⟨middle, ⟨_, ht, hfirst⟩, ih hrest⟩
+
+theorem body_of_bodyEncoding {data : Slice U8} {ops}
+    (he : BodyEncoding ops data.val) : Wasm.BodyEncoding data ops := by
+  obtain ⟨tokens, ht, hb⟩ := he
+  refine ⟨tokens, Slice.len data, rep_consumed ht ?_, rfl, hb⟩
+  exact ⟨by simp, by simp, by simp⟩
+
 end Itasca.ModuleBinary

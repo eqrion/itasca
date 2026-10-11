@@ -1,5 +1,6 @@
 import Itasca.Module.ModuleConstantTyping
 import Itasca.Module.ModuleExternals
+import Itasca.Profile.Types
 
 open Aeneas Aeneas.Std
 
@@ -33,8 +34,8 @@ structure Cache (env : module.Env) (tables : List types.TableType) (memories : L
 
 /-- All semantic checks that are stored in, or derivable from, the returned
 module environment. Byte-format evidence is kept separately. -/
-structure Valid (env : module.Env) : Prop where
-  types : ∀ ft ∈ env.types.val, ft.results.val.length ≤ 1
+structure Valid (env : module.Env) (profile : ValidationProfile := .Wasm1) : Prop where
+  types : ∀ ft ∈ env.types.val, Profile.FuncTypeAdmissible profile ft
   tables : ∀ tt ∈ env.table_types.val, ModuleTranslation.LimitsValid tt.limits (2 ^ 32 - 1)
   memories : ∀ mt ∈ env.mem_types.val, ModuleTranslation.LimitsValid mt.limits (2 ^ 16)
   tableCount : env.table_types.val.length ≤ 1
@@ -76,9 +77,9 @@ theorem Cache.global_prefix {env tables memories} (h : Cache env tables memories
     env.global_types.val.take env.num_imported_globals.val = importedGlobals env.imports.val := by
   rw [h.globals, h.numGlobals, List.take_left]
 
-theorem Cache.func_arity {env tables memories} (h : Cache env tables memories)
-    (ht : ∀ ft ∈ env.types.val, ft.results.val.length ≤ 1) :
-    ∀ ft ∈ env.func_types.val, ft.results.val.length ≤ 1 := by
+theorem Cache.func_property {env tables memories} (h : Cache env tables memories)
+    {P : types.FuncType → Prop} (ht : ∀ ft ∈ env.types.val, P ft) :
+    ∀ ft ∈ env.func_types.val, P ft := by
   intro ft hf
   obtain ⟨j, hj, rfl⟩ := List.mem_iff_getElem.mp hf
   have hj' : j < (importedFuncs env.imports.val ++ env.func_type_indices.val).length := by rw [h.funcs.length_eq]; exact hj
@@ -86,6 +87,24 @@ theorem Cache.func_arity {env tables memories} (h : Cache env tables memories)
   simp only [List.get_eq_getElem] at he
   rw [← he]
   exact ht _ (List.getElem_mem hi)
+
+theorem Cache.func_arity {env tables memories} (h : Cache env tables memories)
+    (ht : ∀ ft ∈ env.types.val, ft.results.val.length ≤ 1) :
+    ∀ ft ∈ env.func_types.val, ft.results.val.length ≤ 1 := h.func_property ht
+
+theorem Valid.environment {profile env tables memories} (hv : Valid env profile)
+    (hc : Cache env tables memories) : Profile.Environment profile env := by
+  have ht : ∀ ft ∈ env.types.val, Profile.FuncType profile ft := by
+    intro ft hm
+    exact ((Profile.funcTypeAdmissible_iff profile ft).mp (hv.types ft hm)).1
+  exact ⟨ht, hc.func_property ht⟩
+
+theorem Valid.environmentWithinLimits {profile env tables memories} (hv : Valid env profile)
+    (hc : Cache env tables memories) : Profile.EnvironmentWithinLimits profile env := by
+  have ht : ∀ ft ∈ env.types.val, Profile.FuncTypeWithinLimits profile ft := by
+    intro ft hm
+    exact ((Profile.funcTypeAdmissible_iff profile ft).mp (hv.types ft hm)).2
+  exact ⟨ht, hc.func_property ht⟩
 
 theorem Cache.import_indices {env tables memories} (h : Cache env tables memories) :
     ∀ idx ∈ importedFuncs env.imports.val, idx.val < env.types.val.length := by
@@ -118,7 +137,7 @@ theorem Cache.imports_resolve {env tables memories} (h : Cache env tables memori
     | Memory mt => exact ⟨.Memory mt :: rest, .cons (by simp [ModuleExternals.ImportResolves, hd]) hr⟩
     | Global gt => exact ⟨.Global gt :: rest, .cons (by simp [ModuleExternals.ImportResolves, hd]) hr⟩
 
-theorem Valid.exports_resolve {env} (h : Valid env) :
+theorem Valid.exports_resolve {profile env} (h : Valid env profile) :
     ∃ xts, List.Forall₂ (ModuleExternals.ExportResolves env) env.exports.val xts := by
   have he := h.exports
   generalize env.exports.val = entries at he ⊢

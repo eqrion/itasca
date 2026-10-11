@@ -69,7 +69,7 @@ impl_def types.ValueType.Insts.CoreCmpPartialEqValueType : core.cmp.PartialEq
 }
 
 /-- [itasca::code::{impl core::cmp::PartialEq<itasca::code::BlockType> for itasca::code::BlockType}::eq]:
-    Source: 'src/code.rs', lines 45:4-51:5
+    Source: 'src/code.rs', lines 47:4-53:5
     Visibility: public -/
 def code.BlockType.Insts.CoreCmpPartialEqBlockType.eq
   (self : _root_.Itasca.code.BlockType) (other : _root_.Itasca.code.BlockType)
@@ -88,7 +88,7 @@ def code.BlockType.Insts.CoreCmpPartialEqBlockType.eq
       types.ValueType.Insts.CoreCmpPartialEqValueType.eq a b
 
 /-- Trait implementation: [itasca::code::{impl core::cmp::PartialEq<itasca::code::BlockType> for itasca::code::BlockType}]
-    Source: 'src/code.rs', lines 44:0-52:1 -/
+    Source: 'src/code.rs', lines 46:0-54:1 -/
 @[reducible]
 impl_def code.BlockType.Insts.CoreCmpPartialEqBlockType : core.cmp.PartialEq
   _root_.Itasca.code.BlockType _root_.Itasca.code.BlockType := {
@@ -98,7 +98,7 @@ impl_def code.BlockType.Insts.CoreCmpPartialEqBlockType : core.cmp.PartialEq
 }
 
 /-- Trait implementation: [itasca::code::{impl core::cmp::Eq for itasca::code::BlockType}]
-    Source: 'src/code.rs', lines 54:0-54:24 -/
+    Source: 'src/code.rs', lines 56:0-56:24 -/
 @[reducible]
 def code.BlockType.Insts.CoreCmpEq : core.cmp.Eq _root_.Itasca.code.BlockType
   := {
@@ -106,7 +106,7 @@ def code.BlockType.Insts.CoreCmpEq : core.cmp.Eq _root_.Itasca.code.BlockType
 }
 
 /-- [itasca::code::visit]:
-    Source: 'src/code.rs', lines 82:0-87:1 -/
+    Source: 'src/code.rs', lines 84:0-89:1 -/
 def code.visit
   (r : core.result.Result Unit _root_.Itasca.error.VisitError) :
   Result (core.result.Result Unit _root_.Itasca.error.OpError)
@@ -117,862 +117,862 @@ def code.visit
     ok (core.result.Result.Err (error.OpError.Visitor e))
 
 /-- [itasca::code::OP_UNREACHABLE]
-    Source: 'src/code.rs', lines 137:0-137:36
+    Source: 'src/code.rs', lines 141:0-141:36
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_UNREACHABLE : Std.U8 := 0#u8
 
 /-- [itasca::code::OP_NOP]
-    Source: 'src/code.rs', lines 138:0-138:28
+    Source: 'src/code.rs', lines 142:0-142:28
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_NOP : Std.U8 := 1#u8
 
 /-- [itasca::code::OP_BLOCK]
-    Source: 'src/code.rs', lines 139:0-139:30
+    Source: 'src/code.rs', lines 143:0-143:30
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_BLOCK : Std.U8 := 2#u8
 
 /-- [itasca::code::OP_LOOP]
-    Source: 'src/code.rs', lines 140:0-140:29
+    Source: 'src/code.rs', lines 144:0-144:29
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_LOOP : Std.U8 := 3#u8
 
 /-- [itasca::code::OP_IF]
-    Source: 'src/code.rs', lines 141:0-141:27
+    Source: 'src/code.rs', lines 145:0-145:27
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_IF : Std.U8 := 4#u8
 
 /-- [itasca::code::OP_ELSE]
-    Source: 'src/code.rs', lines 142:0-142:29
+    Source: 'src/code.rs', lines 146:0-146:29
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_ELSE : Std.U8 := 5#u8
 
 /-- [itasca::code::OP_END]
-    Source: 'src/code.rs', lines 143:0-143:28
+    Source: 'src/code.rs', lines 147:0-147:28
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_END : Std.U8 := 11#u8
 
 /-- [itasca::code::OP_BR]
-    Source: 'src/code.rs', lines 144:0-144:27
+    Source: 'src/code.rs', lines 148:0-148:27
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_BR : Std.U8 := 12#u8
 
 /-- [itasca::code::OP_BR_IF]
-    Source: 'src/code.rs', lines 145:0-145:30
+    Source: 'src/code.rs', lines 149:0-149:30
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_BR_IF : Std.U8 := 13#u8
 
 /-- [itasca::code::OP_BR_TABLE]
-    Source: 'src/code.rs', lines 146:0-146:33
+    Source: 'src/code.rs', lines 150:0-150:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_BR_TABLE : Std.U8 := 14#u8
 
 /-- [itasca::code::OP_RETURN]
-    Source: 'src/code.rs', lines 147:0-147:31
+    Source: 'src/code.rs', lines 151:0-151:31
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_RETURN : Std.U8 := 15#u8
 
 /-- [itasca::code::OP_CALL]
-    Source: 'src/code.rs', lines 148:0-148:29
+    Source: 'src/code.rs', lines 152:0-152:29
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_CALL : Std.U8 := 16#u8
 
 /-- [itasca::code::OP_CALL_INDIRECT]
-    Source: 'src/code.rs', lines 149:0-149:38
+    Source: 'src/code.rs', lines 153:0-153:38
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_CALL_INDIRECT : Std.U8 := 17#u8
 
 /-- [itasca::code::OP_DROP]
-    Source: 'src/code.rs', lines 150:0-150:29
+    Source: 'src/code.rs', lines 154:0-154:29
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_DROP : Std.U8 := 26#u8
 
 /-- [itasca::code::OP_SELECT]
-    Source: 'src/code.rs', lines 151:0-151:31
+    Source: 'src/code.rs', lines 155:0-155:31
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_SELECT : Std.U8 := 27#u8
 
 /-- [itasca::code::OP_LOCAL_GET]
-    Source: 'src/code.rs', lines 153:0-153:34
+    Source: 'src/code.rs', lines 157:0-157:34
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_LOCAL_GET : Std.U8 := 32#u8
 
 /-- [itasca::code::OP_LOCAL_SET]
-    Source: 'src/code.rs', lines 154:0-154:34
+    Source: 'src/code.rs', lines 158:0-158:34
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_LOCAL_SET : Std.U8 := 33#u8
 
 /-- [itasca::code::OP_LOCAL_TEE]
-    Source: 'src/code.rs', lines 155:0-155:34
+    Source: 'src/code.rs', lines 159:0-159:34
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_LOCAL_TEE : Std.U8 := 34#u8
 
 /-- [itasca::code::OP_GLOBAL_GET]
-    Source: 'src/code.rs', lines 156:0-156:35
+    Source: 'src/code.rs', lines 160:0-160:35
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_GLOBAL_GET : Std.U8 := 35#u8
 
 /-- [itasca::code::OP_GLOBAL_SET]
-    Source: 'src/code.rs', lines 157:0-157:35
+    Source: 'src/code.rs', lines 161:0-161:35
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_GLOBAL_SET : Std.U8 := 36#u8
 
 /-- [itasca::code::OP_I32_LOAD]
-    Source: 'src/code.rs', lines 159:0-159:33
+    Source: 'src/code.rs', lines 163:0-163:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_LOAD : Std.U8 := 40#u8
 
 /-- [itasca::code::OP_I64_LOAD]
-    Source: 'src/code.rs', lines 160:0-160:33
+    Source: 'src/code.rs', lines 164:0-164:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_LOAD : Std.U8 := 41#u8
 
 /-- [itasca::code::OP_F32_LOAD]
-    Source: 'src/code.rs', lines 161:0-161:33
+    Source: 'src/code.rs', lines 165:0-165:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_LOAD : Std.U8 := 42#u8
 
 /-- [itasca::code::OP_F64_LOAD]
-    Source: 'src/code.rs', lines 162:0-162:33
+    Source: 'src/code.rs', lines 166:0-166:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_LOAD : Std.U8 := 43#u8
 
 /-- [itasca::code::OP_I32_LOAD8_S]
-    Source: 'src/code.rs', lines 163:0-163:36
+    Source: 'src/code.rs', lines 167:0-167:36
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_LOAD8_S : Std.U8 := 44#u8
 
 /-- [itasca::code::OP_I32_LOAD8_U]
-    Source: 'src/code.rs', lines 164:0-164:36
+    Source: 'src/code.rs', lines 168:0-168:36
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_LOAD8_U : Std.U8 := 45#u8
 
 /-- [itasca::code::OP_I32_LOAD16_S]
-    Source: 'src/code.rs', lines 165:0-165:37
+    Source: 'src/code.rs', lines 169:0-169:37
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_LOAD16_S : Std.U8 := 46#u8
 
 /-- [itasca::code::OP_I32_LOAD16_U]
-    Source: 'src/code.rs', lines 166:0-166:37
+    Source: 'src/code.rs', lines 170:0-170:37
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_LOAD16_U : Std.U8 := 47#u8
 
 /-- [itasca::code::OP_I64_LOAD8_S]
-    Source: 'src/code.rs', lines 167:0-167:36
+    Source: 'src/code.rs', lines 171:0-171:36
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_LOAD8_S : Std.U8 := 48#u8
 
 /-- [itasca::code::OP_I64_LOAD8_U]
-    Source: 'src/code.rs', lines 168:0-168:36
+    Source: 'src/code.rs', lines 172:0-172:36
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_LOAD8_U : Std.U8 := 49#u8
 
 /-- [itasca::code::OP_I64_LOAD16_S]
-    Source: 'src/code.rs', lines 169:0-169:37
+    Source: 'src/code.rs', lines 173:0-173:37
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_LOAD16_S : Std.U8 := 50#u8
 
 /-- [itasca::code::OP_I64_LOAD16_U]
-    Source: 'src/code.rs', lines 170:0-170:37
+    Source: 'src/code.rs', lines 174:0-174:37
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_LOAD16_U : Std.U8 := 51#u8
 
 /-- [itasca::code::OP_I64_LOAD32_S]
-    Source: 'src/code.rs', lines 171:0-171:37
+    Source: 'src/code.rs', lines 175:0-175:37
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_LOAD32_S : Std.U8 := 52#u8
 
 /-- [itasca::code::OP_I64_LOAD32_U]
-    Source: 'src/code.rs', lines 172:0-172:37
+    Source: 'src/code.rs', lines 176:0-176:37
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_LOAD32_U : Std.U8 := 53#u8
 
 /-- [itasca::code::OP_I32_STORE]
-    Source: 'src/code.rs', lines 174:0-174:34
+    Source: 'src/code.rs', lines 178:0-178:34
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_STORE : Std.U8 := 54#u8
 
 /-- [itasca::code::OP_I64_STORE]
-    Source: 'src/code.rs', lines 175:0-175:34
+    Source: 'src/code.rs', lines 179:0-179:34
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_STORE : Std.U8 := 55#u8
 
 /-- [itasca::code::OP_F32_STORE]
-    Source: 'src/code.rs', lines 176:0-176:34
+    Source: 'src/code.rs', lines 180:0-180:34
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_STORE : Std.U8 := 56#u8
 
 /-- [itasca::code::OP_F64_STORE]
-    Source: 'src/code.rs', lines 177:0-177:34
+    Source: 'src/code.rs', lines 181:0-181:34
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_STORE : Std.U8 := 57#u8
 
 /-- [itasca::code::OP_I32_STORE8]
-    Source: 'src/code.rs', lines 178:0-178:35
+    Source: 'src/code.rs', lines 182:0-182:35
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_STORE8 : Std.U8 := 58#u8
 
 /-- [itasca::code::OP_I32_STORE16]
-    Source: 'src/code.rs', lines 179:0-179:36
+    Source: 'src/code.rs', lines 183:0-183:36
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_STORE16 : Std.U8 := 59#u8
 
 /-- [itasca::code::OP_I64_STORE8]
-    Source: 'src/code.rs', lines 180:0-180:35
+    Source: 'src/code.rs', lines 184:0-184:35
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_STORE8 : Std.U8 := 60#u8
 
 /-- [itasca::code::OP_I64_STORE16]
-    Source: 'src/code.rs', lines 181:0-181:36
+    Source: 'src/code.rs', lines 185:0-185:36
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_STORE16 : Std.U8 := 61#u8
 
 /-- [itasca::code::OP_I64_STORE32]
-    Source: 'src/code.rs', lines 182:0-182:36
+    Source: 'src/code.rs', lines 186:0-186:36
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_STORE32 : Std.U8 := 62#u8
 
 /-- [itasca::code::OP_MEMORY_SIZE]
-    Source: 'src/code.rs', lines 184:0-184:36
+    Source: 'src/code.rs', lines 188:0-188:36
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_MEMORY_SIZE : Std.U8 := 63#u8
 
 /-- [itasca::code::OP_MEMORY_GROW]
-    Source: 'src/code.rs', lines 185:0-185:36
+    Source: 'src/code.rs', lines 189:0-189:36
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_MEMORY_GROW : Std.U8 := 64#u8
 
 /-- [itasca::code::OP_I32_CONST]
-    Source: 'src/code.rs', lines 187:0-187:34
+    Source: 'src/code.rs', lines 191:0-191:34
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_CONST : Std.U8 := 65#u8
 
 /-- [itasca::code::OP_I64_CONST]
-    Source: 'src/code.rs', lines 188:0-188:34
+    Source: 'src/code.rs', lines 192:0-192:34
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_CONST : Std.U8 := 66#u8
 
 /-- [itasca::code::OP_F32_CONST]
-    Source: 'src/code.rs', lines 189:0-189:34
+    Source: 'src/code.rs', lines 193:0-193:34
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_CONST : Std.U8 := 67#u8
 
 /-- [itasca::code::OP_F64_CONST]
-    Source: 'src/code.rs', lines 190:0-190:34
+    Source: 'src/code.rs', lines 194:0-194:34
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_CONST : Std.U8 := 68#u8
 
 /-- [itasca::code::OP_I32_EQZ]
-    Source: 'src/code.rs', lines 192:0-192:32
+    Source: 'src/code.rs', lines 196:0-196:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_EQZ : Std.U8 := 69#u8
 
 /-- [itasca::code::OP_I32_EQ]
-    Source: 'src/code.rs', lines 193:0-193:31
+    Source: 'src/code.rs', lines 197:0-197:31
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_EQ : Std.U8 := 70#u8
 
 /-- [itasca::code::OP_I32_NE]
-    Source: 'src/code.rs', lines 194:0-194:31
+    Source: 'src/code.rs', lines 198:0-198:31
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_NE : Std.U8 := 71#u8
 
 /-- [itasca::code::OP_I32_LT_S]
-    Source: 'src/code.rs', lines 195:0-195:33
+    Source: 'src/code.rs', lines 199:0-199:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_LT_S : Std.U8 := 72#u8
 
 /-- [itasca::code::OP_I32_LT_U]
-    Source: 'src/code.rs', lines 196:0-196:33
+    Source: 'src/code.rs', lines 200:0-200:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_LT_U : Std.U8 := 73#u8
 
 /-- [itasca::code::OP_I32_GT_S]
-    Source: 'src/code.rs', lines 197:0-197:33
+    Source: 'src/code.rs', lines 201:0-201:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_GT_S : Std.U8 := 74#u8
 
 /-- [itasca::code::OP_I32_GT_U]
-    Source: 'src/code.rs', lines 198:0-198:33
+    Source: 'src/code.rs', lines 202:0-202:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_GT_U : Std.U8 := 75#u8
 
 /-- [itasca::code::OP_I32_LE_S]
-    Source: 'src/code.rs', lines 199:0-199:33
+    Source: 'src/code.rs', lines 203:0-203:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_LE_S : Std.U8 := 76#u8
 
 /-- [itasca::code::OP_I32_LE_U]
-    Source: 'src/code.rs', lines 200:0-200:33
+    Source: 'src/code.rs', lines 204:0-204:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_LE_U : Std.U8 := 77#u8
 
 /-- [itasca::code::OP_I32_GE_S]
-    Source: 'src/code.rs', lines 201:0-201:33
+    Source: 'src/code.rs', lines 205:0-205:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_GE_S : Std.U8 := 78#u8
 
 /-- [itasca::code::OP_I32_GE_U]
-    Source: 'src/code.rs', lines 202:0-202:33
+    Source: 'src/code.rs', lines 206:0-206:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_GE_U : Std.U8 := 79#u8
 
 /-- [itasca::code::OP_I64_EQZ]
-    Source: 'src/code.rs', lines 204:0-204:32
+    Source: 'src/code.rs', lines 208:0-208:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_EQZ : Std.U8 := 80#u8
 
 /-- [itasca::code::OP_I64_EQ]
-    Source: 'src/code.rs', lines 205:0-205:31
+    Source: 'src/code.rs', lines 209:0-209:31
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_EQ : Std.U8 := 81#u8
 
 /-- [itasca::code::OP_I64_NE]
-    Source: 'src/code.rs', lines 206:0-206:31
+    Source: 'src/code.rs', lines 210:0-210:31
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_NE : Std.U8 := 82#u8
 
 /-- [itasca::code::OP_I64_LT_S]
-    Source: 'src/code.rs', lines 207:0-207:33
+    Source: 'src/code.rs', lines 211:0-211:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_LT_S : Std.U8 := 83#u8
 
 /-- [itasca::code::OP_I64_LT_U]
-    Source: 'src/code.rs', lines 208:0-208:33
+    Source: 'src/code.rs', lines 212:0-212:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_LT_U : Std.U8 := 84#u8
 
 /-- [itasca::code::OP_I64_GT_S]
-    Source: 'src/code.rs', lines 209:0-209:33
+    Source: 'src/code.rs', lines 213:0-213:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_GT_S : Std.U8 := 85#u8
 
 /-- [itasca::code::OP_I64_GT_U]
-    Source: 'src/code.rs', lines 210:0-210:33
+    Source: 'src/code.rs', lines 214:0-214:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_GT_U : Std.U8 := 86#u8
 
 /-- [itasca::code::OP_I64_LE_S]
-    Source: 'src/code.rs', lines 211:0-211:33
+    Source: 'src/code.rs', lines 215:0-215:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_LE_S : Std.U8 := 87#u8
 
 /-- [itasca::code::OP_I64_LE_U]
-    Source: 'src/code.rs', lines 212:0-212:33
+    Source: 'src/code.rs', lines 216:0-216:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_LE_U : Std.U8 := 88#u8
 
 /-- [itasca::code::OP_I64_GE_S]
-    Source: 'src/code.rs', lines 213:0-213:33
+    Source: 'src/code.rs', lines 217:0-217:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_GE_S : Std.U8 := 89#u8
 
 /-- [itasca::code::OP_I64_GE_U]
-    Source: 'src/code.rs', lines 214:0-214:33
+    Source: 'src/code.rs', lines 218:0-218:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_GE_U : Std.U8 := 90#u8
 
 /-- [itasca::code::OP_F32_EQ]
-    Source: 'src/code.rs', lines 216:0-216:31
+    Source: 'src/code.rs', lines 220:0-220:31
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_EQ : Std.U8 := 91#u8
 
 /-- [itasca::code::OP_F32_NE]
-    Source: 'src/code.rs', lines 217:0-217:31
+    Source: 'src/code.rs', lines 221:0-221:31
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_NE : Std.U8 := 92#u8
 
 /-- [itasca::code::OP_F32_LT]
-    Source: 'src/code.rs', lines 218:0-218:31
+    Source: 'src/code.rs', lines 222:0-222:31
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_LT : Std.U8 := 93#u8
 
 /-- [itasca::code::OP_F32_GT]
-    Source: 'src/code.rs', lines 219:0-219:31
+    Source: 'src/code.rs', lines 223:0-223:31
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_GT : Std.U8 := 94#u8
 
 /-- [itasca::code::OP_F32_LE]
-    Source: 'src/code.rs', lines 220:0-220:31
+    Source: 'src/code.rs', lines 224:0-224:31
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_LE : Std.U8 := 95#u8
 
 /-- [itasca::code::OP_F32_GE]
-    Source: 'src/code.rs', lines 221:0-221:31
+    Source: 'src/code.rs', lines 225:0-225:31
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_GE : Std.U8 := 96#u8
 
 /-- [itasca::code::OP_F64_EQ]
-    Source: 'src/code.rs', lines 223:0-223:31
+    Source: 'src/code.rs', lines 227:0-227:31
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_EQ : Std.U8 := 97#u8
 
 /-- [itasca::code::OP_F64_NE]
-    Source: 'src/code.rs', lines 224:0-224:31
+    Source: 'src/code.rs', lines 228:0-228:31
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_NE : Std.U8 := 98#u8
 
 /-- [itasca::code::OP_F64_LT]
-    Source: 'src/code.rs', lines 225:0-225:31
+    Source: 'src/code.rs', lines 229:0-229:31
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_LT : Std.U8 := 99#u8
 
 /-- [itasca::code::OP_F64_GT]
-    Source: 'src/code.rs', lines 226:0-226:31
+    Source: 'src/code.rs', lines 230:0-230:31
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_GT : Std.U8 := 100#u8
 
 /-- [itasca::code::OP_F64_LE]
-    Source: 'src/code.rs', lines 227:0-227:31
+    Source: 'src/code.rs', lines 231:0-231:31
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_LE : Std.U8 := 101#u8
 
 /-- [itasca::code::OP_F64_GE]
-    Source: 'src/code.rs', lines 228:0-228:31
+    Source: 'src/code.rs', lines 232:0-232:31
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_GE : Std.U8 := 102#u8
 
 /-- [itasca::code::OP_I32_SUB]
-    Source: 'src/code.rs', lines 230:0-230:32
+    Source: 'src/code.rs', lines 234:0-234:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_SUB : Std.U8 := 107#u8
 
 /-- [itasca::code::OP_I32_MUL]
-    Source: 'src/code.rs', lines 231:0-231:32
+    Source: 'src/code.rs', lines 235:0-235:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_MUL : Std.U8 := 108#u8
 
 /-- [itasca::code::OP_I32_DIV_S]
-    Source: 'src/code.rs', lines 232:0-232:34
+    Source: 'src/code.rs', lines 236:0-236:34
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_DIV_S : Std.U8 := 109#u8
 
 /-- [itasca::code::OP_I32_DIV_U]
-    Source: 'src/code.rs', lines 233:0-233:34
+    Source: 'src/code.rs', lines 237:0-237:34
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_DIV_U : Std.U8 := 110#u8
 
 /-- [itasca::code::OP_I32_REM_S]
-    Source: 'src/code.rs', lines 234:0-234:34
+    Source: 'src/code.rs', lines 238:0-238:34
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_REM_S : Std.U8 := 111#u8
 
 /-- [itasca::code::OP_I32_REM_U]
-    Source: 'src/code.rs', lines 235:0-235:34
+    Source: 'src/code.rs', lines 239:0-239:34
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_REM_U : Std.U8 := 112#u8
 
 /-- [itasca::code::OP_I32_AND]
-    Source: 'src/code.rs', lines 236:0-236:32
+    Source: 'src/code.rs', lines 240:0-240:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_AND : Std.U8 := 113#u8
 
 /-- [itasca::code::OP_I32_OR]
-    Source: 'src/code.rs', lines 237:0-237:31
+    Source: 'src/code.rs', lines 241:0-241:31
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_OR : Std.U8 := 114#u8
 
 /-- [itasca::code::OP_I32_XOR]
-    Source: 'src/code.rs', lines 238:0-238:32
+    Source: 'src/code.rs', lines 242:0-242:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_XOR : Std.U8 := 115#u8
 
 /-- [itasca::code::OP_I32_SHL]
-    Source: 'src/code.rs', lines 239:0-239:32
+    Source: 'src/code.rs', lines 243:0-243:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_SHL : Std.U8 := 116#u8
 
 /-- [itasca::code::OP_I32_SHR_S]
-    Source: 'src/code.rs', lines 240:0-240:34
+    Source: 'src/code.rs', lines 244:0-244:34
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_SHR_S : Std.U8 := 117#u8
 
 /-- [itasca::code::OP_I32_SHR_U]
-    Source: 'src/code.rs', lines 241:0-241:34
+    Source: 'src/code.rs', lines 245:0-245:34
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_SHR_U : Std.U8 := 118#u8
 
 /-- [itasca::code::OP_I32_ROTL]
-    Source: 'src/code.rs', lines 242:0-242:33
+    Source: 'src/code.rs', lines 246:0-246:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_ROTL : Std.U8 := 119#u8
 
 /-- [itasca::code::OP_I32_ROTR]
-    Source: 'src/code.rs', lines 243:0-243:33
+    Source: 'src/code.rs', lines 247:0-247:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_ROTR : Std.U8 := 120#u8
 
 /-- [itasca::code::OP_I64_ADD]
-    Source: 'src/code.rs', lines 245:0-245:32
+    Source: 'src/code.rs', lines 249:0-249:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_ADD : Std.U8 := 124#u8
 
 /-- [itasca::code::OP_I64_SUB]
-    Source: 'src/code.rs', lines 246:0-246:32
+    Source: 'src/code.rs', lines 250:0-250:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_SUB : Std.U8 := 125#u8
 
 /-- [itasca::code::OP_I64_MUL]
-    Source: 'src/code.rs', lines 247:0-247:32
+    Source: 'src/code.rs', lines 251:0-251:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_MUL : Std.U8 := 126#u8
 
 /-- [itasca::code::OP_I64_DIV_S]
-    Source: 'src/code.rs', lines 248:0-248:34
+    Source: 'src/code.rs', lines 252:0-252:34
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_DIV_S : Std.U8 := 127#u8
 
 /-- [itasca::code::OP_I64_DIV_U]
-    Source: 'src/code.rs', lines 249:0-249:34
+    Source: 'src/code.rs', lines 253:0-253:34
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_DIV_U : Std.U8 := 128#u8
 
 /-- [itasca::code::OP_I64_REM_S]
-    Source: 'src/code.rs', lines 250:0-250:34
+    Source: 'src/code.rs', lines 254:0-254:34
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_REM_S : Std.U8 := 129#u8
 
 /-- [itasca::code::OP_I64_REM_U]
-    Source: 'src/code.rs', lines 251:0-251:34
+    Source: 'src/code.rs', lines 255:0-255:34
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_REM_U : Std.U8 := 130#u8
 
 /-- [itasca::code::OP_I64_AND]
-    Source: 'src/code.rs', lines 252:0-252:32
+    Source: 'src/code.rs', lines 256:0-256:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_AND : Std.U8 := 131#u8
 
 /-- [itasca::code::OP_I64_OR]
-    Source: 'src/code.rs', lines 253:0-253:31
+    Source: 'src/code.rs', lines 257:0-257:31
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_OR : Std.U8 := 132#u8
 
 /-- [itasca::code::OP_I64_XOR]
-    Source: 'src/code.rs', lines 254:0-254:32
+    Source: 'src/code.rs', lines 258:0-258:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_XOR : Std.U8 := 133#u8
 
 /-- [itasca::code::OP_I64_SHL]
-    Source: 'src/code.rs', lines 255:0-255:32
+    Source: 'src/code.rs', lines 259:0-259:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_SHL : Std.U8 := 134#u8
 
 /-- [itasca::code::OP_I64_SHR_S]
-    Source: 'src/code.rs', lines 256:0-256:34
+    Source: 'src/code.rs', lines 260:0-260:34
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_SHR_S : Std.U8 := 135#u8
 
 /-- [itasca::code::OP_I64_SHR_U]
-    Source: 'src/code.rs', lines 257:0-257:34
+    Source: 'src/code.rs', lines 261:0-261:34
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_SHR_U : Std.U8 := 136#u8
 
 /-- [itasca::code::OP_I64_ROTL]
-    Source: 'src/code.rs', lines 258:0-258:33
+    Source: 'src/code.rs', lines 262:0-262:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_ROTL : Std.U8 := 137#u8
 
 /-- [itasca::code::OP_I64_ROTR]
-    Source: 'src/code.rs', lines 259:0-259:33
+    Source: 'src/code.rs', lines 263:0-263:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_ROTR : Std.U8 := 138#u8
 
 /-- [itasca::code::OP_F32_ADD]
-    Source: 'src/code.rs', lines 261:0-261:32
+    Source: 'src/code.rs', lines 265:0-265:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_ADD : Std.U8 := 146#u8
 
 /-- [itasca::code::OP_F32_SUB]
-    Source: 'src/code.rs', lines 262:0-262:32
+    Source: 'src/code.rs', lines 266:0-266:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_SUB : Std.U8 := 147#u8
 
 /-- [itasca::code::OP_F32_MUL]
-    Source: 'src/code.rs', lines 263:0-263:32
+    Source: 'src/code.rs', lines 267:0-267:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_MUL : Std.U8 := 148#u8
 
 /-- [itasca::code::OP_F32_DIV]
-    Source: 'src/code.rs', lines 264:0-264:32
+    Source: 'src/code.rs', lines 268:0-268:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_DIV : Std.U8 := 149#u8
 
 /-- [itasca::code::OP_F32_MIN]
-    Source: 'src/code.rs', lines 265:0-265:32
+    Source: 'src/code.rs', lines 269:0-269:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_MIN : Std.U8 := 150#u8
 
 /-- [itasca::code::OP_F32_MAX]
-    Source: 'src/code.rs', lines 266:0-266:32
+    Source: 'src/code.rs', lines 270:0-270:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_MAX : Std.U8 := 151#u8
 
 /-- [itasca::code::OP_F32_COPYSIGN]
-    Source: 'src/code.rs', lines 267:0-267:37
+    Source: 'src/code.rs', lines 271:0-271:37
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_COPYSIGN : Std.U8 := 152#u8
 
 /-- [itasca::code::OP_F64_ADD]
-    Source: 'src/code.rs', lines 269:0-269:32
+    Source: 'src/code.rs', lines 273:0-273:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_ADD : Std.U8 := 160#u8
 
 /-- [itasca::code::OP_F64_SUB]
-    Source: 'src/code.rs', lines 270:0-270:32
+    Source: 'src/code.rs', lines 274:0-274:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_SUB : Std.U8 := 161#u8
 
 /-- [itasca::code::OP_F64_MUL]
-    Source: 'src/code.rs', lines 271:0-271:32
+    Source: 'src/code.rs', lines 275:0-275:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_MUL : Std.U8 := 162#u8
 
 /-- [itasca::code::OP_F64_DIV]
-    Source: 'src/code.rs', lines 272:0-272:32
+    Source: 'src/code.rs', lines 276:0-276:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_DIV : Std.U8 := 163#u8
 
 /-- [itasca::code::OP_F64_MIN]
-    Source: 'src/code.rs', lines 273:0-273:32
+    Source: 'src/code.rs', lines 277:0-277:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_MIN : Std.U8 := 164#u8
 
 /-- [itasca::code::OP_F64_MAX]
-    Source: 'src/code.rs', lines 274:0-274:32
+    Source: 'src/code.rs', lines 278:0-278:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_MAX : Std.U8 := 165#u8
 
 /-- [itasca::code::OP_F64_COPYSIGN]
-    Source: 'src/code.rs', lines 275:0-275:37
+    Source: 'src/code.rs', lines 279:0-279:37
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_COPYSIGN : Std.U8 := 166#u8
 
 /-- [itasca::code::OP_I32_CLZ]
-    Source: 'src/code.rs', lines 277:0-277:32
+    Source: 'src/code.rs', lines 281:0-281:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_CLZ : Std.U8 := 103#u8
 
 /-- [itasca::code::OP_I32_CTZ]
-    Source: 'src/code.rs', lines 278:0-278:32
+    Source: 'src/code.rs', lines 282:0-282:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_CTZ : Std.U8 := 104#u8
 
 /-- [itasca::code::OP_I32_POPCNT]
-    Source: 'src/code.rs', lines 279:0-279:35
+    Source: 'src/code.rs', lines 283:0-283:35
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_POPCNT : Std.U8 := 105#u8
 
 /-- [itasca::code::OP_I32_ADD]
-    Source: 'src/code.rs', lines 280:0-280:32
+    Source: 'src/code.rs', lines 284:0-284:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_ADD : Std.U8 := 106#u8
 
 /-- [itasca::code::OP_I64_CLZ]
-    Source: 'src/code.rs', lines 282:0-282:32
+    Source: 'src/code.rs', lines 286:0-286:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_CLZ : Std.U8 := 121#u8
 
 /-- [itasca::code::OP_I64_CTZ]
-    Source: 'src/code.rs', lines 283:0-283:32
+    Source: 'src/code.rs', lines 287:0-287:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_CTZ : Std.U8 := 122#u8
 
 /-- [itasca::code::OP_I64_POPCNT]
-    Source: 'src/code.rs', lines 284:0-284:35
+    Source: 'src/code.rs', lines 288:0-288:35
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_POPCNT : Std.U8 := 123#u8
 
 /-- [itasca::code::OP_F32_ABS]
-    Source: 'src/code.rs', lines 286:0-286:32
+    Source: 'src/code.rs', lines 290:0-290:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_ABS : Std.U8 := 139#u8
 
 /-- [itasca::code::OP_F32_NEG]
-    Source: 'src/code.rs', lines 287:0-287:32
+    Source: 'src/code.rs', lines 291:0-291:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_NEG : Std.U8 := 140#u8
 
 /-- [itasca::code::OP_F32_CEIL]
-    Source: 'src/code.rs', lines 288:0-288:33
+    Source: 'src/code.rs', lines 292:0-292:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_CEIL : Std.U8 := 141#u8
 
 /-- [itasca::code::OP_F32_FLOOR]
-    Source: 'src/code.rs', lines 289:0-289:34
+    Source: 'src/code.rs', lines 293:0-293:34
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_FLOOR : Std.U8 := 142#u8
 
 /-- [itasca::code::OP_F32_TRUNC]
-    Source: 'src/code.rs', lines 290:0-290:34
+    Source: 'src/code.rs', lines 294:0-294:34
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_TRUNC : Std.U8 := 143#u8
 
 /-- [itasca::code::OP_F32_NEAREST]
-    Source: 'src/code.rs', lines 291:0-291:36
+    Source: 'src/code.rs', lines 295:0-295:36
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_NEAREST : Std.U8 := 144#u8
 
 /-- [itasca::code::OP_F32_SQRT]
-    Source: 'src/code.rs', lines 292:0-292:33
+    Source: 'src/code.rs', lines 296:0-296:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_SQRT : Std.U8 := 145#u8
 
 /-- [itasca::code::OP_F64_ABS]
-    Source: 'src/code.rs', lines 294:0-294:32
+    Source: 'src/code.rs', lines 298:0-298:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_ABS : Std.U8 := 153#u8
 
 /-- [itasca::code::OP_F64_NEG]
-    Source: 'src/code.rs', lines 295:0-295:32
+    Source: 'src/code.rs', lines 299:0-299:32
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_NEG : Std.U8 := 154#u8
 
 /-- [itasca::code::OP_F64_CEIL]
-    Source: 'src/code.rs', lines 296:0-296:33
+    Source: 'src/code.rs', lines 300:0-300:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_CEIL : Std.U8 := 155#u8
 
 /-- [itasca::code::OP_F64_FLOOR]
-    Source: 'src/code.rs', lines 297:0-297:34
+    Source: 'src/code.rs', lines 301:0-301:34
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_FLOOR : Std.U8 := 156#u8
 
 /-- [itasca::code::OP_F64_TRUNC]
-    Source: 'src/code.rs', lines 298:0-298:34
+    Source: 'src/code.rs', lines 302:0-302:34
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_TRUNC : Std.U8 := 157#u8
 
 /-- [itasca::code::OP_F64_NEAREST]
-    Source: 'src/code.rs', lines 299:0-299:36
+    Source: 'src/code.rs', lines 303:0-303:36
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_NEAREST : Std.U8 := 158#u8
 
 /-- [itasca::code::OP_F64_SQRT]
-    Source: 'src/code.rs', lines 300:0-300:33
+    Source: 'src/code.rs', lines 304:0-304:33
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_SQRT : Std.U8 := 159#u8
 
 /-- [itasca::code::OP_I32_WRAP_I64]
-    Source: 'src/code.rs', lines 302:0-302:37
+    Source: 'src/code.rs', lines 306:0-306:37
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_WRAP_I64 : Std.U8 := 167#u8
 
 /-- [itasca::code::OP_I32_TRUNC_F32_S]
-    Source: 'src/code.rs', lines 303:0-303:40
+    Source: 'src/code.rs', lines 307:0-307:40
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_TRUNC_F32_S : Std.U8 := 168#u8
 
 /-- [itasca::code::OP_I32_TRUNC_F32_U]
-    Source: 'src/code.rs', lines 304:0-304:40
+    Source: 'src/code.rs', lines 308:0-308:40
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_TRUNC_F32_U : Std.U8 := 169#u8
 
 /-- [itasca::code::OP_I32_TRUNC_F64_S]
-    Source: 'src/code.rs', lines 305:0-305:40
+    Source: 'src/code.rs', lines 309:0-309:40
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_TRUNC_F64_S : Std.U8 := 170#u8
 
 /-- [itasca::code::OP_I32_TRUNC_F64_U]
-    Source: 'src/code.rs', lines 306:0-306:40
+    Source: 'src/code.rs', lines 310:0-310:40
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_TRUNC_F64_U : Std.U8 := 171#u8
 
 /-- [itasca::code::OP_I64_EXTEND_I32_S]
-    Source: 'src/code.rs', lines 307:0-307:41
+    Source: 'src/code.rs', lines 311:0-311:41
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_EXTEND_I32_S : Std.U8 := 172#u8
 
 /-- [itasca::code::OP_I64_EXTEND_I32_U]
-    Source: 'src/code.rs', lines 308:0-308:41
+    Source: 'src/code.rs', lines 312:0-312:41
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_EXTEND_I32_U : Std.U8 := 173#u8
 
 /-- [itasca::code::OP_I64_TRUNC_F32_S]
-    Source: 'src/code.rs', lines 309:0-309:40
+    Source: 'src/code.rs', lines 313:0-313:40
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_TRUNC_F32_S : Std.U8 := 174#u8
 
 /-- [itasca::code::OP_I64_TRUNC_F32_U]
-    Source: 'src/code.rs', lines 310:0-310:40
+    Source: 'src/code.rs', lines 314:0-314:40
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_TRUNC_F32_U : Std.U8 := 175#u8
 
 /-- [itasca::code::OP_I64_TRUNC_F64_S]
-    Source: 'src/code.rs', lines 311:0-311:40
+    Source: 'src/code.rs', lines 315:0-315:40
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_TRUNC_F64_S : Std.U8 := 176#u8
 
 /-- [itasca::code::OP_I64_TRUNC_F64_U]
-    Source: 'src/code.rs', lines 312:0-312:40
+    Source: 'src/code.rs', lines 316:0-316:40
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_TRUNC_F64_U : Std.U8 := 177#u8
 
 /-- [itasca::code::OP_F32_CONVERT_I32_S]
-    Source: 'src/code.rs', lines 313:0-313:42
+    Source: 'src/code.rs', lines 317:0-317:42
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_CONVERT_I32_S : Std.U8 := 178#u8
 
 /-- [itasca::code::OP_F32_CONVERT_I32_U]
-    Source: 'src/code.rs', lines 314:0-314:42
+    Source: 'src/code.rs', lines 318:0-318:42
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_CONVERT_I32_U : Std.U8 := 179#u8
 
 /-- [itasca::code::OP_F32_CONVERT_I64_S]
-    Source: 'src/code.rs', lines 315:0-315:42
+    Source: 'src/code.rs', lines 319:0-319:42
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_CONVERT_I64_S : Std.U8 := 180#u8
 
 /-- [itasca::code::OP_F32_CONVERT_I64_U]
-    Source: 'src/code.rs', lines 316:0-316:42
+    Source: 'src/code.rs', lines 320:0-320:42
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_CONVERT_I64_U : Std.U8 := 181#u8
 
 /-- [itasca::code::OP_F32_DEMOTE_F64]
-    Source: 'src/code.rs', lines 317:0-317:39
+    Source: 'src/code.rs', lines 321:0-321:39
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_DEMOTE_F64 : Std.U8 := 182#u8
 
 /-- [itasca::code::OP_F64_CONVERT_I32_S]
-    Source: 'src/code.rs', lines 318:0-318:42
+    Source: 'src/code.rs', lines 322:0-322:42
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_CONVERT_I32_S : Std.U8 := 183#u8
 
 /-- [itasca::code::OP_F64_CONVERT_I32_U]
-    Source: 'src/code.rs', lines 319:0-319:42
+    Source: 'src/code.rs', lines 323:0-323:42
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_CONVERT_I32_U : Std.U8 := 184#u8
 
 /-- [itasca::code::OP_F64_CONVERT_I64_S]
-    Source: 'src/code.rs', lines 320:0-320:42
+    Source: 'src/code.rs', lines 324:0-324:42
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_CONVERT_I64_S : Std.U8 := 185#u8
 
 /-- [itasca::code::OP_F64_CONVERT_I64_U]
-    Source: 'src/code.rs', lines 321:0-321:42
+    Source: 'src/code.rs', lines 325:0-325:42
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_CONVERT_I64_U : Std.U8 := 186#u8
 
 /-- [itasca::code::OP_F64_PROMOTE_F32]
-    Source: 'src/code.rs', lines 322:0-322:40
+    Source: 'src/code.rs', lines 326:0-326:40
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_PROMOTE_F32 : Std.U8 := 187#u8
 
 /-- [itasca::code::OP_I32_REINTERPRET_F32]
-    Source: 'src/code.rs', lines 323:0-323:44
+    Source: 'src/code.rs', lines 327:0-327:44
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_REINTERPRET_F32 : Std.U8 := 188#u8
 
 /-- [itasca::code::OP_I64_REINTERPRET_F64]
-    Source: 'src/code.rs', lines 324:0-324:44
+    Source: 'src/code.rs', lines 328:0-328:44
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_REINTERPRET_F64 : Std.U8 := 189#u8
 
 /-- [itasca::code::OP_F32_REINTERPRET_I32]
-    Source: 'src/code.rs', lines 325:0-325:44
+    Source: 'src/code.rs', lines 329:0-329:44
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_REINTERPRET_I32 : Std.U8 := 190#u8
 
 /-- [itasca::code::OP_F64_REINTERPRET_I64]
-    Source: 'src/code.rs', lines 326:0-326:44
+    Source: 'src/code.rs', lines 330:0-330:44
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_REINTERPRET_I64 : Std.U8 := 191#u8
 
@@ -992,7 +992,7 @@ def reader.read_byte
     ok (core.result.Result.Ok (b, i1))
 
 /-- [itasca::code::read_block_type]:
-    Source: 'src/code.rs', lines 328:0-338:1 -/
+    Source: 'src/code.rs', lines 332:0-342:1 -/
 def code.read_block_type
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result (_root_.Itasca.code.BlockType × Std.Usize)
@@ -1020,7 +1020,7 @@ def code.read_block_type
       _root_.Itasca.error.OpError) residual
 
 /-- [itasca::code::cur_base]:
-    Source: 'src/code.rs', lines 342:0-348:1 -/
+    Source: 'src/code.rs', lines 346:0-352:1 -/
 def code.cur_base
   (st : _root_.Itasca.code.OpIterState) : Result Std.Usize := do
   let n := alloc.vec.Vec.len st.ctrls
@@ -1034,7 +1034,7 @@ def code.cur_base
     ok c.value_stack_base
 
 /-- [itasca::code::cur_polymorphic]:
-    Source: 'src/code.rs', lines 350:0-356:1 -/
+    Source: 'src/code.rs', lines 354:0-360:1 -/
 def code.cur_polymorphic
   (st : _root_.Itasca.code.OpIterState) : Result Bool := do
   let n := alloc.vec.Vec.len st.ctrls
@@ -1048,7 +1048,7 @@ def code.cur_polymorphic
     ok c.polymorphic_base
 
 /-- [itasca::code::push_val]:
-    Source: 'src/code.rs', lines 358:0-360:1 -/
+    Source: 'src/code.rs', lines 362:0-364:1 -/
 def code.push_val
   (st : _root_.Itasca.code.OpIterState) (t : _root_.Itasca.code.StackType) :
   Result _root_.Itasca.code.OpIterState
@@ -1057,7 +1057,7 @@ def code.push_val
   ok { st with vals := v }
 
 /-- [itasca::code::pop_stack_type]:
-    Source: 'src/code.rs', lines 364:0-375:1 -/
+    Source: 'src/code.rs', lines 368:0-379:1 -/
 def code.pop_stack_type
   (st : _root_.Itasca.code.OpIterState) :
   Result ((core.result.Result _root_.Itasca.code.StackType
@@ -1080,7 +1080,7 @@ def code.pop_stack_type
     | some t => ok (core.result.Result.Ok t, { st with vals := v })
 
 /-- [itasca::code::pop_with_type]:
-    Source: 'src/code.rs', lines 379:0-391:1 -/
+    Source: 'src/code.rs', lines 383:0-395:1 -/
 def code.pop_with_type
   (st : _root_.Itasca.code.OpIterState)
   (expected : _root_.Itasca.types.ValueType) :
@@ -1106,7 +1106,7 @@ def code.pop_with_type
     ok (r1, st1)
 
 /-- [itasca::code::pop_types]: loop body 0:
-    Source: 'src/code.rs', lines 397:4-404:1 -/
+    Source: 'src/code.rs', lines 401:4-408:1 -/
 @[rust_loop_body]
 def code.pop_types_loop.body
   (types1 : Slice _root_.Itasca.types.ValueType)
@@ -1131,7 +1131,7 @@ def code.pop_types_loop.body
       ok (done (r1, st1))
 
 /-- [itasca::code::pop_types]: loop 0:
-    Source: 'src/code.rs', lines 397:4-404:1 -/
+    Source: 'src/code.rs', lines 401:4-408:1 -/
 @[rust_loop]
 def code.pop_types_loop
   (st : _root_.Itasca.code.OpIterState)
@@ -1144,7 +1144,7 @@ def code.pop_types_loop
     (st, i)
 
 /-- [itasca::code::pop_types]:
-    Source: 'src/code.rs', lines 395:0-404:1 -/
+    Source: 'src/code.rs', lines 399:0-408:1 -/
 def code.pop_types
   (st : _root_.Itasca.code.OpIterState)
   (types1 : Slice _root_.Itasca.types.ValueType) :
@@ -1155,7 +1155,7 @@ def code.pop_types
   code.pop_types_loop st types1 i
 
 /-- [itasca::code::push_types]: loop body 0:
-    Source: 'src/code.rs', lines 408:4-414:5 -/
+    Source: 'src/code.rs', lines 412:4-418:5 -/
 @[rust_loop_body]
 def code.push_types_loop.body
   (types1 : Slice _root_.Itasca.types.ValueType)
@@ -1173,7 +1173,7 @@ def code.push_types_loop.body
     ok (cont (st1, i2))
 
 /-- [itasca::code::push_types]: loop 0:
-    Source: 'src/code.rs', lines 408:4-414:5 -/
+    Source: 'src/code.rs', lines 412:4-418:5 -/
 @[rust_loop]
 def code.push_types_loop
   (st : _root_.Itasca.code.OpIterState)
@@ -1185,7 +1185,7 @@ def code.push_types_loop
     (st, i)
 
 /-- [itasca::code::push_types]:
-    Source: 'src/code.rs', lines 406:0-415:1 -/
+    Source: 'src/code.rs', lines 410:0-419:1 -/
 @[reducible]
 def code.push_types
   (st : _root_.Itasca.code.OpIterState)
@@ -1194,8 +1194,28 @@ def code.push_types
   := do
   code.push_types_loop st types1 0#usize
 
+/-- [itasca::code::visitor_block_type]:
+    Source: 'src/code.rs', lines 422:0-427:1 -/
+def code.visitor_block_type
+  (bt : _root_.Itasca.code.BlockType) :
+  Result _root_.Itasca.signature.BlockType
+  := do
+  match bt with
+  | code.BlockType.Empty => ok signature.BlockType.Empty
+  | code.BlockType.Value t => ok (signature.BlockType.Value t)
+
+/-- [itasca::code::visitor_result_type]:
+    Source: 'src/code.rs', lines 429:0-434:1 -/
+def code.visitor_result_type
+  (bt : _root_.Itasca.code.BlockType) :
+  Result _root_.Itasca.signature.ResultType
+  := do
+  match bt with
+  | code.BlockType.Empty => ok signature.ResultType.Empty
+  | code.BlockType.Value t => ok (signature.ResultType.One t)
+
 /-- [itasca::code::block_results]:
-    Source: 'src/code.rs', lines 418:0-427:1 -/
+    Source: 'src/code.rs', lines 437:0-446:1 -/
 def code.block_results
   (bt : _root_.Itasca.code.BlockType) :
   Result (alloc.vec.Vec _root_.Itasca.types.ValueType)
@@ -1207,7 +1227,7 @@ def code.block_results
     alloc.vec.Vec.push (alloc.vec.Vec.new _root_.Itasca.types.ValueType) vt
 
 /-- [itasca::code::branch_target_bt]:
-    Source: 'src/code.rs', lines 436:0-441:1 -/
+    Source: 'src/code.rs', lines 455:0-460:1 -/
 def code.branch_target_bt
   (c : _root_.Itasca.code.Ctrl) : Result _root_.Itasca.code.BlockType := do
   match c.kind with
@@ -1218,7 +1238,7 @@ def code.branch_target_bt
   | code.LabelKind.Else => ok c.block_type
 
 /-- [itasca::code::branch_target_types]:
-    Source: 'src/code.rs', lines 443:0-445:1 -/
+    Source: 'src/code.rs', lines 462:0-464:1 -/
 def code.branch_target_types
   (c : _root_.Itasca.code.Ctrl) :
   Result (alloc.vec.Vec _root_.Itasca.types.ValueType)
@@ -1227,25 +1247,27 @@ def code.branch_target_types
   code.block_results bt
 
 /-- [itasca::code::push_ctrl]:
-    Source: 'src/code.rs', lines 447:0-455:1 -/
+    Source: 'src/code.rs', lines 466:0-475:1 -/
 def code.push_ctrl
   (st : _root_.Itasca.code.OpIterState) (kind : _root_.Itasca.code.LabelKind)
   (bt : _root_.Itasca.code.BlockType) :
   Result _root_.Itasca.code.OpIterState
   := do
   let base := alloc.vec.Vec.len st.vals
+  let bt1 ← code.visitor_block_type bt
   let v ←
     alloc.vec.Vec.push st.ctrls
       ({
          kind,
          block_type := bt,
+         signature := bt1,
          value_stack_base := base,
          polymorphic_base := false
        } : _root_.Itasca.code.Ctrl)
   ok { st with ctrls := v }
 
 /-- [itasca::code::mark_unreachable]: loop body 0:
-    Source: 'src/code.rs', lines 460:4-465:5 -/
+    Source: 'src/code.rs', lines 480:4-485:5 -/
 @[rust_loop_body]
 def code.mark_unreachable_loop.body
   (base : Std.Usize) (st : _root_.Itasca.code.OpIterState) :
@@ -1261,7 +1283,7 @@ def code.mark_unreachable_loop.body
     ok (cont { st with vals := v })
 
 /-- [itasca::code::mark_unreachable]: loop 0:
-    Source: 'src/code.rs', lines 460:4-465:5 -/
+    Source: 'src/code.rs', lines 480:4-485:5 -/
 @[rust_loop]
 def code.mark_unreachable_loop
   (st : _root_.Itasca.code.OpIterState) (base : Std.Usize) :
@@ -1273,7 +1295,7 @@ def code.mark_unreachable_loop
     st
 
 /-- [itasca::code::mark_unreachable]:
-    Source: 'src/code.rs', lines 458:0-471:1 -/
+    Source: 'src/code.rs', lines 478:0-491:1 -/
 def code.mark_unreachable
   (st : _root_.Itasca.code.OpIterState) :
   Result _root_.Itasca.code.OpIterState
@@ -1292,7 +1314,7 @@ def code.mark_unreachable
     ok { vals := v, ctrls := v2, pos := i }
 
 /-- [itasca::code::start_function]:
-    Source: 'src/code.rs', lines 475:0-487:1 -/
+    Source: 'src/code.rs', lines 495:0-507:1 -/
 def code.start_function
   (results : Slice _root_.Itasca.types.ValueType) :
   Result _root_.Itasca.code.OpIterState
@@ -1313,13 +1335,13 @@ def code.start_function
     } code.LabelKind.Body bt
 
 /-- [itasca::code::control_stack_empty]:
-    Source: 'src/code.rs', lines 489:0-491:1 -/
+    Source: 'src/code.rs', lines 510:0-512:1 -/
 def code.control_stack_empty
   (st : _root_.Itasca.code.OpIterState) : Result Bool := do
   alloc.vec.Vec.is_empty Global st.ctrls
 
 /-- [itasca::code::read_op]:
-    Source: 'src/code.rs', lines 494:0-498:1 -/
+    Source: 'src/code.rs', lines 516:0-520:1 -/
 def code.read_op
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result Std.U8 _root_.Itasca.error.OpError) ×
@@ -1338,7 +1360,7 @@ def code.read_op
     ok (r1, st)
 
 /-- [itasca::code::read_unreachable]:
-    Source: 'src/code.rs', lines 502:0-505:1 -/
+    Source: 'src/code.rs', lines 524:0-527:1 -/
 def code.read_unreachable
   (st : _root_.Itasca.code.OpIterState) :
   Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
@@ -1433,7 +1455,7 @@ def reader.read_s32_leb
       _root_.Itasca.error.OpError) residual
 
 /-- [itasca::code::read_i32_const]:
-    Source: 'src/code.rs', lines 507:0-512:1 -/
+    Source: 'src/code.rs', lines 529:0-534:1 -/
 def code.read_i32_const
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result Std.I32 _root_.Itasca.error.OpError) ×
@@ -1477,7 +1499,7 @@ def reader.read_s64_leb
       _root_.Itasca.error.OpError) residual
 
 /-- [itasca::code::read_i64_const]:
-    Source: 'src/code.rs', lines 514:0-519:1 -/
+    Source: 'src/code.rs', lines 536:0-541:1 -/
 def code.read_i64_const
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result Std.I64 _root_.Itasca.error.OpError) ×
@@ -1570,7 +1592,7 @@ def reader.read_f32_bits
       _root_.Itasca.error.OpError) residual
 
 /-- [itasca::code::read_f32_const]:
-    Source: 'src/code.rs', lines 522:0-527:1 -/
+    Source: 'src/code.rs', lines 544:0-549:1 -/
 def code.read_f32_const
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result Std.U32 _root_.Itasca.error.OpError) ×
@@ -1602,7 +1624,7 @@ def reader.read_f64_bits
   reader.read_fn_bits data pos 8#u32
 
 /-- [itasca::code::read_f64_const]:
-    Source: 'src/code.rs', lines 530:0-535:1 -/
+    Source: 'src/code.rs', lines 552:0-557:1 -/
 def code.read_f64_const
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result Std.U64 _root_.Itasca.error.OpError) ×
@@ -1624,7 +1646,7 @@ def code.read_f64_const
     ok (r1, st)
 
 /-- [itasca::code::read_binary]:
-    Source: 'src/code.rs', lines 541:0-546:1 -/
+    Source: 'src/code.rs', lines 563:0-568:1 -/
 def code.read_binary
   (st : _root_.Itasca.code.OpIterState) (ty : _root_.Itasca.types.ValueType)
   (result : _root_.Itasca.types.ValueType) :
@@ -1653,7 +1675,7 @@ def code.read_binary
     ok (r1, st1)
 
 /-- [itasca::code::read_conversion]:
-    Source: 'src/code.rs', lines 552:0-556:1 -/
+    Source: 'src/code.rs', lines 574:0-578:1 -/
 def code.read_conversion
   (st : _root_.Itasca.code.OpIterState)
   («from» : _root_.Itasca.types.ValueType)
@@ -1674,7 +1696,7 @@ def code.read_conversion
     ok (r1, st1)
 
 /-- [itasca::code::read_drop]:
-    Source: 'src/code.rs', lines 558:0-560:1 -/
+    Source: 'src/code.rs', lines 580:0-582:1 -/
 def code.read_drop
   (st : _root_.Itasca.code.OpIterState) :
   Result ((core.result.Result _root_.Itasca.code.StackType
@@ -1683,7 +1705,7 @@ def code.read_drop
   code.pop_stack_type st
 
 /-- [itasca::code::join_stack_type]:
-    Source: 'src/code.rs', lines 565:0-579:1 -/
+    Source: 'src/code.rs', lines 587:0-601:1 -/
 def code.join_stack_type
   (a : _root_.Itasca.code.StackType) (b : _root_.Itasca.code.StackType) :
   Result (core.result.Result _root_.Itasca.code.StackType
@@ -1701,7 +1723,7 @@ def code.join_stack_type
   | code.StackType.Bot => ok (core.result.Result.Ok b)
 
 /-- [itasca::code::read_select]:
-    Source: 'src/code.rs', lines 589:0-598:1 -/
+    Source: 'src/code.rs', lines 611:0-620:1 -/
 def code.read_select
   (st : _root_.Itasca.code.OpIterState) :
   Result ((core.result.Result _root_.Itasca.code.StackType
@@ -1751,7 +1773,7 @@ def code.read_select
     ok (r1, st1)
 
 /-- [itasca::code::local_type]:
-    Source: 'src/code.rs', lines 601:0-607:1 -/
+    Source: 'src/code.rs', lines 623:0-629:1 -/
 def code.local_type
   (ctx : _root_.Itasca.code.Context) (idx : Std.U32) :
   Result (core.result.Result _root_.Itasca.types.ValueType
@@ -1840,7 +1862,7 @@ def reader.read_u32_leb
   reader.read_u32_leb_loop data 0#u32 1#u32 pos 0#u32
 
 /-- [itasca::code::take_local]:
-    Source: 'src/code.rs', lines 612:0-617:1 -/
+    Source: 'src/code.rs', lines 634:0-639:1 -/
 def code.take_local
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8)
   (ctx : _root_.Itasca.code.Context) :
@@ -1871,7 +1893,7 @@ def code.take_local
     ok (r1, st)
 
 /-- [itasca::code::read_local_get]:
-    Source: 'src/code.rs', lines 620:0-624:1 -/
+    Source: 'src/code.rs', lines 642:0-646:1 -/
 def code.read_local_get
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8)
   (ctx : _root_.Itasca.code.Context) :
@@ -1892,7 +1914,7 @@ def code.read_local_get
     ok (r1, st1)
 
 /-- [itasca::code::read_local_set]:
-    Source: 'src/code.rs', lines 627:0-631:1 -/
+    Source: 'src/code.rs', lines 649:0-653:1 -/
 def code.read_local_set
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8)
   (ctx : _root_.Itasca.code.Context) :
@@ -1921,7 +1943,7 @@ def code.read_local_set
     ok (r1, st1)
 
 /-- [itasca::code::read_local_tee]:
-    Source: 'src/code.rs', lines 634:0-639:1 -/
+    Source: 'src/code.rs', lines 656:0-661:1 -/
 def code.read_local_tee
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8)
   (ctx : _root_.Itasca.code.Context) :
@@ -1951,7 +1973,7 @@ def code.read_local_tee
     ok (r1, st1)
 
 /-- [itasca::code::global_type]:
-    Source: 'src/code.rs', lines 642:0-648:1 -/
+    Source: 'src/code.rs', lines 664:0-670:1 -/
 def code.global_type
   (env : _root_.Itasca.module.Env) (idx : Std.U32) :
   Result (core.result.Result _root_.Itasca.types.GlobalType
@@ -1968,7 +1990,7 @@ def code.global_type
     ok (core.result.Result.Ok gt)
 
 /-- [itasca::code::take_global]:
-    Source: 'src/code.rs', lines 653:0-658:1 -/
+    Source: 'src/code.rs', lines 675:0-680:1 -/
 def code.take_global
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8)
   (env : _root_.Itasca.module.Env) :
@@ -1999,7 +2021,7 @@ def code.take_global
     ok (r1, st)
 
 /-- [itasca::code::read_global_get]:
-    Source: 'src/code.rs', lines 661:0-665:1 -/
+    Source: 'src/code.rs', lines 683:0-687:1 -/
 def code.read_global_get
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8)
   (env : _root_.Itasca.module.Env) :
@@ -2020,7 +2042,7 @@ def code.read_global_get
     ok (r1, st1)
 
 /-- [itasca::code::read_global_set]:
-    Source: 'src/code.rs', lines 668:0-676:1 -/
+    Source: 'src/code.rs', lines 690:0-698:1 -/
 def code.read_global_set
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8)
   (env : _root_.Itasca.module.Env) :
@@ -2054,7 +2076,7 @@ def code.read_global_set
     ok (r1, st1)
 
 /-- [itasca::code::read_reserved_zero]:
-    Source: 'src/code.rs', lines 682:0-689:1 -/
+    Source: 'src/code.rs', lines 704:0-711:1 -/
 def code.read_reserved_zero
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
@@ -2075,7 +2097,7 @@ def code.read_reserved_zero
     ok (r1, st)
 
 /-- [itasca::code::require_memory]:
-    Source: 'src/code.rs', lines 1017:0-1022:1 -/
+    Source: 'src/code.rs', lines 1035:0-1040:1 -/
 def code.require_memory
   (env : _root_.Itasca.module.Env) :
   Result (core.result.Result Unit _root_.Itasca.error.OpError)
@@ -2086,7 +2108,7 @@ def code.require_memory
   else ok (core.result.Result.Ok ())
 
 /-- [itasca::code::read_memory_size]:
-    Source: 'src/code.rs', lines 692:0-697:1 -/
+    Source: 'src/code.rs', lines 714:0-719:1 -/
 def code.read_memory_size
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8)
   (env : _root_.Itasca.module.Env) :
@@ -2115,7 +2137,7 @@ def code.read_memory_size
     ok (r1, st1)
 
 /-- [itasca::code::read_memory_grow]:
-    Source: 'src/code.rs', lines 700:0-706:1 -/
+    Source: 'src/code.rs', lines 722:0-728:1 -/
 def code.read_memory_grow
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8)
   (env : _root_.Itasca.module.Env) :
@@ -2153,7 +2175,7 @@ def code.read_memory_grow
     ok (r1, st1)
 
 /-- [itasca::code::read_block]:
-    Source: 'src/code.rs', lines 708:0-713:1 -/
+    Source: 'src/code.rs', lines 730:0-735:1 -/
 def code.read_block
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result _root_.Itasca.code.BlockType
@@ -2174,7 +2196,7 @@ def code.read_block
     ok (r1, st)
 
 /-- [itasca::code::read_loop]:
-    Source: 'src/code.rs', lines 715:0-720:1 -/
+    Source: 'src/code.rs', lines 737:0-742:1 -/
 def code.read_loop
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result _root_.Itasca.code.BlockType
@@ -2195,7 +2217,7 @@ def code.read_loop
     ok (r1, st)
 
 /-- [itasca::code::is_then]:
-    Source: 'src/code.rs', lines 724:0-732:1 -/
+    Source: 'src/code.rs', lines 746:0-754:1 -/
 def code.is_then (kind : _root_.Itasca.code.LabelKind) : Result Bool := do
   match kind with
   | code.LabelKind.Body => ok false
@@ -2205,7 +2227,7 @@ def code.is_then (kind : _root_.Itasca.code.LabelKind) : Result Bool := do
   | code.LabelKind.Else => ok false
 
 /-- [itasca::code::read_if]:
-    Source: 'src/code.rs', lines 736:0-742:1 -/
+    Source: 'src/code.rs', lines 758:0-764:1 -/
 def code.read_if
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result _root_.Itasca.code.BlockType
@@ -2237,7 +2259,7 @@ def code.read_if
     ok (r1, st)
 
 /-- [itasca::code::read_else]:
-    Source: 'src/code.rs', lines 748:0-765:1 -/
+    Source: 'src/code.rs', lines 770:0-787:1 -/
 def code.read_else
   (st : _root_.Itasca.code.OpIterState) :
   Result ((core.result.Result _root_.Itasca.code.BlockType
@@ -2282,7 +2304,7 @@ def code.read_else
     else ok (core.result.Result.Err error.OpError.StackMismatch, st)
 
 /-- [itasca::code::read_end]:
-    Source: 'src/code.rs', lines 774:0-791:1 -/
+    Source: 'src/code.rs', lines 796:0-813:1 -/
 def code.read_end
   (st : _root_.Itasca.code.OpIterState) :
   Result ((core.result.Result (_root_.Itasca.code.LabelKind ×
@@ -2346,7 +2368,7 @@ def code.read_end
         ok (r1, st1)
 
 /-- [itasca::code::read_label]:
-    Source: 'src/code.rs', lines 799:0-808:1 -/
+    Source: 'src/code.rs', lines 821:0-830:1 -/
 def code.read_label
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result (Std.U32 × _root_.Itasca.code.Ctrl)
@@ -2378,7 +2400,7 @@ def code.read_label
     ok (r1, st)
 
 /-- [itasca::code::read_br]:
-    Source: 'src/code.rs', lines 812:0-818:1 -/
+    Source: 'src/code.rs', lines 834:0-840:1 -/
 def code.read_br
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result (Std.U32 × _root_.Itasca.code.BlockType)
@@ -2396,7 +2418,8 @@ def code.read_br
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue _ =>
       let st3 ← code.mark_unreachable st2
-      ok (core.result.Result.Ok (depth, target.block_type), st3)
+      let bt ← code.branch_target_bt target
+      ok (core.result.Result.Ok (depth, bt), st3)
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r2 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -2411,7 +2434,7 @@ def code.read_br
     ok (r1, st1)
 
 /-- [itasca::code::read_return]:
-    Source: 'src/code.rs', lines 823:0-827:1 -/
+    Source: 'src/code.rs', lines 845:0-849:1 -/
 def code.read_return
   (st : _root_.Itasca.code.OpIterState) (ctx : _root_.Itasca.code.Context) :
   Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
@@ -2431,7 +2454,7 @@ def code.read_return
     ok (r1, st1)
 
 /-- [itasca::code::read_br_if]:
-    Source: 'src/code.rs', lines 832:0-839:1 -/
+    Source: 'src/code.rs', lines 854:0-861:1 -/
 def code.read_br_if
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result (Std.U32 × _root_.Itasca.code.BlockType)
@@ -2454,7 +2477,8 @@ def code.read_br_if
       | core.ops.control_flow.ControlFlow.Continue _ =>
         let s1 := alloc.vec.Vec.deref types1
         let st4 ← code.push_types st3 s1
-        ok (core.result.Result.Ok (depth, target.block_type), st4)
+        let bt ← code.branch_target_bt target
+        ok (core.result.Result.Ok (depth, bt), st4)
       | core.ops.control_flow.ControlFlow.Break residual =>
         let r3 ←
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -2475,7 +2499,7 @@ def code.read_br_if
     ok (r1, st1)
 
 /-- [itasca::code::merge_target]:
-    Source: 'src/code.rs', lines 844:0-855:1 -/
+    Source: 'src/code.rs', lines 866:0-877:1 -/
 def code.merge_target
   (expect : Option _root_.Itasca.code.BlockType)
   (bt : _root_.Itasca.code.BlockType) :
@@ -2491,7 +2515,7 @@ def code.merge_target
     else ok (core.result.Result.Err error.OpError.TypeMismatch)
 
 /-- [itasca::code::read_table_labels]: loop body 0:
-    Source: 'src/code.rs', lines 870:4-883:1 -/
+    Source: 'src/code.rs', lines 892:4-905:1 -/
 @[rust_loop_body]
 def code.read_table_labels_loop.body
   {V : Type} (OpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
@@ -2542,7 +2566,7 @@ def code.read_table_labels_loop.body
       ok (done (r1, st1, v))
 
 /-- [itasca::code::read_table_labels]: loop 0:
-    Source: 'src/code.rs', lines 870:4-883:1 -/
+    Source: 'src/code.rs', lines 892:4-905:1 -/
 @[rust_loop]
 def code.read_table_labels_loop
   {V : Type} (OpVisitorInst : code.OpVisitor V)
@@ -2557,7 +2581,7 @@ def code.read_table_labels_loop
     (st, v, expect, i)
 
 /-- [itasca::code::read_table_labels]:
-    Source: 'src/code.rs', lines 862:0-883:1 -/
+    Source: 'src/code.rs', lines 884:0-905:1 -/
 @[reducible]
 def code.read_table_labels
   {V : Type} (OpVisitorInst : code.OpVisitor V)
@@ -2569,7 +2593,7 @@ def code.read_table_labels
   code.read_table_labels_loop OpVisitorInst st data count v none 0#u32
 
 /-- [itasca::code::read_br_table]:
-    Source: 'src/code.rs', lines 893:0-908:1 -/
+    Source: 'src/code.rs', lines 915:0-930:1 -/
 def code.read_br_table
   {V : Type} (OpVisitorInst : code.OpVisitor V)
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8) (v : V) :
@@ -2646,7 +2670,7 @@ def code.read_br_table
     ok (r1, st, v)
 
 /-- [itasca::code::take_index]:
-    Source: 'src/code.rs', lines 913:0-917:1 -/
+    Source: 'src/code.rs', lines 935:0-939:1 -/
 def code.take_index
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result Std.U32 _root_.Itasca.error.OpError) ×
@@ -2670,7 +2694,7 @@ def code.take_index
 @[global_simps, irreducible] def limits.MAX_RESULTS : Std.Usize := 1#usize
 
 /-- [itasca::code::require_single_result]:
-    Source: 'src/code.rs', lines 924:0-929:1 -/
+    Source: 'src/code.rs', lines 946:0-951:1 -/
 def code.require_single_result
   (results : Slice _root_.Itasca.types.ValueType) :
   Result (core.result.Result Unit _root_.Itasca.error.OpError)
@@ -2681,7 +2705,7 @@ def code.require_single_result
   else ok (core.result.Result.Ok ())
 
 /-- [itasca::code::read_call]:
-    Source: 'src/code.rs', lines 937:0-947:1 -/
+    Source: 'src/code.rs', lines 959:0-969:1 -/
 def code.read_call
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8)
   (env : _root_.Itasca.module.Env) :
@@ -2732,7 +2756,7 @@ def code.read_call
     ok (r1, st1)
 
 /-- [itasca::code::read_call_indirect]:
-    Source: 'src/code.rs', lines 956:0-975:1 -/
+    Source: 'src/code.rs', lines 978:0-993:1 -/
 def code.read_call_indirect
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8)
   (env : _root_.Itasca.module.Env) :
@@ -2806,7 +2830,7 @@ def code.read_call_indirect
     ok (r1, st1)
 
 /-- [itasca::code::check_memory_and_alignment]:
-    Source: 'src/code.rs', lines 1025:0-1031:1 -/
+    Source: 'src/code.rs', lines 1043:0-1049:1 -/
 def code.check_memory_and_alignment
   (env : _root_.Itasca.module.Env) (memarg : _root_.Itasca.code.MemArg)
   (natural_align : Std.U32) :
@@ -2824,7 +2848,7 @@ def code.check_memory_and_alignment
       Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
 
 /-- [itasca::code::read_memarg]:
-    Source: 'src/code.rs', lines 1008:0-1013:1 -/
+    Source: 'src/code.rs', lines 1026:0-1031:1 -/
 def code.read_memarg
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result _root_.Itasca.code.MemArg
@@ -2855,7 +2879,7 @@ def code.read_memarg
     ok (r1, st)
 
 /-- [itasca::code::read_load]:
-    Source: 'src/code.rs', lines 979:0-991:1 -/
+    Source: 'src/code.rs', lines 997:0-1009:1 -/
 def code.read_load
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8)
   (env : _root_.Itasca.module.Env) (ty : _root_.Itasca.types.ValueType)
@@ -2897,7 +2921,7 @@ def code.read_load
     ok (r1, st1)
 
 /-- [itasca::code::read_store]:
-    Source: 'src/code.rs', lines 994:0-1006:1 -/
+    Source: 'src/code.rs', lines 1012:0-1024:1 -/
 def code.read_store
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8)
   (env : _root_.Itasca.module.Env) (ty : _root_.Itasca.types.ValueType)
@@ -2948,7 +2972,7 @@ def code.read_store
     ok (r1, st1)
 
 /-- [itasca::code::convert_types]:
-    Source: 'src/code.rs', lines 1048:0-1080:1 -/
+    Source: 'src/code.rs', lines 1066:0-1098:1 -/
 def code.convert_types
   (opcode : Std.U8) :
   Result (Option (_root_.Itasca.types.ValueType ×
@@ -3005,7 +3029,7 @@ def code.convert_types
   | _ => ok none
 
 /-- [itasca::code::binary_types]:
-    Source: 'src/code.rs', lines 1088:0-1114:1 -/
+    Source: 'src/code.rs', lines 1106:0-1132:1 -/
 def code.binary_types
   (opcode : Std.U8) :
   Result (Option (_root_.Itasca.types.ValueType ×
@@ -3091,7 +3115,7 @@ def code.binary_types
   | _ => ok none
 
 /-- [itasca::code::visit_memory]:
-    Source: 'src/code.rs', lines 1860:8-1870:9 -/
+    Source: 'src/code.rs', lines 1879:8-1889:9 -/
 def code.visit_memory
   {V : Type} (OpVisitorInst : code.OpVisitor V) (v : V)
   (st : _root_.Itasca.code.OpIterState) (opcode : Std.U8)
@@ -3125,7 +3149,7 @@ def code.visit_memory
   | _ => ok (core.result.Result.Ok (), v)
 
 /-- [itasca::code::visit_numeric]:
-    Source: 'src/code.rs', lines 1844:8-1853:9 -/
+    Source: 'src/code.rs', lines 1863:8-1872:9 -/
 def code.visit_numeric
   {V : Type} (OpVisitorInst : code.OpVisitor V) (v : V)
   (st : _root_.Itasca.code.OpIterState) (opcode : Std.U8) :
@@ -3258,7 +3282,7 @@ def code.visit_numeric
   | _ => ok (core.result.Result.Ok (), v)
 
 /-- [itasca::code::step_numeric]:
-    Source: 'src/code.rs', lines 1370:0-1392:1 -/
+    Source: 'src/code.rs', lines 1388:0-1406:1 -/
 def code.step_numeric
   {V : Type} (OpVisitorInst : code.OpVisitor V)
   (st : _root_.Itasca.code.OpIterState) (opcode : Std.U8) (v : V) :
@@ -3318,7 +3342,7 @@ def code.step_numeric
       ok (r1, st1, v)
 
 /-- [itasca::code::step_memory]:
-    Source: 'src/code.rs', lines 1255:0-1365:1 -/
+    Source: 'src/code.rs', lines 1273:0-1383:1 -/
 def code.step_memory
   {V : Type} (OpVisitorInst : code.OpVisitor V)
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8)
@@ -3855,7 +3879,7 @@ def code.step_memory
   | _ => code.step_numeric OpVisitorInst st opcode v
 
 /-- [itasca::code::step]:
-    Source: 'src/code.rs', lines 1123:0-1253:1 -/
+    Source: 'src/code.rs', lines 1141:0-1271:1 -/
 def code.step
   {V : Type} (OpVisitorInst : code.OpVisitor V)
   (st : _root_.Itasca.code.OpIterState) (data : Slice Std.U8)
@@ -4029,7 +4053,8 @@ def code.step
     let cf ← core.result.Result.Insts.CoreOpsTry.branch r
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
-      let (r1, v1) ← OpVisitorInst.on_block v st1 val
+      let bt ← code.visitor_block_type val
+      let (r1, v1) ← OpVisitorInst.on_block v st1 bt
       let r2 ← code.visit r1
       let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
       match cf1 with
@@ -4050,7 +4075,8 @@ def code.step
     let cf ← core.result.Result.Insts.CoreOpsTry.branch r
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
-      let (r1, v1) ← OpVisitorInst.on_loop v st1 val
+      let bt ← code.visitor_block_type val
+      let (r1, v1) ← OpVisitorInst.on_loop v st1 bt
       let r2 ← code.visit r1
       let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
       match cf1 with
@@ -4071,7 +4097,8 @@ def code.step
     let cf ← core.result.Result.Insts.CoreOpsTry.branch r
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
-      let (r1, v1) ← OpVisitorInst.on_if v st1 val
+      let bt ← code.visitor_block_type val
+      let (r1, v1) ← OpVisitorInst.on_if v st1 bt
       let r2 ← code.visit r1
       let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
       match cf1 with
@@ -4092,7 +4119,8 @@ def code.step
     let cf ← core.result.Result.Insts.CoreOpsTry.branch r
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
-      let (r1, v1) ← OpVisitorInst.on_else v st1 val
+      let bt ← code.visitor_block_type val
+      let (r1, v1) ← OpVisitorInst.on_else v st1 bt
       let r2 ← code.visit r1
       let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
       match cf1 with
@@ -4114,7 +4142,8 @@ def code.step
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
       let (kind, bt) := val
-      let (r1, v1) ← OpVisitorInst.on_end v st1 kind bt
+      let bt1 ← code.visitor_block_type bt
+      let (r1, v1) ← OpVisitorInst.on_end v st1 kind bt1
       let r2 ← code.visit r1
       let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
       match cf1 with
@@ -4136,7 +4165,8 @@ def code.step
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
       let (depth, bt) := val
-      let (r1, v1) ← OpVisitorInst.on_br v st1 depth bt
+      let rt ← code.visitor_result_type bt
+      let (r1, v1) ← OpVisitorInst.on_br v st1 depth rt
       let r2 ← code.visit r1
       let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
       match cf1 with
@@ -4158,7 +4188,8 @@ def code.step
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
       let (depth, bt) := val
-      let (r1, v1) ← OpVisitorInst.on_br_if v st1 depth bt
+      let rt ← code.visitor_result_type bt
+      let (r1, v1) ← OpVisitorInst.on_br_if v st1 depth rt
       let r2 ← code.visit r1
       let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
       match cf1 with
@@ -4180,7 +4211,8 @@ def code.step
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
       let (default, common) := val
-      let (r1, v2) ← OpVisitorInst.on_br_table v1 st1 default common
+      let rt ← code.visitor_result_type common
+      let (r1, v2) ← OpVisitorInst.on_br_table v1 st1 default rt
       let r2 ← code.visit r1
       let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
       match cf1 with
@@ -4366,73 +4398,2331 @@ def code.step
       ok (r1, st1, v)
   | _ => code.step_memory OpVisitorInst st data env opcode v
 
+/-- [itasca::multi_value::MAX_RESULTS]
+    Source: 'src/multi_value.rs', lines 25:0-25:36
+    Visibility: public -/
+@[global_simps, irreducible]
+def multi_value.MAX_RESULTS : Std.Usize := 1000#usize
+
+/-- [itasca::multi_value::MAX_PARAMS]
+    Source: 'src/multi_value.rs', lines 24:0-24:35
+    Visibility: public -/
+@[global_simps, irreducible]
+def multi_value.MAX_PARAMS : Std.Usize := 1000#usize
+
+/-- [itasca::multi_value::check_func_type]:
+    Source: 'src/multi_value.rs', lines 31:0-39:1 -/
+def multi_value.check_func_type
+  (ft : _root_.Itasca.types.FuncType) :
+  Result (core.result.Result Unit _root_.Itasca.error.OpError)
+  := do
+  let i := alloc.vec.Vec.len ft.params
+  if i > multi_value.MAX_PARAMS
+  then ok (core.result.Result.Err error.OpError.TooManyParams)
+  else
+    let i1 := alloc.vec.Vec.len ft.results
+    if i1 > multi_value.MAX_RESULTS
+    then ok (core.result.Result.Err error.OpError.TooManyResults)
+    else ok (core.result.Result.Ok ())
+
+/-- [itasca::multi_value::apply_func_type]:
+    Source: 'src/multi_value.rs', lines 312:0-320:1 -/
+def multi_value.apply_func_type
+  (st : _root_.Itasca.code.OpIterState) (ft : _root_.Itasca.types.FuncType) :
+  Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
+    _root_.Itasca.code.OpIterState)
+  := do
+  let r ← multi_value.check_func_type ft
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue _ =>
+    let s := alloc.vec.Vec.deref ft.params
+    let (r1, st1) ← code.pop_types st s
+    let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+    match cf1 with
+    | core.ops.control_flow.ControlFlow.Continue _ =>
+      let i := alloc.vec.Vec.len ft.results
+      let i1 := alloc.vec.Vec.len st1.vals
+      let i2 ← core.num.Usize.MAX - i1
+      if i > i2
+      then ok (core.result.Result.Err error.OpError.StackTooLarge, st1)
+      else
+        let s1 := alloc.vec.Vec.deref ft.results
+        let st2 ← code.push_types st1 s1
+        ok (core.result.Result.Ok (), st2)
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r2 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+      ok (r2, st1)
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    let r1 ←
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+        Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+    ok (r1, st)
+
+/-- [itasca::multi_value::call_info]:
+    Source: 'src/multi_value.rs', lines 322:0-347:1 -/
+def multi_value.call_info
+  (st : _root_.Itasca.multi_value.State) (data : Slice Std.U8)
+  (env : _root_.Itasca.module.Env) (indirect : Bool) :
+  Result ((core.result.Result Std.U32 _root_.Itasca.error.OpError) ×
+    _root_.Itasca.multi_value.State)
+  := do
+  let r ← reader.read_u32_leb data st.core.pos
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue val =>
+    let (index, «end») := val
+    let i ← lift (UScalar.cast .Usize index)
+    if indirect
+    then
+      let r1 ← reader.read_byte data «end»
+      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+      match cf1 with
+      | core.ops.control_flow.ControlFlow.Continue val1 =>
+        let (reserved, end1) := val1
+        if reserved != 0#u8
+        then
+          ok (core.result.Result.Err error.OpError.ReservedByteNotZero,
+            { core := { st.core with pos := «end» } })
+        else
+          let b ← alloc.vec.Vec.is_empty Global env.table_types
+          if b
+          then
+            ok (core.result.Result.Err error.OpError.UnknownTable,
+              { core := { st.core with pos := end1 } })
+          else
+            let i1 := alloc.vec.Vec.len env.types
+            if i >= i1
+            then
+              ok (core.result.Result.Err error.OpError.UnknownType,
+                { core := { st.core with pos := end1 } })
+            else
+              let (r2, ois) ←
+                code.pop_with_type { st.core with pos := end1 }
+                  types.ValueType.I32
+              let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+              match cf2 with
+              | core.ops.control_flow.ControlFlow.Continue _ =>
+                let ft ←
+                  alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+                    _root_.Itasca.types.FuncType) env.types i
+                let (r3, ois1) ← multi_value.apply_func_type ois ft
+                let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
+                match cf3 with
+                | core.ops.control_flow.ControlFlow.Continue _ =>
+                  ok (core.result.Result.Ok index, { core := ois1 })
+                | core.ops.control_flow.ControlFlow.Break residual =>
+                  let r4 ←
+                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                      Std.U32 (core.convert.FromSame
+                      _root_.Itasca.error.OpError) residual
+                  ok (r4, { core := ois1 })
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                let r3 ←
+                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                    Std.U32 (core.convert.FromSame _root_.Itasca.error.OpError)
+                    residual
+                ok (r3, { core := ois })
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r2 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Std.U32 (core.convert.FromSame _root_.Itasca.error.OpError)
+            residual
+        ok (r2, { core := { st.core with pos := «end» } })
+    else
+      let i1 := alloc.vec.Vec.len env.func_types
+      if i >= i1
+      then
+        ok (core.result.Result.Err error.OpError.UnknownFunc,
+          { core := { st.core with pos := «end» } })
+      else
+        let ft ←
+          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+            _root_.Itasca.types.FuncType) env.func_types i
+        let (r1, ois) ←
+          multi_value.apply_func_type { st.core with pos := «end» } ft
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          ok (core.result.Result.Ok index, { core := ois })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r2 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              Std.U32 (core.convert.FromSame _root_.Itasca.error.OpError)
+              residual
+          ok (r2, { core := ois })
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    let r1 ←
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+        Std.U32 (core.convert.FromSame _root_.Itasca.error.OpError) residual
+    ok (r1, st)
+
+/-- [itasca::signature::{itasca::signature::ResultType}::len]:
+    Source: 'src/signature.rs', lines 28:4-43:5
+    Visibility: public -/
+def signature.ResultType.len
+  (self : _root_.Itasca.signature.ResultType) (env : _root_.Itasca.module.Env)
+  :
+  Result (core.result.Result Std.Usize _root_.Itasca.error.OpError)
+  := do
+  match self with
+  | signature.ResultType.Empty => ok (core.result.Result.Ok 0#usize)
+  | signature.ResultType.One _ => ok (core.result.Result.Ok 1#usize)
+  | signature.ResultType.Type index part =>
+    let i ← lift (UScalar.cast .Usize index)
+    let i1 := alloc.vec.Vec.len env.types
+    if i >= i1
+    then ok (core.result.Result.Err error.OpError.UnknownType)
+    else
+      match part with
+      | signature.TypePart.Params =>
+        let ft ←
+          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+            _root_.Itasca.types.FuncType) env.types i
+        let i2 := alloc.vec.Vec.len ft.params
+        ok (core.result.Result.Ok i2)
+      | signature.TypePart.Results =>
+        let ft ←
+          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+            _root_.Itasca.types.FuncType) env.types i
+        let i2 := alloc.vec.Vec.len ft.results
+        ok (core.result.Result.Ok i2)
+
+/-- [itasca::signature::{itasca::signature::ResultType}::get]:
+    Source: 'src/signature.rs', lines 47:4-80:5
+    Visibility: public -/
+def signature.ResultType.get
+  (self : _root_.Itasca.signature.ResultType) (env : _root_.Itasca.module.Env)
+  (element : Std.Usize) :
+  Result (core.result.Result (Option _root_.Itasca.types.ValueType)
+    _root_.Itasca.error.OpError)
+  := do
+  match self with
+  | signature.ResultType.Empty => ok (core.result.Result.Ok none)
+  | signature.ResultType.One v =>
+    if element = 0#usize
+    then ok (core.result.Result.Ok (some v))
+    else ok (core.result.Result.Ok none)
+  | signature.ResultType.Type index part =>
+    let i ← lift (UScalar.cast .Usize index)
+    let i1 := alloc.vec.Vec.len env.types
+    if i >= i1
+    then ok (core.result.Result.Err error.OpError.UnknownType)
+    else
+      match part with
+      | signature.TypePart.Params =>
+        let ft ←
+          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+            _root_.Itasca.types.FuncType) env.types i
+        let i2 := alloc.vec.Vec.len ft.params
+        if element >= i2
+        then ok (core.result.Result.Ok none)
+        else
+          let vt ←
+            alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+              _root_.Itasca.types.ValueType) ft.params element
+          ok (core.result.Result.Ok (some vt))
+      | signature.TypePart.Results =>
+        let ft ←
+          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+            _root_.Itasca.types.FuncType) env.types i
+        let i2 := alloc.vec.Vec.len ft.results
+        if element >= i2
+        then ok (core.result.Result.Ok none)
+        else
+          let vt ←
+            alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+              _root_.Itasca.types.ValueType) ft.results element
+          ok (core.result.Result.Ok (some vt))
+
+/-- [itasca::multi_value::check_suffix]: loop body 0:
+    Source: 'src/multi_value.rs', lines 245:4-266:5 -/
+@[rust_loop_body]
+def multi_value.check_suffix_loop.body
+  (v : alloc.vec.Vec _root_.Itasca.code.StackType)
+  (v1 : alloc.vec.Vec _root_.Itasca.code.Ctrl) (i : Std.Usize)
+  (env : _root_.Itasca.module.Env) (ts : _root_.Itasca.signature.ResultType)
+  (base : Std.Usize) (stack : Std.Usize) (i1 : Std.Usize) :
+  Result (ControlFlow (Std.Usize × Std.Usize) (core.result.Result Unit
+    _root_.Itasca.error.OpError))
+  := do
+  if i1 = 0#usize
+  then ok (done (core.result.Result.Ok ()))
+  else
+    let i2 ← i1 - 1#usize
+    let r ← signature.ResultType.get ts env i2
+    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      match val with
+      | none => ok (done (core.result.Result.Err error.OpError.TypeMismatch))
+      | some t =>
+        if stack = base
+        then
+          let b ← code.cur_polymorphic { vals := v, ctrls := v1, pos := i }
+          if b
+          then ok (cont (stack, i2))
+          else ok (done (core.result.Result.Err error.OpError.EmptyStack))
+        else
+          let stack1 ← stack - 1#usize
+          let st ←
+            alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+              _root_.Itasca.code.StackType) v stack1
+          match st with
+          | code.StackType.Val actual =>
+            let b ←
+              core.cmp.PartialEq.ne.trait_default
+                types.ValueType.Insts.CoreCmpPartialEqValueType actual t
+            if b
+            then ok (done (core.result.Result.Err error.OpError.TypeMismatch))
+            else ok (cont (stack1, i2))
+          | code.StackType.Bot => ok (cont (stack1, i2))
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r1 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+      ok (done r1)
+
+/-- [itasca::multi_value::check_suffix]: loop 0:
+    Source: 'src/multi_value.rs', lines 245:4-266:5 -/
+@[rust_loop]
+def multi_value.check_suffix_loop
+  (v : alloc.vec.Vec _root_.Itasca.code.StackType)
+  (v1 : alloc.vec.Vec _root_.Itasca.code.Ctrl) (i : Std.Usize)
+  (env : _root_.Itasca.module.Env) (ts : _root_.Itasca.signature.ResultType)
+  (base : Std.Usize) (stack : Std.Usize) (i1 : Std.Usize) :
+  Result (core.result.Result Unit _root_.Itasca.error.OpError)
+  := do
+  loop
+    (fun (stack1, i2) => multi_value.check_suffix_loop.body v v1 i env ts base
+      stack1 i2)
+    (stack, i1)
+
+/-- [itasca::multi_value::check_suffix]:
+    Source: 'src/multi_value.rs', lines 241:0-267:1 -/
+def multi_value.check_suffix
+  (st : _root_.Itasca.code.OpIterState) (env : _root_.Itasca.module.Env)
+  (ts : _root_.Itasca.signature.ResultType) :
+  Result (core.result.Result Unit _root_.Itasca.error.OpError)
+  := do
+  let base ← code.cur_base st
+  let stack := alloc.vec.Vec.len st.vals
+  let r ← signature.ResultType.len ts env
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue val =>
+    multi_value.check_suffix_loop st.vals st.ctrls st.pos env ts base stack val
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+      Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+
+/-- [itasca::signature::{itasca::signature::BlockType}::results]:
+    Source: 'src/signature.rs', lines 103:4-112:5
+    Visibility: public -/
+def signature.BlockType.results
+  (self : _root_.Itasca.signature.BlockType) :
+  Result _root_.Itasca.signature.ResultType
+  := do
+  match self with
+  | signature.BlockType.Empty => ok signature.ResultType.Empty
+  | signature.BlockType.Value v => ok (signature.ResultType.One v)
+  | signature.BlockType.TypeIndex index =>
+    ok (signature.ResultType.Type index signature.TypePart.Results)
+
+/-- [itasca::signature::{itasca::signature::BlockType}::params]:
+    Source: 'src/signature.rs', lines 93:4-101:5
+    Visibility: public -/
+def signature.BlockType.params
+  (self : _root_.Itasca.signature.BlockType) :
+  Result _root_.Itasca.signature.ResultType
+  := do
+  match self with
+  | signature.BlockType.Empty => ok signature.ResultType.Empty
+  | signature.BlockType.Value _ => ok signature.ResultType.Empty
+  | signature.BlockType.TypeIndex index =>
+    ok (signature.ResultType.Type index signature.TypePart.Params)
+
+/-- [itasca::multi_value::label]:
+    Source: 'src/multi_value.rs', lines 185:0-196:1 -/
+def multi_value.label
+  (st : _root_.Itasca.multi_value.State) (depth : Std.U32) :
+  Result (core.result.Result _root_.Itasca.signature.ResultType
+    _root_.Itasca.error.OpError)
+  := do
+  let n := alloc.vec.Vec.len st.core.ctrls
+  let d ← lift (UScalar.cast .Usize depth)
+  if d >= n
+  then ok (core.result.Result.Err error.OpError.UnknownLabel)
+  else
+    let i ← n - 1#usize
+    let i1 ← i - d
+    let c ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        _root_.Itasca.code.Ctrl) st.core.ctrls i1
+    match c.kind with
+    | code.LabelKind.Body =>
+      let rt ← signature.BlockType.results c.signature
+      ok (core.result.Result.Ok rt)
+    | code.LabelKind.Block =>
+      let rt ← signature.BlockType.results c.signature
+      ok (core.result.Result.Ok rt)
+    | code.LabelKind.Loop =>
+      let rt ← signature.BlockType.params c.signature
+      ok (core.result.Result.Ok rt)
+    | code.LabelKind.Then =>
+      let rt ← signature.BlockType.results c.signature
+      ok (core.result.Result.Ok rt)
+    | code.LabelKind.Else =>
+      let rt ← signature.BlockType.results c.signature
+      ok (core.result.Result.Ok rt)
+
+/-- [itasca::multi_value::read_label_info]:
+    Source: 'src/multi_value.rs', lines 198:0-203:1 -/
+def multi_value.read_label_info
+  (st : _root_.Itasca.multi_value.State) (data : Slice Std.U8) :
+  Result ((core.result.Result (Std.U32 × _root_.Itasca.signature.ResultType)
+    _root_.Itasca.error.OpError) × _root_.Itasca.multi_value.State)
+  := do
+  let r ← reader.read_u32_leb data st.core.pos
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue val =>
+    let (depth, «end») := val
+    let r1 ←
+      multi_value.label { core := { st.core with pos := «end» } } depth
+    let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+    match cf1 with
+    | core.ops.control_flow.ControlFlow.Continue val1 =>
+      ok (core.result.Result.Ok (depth, val1),
+        { core := { st.core with pos := «end» } })
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r2 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          (Std.U32 × _root_.Itasca.signature.ResultType)
+          (core.convert.FromSame _root_.Itasca.error.OpError) residual
+      ok (r2, { core := { st.core with pos := «end» } })
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    let r1 ←
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+        (Std.U32 × _root_.Itasca.signature.ResultType) (core.convert.FromSame
+        _root_.Itasca.error.OpError) residual
+    ok (r1, st)
+
+/-- [itasca::multi_value::branch_table_with]: loop body 0:
+    Source: 'src/multi_value.rs', lines 280:4-302:5 -/
+@[rust_loop_body]
+def multi_value.branch_table_with_loop.body
+  {V : Type} (codeOpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
+  (env : _root_.Itasca.module.Env) (count : Std.U32)
+  (ois : _root_.Itasca.code.OpIterState) (visitor : V)
+  (arity : Option Std.Usize) (i : Std.U32) :
+  Result (ControlFlow (_root_.Itasca.code.OpIterState × V × (Option
+    Std.Usize) × Std.U32) ((core.result.Result Unit
+    _root_.Itasca.error.OpError) × _root_.Itasca.multi_value.State × V))
+  := do
+  let (r, st) ← multi_value.read_label_info { core := ois } data
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue val =>
+    let (depth, ts) := val
+    if i != count
+    then
+      let (r1, visitor1) ←
+        codeOpVisitorInst.on_br_table_label visitor st.core depth
+      let r2 ← code.visit r1
+      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
+      match cf1 with
+      | core.ops.control_flow.ControlFlow.Continue _ =>
+        let r3 ← signature.ResultType.len ts env
+        let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r3
+        match cf2 with
+        | core.ops.control_flow.ControlFlow.Continue val1 =>
+          match arity with
+          | none =>
+            let r4 ← multi_value.check_suffix st.core env ts
+            let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r4
+            match cf3 with
+            | core.ops.control_flow.ControlFlow.Continue _ =>
+              if i = count
+              then
+                let ois1 ← code.mark_unreachable st.core
+                let (r5, visitor2) ←
+                  codeOpVisitorInst.on_br_table visitor1 ois1 depth ts
+                let r6 ← code.visit r5
+                let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r6
+                match cf4 with
+                | core.ops.control_flow.ControlFlow.Continue _ =>
+                  ok (done (core.result.Result.Ok (), { core := ois1 },
+                    visitor2))
+                | core.ops.control_flow.ControlFlow.Break residual =>
+                  let r7 ←
+                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                      Unit (core.convert.FromSame _root_.Itasca.error.OpError)
+                      residual
+                  ok (done (r7, { core := ois1 }, visitor2))
+              else
+                let i1 ← i + 1#u32
+                ok (cont (st.core, visitor1, some val1, i1))
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              let r5 ←
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  Unit (core.convert.FromSame _root_.Itasca.error.OpError)
+                  residual
+              ok (done (r5, st, visitor1))
+          | some expected =>
+            if expected != val1
+            then
+              ok (done (core.result.Result.Err error.OpError.TypeMismatch, st,
+                visitor1))
+            else
+              let r4 ← multi_value.check_suffix st.core env ts
+              let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r4
+              match cf3 with
+              | core.ops.control_flow.ControlFlow.Continue _ =>
+                if i = count
+                then
+                  let ois1 ← code.mark_unreachable st.core
+                  let (r5, visitor2) ←
+                    codeOpVisitorInst.on_br_table visitor1 ois1 depth ts
+                  let r6 ← code.visit r5
+                  let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r6
+                  match cf4 with
+                  | core.ops.control_flow.ControlFlow.Continue _ =>
+                    ok (done (core.result.Result.Ok (), { core := ois1 },
+                      visitor2))
+                  | core.ops.control_flow.ControlFlow.Break residual =>
+                    let r7 ←
+                      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                        Unit (core.convert.FromSame
+                        _root_.Itasca.error.OpError) residual
+                    ok (done (r7, { core := ois1 }, visitor2))
+                else
+                  let i1 ← i + 1#u32
+                  ok (cont (st.core, visitor1, arity, i1))
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                let r5 ←
+                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                    Unit (core.convert.FromSame _root_.Itasca.error.OpError)
+                    residual
+                ok (done (r5, st, visitor1))
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r4 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+          ok (done (r4, st, visitor1))
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r3 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+        ok (done (r3, st, visitor1))
+    else
+      let r1 ← signature.ResultType.len ts env
+      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+      match cf1 with
+      | core.ops.control_flow.ControlFlow.Continue val1 =>
+        match arity with
+        | none =>
+          let r2 ← multi_value.check_suffix st.core env ts
+          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+          match cf2 with
+          | core.ops.control_flow.ControlFlow.Continue _ =>
+            if i = count
+            then
+              let ois1 ← code.mark_unreachable st.core
+              let (r3, visitor1) ←
+                codeOpVisitorInst.on_br_table visitor ois1 depth ts
+              let r4 ← code.visit r3
+              let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r4
+              match cf3 with
+              | core.ops.control_flow.ControlFlow.Continue _ =>
+                ok (done (core.result.Result.Ok (), { core := ois1 },
+                  visitor1))
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                let r5 ←
+                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                    Unit (core.convert.FromSame _root_.Itasca.error.OpError)
+                    residual
+                ok (done (r5, { core := ois1 }, visitor1))
+            else
+              let i1 ← i + 1#u32
+              ok (cont (st.core, visitor, some val1, i1))
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            let r3 ←
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                Unit (core.convert.FromSame _root_.Itasca.error.OpError)
+                residual
+            ok (done (r3, st, visitor))
+        | some expected =>
+          if expected != val1
+          then
+            ok (done (core.result.Result.Err error.OpError.TypeMismatch, st,
+              visitor))
+          else
+            let r2 ← multi_value.check_suffix st.core env ts
+            let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+            match cf2 with
+            | core.ops.control_flow.ControlFlow.Continue _ =>
+              if i = count
+              then
+                let ois1 ← code.mark_unreachable st.core
+                let (r3, visitor1) ←
+                  codeOpVisitorInst.on_br_table visitor ois1 depth ts
+                let r4 ← code.visit r3
+                let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r4
+                match cf3 with
+                | core.ops.control_flow.ControlFlow.Continue _ =>
+                  ok (done (core.result.Result.Ok (), { core := ois1 },
+                    visitor1))
+                | core.ops.control_flow.ControlFlow.Break residual =>
+                  let r5 ←
+                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                      Unit (core.convert.FromSame _root_.Itasca.error.OpError)
+                      residual
+                  ok (done (r5, { core := ois1 }, visitor1))
+              else let i1 ← i + 1#u32
+                   ok (cont (st.core, visitor, arity, i1))
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              let r3 ←
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  Unit (core.convert.FromSame _root_.Itasca.error.OpError)
+                  residual
+              ok (done (r3, st, visitor))
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r2 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+        ok (done (r2, st, visitor))
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    let r1 ←
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+        Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+    ok (done (r1, st, visitor))
+
+/-- [itasca::multi_value::branch_table_with]: loop 0:
+    Source: 'src/multi_value.rs', lines 280:4-302:5 -/
+@[rust_loop]
+def multi_value.branch_table_with_loop
+  {V : Type} (codeOpVisitorInst : code.OpVisitor V)
+  (ois : _root_.Itasca.code.OpIterState) (data : Slice Std.U8)
+  (env : _root_.Itasca.module.Env) (visitor : V) (count : Std.U32)
+  (arity : Option Std.Usize) (i : Std.U32) :
+  Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
+    _root_.Itasca.multi_value.State × V)
+  := do
+  loop
+    (fun (ois1, visitor1, arity1, i1) =>
+      multi_value.branch_table_with_loop.body codeOpVisitorInst data env count
+      ois1 visitor1 arity1 i1)
+    (ois, visitor, arity, i)
+
+/-- [itasca::multi_value::branch_table_with]:
+    Source: 'src/multi_value.rs', lines 269:0-303:1 -/
+def multi_value.branch_table_with
+  {V : Type} (codeOpVisitorInst : code.OpVisitor V)
+  (st : _root_.Itasca.multi_value.State) (data : Slice Std.U8)
+  (env : _root_.Itasca.module.Env) (visitor : V) :
+  Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
+    _root_.Itasca.multi_value.State × V)
+  := do
+  let r ← reader.read_u32_leb data st.core.pos
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue val =>
+    let (count, «end») := val
+    let (r1, ois) ←
+      code.pop_with_type { st.core with pos := «end» } types.ValueType.I32
+    let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+    match cf1 with
+    | core.ops.control_flow.ControlFlow.Continue _ =>
+      multi_value.branch_table_with_loop codeOpVisitorInst ois data env visitor
+        count none 0#u32
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r2 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+      ok (r2, { core := ois }, visitor)
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    let r1 ←
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+        Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+    ok (r1, st, visitor)
+
+/-- [itasca::multi_value::push_results]:
+    Source: 'src/multi_value.rs', lines 61:0-81:1 -/
+def multi_value.push_results
+  (st : _root_.Itasca.code.OpIterState) (env : _root_.Itasca.module.Env)
+  (ts : _root_.Itasca.signature.ResultType) :
+  Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
+    _root_.Itasca.code.OpIterState)
+  := do
+  let r ← signature.ResultType.len ts env
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue val =>
+    let i := alloc.vec.Vec.len st.vals
+    let i1 ← core.num.Usize.MAX - i
+    if val > i1
+    then ok (core.result.Result.Err error.OpError.StackTooLarge, st)
+    else
+      match ts with
+      | signature.ResultType.Empty => ok (core.result.Result.Ok (), st)
+      | signature.ResultType.One t =>
+        let v ← alloc.vec.Vec.push st.vals (code.StackType.Val t)
+        ok (core.result.Result.Ok (), { st with vals := v })
+      | signature.ResultType.Type index part =>
+        let i2 ← lift (UScalar.cast .Usize index)
+        let i3 := alloc.vec.Vec.len env.types
+        if i2 >= i3
+        then ok (core.result.Result.Err error.OpError.UnknownType, st)
+        else
+          match part with
+          | signature.TypePart.Params =>
+            let ft ←
+              alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+                _root_.Itasca.types.FuncType) env.types i2
+            let s := alloc.vec.Vec.deref ft.params
+            let st1 ← code.push_types st s
+            ok (core.result.Result.Ok (), st1)
+          | signature.TypePart.Results =>
+            let ft ←
+              alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+                _root_.Itasca.types.FuncType) env.types i2
+            let s := alloc.vec.Vec.deref ft.results
+            let st1 ← code.push_types st s
+            ok (core.result.Result.Ok (), st1)
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    let r1 ←
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+        Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+    ok (r1, st)
+
+/-- [itasca::multi_value::pop_results]:
+    Source: 'src/multi_value.rs', lines 41:0-59:1 -/
+def multi_value.pop_results
+  (st : _root_.Itasca.code.OpIterState) (env : _root_.Itasca.module.Env)
+  (ts : _root_.Itasca.signature.ResultType) :
+  Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
+    _root_.Itasca.code.OpIterState)
+  := do
+  match ts with
+  | signature.ResultType.Empty => ok (core.result.Result.Ok (), st)
+  | signature.ResultType.One t =>
+    let (r, st1) ← code.pop_with_type st t
+    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue _ =>
+      ok (core.result.Result.Ok (), st1)
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r1 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+      ok (r1, st1)
+  | signature.ResultType.Type index part =>
+    let i ← lift (UScalar.cast .Usize index)
+    let i1 := alloc.vec.Vec.len env.types
+    if i >= i1
+    then ok (core.result.Result.Err error.OpError.UnknownType, st)
+    else
+      match part with
+      | signature.TypePart.Params =>
+        let ft ←
+          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+            _root_.Itasca.types.FuncType) env.types i
+        let s := alloc.vec.Vec.deref ft.params
+        code.pop_types st s
+      | signature.TypePart.Results =>
+        let ft ←
+          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+            _root_.Itasca.types.FuncType) env.types i
+        let s := alloc.vec.Vec.deref ft.results
+        code.pop_types st s
+
+/-- [itasca::multi_value::branch_info]:
+    Source: 'src/multi_value.rs', lines 212:0-229:1 -/
+def multi_value.branch_info
+  (st : _root_.Itasca.multi_value.State) (data : Slice Std.U8)
+  (env : _root_.Itasca.module.Env) (conditional : Bool) :
+  Result ((core.result.Result (Std.U32 × _root_.Itasca.signature.ResultType)
+    _root_.Itasca.error.OpError) × _root_.Itasca.multi_value.State)
+  := do
+  let (r, st1) ← multi_value.read_label_info st data
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue val =>
+    let (_, ts) := val
+    if conditional
+    then
+      let (r1, ois) ← code.pop_with_type st1.core types.ValueType.I32
+      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+      match cf1 with
+      | core.ops.control_flow.ControlFlow.Continue _ =>
+        let (r2, ois1) ← multi_value.pop_results ois env ts
+        let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+        match cf2 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          if conditional
+          then
+            let (r3, ois2) ← multi_value.push_results ois1 env ts
+            let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
+            match cf3 with
+            | core.ops.control_flow.ControlFlow.Continue _ =>
+              ok (core.result.Result.Ok val, { core := ois2 })
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              let r4 ←
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  (Std.U32 × _root_.Itasca.signature.ResultType)
+                  (core.convert.FromSame _root_.Itasca.error.OpError) residual
+              ok (r4, { core := ois2 })
+          else
+            let ois2 ← code.mark_unreachable ois1
+            ok (core.result.Result.Ok val, { core := ois2 })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r3 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              (Std.U32 × _root_.Itasca.signature.ResultType)
+              (core.convert.FromSame _root_.Itasca.error.OpError) residual
+          ok (r3, { core := ois1 })
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r2 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            (Std.U32 × _root_.Itasca.signature.ResultType)
+            (core.convert.FromSame _root_.Itasca.error.OpError) residual
+        ok (r2, { core := ois })
+    else
+      let (r1, ois) ← multi_value.pop_results st1.core env ts
+      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+      match cf1 with
+      | core.ops.control_flow.ControlFlow.Continue _ =>
+        if conditional
+        then
+          let (r2, ois1) ← multi_value.push_results ois env ts
+          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+          match cf2 with
+          | core.ops.control_flow.ControlFlow.Continue _ =>
+            ok (core.result.Result.Ok val, { core := ois1 })
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            let r3 ←
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                (Std.U32 × _root_.Itasca.signature.ResultType)
+                (core.convert.FromSame _root_.Itasca.error.OpError) residual
+            ok (r3, { core := ois1 })
+        else
+          let ois1 ← code.mark_unreachable ois
+          ok (core.result.Result.Ok val, { core := ois1 })
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r2 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            (Std.U32 × _root_.Itasca.signature.ResultType)
+            (core.convert.FromSame _root_.Itasca.error.OpError) residual
+        ok (r2, { core := ois })
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    let r1 ←
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+        (Std.U32 × _root_.Itasca.signature.ResultType) (core.convert.FromSame
+        _root_.Itasca.error.OpError) residual
+    ok (r1, st1)
+
+/-- [itasca::multi_value::same_types]: loop body 0:
+    Source: 'src/multi_value.rs', lines 89:4-102:5 -/
+@[rust_loop_body]
+def multi_value.same_types_loop.body
+  (env : _root_.Itasca.module.Env) (a : _root_.Itasca.signature.ResultType)
+  (b : _root_.Itasca.signature.ResultType) (n : Std.Usize) (i : Std.Usize) :
+  Result (ControlFlow Std.Usize (core.result.Result Bool
+    _root_.Itasca.error.OpError))
+  := do
+  if i >= n
+  then ok (done (core.result.Result.Ok true))
+  else
+    let r ← signature.ResultType.get a env i
+    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      let r1 ← signature.ResultType.get b env i
+      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+      match cf1 with
+      | core.ops.control_flow.ControlFlow.Continue val1 =>
+        match val with
+        | none => ok (done (core.result.Result.Err error.OpError.TypeMismatch))
+        | some x =>
+          match val1 with
+          | none =>
+            ok (done (core.result.Result.Err error.OpError.TypeMismatch))
+          | some y =>
+            let b1 ←
+              core.cmp.PartialEq.ne.trait_default
+                types.ValueType.Insts.CoreCmpPartialEqValueType x y
+            if b1
+            then ok (done (core.result.Result.Ok false))
+            else let i1 ← i + 1#usize
+                 ok (cont i1)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r2 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Bool (core.convert.FromSame _root_.Itasca.error.OpError) residual
+        ok (done r2)
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r1 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          Bool (core.convert.FromSame _root_.Itasca.error.OpError) residual
+      ok (done r1)
+
+/-- [itasca::multi_value::same_types]: loop 0:
+    Source: 'src/multi_value.rs', lines 89:4-102:5 -/
+@[rust_loop]
+def multi_value.same_types_loop
+  (env : _root_.Itasca.module.Env) (a : _root_.Itasca.signature.ResultType)
+  (b : _root_.Itasca.signature.ResultType) (n : Std.Usize) (i : Std.Usize) :
+  Result (core.result.Result Bool _root_.Itasca.error.OpError)
+  := do
+  loop
+    (fun i1 => multi_value.same_types_loop.body env a b n i1)
+    i
+
+/-- [itasca::multi_value::same_types]:
+    Source: 'src/multi_value.rs', lines 83:0-103:1 -/
+def multi_value.same_types
+  (env : _root_.Itasca.module.Env) (a : _root_.Itasca.signature.ResultType)
+  (b : _root_.Itasca.signature.ResultType) :
+  Result (core.result.Result Bool _root_.Itasca.error.OpError)
+  := do
+  let r ← signature.ResultType.len a env
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue val =>
+    let r1 ← signature.ResultType.len b env
+    let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+    match cf1 with
+    | core.ops.control_flow.ControlFlow.Continue val1 =>
+      if val != val1
+      then ok (core.result.Result.Ok false)
+      else multi_value.same_types_loop env a b val 0#usize
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+        Bool (core.convert.FromSame _root_.Itasca.error.OpError) residual
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+      Bool (core.convert.FromSame _root_.Itasca.error.OpError) residual
+
+/-- [itasca::multi_value::end_frame_info]:
+    Source: 'src/multi_value.rs', lines 142:0-176:1 -/
+def multi_value.end_frame_info
+  (st : _root_.Itasca.multi_value.State) (env : _root_.Itasca.module.Env)
+  (is_else : Bool) :
+  Result ((core.result.Result (_root_.Itasca.code.LabelKind ×
+    _root_.Itasca.signature.BlockType) _root_.Itasca.error.OpError) ×
+    _root_.Itasca.multi_value.State)
+  := do
+  let n := alloc.vec.Vec.len st.core.ctrls
+  if n = 0#usize
+  then ok (core.result.Result.Err error.OpError.UnknownLabel, st)
+  else
+    let i ← n - 1#usize
+    let c ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        _root_.Itasca.code.Ctrl) st.core.ctrls i
+    let frame ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        _root_.Itasca.code.Ctrl) st.core.ctrls i
+    if is_else
+    then
+      match frame.kind with
+      | code.LabelKind.Body =>
+        ok (core.result.Result.Err error.OpError.TypeMismatch, st)
+      | code.LabelKind.Block =>
+        ok (core.result.Result.Err error.OpError.TypeMismatch, st)
+      | code.LabelKind.Loop =>
+        ok (core.result.Result.Err error.OpError.TypeMismatch, st)
+      | code.LabelKind.Then =>
+        let rt ← signature.BlockType.results c.signature
+        let (r, ois) ← multi_value.pop_results st.core env rt
+        let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+        match cf with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          let i1 := alloc.vec.Vec.len ois.vals
+          if i1 != frame.value_stack_base
+          then
+            ok (core.result.Result.Err error.OpError.StackMismatch,
+              { core := ois })
+          else if is_else
+          then
+            let (c1, index_mut_back) ←
+              alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+                _root_.Itasca.code.Ctrl) ois.ctrls i
+            let v := index_mut_back { c1 with kind := code.LabelKind.Else }
+            let (c2, index_mut_back1) ←
+              alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+                _root_.Itasca.code.Ctrl) v i
+            let v1 := index_mut_back1 { c2 with polymorphic_base := false }
+            let rt1 ← signature.BlockType.params c.signature
+            let (r1, ois1) ←
+              multi_value.push_results { ois with ctrls := v1 } env rt1
+            let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+            match cf1 with
+            | core.ops.control_flow.ControlFlow.Continue _ =>
+              ok (core.result.Result.Ok (code.LabelKind.Then, c.signature),
+                { core := ois1 })
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              let r2 ←
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  (_root_.Itasca.code.LabelKind ×
+                  _root_.Itasca.signature.BlockType) (core.convert.FromSame
+                  _root_.Itasca.error.OpError) residual
+              ok (r2, { core := ois1 })
+          else
+            let (_, v) ← alloc.vec.Vec.pop Global ois.ctrls
+            if n != 1#usize
+            then
+              let (r1, ois1) ←
+                multi_value.push_results { ois with ctrls := v } env rt
+              let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+              match cf1 with
+              | core.ops.control_flow.ControlFlow.Continue _ =>
+                ok (core.result.Result.Ok (code.LabelKind.Then, c.signature),
+                  { core := ois1 })
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                let r2 ←
+                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                    (_root_.Itasca.code.LabelKind ×
+                    _root_.Itasca.signature.BlockType) (core.convert.FromSame
+                    _root_.Itasca.error.OpError) residual
+                ok (r2, { core := ois1 })
+            else
+              ok (core.result.Result.Ok (code.LabelKind.Then, c.signature),
+                { core := { ois with ctrls := v } })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r1 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              (_root_.Itasca.code.LabelKind ×
+              _root_.Itasca.signature.BlockType) (core.convert.FromSame
+              _root_.Itasca.error.OpError) residual
+          ok (r1, { core := ois })
+      | code.LabelKind.Else =>
+        ok (core.result.Result.Err error.OpError.TypeMismatch, st)
+    else
+      match frame.kind with
+      | code.LabelKind.Body =>
+        let rt ← signature.BlockType.results c.signature
+        let (r, ois) ← multi_value.pop_results st.core env rt
+        let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+        match cf with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          let i1 := alloc.vec.Vec.len ois.vals
+          if i1 != frame.value_stack_base
+          then
+            ok (core.result.Result.Err error.OpError.StackMismatch,
+              { core := ois })
+          else if is_else
+          then
+            let (c1, index_mut_back) ←
+              alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+                _root_.Itasca.code.Ctrl) ois.ctrls i
+            let v := index_mut_back { c1 with kind := code.LabelKind.Else }
+            let (c2, index_mut_back1) ←
+              alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+                _root_.Itasca.code.Ctrl) v i
+            let v1 := index_mut_back1 { c2 with polymorphic_base := false }
+            let rt1 ← signature.BlockType.params c.signature
+            let (r1, ois1) ←
+              multi_value.push_results { ois with ctrls := v1 } env rt1
+            let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+            match cf1 with
+            | core.ops.control_flow.ControlFlow.Continue _ =>
+              ok (core.result.Result.Ok (code.LabelKind.Body, c.signature),
+                { core := ois1 })
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              let r2 ←
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  (_root_.Itasca.code.LabelKind ×
+                  _root_.Itasca.signature.BlockType) (core.convert.FromSame
+                  _root_.Itasca.error.OpError) residual
+              ok (r2, { core := ois1 })
+          else
+            let (_, v) ← alloc.vec.Vec.pop Global ois.ctrls
+            if n != 1#usize
+            then
+              let (r1, ois1) ←
+                multi_value.push_results { ois with ctrls := v } env rt
+              let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+              match cf1 with
+              | core.ops.control_flow.ControlFlow.Continue _ =>
+                ok (core.result.Result.Ok (code.LabelKind.Body, c.signature),
+                  { core := ois1 })
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                let r2 ←
+                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                    (_root_.Itasca.code.LabelKind ×
+                    _root_.Itasca.signature.BlockType) (core.convert.FromSame
+                    _root_.Itasca.error.OpError) residual
+                ok (r2, { core := ois1 })
+            else
+              ok (core.result.Result.Ok (code.LabelKind.Body, c.signature),
+                { core := { ois with ctrls := v } })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r1 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              (_root_.Itasca.code.LabelKind ×
+              _root_.Itasca.signature.BlockType) (core.convert.FromSame
+              _root_.Itasca.error.OpError) residual
+          ok (r1, { core := ois })
+      | code.LabelKind.Block =>
+        let rt ← signature.BlockType.results c.signature
+        let (r, ois) ← multi_value.pop_results st.core env rt
+        let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+        match cf with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          let i1 := alloc.vec.Vec.len ois.vals
+          if i1 != frame.value_stack_base
+          then
+            ok (core.result.Result.Err error.OpError.StackMismatch,
+              { core := ois })
+          else if is_else
+          then
+            let (c1, index_mut_back) ←
+              alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+                _root_.Itasca.code.Ctrl) ois.ctrls i
+            let v := index_mut_back { c1 with kind := code.LabelKind.Else }
+            let (c2, index_mut_back1) ←
+              alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+                _root_.Itasca.code.Ctrl) v i
+            let v1 := index_mut_back1 { c2 with polymorphic_base := false }
+            let rt1 ← signature.BlockType.params c.signature
+            let (r1, ois1) ←
+              multi_value.push_results { ois with ctrls := v1 } env rt1
+            let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+            match cf1 with
+            | core.ops.control_flow.ControlFlow.Continue _ =>
+              ok (core.result.Result.Ok (code.LabelKind.Block, c.signature),
+                { core := ois1 })
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              let r2 ←
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  (_root_.Itasca.code.LabelKind ×
+                  _root_.Itasca.signature.BlockType) (core.convert.FromSame
+                  _root_.Itasca.error.OpError) residual
+              ok (r2, { core := ois1 })
+          else
+            let (_, v) ← alloc.vec.Vec.pop Global ois.ctrls
+            if n != 1#usize
+            then
+              let (r1, ois1) ←
+                multi_value.push_results { ois with ctrls := v } env rt
+              let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+              match cf1 with
+              | core.ops.control_flow.ControlFlow.Continue _ =>
+                ok (core.result.Result.Ok (code.LabelKind.Block, c.signature),
+                  { core := ois1 })
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                let r2 ←
+                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                    (_root_.Itasca.code.LabelKind ×
+                    _root_.Itasca.signature.BlockType) (core.convert.FromSame
+                    _root_.Itasca.error.OpError) residual
+                ok (r2, { core := ois1 })
+            else
+              ok (core.result.Result.Ok (code.LabelKind.Block, c.signature),
+                { core := { ois with ctrls := v } })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r1 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              (_root_.Itasca.code.LabelKind ×
+              _root_.Itasca.signature.BlockType) (core.convert.FromSame
+              _root_.Itasca.error.OpError) residual
+          ok (r1, { core := ois })
+      | code.LabelKind.Loop =>
+        let rt ← signature.BlockType.results c.signature
+        let (r, ois) ← multi_value.pop_results st.core env rt
+        let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+        match cf with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          let i1 := alloc.vec.Vec.len ois.vals
+          if i1 != frame.value_stack_base
+          then
+            ok (core.result.Result.Err error.OpError.StackMismatch,
+              { core := ois })
+          else if is_else
+          then
+            let (c1, index_mut_back) ←
+              alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+                _root_.Itasca.code.Ctrl) ois.ctrls i
+            let v := index_mut_back { c1 with kind := code.LabelKind.Else }
+            let (c2, index_mut_back1) ←
+              alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+                _root_.Itasca.code.Ctrl) v i
+            let v1 := index_mut_back1 { c2 with polymorphic_base := false }
+            let rt1 ← signature.BlockType.params c.signature
+            let (r1, ois1) ←
+              multi_value.push_results { ois with ctrls := v1 } env rt1
+            let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+            match cf1 with
+            | core.ops.control_flow.ControlFlow.Continue _ =>
+              ok (core.result.Result.Ok (code.LabelKind.Loop, c.signature),
+                { core := ois1 })
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              let r2 ←
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  (_root_.Itasca.code.LabelKind ×
+                  _root_.Itasca.signature.BlockType) (core.convert.FromSame
+                  _root_.Itasca.error.OpError) residual
+              ok (r2, { core := ois1 })
+          else
+            let (_, v) ← alloc.vec.Vec.pop Global ois.ctrls
+            if n != 1#usize
+            then
+              let (r1, ois1) ←
+                multi_value.push_results { ois with ctrls := v } env rt
+              let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+              match cf1 with
+              | core.ops.control_flow.ControlFlow.Continue _ =>
+                ok (core.result.Result.Ok (code.LabelKind.Loop, c.signature),
+                  { core := ois1 })
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                let r2 ←
+                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                    (_root_.Itasca.code.LabelKind ×
+                    _root_.Itasca.signature.BlockType) (core.convert.FromSame
+                    _root_.Itasca.error.OpError) residual
+                ok (r2, { core := ois1 })
+            else
+              ok (core.result.Result.Ok (code.LabelKind.Loop, c.signature),
+                { core := { ois with ctrls := v } })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r1 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              (_root_.Itasca.code.LabelKind ×
+              _root_.Itasca.signature.BlockType) (core.convert.FromSame
+              _root_.Itasca.error.OpError) residual
+          ok (r1, { core := ois })
+      | code.LabelKind.Then =>
+        let rt ← signature.BlockType.params c.signature
+        let rt1 ← signature.BlockType.results c.signature
+        let r ← multi_value.same_types env rt rt1
+        let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+        match cf with
+        | core.ops.control_flow.ControlFlow.Continue val =>
+          if val
+          then
+            let (r1, ois) ← multi_value.pop_results st.core env rt1
+            let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+            match cf1 with
+            | core.ops.control_flow.ControlFlow.Continue _ =>
+              let i1 := alloc.vec.Vec.len ois.vals
+              if i1 != frame.value_stack_base
+              then
+                ok (core.result.Result.Err error.OpError.StackMismatch,
+                  { core := ois })
+              else if is_else
+              then
+                let (c1, index_mut_back) ←
+                  alloc.vec.Vec.index_mut
+                    (core.slice.index.SliceIndexUsizeSlice
+                    _root_.Itasca.code.Ctrl) ois.ctrls i
+                let v := index_mut_back { c1 with kind := code.LabelKind.Else }
+                let (c2, index_mut_back1) ←
+                  alloc.vec.Vec.index_mut
+                    (core.slice.index.SliceIndexUsizeSlice
+                    _root_.Itasca.code.Ctrl) v i
+                let v1 := index_mut_back1 { c2 with polymorphic_base := false }
+                let (r2, ois1) ←
+                  multi_value.push_results { ois with ctrls := v1 } env rt
+                let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+                match cf2 with
+                | core.ops.control_flow.ControlFlow.Continue _ =>
+                  ok (core.result.Result.Ok (code.LabelKind.Then, c.signature),
+                    { core := ois1 })
+                | core.ops.control_flow.ControlFlow.Break residual =>
+                  let r3 ←
+                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                      (_root_.Itasca.code.LabelKind ×
+                      _root_.Itasca.signature.BlockType) (core.convert.FromSame
+                      _root_.Itasca.error.OpError) residual
+                  ok (r3, { core := ois1 })
+              else
+                let (_, v) ← alloc.vec.Vec.pop Global ois.ctrls
+                if n != 1#usize
+                then
+                  let (r2, ois1) ←
+                    multi_value.push_results { ois with ctrls := v } env rt1
+                  let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+                  match cf2 with
+                  | core.ops.control_flow.ControlFlow.Continue _ =>
+                    ok (core.result.Result.Ok (code.LabelKind.Then,
+                      c.signature), { core := ois1 })
+                  | core.ops.control_flow.ControlFlow.Break residual =>
+                    let r3 ←
+                      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                        (_root_.Itasca.code.LabelKind ×
+                        _root_.Itasca.signature.BlockType)
+                        (core.convert.FromSame _root_.Itasca.error.OpError)
+                        residual
+                    ok (r3, { core := ois1 })
+                else
+                  ok (core.result.Result.Ok (code.LabelKind.Then, c.signature),
+                    { core := { ois with ctrls := v } })
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              let r2 ←
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  (_root_.Itasca.code.LabelKind ×
+                  _root_.Itasca.signature.BlockType) (core.convert.FromSame
+                  _root_.Itasca.error.OpError) residual
+              ok (r2, { core := ois })
+          else ok (core.result.Result.Err error.OpError.TypeMismatch, st)
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r1 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              (_root_.Itasca.code.LabelKind ×
+              _root_.Itasca.signature.BlockType) (core.convert.FromSame
+              _root_.Itasca.error.OpError) residual
+          ok (r1, st)
+      | code.LabelKind.Else =>
+        let rt ← signature.BlockType.results c.signature
+        let (r, ois) ← multi_value.pop_results st.core env rt
+        let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+        match cf with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          let i1 := alloc.vec.Vec.len ois.vals
+          if i1 != frame.value_stack_base
+          then
+            ok (core.result.Result.Err error.OpError.StackMismatch,
+              { core := ois })
+          else if is_else
+          then
+            let (c1, index_mut_back) ←
+              alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+                _root_.Itasca.code.Ctrl) ois.ctrls i
+            let v := index_mut_back { c1 with kind := code.LabelKind.Else }
+            let (c2, index_mut_back1) ←
+              alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+                _root_.Itasca.code.Ctrl) v i
+            let v1 := index_mut_back1 { c2 with polymorphic_base := false }
+            let rt1 ← signature.BlockType.params c.signature
+            let (r1, ois1) ←
+              multi_value.push_results { ois with ctrls := v1 } env rt1
+            let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+            match cf1 with
+            | core.ops.control_flow.ControlFlow.Continue _ =>
+              ok (core.result.Result.Ok (code.LabelKind.Else, c.signature),
+                { core := ois1 })
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              let r2 ←
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  (_root_.Itasca.code.LabelKind ×
+                  _root_.Itasca.signature.BlockType) (core.convert.FromSame
+                  _root_.Itasca.error.OpError) residual
+              ok (r2, { core := ois1 })
+          else
+            let (_, v) ← alloc.vec.Vec.pop Global ois.ctrls
+            if n != 1#usize
+            then
+              let (r1, ois1) ←
+                multi_value.push_results { ois with ctrls := v } env rt
+              let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+              match cf1 with
+              | core.ops.control_flow.ControlFlow.Continue _ =>
+                ok (core.result.Result.Ok (code.LabelKind.Else, c.signature),
+                  { core := ois1 })
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                let r2 ←
+                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                    (_root_.Itasca.code.LabelKind ×
+                    _root_.Itasca.signature.BlockType) (core.convert.FromSame
+                    _root_.Itasca.error.OpError) residual
+                ok (r2, { core := ois1 })
+            else
+              ok (core.result.Result.Ok (code.LabelKind.Else, c.signature),
+                { core := { ois with ctrls := v } })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r1 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              (_root_.Itasca.code.LabelKind ×
+              _root_.Itasca.signature.BlockType) (core.convert.FromSame
+              _root_.Itasca.error.OpError) residual
+          ok (r1, { core := ois })
+
+/-- [itasca::reader::read_s33_leb]:
+    Source: 'src/reader.rs', lines 160:0-163:1
+    Visibility: public -/
+def reader.read_s33_leb
+  (data : Slice Std.U8) (pos : Std.Usize) :
+  Result (core.result.Result (Std.I64 × Std.Usize)
+    _root_.Itasca.error.OpError)
+  := do
+  let r ←
+    reader.read_sn_leb data pos 4#u32 (-4294967296)#i128 4294967295#i128
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue val =>
+    let (v, p) := val
+    let i ← lift (IScalar.cast .I64 v)
+    ok (core.result.Result.Ok (i, p))
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+      (Std.I64 × Std.Usize) (core.convert.FromSame
+      _root_.Itasca.error.OpError) residual
+
+/-- [itasca::signature::read_block_type]:
+    Source: 'src/signature.rs', lines 117:0-133:1 -/
+def signature.read_block_type
+  (data : Slice Std.U8) (pos : Std.Usize) :
+  Result (core.result.Result (_root_.Itasca.signature.BlockType × Std.Usize)
+    _root_.Itasca.error.OpError)
+  := do
+  let r ← reader.read_byte data pos
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue val =>
+    let (b, p) := val
+    match b with
+    | 64#uscalar => ok (core.result.Result.Ok (signature.BlockType.Empty, p))
+    | 127#uscalar =>
+      ok (core.result.Result.Ok (signature.BlockType.Value types.ValueType.I32,
+        p))
+    | 126#uscalar =>
+      ok (core.result.Result.Ok (signature.BlockType.Value types.ValueType.I64,
+        p))
+    | 125#uscalar =>
+      ok (core.result.Result.Ok (signature.BlockType.Value types.ValueType.F32,
+        p))
+    | 124#uscalar =>
+      ok (core.result.Result.Ok (signature.BlockType.Value types.ValueType.F64,
+        p))
+    | _ =>
+      let r1 ← reader.read_s33_leb data pos
+      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+      match cf1 with
+      | core.ops.control_flow.ControlFlow.Continue val1 =>
+        let (index, «end») := val1
+        if index < 0#i64
+        then ok (core.result.Result.Err error.OpError.InvalidBlockType)
+        else
+          let i ← lift (IScalar.hcast .U32 index)
+          ok (core.result.Result.Ok (signature.BlockType.TypeIndex i, «end»))
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          (_root_.Itasca.signature.BlockType × Std.Usize)
+          (core.convert.FromSame _root_.Itasca.error.OpError) residual
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+      (_root_.Itasca.signature.BlockType × Std.Usize) (core.convert.FromSame
+      _root_.Itasca.error.OpError) residual
+
+/-- [itasca::multi_value::push_frame]:
+    Source: 'src/multi_value.rs', lines 105:0-113:1 -/
+def multi_value.push_frame
+  (st : _root_.Itasca.multi_value.State) (kind : _root_.Itasca.code.LabelKind)
+  (bt : _root_.Itasca.signature.BlockType) :
+  Result _root_.Itasca.multi_value.State
+  := do
+  let i := alloc.vec.Vec.len st.core.vals
+  let v ←
+    alloc.vec.Vec.push st.core.ctrls
+      ({
+         kind,
+         block_type := code.BlockType.Empty,
+         signature := bt,
+         value_stack_base := i,
+         polymorphic_base := false
+       } : _root_.Itasca.code.Ctrl)
+  ok { core := { st.core with ctrls := v } }
+
+/-- [itasca::multi_value::enter_info]:
+    Source: 'src/multi_value.rs', lines 115:0-133:1 -/
+def multi_value.enter_info
+  (st : _root_.Itasca.multi_value.State) (data : Slice Std.U8)
+  (env : _root_.Itasca.module.Env) (kind : _root_.Itasca.code.LabelKind) :
+  Result ((core.result.Result _root_.Itasca.signature.BlockType
+    _root_.Itasca.error.OpError) × _root_.Itasca.multi_value.State)
+  := do
+  let r ← signature.read_block_type data st.core.pos
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue val =>
+    let (bt, «end») := val
+    match bt with
+    | signature.BlockType.Empty =>
+      match kind with
+      | code.LabelKind.Body =>
+        let rt ← signature.BlockType.params signature.BlockType.Empty
+        let (r1, ois) ←
+          multi_value.pop_results { st.core with pos := «end» } env rt
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          let st1 ←
+            multi_value.push_frame { core := ois } code.LabelKind.Body
+              signature.BlockType.Empty
+          let (r2, ois1) ← multi_value.push_results st1.core env rt
+          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+          match cf2 with
+          | core.ops.control_flow.ControlFlow.Continue _ =>
+            ok (core.result.Result.Ok signature.BlockType.Empty,
+              { core := ois1 })
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            let r3 ←
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                _root_.Itasca.signature.BlockType (core.convert.FromSame
+                _root_.Itasca.error.OpError) residual
+            ok (r3, { core := ois1 })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r2 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              _root_.Itasca.signature.BlockType (core.convert.FromSame
+              _root_.Itasca.error.OpError) residual
+          ok (r2, { core := ois })
+      | code.LabelKind.Block =>
+        let rt ← signature.BlockType.params signature.BlockType.Empty
+        let (r1, ois) ←
+          multi_value.pop_results { st.core with pos := «end» } env rt
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          let st1 ←
+            multi_value.push_frame { core := ois } code.LabelKind.Block
+              signature.BlockType.Empty
+          let (r2, ois1) ← multi_value.push_results st1.core env rt
+          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+          match cf2 with
+          | core.ops.control_flow.ControlFlow.Continue _ =>
+            ok (core.result.Result.Ok signature.BlockType.Empty,
+              { core := ois1 })
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            let r3 ←
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                _root_.Itasca.signature.BlockType (core.convert.FromSame
+                _root_.Itasca.error.OpError) residual
+            ok (r3, { core := ois1 })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r2 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              _root_.Itasca.signature.BlockType (core.convert.FromSame
+              _root_.Itasca.error.OpError) residual
+          ok (r2, { core := ois })
+      | code.LabelKind.Loop =>
+        let rt ← signature.BlockType.params signature.BlockType.Empty
+        let (r1, ois) ←
+          multi_value.pop_results { st.core with pos := «end» } env rt
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          let st1 ←
+            multi_value.push_frame { core := ois } code.LabelKind.Loop
+              signature.BlockType.Empty
+          let (r2, ois1) ← multi_value.push_results st1.core env rt
+          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+          match cf2 with
+          | core.ops.control_flow.ControlFlow.Continue _ =>
+            ok (core.result.Result.Ok signature.BlockType.Empty,
+              { core := ois1 })
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            let r3 ←
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                _root_.Itasca.signature.BlockType (core.convert.FromSame
+                _root_.Itasca.error.OpError) residual
+            ok (r3, { core := ois1 })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r2 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              _root_.Itasca.signature.BlockType (core.convert.FromSame
+              _root_.Itasca.error.OpError) residual
+          ok (r2, { core := ois })
+      | code.LabelKind.Then =>
+        let (r1, ois) ←
+          code.pop_with_type { st.core with pos := «end» }
+            types.ValueType.I32
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          let rt ← signature.BlockType.params signature.BlockType.Empty
+          let (r2, ois1) ← multi_value.pop_results ois env rt
+          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+          match cf2 with
+          | core.ops.control_flow.ControlFlow.Continue _ =>
+            let st1 ←
+              multi_value.push_frame { core := ois1 } code.LabelKind.Then
+                signature.BlockType.Empty
+            let (r3, ois2) ← multi_value.push_results st1.core env rt
+            let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
+            match cf3 with
+            | core.ops.control_flow.ControlFlow.Continue _ =>
+              ok (core.result.Result.Ok signature.BlockType.Empty,
+                { core := ois2 })
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              let r4 ←
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  _root_.Itasca.signature.BlockType (core.convert.FromSame
+                  _root_.Itasca.error.OpError) residual
+              ok (r4, { core := ois2 })
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            let r3 ←
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                _root_.Itasca.signature.BlockType (core.convert.FromSame
+                _root_.Itasca.error.OpError) residual
+            ok (r3, { core := ois1 })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r2 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              _root_.Itasca.signature.BlockType (core.convert.FromSame
+              _root_.Itasca.error.OpError) residual
+          ok (r2, { core := ois })
+      | code.LabelKind.Else =>
+        let rt ← signature.BlockType.params signature.BlockType.Empty
+        let (r1, ois) ←
+          multi_value.pop_results { st.core with pos := «end» } env rt
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          let st1 ←
+            multi_value.push_frame { core := ois } code.LabelKind.Else
+              signature.BlockType.Empty
+          let (r2, ois1) ← multi_value.push_results st1.core env rt
+          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+          match cf2 with
+          | core.ops.control_flow.ControlFlow.Continue _ =>
+            ok (core.result.Result.Ok signature.BlockType.Empty,
+              { core := ois1 })
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            let r3 ←
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                _root_.Itasca.signature.BlockType (core.convert.FromSame
+                _root_.Itasca.error.OpError) residual
+            ok (r3, { core := ois1 })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r2 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              _root_.Itasca.signature.BlockType (core.convert.FromSame
+              _root_.Itasca.error.OpError) residual
+          ok (r2, { core := ois })
+    | signature.BlockType.Value _ =>
+      match kind with
+      | code.LabelKind.Body =>
+        let rt ← signature.BlockType.params bt
+        let (r1, ois) ←
+          multi_value.pop_results { st.core with pos := «end» } env rt
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          let st1 ←
+            multi_value.push_frame { core := ois } code.LabelKind.Body bt
+          let (r2, ois1) ← multi_value.push_results st1.core env rt
+          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+          match cf2 with
+          | core.ops.control_flow.ControlFlow.Continue _ =>
+            ok (core.result.Result.Ok bt, { core := ois1 })
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            let r3 ←
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                _root_.Itasca.signature.BlockType (core.convert.FromSame
+                _root_.Itasca.error.OpError) residual
+            ok (r3, { core := ois1 })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r2 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              _root_.Itasca.signature.BlockType (core.convert.FromSame
+              _root_.Itasca.error.OpError) residual
+          ok (r2, { core := ois })
+      | code.LabelKind.Block =>
+        let rt ← signature.BlockType.params bt
+        let (r1, ois) ←
+          multi_value.pop_results { st.core with pos := «end» } env rt
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          let st1 ←
+            multi_value.push_frame { core := ois } code.LabelKind.Block bt
+          let (r2, ois1) ← multi_value.push_results st1.core env rt
+          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+          match cf2 with
+          | core.ops.control_flow.ControlFlow.Continue _ =>
+            ok (core.result.Result.Ok bt, { core := ois1 })
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            let r3 ←
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                _root_.Itasca.signature.BlockType (core.convert.FromSame
+                _root_.Itasca.error.OpError) residual
+            ok (r3, { core := ois1 })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r2 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              _root_.Itasca.signature.BlockType (core.convert.FromSame
+              _root_.Itasca.error.OpError) residual
+          ok (r2, { core := ois })
+      | code.LabelKind.Loop =>
+        let rt ← signature.BlockType.params bt
+        let (r1, ois) ←
+          multi_value.pop_results { st.core with pos := «end» } env rt
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          let st1 ←
+            multi_value.push_frame { core := ois } code.LabelKind.Loop bt
+          let (r2, ois1) ← multi_value.push_results st1.core env rt
+          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+          match cf2 with
+          | core.ops.control_flow.ControlFlow.Continue _ =>
+            ok (core.result.Result.Ok bt, { core := ois1 })
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            let r3 ←
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                _root_.Itasca.signature.BlockType (core.convert.FromSame
+                _root_.Itasca.error.OpError) residual
+            ok (r3, { core := ois1 })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r2 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              _root_.Itasca.signature.BlockType (core.convert.FromSame
+              _root_.Itasca.error.OpError) residual
+          ok (r2, { core := ois })
+      | code.LabelKind.Then =>
+        let (r1, ois) ←
+          code.pop_with_type { st.core with pos := «end» }
+            types.ValueType.I32
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          let rt ← signature.BlockType.params bt
+          let (r2, ois1) ← multi_value.pop_results ois env rt
+          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+          match cf2 with
+          | core.ops.control_flow.ControlFlow.Continue _ =>
+            let st1 ←
+              multi_value.push_frame { core := ois1 } code.LabelKind.Then bt
+            let (r3, ois2) ← multi_value.push_results st1.core env rt
+            let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
+            match cf3 with
+            | core.ops.control_flow.ControlFlow.Continue _ =>
+              ok (core.result.Result.Ok bt, { core := ois2 })
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              let r4 ←
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  _root_.Itasca.signature.BlockType (core.convert.FromSame
+                  _root_.Itasca.error.OpError) residual
+              ok (r4, { core := ois2 })
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            let r3 ←
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                _root_.Itasca.signature.BlockType (core.convert.FromSame
+                _root_.Itasca.error.OpError) residual
+            ok (r3, { core := ois1 })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r2 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              _root_.Itasca.signature.BlockType (core.convert.FromSame
+              _root_.Itasca.error.OpError) residual
+          ok (r2, { core := ois })
+      | code.LabelKind.Else =>
+        let rt ← signature.BlockType.params bt
+        let (r1, ois) ←
+          multi_value.pop_results { st.core with pos := «end» } env rt
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          let st1 ←
+            multi_value.push_frame { core := ois } code.LabelKind.Else bt
+          let (r2, ois1) ← multi_value.push_results st1.core env rt
+          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+          match cf2 with
+          | core.ops.control_flow.ControlFlow.Continue _ =>
+            ok (core.result.Result.Ok bt, { core := ois1 })
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            let r3 ←
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                _root_.Itasca.signature.BlockType (core.convert.FromSame
+                _root_.Itasca.error.OpError) residual
+            ok (r3, { core := ois1 })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r2 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              _root_.Itasca.signature.BlockType (core.convert.FromSame
+              _root_.Itasca.error.OpError) residual
+          ok (r2, { core := ois })
+    | signature.BlockType.TypeIndex index =>
+      let i ← lift (UScalar.cast .Usize index)
+      let i1 := alloc.vec.Vec.len env.types
+      if i >= i1
+      then
+        ok (core.result.Result.Err error.OpError.UnknownType,
+          { core := { st.core with pos := «end» } })
+      else
+        let ft ←
+          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+            _root_.Itasca.types.FuncType) env.types i
+        let r1 ← multi_value.check_func_type ft
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          match kind with
+          | code.LabelKind.Body =>
+            let rt ← signature.BlockType.params bt
+            let (r2, ois) ←
+              multi_value.pop_results { st.core with pos := «end» } env rt
+            let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+            match cf2 with
+            | core.ops.control_flow.ControlFlow.Continue _ =>
+              let st1 ←
+                multi_value.push_frame { core := ois } code.LabelKind.Body bt
+              let (r3, ois1) ← multi_value.push_results st1.core env rt
+              let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
+              match cf3 with
+              | core.ops.control_flow.ControlFlow.Continue _ =>
+                ok (core.result.Result.Ok bt, { core := ois1 })
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                let r4 ←
+                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                    _root_.Itasca.signature.BlockType (core.convert.FromSame
+                    _root_.Itasca.error.OpError) residual
+                ok (r4, { core := ois1 })
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              let r3 ←
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  _root_.Itasca.signature.BlockType (core.convert.FromSame
+                  _root_.Itasca.error.OpError) residual
+              ok (r3, { core := ois })
+          | code.LabelKind.Block =>
+            let rt ← signature.BlockType.params bt
+            let (r2, ois) ←
+              multi_value.pop_results { st.core with pos := «end» } env rt
+            let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+            match cf2 with
+            | core.ops.control_flow.ControlFlow.Continue _ =>
+              let st1 ←
+                multi_value.push_frame { core := ois } code.LabelKind.Block bt
+              let (r3, ois1) ← multi_value.push_results st1.core env rt
+              let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
+              match cf3 with
+              | core.ops.control_flow.ControlFlow.Continue _ =>
+                ok (core.result.Result.Ok bt, { core := ois1 })
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                let r4 ←
+                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                    _root_.Itasca.signature.BlockType (core.convert.FromSame
+                    _root_.Itasca.error.OpError) residual
+                ok (r4, { core := ois1 })
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              let r3 ←
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  _root_.Itasca.signature.BlockType (core.convert.FromSame
+                  _root_.Itasca.error.OpError) residual
+              ok (r3, { core := ois })
+          | code.LabelKind.Loop =>
+            let rt ← signature.BlockType.params bt
+            let (r2, ois) ←
+              multi_value.pop_results { st.core with pos := «end» } env rt
+            let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+            match cf2 with
+            | core.ops.control_flow.ControlFlow.Continue _ =>
+              let st1 ←
+                multi_value.push_frame { core := ois } code.LabelKind.Loop bt
+              let (r3, ois1) ← multi_value.push_results st1.core env rt
+              let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
+              match cf3 with
+              | core.ops.control_flow.ControlFlow.Continue _ =>
+                ok (core.result.Result.Ok bt, { core := ois1 })
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                let r4 ←
+                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                    _root_.Itasca.signature.BlockType (core.convert.FromSame
+                    _root_.Itasca.error.OpError) residual
+                ok (r4, { core := ois1 })
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              let r3 ←
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  _root_.Itasca.signature.BlockType (core.convert.FromSame
+                  _root_.Itasca.error.OpError) residual
+              ok (r3, { core := ois })
+          | code.LabelKind.Then =>
+            let (r2, ois) ←
+              code.pop_with_type { st.core with pos := «end» }
+                types.ValueType.I32
+            let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+            match cf2 with
+            | core.ops.control_flow.ControlFlow.Continue _ =>
+              let rt ← signature.BlockType.params bt
+              let (r3, ois1) ← multi_value.pop_results ois env rt
+              let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
+              match cf3 with
+              | core.ops.control_flow.ControlFlow.Continue _ =>
+                let st1 ←
+                  multi_value.push_frame { core := ois1 } code.LabelKind.Then
+                    bt
+                let (r4, ois2) ← multi_value.push_results st1.core env rt
+                let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
+                match cf4 with
+                | core.ops.control_flow.ControlFlow.Continue _ =>
+                  ok (core.result.Result.Ok bt, { core := ois2 })
+                | core.ops.control_flow.ControlFlow.Break residual =>
+                  let r5 ←
+                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                      _root_.Itasca.signature.BlockType (core.convert.FromSame
+                      _root_.Itasca.error.OpError) residual
+                  ok (r5, { core := ois2 })
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                let r4 ←
+                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                    _root_.Itasca.signature.BlockType (core.convert.FromSame
+                    _root_.Itasca.error.OpError) residual
+                ok (r4, { core := ois1 })
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              let r3 ←
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  _root_.Itasca.signature.BlockType (core.convert.FromSame
+                  _root_.Itasca.error.OpError) residual
+              ok (r3, { core := ois })
+          | code.LabelKind.Else =>
+            let rt ← signature.BlockType.params bt
+            let (r2, ois) ←
+              multi_value.pop_results { st.core with pos := «end» } env rt
+            let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+            match cf2 with
+            | core.ops.control_flow.ControlFlow.Continue _ =>
+              let st1 ←
+                multi_value.push_frame { core := ois } code.LabelKind.Else bt
+              let (r3, ois1) ← multi_value.push_results st1.core env rt
+              let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
+              match cf3 with
+              | core.ops.control_flow.ControlFlow.Continue _ =>
+                ok (core.result.Result.Ok bt, { core := ois1 })
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                let r4 ←
+                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                    _root_.Itasca.signature.BlockType (core.convert.FromSame
+                    _root_.Itasca.error.OpError) residual
+                ok (r4, { core := ois1 })
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              let r3 ←
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  _root_.Itasca.signature.BlockType (core.convert.FromSame
+                  _root_.Itasca.error.OpError) residual
+              ok (r3, { core := ois })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r2 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              _root_.Itasca.signature.BlockType (core.convert.FromSame
+              _root_.Itasca.error.OpError) residual
+          ok (r2, { core := { st.core with pos := «end» } })
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    let r1 ←
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+        _root_.Itasca.signature.BlockType (core.convert.FromSame
+        _root_.Itasca.error.OpError) residual
+    ok (r1, st)
+
+/-- [itasca::multi_value::step_profile]:
+    Source: 'src/multi_value.rs', lines 410:0-484:1 -/
+def multi_value.step_profile
+  {V : Type} (codeOpVisitorInst : code.OpVisitor V)
+  (st : _root_.Itasca.multi_value.State) (data : Slice Std.U8)
+  (env : _root_.Itasca.module.Env) (ctx : _root_.Itasca.code.Context)
+  (type_index : Std.U32) (profile : _root_.Itasca.ValidationProfile)
+  (op : Std.U8) (visitor : V) :
+  Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
+    _root_.Itasca.multi_value.State × V)
+  := do
+  match profile with
+  | ValidationProfile.Wasm1 =>
+    let (r, ois, visitor1) ←
+      code.step codeOpVisitorInst st.core data env ctx op visitor
+    ok (r, { core := ois }, visitor1)
+  | ValidationProfile.MultiValue =>
+    match op with
+    | 2#uscalar =>
+      let (r, st1) ← multi_value.enter_info st data env code.LabelKind.Block
+      let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+      match cf with
+      | core.ops.control_flow.ControlFlow.Continue val =>
+        let (r1, visitor1) ← codeOpVisitorInst.on_block visitor st1.core val
+        let r2 ← code.visit r1
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          ok (core.result.Result.Ok (), st1, visitor1)
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r3 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+          ok (r3, st1, visitor1)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r1 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+        ok (r1, st1, visitor)
+    | 3#uscalar =>
+      let (r, st1) ← multi_value.enter_info st data env code.LabelKind.Loop
+      let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+      match cf with
+      | core.ops.control_flow.ControlFlow.Continue val =>
+        let (r1, visitor1) ← codeOpVisitorInst.on_loop visitor st1.core val
+        let r2 ← code.visit r1
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          ok (core.result.Result.Ok (), st1, visitor1)
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r3 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+          ok (r3, st1, visitor1)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r1 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+        ok (r1, st1, visitor)
+    | 4#uscalar =>
+      let (r, st1) ← multi_value.enter_info st data env code.LabelKind.Then
+      let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+      match cf with
+      | core.ops.control_flow.ControlFlow.Continue val =>
+        let (r1, visitor1) ← codeOpVisitorInst.on_if visitor st1.core val
+        let r2 ← code.visit r1
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          ok (core.result.Result.Ok (), st1, visitor1)
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r3 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+          ok (r3, st1, visitor1)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r1 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+        ok (r1, st1, visitor)
+    | 5#uscalar =>
+      let (r, st1) ← multi_value.end_frame_info st env true
+      let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+      match cf with
+      | core.ops.control_flow.ControlFlow.Continue val =>
+        let (_, bt) := val
+        let (r1, visitor1) ← codeOpVisitorInst.on_else visitor st1.core bt
+        let r2 ← code.visit r1
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          ok (core.result.Result.Ok (), st1, visitor1)
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r3 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+          ok (r3, st1, visitor1)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r1 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+        ok (r1, st1, visitor)
+    | 11#uscalar =>
+      let (r, st1) ← multi_value.end_frame_info st env false
+      let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+      match cf with
+      | core.ops.control_flow.ControlFlow.Continue val =>
+        let (kind, bt) := val
+        let (r1, visitor1) ←
+          codeOpVisitorInst.on_end visitor st1.core kind bt
+        let r2 ← code.visit r1
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          ok (core.result.Result.Ok (), st1, visitor1)
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r3 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+          ok (r3, st1, visitor1)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r1 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+        ok (r1, st1, visitor)
+    | 12#uscalar =>
+      let (r, st1) ← multi_value.branch_info st data env false
+      let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+      match cf with
+      | core.ops.control_flow.ControlFlow.Continue val =>
+        let (depth, ts) := val
+        let (r1, visitor1) ←
+          codeOpVisitorInst.on_br visitor st1.core depth ts
+        let r2 ← code.visit r1
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          ok (core.result.Result.Ok (), st1, visitor1)
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r3 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+          ok (r3, st1, visitor1)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r1 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+        ok (r1, st1, visitor)
+    | 13#uscalar =>
+      let (r, st1) ← multi_value.branch_info st data env true
+      let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+      match cf with
+      | core.ops.control_flow.ControlFlow.Continue val =>
+        let (depth, ts) := val
+        let (r1, visitor1) ←
+          codeOpVisitorInst.on_br_if visitor st1.core depth ts
+        let r2 ← code.visit r1
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          ok (core.result.Result.Ok (), st1, visitor1)
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r3 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+          ok (r3, st1, visitor1)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r1 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+        ok (r1, st1, visitor)
+    | 14#uscalar =>
+      let (r, st1, visitor1) ←
+        multi_value.branch_table_with codeOpVisitorInst st data env visitor
+      let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+      match cf with
+      | core.ops.control_flow.ControlFlow.Continue _ =>
+        ok (core.result.Result.Ok (), st1, visitor1)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r1 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+        ok (r1, st1, visitor1)
+    | 15#uscalar =>
+      let (r, ois) ←
+        multi_value.pop_results st.core env (signature.ResultType.Type
+          type_index signature.TypePart.Results)
+      let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+      match cf with
+      | core.ops.control_flow.ControlFlow.Continue _ =>
+        let ois1 ← code.mark_unreachable ois
+        let (r1, visitor1) ← codeOpVisitorInst.on_return visitor ois1
+        let r2 ← code.visit r1
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          ok (core.result.Result.Ok (), { core := ois1 }, visitor1)
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r3 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+          ok (r3, { core := ois1 }, visitor1)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r1 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+        ok (r1, { core := ois }, visitor)
+    | 16#uscalar =>
+      let (r, st1) ← multi_value.call_info st data env false
+      let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+      match cf with
+      | core.ops.control_flow.ControlFlow.Continue val =>
+        let (r1, visitor1) ← codeOpVisitorInst.on_call visitor st1.core val
+        let r2 ← code.visit r1
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          ok (core.result.Result.Ok (), st1, visitor1)
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r3 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+          ok (r3, st1, visitor1)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r1 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+        ok (r1, st1, visitor)
+    | 17#uscalar =>
+      let (r, st1) ← multi_value.call_info st data env true
+      let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+      match cf with
+      | core.ops.control_flow.ControlFlow.Continue val =>
+        let (r1, visitor1) ←
+          codeOpVisitorInst.on_call_indirect visitor st1.core val
+        let r2 ← code.visit r1
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          ok (core.result.Result.Ok (), st1, visitor1)
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r3 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+          ok (r3, st1, visitor1)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r1 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+        ok (r1, st1, visitor)
+    | _ =>
+      let i := alloc.vec.Vec.len st.core.vals
+      if i = core.num.Usize.MAX
+      then ok (core.result.Result.Err error.OpError.StackTooLarge, st, visitor)
+      else
+        let (r, ois, visitor1) ←
+          code.step codeOpVisitorInst st.core data env ctx op visitor
+        let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+        match cf with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          ok (core.result.Result.Ok (), { core := ois }, visitor1)
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r1 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+          ok (r1, { core := ois }, visitor1)
+
+/-- [itasca::multi_value::body_loop]: loop body 0:
+    Source: 'src/multi_value.rs', lines 396:4-406:5 -/
+@[rust_loop_body]
+def multi_value.body_loop_loop.body
+  {V : Type} (codeOpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
+  (env : _root_.Itasca.module.Env) (ctx : _root_.Itasca.code.Context)
+  (type_index : Std.U32) (profile : _root_.Itasca.ValidationProfile)
+  (visitor : V) (st : _root_.Itasca.multi_value.State) :
+  Result (ControlFlow (V × _root_.Itasca.multi_value.State)
+    ((core.result.Result Unit _root_.Itasca.error.OpError) × V))
+  := do
+  let b ← alloc.vec.Vec.is_empty Global st.core.ctrls
+  if b
+  then
+    let i := Slice.len data
+    if st.core.pos != i
+    then
+      ok (done (core.result.Result.Err error.OpError.TrailingBytes, visitor))
+    else ok (done (core.result.Result.Ok (), visitor))
+  else
+    let r ← reader.read_byte data st.core.pos
+    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      let (op, «end») := val
+      let (r1, st1, visitor1) ←
+        multi_value.step_profile codeOpVisitorInst
+          { core := { st.core with pos := «end» } } data env ctx type_index
+          profile op visitor
+      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+      match cf1 with
+      | core.ops.control_flow.ControlFlow.Continue _ =>
+        ok (cont (visitor1, st1))
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r2 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+        ok (done (r2, visitor1))
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r1 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+      ok (done (r1, visitor))
+
+/-- [itasca::multi_value::body_loop]: loop 0:
+    Source: 'src/multi_value.rs', lines 396:4-406:5 -/
+@[rust_loop]
+def multi_value.body_loop_loop
+  {V : Type} (codeOpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
+  (env : _root_.Itasca.module.Env) (ctx : _root_.Itasca.code.Context)
+  (type_index : Std.U32) (profile : _root_.Itasca.ValidationProfile)
+  (visitor : V) (st : _root_.Itasca.multi_value.State) :
+  Result ((core.result.Result Unit _root_.Itasca.error.OpError) × V)
+  := do
+  loop
+    (fun (visitor1, st1) => multi_value.body_loop_loop.body codeOpVisitorInst
+      data env ctx type_index profile visitor1 st1)
+    (visitor, st)
+
+/-- [itasca::multi_value::body_loop]:
+    Source: 'src/multi_value.rs', lines 387:0-407:1 -/
+@[reducible]
+def multi_value.body_loop
+  {V : Type} (codeOpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
+  (env : _root_.Itasca.module.Env) (ctx : _root_.Itasca.code.Context)
+  (type_index : Std.U32) (profile : _root_.Itasca.ValidationProfile)
+  (visitor : V) (st : _root_.Itasca.multi_value.State) :
+  Result ((core.result.Result Unit _root_.Itasca.error.OpError) × V)
+  := do
+  multi_value.body_loop_loop codeOpVisitorInst data env ctx type_index profile
+    visitor st
+
+/-- [itasca::multi_value::initial_state]:
+    Source: 'src/multi_value.rs', lines 357:0-384:1 -/
+def multi_value.initial_state
+  (env : _root_.Itasca.module.Env) (ctx : _root_.Itasca.code.Context)
+  (type_index : Std.U32) (profile : _root_.Itasca.ValidationProfile) :
+  Result (core.result.Result _root_.Itasca.multi_value.State
+    _root_.Itasca.error.OpError)
+  := do
+  match profile with
+  | ValidationProfile.Wasm1 =>
+    let s := alloc.vec.Vec.deref ctx.results
+    let ois ← code.start_function s
+    ok (core.result.Result.Ok { core := ois })
+  | ValidationProfile.MultiValue =>
+    let i ← lift (UScalar.cast .Usize type_index)
+    let i1 := alloc.vec.Vec.len env.types
+    if i >= i1
+    then ok (core.result.Result.Err error.OpError.UnknownType)
+    else
+      let ft ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          _root_.Itasca.types.FuncType) env.types i
+      let r ← multi_value.check_func_type ft
+      let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+      match cf with
+      | core.ops.control_flow.ControlFlow.Continue _ =>
+        let st ←
+          multi_value.push_frame
+            {
+              core :=
+                {
+                  vals := (alloc.vec.Vec.new _root_.Itasca.code.StackType),
+                  ctrls := (alloc.vec.Vec.new _root_.Itasca.code.Ctrl),
+                  pos := 0#usize
+                }
+            } code.LabelKind.Body (signature.BlockType.TypeIndex type_index)
+        ok (core.result.Result.Ok st)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          _root_.Itasca.multi_value.State (core.convert.FromSame
+          _root_.Itasca.error.OpError) residual
+
 /-- [itasca::limits::MAX_FUNCTION_BYTES]
     Source: 'src/limits.rs', lines 33:0-33:48
     Visibility: public -/
 @[global_simps, irreducible]
 def limits.MAX_FUNCTION_BYTES : Std.Usize := 7654321#usize
 
-/-- [itasca::code::validate_body_with]: loop body 0:
-    Source: 'src/code.rs', lines 1427:4-1437:5
-    Visibility: public -/
-@[rust_loop_body]
-def code.validate_body_with_loop.body
-  {V : Type} (OpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
-  (env : _root_.Itasca.module.Env)
-  (v : alloc.vec.Vec _root_.Itasca.types.ValueType)
-  (v1 : alloc.vec.Vec _root_.Itasca.types.ValueType) (v2 : V)
-  (st : _root_.Itasca.code.OpIterState) :
-  Result (ControlFlow (V × _root_.Itasca.code.OpIterState)
-    ((core.result.Result Unit _root_.Itasca.error.OpError) × V))
+/-- [itasca::multi_value::validate_body_with_profile]:
+    Source: 'src/multi_value.rs', lines 487:0-500:1 -/
+def multi_value.validate_body_with_profile
+  {V : Type} (codeOpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
+  (env : _root_.Itasca.module.Env) (ctx : _root_.Itasca.code.Context)
+  (type_index : Std.U32) (profile : _root_.Itasca.ValidationProfile)
+  (visitor : V) :
+  Result ((core.result.Result Unit _root_.Itasca.error.OpError) × V)
   := do
-  let b ← code.control_stack_empty st
-  if b
-  then
-    let i := Slice.len data
-    if st.pos = i
-    then ok (done (core.result.Result.Ok (), v2))
-    else ok (done (core.result.Result.Err error.OpError.TrailingBytes, v2))
+  let i := Slice.len data
+  if i > limits.MAX_FUNCTION_BYTES
+  then ok (core.result.Result.Err error.OpError.BodyTooLarge, visitor)
   else
-    let (r, st1) ← code.read_op st data
+    let r ← multi_value.initial_state env ctx type_index profile
     let cf ← core.result.Result.Insts.CoreOpsTry.branch r
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
-      let (r1, st2, v3) ←
-        code.step OpVisitorInst st1 data env { locals := v, results := v1 } val
-          v2
-      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-      match cf1 with
-      | core.ops.control_flow.ControlFlow.Continue _ => ok (cont (v3, st2))
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r2 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-        ok (done (r2, v3))
+      multi_value.body_loop codeOpVisitorInst data env ctx type_index profile
+        visitor val
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r1 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
           Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-      ok (done (r1, v2))
-
-/-- [itasca::code::validate_body_with]: loop 0:
-    Source: 'src/code.rs', lines 1427:4-1437:5
-    Visibility: public -/
-@[rust_loop]
-def code.validate_body_with_loop
-  {V : Type} (OpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
-  (env : _root_.Itasca.module.Env)
-  (v : alloc.vec.Vec _root_.Itasca.types.ValueType)
-  (v1 : alloc.vec.Vec _root_.Itasca.types.ValueType) (v2 : V)
-  (st : _root_.Itasca.code.OpIterState) :
-  Result ((core.result.Result Unit _root_.Itasca.error.OpError) × V)
-  := do
-  loop
-    (fun (v3, st1) => code.validate_body_with_loop.body OpVisitorInst data env
-      v v1 v3 st1)
-    (v2, st)
+      ok (r1, visitor)
 
 /-- [itasca::code::validate_body_with]:
-    Source: 'src/code.rs', lines 1417:0-1438:1
+    Source: 'src/code.rs', lines 1431:0-1445:1
     Visibility: public -/
 def code.validate_body_with
   {V : Type} (OpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
@@ -4440,17 +6730,11 @@ def code.validate_body_with
   (v : V) :
   Result ((core.result.Result Unit _root_.Itasca.error.OpError) × V)
   := do
-  let i := Slice.len data
-  if i > limits.MAX_FUNCTION_BYTES
-  then ok (core.result.Result.Err error.OpError.BodyTooLarge, v)
-  else
-    let s := alloc.vec.Vec.deref ctx.results
-    let st ← code.start_function s
-    code.validate_body_with_loop OpVisitorInst data env ctx.locals ctx.results
-      v st
+  multi_value.validate_body_with_profile OpVisitorInst data env ctx 0#u32
+    ValidationProfile.Wasm1 v
 
 /-- [itasca::code::OpVisitor::on_f64_const]:
-    Source: 'src/code.rs', lines 1819:4-1821:5
+    Source: 'src/code.rs', lines 1838:4-1840:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_const.default
@@ -4461,7 +6745,7 @@ def code.OpVisitor.on_f64_const.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_const]:
-    Source: 'src/code.rs', lines 1815:4-1817:5
+    Source: 'src/code.rs', lines 1834:4-1836:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_const.default
@@ -4472,7 +6756,7 @@ def code.OpVisitor.on_f32_const.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_const]:
-    Source: 'src/code.rs', lines 1809:4-1811:5
+    Source: 'src/code.rs', lines 1828:4-1830:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_const.default
@@ -4483,7 +6767,7 @@ def code.OpVisitor.on_i64_const.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_const]:
-    Source: 'src/code.rs', lines 1805:4-1807:5
+    Source: 'src/code.rs', lines 1824:4-1826:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_const.default
@@ -4494,7 +6778,7 @@ def code.OpVisitor.on_i32_const.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_memory_grow]:
-    Source: 'src/code.rs', lines 1799:4-1801:5
+    Source: 'src/code.rs', lines 1818:4-1820:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_memory_grow.default
@@ -4504,7 +6788,7 @@ def code.OpVisitor.on_memory_grow.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_memory_size]:
-    Source: 'src/code.rs', lines 1795:4-1797:5
+    Source: 'src/code.rs', lines 1814:4-1816:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_memory_size.default
@@ -4514,7 +6798,7 @@ def code.OpVisitor.on_memory_size.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_global_set]:
-    Source: 'src/code.rs', lines 1789:4-1791:5
+    Source: 'src/code.rs', lines 1808:4-1810:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_global_set.default
@@ -4525,7 +6809,7 @@ def code.OpVisitor.on_global_set.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_global_get]:
-    Source: 'src/code.rs', lines 1785:4-1787:5
+    Source: 'src/code.rs', lines 1804:4-1806:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_global_get.default
@@ -4536,7 +6820,7 @@ def code.OpVisitor.on_global_get.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_local_tee]:
-    Source: 'src/code.rs', lines 1781:4-1783:5
+    Source: 'src/code.rs', lines 1800:4-1802:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_local_tee.default
@@ -4547,7 +6831,7 @@ def code.OpVisitor.on_local_tee.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_local_set]:
-    Source: 'src/code.rs', lines 1777:4-1779:5
+    Source: 'src/code.rs', lines 1796:4-1798:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_local_set.default
@@ -4558,7 +6842,7 @@ def code.OpVisitor.on_local_set.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_local_get]:
-    Source: 'src/code.rs', lines 1773:4-1775:5
+    Source: 'src/code.rs', lines 1792:4-1794:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_local_get.default
@@ -4569,7 +6853,7 @@ def code.OpVisitor.on_local_get.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_select]:
-    Source: 'src/code.rs', lines 1767:4-1769:5
+    Source: 'src/code.rs', lines 1786:4-1788:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_select.default
@@ -4580,7 +6864,7 @@ def code.OpVisitor.on_select.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_drop]:
-    Source: 'src/code.rs', lines 1761:4-1763:5
+    Source: 'src/code.rs', lines 1780:4-1782:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_drop.default
@@ -4591,7 +6875,7 @@ def code.OpVisitor.on_drop.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_call_indirect]:
-    Source: 'src/code.rs', lines 1754:4-1756:5
+    Source: 'src/code.rs', lines 1773:4-1775:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_call_indirect.default
@@ -4602,7 +6886,7 @@ def code.OpVisitor.on_call_indirect.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_call]:
-    Source: 'src/code.rs', lines 1750:4-1752:5
+    Source: 'src/code.rs', lines 1769:4-1771:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_call.default
@@ -4613,7 +6897,7 @@ def code.OpVisitor.on_call.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_return]:
-    Source: 'src/code.rs', lines 1746:4-1748:5
+    Source: 'src/code.rs', lines 1765:4-1767:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_return.default
@@ -4623,18 +6907,18 @@ def code.OpVisitor.on_return.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_br_table]:
-    Source: 'src/code.rs', lines 1737:4-1744:5
+    Source: 'src/code.rs', lines 1756:4-1763:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_br_table.default
   {Self : Type} (self : Self) (_st : _root_.Itasca.code.OpIterState)
-  (_default : Std.U32) (_common : _root_.Itasca.code.BlockType) :
+  (_default : Std.U32) (_default_types : _root_.Itasca.signature.ResultType) :
   Result ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
   := do
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_br_table_label]:
-    Source: 'src/code.rs', lines 1731:4-1733:5
+    Source: 'src/code.rs', lines 1749:4-1751:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_br_table_label.default
@@ -4645,84 +6929,85 @@ def code.OpVisitor.on_br_table_label.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_br_if]:
-    Source: 'src/code.rs', lines 1723:4-1725:5
+    Source: 'src/code.rs', lines 1736:4-1743:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_br_if.default
   {Self : Type} (self : Self) (_st : _root_.Itasca.code.OpIterState)
-  (_depth : Std.U32) (_bt : _root_.Itasca.code.BlockType) :
+  (_depth : Std.U32) (_types : _root_.Itasca.signature.ResultType) :
   Result ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
   := do
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_br]:
-    Source: 'src/code.rs', lines 1719:4-1721:5
+    Source: 'src/code.rs', lines 1727:4-1734:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_br.default
   {Self : Type} (self : Self) (_st : _root_.Itasca.code.OpIterState)
-  (_depth : Std.U32) (_bt : _root_.Itasca.code.BlockType) :
+  (_depth : Std.U32) (_types : _root_.Itasca.signature.ResultType) :
   Result ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
   := do
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_end]:
-    Source: 'src/code.rs', lines 1709:4-1716:5
+    Source: 'src/code.rs', lines 1716:4-1723:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_end.default
   {Self : Type} (self : Self) (_st : _root_.Itasca.code.OpIterState)
-  (_kind : _root_.Itasca.code.LabelKind) (_bt : _root_.Itasca.code.BlockType) :
+  (_kind : _root_.Itasca.code.LabelKind)
+  (_bt : _root_.Itasca.signature.BlockType) :
   Result ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
   := do
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_else]:
-    Source: 'src/code.rs', lines 1702:4-1704:5
+    Source: 'src/code.rs', lines 1709:4-1711:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_else.default
   {Self : Type} (self : Self) (_st : _root_.Itasca.code.OpIterState)
-  (_bt : _root_.Itasca.code.BlockType) :
+  (_bt : _root_.Itasca.signature.BlockType) :
   Result ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
   := do
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_if]:
-    Source: 'src/code.rs', lines 1697:4-1699:5
+    Source: 'src/code.rs', lines 1704:4-1706:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_if.default
   {Self : Type} (self : Self) (_st : _root_.Itasca.code.OpIterState)
-  (_bt : _root_.Itasca.code.BlockType) :
+  (_bt : _root_.Itasca.signature.BlockType) :
   Result ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
   := do
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_loop]:
-    Source: 'src/code.rs', lines 1693:4-1695:5
+    Source: 'src/code.rs', lines 1700:4-1702:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_loop.default
   {Self : Type} (self : Self) (_st : _root_.Itasca.code.OpIterState)
-  (_bt : _root_.Itasca.code.BlockType) :
+  (_bt : _root_.Itasca.signature.BlockType) :
   Result ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
   := do
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_block]:
-    Source: 'src/code.rs', lines 1689:4-1691:5
+    Source: 'src/code.rs', lines 1696:4-1698:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_block.default
   {Self : Type} (self : Self) (_st : _root_.Itasca.code.OpIterState)
-  (_bt : _root_.Itasca.code.BlockType) :
+  (_bt : _root_.Itasca.signature.BlockType) :
   Result ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
   := do
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_nop]:
-    Source: 'src/code.rs', lines 1685:4-1687:5
+    Source: 'src/code.rs', lines 1692:4-1694:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_nop.default
@@ -4732,7 +7017,7 @@ def code.OpVisitor.on_nop.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_unreachable]:
-    Source: 'src/code.rs', lines 1681:4-1683:5
+    Source: 'src/code.rs', lines 1688:4-1690:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_unreachable.default
@@ -4742,7 +7027,7 @@ def code.OpVisitor.on_unreachable.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_function_start]:
-    Source: 'src/code.rs', lines 1669:4-1677:5
+    Source: 'src/code.rs', lines 1676:4-1684:5
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_function_start.default
@@ -4753,7 +7038,7 @@ def code.OpVisitor.on_function_start.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_store32]:
-    Source: 'src/code.rs', lines 1632:10-1634:9
+    Source: 'src/code.rs', lines 1639:10-1641:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_store32.default
@@ -4764,7 +7049,7 @@ def code.OpVisitor.on_i64_store32.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_store16]:
-    Source: 'src/code.rs', lines 1632:10-1634:9
+    Source: 'src/code.rs', lines 1639:10-1641:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_store16.default
@@ -4775,7 +7060,7 @@ def code.OpVisitor.on_i64_store16.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_store8]:
-    Source: 'src/code.rs', lines 1632:10-1634:9
+    Source: 'src/code.rs', lines 1639:10-1641:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_store8.default
@@ -4786,7 +7071,7 @@ def code.OpVisitor.on_i64_store8.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_store16]:
-    Source: 'src/code.rs', lines 1632:10-1634:9
+    Source: 'src/code.rs', lines 1639:10-1641:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_store16.default
@@ -4797,7 +7082,7 @@ def code.OpVisitor.on_i32_store16.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_store8]:
-    Source: 'src/code.rs', lines 1632:10-1634:9
+    Source: 'src/code.rs', lines 1639:10-1641:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_store8.default
@@ -4808,7 +7093,7 @@ def code.OpVisitor.on_i32_store8.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_store]:
-    Source: 'src/code.rs', lines 1632:10-1634:9
+    Source: 'src/code.rs', lines 1639:10-1641:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_store.default
@@ -4819,7 +7104,7 @@ def code.OpVisitor.on_f64_store.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_store]:
-    Source: 'src/code.rs', lines 1632:10-1634:9
+    Source: 'src/code.rs', lines 1639:10-1641:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_store.default
@@ -4830,7 +7115,7 @@ def code.OpVisitor.on_f32_store.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_store]:
-    Source: 'src/code.rs', lines 1632:10-1634:9
+    Source: 'src/code.rs', lines 1639:10-1641:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_store.default
@@ -4841,7 +7126,7 @@ def code.OpVisitor.on_i64_store.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_store]:
-    Source: 'src/code.rs', lines 1632:10-1634:9
+    Source: 'src/code.rs', lines 1639:10-1641:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_store.default
@@ -4852,7 +7137,7 @@ def code.OpVisitor.on_i32_store.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_load32_u]:
-    Source: 'src/code.rs', lines 1632:10-1634:9
+    Source: 'src/code.rs', lines 1639:10-1641:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_load32_u.default
@@ -4863,7 +7148,7 @@ def code.OpVisitor.on_i64_load32_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_load32_s]:
-    Source: 'src/code.rs', lines 1632:10-1634:9
+    Source: 'src/code.rs', lines 1639:10-1641:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_load32_s.default
@@ -4874,7 +7159,7 @@ def code.OpVisitor.on_i64_load32_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_load16_u]:
-    Source: 'src/code.rs', lines 1632:10-1634:9
+    Source: 'src/code.rs', lines 1639:10-1641:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_load16_u.default
@@ -4885,7 +7170,7 @@ def code.OpVisitor.on_i64_load16_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_load16_s]:
-    Source: 'src/code.rs', lines 1632:10-1634:9
+    Source: 'src/code.rs', lines 1639:10-1641:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_load16_s.default
@@ -4896,7 +7181,7 @@ def code.OpVisitor.on_i64_load16_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_load8_u]:
-    Source: 'src/code.rs', lines 1632:10-1634:9
+    Source: 'src/code.rs', lines 1639:10-1641:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_load8_u.default
@@ -4907,7 +7192,7 @@ def code.OpVisitor.on_i64_load8_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_load8_s]:
-    Source: 'src/code.rs', lines 1632:10-1634:9
+    Source: 'src/code.rs', lines 1639:10-1641:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_load8_s.default
@@ -4918,7 +7203,7 @@ def code.OpVisitor.on_i64_load8_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_load16_u]:
-    Source: 'src/code.rs', lines 1632:10-1634:9
+    Source: 'src/code.rs', lines 1639:10-1641:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_load16_u.default
@@ -4929,7 +7214,7 @@ def code.OpVisitor.on_i32_load16_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_load16_s]:
-    Source: 'src/code.rs', lines 1632:10-1634:9
+    Source: 'src/code.rs', lines 1639:10-1641:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_load16_s.default
@@ -4940,7 +7225,7 @@ def code.OpVisitor.on_i32_load16_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_load8_u]:
-    Source: 'src/code.rs', lines 1632:10-1634:9
+    Source: 'src/code.rs', lines 1639:10-1641:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_load8_u.default
@@ -4951,7 +7236,7 @@ def code.OpVisitor.on_i32_load8_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_load8_s]:
-    Source: 'src/code.rs', lines 1632:10-1634:9
+    Source: 'src/code.rs', lines 1639:10-1641:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_load8_s.default
@@ -4962,7 +7247,7 @@ def code.OpVisitor.on_i32_load8_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_load]:
-    Source: 'src/code.rs', lines 1632:10-1634:9
+    Source: 'src/code.rs', lines 1639:10-1641:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_load.default
@@ -4973,7 +7258,7 @@ def code.OpVisitor.on_f64_load.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_load]:
-    Source: 'src/code.rs', lines 1632:10-1634:9
+    Source: 'src/code.rs', lines 1639:10-1641:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_load.default
@@ -4984,7 +7269,7 @@ def code.OpVisitor.on_f32_load.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_load]:
-    Source: 'src/code.rs', lines 1632:10-1634:9
+    Source: 'src/code.rs', lines 1639:10-1641:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_load.default
@@ -4995,7 +7280,7 @@ def code.OpVisitor.on_i64_load.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_load]:
-    Source: 'src/code.rs', lines 1632:10-1634:9
+    Source: 'src/code.rs', lines 1639:10-1641:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_load.default
@@ -5006,7 +7291,7 @@ def code.OpVisitor.on_i32_load.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_reinterpret_i64]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_reinterpret_i64.default
@@ -5016,7 +7301,7 @@ def code.OpVisitor.on_f64_reinterpret_i64.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_reinterpret_i32]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_reinterpret_i32.default
@@ -5026,7 +7311,7 @@ def code.OpVisitor.on_f32_reinterpret_i32.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_reinterpret_f64]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_reinterpret_f64.default
@@ -5036,7 +7321,7 @@ def code.OpVisitor.on_i64_reinterpret_f64.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_reinterpret_f32]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_reinterpret_f32.default
@@ -5046,7 +7331,7 @@ def code.OpVisitor.on_i32_reinterpret_f32.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_promote_f32]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_promote_f32.default
@@ -5056,7 +7341,7 @@ def code.OpVisitor.on_f64_promote_f32.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_convert_i64_u]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_convert_i64_u.default
@@ -5066,7 +7351,7 @@ def code.OpVisitor.on_f64_convert_i64_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_convert_i64_s]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_convert_i64_s.default
@@ -5076,7 +7361,7 @@ def code.OpVisitor.on_f64_convert_i64_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_convert_i32_u]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_convert_i32_u.default
@@ -5086,7 +7371,7 @@ def code.OpVisitor.on_f64_convert_i32_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_convert_i32_s]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_convert_i32_s.default
@@ -5096,7 +7381,7 @@ def code.OpVisitor.on_f64_convert_i32_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_demote_f64]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_demote_f64.default
@@ -5106,7 +7391,7 @@ def code.OpVisitor.on_f32_demote_f64.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_convert_i64_u]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_convert_i64_u.default
@@ -5116,7 +7401,7 @@ def code.OpVisitor.on_f32_convert_i64_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_convert_i64_s]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_convert_i64_s.default
@@ -5126,7 +7411,7 @@ def code.OpVisitor.on_f32_convert_i64_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_convert_i32_u]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_convert_i32_u.default
@@ -5136,7 +7421,7 @@ def code.OpVisitor.on_f32_convert_i32_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_convert_i32_s]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_convert_i32_s.default
@@ -5146,7 +7431,7 @@ def code.OpVisitor.on_f32_convert_i32_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_trunc_f64_u]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_trunc_f64_u.default
@@ -5156,7 +7441,7 @@ def code.OpVisitor.on_i64_trunc_f64_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_trunc_f64_s]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_trunc_f64_s.default
@@ -5166,7 +7451,7 @@ def code.OpVisitor.on_i64_trunc_f64_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_trunc_f32_u]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_trunc_f32_u.default
@@ -5176,7 +7461,7 @@ def code.OpVisitor.on_i64_trunc_f32_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_trunc_f32_s]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_trunc_f32_s.default
@@ -5186,7 +7471,7 @@ def code.OpVisitor.on_i64_trunc_f32_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_extend_i32_u]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_extend_i32_u.default
@@ -5196,7 +7481,7 @@ def code.OpVisitor.on_i64_extend_i32_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_extend_i32_s]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_extend_i32_s.default
@@ -5206,7 +7491,7 @@ def code.OpVisitor.on_i64_extend_i32_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_trunc_f64_u]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_trunc_f64_u.default
@@ -5216,7 +7501,7 @@ def code.OpVisitor.on_i32_trunc_f64_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_trunc_f64_s]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_trunc_f64_s.default
@@ -5226,7 +7511,7 @@ def code.OpVisitor.on_i32_trunc_f64_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_trunc_f32_u]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_trunc_f32_u.default
@@ -5236,7 +7521,7 @@ def code.OpVisitor.on_i32_trunc_f32_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_trunc_f32_s]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_trunc_f32_s.default
@@ -5246,7 +7531,7 @@ def code.OpVisitor.on_i32_trunc_f32_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_wrap_i64]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_wrap_i64.default
@@ -5256,7 +7541,7 @@ def code.OpVisitor.on_i32_wrap_i64.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_sqrt]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_sqrt.default
@@ -5266,7 +7551,7 @@ def code.OpVisitor.on_f64_sqrt.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_nearest]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_nearest.default
@@ -5276,7 +7561,7 @@ def code.OpVisitor.on_f64_nearest.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_trunc]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_trunc.default
@@ -5286,7 +7571,7 @@ def code.OpVisitor.on_f64_trunc.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_floor]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_floor.default
@@ -5296,7 +7581,7 @@ def code.OpVisitor.on_f64_floor.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_ceil]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_ceil.default
@@ -5306,7 +7591,7 @@ def code.OpVisitor.on_f64_ceil.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_neg]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_neg.default
@@ -5316,7 +7601,7 @@ def code.OpVisitor.on_f64_neg.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_abs]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_abs.default
@@ -5326,7 +7611,7 @@ def code.OpVisitor.on_f64_abs.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_sqrt]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_sqrt.default
@@ -5336,7 +7621,7 @@ def code.OpVisitor.on_f32_sqrt.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_nearest]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_nearest.default
@@ -5346,7 +7631,7 @@ def code.OpVisitor.on_f32_nearest.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_trunc]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_trunc.default
@@ -5356,7 +7641,7 @@ def code.OpVisitor.on_f32_trunc.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_floor]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_floor.default
@@ -5366,7 +7651,7 @@ def code.OpVisitor.on_f32_floor.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_ceil]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_ceil.default
@@ -5376,7 +7661,7 @@ def code.OpVisitor.on_f32_ceil.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_neg]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_neg.default
@@ -5386,7 +7671,7 @@ def code.OpVisitor.on_f32_neg.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_abs]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_abs.default
@@ -5396,7 +7681,7 @@ def code.OpVisitor.on_f32_abs.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_popcnt]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_popcnt.default
@@ -5406,7 +7691,7 @@ def code.OpVisitor.on_i64_popcnt.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_ctz]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_ctz.default
@@ -5416,7 +7701,7 @@ def code.OpVisitor.on_i64_ctz.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_clz]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_clz.default
@@ -5426,7 +7711,7 @@ def code.OpVisitor.on_i64_clz.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_add]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_add.default
@@ -5436,7 +7721,7 @@ def code.OpVisitor.on_i32_add.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_popcnt]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_popcnt.default
@@ -5446,7 +7731,7 @@ def code.OpVisitor.on_i32_popcnt.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_ctz]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_ctz.default
@@ -5456,7 +7741,7 @@ def code.OpVisitor.on_i32_ctz.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_clz]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_clz.default
@@ -5466,7 +7751,7 @@ def code.OpVisitor.on_i32_clz.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_copysign]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_copysign.default
@@ -5476,7 +7761,7 @@ def code.OpVisitor.on_f64_copysign.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_max]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_max.default
@@ -5486,7 +7771,7 @@ def code.OpVisitor.on_f64_max.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_min]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_min.default
@@ -5496,7 +7781,7 @@ def code.OpVisitor.on_f64_min.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_div]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_div.default
@@ -5506,7 +7791,7 @@ def code.OpVisitor.on_f64_div.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_mul]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_mul.default
@@ -5516,7 +7801,7 @@ def code.OpVisitor.on_f64_mul.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_sub]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_sub.default
@@ -5526,7 +7811,7 @@ def code.OpVisitor.on_f64_sub.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_add]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_add.default
@@ -5536,7 +7821,7 @@ def code.OpVisitor.on_f64_add.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_copysign]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_copysign.default
@@ -5546,7 +7831,7 @@ def code.OpVisitor.on_f32_copysign.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_max]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_max.default
@@ -5556,7 +7841,7 @@ def code.OpVisitor.on_f32_max.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_min]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_min.default
@@ -5566,7 +7851,7 @@ def code.OpVisitor.on_f32_min.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_div]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_div.default
@@ -5576,7 +7861,7 @@ def code.OpVisitor.on_f32_div.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_mul]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_mul.default
@@ -5586,7 +7871,7 @@ def code.OpVisitor.on_f32_mul.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_sub]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_sub.default
@@ -5596,7 +7881,7 @@ def code.OpVisitor.on_f32_sub.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_add]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_add.default
@@ -5606,7 +7891,7 @@ def code.OpVisitor.on_f32_add.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_rotr]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_rotr.default
@@ -5616,7 +7901,7 @@ def code.OpVisitor.on_i64_rotr.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_rotl]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_rotl.default
@@ -5626,7 +7911,7 @@ def code.OpVisitor.on_i64_rotl.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_shr_u]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_shr_u.default
@@ -5636,7 +7921,7 @@ def code.OpVisitor.on_i64_shr_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_shr_s]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_shr_s.default
@@ -5646,7 +7931,7 @@ def code.OpVisitor.on_i64_shr_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_shl]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_shl.default
@@ -5656,7 +7941,7 @@ def code.OpVisitor.on_i64_shl.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_xor]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_xor.default
@@ -5666,7 +7951,7 @@ def code.OpVisitor.on_i64_xor.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_or]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_or.default
@@ -5676,7 +7961,7 @@ def code.OpVisitor.on_i64_or.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_and]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_and.default
@@ -5686,7 +7971,7 @@ def code.OpVisitor.on_i64_and.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_rem_u]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_rem_u.default
@@ -5696,7 +7981,7 @@ def code.OpVisitor.on_i64_rem_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_rem_s]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_rem_s.default
@@ -5706,7 +7991,7 @@ def code.OpVisitor.on_i64_rem_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_div_u]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_div_u.default
@@ -5716,7 +8001,7 @@ def code.OpVisitor.on_i64_div_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_div_s]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_div_s.default
@@ -5726,7 +8011,7 @@ def code.OpVisitor.on_i64_div_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_mul]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_mul.default
@@ -5736,7 +8021,7 @@ def code.OpVisitor.on_i64_mul.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_sub]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_sub.default
@@ -5746,7 +8031,7 @@ def code.OpVisitor.on_i64_sub.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_add]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_add.default
@@ -5756,7 +8041,7 @@ def code.OpVisitor.on_i64_add.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_rotr]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_rotr.default
@@ -5766,7 +8051,7 @@ def code.OpVisitor.on_i32_rotr.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_rotl]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_rotl.default
@@ -5776,7 +8061,7 @@ def code.OpVisitor.on_i32_rotl.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_shr_u]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_shr_u.default
@@ -5786,7 +8071,7 @@ def code.OpVisitor.on_i32_shr_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_shr_s]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_shr_s.default
@@ -5796,7 +8081,7 @@ def code.OpVisitor.on_i32_shr_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_shl]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_shl.default
@@ -5806,7 +8091,7 @@ def code.OpVisitor.on_i32_shl.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_xor]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_xor.default
@@ -5816,7 +8101,7 @@ def code.OpVisitor.on_i32_xor.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_or]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_or.default
@@ -5826,7 +8111,7 @@ def code.OpVisitor.on_i32_or.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_and]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_and.default
@@ -5836,7 +8121,7 @@ def code.OpVisitor.on_i32_and.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_rem_u]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_rem_u.default
@@ -5846,7 +8131,7 @@ def code.OpVisitor.on_i32_rem_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_rem_s]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_rem_s.default
@@ -5856,7 +8141,7 @@ def code.OpVisitor.on_i32_rem_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_div_u]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_div_u.default
@@ -5866,7 +8151,7 @@ def code.OpVisitor.on_i32_div_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_div_s]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_div_s.default
@@ -5876,7 +8161,7 @@ def code.OpVisitor.on_i32_div_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_mul]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_mul.default
@@ -5886,7 +8171,7 @@ def code.OpVisitor.on_i32_mul.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_sub]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_sub.default
@@ -5896,7 +8181,7 @@ def code.OpVisitor.on_i32_sub.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_ge]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_ge.default
@@ -5906,7 +8191,7 @@ def code.OpVisitor.on_f64_ge.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_le]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_le.default
@@ -5916,7 +8201,7 @@ def code.OpVisitor.on_f64_le.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_gt]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_gt.default
@@ -5926,7 +8211,7 @@ def code.OpVisitor.on_f64_gt.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_lt]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_lt.default
@@ -5936,7 +8221,7 @@ def code.OpVisitor.on_f64_lt.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_ne]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_ne.default
@@ -5946,7 +8231,7 @@ def code.OpVisitor.on_f64_ne.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_eq]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_eq.default
@@ -5956,7 +8241,7 @@ def code.OpVisitor.on_f64_eq.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_ge]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_ge.default
@@ -5966,7 +8251,7 @@ def code.OpVisitor.on_f32_ge.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_le]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_le.default
@@ -5976,7 +8261,7 @@ def code.OpVisitor.on_f32_le.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_gt]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_gt.default
@@ -5986,7 +8271,7 @@ def code.OpVisitor.on_f32_gt.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_lt]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_lt.default
@@ -5996,7 +8281,7 @@ def code.OpVisitor.on_f32_lt.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_ne]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_ne.default
@@ -6006,7 +8291,7 @@ def code.OpVisitor.on_f32_ne.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_eq]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_eq.default
@@ -6016,7 +8301,7 @@ def code.OpVisitor.on_f32_eq.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_ge_u]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_ge_u.default
@@ -6026,7 +8311,7 @@ def code.OpVisitor.on_i64_ge_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_ge_s]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_ge_s.default
@@ -6036,7 +8321,7 @@ def code.OpVisitor.on_i64_ge_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_le_u]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_le_u.default
@@ -6046,7 +8331,7 @@ def code.OpVisitor.on_i64_le_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_le_s]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_le_s.default
@@ -6056,7 +8341,7 @@ def code.OpVisitor.on_i64_le_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_gt_u]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_gt_u.default
@@ -6066,7 +8351,7 @@ def code.OpVisitor.on_i64_gt_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_gt_s]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_gt_s.default
@@ -6076,7 +8361,7 @@ def code.OpVisitor.on_i64_gt_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_lt_u]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_lt_u.default
@@ -6086,7 +8371,7 @@ def code.OpVisitor.on_i64_lt_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_lt_s]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_lt_s.default
@@ -6096,7 +8381,7 @@ def code.OpVisitor.on_i64_lt_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_ne]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_ne.default
@@ -6106,7 +8391,7 @@ def code.OpVisitor.on_i64_ne.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_eq]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_eq.default
@@ -6116,7 +8401,7 @@ def code.OpVisitor.on_i64_eq.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_eqz]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_eqz.default
@@ -6126,7 +8411,7 @@ def code.OpVisitor.on_i64_eqz.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_ge_u]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_ge_u.default
@@ -6136,7 +8421,7 @@ def code.OpVisitor.on_i32_ge_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_ge_s]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_ge_s.default
@@ -6146,7 +8431,7 @@ def code.OpVisitor.on_i32_ge_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_le_u]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_le_u.default
@@ -6156,7 +8441,7 @@ def code.OpVisitor.on_i32_le_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_le_s]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_le_s.default
@@ -6166,7 +8451,7 @@ def code.OpVisitor.on_i32_le_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_gt_u]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_gt_u.default
@@ -6176,7 +8461,7 @@ def code.OpVisitor.on_i32_gt_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_gt_s]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_gt_s.default
@@ -6186,7 +8471,7 @@ def code.OpVisitor.on_i32_gt_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_lt_u]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_lt_u.default
@@ -6196,7 +8481,7 @@ def code.OpVisitor.on_i32_lt_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_lt_s]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_lt_s.default
@@ -6206,7 +8491,7 @@ def code.OpVisitor.on_i32_lt_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_ne]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_ne.default
@@ -6216,7 +8501,7 @@ def code.OpVisitor.on_i32_ne.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_eq]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_eq.default
@@ -6226,7 +8511,7 @@ def code.OpVisitor.on_i32_eq.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_eqz]:
-    Source: 'src/code.rs', lines 1624:10-1626:9
+    Source: 'src/code.rs', lines 1631:10-1633:9
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_eqz.default
@@ -6236,7 +8521,7 @@ def code.OpVisitor.on_i32_eqz.default
   ok (core.result.Result.Ok (), self)
 
 /-- Trait implementation: [itasca::code::{impl itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}]
-    Source: 'src/code.rs', lines 1836:0-1836:36 -/
+    Source: 'src/code.rs', lines 1855:0-1855:36 -/
 @[reducible]
 def code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor : code.OpVisitor
   _root_.Itasca.code.EmptyOpVisitor := {
@@ -6417,7 +8702,7 @@ def code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor : code.OpVisitor
 }
 
 /-- [itasca::code::validate_body]:
-    Source: 'src/code.rs', lines 1442:0-1445:1
+    Source: 'src/code.rs', lines 1449:0-1452:1
     Visibility: public -/
 def code.validate_body
   (data : Slice Std.U8) (env : _root_.Itasca.module.Env)
@@ -6444,36 +8729,1422 @@ def error.Error.Insts.CoreConvertFromOpError : core.convert.From
   «from» := error.Error.Insts.CoreConvertFromOpError.from
 }
 
-/-- [itasca::multi_value::active_index]:
-    Source: 'src/multi_value.rs', lines 529:0-539:1 -/
-def multi_value.active_index
+/-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::tail_ready]:
+    Source: 'src/stream.rs', lines 612:4-615:5
+    Visibility: public -/
+def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.tail_ready
+  (self : _root_.Itasca.stream.SyncVisitor) (tail : _root_.Itasca.module.Tail)
+  :
+  Result ((core.result.Result Unit _root_.Itasca.error.Error) ×
+    _root_.Itasca.stream.SyncVisitor)
+  := do
+  ok (core.result.Result.Ok (), { self with tail := (some tail) })
+
+/-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::code_end]:
+    Source: 'src/stream.rs', lines 608:4-610:5
+    Visibility: public -/
+def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.code_end
+  (self : _root_.Itasca.stream.SyncVisitor) :
+  Result ((core.result.Result Unit _root_.Itasca.error.Error) ×
+    _root_.Itasca.stream.SyncVisitor)
+  := do
+  ok (core.result.Result.Ok (), self)
+
+/-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::poll_code_batch]:
+    Source: 'src/stream.rs', lines 601:4-606:5
+    Visibility: public -/
+def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.poll_code_batch
+  (self : _root_.Itasca.stream.SyncVisitor) :
+  Result ((core.result.Result _root_.Itasca.stream.CodeBatch
+    _root_.Itasca.error.Error) × _root_.Itasca.stream.SyncVisitor)
+  := do
+  let (o, o1) := core.option.Option.take self.completed
+  match o with
+  | none =>
+    ok (core.result.Result.Err error.Error.Host, { self with completed := o1 })
+  | some cb => ok (core.result.Result.Ok cb, { self with completed := o1 })
+
+/-- [itasca::multi_value::validate_body_with]:
+    Source: 'src/multi_value.rs', lines 509:0-524:1
+    Visibility: public -/
+def multi_value.validate_body_with
+  {V : Type} (codeOpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
+  (env : _root_.Itasca.module.Env) (ctx : _root_.Itasca.code.Context)
+  (type_index : Std.U32) (visitor : V) :
+  Result ((core.result.Result Unit _root_.Itasca.error.OpError) × V)
+  := do
+  multi_value.validate_body_with_profile codeOpVisitorInst data env ctx
+    type_index ValidationProfile.MultiValue visitor
+
+/-- [itasca::module::copy_value_types]: loop body 0:
+    Source: 'src/module.rs', lines 669:4-675:5 -/
+@[rust_loop_body]
+def module.copy_value_types_loop.body
+  (src : Slice _root_.Itasca.types.ValueType)
+  (out : alloc.vec.Vec _root_.Itasca.types.ValueType) (i : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec _root_.Itasca.types.ValueType) ×
+    Std.Usize) (alloc.vec.Vec _root_.Itasca.types.ValueType))
+  := do
+  let i1 := Slice.len src
+  if i >= i1
+  then ok (done out)
+  else
+    let vt ← Slice.index_usize src i
+    let out1 ← alloc.vec.Vec.push out vt
+    let i2 ← i + 1#usize
+    ok (cont (out1, i2))
+
+/-- [itasca::module::copy_value_types]: loop 0:
+    Source: 'src/module.rs', lines 669:4-675:5 -/
+@[rust_loop]
+def module.copy_value_types_loop
+  (src : Slice _root_.Itasca.types.ValueType)
+  (out : alloc.vec.Vec _root_.Itasca.types.ValueType) (i : Std.Usize) :
+  Result (alloc.vec.Vec _root_.Itasca.types.ValueType)
+  := do
+  loop
+    (fun (out1, i1) => module.copy_value_types_loop.body src out1 i1)
+    (out, i)
+
+/-- [itasca::module::copy_value_types]:
+    Source: 'src/module.rs', lines 666:0-676:1 -/
+@[reducible]
+def module.copy_value_types
+  (src : Slice _root_.Itasca.types.ValueType) :
+  Result (alloc.vec.Vec _root_.Itasca.types.ValueType)
+  := do
+  module.copy_value_types_loop src (alloc.vec.Vec.new
+    _root_.Itasca.types.ValueType) 0#usize
+
+/-- [itasca::module::build_func_locals]: loop body 0:
+    Source: 'src/module.rs', lines 1130:4-1136:5 -/
+@[rust_loop_body]
+def module.build_func_locals_loop.body
+  (declared : Slice _root_.Itasca.types.ValueType)
+  (locals : alloc.vec.Vec _root_.Itasca.types.ValueType) (i : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec _root_.Itasca.types.ValueType) ×
+    Std.Usize) (alloc.vec.Vec _root_.Itasca.types.ValueType))
+  := do
+  let i1 := Slice.len declared
+  if i >= i1
+  then ok (done locals)
+  else
+    let vt ← Slice.index_usize declared i
+    let locals1 ← alloc.vec.Vec.push locals vt
+    let i2 ← i + 1#usize
+    ok (cont (locals1, i2))
+
+/-- [itasca::module::build_func_locals]: loop 0:
+    Source: 'src/module.rs', lines 1130:4-1136:5 -/
+@[rust_loop]
+def module.build_func_locals_loop
+  (declared : Slice _root_.Itasca.types.ValueType)
+  (locals : alloc.vec.Vec _root_.Itasca.types.ValueType) (i : Std.Usize) :
+  Result (alloc.vec.Vec _root_.Itasca.types.ValueType)
+  := do
+  loop
+    (fun (locals1, i1) => module.build_func_locals_loop.body declared locals1
+      i1)
+    (locals, i)
+
+/-- [itasca::module::build_func_locals]:
+    Source: 'src/module.rs', lines 1127:0-1137:1 -/
+def module.build_func_locals
+  (params : Slice _root_.Itasca.types.ValueType)
+  (declared : Slice _root_.Itasca.types.ValueType) :
+  Result (alloc.vec.Vec _root_.Itasca.types.ValueType)
+  := do
+  let locals ← module.copy_value_types params
+  module.build_func_locals_loop declared locals 0#usize
+
+/-- [itasca::module::push_locals]: loop body 0:
+    Source: 'src/module.rs', lines 1095:4-1101:5 -/
+@[rust_loop_body]
+def module.push_locals_loop.body
+  (count : Std.U32) (vt : _root_.Itasca.types.ValueType)
+  (out : alloc.vec.Vec _root_.Itasca.types.ValueType) (i : Std.U32) :
+  Result (ControlFlow ((alloc.vec.Vec _root_.Itasca.types.ValueType) ×
+    Std.U32) (alloc.vec.Vec _root_.Itasca.types.ValueType))
+  := do
+  if i >= count
+  then ok (done out)
+  else
+    let out1 ← alloc.vec.Vec.push out vt
+    let i1 ← i + 1#u32
+    ok (cont (out1, i1))
+
+/-- [itasca::module::push_locals]: loop 0:
+    Source: 'src/module.rs', lines 1095:4-1101:5 -/
+@[rust_loop]
+def module.push_locals_loop
+  (out : alloc.vec.Vec _root_.Itasca.types.ValueType) (count : Std.U32)
+  (vt : _root_.Itasca.types.ValueType) (i : Std.U32) :
+  Result (alloc.vec.Vec _root_.Itasca.types.ValueType)
+  := do
+  loop
+    (fun (out1, i1) => module.push_locals_loop.body count vt out1 i1)
+    (out, i)
+
+/-- [itasca::module::push_locals]:
+    Source: 'src/module.rs', lines 1093:0-1102:1 -/
+@[reducible]
+def module.push_locals
+  (out : alloc.vec.Vec _root_.Itasca.types.ValueType) (count : Std.U32)
+  (vt : _root_.Itasca.types.ValueType) :
+  Result (alloc.vec.Vec _root_.Itasca.types.ValueType)
+  := do
+  module.push_locals_loop out count vt 0#u32
+
+/-- [itasca::module::decode_value_type]:
+    Source: 'src/module.rs', lines 344:0-353:1 -/
+def module.decode_value_type
   (data : Slice Std.U8) (pos : Std.Usize) :
-  Result (core.result.Result (Std.U32 × Std.Usize × Bool)
+  Result (core.result.Result (_root_.Itasca.types.ValueType × Std.Usize)
     _root_.Itasca.error.Error)
+  := do
+  let r ← reader.read_byte data pos
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue val =>
+    let (b, p) := val
+    match b with
+    | 127#uscalar => ok (core.result.Result.Ok (types.ValueType.I32, p))
+    | 126#uscalar => ok (core.result.Result.Ok (types.ValueType.I64, p))
+    | 125#uscalar => ok (core.result.Result.Ok (types.ValueType.F32, p))
+    | 124#uscalar => ok (core.result.Result.Ok (types.ValueType.F64, p))
+    | _ => ok (core.result.Result.Err (error.Error.InvalidType b))
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+      (_root_.Itasca.types.ValueType × Std.Usize)
+      error.Error.Insts.CoreConvertFromOpError residual
+
+/-- [itasca::limits::MAX_LOCALS]
+    Source: 'src/limits.rs', lines 51:0-51:37
+    Visibility: public -/
+@[global_simps, irreducible] def limits.MAX_LOCALS : Std.Usize := 50000#usize
+
+/-- [itasca::module::decode_locals]: loop body 0:
+    Source: 'src/module.rs', lines 1110:4-1124:5 -/
+@[rust_loop_body]
+def module.decode_locals_loop.body
+  (data : Slice Std.U8) (groups : Std.U32)
+  (out : alloc.vec.Vec _root_.Itasca.types.ValueType) (q : Std.Usize)
+  (i : Std.U32) :
+  Result (ControlFlow ((alloc.vec.Vec _root_.Itasca.types.ValueType) ×
+    Std.Usize × Std.U32) (core.result.Result ((alloc.vec.Vec
+    _root_.Itasca.types.ValueType) × Std.Usize) _root_.Itasca.error.Error))
+  := do
+  if i >= groups
+  then ok (done (core.result.Result.Ok (out, q)))
+  else
+    let r ← reader.read_u32_leb data q
+    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      let (count, q1) := val
+      let r1 ← module.decode_value_type data q1
+      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+      match cf1 with
+      | core.ops.control_flow.ControlFlow.Continue val1 =>
+        let (vt, q2) := val1
+        let i1 ← lift (UScalar.cast .Usize count)
+        let i2 := alloc.vec.Vec.len out
+        let i3 ← limits.MAX_LOCALS - i2
+        if i1 > i3
+        then ok (done (core.result.Result.Err error.Error.TooManyLocals))
+        else
+          let out1 ← module.push_locals out count vt
+          let i4 ← i + 1#u32
+          ok (cont (out1, q2, i4))
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r2 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            ((alloc.vec.Vec _root_.Itasca.types.ValueType) × Std.Usize)
+            (core.convert.FromSame _root_.Itasca.error.Error) residual
+        ok (done r2)
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r1 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          ((alloc.vec.Vec _root_.Itasca.types.ValueType) × Std.Usize)
+          error.Error.Insts.CoreConvertFromOpError residual
+      ok (done r1)
+
+/-- [itasca::module::decode_locals]: loop 0:
+    Source: 'src/module.rs', lines 1110:4-1124:5 -/
+@[rust_loop]
+def module.decode_locals_loop
+  (data : Slice Std.U8) (groups : Std.U32)
+  (out : alloc.vec.Vec _root_.Itasca.types.ValueType) (q : Std.Usize)
+  (i : Std.U32) :
+  Result (core.result.Result ((alloc.vec.Vec _root_.Itasca.types.ValueType) ×
+    Std.Usize) _root_.Itasca.error.Error)
+  := do
+  loop
+    (fun (out1, q1, i1) => module.decode_locals_loop.body data groups out1 q1
+      i1)
+    (out, q, i)
+
+/-- [itasca::module::decode_locals]:
+    Source: 'src/module.rs', lines 1105:0-1125:1 -/
+def module.decode_locals
+  (data : Slice Std.U8) (pos : Std.Usize) :
+  Result (core.result.Result ((alloc.vec.Vec _root_.Itasca.types.ValueType) ×
+    Std.Usize) _root_.Itasca.error.Error)
   := do
   let r ← reader.read_u32_leb data pos
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
-    let (flags, pos1) := val
-    match flags with
-    | 0#uscalar => ok (core.result.Result.Ok (0#u32, pos1, false))
-    | 2#uscalar =>
-      let r1 ← reader.read_u32_leb data pos1
+    let (groups, p) := val
+    module.decode_locals_loop data groups (alloc.vec.Vec.new
+      _root_.Itasca.types.ValueType) p 0#u32
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+      ((alloc.vec.Vec _root_.Itasca.types.ValueType) × Std.Usize)
+      error.Error.Insts.CoreConvertFromOpError residual
+
+/-- [itasca::module::have_bytes]:
+    Source: 'src/module.rs', lines 304:0-309:1 -/
+def module.have_bytes
+  (data : Slice Std.U8) (pos : Std.Usize) (n : Std.Usize) :
+  Result (core.result.Result Unit _root_.Itasca.error.Error)
+  := do
+  let i := Slice.len data
+  let i1 ← i - pos
+  if n > i1
+  then ok (core.result.Result.Err error.Error.UnexpectedEof)
+  else ok (core.result.Result.Ok ())
+
+/-- [itasca::module::validate_code_entry_with]:
+    Source: 'src/module.rs', lines 1152:0-1202:1
+    Visibility: public -/
+def module.validate_code_entry_with
+  {V : Type} (codeOpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
+  (pos : Std.Usize) (env : _root_.Itasca.module.Env) (index : Std.Usize)
+  (profile : _root_.Itasca.ValidationProfile) (v : V) :
+  Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) × V)
+  := do
+  let i := alloc.vec.Vec.len env.func_type_indices
+  if index >= i
+  then ok (core.result.Result.Err error.Error.FuncCodeMismatch, v)
+  else
+    let r ← reader.read_u32_leb data pos
+    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      let (size, p) := val
+      let n ← lift (UScalar.cast .Usize size)
+      let r1 ← module.have_bytes data p n
       let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
       match cf1 with
-      | core.ops.control_flow.ControlFlow.Continue val1 =>
-        let (index, pos2) := val1
-        ok (core.result.Result.Ok (index, pos2, true))
+      | core.ops.control_flow.ControlFlow.Continue _ =>
+        let «end» ← p + n
+        let r2 ← module.decode_locals data p
+        let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+        match cf2 with
+        | core.ops.control_flow.ControlFlow.Continue val1 =>
+          let (declared, p1) := val1
+          if p1 > «end»
+          then ok (core.result.Result.Err error.Error.SectionSizeMismatch, v)
+          else
+            let type_idx ←
+              alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+                Std.U32) env.func_type_indices index
+            let t ← lift (UScalar.cast .Usize type_idx)
+            let i1 := alloc.vec.Vec.len env.types
+            if t >= i1
+            then
+              ok (core.result.Result.Err (error.Error.UnknownType type_idx), v)
+            else
+              let ft ←
+                alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+                  _root_.Itasca.types.FuncType) env.types t
+              let s := alloc.vec.Vec.deref ft.params
+              let s1 := alloc.vec.Vec.deref declared
+              let v1 ← module.build_func_locals s s1
+              let s2 := alloc.vec.Vec.deref ft.results
+              let v2 ← module.copy_value_types s2
+              let (r3, v3) ←
+                codeOpVisitorInst.on_function_start v
+                  { locals := v1, results := v2 } type_idx p1 «end»
+              match r3 with
+              | core.result.Result.Ok _ =>
+                let (v4, body_result) ←
+                  match profile with
+                  | ValidationProfile.Wasm1 =>
+                    do
+                    let s3 ←
+                      core.slice.index.Slice.index
+                        (core.slice.index.SliceIndexRangeUsizeSlice Std.U8)
+                        data { start := p1, «end» }
+                    let (body_result1, v5) ←
+                      code.validate_body_with codeOpVisitorInst s3 env
+                        { locals := v1, results := v2 } v3
+                    ok (v5, body_result1)
+                  | ValidationProfile.MultiValue =>
+                    do
+                    let s3 ←
+                      core.slice.index.Slice.index
+                        (core.slice.index.SliceIndexRangeUsizeSlice Std.U8)
+                        data { start := p1, «end» }
+                    let (body_result1, v5) ←
+                      multi_value.validate_body_with codeOpVisitorInst s3 env
+                        { locals := v1, results := v2 } type_idx v3
+                    ok (v5, body_result1)
+                match body_result with
+                | core.result.Result.Ok _ =>
+                  ok (core.result.Result.Ok «end», v4)
+                | core.result.Result.Err e =>
+                  ok (core.result.Result.Err (error.Error.Body e), v4)
+              | core.result.Result.Err e =>
+                ok (core.result.Result.Err (error.Error.Body
+                  (error.OpError.Visitor e)), v3)
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r3 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              Std.Usize (core.convert.FromSame _root_.Itasca.error.Error)
+              residual
+          ok (r3, v)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r2 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Std.Usize (core.convert.FromSame _root_.Itasca.error.Error)
+            residual
+        ok (r2, v)
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r1 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          Std.Usize error.Error.Insts.CoreConvertFromOpError residual
+      ok (r1, v)
+
+/-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::validate_next]:
+    Source: 'src/stream.rs', lines 226:4-238:5 -/
+def stream.CodeBatch.validate_next
+  {V : Type} (codeOpVisitorInst : code.OpVisitor V)
+  (self : _root_.Itasca.stream.CodeBatch) (index : Std.Usize) (visitor : V) :
+  Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) × V)
+  := do
+  if self.num_validated >= self.num_funcs
+  then ok (core.result.Result.Err error.Error.Host, visitor)
+  else
+    let i ← self.first_func + self.num_validated
+    if index != i
+    then ok (core.result.Result.Err error.Error.Host, visitor)
+    else
+      module.validate_code_entry_with codeOpVisitorInst self.code
+        self.validated_end self.env index self.profile visitor
+
+/-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::validate_func]:
+    Source: 'src/stream.rs', lines 200:4-214:5
+    Visibility: public -/
+def stream.CodeBatch.validate_func
+  {V : Type} (codeOpVisitorInst : code.OpVisitor V)
+  (self : _root_.Itasca.stream.CodeBatch) (index : Std.Usize) (visitor : V) :
+  Result ((core.result.Result Unit _root_.Itasca.error.Error) ×
+    _root_.Itasca.stream.CodeBatch × V)
+  := do
+  let b := core.option.Option.is_none self.error
+  let (i, i1, o, visitor1) ←
+    if b
+    then
+      do
+      let (r, visitor2) ←
+        stream.CodeBatch.validate_next codeOpVisitorInst self index visitor
+      let (i2, i3, o1) ←
+        match r with
+        | core.result.Result.Ok «end» =>
+          do
+          let i4 ← self.num_validated + 1#usize
+          ok (i4, «end», self.error)
+        | core.result.Result.Err e =>
+          ok (self.num_validated, self.validated_end, some e)
+      ok (i2, i3, o1, visitor2)
+    else ok (self.num_validated, self.validated_end, self.error, visitor)
+  match o with
+  | none =>
+    ok (core.result.Result.Ok (),
+      { self with num_validated := i, validated_end := i1, error := none },
+      visitor1)
+  | some e =>
+    ok (core.result.Result.Err e,
+      { self with num_validated := i, validated_end := i1, error := o },
+      visitor1)
+
+/-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::validate_all]: loop body 0:
+    Source: 'src/stream.rs', lines 218:8-223:9 -/
+@[rust_loop_body]
+def stream.CodeBatch.validate_all_loop.body
+  (self : _root_.Itasca.stream.CodeBatch) (ok1 : Bool) :
+  Result (ControlFlow (_root_.Itasca.stream.CodeBatch × Bool) (Std.U64 ×
+    Std.Usize × _root_.Itasca.ValidationProfile × _root_.Itasca.module.Env ×
+    (Slice Std.U8) × Std.Usize × Std.Usize × Std.Usize × Std.Usize ×
+    Std.Usize × Std.Usize × Std.Usize × (Option _root_.Itasca.error.Error)))
+  := do
+  if self.num_validated < self.num_funcs
+  then
+    if ok1
+    then
+      let index ← self.first_func + self.num_validated
+      let (r, self1, _) ←
+        stream.CodeBatch.validate_func
+          code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor self index ()
+      let ok2 ← core.result.Result.is_ok r
+      ok (cont (self1, ok2))
+    else
+      ok (done (self.module_id, self.batch_id, self.profile, self.env,
+        self.code, self.code_offset, self.first_func, self.num_funcs,
+        self.num_dispatched, self.dispatch_end, self.num_validated,
+        self.validated_end, self.error))
+  else
+    ok (done (self.module_id, self.batch_id, self.profile, self.env, 
+      self.code, self.code_offset, self.first_func, self.num_funcs,
+      self.num_dispatched, self.dispatch_end, self.num_validated,
+      self.validated_end, self.error))
+
+/-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::validate_all]: loop 0:
+    Source: 'src/stream.rs', lines 218:8-223:9 -/
+@[rust_loop]
+def stream.CodeBatch.validate_all_loop
+  (self : _root_.Itasca.stream.CodeBatch) (ok1 : Bool) :
+  Result (Std.U64 × Std.Usize × _root_.Itasca.ValidationProfile ×
+    _root_.Itasca.module.Env × (Slice Std.U8) × Std.Usize × Std.Usize ×
+    Std.Usize × Std.Usize × Std.Usize × Std.Usize × Std.Usize × (Option
+    _root_.Itasca.error.Error))
+  := do
+  loop
+    (fun (self1, ok2) => stream.CodeBatch.validate_all_loop.body self1 ok2)
+    (self, ok1)
+
+/-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::validate_all]:
+    Source: 'src/stream.rs', lines 216:4-224:5 -/
+def stream.CodeBatch.validate_all
+  (self : _root_.Itasca.stream.CodeBatch) :
+  Result _root_.Itasca.stream.CodeBatch
+  := do
+  let (i, i1, vp, e, s, i2, i3, i4, i5, i6, i7, i8, o) ←
+    stream.CodeBatch.validate_all_loop self true
+  ok
+    {
+      module_id := i,
+      batch_id := i1,
+      profile := vp,
+      env := e,
+      code := s,
+      code_offset := i2,
+      first_func := i3,
+      num_funcs := i4,
+      num_dispatched := i5,
+      dispatch_end := i6,
+      num_validated := i7,
+      validated_end := i8,
+      error := o
+    }
+
+/-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::submit_code_batch]:
+    Source: 'src/stream.rs', lines 595:4-599:5
+    Visibility: public -/
+def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.submit_code_batch
+  (self : _root_.Itasca.stream.SyncVisitor)
+  (batch : _root_.Itasca.stream.CodeBatch) :
+  Result ((core.result.Result Unit _root_.Itasca.error.Error) ×
+    _root_.Itasca.stream.SyncVisitor)
+  := do
+  let batch1 ← stream.CodeBatch.validate_all batch
+  ok (core.result.Result.Ok (), { self with completed := (some batch1) })
+
+/-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::environment_ready]:
+    Source: 'src/stream.rs', lines 588:4-593:5
+    Visibility: public -/
+def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.environment_ready
+  (self : _root_.Itasca.stream.SyncVisitor) (_env : _root_.Itasca.module.Env) :
+  Result ((core.result.Result _root_.Itasca.stream.Config
+    _root_.Itasca.error.Error) × _root_.Itasca.stream.SyncVisitor)
+  := do
+  ok (core.result.Result.Ok
+    { batch_bytes := 25000#usize, max_batches := 1#usize }, self)
+
+/-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::custom_region]:
+    Source: 'src/stream.rs', lines 586:4-586:51
+    Visibility: public -/
+def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.custom_region
+  (self : _root_.Itasca.stream.SyncVisitor)
+  (_region : _root_.Itasca.stream.Region) :
+  Result _root_.Itasca.stream.SyncVisitor
+  := do
+  ok self
+
+/-- [itasca::module::ModuleVisitor::on_custom_section]:
+    Source: 'src/module.rs', lines 1360:4-1362:5
+    Visibility: public -/
+@[trait_default]
+def module.ModuleVisitor.on_custom_section.default
+  {Self : Type} (self : Self) (_section : _root_.Itasca.types.CustomSection) :
+  Result ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
+  := do
+  ok (core.result.Result.Ok (), self)
+
+/-- Trait implementation: [itasca::stream::{impl itasca::module::ModuleVisitor for itasca::stream::SyncVisitor<'_0>}]
+    Source: 'src/stream.rs', lines 583:0-583:49 -/
+@[reducible]
+def stream.SyncVisitor.Insts.ItascaModuleModuleVisitor : module.ModuleVisitor
+  _root_.Itasca.stream.SyncVisitor := {
+  on_custom_section := module.ModuleVisitor.on_custom_section.default
+}
+
+/-- Trait implementation: [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}]
+    Source: 'src/stream.rs', lines 585:0-616:1 -/
+@[reducible]
+def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor :
+  stream.StreamingVisitor _root_.Itasca.stream.SyncVisitor := {
+  moduleModuleVisitorInst := stream.SyncVisitor.Insts.ItascaModuleModuleVisitor
+  custom_region :=
+    stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.custom_region
+  environment_ready :=
+    stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.environment_ready
+  submit_code_batch :=
+    stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.submit_code_batch
+  poll_code_batch :=
+    stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.poll_code_batch
+  code_end := stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.code_end
+  tail_ready :=
+    stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.tail_ready
+}
+
+/-- [itasca::stream::{impl itasca::stream::Source for itasca::stream::SliceSource<'_0>}::tail]:
+    Source: 'src/stream.rs', lines 571:4-573:5
+    Visibility: public -/
+def stream.SliceSource.Insts.ItascaStreamSource.tail
+  (self : _root_.Itasca.stream.SliceSource) :
+  Result (core.result.Result (Slice Std.U8) _root_.Itasca.error.Error)
+  := do
+  ok (core.result.Result.Ok self.tail)
+
+/-- [itasca::stream::{impl itasca::stream::Source for itasca::stream::SliceSource<'_0>}::code]:
+    Source: 'src/stream.rs', lines 564:4-569:5
+    Visibility: public -/
+def stream.SliceSource.Insts.ItascaStreamSource.code
+  (self : _root_.Itasca.stream.SliceSource) (start : Std.Usize)
+  («end» : Std.Usize) :
+  Result (core.result.Result (Slice Std.U8) _root_.Itasca.error.Error)
+  := do
+  if start > «end»
+  then ok (core.result.Result.Err error.Error.Host)
+  else
+    let i := Slice.len self.code
+    if «end» > i
+    then ok (core.result.Result.Err error.Error.Host)
+    else
+      let s ←
+        core.slice.index.Slice.index
+          (core.slice.index.SliceIndexRangeUsizeSlice Std.U8) self.code
+          { start, «end» }
+      ok (core.result.Result.Ok s)
+
+/-- [itasca::stream::{impl itasca::stream::Source for itasca::stream::SliceSource<'_0>}::code_len]:
+    Source: 'src/stream.rs', lines 560:4-562:5
+    Visibility: public -/
+def stream.SliceSource.Insts.ItascaStreamSource.code_len
+  (self : _root_.Itasca.stream.SliceSource) : Result Std.Usize := do
+  ok (Slice.len self.code)
+
+/-- [itasca::stream::{impl itasca::stream::Source for itasca::stream::SliceSource<'_0>}::environment]:
+    Source: 'src/stream.rs', lines 556:4-558:5
+    Visibility: public -/
+def stream.SliceSource.Insts.ItascaStreamSource.environment
+  (self : _root_.Itasca.stream.SliceSource) :
+  Result (core.result.Result (Slice Std.U8) _root_.Itasca.error.Error)
+  := do
+  ok (core.result.Result.Ok self.env)
+
+/-- Trait implementation: [itasca::stream::{impl itasca::stream::Source for itasca::stream::SliceSource<'_0>}]
+    Source: 'src/stream.rs', lines 555:0-574:1 -/
+@[reducible]
+def stream.SliceSource.Insts.ItascaStreamSource : stream.Source
+  _root_.Itasca.stream.SliceSource := {
+  environment := stream.SliceSource.Insts.ItascaStreamSource.environment
+  code_len := stream.SliceSource.Insts.ItascaStreamSource.code_len
+  code := stream.SliceSource.Insts.ItascaStreamSource.code
+  tail := stream.SliceSource.Insts.ItascaStreamSource.tail
+}
+
+/-- [itasca::stream::read_len]:
+    Source: 'src/stream.rs', lines 478:0-484:1 -/
+def stream.read_len
+  (data : Slice Std.U8) (pos : Std.Usize) :
+  Result (core.result.Result (Std.Usize × Std.Usize)
+    _root_.Itasca.error.Error)
+  := do
+  let r ← reader.read_u32_leb data pos
+  match r with
+  | core.result.Result.Ok p =>
+    let (value, «end») := p
+    let i ← lift (UScalar.cast .Usize value)
+    ok (core.result.Result.Ok (i, «end»))
+  | core.result.Result.Err oe =>
+    match oe with
+    | error.OpError.UnexpectedEof =>
+      ok (core.result.Result.Err error.Error.UnexpectedEof)
+    | error.OpError.LebTooLong =>
+      ok (core.result.Result.Err (error.Error.Read error.OpError.LebTooLong))
+    | error.OpError.UnrecognizedOpcode =>
+      ok (core.result.Result.Err (error.Error.Read
+        error.OpError.UnrecognizedOpcode))
+    | error.OpError.InvalidBlockType =>
+      ok (core.result.Result.Err (error.Error.Read
+        error.OpError.InvalidBlockType))
+    | error.OpError.TypeMismatch =>
+      ok (core.result.Result.Err (error.Error.Read error.OpError.TypeMismatch))
+    | error.OpError.EmptyStack =>
+      ok (core.result.Result.Err (error.Error.Read error.OpError.EmptyStack))
+    | error.OpError.StackMismatch =>
+      ok (core.result.Result.Err (error.Error.Read
+        error.OpError.StackMismatch))
+    | error.OpError.StackTooLarge =>
+      ok (core.result.Result.Err (error.Error.Read
+        error.OpError.StackTooLarge))
+    | error.OpError.UnknownLabel =>
+      ok (core.result.Result.Err (error.Error.Read error.OpError.UnknownLabel))
+    | error.OpError.UnknownLocal =>
+      ok (core.result.Result.Err (error.Error.Read error.OpError.UnknownLocal))
+    | error.OpError.UnknownGlobal =>
+      ok (core.result.Result.Err (error.Error.Read
+        error.OpError.UnknownGlobal))
+    | error.OpError.ImmutableGlobal =>
+      ok (core.result.Result.Err (error.Error.Read
+        error.OpError.ImmutableGlobal))
+    | error.OpError.UnknownMemory =>
+      ok (core.result.Result.Err (error.Error.Read
+        error.OpError.UnknownMemory))
+    | error.OpError.UnknownFunc =>
+      ok (core.result.Result.Err (error.Error.Read error.OpError.UnknownFunc))
+    | error.OpError.UnknownType =>
+      ok (core.result.Result.Err (error.Error.Read error.OpError.UnknownType))
+    | error.OpError.UnknownTable =>
+      ok (core.result.Result.Err (error.Error.Read error.OpError.UnknownTable))
+    | error.OpError.TooManyResults =>
+      ok (core.result.Result.Err (error.Error.Read
+        error.OpError.TooManyResults))
+    | error.OpError.TooManyParams =>
+      ok (core.result.Result.Err (error.Error.Read
+        error.OpError.TooManyParams))
+    | error.OpError.ReservedByteNotZero =>
+      ok (core.result.Result.Err (error.Error.Read
+        error.OpError.ReservedByteNotZero))
+    | error.OpError.InvalidAlignment =>
+      ok (core.result.Result.Err (error.Error.Read
+        error.OpError.InvalidAlignment))
+    | error.OpError.TrailingBytes =>
+      ok (core.result.Result.Err (error.Error.Read
+        error.OpError.TrailingBytes))
+    | error.OpError.BodyTooLarge =>
+      ok (core.result.Result.Err (error.Error.Read error.OpError.BodyTooLarge))
+    | error.OpError.Visitor _ =>
+      ok (core.result.Result.Err (error.Error.Read oe))
+
+/-- [itasca::module::SECTION_CODE]
+    Source: 'src/module.rs', lines 44:0-44:39 -/
+@[global_simps, irreducible] def module.SECTION_CODE : Std.U8 := 10#u8
+
+/-- [itasca::stream::find_code_region]: loop body 0:
+    Source: 'src/stream.rs', lines 526:4-546:1 -/
+@[rust_loop_body]
+def stream.find_code_region_loop.body
+  (bytes : Slice Std.U8) (len : Std.Usize) (pos : Std.Usize) :
+  Result (ControlFlow Std.Usize (Std.Usize × Std.Usize))
+  := do
+  if pos >= len
+  then ok (done (len, len))
+  else
+    let id ← Slice.index_usize bytes pos
+    if id > module.SECTION_CODE
+    then ok (done (pos, pos))
+    else
+      let i ← pos + 1#usize
+      let r ← stream.read_len bytes i
+      let «end» ←
+        match r with
+        | core.result.Result.Ok p =>
+          do
+          let (size, contents) := p
+          let i1 ← len - contents
+          let i2 ← lift (core.cmp.impls.OrdUsize.min size i1)
+          contents + i2
+        | core.result.Result.Err _ => ok len
+      if id = module.SECTION_CODE
+      then ok (done (pos, «end»))
+      else if «end» = len
+      then ok (done (len, len))
+      else ok (cont «end»)
+
+/-- [itasca::stream::find_code_region]: loop 0:
+    Source: 'src/stream.rs', lines 526:4-546:1 -/
+@[rust_loop]
+def stream.find_code_region_loop
+  (bytes : Slice Std.U8) (len : Std.Usize) (pos : Std.Usize) :
+  Result (Std.Usize × Std.Usize)
+  := do
+  loop
+    (fun pos1 => stream.find_code_region_loop.body bytes len pos1)
+    pos
+
+/-- [itasca::stream::find_code_region]:
+    Source: 'src/stream.rs', lines 523:0-546:1 -/
+def stream.find_code_region
+  (bytes : Slice Std.U8) : Result (Std.Usize × Std.Usize) := do
+  let len := Slice.len bytes
+  stream.find_code_region_loop bytes len 8#usize
+
+/-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::finish]:
+    Source: 'src/stream.rs', lines 240:4-250:5 -/
+def stream.CodeBatch.finish
+  (self : _root_.Itasca.stream.CodeBatch) :
+  Result (core.result.Result Unit _root_.Itasca.error.Error)
+  := do
+  match self.error with
+  | none =>
+    if self.num_validated = self.num_funcs
+    then
+      let i := Slice.len self.code
+      if self.validated_end = i
+      then ok (core.result.Result.Ok ())
+      else ok (core.result.Result.Err error.Error.Host)
+    else ok (core.result.Result.Err error.Error.Host)
+  | some e => ok (core.result.Result.Err e)
+
+/-- [itasca::stream::retire_code_batch]: loop body 0:
+    Source: 'src/stream.rs', lines 439:4-441:5 -/
+@[rust_loop_body]
+def stream.retire_code_batch_loop.body
+  (pending : alloc.vec.Vec Std.Usize) (i : Std.Usize) (i1 : Std.Usize) :
+  Result (ControlFlow Std.Usize Std.Usize)
+  := do
+  let i2 := alloc.vec.Vec.len pending
+  if i1 < i2
+  then
+    let i3 ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Std.Usize)
+        pending i1
+    if i3 != i
+    then let i4 ← i1 + 1#usize
+         ok (cont i4)
+    else ok (done i1)
+  else ok (done i1)
+
+/-- [itasca::stream::retire_code_batch]: loop 0:
+    Source: 'src/stream.rs', lines 439:4-441:5 -/
+@[rust_loop]
+def stream.retire_code_batch_loop
+  (pending : alloc.vec.Vec Std.Usize) (i : Std.Usize) (i1 : Std.Usize) :
+  Result Std.Usize
+  := do
+  loop
+    (fun i2 => stream.retire_code_batch_loop.body pending i i2)
+    i1
+
+/-- [itasca::stream::retire_code_batch]:
+    Source: 'src/stream.rs', lines 429:0-449:1 -/
+def stream.retire_code_batch
+  {V : Type} (StreamingVisitorInst : stream.StreamingVisitor V)
+  (module_id : Std.U64) (visitor : V) (pending : alloc.vec.Vec Std.Usize) :
+  Result ((core.result.Result Unit _root_.Itasca.error.Error) × V ×
+    (alloc.vec.Vec Std.Usize))
+  := do
+  let (r, visitor1) ← StreamingVisitorInst.poll_code_batch visitor
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue cb =>
+    if cb.module_id != module_id
+    then ok (core.result.Result.Err error.Error.Host, visitor1, pending)
+    else
+      let i ← stream.retire_code_batch_loop pending cb.batch_id 0#usize
+      let i1 := alloc.vec.Vec.len pending
+      if i = i1
+      then ok (core.result.Result.Err error.Error.Host, visitor1, pending)
+      else
+        let i2 := alloc.vec.Vec.len pending
+        let last ← i2 - 1#usize
+        let i3 ←
+          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Std.Usize)
+            pending last
+        let (_, index_mut_back) ←
+          alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+            Std.Usize) pending i
+        let pending1 := index_mut_back i3
+        let (_, pending2) ← alloc.vec.Vec.pop Global pending1
+        let r1 ← stream.CodeBatch.finish cb
+        ok (r1, visitor1, pending2)
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    let r1 ←
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+        Unit (core.convert.FromSame _root_.Itasca.error.Error) residual
+    ok (r1, visitor1, pending)
+
+/-- [itasca::stream::retire_all_code_batches]: loop body 0:
+    Source: 'src/stream.rs', lines 458:4-462:1 -/
+@[rust_loop_body]
+def stream.retire_all_code_batches_loop.body
+  {V : Type} (StreamingVisitorInst : stream.StreamingVisitor V)
+  (module_id : Std.U64) (visitor : V) (pending : alloc.vec.Vec Std.Usize) :
+  Result (ControlFlow (V × (alloc.vec.Vec Std.Usize)) ((core.result.Result
+    Unit _root_.Itasca.error.Error) × V × (alloc.vec.Vec Std.Usize)))
+  := do
+  let b ← alloc.vec.Vec.is_empty Global pending
+  if b
+  then ok (done (core.result.Result.Ok (), visitor, pending))
+  else
+    let (r, visitor1, pending1) ←
+      stream.retire_code_batch StreamingVisitorInst module_id visitor pending
+    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue _ =>
+      ok (cont (visitor1, pending1))
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r1 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          Unit (core.convert.FromSame _root_.Itasca.error.Error) residual
+      ok (done (r1, visitor1, pending1))
+
+/-- [itasca::stream::retire_all_code_batches]: loop 0:
+    Source: 'src/stream.rs', lines 458:4-462:1 -/
+@[rust_loop]
+def stream.retire_all_code_batches_loop
+  {V : Type} (StreamingVisitorInst : stream.StreamingVisitor V)
+  (module_id : Std.U64) (visitor : V) (pending : alloc.vec.Vec Std.Usize) :
+  Result ((core.result.Result Unit _root_.Itasca.error.Error) × V ×
+    (alloc.vec.Vec Std.Usize))
+  := do
+  loop
+    (fun (visitor1, pending1) => stream.retire_all_code_batches_loop.body
+      StreamingVisitorInst module_id visitor1 pending1)
+    (visitor, pending)
+
+/-- [itasca::stream::retire_all_code_batches]:
+    Source: 'src/stream.rs', lines 453:0-462:1 -/
+@[reducible]
+def stream.retire_all_code_batches
+  {V : Type} (StreamingVisitorInst : stream.StreamingVisitor V)
+  (module_id : Std.U64) (visitor : V) (pending : alloc.vec.Vec Std.Usize) :
+  Result ((core.result.Result Unit _root_.Itasca.error.Error) × V ×
+    (alloc.vec.Vec Std.Usize))
+  := do
+  stream.retire_all_code_batches_loop StreamingVisitorInst module_id visitor
+    pending
+
+/-- [itasca::stream::read_exact]:
+    Source: 'src/stream.rs', lines 486:0-492:1 -/
+def stream.read_exact
+  {S : Type} (SourceInst : stream.Source S) (source : S) (start : Std.Usize)
+  («end» : Std.Usize) :
+  Result (core.result.Result (Slice Std.U8) _root_.Itasca.error.Error)
+  := do
+  let r ← SourceInst.code source start «end»
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue val =>
+    let i := Slice.len val
+    let i1 ← «end» - start
+    if i != i1
+    then ok (core.result.Result.Err error.Error.UnexpectedEof)
+    else ok (core.result.Result.Ok val)
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+      (Slice Std.U8) (core.convert.FromSame _root_.Itasca.error.Error) residual
+
+/-- [itasca::limits::MAX_MODULE_BYTES]
+    Source: 'src/limits.rs', lines 37:0-37:50
+    Visibility: public -/
+@[global_simps, irreducible]
+def limits.MAX_MODULE_BYTES : Std.Usize := 1073741824#usize
+
+/-- [itasca::limits::add_offset]:
+    Source: 'src/limits.rs', lines 71:0-76:1 -/
+def limits.add_offset
+  (a : Std.Usize) (b : Std.Usize) :
+  Result (core.result.Result Std.Usize _root_.Itasca.error.Error)
+  := do
+  if a > limits.MAX_MODULE_BYTES
+  then ok (core.result.Result.Err error.Error.ModuleTooLarge)
+  else
+    let i ← limits.MAX_MODULE_BYTES - a
+    if b > i
+    then ok (core.result.Result.Err error.Error.ModuleTooLarge)
+    else let i1 ← a + b
+         ok (core.result.Result.Ok i1)
+
+/-- [itasca::limits::MAX_LEB_BYTES]
+    Source: 'src/limits.rs', lines 42:0-42:35
+    Visibility: public -/
+@[global_simps, irreducible] def limits.MAX_LEB_BYTES : Std.Usize := 5#usize
+
+/-- [itasca::stream::get_next_batch]: loop body 0:
+    Source: 'src/stream.rs', lines 408:4-425:1 -/
+@[rust_loop_body]
+def stream.get_next_batch_loop.body
+  {S : Type} (SourceInst : stream.Source S) (source : S) (code_len : Std.Usize)
+  (first_func : Std.Usize) (num_funcs : Std.Usize) (threshold : Std.Usize)
+  (pos : Std.Usize) (func : Std.Usize) (batch_bytes : Std.Usize) (done1 : Bool)
+  :
+  Result (ControlFlow (Std.Usize × Std.Usize × Std.Usize × Bool)
+    (core.result.Result (Std.Usize × Std.Usize) _root_.Itasca.error.Error))
+  := do
+  if func < num_funcs
+  then
+    if done1
+    then ok (done (core.result.Result.Ok (pos, func)))
+    else
+      let i ← pos + limits.MAX_LEB_BYTES
+      let i1 ← lift (core.cmp.impls.OrdUsize.min code_len i)
+      let r ← stream.read_exact SourceInst source pos i1
+      let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+      match cf with
+      | core.ops.control_flow.ControlFlow.Continue val =>
+        let r1 ← stream.read_len val 0#usize
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue val1 =>
+          let (len, prefix_len) := val1
+          if func != first_func
+          then
+            let i2 ← threshold - batch_bytes
+            if len > i2
+            then ok (cont (pos, func, batch_bytes, true))
+            else
+              let r2 ← limits.add_offset pos prefix_len
+              let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+              match cf2 with
+              | core.ops.control_flow.ControlFlow.Continue val2 =>
+                let r3 ← limits.add_offset val2 len
+                let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
+                match cf3 with
+                | core.ops.control_flow.ControlFlow.Continue val3 =>
+                  if val3 > code_len
+                  then
+                    ok (done (core.result.Result.Err
+                      error.Error.UnexpectedEof))
+                  else
+                    let batch_bytes1 ← batch_bytes + len
+                    let func1 ← func + 1#usize
+                    ok (cont (val3, func1, batch_bytes1, batch_bytes1 >=
+                      threshold))
+                | core.ops.control_flow.ControlFlow.Break residual =>
+                  let r4 ←
+                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                      (Std.Usize × Std.Usize) (core.convert.FromSame
+                      _root_.Itasca.error.Error) residual
+                  ok (done r4)
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                let r3 ←
+                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                    (Std.Usize × Std.Usize) (core.convert.FromSame
+                    _root_.Itasca.error.Error) residual
+                ok (done r3)
+          else
+            let r2 ← limits.add_offset pos prefix_len
+            let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+            match cf2 with
+            | core.ops.control_flow.ControlFlow.Continue val2 =>
+              let r3 ← limits.add_offset val2 len
+              let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
+              match cf3 with
+              | core.ops.control_flow.ControlFlow.Continue val3 =>
+                if val3 > code_len
+                then
+                  ok (done (core.result.Result.Err error.Error.UnexpectedEof))
+                else
+                  let batch_bytes1 ← batch_bytes + len
+                  let func1 ← func + 1#usize
+                  ok (cont (val3, func1, batch_bytes1, batch_bytes1 >=
+                    threshold))
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                let r4 ←
+                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                    (Std.Usize × Std.Usize) (core.convert.FromSame
+                    _root_.Itasca.error.Error) residual
+                ok (done r4)
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              let r3 ←
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  (Std.Usize × Std.Usize) (core.convert.FromSame
+                  _root_.Itasca.error.Error) residual
+              ok (done r3)
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r2 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              (Std.Usize × Std.Usize) (core.convert.FromSame
+              _root_.Itasca.error.Error) residual
+          ok (done r2)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r1 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            (Std.Usize × Std.Usize) (core.convert.FromSame
+            _root_.Itasca.error.Error) residual
+        ok (done r1)
+  else ok (done (core.result.Result.Ok (pos, func)))
+
+/-- [itasca::stream::get_next_batch]: loop 0:
+    Source: 'src/stream.rs', lines 408:4-425:1 -/
+@[rust_loop]
+def stream.get_next_batch_loop
+  {S : Type} (SourceInst : stream.Source S) (source : S) (code_len : Std.Usize)
+  (first_func : Std.Usize) (num_funcs : Std.Usize) (threshold : Std.Usize)
+  (pos : Std.Usize) (func : Std.Usize) (batch_bytes : Std.Usize) (done1 : Bool)
+  :
+  Result (core.result.Result (Std.Usize × Std.Usize)
+    _root_.Itasca.error.Error)
+  := do
+  loop
+    (fun (pos1, func1, batch_bytes1, done2) => stream.get_next_batch_loop.body
+      SourceInst source code_len first_func num_funcs threshold pos1 func1
+      batch_bytes1 done2)
+    (pos, func, batch_bytes, done1)
+
+/-- [itasca::stream::get_next_batch]:
+    Source: 'src/stream.rs', lines 396:0-425:1 -/
+@[reducible]
+def stream.get_next_batch
+  {S : Type} (SourceInst : stream.Source S) (source : S) (code_len : Std.Usize)
+  (start : Std.Usize) (first_func : Std.Usize) (num_funcs : Std.Usize)
+  (threshold : Std.Usize) :
+  Result (core.result.Result (Std.Usize × Std.Usize)
+    _root_.Itasca.error.Error)
+  := do
+  stream.get_next_batch_loop SourceInst source code_len first_func num_funcs
+    threshold start first_func 0#usize false
+
+/-- [itasca::stream::submit_code_batches]: loop body 0:
+    Source: 'src/stream.rs', lines 359:4-390:1 -/
+@[rust_loop_body]
+def stream.submit_code_batches_loop.body
+  {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
+  stream.StreamingVisitor V) (module_id : Std.U64)
+  (profile : _root_.Itasca.ValidationProfile) (source : S)
+  (v : alloc.vec.Vec _root_.Itasca.types.FuncType)
+  (v1 : alloc.vec.Vec _root_.Itasca.module.Import)
+  (v2 : alloc.vec.Vec _root_.Itasca.module.Global)
+  (v3 : alloc.vec.Vec _root_.Itasca.module.Export)
+  (v4 : alloc.vec.Vec _root_.Itasca.module.Element) (o : Option Std.U32)
+  (v5 : alloc.vec.Vec Std.U32)
+  (v6 : alloc.vec.Vec _root_.Itasca.types.FuncType)
+  (v7 : alloc.vec.Vec _root_.Itasca.types.TableType)
+  (v8 : alloc.vec.Vec _root_.Itasca.types.MemType)
+  (v9 : alloc.vec.Vec _root_.Itasca.types.GlobalType) (i : Std.Usize)
+  (i1 : Std.Usize) (code_len : Std.Usize)
+  (config : _root_.Itasca.stream.Config) (num_funcs : Std.Usize) (visitor : V)
+  (pending : alloc.vec.Vec Std.Usize) (pos : Std.Usize) (func : Std.Usize)
+  (batch_id : Std.Usize) :
+  Result (ControlFlow (V × (alloc.vec.Vec Std.Usize) × Std.Usize × Std.Usize
+    × Std.Usize) ((core.result.Result (alloc.vec.Vec Std.Usize)
+    _root_.Itasca.error.Error) × V))
+  := do
+  if func < num_funcs
+  then
+    let i2 := alloc.vec.Vec.len pending
+    if i2 >= config.max_batches
+    then
+      let (r, visitor1, pending1) ←
+        stream.retire_code_batch StreamingVisitorInst module_id visitor pending
+      let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+      match cf with
+      | core.ops.control_flow.ControlFlow.Continue _ =>
+        let r1 ←
+          stream.get_next_batch SourceInst source code_len pos func num_funcs
+            config.batch_bytes
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue val =>
+          let («end», next_func) := val
+          let r2 ← stream.read_exact SourceInst source pos «end»
+          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+          match cf2 with
+          | core.ops.control_flow.ControlFlow.Continue val1 =>
+            let pending2 ← alloc.vec.Vec.push pending1 batch_id
+            let i3 ← next_func - func
+            let (r3, visitor2) ←
+              StreamingVisitorInst.submit_code_batch visitor1
+                {
+                  module_id,
+                  batch_id,
+                  profile,
+                  env :=
+                    {
+                      types := v,
+                      imports := v1,
+                      globals := v2,
+                      exports := v3,
+                      elements := v4,
+                      start := o,
+                      func_type_indices := v5,
+                      func_types := v6,
+                      table_types := v7,
+                      mem_types := v8,
+                      global_types := v9,
+                      num_imported_funcs := i,
+                      num_imported_globals := i1
+                    },
+                  code := val1,
+                  code_offset := pos,
+                  first_func := func,
+                  num_funcs := i3,
+                  num_dispatched := 0#usize,
+                  dispatch_end := 0#usize,
+                  num_validated := 0#usize,
+                  validated_end := 0#usize,
+                  error := none
+                }
+            let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
+            match cf3 with
+            | core.ops.control_flow.ControlFlow.Continue _ =>
+              let batch_id1 ← batch_id + 1#usize
+              ok (cont (visitor2, pending2, «end», next_func, batch_id1))
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              let r4 ←
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  (alloc.vec.Vec Std.Usize) (core.convert.FromSame
+                  _root_.Itasca.error.Error) residual
+              ok (done (r4, visitor2))
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            let r3 ←
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                (alloc.vec.Vec Std.Usize) (core.convert.FromSame
+                _root_.Itasca.error.Error) residual
+            ok (done (r3, visitor1))
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r2 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              (alloc.vec.Vec Std.Usize) (core.convert.FromSame
+              _root_.Itasca.error.Error) residual
+          ok (done (r2, visitor1))
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r1 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            (alloc.vec.Vec Std.Usize) (core.convert.FromSame
+            _root_.Itasca.error.Error) residual
+        ok (done (r1, visitor1))
+    else
+      let r ←
+        stream.get_next_batch SourceInst source code_len pos func num_funcs
+          config.batch_bytes
+      let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+      match cf with
+      | core.ops.control_flow.ControlFlow.Continue val =>
+        let («end», next_func) := val
+        let r1 ← stream.read_exact SourceInst source pos «end»
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue val1 =>
+          let pending1 ← alloc.vec.Vec.push pending batch_id
+          let i3 ← next_func - func
+          let (r2, visitor1) ←
+            StreamingVisitorInst.submit_code_batch visitor
+              {
+                module_id,
+                batch_id,
+                profile,
+                env :=
+                  {
+                    types := v,
+                    imports := v1,
+                    globals := v2,
+                    exports := v3,
+                    elements := v4,
+                    start := o,
+                    func_type_indices := v5,
+                    func_types := v6,
+                    table_types := v7,
+                    mem_types := v8,
+                    global_types := v9,
+                    num_imported_funcs := i,
+                    num_imported_globals := i1
+                  },
+                code := val1,
+                code_offset := pos,
+                first_func := func,
+                num_funcs := i3,
+                num_dispatched := 0#usize,
+                dispatch_end := 0#usize,
+                num_validated := 0#usize,
+                validated_end := 0#usize,
+                error := none
+              }
+          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+          match cf2 with
+          | core.ops.control_flow.ControlFlow.Continue _ =>
+            let batch_id1 ← batch_id + 1#usize
+            ok (cont (visitor1, pending1, «end», next_func, batch_id1))
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            let r3 ←
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                (alloc.vec.Vec Std.Usize) (core.convert.FromSame
+                _root_.Itasca.error.Error) residual
+            ok (done (r3, visitor1))
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r2 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              (alloc.vec.Vec Std.Usize) (core.convert.FromSame
+              _root_.Itasca.error.Error) residual
+          ok (done (r2, visitor))
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r1 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            (alloc.vec.Vec Std.Usize) (core.convert.FromSame
+            _root_.Itasca.error.Error) residual
+        ok (done (r1, visitor))
+  else if pos != code_len
+  then
+    ok (done (core.result.Result.Err error.Error.SectionSizeMismatch, visitor))
+  else ok (done (core.result.Result.Ok pending, visitor))
+
+/-- [itasca::stream::submit_code_batches]: loop 0:
+    Source: 'src/stream.rs', lines 359:4-390:1 -/
+@[rust_loop]
+def stream.submit_code_batches_loop
+  {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
+  stream.StreamingVisitor V) (module_id : Std.U64)
+  (profile : _root_.Itasca.ValidationProfile) (source : S)
+  (v : alloc.vec.Vec _root_.Itasca.types.FuncType)
+  (v1 : alloc.vec.Vec _root_.Itasca.module.Import)
+  (v2 : alloc.vec.Vec _root_.Itasca.module.Global)
+  (v3 : alloc.vec.Vec _root_.Itasca.module.Export)
+  (v4 : alloc.vec.Vec _root_.Itasca.module.Element) (o : Option Std.U32)
+  (v5 : alloc.vec.Vec Std.U32)
+  (v6 : alloc.vec.Vec _root_.Itasca.types.FuncType)
+  (v7 : alloc.vec.Vec _root_.Itasca.types.TableType)
+  (v8 : alloc.vec.Vec _root_.Itasca.types.MemType)
+  (v9 : alloc.vec.Vec _root_.Itasca.types.GlobalType) (i : Std.Usize)
+  (i1 : Std.Usize) (code_len : Std.Usize)
+  (config : _root_.Itasca.stream.Config) (visitor : V)
+  (pending : alloc.vec.Vec Std.Usize) (pos : Std.Usize) (func : Std.Usize)
+  (batch_id : Std.Usize) (num_funcs : Std.Usize) :
+  Result ((core.result.Result (alloc.vec.Vec Std.Usize)
+    _root_.Itasca.error.Error) × V)
+  := do
+  loop
+    (fun (visitor1, pending1, pos1, func1, batch_id1) =>
+      stream.submit_code_batches_loop.body SourceInst StreamingVisitorInst
+      module_id profile source v v1 v2 v3 v4 o v5 v6 v7 v8 v9 i i1 code_len
+      config num_funcs visitor1 pending1 pos1 func1 batch_id1)
+    (visitor, pending, pos, func, batch_id)
+
+/-- [itasca::stream::submit_code_batches]:
+    Source: 'src/stream.rs', lines 344:0-390:1 -/
+def stream.submit_code_batches
+  {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
+  stream.StreamingVisitor V) (module_id : Std.U64)
+  (profile : _root_.Itasca.ValidationProfile) (source : S)
+  (env : _root_.Itasca.module.Env) (code_len : Std.Usize) (pos : Std.Usize)
+  (config : _root_.Itasca.stream.Config) (visitor : V) :
+  Result ((core.result.Result (alloc.vec.Vec Std.Usize)
+    _root_.Itasca.error.Error) × V)
+  := do
+  let num_funcs := alloc.vec.Vec.len env.func_type_indices
+  stream.submit_code_batches_loop SourceInst StreamingVisitorInst module_id
+    profile source env.types env.imports env.globals env.exports env.elements
+    env.start env.func_type_indices env.func_types env.table_types
+    env.mem_types env.global_types env.num_imported_funcs
+    env.num_imported_globals code_len config visitor (alloc.vec.Vec.new
+    Std.Usize) pos 0#usize 0#usize num_funcs
+
+/-- [itasca::limits::MAX_CODE_HEADER_BYTES]
+    Source: 'src/limits.rs', lines 46:0-46:63
+    Visibility: public -/
+@[global_simps, irreducible]
+def limits.MAX_CODE_HEADER_BYTES : Result Std.Usize := do
+  let i ← 2#usize * limits.MAX_LEB_BYTES
+  1#usize + i
+
+/-- [itasca::stream::read_code_header]:
+    Source: 'src/stream.rs', lines 313:0-340:1 -/
+def stream.read_code_header
+  {S : Type} (SourceInst : stream.Source S) (source : S) (code_len : Std.Usize)
+  (env : _root_.Itasca.module.Env) :
+  Result (core.result.Result Std.Usize _root_.Itasca.error.Error)
+  := do
+  if code_len = 0#usize
+  then
+    let b ← alloc.vec.Vec.is_empty Global env.func_type_indices
+    if b
+    then ok (core.result.Result.Ok 0#usize)
+    else ok (core.result.Result.Err error.Error.MissingCodeSection)
+  else
+    let i ← limits.MAX_CODE_HEADER_BYTES
+    let i1 ← lift (core.cmp.impls.OrdUsize.min code_len i)
+    let r ← stream.read_exact SourceInst source 0#usize i1
+    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      let i2 ← Slice.index_usize val 0#usize
+      if i2 != module.SECTION_CODE
+      then ok (core.result.Result.Err error.Error.Host)
+      else
+        let r1 ← stream.read_len val 1#usize
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue val1 =>
+          let (len, contents) := val1
+          let r2 ← limits.add_offset contents len
+          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+          match cf2 with
+          | core.ops.control_flow.ControlFlow.Continue val2 =>
+            if val2 > code_len
+            then ok (core.result.Result.Err error.Error.UnexpectedEof)
+            else if val2 < code_len
+            then ok (core.result.Result.Err error.Error.SectionSizeMismatch)
+            else
+              let r3 ← stream.read_len val contents
+              let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
+              match cf3 with
+              | core.ops.control_flow.ControlFlow.Continue val3 =>
+                let (count, entries) := val3
+                if entries > val2
+                then
+                  ok (core.result.Result.Err error.Error.SectionSizeMismatch)
+                else
+                  let i3 := alloc.vec.Vec.len env.func_type_indices
+                  if count != i3
+                  then ok (core.result.Result.Err error.Error.FuncCodeMismatch)
+                  else ok (core.result.Result.Ok entries)
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  Std.Usize (core.convert.FromSame _root_.Itasca.error.Error)
+                  residual
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              Std.Usize (core.convert.FromSame _root_.Itasca.error.Error)
+              residual
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Std.Usize (core.convert.FromSame _root_.Itasca.error.Error)
+            residual
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+        Std.Usize (core.convert.FromSame _root_.Itasca.error.Error) residual
+
+/-- [itasca::module::decode_segment_index]:
+    Source: 'src/module.rs', lines 973:0-987:1 -/
+def module.decode_segment_index
+  (data : Slice Std.U8) (pos : Std.Usize) (index_or_flags : Std.U32)
+  (profile : _root_.Itasca.ValidationProfile) :
+  Result (core.result.Result (Std.U32 × Std.Usize × Bool)
+    _root_.Itasca.error.Error)
+  := do
+  match profile with
+  | ValidationProfile.Wasm1 =>
+    ok (core.result.Result.Ok (index_or_flags, pos, false))
+  | ValidationProfile.MultiValue =>
+    match index_or_flags with
+    | 0#uscalar => ok (core.result.Result.Ok (0#u32, pos, false))
+    | 2#uscalar =>
+      let r ← reader.read_u32_leb data pos
+      let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+      match cf with
+      | core.ops.control_flow.ControlFlow.Continue val =>
+        let (index, next) := val
+        ok (core.result.Result.Ok (index, next, true))
       | core.ops.control_flow.ControlFlow.Break residual =>
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
           (Std.U32 × Std.Usize × Bool)
           error.Error.Insts.CoreConvertFromOpError residual
     | _ => ok (core.result.Result.Err (error.Error.InvalidType 255#u8))
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-      (Std.U32 × Std.Usize × Bool) error.Error.Insts.CoreConvertFromOpError
-      residual
 
 /-- [itasca::types::{impl core::cmp::PartialEq<itasca::types::Mut> for itasca::types::Mut}::eq]:
     Source: 'src/types.rs', lines 42:4-48:5
@@ -6502,7 +10173,7 @@ impl_def types.Mut.Insts.CoreCmpPartialEqMut : core.cmp.PartialEq
 }
 
 /-- [itasca::module::const_global]:
-    Source: 'src/module.rs', lines 580:0-593:1 -/
+    Source: 'src/module.rs', lines 604:0-617:1 -/
 def module.const_global
   (env : _root_.Itasca.module.Env) (idx : Std.U32) :
   Result (core.result.Result _root_.Itasca.types.GlobalType
@@ -6526,7 +10197,7 @@ def module.const_global
     else ok (core.result.Result.Ok gt)
 
 /-- [itasca::module::read_expr_end]:
-    Source: 'src/module.rs', lines 570:0-576:1 -/
+    Source: 'src/module.rs', lines 594:0-600:1 -/
 def module.read_expr_end
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result Std.Usize _root_.Itasca.error.Error)
@@ -6544,7 +10215,7 @@ def module.read_expr_end
       Std.Usize error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::module::expect_const_type]:
-    Source: 'src/module.rs', lines 563:0-568:1 -/
+    Source: 'src/module.rs', lines 587:0-592:1 -/
 def module.expect_const_type
   (actual : _root_.Itasca.types.ValueType)
   (expected : _root_.Itasca.types.ValueType) :
@@ -6558,7 +10229,7 @@ def module.expect_const_type
   else ok (core.result.Result.Ok ())
 
 /-- [itasca::module::decode_const_expr]:
-    Source: 'src/module.rs', lines 597:0-638:1 -/
+    Source: 'src/module.rs', lines 621:0-662:1 -/
 def module.decode_const_expr
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env)
   (expected : _root_.Itasca.types.ValueType) :
@@ -6720,20 +10391,8 @@ def module.decode_const_expr
       (_root_.Itasca.types.ConstExpr × Std.Usize)
       error.Error.Insts.CoreConvertFromOpError residual
 
-/-- [itasca::module::have_bytes]:
-    Source: 'src/module.rs', lines 303:0-308:1 -/
-def module.have_bytes
-  (data : Slice Std.U8) (pos : Std.Usize) (n : Std.Usize) :
-  Result (core.result.Result Unit _root_.Itasca.error.Error)
-  := do
-  let i := Slice.len data
-  let i1 ← i - pos
-  if n > i1
-  then ok (core.result.Result.Err error.Error.UnexpectedEof)
-  else ok (core.result.Result.Ok ())
-
 /-- [itasca::module::copy_bytes]: loop body 0:
-    Source: 'src/module.rs', lines 292:4-298:5 -/
+    Source: 'src/module.rs', lines 293:4-299:5 -/
 @[rust_loop_body]
 def module.copy_bytes_loop.body
   (data : Slice Std.U8) («to» : Std.Usize) (out : alloc.vec.Vec Std.U8)
@@ -6750,7 +10409,7 @@ def module.copy_bytes_loop.body
     ok (cont (out1, i2))
 
 /-- [itasca::module::copy_bytes]: loop 0:
-    Source: 'src/module.rs', lines 292:4-298:5 -/
+    Source: 'src/module.rs', lines 293:4-299:5 -/
 @[rust_loop]
 def module.copy_bytes_loop
   (data : Slice Std.U8) («to» : Std.Usize) (out : alloc.vec.Vec Std.U8)
@@ -6762,7 +10421,7 @@ def module.copy_bytes_loop
     (out, i)
 
 /-- [itasca::module::copy_bytes]:
-    Source: 'src/module.rs', lines 289:0-299:1 -/
+    Source: 'src/module.rs', lines 290:0-300:1 -/
 @[reducible]
 def module.copy_bytes
   (data : Slice Std.U8) («from» : Std.Usize) («to» : Std.Usize) :
@@ -6770,73 +10429,91 @@ def module.copy_bytes
   := do
   module.copy_bytes_loop data «to» (alloc.vec.Vec.new Std.U8) «from»
 
-/-- [itasca::multi_value::decode_data]: loop body 0:
-    Source: 'src/multi_value.rs', lines 583:4-603:5 -/
+/-- [itasca::module::decode_data_segment]:
+    Source: 'src/module.rs', lines 1221:0-1242:1 -/
+def module.decode_data_segment
+  (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env)
+  (profile : _root_.Itasca.ValidationProfile) :
+  Result (core.result.Result (_root_.Itasca.module.Data × Std.Usize)
+    _root_.Itasca.error.Error)
+  := do
+  let r ← reader.read_u32_leb data pos
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue val =>
+    let (index_or_flags, p1) := val
+    let r1 ← module.decode_segment_index data p1 index_or_flags profile
+    let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+    match cf1 with
+    | core.ops.control_flow.ControlFlow.Continue val1 =>
+      let (memory_idx, p11, _) := val1
+      let i ← lift (UScalar.cast .Usize memory_idx)
+      let i1 := alloc.vec.Vec.len env.mem_types
+      if i >= i1
+      then ok (core.result.Result.Err (error.Error.UnknownMemory memory_idx))
+      else
+        let r2 ← module.decode_const_expr data p11 env types.ValueType.I32
+        let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+        match cf2 with
+        | core.ops.control_flow.ControlFlow.Continue val2 =>
+          let (offset, p2) := val2
+          let r3 ← reader.read_u32_leb data p2
+          let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
+          match cf3 with
+          | core.ops.control_flow.ControlFlow.Continue val3 =>
+            let (len, p3) := val3
+            let n ← lift (UScalar.cast .Usize len)
+            let r4 ← module.have_bytes data p3 n
+            let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
+            match cf4 with
+            | core.ops.control_flow.ControlFlow.Continue _ =>
+              let i2 ← p3 + n
+              let init ← module.copy_bytes data p3 i2
+              ok (core.result.Result.Ok ({ memory_idx, offset, init }, i2))
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                (_root_.Itasca.module.Data × Std.Usize) (core.convert.FromSame
+                _root_.Itasca.error.Error) residual
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              (_root_.Itasca.module.Data × Std.Usize)
+              error.Error.Insts.CoreConvertFromOpError residual
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            (_root_.Itasca.module.Data × Std.Usize) (core.convert.FromSame
+            _root_.Itasca.error.Error) residual
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+        (_root_.Itasca.module.Data × Std.Usize) (core.convert.FromSame
+        _root_.Itasca.error.Error) residual
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+      (_root_.Itasca.module.Data × Std.Usize)
+      error.Error.Insts.CoreConvertFromOpError residual
+
+/-- [itasca::module::decode_data_section]: loop body 0:
+    Source: 'src/module.rs', lines 1251:4-1259:5 -/
 @[rust_loop_body]
-def multi_value.decode_data_loop.body
-  (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
-  (pos : Std.Usize) (segments : alloc.vec.Vec _root_.Itasca.module.Data)
-  (i : Std.U32) :
-  Result (ControlFlow (Std.Usize × (alloc.vec.Vec _root_.Itasca.module.Data)
+def module.decode_data_section_loop.body
+  (data : Slice Std.U8) (env : _root_.Itasca.module.Env)
+  (profile : _root_.Itasca.ValidationProfile) (count : Std.U32)
+  (out : alloc.vec.Vec _root_.Itasca.module.Data) (q : Std.Usize) (i : Std.U32)
+  :
+  Result (ControlFlow ((alloc.vec.Vec _root_.Itasca.module.Data) × Std.Usize
     × Std.U32) (core.result.Result ((alloc.vec.Vec _root_.Itasca.module.Data)
     × Std.Usize) _root_.Itasca.error.Error))
   := do
   if i >= count
-  then ok (done (core.result.Result.Ok (segments, pos)))
+  then ok (done (core.result.Result.Ok (out, q)))
   else
-    let r ← multi_value.active_index data pos
+    let r ← module.decode_data_segment data q env profile
     let cf ← core.result.Result.Insts.CoreOpsTry.branch r
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
-      let (memory_idx, p, _) := val
-      let i1 ← lift (UScalar.cast .Usize memory_idx)
-      let i2 := alloc.vec.Vec.len env.mem_types
-      if i1 >= i2
-      then
-        ok (done (core.result.Result.Err (error.Error.UnknownMemory
-          memory_idx)))
-      else
-        let r1 ← module.decode_const_expr data p env types.ValueType.I32
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue val1 =>
-          let (offset, p1) := val1
-          let r2 ← reader.read_u32_leb data p1
-          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-          match cf2 with
-          | core.ops.control_flow.ControlFlow.Continue val2 =>
-            let (size, p2) := val2
-            let i3 ← lift (UScalar.cast .Usize size)
-            let r3 ← module.have_bytes data p2 i3
-            let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
-            match cf3 with
-            | core.ops.control_flow.ControlFlow.Continue _ =>
-              let i4 ← lift (UScalar.cast .Usize size)
-              let «end» ← p2 + i4
-              let init ← module.copy_bytes data p2 «end»
-              let segments1 ←
-                alloc.vec.Vec.push segments ({ memory_idx, offset, init } :
-                  _root_.Itasca.module.Data)
-              let i5 ← i + 1#u32
-              ok (cont («end», segments1, i5))
-            | core.ops.control_flow.ControlFlow.Break residual =>
-              let r4 ←
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  ((alloc.vec.Vec _root_.Itasca.module.Data) × Std.Usize)
-                  (core.convert.FromSame _root_.Itasca.error.Error) residual
-              ok (done r4)
-          | core.ops.control_flow.ControlFlow.Break residual =>
-            let r3 ←
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                ((alloc.vec.Vec _root_.Itasca.module.Data) × Std.Usize)
-                error.Error.Insts.CoreConvertFromOpError residual
-            ok (done r3)
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              ((alloc.vec.Vec _root_.Itasca.module.Data) × Std.Usize)
-              (core.convert.FromSame _root_.Itasca.error.Error) residual
-          ok (done r2)
+      let (segment, q1) := val
+      let out1 ← alloc.vec.Vec.push out segment
+      let i1 ← i + 1#u32
+      ok (cont (out1, q1, i1))
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r1 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -6844,25 +10521,27 @@ def multi_value.decode_data_loop.body
           (core.convert.FromSame _root_.Itasca.error.Error) residual
       ok (done r1)
 
-/-- [itasca::multi_value::decode_data]: loop 0:
-    Source: 'src/multi_value.rs', lines 583:4-603:5 -/
+/-- [itasca::module::decode_data_section]: loop 0:
+    Source: 'src/module.rs', lines 1251:4-1259:5 -/
 @[rust_loop]
-def multi_value.decode_data_loop
-  (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
-  (pos : Std.Usize) (segments : alloc.vec.Vec _root_.Itasca.module.Data)
-  (i : Std.U32) :
+def module.decode_data_section_loop
+  (data : Slice Std.U8) (env : _root_.Itasca.module.Env)
+  (profile : _root_.Itasca.ValidationProfile) (count : Std.U32)
+  (out : alloc.vec.Vec _root_.Itasca.module.Data) (q : Std.Usize) (i : Std.U32)
+  :
   Result (core.result.Result ((alloc.vec.Vec _root_.Itasca.module.Data) ×
     Std.Usize) _root_.Itasca.error.Error)
   := do
   loop
-    (fun (pos1, segments1, i1) => multi_value.decode_data_loop.body data env
-      count pos1 segments1 i1)
-    (pos, segments, i)
+    (fun (out1, q1, i1) => module.decode_data_section_loop.body data env
+      profile count out1 q1 i1)
+    (out, q, i)
 
-/-- [itasca::multi_value::decode_data]:
-    Source: 'src/multi_value.rs', lines 575:0-604:1 -/
-def multi_value.decode_data
-  (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
+/-- [itasca::module::decode_data_section]:
+    Source: 'src/module.rs', lines 1244:0-1260:1 -/
+def module.decode_data_section
+  (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env)
+  (profile : _root_.Itasca.ValidationProfile) :
   Result (core.result.Result ((alloc.vec.Vec _root_.Itasca.module.Data) ×
     Std.Usize) _root_.Itasca.error.Error)
   := do
@@ -6870,16 +10549,16 @@ def multi_value.decode_data
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
-    let (count, pos1) := val
-    multi_value.decode_data_loop data env count pos1 (alloc.vec.Vec.new
-      _root_.Itasca.module.Data) 0#u32
+    let (count, p) := val
+    module.decode_data_section_loop data env profile count (alloc.vec.Vec.new
+      _root_.Itasca.module.Data) p 0#u32
   | core.ops.control_flow.ControlFlow.Break residual =>
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
       ((alloc.vec.Vec _root_.Itasca.module.Data) × Std.Usize)
       error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::module::utf8_cont]:
-    Source: 'src/module.rs', lines 459:0-468:1 -/
+    Source: 'src/module.rs', lines 483:0-492:1 -/
 def module.utf8_cont
   (bytes : Slice Std.U8) (i : Std.Usize) (lo : Std.U8) (hi : Std.U8) :
   Result (core.result.Result Unit _root_.Itasca.error.Error)
@@ -6896,7 +10575,7 @@ def module.utf8_cont
     else ok (core.result.Result.Ok ())
 
 /-- [itasca::module::utf8_sequence_len]:
-    Source: 'src/module.rs', lines 474:0-517:1 -/
+    Source: 'src/module.rs', lines 498:0-541:1 -/
 def module.utf8_sequence_len
   (bytes : Slice Std.U8) (i : Std.Usize) :
   Result (core.result.Result Std.Usize _root_.Itasca.error.Error)
@@ -7194,7 +10873,7 @@ def module.utf8_sequence_len
     else ok (core.result.Result.Err error.Error.InvalidUtf8)
 
 /-- [itasca::module::validate_utf8]: loop body 0:
-    Source: 'src/module.rs', lines 521:4-528:1 -/
+    Source: 'src/module.rs', lines 545:4-552:1 -/
 @[rust_loop_body]
 def module.validate_utf8_loop.body
   (bytes : Slice Std.U8) (i : Std.Usize) :
@@ -7218,7 +10897,7 @@ def module.validate_utf8_loop.body
       ok (done r1)
 
 /-- [itasca::module::validate_utf8]: loop 0:
-    Source: 'src/module.rs', lines 521:4-528:1 -/
+    Source: 'src/module.rs', lines 545:4-552:1 -/
 @[rust_loop]
 def module.validate_utf8_loop
   (bytes : Slice Std.U8) (i : Std.Usize) :
@@ -7229,7 +10908,7 @@ def module.validate_utf8_loop
     i
 
 /-- [itasca::module::validate_utf8]:
-    Source: 'src/module.rs', lines 519:0-528:1 -/
+    Source: 'src/module.rs', lines 543:0-552:1 -/
 @[reducible]
 def module.validate_utf8
   (bytes : Slice Std.U8) :
@@ -7238,7 +10917,7 @@ def module.validate_utf8
   module.validate_utf8_loop bytes 0#usize
 
 /-- [itasca::module::decode_name]:
-    Source: 'src/module.rs', lines 531:0-538:1 -/
+    Source: 'src/module.rs', lines 555:0-562:1 -/
 def module.decode_name
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result ((alloc.vec.Vec Std.U8) × Std.Usize)
@@ -7276,7 +10955,7 @@ def module.decode_name
       error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::module::decode_custom_section]:
-    Source: 'src/module.rs', lines 549:0-559:1 -/
+    Source: 'src/module.rs', lines 573:0-583:1 -/
 def module.decode_custom_section
   (data : Slice Std.U8) (pos : Std.Usize) («end» : Std.Usize) :
   Result (core.result.Result _root_.Itasca.types.CustomSection
@@ -7299,7 +10978,7 @@ def module.decode_custom_section
       _root_.Itasca.error.Error) residual
 
 /-- [itasca::module::read_section_header]:
-    Source: 'src/module.rs', lines 333:0-339:1 -/
+    Source: 'src/module.rs', lines 334:0-340:1 -/
 def module.read_section_header
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result (Std.U8 × Std.Usize × Std.Usize)
@@ -7335,2402 +11014,231 @@ def module.read_section_header
       (Std.U8 × Std.Usize × Std.Usize)
       error.Error.Insts.CoreConvertFromOpError residual
 
-/-- [itasca::multi_value::validate_tail]: loop body 0:
-    Source: 'src/multi_value.rs', lines 613:4-631:5 -/
+/-- [itasca::module::SECTION_DATA]
+    Source: 'src/module.rs', lines 45:0-45:28 -/
+@[global_simps, irreducible] def module.SECTION_DATA : Std.U8 := 11#u8
+
+/-- [itasca::module::SECTION_CUSTOM]
+    Source: 'src/module.rs', lines 34:0-34:29 -/
+@[global_simps, irreducible] def module.SECTION_CUSTOM : Std.U8 := 0#u8
+
+/-- [itasca::module::validate_tail_with]: loop body 0:
+    Source: 'src/module.rs', lines 1287:4-1310:5
+    Visibility: public -/
 @[rust_loop_body]
-def multi_value.validate_tail_loop.body
-  (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (pos : Std.Usize)
-  (segments : alloc.vec.Vec _root_.Itasca.module.Data) (seen_data : Bool) :
-  Result (ControlFlow (Std.Usize × (alloc.vec.Vec _root_.Itasca.module.Data)
-    × Bool) (core.result.Result _root_.Itasca.module.Tail
-    _root_.Itasca.error.Error))
+def module.validate_tail_with_loop.body
+  {V : Type} (ModuleVisitorInst : module.ModuleVisitor V) (data : Slice Std.U8)
+  (env : _root_.Itasca.module.Env) (profile : _root_.Itasca.ValidationProfile)
+  (v : V) (segments : alloc.vec.Vec _root_.Itasca.module.Data) (q : Std.Usize)
+  (seen_data : Bool) :
+  Result (ControlFlow (V × (alloc.vec.Vec _root_.Itasca.module.Data) ×
+    Std.Usize × Bool) ((core.result.Result _root_.Itasca.module.Tail
+    _root_.Itasca.error.Error) × V))
   := do
   let i := Slice.len data
-  if pos >= i
-  then ok (done (core.result.Result.Ok { data := segments }))
+  if q >= i
+  then ok (done (core.result.Result.Ok { data := segments }, v))
   else
-    let r ← module.read_section_header data pos
+    let r ← module.read_section_header data q
     let cf ← core.result.Result.Insts.CoreOpsTry.branch r
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
       let (id, start, «end») := val
-      if id = 0#u8
+      if id = module.SECTION_CUSTOM
       then
         let r1 ← module.decode_custom_section data start «end»
         let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
         match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          ok (cont («end», segments, seen_data))
+        | core.ops.control_flow.ControlFlow.Continue val1 =>
+          let (r2, v1) ← ModuleVisitorInst.on_custom_section v val1
+          match r2 with
+          | core.result.Result.Ok _ =>
+            ok (cont (v1, segments, «end», seen_data))
+          | core.result.Result.Err e =>
+            ok (done (core.result.Result.Err (error.Error.Visitor e), v1))
         | core.ops.control_flow.ControlFlow.Break residual =>
           let r2 ←
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
               _root_.Itasca.module.Tail (core.convert.FromSame
               _root_.Itasca.error.Error) residual
-          ok (done r2)
-      else if id != 11#u8
-      then ok (done (core.result.Result.Err error.Error.SectionOutOfOrder))
+          ok (done (r2, v))
+      else if id != module.SECTION_DATA
+      then ok (done (core.result.Result.Err error.Error.SectionOutOfOrder, v))
       else if seen_data
-      then ok (done (core.result.Result.Err error.Error.SectionOutOfOrder))
+      then ok (done (core.result.Result.Err error.Error.SectionOutOfOrder, v))
       else
-        let r1 ← multi_value.decode_data data start env
+        let r1 ← module.decode_data_section data start env profile
         let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
         match cf1 with
         | core.ops.control_flow.ControlFlow.Continue val1 =>
-          let (decoded, actual) := val1
-          if actual != «end»
+          let (decoded, p) := val1
+          if p != «end»
           then
-            ok (done (core.result.Result.Err error.Error.SectionSizeMismatch))
-          else ok (cont («end», decoded, true))
+            ok (done (core.result.Result.Err error.Error.SectionSizeMismatch,
+              v))
+          else ok (cont (v, decoded, «end», true))
         | core.ops.control_flow.ControlFlow.Break residual =>
           let r2 ←
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
               _root_.Itasca.module.Tail (core.convert.FromSame
               _root_.Itasca.error.Error) residual
-          ok (done r2)
+          ok (done (r2, v))
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r1 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
           _root_.Itasca.module.Tail (core.convert.FromSame
           _root_.Itasca.error.Error) residual
-      ok (done r1)
+      ok (done (r1, v))
 
-/-- [itasca::multi_value::validate_tail]: loop 0:
-    Source: 'src/multi_value.rs', lines 613:4-631:5 -/
+/-- [itasca::module::validate_tail_with]: loop 0:
+    Source: 'src/module.rs', lines 1287:4-1310:5
+    Visibility: public -/
 @[rust_loop]
-def multi_value.validate_tail_loop
-  (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env)
-  (segments : alloc.vec.Vec _root_.Itasca.module.Data) (seen_data : Bool) :
-  Result (core.result.Result _root_.Itasca.module.Tail
-    _root_.Itasca.error.Error)
+def module.validate_tail_with_loop
+  {V : Type} (ModuleVisitorInst : module.ModuleVisitor V) (data : Slice Std.U8)
+  (env : _root_.Itasca.module.Env) (profile : _root_.Itasca.ValidationProfile)
+  (v : V) (segments : alloc.vec.Vec _root_.Itasca.module.Data) (q : Std.Usize)
+  (seen_data : Bool) :
+  Result ((core.result.Result _root_.Itasca.module.Tail
+    _root_.Itasca.error.Error) × V)
   := do
   loop
-    (fun (pos1, segments1, seen_data1) => multi_value.validate_tail_loop.body
-      data env pos1 segments1 seen_data1)
-    (pos, segments, seen_data)
+    (fun (v1, segments1, q1, seen_data1) => module.validate_tail_with_loop.body
+      ModuleVisitorInst data env profile v1 segments1 q1 seen_data1)
+    (v, segments, q, seen_data)
 
-/-- [itasca::multi_value::validate_tail]:
-    Source: 'src/multi_value.rs', lines 606:0-632:1 -/
+/-- [itasca::module::validate_tail_with]:
+    Source: 'src/module.rs', lines 1277:0-1311:1
+    Visibility: public -/
 @[reducible]
-def multi_value.validate_tail
-  (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
-  Result (core.result.Result _root_.Itasca.module.Tail
-    _root_.Itasca.error.Error)
+def module.validate_tail_with
+  {V : Type} (ModuleVisitorInst : module.ModuleVisitor V) (data : Slice Std.U8)
+  (pos : Std.Usize) (env : _root_.Itasca.module.Env)
+  (profile : _root_.Itasca.ValidationProfile) (v : V) :
+  Result ((core.result.Result _root_.Itasca.module.Tail
+    _root_.Itasca.error.Error) × V)
   := do
-  multi_value.validate_tail_loop data pos env (alloc.vec.Vec.new
-    _root_.Itasca.module.Data) false
+  module.validate_tail_with_loop ModuleVisitorInst data env profile v
+    (alloc.vec.Vec.new _root_.Itasca.module.Data) pos false
 
-/-- [itasca::multi_value::MAX_RESULTS]
-    Source: 'src/multi_value.rs', lines 25:0-25:36
-    Visibility: public -/
-@[global_simps, irreducible]
-def multi_value.MAX_RESULTS : Std.Usize := 1000#usize
-
-/-- [itasca::multi_value::MAX_PARAMS]
-    Source: 'src/multi_value.rs', lines 24:0-24:35
-    Visibility: public -/
-@[global_simps, irreducible]
-def multi_value.MAX_PARAMS : Std.Usize := 1000#usize
-
-/-- [itasca::multi_value::check_func_type]:
-    Source: 'src/multi_value.rs', lines 32:0-40:1 -/
-def multi_value.check_func_type
-  (ft : _root_.Itasca.types.FuncType) :
-  Result (core.result.Result Unit _root_.Itasca.error.OpError)
+/-- [itasca::stream::validate_remaining]:
+    Source: 'src/stream.rs', lines 283:0-309:1 -/
+def stream.validate_remaining
+  {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
+  stream.StreamingVisitor V) (module_id : Std.U64)
+  (profile : _root_.Itasca.ValidationProfile) (source : S)
+  (env : _root_.Itasca.module.Env) (env_len : Std.Usize) (visitor : V) :
+  Result ((core.result.Result Unit _root_.Itasca.error.Error) × V)
   := do
-  let i := alloc.vec.Vec.len ft.params
-  if i > multi_value.MAX_PARAMS
-  then ok (core.result.Result.Err error.OpError.TooManyParams)
-  else
-    let i1 := alloc.vec.Vec.len ft.results
-    if i1 > multi_value.MAX_RESULTS
-    then ok (core.result.Result.Err error.OpError.TooManyResults)
-    else ok (core.result.Result.Ok ())
-
-/-- [itasca::multi_value::apply_func_type]:
-    Source: 'src/multi_value.rs', lines 259:0-267:1 -/
-def multi_value.apply_func_type
-  (st : _root_.Itasca.code.OpIterState) (ft : _root_.Itasca.types.FuncType) :
-  Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
-    _root_.Itasca.code.OpIterState)
-  := do
-  let r ← multi_value.check_func_type ft
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue _ =>
-    let s := alloc.vec.Vec.deref ft.params
-    let (r1, st1) ← code.pop_types st s
-    let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-    match cf1 with
-    | core.ops.control_flow.ControlFlow.Continue _ =>
-      let i := alloc.vec.Vec.len ft.results
-      let i1 := alloc.vec.Vec.len st1.vals
-      let i2 ← core.num.Usize.MAX - i1
-      if i > i2
-      then ok (core.result.Result.Err error.OpError.StackTooLarge, st1)
-      else
-        let s1 := alloc.vec.Vec.deref ft.results
-        let st2 ← code.push_types st1 s1
-        ok (core.result.Result.Ok (), st2)
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      let r2 ←
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-      ok (r2, st1)
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    let r1 ←
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-    ok (r1, st)
-
-/-- [itasca::multi_value::call]:
-    Source: 'src/multi_value.rs', lines 269:0-293:1 -/
-def multi_value.call
-  (st : _root_.Itasca.multi_value.State) (data : Slice Std.U8)
-  (env : _root_.Itasca.module.Env) (indirect : Bool) :
-  Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
-    _root_.Itasca.multi_value.State)
-  := do
-  let r ← reader.read_u32_leb data st.core.pos
+  let code_len ← SourceInst.code_len source
+  let r ← limits.add_offset env_len code_len
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
-    let (index, «end») := val
-    let i ← lift (UScalar.cast .Usize index)
-    if indirect
-    then
-      let r1 ← reader.read_byte data «end»
-      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-      match cf1 with
-      | core.ops.control_flow.ControlFlow.Continue val1 =>
-        let (reserved, end1) := val1
-        if reserved != 0#u8
-        then
-          ok (core.result.Result.Err error.OpError.ReservedByteNotZero,
-            { st with core := { st.core with pos := «end» } })
-        else
-          let b ← alloc.vec.Vec.is_empty Global env.table_types
-          if b
-          then
-            ok (core.result.Result.Err error.OpError.UnknownTable,
-              { st with core := { st.core with pos := end1 } })
-          else
-            let i1 := alloc.vec.Vec.len env.types
-            if i >= i1
-            then
-              ok (core.result.Result.Err error.OpError.UnknownType,
-                { st with core := { st.core with pos := end1 } })
-            else
-              let (r2, ois) ←
-                code.pop_with_type { st.core with pos := end1 }
-                  types.ValueType.I32
-              let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-              match cf2 with
-              | core.ops.control_flow.ControlFlow.Continue _ =>
-                let ft ←
-                  alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-                    _root_.Itasca.types.FuncType) env.types i
-                let (r3, ois1) ← multi_value.apply_func_type ois ft
-                ok (r3, { st with core := ois1 })
-              | core.ops.control_flow.ControlFlow.Break residual =>
-                let r3 ←
-                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                    Unit (core.convert.FromSame _root_.Itasca.error.OpError)
-                    residual
-                ok (r3, { st with core := ois })
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r2 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-        ok (r2, { st with core := { st.core with pos := «end» } })
-    else
-      let i1 := alloc.vec.Vec.len env.func_types
-      if i >= i1
-      then
-        ok (core.result.Result.Err error.OpError.UnknownFunc,
-          { st with core := { st.core with pos := «end» } })
-      else
-        let ft ←
-          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-            _root_.Itasca.types.FuncType) env.func_types i
-        let (r1, ois) ←
-          multi_value.apply_func_type { st.core with pos := «end» } ft
-        ok (r1, { st with core := ois })
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    let r1 ←
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-    ok (r1, st)
-
-/-- [itasca::signature::{itasca::signature::ResultType}::len]:
-    Source: 'src/signature.rs', lines 28:4-43:5
-    Visibility: public -/
-def signature.ResultType.len
-  (self : _root_.Itasca.signature.ResultType) (env : _root_.Itasca.module.Env)
-  :
-  Result (core.result.Result Std.Usize _root_.Itasca.error.OpError)
-  := do
-  match self with
-  | signature.ResultType.Empty => ok (core.result.Result.Ok 0#usize)
-  | signature.ResultType.One _ => ok (core.result.Result.Ok 1#usize)
-  | signature.ResultType.Type index part =>
-    let i ← lift (UScalar.cast .Usize index)
-    let i1 := alloc.vec.Vec.len env.types
-    if i >= i1
-    then ok (core.result.Result.Err error.OpError.UnknownType)
-    else
-      match part with
-      | signature.TypePart.Params =>
-        let ft ←
-          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-            _root_.Itasca.types.FuncType) env.types i
-        let i2 := alloc.vec.Vec.len ft.params
-        ok (core.result.Result.Ok i2)
-      | signature.TypePart.Results =>
-        let ft ←
-          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-            _root_.Itasca.types.FuncType) env.types i
-        let i2 := alloc.vec.Vec.len ft.results
-        ok (core.result.Result.Ok i2)
-
-/-- [itasca::signature::{itasca::signature::ResultType}::get]:
-    Source: 'src/signature.rs', lines 47:4-80:5
-    Visibility: public -/
-def signature.ResultType.get
-  (self : _root_.Itasca.signature.ResultType) (env : _root_.Itasca.module.Env)
-  (element : Std.Usize) :
-  Result (core.result.Result (Option _root_.Itasca.types.ValueType)
-    _root_.Itasca.error.OpError)
-  := do
-  match self with
-  | signature.ResultType.Empty => ok (core.result.Result.Ok none)
-  | signature.ResultType.One v =>
-    if element = 0#usize
-    then ok (core.result.Result.Ok (some v))
-    else ok (core.result.Result.Ok none)
-  | signature.ResultType.Type index part =>
-    let i ← lift (UScalar.cast .Usize index)
-    let i1 := alloc.vec.Vec.len env.types
-    if i >= i1
-    then ok (core.result.Result.Err error.OpError.UnknownType)
-    else
-      match part with
-      | signature.TypePart.Params =>
-        let ft ←
-          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-            _root_.Itasca.types.FuncType) env.types i
-        let i2 := alloc.vec.Vec.len ft.params
-        if element >= i2
-        then ok (core.result.Result.Ok none)
-        else
-          let vt ←
-            alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-              _root_.Itasca.types.ValueType) ft.params element
-          ok (core.result.Result.Ok (some vt))
-      | signature.TypePart.Results =>
-        let ft ←
-          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-            _root_.Itasca.types.FuncType) env.types i
-        let i2 := alloc.vec.Vec.len ft.results
-        if element >= i2
-        then ok (core.result.Result.Ok none)
-        else
-          let vt ←
-            alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-              _root_.Itasca.types.ValueType) ft.results element
-          ok (core.result.Result.Ok (some vt))
-
-/-- [itasca::multi_value::check_suffix]: loop body 0:
-    Source: 'src/multi_value.rs', lines 208:4-229:5 -/
-@[rust_loop_body]
-def multi_value.check_suffix_loop.body
-  (v : alloc.vec.Vec _root_.Itasca.code.StackType)
-  (v1 : alloc.vec.Vec _root_.Itasca.code.Ctrl) (i : Std.Usize)
-  (env : _root_.Itasca.module.Env) (ts : _root_.Itasca.signature.ResultType)
-  (base : Std.Usize) (stack : Std.Usize) (i1 : Std.Usize) :
-  Result (ControlFlow (Std.Usize × Std.Usize) (core.result.Result Unit
-    _root_.Itasca.error.OpError))
-  := do
-  if i1 = 0#usize
-  then ok (done (core.result.Result.Ok ()))
-  else
-    let i2 ← i1 - 1#usize
-    let r ← signature.ResultType.get ts env i2
-    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-    match cf with
-    | core.ops.control_flow.ControlFlow.Continue val =>
-      match val with
-      | none => ok (done (core.result.Result.Err error.OpError.TypeMismatch))
-      | some t =>
-        if stack = base
-        then
-          let b ← code.cur_polymorphic { vals := v, ctrls := v1, pos := i }
-          if b
-          then ok (cont (stack, i2))
-          else ok (done (core.result.Result.Err error.OpError.EmptyStack))
-        else
-          let stack1 ← stack - 1#usize
-          let st ←
-            alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-              _root_.Itasca.code.StackType) v stack1
-          match st with
-          | code.StackType.Val actual =>
-            let b ←
-              core.cmp.PartialEq.ne.trait_default
-                types.ValueType.Insts.CoreCmpPartialEqValueType actual t
-            if b
-            then ok (done (core.result.Result.Err error.OpError.TypeMismatch))
-            else ok (cont (stack1, i2))
-          | code.StackType.Bot => ok (cont (stack1, i2))
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      let r1 ←
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-      ok (done r1)
-
-/-- [itasca::multi_value::check_suffix]: loop 0:
-    Source: 'src/multi_value.rs', lines 208:4-229:5 -/
-@[rust_loop]
-def multi_value.check_suffix_loop
-  (v : alloc.vec.Vec _root_.Itasca.code.StackType)
-  (v1 : alloc.vec.Vec _root_.Itasca.code.Ctrl) (i : Std.Usize)
-  (env : _root_.Itasca.module.Env) (ts : _root_.Itasca.signature.ResultType)
-  (base : Std.Usize) (stack : Std.Usize) (i1 : Std.Usize) :
-  Result (core.result.Result Unit _root_.Itasca.error.OpError)
-  := do
-  loop
-    (fun (stack1, i2) => multi_value.check_suffix_loop.body v v1 i env ts base
-      stack1 i2)
-    (stack, i1)
-
-/-- [itasca::multi_value::check_suffix]:
-    Source: 'src/multi_value.rs', lines 204:0-230:1 -/
-def multi_value.check_suffix
-  (st : _root_.Itasca.code.OpIterState) (env : _root_.Itasca.module.Env)
-  (ts : _root_.Itasca.signature.ResultType) :
-  Result (core.result.Result Unit _root_.Itasca.error.OpError)
-  := do
-  let base ← code.cur_base st
-  let stack := alloc.vec.Vec.len st.vals
-  let r ← signature.ResultType.len ts env
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue val =>
-    multi_value.check_suffix_loop st.vals st.ctrls st.pos env ts base stack val
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-      Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-
-/-- [itasca::signature::{itasca::signature::BlockType}::results]:
-    Source: 'src/signature.rs', lines 103:4-112:5
-    Visibility: public -/
-def signature.BlockType.results
-  (self : _root_.Itasca.signature.BlockType) :
-  Result _root_.Itasca.signature.ResultType
-  := do
-  match self with
-  | signature.BlockType.Empty => ok signature.ResultType.Empty
-  | signature.BlockType.Value v => ok (signature.ResultType.One v)
-  | signature.BlockType.TypeIndex index =>
-    ok (signature.ResultType.Type index signature.TypePart.Results)
-
-/-- [itasca::signature::{itasca::signature::BlockType}::params]:
-    Source: 'src/signature.rs', lines 93:4-101:5
-    Visibility: public -/
-def signature.BlockType.params
-  (self : _root_.Itasca.signature.BlockType) :
-  Result _root_.Itasca.signature.ResultType
-  := do
-  match self with
-  | signature.BlockType.Empty => ok signature.ResultType.Empty
-  | signature.BlockType.Value _ => ok signature.ResultType.Empty
-  | signature.BlockType.TypeIndex index =>
-    ok (signature.ResultType.Type index signature.TypePart.Params)
-
-/-- [itasca::multi_value::label]:
-    Source: 'src/multi_value.rs', lines 168:0-179:1 -/
-def multi_value.label
-  (st : _root_.Itasca.multi_value.State) (depth : Std.U32) :
-  Result (core.result.Result _root_.Itasca.signature.ResultType
-    _root_.Itasca.error.OpError)
-  := do
-  let n := alloc.vec.Vec.len st.blocks
-  let d ← lift (UScalar.cast .Usize depth)
-  if d >= n
-  then ok (core.result.Result.Err error.OpError.UnknownLabel)
-  else
-    let i ← n - 1#usize
-    let i1 ← i - d
-    let c ←
-      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-        _root_.Itasca.code.Ctrl) st.core.ctrls i1
-    match c.kind with
-    | code.LabelKind.Body =>
-      let bt ←
-        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-          _root_.Itasca.signature.BlockType) st.blocks i1
-      let rt ← signature.BlockType.results bt
-      ok (core.result.Result.Ok rt)
-    | code.LabelKind.Block =>
-      let bt ←
-        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-          _root_.Itasca.signature.BlockType) st.blocks i1
-      let rt ← signature.BlockType.results bt
-      ok (core.result.Result.Ok rt)
-    | code.LabelKind.Loop =>
-      let bt ←
-        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-          _root_.Itasca.signature.BlockType) st.blocks i1
-      let rt ← signature.BlockType.params bt
-      ok (core.result.Result.Ok rt)
-    | code.LabelKind.Then =>
-      let bt ←
-        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-          _root_.Itasca.signature.BlockType) st.blocks i1
-      let rt ← signature.BlockType.results bt
-      ok (core.result.Result.Ok rt)
-    | code.LabelKind.Else =>
-      let bt ←
-        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-          _root_.Itasca.signature.BlockType) st.blocks i1
-      let rt ← signature.BlockType.results bt
-      ok (core.result.Result.Ok rt)
-
-/-- [itasca::multi_value::read_label]:
-    Source: 'src/multi_value.rs', lines 181:0-185:1 -/
-def multi_value.read_label
-  (st : _root_.Itasca.multi_value.State) (data : Slice Std.U8) :
-  Result ((core.result.Result _root_.Itasca.signature.ResultType
-    _root_.Itasca.error.OpError) × _root_.Itasca.multi_value.State)
-  := do
-  let r ← reader.read_u32_leb data st.core.pos
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue val =>
-    let (depth, «end») := val
-    let r1 ←
-      multi_value.label { st with core := { st.core with pos := «end» } }
-        depth
-    ok (r1, { st with core := { st.core with pos := «end» } })
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    let r1 ←
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        _root_.Itasca.signature.ResultType (core.convert.FromSame
-        _root_.Itasca.error.OpError) residual
-    ok (r1, st)
-
-/-- [itasca::multi_value::branch_table]: loop body 0:
-    Source: 'src/multi_value.rs', lines 238:4-256:5 -/
-@[rust_loop_body]
-def multi_value.branch_table_loop.body
-  (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
-  (ois : _root_.Itasca.code.OpIterState)
-  (v : alloc.vec.Vec _root_.Itasca.signature.BlockType)
-  (arity : Option Std.Usize) (i : Std.U32) :
-  Result (ControlFlow (_root_.Itasca.code.OpIterState × (alloc.vec.Vec
-    _root_.Itasca.signature.BlockType) × (Option Std.Usize) × Std.U32)
-    ((core.result.Result Unit _root_.Itasca.error.OpError) ×
-    _root_.Itasca.multi_value.State))
-  := do
-  let (r, st) ← multi_value.read_label { core := ois, blocks := v } data
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue val =>
-    let r1 ← signature.ResultType.len val env
+    let r1 ← stream.read_code_header SourceInst source code_len env
     let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue val1 =>
-      match arity with
-      | none =>
-        let r2 ← multi_value.check_suffix st.core env val
-        let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-        match cf2 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          if i = count
-          then
-            let ois1 ← code.mark_unreachable st.core
-            ok (done (core.result.Result.Ok (), { st with core := ois1 }))
-          else
-            let i1 ← i + 1#u32
-            ok (cont (st.core, st.blocks, some val1, i1))
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r3 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (done (r3, st))
-      | some expected =>
-        if expected != val1
-        then ok (done (core.result.Result.Err error.OpError.TypeMismatch, st))
+      let (r2, visitor1) ← StreamingVisitorInst.environment_ready visitor env
+      let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+      match cf2 with
+      | core.ops.control_flow.ControlFlow.Continue val2 =>
+        if val2.batch_bytes = 0#usize
+        then ok (core.result.Result.Err error.Error.Host, visitor1)
+        else if val2.max_batches = 0#usize
+        then ok (core.result.Result.Err error.Error.Host, visitor1)
         else
-          let r2 ← multi_value.check_suffix st.core env val
-          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-          match cf2 with
-          | core.ops.control_flow.ControlFlow.Continue _ =>
-            if i = count
-            then
-              let ois1 ← code.mark_unreachable st.core
-              ok (done (core.result.Result.Ok (), { st with core := ois1 }))
-            else let i1 ← i + 1#u32
-                 ok (cont (st.core, st.blocks, arity, i1))
-          | core.ops.control_flow.ControlFlow.Break residual =>
-            let r3 ←
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                Unit (core.convert.FromSame _root_.Itasca.error.OpError)
-                residual
-            ok (done (r3, st))
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      let r2 ←
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-      ok (done (r2, st))
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    let r1 ←
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-    ok (done (r1, st))
-
-/-- [itasca::multi_value::branch_table]: loop 0:
-    Source: 'src/multi_value.rs', lines 238:4-256:5 -/
-@[rust_loop]
-def multi_value.branch_table_loop
-  (ois : _root_.Itasca.code.OpIterState)
-  (v : alloc.vec.Vec _root_.Itasca.signature.BlockType) (data : Slice Std.U8)
-  (env : _root_.Itasca.module.Env) (count : Std.U32) (arity : Option Std.Usize)
-  (i : Std.U32) :
-  Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
-    _root_.Itasca.multi_value.State)
-  := do
-  loop
-    (fun (ois1, v1, arity1, i1) => multi_value.branch_table_loop.body data env
-      count ois1 v1 arity1 i1)
-    (ois, v, arity, i)
-
-/-- [itasca::multi_value::branch_table]:
-    Source: 'src/multi_value.rs', lines 232:0-257:1 -/
-def multi_value.branch_table
-  (st : _root_.Itasca.multi_value.State) (data : Slice Std.U8)
-  (env : _root_.Itasca.module.Env) :
-  Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
-    _root_.Itasca.multi_value.State)
-  := do
-  let r ← reader.read_u32_leb data st.core.pos
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue val =>
-    let (count, «end») := val
-    let (r1, ois) ←
-      code.pop_with_type { st.core with pos := «end» } types.ValueType.I32
-    let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-    match cf1 with
-    | core.ops.control_flow.ControlFlow.Continue _ =>
-      multi_value.branch_table_loop ois st.blocks data env count none 0#u32
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      let r2 ←
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-      ok (r2, { st with core := ois })
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    let r1 ←
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-    ok (r1, st)
-
-/-- [itasca::multi_value::push_results]:
-    Source: 'src/multi_value.rs', lines 62:0-82:1 -/
-def multi_value.push_results
-  (st : _root_.Itasca.code.OpIterState) (env : _root_.Itasca.module.Env)
-  (ts : _root_.Itasca.signature.ResultType) :
-  Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
-    _root_.Itasca.code.OpIterState)
-  := do
-  let r ← signature.ResultType.len ts env
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue val =>
-    let i := alloc.vec.Vec.len st.vals
-    let i1 ← core.num.Usize.MAX - i
-    if val > i1
-    then ok (core.result.Result.Err error.OpError.StackTooLarge, st)
-    else
-      match ts with
-      | signature.ResultType.Empty => ok (core.result.Result.Ok (), st)
-      | signature.ResultType.One t =>
-        let v ← alloc.vec.Vec.push st.vals (code.StackType.Val t)
-        ok (core.result.Result.Ok (), { st with vals := v })
-      | signature.ResultType.Type index part =>
-        let i2 ← lift (UScalar.cast .Usize index)
-        let i3 := alloc.vec.Vec.len env.types
-        if i2 >= i3
-        then ok (core.result.Result.Err error.OpError.UnknownType, st)
-        else
-          match part with
-          | signature.TypePart.Params =>
-            let ft ←
-              alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-                _root_.Itasca.types.FuncType) env.types i2
-            let s := alloc.vec.Vec.deref ft.params
-            let st1 ← code.push_types st s
-            ok (core.result.Result.Ok (), st1)
-          | signature.TypePart.Results =>
-            let ft ←
-              alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-                _root_.Itasca.types.FuncType) env.types i2
-            let s := alloc.vec.Vec.deref ft.results
-            let st1 ← code.push_types st s
-            ok (core.result.Result.Ok (), st1)
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    let r1 ←
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-    ok (r1, st)
-
-/-- [itasca::multi_value::pop_results]:
-    Source: 'src/multi_value.rs', lines 42:0-60:1 -/
-def multi_value.pop_results
-  (st : _root_.Itasca.code.OpIterState) (env : _root_.Itasca.module.Env)
-  (ts : _root_.Itasca.signature.ResultType) :
-  Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
-    _root_.Itasca.code.OpIterState)
-  := do
-  match ts with
-  | signature.ResultType.Empty => ok (core.result.Result.Ok (), st)
-  | signature.ResultType.One t =>
-    let (r, st1) ← code.pop_with_type st t
-    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-    match cf with
-    | core.ops.control_flow.ControlFlow.Continue _ =>
-      ok (core.result.Result.Ok (), st1)
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      let r1 ←
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-      ok (r1, st1)
-  | signature.ResultType.Type index part =>
-    let i ← lift (UScalar.cast .Usize index)
-    let i1 := alloc.vec.Vec.len env.types
-    if i >= i1
-    then ok (core.result.Result.Err error.OpError.UnknownType, st)
-    else
-      match part with
-      | signature.TypePart.Params =>
-        let ft ←
-          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-            _root_.Itasca.types.FuncType) env.types i
-        let s := alloc.vec.Vec.deref ft.params
-        code.pop_types st s
-      | signature.TypePart.Results =>
-        let ft ←
-          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-            _root_.Itasca.types.FuncType) env.types i
-        let s := alloc.vec.Vec.deref ft.results
-        code.pop_types st s
-
-/-- [itasca::multi_value::branch]:
-    Source: 'src/multi_value.rs', lines 187:0-199:1 -/
-def multi_value.branch
-  (st : _root_.Itasca.multi_value.State) (data : Slice Std.U8)
-  (env : _root_.Itasca.module.Env) (conditional : Bool) :
-  Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
-    _root_.Itasca.multi_value.State)
-  := do
-  let (r, st1) ← multi_value.read_label st data
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue val =>
-    if conditional
-    then
-      let (r1, ois) ← code.pop_with_type st1.core types.ValueType.I32
-      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-      match cf1 with
-      | core.ops.control_flow.ControlFlow.Continue _ =>
-        let (r2, ois1) ← multi_value.pop_results ois env val
-        let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-        match cf2 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          if conditional
-          then
-            let (r3, ois2) ← multi_value.push_results ois1 env val
-            ok (r3, { st1 with core := ois2 })
-          else
-            let ois2 ← code.mark_unreachable ois1
-            ok (core.result.Result.Ok (), { st1 with core := ois2 })
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r3 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (r3, { st1 with core := ois1 })
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r2 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-        ok (r2, { st1 with core := ois })
-    else
-      let (r1, ois) ← multi_value.pop_results st1.core env val
-      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-      match cf1 with
-      | core.ops.control_flow.ControlFlow.Continue _ =>
-        if conditional
-        then
-          let (r2, ois1) ← multi_value.push_results ois env val
-          ok (r2, { st1 with core := ois1 })
-        else
-          let ois1 ← code.mark_unreachable ois
-          ok (core.result.Result.Ok (), { st1 with core := ois1 })
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r2 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-        ok (r2, { st1 with core := ois })
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    let r1 ←
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-    ok (r1, st1)
-
-/-- [itasca::multi_value::same_types]: loop body 0:
-    Source: 'src/multi_value.rs', lines 90:4-103:5 -/
-@[rust_loop_body]
-def multi_value.same_types_loop.body
-  (env : _root_.Itasca.module.Env) (a : _root_.Itasca.signature.ResultType)
-  (b : _root_.Itasca.signature.ResultType) (n : Std.Usize) (i : Std.Usize) :
-  Result (ControlFlow Std.Usize (core.result.Result Bool
-    _root_.Itasca.error.OpError))
-  := do
-  if i >= n
-  then ok (done (core.result.Result.Ok true))
-  else
-    let r ← signature.ResultType.get a env i
-    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-    match cf with
-    | core.ops.control_flow.ControlFlow.Continue val =>
-      let r1 ← signature.ResultType.get b env i
-      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-      match cf1 with
-      | core.ops.control_flow.ControlFlow.Continue val1 =>
-        match val with
-        | none => ok (done (core.result.Result.Err error.OpError.TypeMismatch))
-        | some x =>
-          match val1 with
-          | none =>
-            ok (done (core.result.Result.Err error.OpError.TypeMismatch))
-          | some y =>
-            let b1 ←
-              core.cmp.PartialEq.ne.trait_default
-                types.ValueType.Insts.CoreCmpPartialEqValueType x y
-            if b1
-            then ok (done (core.result.Result.Ok false))
-            else let i1 ← i + 1#usize
-                 ok (cont i1)
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r2 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Bool (core.convert.FromSame _root_.Itasca.error.OpError) residual
-        ok (done r2)
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      let r1 ←
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          Bool (core.convert.FromSame _root_.Itasca.error.OpError) residual
-      ok (done r1)
-
-/-- [itasca::multi_value::same_types]: loop 0:
-    Source: 'src/multi_value.rs', lines 90:4-103:5 -/
-@[rust_loop]
-def multi_value.same_types_loop
-  (env : _root_.Itasca.module.Env) (a : _root_.Itasca.signature.ResultType)
-  (b : _root_.Itasca.signature.ResultType) (n : Std.Usize) (i : Std.Usize) :
-  Result (core.result.Result Bool _root_.Itasca.error.OpError)
-  := do
-  loop
-    (fun i1 => multi_value.same_types_loop.body env a b n i1)
-    i
-
-/-- [itasca::multi_value::same_types]:
-    Source: 'src/multi_value.rs', lines 84:0-104:1 -/
-def multi_value.same_types
-  (env : _root_.Itasca.module.Env) (a : _root_.Itasca.signature.ResultType)
-  (b : _root_.Itasca.signature.ResultType) :
-  Result (core.result.Result Bool _root_.Itasca.error.OpError)
-  := do
-  let r ← signature.ResultType.len a env
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue val =>
-    let r1 ← signature.ResultType.len b env
-    let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-    match cf1 with
-    | core.ops.control_flow.ControlFlow.Continue val1 =>
-      if val != val1
-      then ok (core.result.Result.Ok false)
-      else multi_value.same_types_loop env a b val 0#usize
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        Bool (core.convert.FromSame _root_.Itasca.error.OpError) residual
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-      Bool (core.convert.FromSame _root_.Itasca.error.OpError) residual
-
-/-- [itasca::multi_value::end_frame]:
-    Source: 'src/multi_value.rs', lines 130:0-166:1 -/
-def multi_value.end_frame
-  (st : _root_.Itasca.multi_value.State) (env : _root_.Itasca.module.Env)
-  (is_else : Bool) :
-  Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
-    _root_.Itasca.multi_value.State)
-  := do
-  let n := alloc.vec.Vec.len st.blocks
-  if n = 0#usize
-  then ok (core.result.Result.Err error.OpError.UnknownLabel, st)
-  else
-    let i ← n - 1#usize
-    let bt ←
-      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-        _root_.Itasca.signature.BlockType) st.blocks i
-    let frame ←
-      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-        _root_.Itasca.code.Ctrl) st.core.ctrls i
-    if is_else
-    then
-      match frame.kind with
-      | code.LabelKind.Body =>
-        ok (core.result.Result.Err error.OpError.TypeMismatch, st)
-      | code.LabelKind.Block =>
-        ok (core.result.Result.Err error.OpError.TypeMismatch, st)
-      | code.LabelKind.Loop =>
-        ok (core.result.Result.Err error.OpError.TypeMismatch, st)
-      | code.LabelKind.Then =>
-        let rt ← signature.BlockType.results bt
-        let (r, ois) ← multi_value.pop_results st.core env rt
-        let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-        match cf with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          let i1 := alloc.vec.Vec.len ois.vals
-          if i1 != frame.value_stack_base
-          then
-            ok (core.result.Result.Err error.OpError.StackMismatch,
-              { st with core := ois })
-          else if is_else
-          then
-            let (c, index_mut_back) ←
-              alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
-                _root_.Itasca.code.Ctrl) ois.ctrls i
-            let v := index_mut_back { c with kind := code.LabelKind.Else }
-            let (c1, index_mut_back1) ←
-              alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
-                _root_.Itasca.code.Ctrl) v i
-            let v1 := index_mut_back1 { c1 with polymorphic_base := false }
-            let rt1 ← signature.BlockType.params bt
-            let (r1, ois1) ←
-              multi_value.push_results { ois with ctrls := v1 } env rt1
-            ok (r1, { st with core := ois1 })
-          else
-            let (_, v) ← alloc.vec.Vec.pop Global ois.ctrls
-            let (_, v1) ← alloc.vec.Vec.pop Global st.blocks
-            if n = 1#usize
-            then
-              ok (core.result.Result.Ok (),
-                { core := { ois with ctrls := v }, blocks := v1 })
-            else
-              let (r1, ois1) ←
-                multi_value.push_results { ois with ctrls := v } env rt
-              ok (r1, { core := ois1, blocks := v1 })
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r1 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (r1, { st with core := ois })
-      | code.LabelKind.Else =>
-        ok (core.result.Result.Err error.OpError.TypeMismatch, st)
-    else
-      match frame.kind with
-      | code.LabelKind.Body =>
-        let rt ← signature.BlockType.results bt
-        let (r, ois) ← multi_value.pop_results st.core env rt
-        let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-        match cf with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          let i1 := alloc.vec.Vec.len ois.vals
-          if i1 != frame.value_stack_base
-          then
-            ok (core.result.Result.Err error.OpError.StackMismatch,
-              { st with core := ois })
-          else if is_else
-          then
-            let (c, index_mut_back) ←
-              alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
-                _root_.Itasca.code.Ctrl) ois.ctrls i
-            let v := index_mut_back { c with kind := code.LabelKind.Else }
-            let (c1, index_mut_back1) ←
-              alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
-                _root_.Itasca.code.Ctrl) v i
-            let v1 := index_mut_back1 { c1 with polymorphic_base := false }
-            let rt1 ← signature.BlockType.params bt
-            let (r1, ois1) ←
-              multi_value.push_results { ois with ctrls := v1 } env rt1
-            ok (r1, { st with core := ois1 })
-          else
-            let (_, v) ← alloc.vec.Vec.pop Global ois.ctrls
-            let (_, v1) ← alloc.vec.Vec.pop Global st.blocks
-            if n = 1#usize
-            then
-              ok (core.result.Result.Ok (),
-                { core := { ois with ctrls := v }, blocks := v1 })
-            else
-              let (r1, ois1) ←
-                multi_value.push_results { ois with ctrls := v } env rt
-              ok (r1, { core := ois1, blocks := v1 })
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r1 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (r1, { st with core := ois })
-      | code.LabelKind.Block =>
-        let rt ← signature.BlockType.results bt
-        let (r, ois) ← multi_value.pop_results st.core env rt
-        let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-        match cf with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          let i1 := alloc.vec.Vec.len ois.vals
-          if i1 != frame.value_stack_base
-          then
-            ok (core.result.Result.Err error.OpError.StackMismatch,
-              { st with core := ois })
-          else if is_else
-          then
-            let (c, index_mut_back) ←
-              alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
-                _root_.Itasca.code.Ctrl) ois.ctrls i
-            let v := index_mut_back { c with kind := code.LabelKind.Else }
-            let (c1, index_mut_back1) ←
-              alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
-                _root_.Itasca.code.Ctrl) v i
-            let v1 := index_mut_back1 { c1 with polymorphic_base := false }
-            let rt1 ← signature.BlockType.params bt
-            let (r1, ois1) ←
-              multi_value.push_results { ois with ctrls := v1 } env rt1
-            ok (r1, { st with core := ois1 })
-          else
-            let (_, v) ← alloc.vec.Vec.pop Global ois.ctrls
-            let (_, v1) ← alloc.vec.Vec.pop Global st.blocks
-            if n = 1#usize
-            then
-              ok (core.result.Result.Ok (),
-                { core := { ois with ctrls := v }, blocks := v1 })
-            else
-              let (r1, ois1) ←
-                multi_value.push_results { ois with ctrls := v } env rt
-              ok (r1, { core := ois1, blocks := v1 })
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r1 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (r1, { st with core := ois })
-      | code.LabelKind.Loop =>
-        let rt ← signature.BlockType.results bt
-        let (r, ois) ← multi_value.pop_results st.core env rt
-        let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-        match cf with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          let i1 := alloc.vec.Vec.len ois.vals
-          if i1 != frame.value_stack_base
-          then
-            ok (core.result.Result.Err error.OpError.StackMismatch,
-              { st with core := ois })
-          else if is_else
-          then
-            let (c, index_mut_back) ←
-              alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
-                _root_.Itasca.code.Ctrl) ois.ctrls i
-            let v := index_mut_back { c with kind := code.LabelKind.Else }
-            let (c1, index_mut_back1) ←
-              alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
-                _root_.Itasca.code.Ctrl) v i
-            let v1 := index_mut_back1 { c1 with polymorphic_base := false }
-            let rt1 ← signature.BlockType.params bt
-            let (r1, ois1) ←
-              multi_value.push_results { ois with ctrls := v1 } env rt1
-            ok (r1, { st with core := ois1 })
-          else
-            let (_, v) ← alloc.vec.Vec.pop Global ois.ctrls
-            let (_, v1) ← alloc.vec.Vec.pop Global st.blocks
-            if n = 1#usize
-            then
-              ok (core.result.Result.Ok (),
-                { core := { ois with ctrls := v }, blocks := v1 })
-            else
-              let (r1, ois1) ←
-                multi_value.push_results { ois with ctrls := v } env rt
-              ok (r1, { core := ois1, blocks := v1 })
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r1 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (r1, { st with core := ois })
-      | code.LabelKind.Then =>
-        let rt ← signature.BlockType.params bt
-        let rt1 ← signature.BlockType.results bt
-        let r ← multi_value.same_types env rt rt1
-        let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-        match cf with
-        | core.ops.control_flow.ControlFlow.Continue val =>
-          if val
-          then
-            let (r1, ois) ← multi_value.pop_results st.core env rt1
-            let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-            match cf1 with
+          let (r3, visitor2) ←
+            stream.submit_code_batches SourceInst StreamingVisitorInst
+              module_id profile source env code_len val1 val2 visitor1
+          let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
+          match cf3 with
+          | core.ops.control_flow.ControlFlow.Continue val3 =>
+            let (r4, visitor3) ← StreamingVisitorInst.code_end visitor2
+            let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
+            match cf4 with
             | core.ops.control_flow.ControlFlow.Continue _ =>
-              let i1 := alloc.vec.Vec.len ois.vals
-              if i1 != frame.value_stack_base
-              then
-                ok (core.result.Result.Err error.OpError.StackMismatch,
-                  { st with core := ois })
-              else if is_else
-              then
-                let (c, index_mut_back) ←
-                  alloc.vec.Vec.index_mut
-                    (core.slice.index.SliceIndexUsizeSlice
-                    _root_.Itasca.code.Ctrl) ois.ctrls i
-                let v := index_mut_back { c with kind := code.LabelKind.Else }
-                let (c1, index_mut_back1) ←
-                  alloc.vec.Vec.index_mut
-                    (core.slice.index.SliceIndexUsizeSlice
-                    _root_.Itasca.code.Ctrl) v i
-                let v1 := index_mut_back1 { c1 with polymorphic_base := false }
-                let (r2, ois1) ←
-                  multi_value.push_results { ois with ctrls := v1 } env rt
-                ok (r2, { st with core := ois1 })
-              else
-                let (_, v) ← alloc.vec.Vec.pop Global ois.ctrls
-                let (_, v1) ← alloc.vec.Vec.pop Global st.blocks
-                if n = 1#usize
-                then
-                  ok (core.result.Result.Ok (),
-                    { core := { ois with ctrls := v }, blocks := v1 })
-                else
-                  let (r2, ois1) ←
-                    multi_value.push_results { ois with ctrls := v } env rt1
-                  ok (r2, { core := ois1, blocks := v1 })
-            | core.ops.control_flow.ControlFlow.Break residual =>
-              let r2 ←
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  Unit (core.convert.FromSame _root_.Itasca.error.OpError)
-                  residual
-              ok (r2, { st with core := ois })
-          else ok (core.result.Result.Err error.OpError.TypeMismatch, st)
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r1 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (r1, st)
-      | code.LabelKind.Else =>
-        let rt ← signature.BlockType.results bt
-        let (r, ois) ← multi_value.pop_results st.core env rt
-        let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-        match cf with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          let i1 := alloc.vec.Vec.len ois.vals
-          if i1 != frame.value_stack_base
-          then
-            ok (core.result.Result.Err error.OpError.StackMismatch,
-              { st with core := ois })
-          else if is_else
-          then
-            let (c, index_mut_back) ←
-              alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
-                _root_.Itasca.code.Ctrl) ois.ctrls i
-            let v := index_mut_back { c with kind := code.LabelKind.Else }
-            let (c1, index_mut_back1) ←
-              alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
-                _root_.Itasca.code.Ctrl) v i
-            let v1 := index_mut_back1 { c1 with polymorphic_base := false }
-            let rt1 ← signature.BlockType.params bt
-            let (r1, ois1) ←
-              multi_value.push_results { ois with ctrls := v1 } env rt1
-            ok (r1, { st with core := ois1 })
-          else
-            let (_, v) ← alloc.vec.Vec.pop Global ois.ctrls
-            let (_, v1) ← alloc.vec.Vec.pop Global st.blocks
-            if n = 1#usize
-            then
-              ok (core.result.Result.Ok (),
-                { core := { ois with ctrls := v }, blocks := v1 })
-            else
-              let (r1, ois1) ←
-                multi_value.push_results { ois with ctrls := v } env rt
-              ok (r1, { core := ois1, blocks := v1 })
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r1 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (r1, { st with core := ois })
-
-/-- [itasca::reader::read_s33_leb]:
-    Source: 'src/reader.rs', lines 160:0-163:1
-    Visibility: public -/
-def reader.read_s33_leb
-  (data : Slice Std.U8) (pos : Std.Usize) :
-  Result (core.result.Result (Std.I64 × Std.Usize)
-    _root_.Itasca.error.OpError)
-  := do
-  let r ←
-    reader.read_sn_leb data pos 4#u32 (-4294967296)#i128 4294967295#i128
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue val =>
-    let (v, p) := val
-    let i ← lift (IScalar.cast .I64 v)
-    ok (core.result.Result.Ok (i, p))
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-      (Std.I64 × Std.Usize) (core.convert.FromSame
-      _root_.Itasca.error.OpError) residual
-
-/-- [itasca::signature::read_block_type]:
-    Source: 'src/signature.rs', lines 117:0-133:1 -/
-def signature.read_block_type
-  (data : Slice Std.U8) (pos : Std.Usize) :
-  Result (core.result.Result (_root_.Itasca.signature.BlockType × Std.Usize)
-    _root_.Itasca.error.OpError)
-  := do
-  let r ← reader.read_byte data pos
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue val =>
-    let (b, p) := val
-    match b with
-    | 64#uscalar => ok (core.result.Result.Ok (signature.BlockType.Empty, p))
-    | 127#uscalar =>
-      ok (core.result.Result.Ok (signature.BlockType.Value types.ValueType.I32,
-        p))
-    | 126#uscalar =>
-      ok (core.result.Result.Ok (signature.BlockType.Value types.ValueType.I64,
-        p))
-    | 125#uscalar =>
-      ok (core.result.Result.Ok (signature.BlockType.Value types.ValueType.F32,
-        p))
-    | 124#uscalar =>
-      ok (core.result.Result.Ok (signature.BlockType.Value types.ValueType.F64,
-        p))
-    | _ =>
-      let r1 ← reader.read_s33_leb data pos
-      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-      match cf1 with
-      | core.ops.control_flow.ControlFlow.Continue val1 =>
-        let (index, «end») := val1
-        if index < 0#i64
-        then ok (core.result.Result.Err error.OpError.InvalidBlockType)
-        else
-          let i ← lift (IScalar.hcast .U32 index)
-          ok (core.result.Result.Ok (signature.BlockType.TypeIndex i, «end»))
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          (_root_.Itasca.signature.BlockType × Std.Usize)
-          (core.convert.FromSame _root_.Itasca.error.OpError) residual
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-      (_root_.Itasca.signature.BlockType × Std.Usize) (core.convert.FromSame
-      _root_.Itasca.error.OpError) residual
-
-/-- [itasca::multi_value::push_frame]:
-    Source: 'src/multi_value.rs', lines 106:0-109:1 -/
-def multi_value.push_frame
-  (st : _root_.Itasca.multi_value.State) (kind : _root_.Itasca.code.LabelKind)
-  (bt : _root_.Itasca.signature.BlockType) :
-  Result _root_.Itasca.multi_value.State
-  := do
-  let ois ← code.push_ctrl st.core kind code.BlockType.Empty
-  let v ← alloc.vec.Vec.push st.blocks bt
-  ok { core := ois, blocks := v }
-
-/-- [itasca::multi_value::enter]:
-    Source: 'src/multi_value.rs', lines 111:0-128:1 -/
-def multi_value.enter
-  (st : _root_.Itasca.multi_value.State) (data : Slice Std.U8)
-  (env : _root_.Itasca.module.Env) (kind : _root_.Itasca.code.LabelKind) :
-  Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
-    _root_.Itasca.multi_value.State)
-  := do
-  let r ← signature.read_block_type data st.core.pos
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue val =>
-    let (bt, «end») := val
-    match bt with
-    | signature.BlockType.Empty =>
-      match kind with
-      | code.LabelKind.Body =>
-        let rt ← signature.BlockType.params signature.BlockType.Empty
-        let (r1, ois) ←
-          multi_value.pop_results { st.core with pos := «end» } env rt
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          let st1 ←
-            multi_value.push_frame { st with core := ois } code.LabelKind.Body
-              signature.BlockType.Empty
-          let (r2, ois1) ← multi_value.push_results st1.core env rt
-          ok (r2, { st1 with core := ois1 })
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (r2, { st with core := ois })
-      | code.LabelKind.Block =>
-        let rt ← signature.BlockType.params signature.BlockType.Empty
-        let (r1, ois) ←
-          multi_value.pop_results { st.core with pos := «end» } env rt
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          let st1 ←
-            multi_value.push_frame { st with core := ois } code.LabelKind.Block
-              signature.BlockType.Empty
-          let (r2, ois1) ← multi_value.push_results st1.core env rt
-          ok (r2, { st1 with core := ois1 })
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (r2, { st with core := ois })
-      | code.LabelKind.Loop =>
-        let rt ← signature.BlockType.params signature.BlockType.Empty
-        let (r1, ois) ←
-          multi_value.pop_results { st.core with pos := «end» } env rt
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          let st1 ←
-            multi_value.push_frame { st with core := ois } code.LabelKind.Loop
-              signature.BlockType.Empty
-          let (r2, ois1) ← multi_value.push_results st1.core env rt
-          ok (r2, { st1 with core := ois1 })
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (r2, { st with core := ois })
-      | code.LabelKind.Then =>
-        let (r1, ois) ←
-          code.pop_with_type { st.core with pos := «end» }
-            types.ValueType.I32
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          let rt ← signature.BlockType.params signature.BlockType.Empty
-          let (r2, ois1) ← multi_value.pop_results ois env rt
-          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-          match cf2 with
-          | core.ops.control_flow.ControlFlow.Continue _ =>
-            let st1 ←
-              multi_value.push_frame { st with core := ois1 }
-                code.LabelKind.Then signature.BlockType.Empty
-            let (r3, ois2) ← multi_value.push_results st1.core env rt
-            ok (r3, { st1 with core := ois2 })
-          | core.ops.control_flow.ControlFlow.Break residual =>
-            let r3 ←
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                Unit (core.convert.FromSame _root_.Itasca.error.OpError)
-                residual
-            ok (r3, { st with core := ois1 })
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (r2, { st with core := ois })
-      | code.LabelKind.Else =>
-        let rt ← signature.BlockType.params signature.BlockType.Empty
-        let (r1, ois) ←
-          multi_value.pop_results { st.core with pos := «end» } env rt
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          let st1 ←
-            multi_value.push_frame { st with core := ois } code.LabelKind.Else
-              signature.BlockType.Empty
-          let (r2, ois1) ← multi_value.push_results st1.core env rt
-          ok (r2, { st1 with core := ois1 })
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (r2, { st with core := ois })
-    | signature.BlockType.Value _ =>
-      match kind with
-      | code.LabelKind.Body =>
-        let rt ← signature.BlockType.params bt
-        let (r1, ois) ←
-          multi_value.pop_results { st.core with pos := «end» } env rt
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          let st1 ←
-            multi_value.push_frame { st with core := ois } code.LabelKind.Body
-              bt
-          let (r2, ois1) ← multi_value.push_results st1.core env rt
-          ok (r2, { st1 with core := ois1 })
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (r2, { st with core := ois })
-      | code.LabelKind.Block =>
-        let rt ← signature.BlockType.params bt
-        let (r1, ois) ←
-          multi_value.pop_results { st.core with pos := «end» } env rt
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          let st1 ←
-            multi_value.push_frame { st with core := ois } code.LabelKind.Block
-              bt
-          let (r2, ois1) ← multi_value.push_results st1.core env rt
-          ok (r2, { st1 with core := ois1 })
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (r2, { st with core := ois })
-      | code.LabelKind.Loop =>
-        let rt ← signature.BlockType.params bt
-        let (r1, ois) ←
-          multi_value.pop_results { st.core with pos := «end» } env rt
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          let st1 ←
-            multi_value.push_frame { st with core := ois } code.LabelKind.Loop
-              bt
-          let (r2, ois1) ← multi_value.push_results st1.core env rt
-          ok (r2, { st1 with core := ois1 })
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (r2, { st with core := ois })
-      | code.LabelKind.Then =>
-        let (r1, ois) ←
-          code.pop_with_type { st.core with pos := «end» }
-            types.ValueType.I32
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          let rt ← signature.BlockType.params bt
-          let (r2, ois1) ← multi_value.pop_results ois env rt
-          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-          match cf2 with
-          | core.ops.control_flow.ControlFlow.Continue _ =>
-            let st1 ←
-              multi_value.push_frame { st with core := ois1 }
-                code.LabelKind.Then bt
-            let (r3, ois2) ← multi_value.push_results st1.core env rt
-            ok (r3, { st1 with core := ois2 })
-          | core.ops.control_flow.ControlFlow.Break residual =>
-            let r3 ←
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                Unit (core.convert.FromSame _root_.Itasca.error.OpError)
-                residual
-            ok (r3, { st with core := ois1 })
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (r2, { st with core := ois })
-      | code.LabelKind.Else =>
-        let rt ← signature.BlockType.params bt
-        let (r1, ois) ←
-          multi_value.pop_results { st.core with pos := «end» } env rt
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          let st1 ←
-            multi_value.push_frame { st with core := ois } code.LabelKind.Else
-              bt
-          let (r2, ois1) ← multi_value.push_results st1.core env rt
-          ok (r2, { st1 with core := ois1 })
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (r2, { st with core := ois })
-    | signature.BlockType.TypeIndex index =>
-      let i ← lift (UScalar.cast .Usize index)
-      let i1 := alloc.vec.Vec.len env.types
-      if i >= i1
-      then
-        ok (core.result.Result.Err error.OpError.UnknownType,
-          { st with core := { st.core with pos := «end» } })
-      else
-        let ft ←
-          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-            _root_.Itasca.types.FuncType) env.types i
-        let r1 ← multi_value.check_func_type ft
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          match kind with
-          | code.LabelKind.Body =>
-            let rt ← signature.BlockType.params bt
-            let (r2, ois) ←
-              multi_value.pop_results { st.core with pos := «end» } env rt
-            let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-            match cf2 with
-            | core.ops.control_flow.ControlFlow.Continue _ =>
-              let st1 ←
-                multi_value.push_frame { st with core := ois }
-                  code.LabelKind.Body bt
-              let (r3, ois1) ← multi_value.push_results st1.core env rt
-              ok (r3, { st1 with core := ois1 })
-            | core.ops.control_flow.ControlFlow.Break residual =>
-              let r3 ←
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  Unit (core.convert.FromSame _root_.Itasca.error.OpError)
-                  residual
-              ok (r3, { st with core := ois })
-          | code.LabelKind.Block =>
-            let rt ← signature.BlockType.params bt
-            let (r2, ois) ←
-              multi_value.pop_results { st.core with pos := «end» } env rt
-            let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-            match cf2 with
-            | core.ops.control_flow.ControlFlow.Continue _ =>
-              let st1 ←
-                multi_value.push_frame { st with core := ois }
-                  code.LabelKind.Block bt
-              let (r3, ois1) ← multi_value.push_results st1.core env rt
-              ok (r3, { st1 with core := ois1 })
-            | core.ops.control_flow.ControlFlow.Break residual =>
-              let r3 ←
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  Unit (core.convert.FromSame _root_.Itasca.error.OpError)
-                  residual
-              ok (r3, { st with core := ois })
-          | code.LabelKind.Loop =>
-            let rt ← signature.BlockType.params bt
-            let (r2, ois) ←
-              multi_value.pop_results { st.core with pos := «end» } env rt
-            let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-            match cf2 with
-            | core.ops.control_flow.ControlFlow.Continue _ =>
-              let st1 ←
-                multi_value.push_frame { st with core := ois }
-                  code.LabelKind.Loop bt
-              let (r3, ois1) ← multi_value.push_results st1.core env rt
-              ok (r3, { st1 with core := ois1 })
-            | core.ops.control_flow.ControlFlow.Break residual =>
-              let r3 ←
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  Unit (core.convert.FromSame _root_.Itasca.error.OpError)
-                  residual
-              ok (r3, { st with core := ois })
-          | code.LabelKind.Then =>
-            let (r2, ois) ←
-              code.pop_with_type { st.core with pos := «end» }
-                types.ValueType.I32
-            let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-            match cf2 with
-            | core.ops.control_flow.ControlFlow.Continue _ =>
-              let rt ← signature.BlockType.params bt
-              let (r3, ois1) ← multi_value.pop_results ois env rt
-              let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
-              match cf3 with
-              | core.ops.control_flow.ControlFlow.Continue _ =>
-                let st1 ←
-                  multi_value.push_frame { st with core := ois1 }
-                    code.LabelKind.Then bt
-                let (r4, ois2) ← multi_value.push_results st1.core env rt
-                ok (r4, { st1 with core := ois2 })
+              let r5 ← SourceInst.tail source
+              let cf5 ← core.result.Result.Insts.CoreOpsTry.branch r5
+              match cf5 with
+              | core.ops.control_flow.ControlFlow.Continue val4 =>
+                let i := Slice.len val4
+                let r6 ← limits.add_offset val i
+                let cf6 ← core.result.Result.Insts.CoreOpsTry.branch r6
+                match cf6 with
+                | core.ops.control_flow.ControlFlow.Continue _ =>
+                  let visitor4 ←
+                    StreamingVisitorInst.custom_region visitor3
+                      stream.Region.Tail
+                  let (r7, visitor5) ←
+                    module.validate_tail_with
+                      StreamingVisitorInst.moduleModuleVisitorInst val4 0#usize
+                      env profile visitor4
+                  let cf7 ← core.result.Result.Insts.CoreOpsTry.branch r7
+                  match cf7 with
+                  | core.ops.control_flow.ControlFlow.Continue val5 =>
+                    let (r8, visitor6) ←
+                      StreamingVisitorInst.tail_ready visitor5 val5
+                    let cf8 ← core.result.Result.Insts.CoreOpsTry.branch r8
+                    match cf8 with
+                    | core.ops.control_flow.ControlFlow.Continue _ =>
+                      let (r9, visitor7, _) ←
+                        stream.retire_all_code_batches StreamingVisitorInst
+                          module_id visitor6 val3
+                      ok (r9, visitor7)
+                    | core.ops.control_flow.ControlFlow.Break residual =>
+                      let r9 ←
+                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                          Unit (core.convert.FromSame
+                          _root_.Itasca.error.Error) residual
+                      ok (r9, visitor6)
+                  | core.ops.control_flow.ControlFlow.Break residual =>
+                    let r8 ←
+                      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                        Unit (core.convert.FromSame _root_.Itasca.error.Error)
+                        residual
+                    ok (r8, visitor5)
+                | core.ops.control_flow.ControlFlow.Break residual =>
+                  let r7 ←
+                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                      Unit (core.convert.FromSame _root_.Itasca.error.Error)
+                      residual
+                  ok (r7, visitor3)
               | core.ops.control_flow.ControlFlow.Break residual =>
-                let r4 ←
+                let r6 ←
                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                    Unit (core.convert.FromSame _root_.Itasca.error.OpError)
+                    Unit (core.convert.FromSame _root_.Itasca.error.Error)
                     residual
-                ok (r4, { st with core := ois1 })
+                ok (r6, visitor3)
             | core.ops.control_flow.ControlFlow.Break residual =>
-              let r3 ←
+              let r5 ←
                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  Unit (core.convert.FromSame _root_.Itasca.error.OpError)
+                  Unit (core.convert.FromSame _root_.Itasca.error.Error)
                   residual
-              ok (r3, { st with core := ois })
-          | code.LabelKind.Else =>
-            let rt ← signature.BlockType.params bt
-            let (r2, ois) ←
-              multi_value.pop_results { st.core with pos := «end» } env rt
-            let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-            match cf2 with
-            | core.ops.control_flow.ControlFlow.Continue _ =>
-              let st1 ←
-                multi_value.push_frame { st with core := ois }
-                  code.LabelKind.Else bt
-              let (r3, ois1) ← multi_value.push_results st1.core env rt
-              ok (r3, { st1 with core := ois1 })
-            | core.ops.control_flow.ControlFlow.Break residual =>
-              let r3 ←
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  Unit (core.convert.FromSame _root_.Itasca.error.OpError)
-                  residual
-              ok (r3, { st with core := ois })
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (r2, { st with core := { st.core with pos := «end» } })
+              ok (r5, visitor3)
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            let r4 ←
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                Unit (core.convert.FromSame _root_.Itasca.error.Error) residual
+            ok (r4, visitor2)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r3 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Unit (core.convert.FromSame _root_.Itasca.error.Error) residual
+        ok (r3, visitor1)
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r2 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          Unit (core.convert.FromSame _root_.Itasca.error.Error) residual
+      ok (r2, visitor)
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-    ok (r1, st)
-
-/-- [itasca::multi_value::validate_body]: loop body 0:
-    Source: 'src/multi_value.rs', lines 330:4-369:5
-    Visibility: public -/
-@[rust_loop_body]
-def multi_value.validate_body_loop.body
-  (data : Slice Std.U8) (v : alloc.vec.Vec _root_.Itasca.types.FuncType)
-  (v1 : alloc.vec.Vec _root_.Itasca.module.Import)
-  (v2 : alloc.vec.Vec _root_.Itasca.module.Global)
-  (v3 : alloc.vec.Vec _root_.Itasca.module.Export)
-  (v4 : alloc.vec.Vec _root_.Itasca.module.Element) (o : Option Std.U32)
-  (v5 : alloc.vec.Vec Std.U32)
-  (v6 : alloc.vec.Vec _root_.Itasca.types.FuncType)
-  (v7 : alloc.vec.Vec _root_.Itasca.types.TableType)
-  (v8 : alloc.vec.Vec _root_.Itasca.types.MemType)
-  (v9 : alloc.vec.Vec _root_.Itasca.types.GlobalType) (i : Std.Usize)
-  (i1 : Std.Usize) (type_index : Std.U32)
-  (locals : alloc.vec.Vec _root_.Itasca.types.ValueType)
-  (v10 : alloc.vec.Vec _root_.Itasca.types.ValueType)
-  (st : _root_.Itasca.multi_value.State)
-  (visitor : _root_.Itasca.code.EmptyOpVisitor) :
-  Result (ControlFlow (_root_.Itasca.multi_value.State ×
-    _root_.Itasca.code.EmptyOpVisitor) (core.result.Result Unit
-    _root_.Itasca.error.OpError))
-  := do
-  let b ← alloc.vec.Vec.is_empty Global st.blocks
-  if b
-  then
-    let i2 := Slice.len data
-    if st.core.pos != i2
-    then ok (done (core.result.Result.Err error.OpError.TrailingBytes))
-    else ok (done (core.result.Result.Ok ()))
-  else
-    let r ← reader.read_byte data st.core.pos
-    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-    match cf with
-    | core.ops.control_flow.ControlFlow.Continue val =>
-      let (op, «end») := val
-      match op with
-      | 2#uscalar =>
-        let (r1, st1) ←
-          multi_value.enter { st with core := { st.core with pos := «end» } }
-            data
-            {
-              types := v,
-              imports := v1,
-              globals := v2,
-              exports := v3,
-              elements := v4,
-              start := o,
-              func_type_indices := v5,
-              func_types := v6,
-              table_types := v7,
-              mem_types := v8,
-              global_types := v9,
-              num_imported_funcs := i,
-              num_imported_globals := i1
-            } code.LabelKind.Block
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          ok (cont (st1, visitor))
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (done r2)
-      | 3#uscalar =>
-        let (r1, st1) ←
-          multi_value.enter { st with core := { st.core with pos := «end» } }
-            data
-            {
-              types := v,
-              imports := v1,
-              globals := v2,
-              exports := v3,
-              elements := v4,
-              start := o,
-              func_type_indices := v5,
-              func_types := v6,
-              table_types := v7,
-              mem_types := v8,
-              global_types := v9,
-              num_imported_funcs := i,
-              num_imported_globals := i1
-            } code.LabelKind.Loop
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          ok (cont (st1, visitor))
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (done r2)
-      | 4#uscalar =>
-        let (r1, st1) ←
-          multi_value.enter { st with core := { st.core with pos := «end» } }
-            data
-            {
-              types := v,
-              imports := v1,
-              globals := v2,
-              exports := v3,
-              elements := v4,
-              start := o,
-              func_type_indices := v5,
-              func_types := v6,
-              table_types := v7,
-              mem_types := v8,
-              global_types := v9,
-              num_imported_funcs := i,
-              num_imported_globals := i1
-            } code.LabelKind.Then
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          ok (cont (st1, visitor))
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (done r2)
-      | 5#uscalar =>
-        let (r1, st1) ←
-          multi_value.end_frame
-            { st with core := { st.core with pos := «end» } }
-            {
-              types := v,
-              imports := v1,
-              globals := v2,
-              exports := v3,
-              elements := v4,
-              start := o,
-              func_type_indices := v5,
-              func_types := v6,
-              table_types := v7,
-              mem_types := v8,
-              global_types := v9,
-              num_imported_funcs := i,
-              num_imported_globals := i1
-            } true
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          ok (cont (st1, visitor))
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (done r2)
-      | 11#uscalar =>
-        let (r1, st1) ←
-          multi_value.end_frame
-            { st with core := { st.core with pos := «end» } }
-            {
-              types := v,
-              imports := v1,
-              globals := v2,
-              exports := v3,
-              elements := v4,
-              start := o,
-              func_type_indices := v5,
-              func_types := v6,
-              table_types := v7,
-              mem_types := v8,
-              global_types := v9,
-              num_imported_funcs := i,
-              num_imported_globals := i1
-            } false
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          ok (cont (st1, visitor))
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (done r2)
-      | 12#uscalar =>
-        let (r1, st1) ←
-          multi_value.branch
-            { st with core := { st.core with pos := «end» } } data
-            {
-              types := v,
-              imports := v1,
-              globals := v2,
-              exports := v3,
-              elements := v4,
-              start := o,
-              func_type_indices := v5,
-              func_types := v6,
-              table_types := v7,
-              mem_types := v8,
-              global_types := v9,
-              num_imported_funcs := i,
-              num_imported_globals := i1
-            } false
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          ok (cont (st1, visitor))
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (done r2)
-      | 13#uscalar =>
-        let (r1, st1) ←
-          multi_value.branch
-            { st with core := { st.core with pos := «end» } } data
-            {
-              types := v,
-              imports := v1,
-              globals := v2,
-              exports := v3,
-              elements := v4,
-              start := o,
-              func_type_indices := v5,
-              func_types := v6,
-              table_types := v7,
-              mem_types := v8,
-              global_types := v9,
-              num_imported_funcs := i,
-              num_imported_globals := i1
-            } true
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          ok (cont (st1, visitor))
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (done r2)
-      | 14#uscalar =>
-        let (r1, st1) ←
-          multi_value.branch_table
-            { st with core := { st.core with pos := «end» } } data
-            {
-              types := v,
-              imports := v1,
-              globals := v2,
-              exports := v3,
-              elements := v4,
-              start := o,
-              func_type_indices := v5,
-              func_types := v6,
-              table_types := v7,
-              mem_types := v8,
-              global_types := v9,
-              num_imported_funcs := i,
-              num_imported_globals := i1
-            }
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          ok (cont (st1, visitor))
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (done r2)
-      | 15#uscalar =>
-        let (r1, ois) ←
-          multi_value.pop_results { st.core with pos := «end» }
-            {
-              types := v,
-              imports := v1,
-              globals := v2,
-              exports := v3,
-              elements := v4,
-              start := o,
-              func_type_indices := v5,
-              func_types := v6,
-              table_types := v7,
-              mem_types := v8,
-              global_types := v9,
-              num_imported_funcs := i,
-              num_imported_globals := i1
-            } (signature.ResultType.Type type_index signature.TypePart.Results)
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          let ois1 ← code.mark_unreachable ois
-          ok (cont ({ st with core := ois1 }, visitor))
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (done r2)
-      | 16#uscalar =>
-        let (r1, st1) ←
-          multi_value.call { st with core := { st.core with pos := «end» } }
-            data
-            {
-              types := v,
-              imports := v1,
-              globals := v2,
-              exports := v3,
-              elements := v4,
-              start := o,
-              func_type_indices := v5,
-              func_types := v6,
-              table_types := v7,
-              mem_types := v8,
-              global_types := v9,
-              num_imported_funcs := i,
-              num_imported_globals := i1
-            } false
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          ok (cont (st1, visitor))
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (done r2)
-      | 17#uscalar =>
-        let (r1, st1) ←
-          multi_value.call { st with core := { st.core with pos := «end» } }
-            data
-            {
-              types := v,
-              imports := v1,
-              globals := v2,
-              exports := v3,
-              elements := v4,
-              start := o,
-              func_type_indices := v5,
-              func_types := v6,
-              table_types := v7,
-              mem_types := v8,
-              global_types := v9,
-              num_imported_funcs := i,
-              num_imported_globals := i1
-            } true
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          ok (cont (st1, visitor))
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-          ok (done r2)
-      | _ =>
-        let i2 := alloc.vec.Vec.len st.core.vals
-        if i2 = core.num.Usize.MAX
-        then ok (done (core.result.Result.Err error.OpError.StackTooLarge))
-        else
-          let (r1, ois, visitor1) ←
-            code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
-              { st.core with pos := «end» } data
-              {
-                types := v,
-                imports := v1,
-                globals := v2,
-                exports := v3,
-                elements := v4,
-                start := o,
-                func_type_indices := v5,
-                func_types := v6,
-                table_types := v7,
-                mem_types := v8,
-                global_types := v9,
-                num_imported_funcs := i,
-                num_imported_globals := i1
-              } { locals, results := v10 } op visitor
-          let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-          match cf1 with
-          | core.ops.control_flow.ControlFlow.Continue _ =>
-            ok (cont ({ st with core := ois }, visitor1))
-          | core.ops.control_flow.ControlFlow.Break residual =>
-            let r2 ←
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                Unit (core.convert.FromSame _root_.Itasca.error.OpError)
-                residual
-            ok (done r2)
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      let r1 ←
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-      ok (done r1)
-
-/-- [itasca::multi_value::validate_body]: loop 0:
-    Source: 'src/multi_value.rs', lines 330:4-369:5
-    Visibility: public -/
-@[rust_loop]
-def multi_value.validate_body_loop
-  (data : Slice Std.U8) (v : alloc.vec.Vec _root_.Itasca.types.FuncType)
-  (v1 : alloc.vec.Vec _root_.Itasca.module.Import)
-  (v2 : alloc.vec.Vec _root_.Itasca.module.Global)
-  (v3 : alloc.vec.Vec _root_.Itasca.module.Export)
-  (v4 : alloc.vec.Vec _root_.Itasca.module.Element) (o : Option Std.U32)
-  (v5 : alloc.vec.Vec Std.U32)
-  (v6 : alloc.vec.Vec _root_.Itasca.types.FuncType)
-  (v7 : alloc.vec.Vec _root_.Itasca.types.TableType)
-  (v8 : alloc.vec.Vec _root_.Itasca.types.MemType)
-  (v9 : alloc.vec.Vec _root_.Itasca.types.GlobalType) (i : Std.Usize)
-  (i1 : Std.Usize) (type_index : Std.U32)
-  (st : _root_.Itasca.multi_value.State)
-  (locals : alloc.vec.Vec _root_.Itasca.types.ValueType)
-  (v10 : alloc.vec.Vec _root_.Itasca.types.ValueType)
-  (visitor : _root_.Itasca.code.EmptyOpVisitor) :
-  Result (core.result.Result Unit _root_.Itasca.error.OpError)
-  := do
-  loop
-    (fun (st1, visitor1) => multi_value.validate_body_loop.body data v v1 v2 v3
-      v4 o v5 v6 v7 v8 v9 i i1 type_index locals v10 st1 visitor1)
-    (st, visitor)
-
-/-- [itasca::multi_value::validate_body]:
-    Source: 'src/multi_value.rs', lines 302:0-370:1
-    Visibility: public -/
-def multi_value.validate_body
-  (data : Slice Std.U8) (env : _root_.Itasca.module.Env)
-  (locals : alloc.vec.Vec _root_.Itasca.types.ValueType) (type_index : Std.U32)
-  :
-  Result (core.result.Result Unit _root_.Itasca.error.OpError)
-  := do
-  let i := Slice.len data
-  if i > limits.MAX_FUNCTION_BYTES
-  then ok (core.result.Result.Err error.OpError.BodyTooLarge)
-  else
-    let i1 ← lift (UScalar.cast .Usize type_index)
-    let i2 := alloc.vec.Vec.len env.types
-    if i1 >= i2
-    then ok (core.result.Result.Err error.OpError.UnknownType)
-    else
-      let ft ←
-        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-          _root_.Itasca.types.FuncType) env.types i1
-      let r ← multi_value.check_func_type ft
-      let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-      match cf with
-      | core.ops.control_flow.ControlFlow.Continue _ =>
-        let st ←
-          multi_value.push_frame
-            {
-              core :=
-                {
-                  vals := (alloc.vec.Vec.new _root_.Itasca.code.StackType),
-                  ctrls := (alloc.vec.Vec.new _root_.Itasca.code.Ctrl),
-                  pos := 0#usize
-                },
-              blocks := (alloc.vec.Vec.new _root_.Itasca.signature.BlockType)
-            } code.LabelKind.Body (signature.BlockType.TypeIndex type_index)
-        multi_value.validate_body_loop data env.types env.imports env.globals
-          env.exports env.elements env.start env.func_type_indices
-          env.func_types env.table_types env.mem_types env.global_types
-          env.num_imported_funcs env.num_imported_globals type_index st locals
-          (alloc.vec.Vec.new _root_.Itasca.types.ValueType) ()
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
-
-/-- [itasca::module::copy_value_types]: loop body 0:
-    Source: 'src/module.rs', lines 645:4-651:5 -/
-@[rust_loop_body]
-def module.copy_value_types_loop.body
-  (src : Slice _root_.Itasca.types.ValueType)
-  (out : alloc.vec.Vec _root_.Itasca.types.ValueType) (i : Std.Usize) :
-  Result (ControlFlow ((alloc.vec.Vec _root_.Itasca.types.ValueType) ×
-    Std.Usize) (alloc.vec.Vec _root_.Itasca.types.ValueType))
-  := do
-  let i1 := Slice.len src
-  if i >= i1
-  then ok (done out)
-  else
-    let vt ← Slice.index_usize src i
-    let out1 ← alloc.vec.Vec.push out vt
-    let i2 ← i + 1#usize
-    ok (cont (out1, i2))
-
-/-- [itasca::module::copy_value_types]: loop 0:
-    Source: 'src/module.rs', lines 645:4-651:5 -/
-@[rust_loop]
-def module.copy_value_types_loop
-  (src : Slice _root_.Itasca.types.ValueType)
-  (out : alloc.vec.Vec _root_.Itasca.types.ValueType) (i : Std.Usize) :
-  Result (alloc.vec.Vec _root_.Itasca.types.ValueType)
-  := do
-  loop
-    (fun (out1, i1) => module.copy_value_types_loop.body src out1 i1)
-    (out, i)
-
-/-- [itasca::module::copy_value_types]:
-    Source: 'src/module.rs', lines 642:0-652:1 -/
-@[reducible]
-def module.copy_value_types
-  (src : Slice _root_.Itasca.types.ValueType) :
-  Result (alloc.vec.Vec _root_.Itasca.types.ValueType)
-  := do
-  module.copy_value_types_loop src (alloc.vec.Vec.new
-    _root_.Itasca.types.ValueType) 0#usize
-
-/-- [itasca::module::build_func_locals]: loop body 0:
-    Source: 'src/module.rs', lines 1072:4-1078:5 -/
-@[rust_loop_body]
-def module.build_func_locals_loop.body
-  (declared : Slice _root_.Itasca.types.ValueType)
-  (locals : alloc.vec.Vec _root_.Itasca.types.ValueType) (i : Std.Usize) :
-  Result (ControlFlow ((alloc.vec.Vec _root_.Itasca.types.ValueType) ×
-    Std.Usize) (alloc.vec.Vec _root_.Itasca.types.ValueType))
-  := do
-  let i1 := Slice.len declared
-  if i >= i1
-  then ok (done locals)
-  else
-    let vt ← Slice.index_usize declared i
-    let locals1 ← alloc.vec.Vec.push locals vt
-    let i2 ← i + 1#usize
-    ok (cont (locals1, i2))
-
-/-- [itasca::module::build_func_locals]: loop 0:
-    Source: 'src/module.rs', lines 1072:4-1078:5 -/
-@[rust_loop]
-def module.build_func_locals_loop
-  (declared : Slice _root_.Itasca.types.ValueType)
-  (locals : alloc.vec.Vec _root_.Itasca.types.ValueType) (i : Std.Usize) :
-  Result (alloc.vec.Vec _root_.Itasca.types.ValueType)
-  := do
-  loop
-    (fun (locals1, i1) => module.build_func_locals_loop.body declared locals1
-      i1)
-    (locals, i)
-
-/-- [itasca::module::build_func_locals]:
-    Source: 'src/module.rs', lines 1069:0-1079:1 -/
-def module.build_func_locals
-  (params : Slice _root_.Itasca.types.ValueType)
-  (declared : Slice _root_.Itasca.types.ValueType) :
-  Result (alloc.vec.Vec _root_.Itasca.types.ValueType)
-  := do
-  let locals ← module.copy_value_types params
-  module.build_func_locals_loop declared locals 0#usize
-
-/-- [itasca::module::push_locals]: loop body 0:
-    Source: 'src/module.rs', lines 1037:4-1043:5 -/
-@[rust_loop_body]
-def module.push_locals_loop.body
-  (count : Std.U32) (vt : _root_.Itasca.types.ValueType)
-  (out : alloc.vec.Vec _root_.Itasca.types.ValueType) (i : Std.U32) :
-  Result (ControlFlow ((alloc.vec.Vec _root_.Itasca.types.ValueType) ×
-    Std.U32) (alloc.vec.Vec _root_.Itasca.types.ValueType))
-  := do
-  if i >= count
-  then ok (done out)
-  else
-    let out1 ← alloc.vec.Vec.push out vt
-    let i1 ← i + 1#u32
-    ok (cont (out1, i1))
-
-/-- [itasca::module::push_locals]: loop 0:
-    Source: 'src/module.rs', lines 1037:4-1043:5 -/
-@[rust_loop]
-def module.push_locals_loop
-  (out : alloc.vec.Vec _root_.Itasca.types.ValueType) (count : Std.U32)
-  (vt : _root_.Itasca.types.ValueType) (i : Std.U32) :
-  Result (alloc.vec.Vec _root_.Itasca.types.ValueType)
-  := do
-  loop
-    (fun (out1, i1) => module.push_locals_loop.body count vt out1 i1)
-    (out, i)
-
-/-- [itasca::module::push_locals]:
-    Source: 'src/module.rs', lines 1035:0-1044:1 -/
-@[reducible]
-def module.push_locals
-  (out : alloc.vec.Vec _root_.Itasca.types.ValueType) (count : Std.U32)
-  (vt : _root_.Itasca.types.ValueType) :
-  Result (alloc.vec.Vec _root_.Itasca.types.ValueType)
-  := do
-  module.push_locals_loop out count vt 0#u32
-
-/-- [itasca::module::decode_value_type]:
-    Source: 'src/module.rs', lines 343:0-352:1 -/
-def module.decode_value_type
-  (data : Slice Std.U8) (pos : Std.Usize) :
-  Result (core.result.Result (_root_.Itasca.types.ValueType × Std.Usize)
-    _root_.Itasca.error.Error)
-  := do
-  let r ← reader.read_byte data pos
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue val =>
-    let (b, p) := val
-    match b with
-    | 127#uscalar => ok (core.result.Result.Ok (types.ValueType.I32, p))
-    | 126#uscalar => ok (core.result.Result.Ok (types.ValueType.I64, p))
-    | 125#uscalar => ok (core.result.Result.Ok (types.ValueType.F32, p))
-    | 124#uscalar => ok (core.result.Result.Ok (types.ValueType.F64, p))
-    | _ => ok (core.result.Result.Err (error.Error.InvalidType b))
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-      (_root_.Itasca.types.ValueType × Std.Usize)
-      error.Error.Insts.CoreConvertFromOpError residual
-
-/-- [itasca::limits::MAX_LOCALS]
-    Source: 'src/limits.rs', lines 51:0-51:37
-    Visibility: public -/
-@[global_simps, irreducible] def limits.MAX_LOCALS : Std.Usize := 50000#usize
-
-/-- [itasca::module::decode_locals]: loop body 0:
-    Source: 'src/module.rs', lines 1052:4-1066:5 -/
-@[rust_loop_body]
-def module.decode_locals_loop.body
-  (data : Slice Std.U8) (groups : Std.U32)
-  (out : alloc.vec.Vec _root_.Itasca.types.ValueType) (q : Std.Usize)
-  (i : Std.U32) :
-  Result (ControlFlow ((alloc.vec.Vec _root_.Itasca.types.ValueType) ×
-    Std.Usize × Std.U32) (core.result.Result ((alloc.vec.Vec
-    _root_.Itasca.types.ValueType) × Std.Usize) _root_.Itasca.error.Error))
-  := do
-  if i >= groups
-  then ok (done (core.result.Result.Ok (out, q)))
-  else
-    let r ← reader.read_u32_leb data q
-    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-    match cf with
-    | core.ops.control_flow.ControlFlow.Continue val =>
-      let (count, q1) := val
-      let r1 ← module.decode_value_type data q1
-      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-      match cf1 with
-      | core.ops.control_flow.ControlFlow.Continue val1 =>
-        let (vt, q2) := val1
-        let i1 ← lift (UScalar.cast .Usize count)
-        let i2 := alloc.vec.Vec.len out
-        let i3 ← limits.MAX_LOCALS - i2
-        if i1 > i3
-        then ok (done (core.result.Result.Err error.Error.TooManyLocals))
-        else
-          let out1 ← module.push_locals out count vt
-          let i4 ← i + 1#u32
-          ok (cont (out1, q2, i4))
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r2 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            ((alloc.vec.Vec _root_.Itasca.types.ValueType) × Std.Usize)
-            (core.convert.FromSame _root_.Itasca.error.Error) residual
-        ok (done r2)
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      let r1 ←
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          ((alloc.vec.Vec _root_.Itasca.types.ValueType) × Std.Usize)
-          error.Error.Insts.CoreConvertFromOpError residual
-      ok (done r1)
-
-/-- [itasca::module::decode_locals]: loop 0:
-    Source: 'src/module.rs', lines 1052:4-1066:5 -/
-@[rust_loop]
-def module.decode_locals_loop
-  (data : Slice Std.U8) (groups : Std.U32)
-  (out : alloc.vec.Vec _root_.Itasca.types.ValueType) (q : Std.Usize)
-  (i : Std.U32) :
-  Result (core.result.Result ((alloc.vec.Vec _root_.Itasca.types.ValueType) ×
-    Std.Usize) _root_.Itasca.error.Error)
-  := do
-  loop
-    (fun (out1, q1, i1) => module.decode_locals_loop.body data groups out1 q1
-      i1)
-    (out, q, i)
-
-/-- [itasca::module::decode_locals]:
-    Source: 'src/module.rs', lines 1047:0-1067:1 -/
-def module.decode_locals
-  (data : Slice Std.U8) (pos : Std.Usize) :
-  Result (core.result.Result ((alloc.vec.Vec _root_.Itasca.types.ValueType) ×
-    Std.Usize) _root_.Itasca.error.Error)
-  := do
-  let r ← reader.read_u32_leb data pos
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue val =>
-    let (groups, p) := val
-    module.decode_locals_loop data groups (alloc.vec.Vec.new
-      _root_.Itasca.types.ValueType) p 0#u32
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-      ((alloc.vec.Vec _root_.Itasca.types.ValueType) × Std.Usize)
-      error.Error.Insts.CoreConvertFromOpError residual
-
-/-- [itasca::multi_value::validate_entry]:
-    Source: 'src/multi_value.rs', lines 448:0-474:1 -/
-def multi_value.validate_entry
-  (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env)
-  (index : Std.Usize) :
-  Result (core.result.Result Std.Usize _root_.Itasca.error.Error)
-  := do
-  let i := alloc.vec.Vec.len env.func_type_indices
-  if index >= i
-  then ok (core.result.Result.Err error.Error.FuncCodeMismatch)
-  else
-    let r ← reader.read_u32_leb data pos
-    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-    match cf with
-    | core.ops.control_flow.ControlFlow.Continue val =>
-      let (size, p) := val
-      let i1 ← lift (UScalar.cast .Usize size)
-      let r1 ← module.have_bytes data p i1
-      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-      match cf1 with
-      | core.ops.control_flow.ControlFlow.Continue _ =>
-        let i2 ← lift (UScalar.cast .Usize size)
-        let «end» ← p + i2
-        let r2 ← module.decode_locals data p
-        let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-        match cf2 with
-        | core.ops.control_flow.ControlFlow.Continue val1 =>
-          let (declared, start) := val1
-          if start > «end»
-          then ok (core.result.Result.Err error.Error.SectionSizeMismatch)
-          else
-            let type_index ←
-              alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-                Std.U32) env.func_type_indices index
-            let i3 ← lift (UScalar.cast .Usize type_index)
-            let i4 := alloc.vec.Vec.len env.types
-            if i3 >= i4
-            then
-              ok (core.result.Result.Err (error.Error.UnknownType type_index))
-            else
-              let ft ←
-                alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-                  _root_.Itasca.types.FuncType) env.types i3
-              let s := alloc.vec.Vec.deref ft.params
-              let s1 := alloc.vec.Vec.deref declared
-              let locals ← module.build_func_locals s s1
-              let s2 ←
-                core.slice.index.Slice.index
-                  (core.slice.index.SliceIndexRangeUsizeSlice Std.U8) data
-                  { start, «end» }
-              let r3 ← multi_value.validate_body s2 env locals type_index
-              match r3 with
-              | core.result.Result.Ok _ => ok (core.result.Result.Ok «end»)
-              | core.result.Result.Err e =>
-                ok (core.result.Result.Err (error.Error.Body e))
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Std.Usize (core.convert.FromSame _root_.Itasca.error.Error)
-            residual
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          Std.Usize (core.convert.FromSame _root_.Itasca.error.Error) residual
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        Std.Usize error.Error.Insts.CoreConvertFromOpError residual
-
-/-- [itasca::multi_value::validate_entries]: loop body 0:
-    Source: 'src/multi_value.rs', lines 512:4-525:1 -/
-@[rust_loop_body]
-def multi_value.validate_entries_loop.body
-  (data : Slice Std.U8) («end» : Std.Usize) (count : Std.U32)
-  (env : _root_.Itasca.module.Env) (entry : Std.Usize) (i : Std.Usize) :
-  Result (ControlFlow (Std.Usize × Std.Usize) (core.result.Result Std.Usize
-    _root_.Itasca.error.Error))
-  := do
-  let i1 ← lift (UScalar.cast .Usize count)
-  if i >= i1
-  then
-    if entry != «end»
-    then ok (done (core.result.Result.Err error.Error.SectionSizeMismatch))
-    else ok (done (core.result.Result.Ok «end»))
-  else
-    let r ← multi_value.validate_entry data entry env i
-    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-    match cf with
-    | core.ops.control_flow.ControlFlow.Continue val =>
-      if val > «end»
-      then ok (done (core.result.Result.Err error.Error.SectionSizeMismatch))
-      else let i2 ← i + 1#usize
-           ok (cont (val, i2))
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      let r1 ←
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          Std.Usize (core.convert.FromSame _root_.Itasca.error.Error) residual
-      ok (done r1)
-
-/-- [itasca::multi_value::validate_entries]: loop 0:
-    Source: 'src/multi_value.rs', lines 512:4-525:1 -/
-@[rust_loop]
-def multi_value.validate_entries_loop
-  (data : Slice Std.U8) (entry : Std.Usize) («end» : Std.Usize)
-  (count : Std.U32) (env : _root_.Itasca.module.Env) (i : Std.Usize) :
-  Result (core.result.Result Std.Usize _root_.Itasca.error.Error)
-  := do
-  loop
-    (fun (entry1, i1) => multi_value.validate_entries_loop.body data «end»
-      count env entry1 i1)
-    (entry, i)
-
-/-- [itasca::multi_value::validate_entries]:
-    Source: 'src/multi_value.rs', lines 504:0-525:1 -/
-@[reducible]
-def multi_value.validate_entries
-  (data : Slice Std.U8) (entry : Std.Usize) («end» : Std.Usize)
-  (count : Std.U32) (env : _root_.Itasca.module.Env) :
-  Result (core.result.Result Std.Usize _root_.Itasca.error.Error)
-  := do
-  multi_value.validate_entries_loop data entry «end» count env 0#usize
-
-/-- [itasca::module::SECTION_CODE]
-    Source: 'src/module.rs', lines 43:0-43:39 -/
-@[global_simps, irreducible] def module.SECTION_CODE : Std.U8 := 10#u8
-
-/-- [itasca::multi_value::validate_code]:
-    Source: 'src/multi_value.rs', lines 490:0-502:1 -/
-def multi_value.validate_code
-  (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
-  Result (core.result.Result Std.Usize _root_.Itasca.error.Error)
-  := do
-  let i := Slice.len data
-  if pos < i
-  then
-    let i1 ← Slice.index_usize data pos
-    if i1 = module.SECTION_CODE
-    then
-      let r ← module.read_section_header data pos
-      let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-      match cf with
-      | core.ops.control_flow.ControlFlow.Continue val =>
-        let (_, start, «end») := val
-        let r1 ← reader.read_u32_leb data start
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue val1 =>
-          let (count, entry) := val1
-          let i2 ← lift (UScalar.cast .Usize count)
-          let i3 := alloc.vec.Vec.len env.func_type_indices
-          if i2 != i3
-          then ok (core.result.Result.Err error.Error.FuncCodeMismatch)
-          else multi_value.validate_entries data entry «end» count env
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Std.Usize error.Error.Insts.CoreConvertFromOpError residual
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          Std.Usize (core.convert.FromSame _root_.Itasca.error.Error) residual
-    else
-      let b ← alloc.vec.Vec.is_empty Global env.func_type_indices
-      if b
-      then ok (core.result.Result.Ok pos)
-      else ok (core.result.Result.Err error.Error.MissingCodeSection)
-  else
-    let b ← alloc.vec.Vec.is_empty Global env.func_type_indices
-    if b
-    then ok (core.result.Result.Ok pos)
-    else ok (core.result.Result.Err error.Error.MissingCodeSection)
+        Unit (core.convert.FromSame _root_.Itasca.error.Error) residual
+    ok (r1, visitor)
 
 /-- [itasca::module::decode_func_indices]: loop body 0:
-    Source: 'src/module.rs', lines 931:4-942:5 -/
+    Source: 'src/module.rs', lines 957:4-968:5 -/
 @[rust_loop_body]
 def module.decode_func_indices_loop.body
   (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
@@ -9763,7 +11271,7 @@ def module.decode_func_indices_loop.body
       ok (done r1)
 
 /-- [itasca::module::decode_func_indices]: loop 0:
-    Source: 'src/module.rs', lines 931:4-942:5 -/
+    Source: 'src/module.rs', lines 957:4-968:5 -/
 @[rust_loop]
 def module.decode_func_indices_loop
   (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
@@ -9777,7 +11285,7 @@ def module.decode_func_indices_loop
     (out, q, i)
 
 /-- [itasca::module::decode_func_indices]:
-    Source: 'src/module.rs', lines 926:0-943:1 -/
+    Source: 'src/module.rs', lines 952:0-969:1 -/
 def module.decode_func_indices
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
   Result (core.result.Result ((alloc.vec.Vec Std.U32) × Std.Usize)
@@ -9795,297 +11303,13 @@ def module.decode_func_indices
       ((alloc.vec.Vec Std.U32) × Std.Usize)
       error.Error.Insts.CoreConvertFromOpError residual
 
-/-- [itasca::multi_value::decode_elements]: loop body 0:
-    Source: 'src/multi_value.rs', lines 548:4-572:5 -/
-@[rust_loop_body]
-def multi_value.decode_elements_loop.body
-  (data : Slice Std.U8) (count : Std.U32) (env : _root_.Itasca.module.Env)
-  (pos : Std.Usize) (i : Std.U32) :
-  Result (ControlFlow (_root_.Itasca.module.Env × Std.Usize × Std.U32)
-    ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
-    _root_.Itasca.module.Env))
-  := do
-  if i >= count
-  then ok (done (core.result.Result.Ok pos, env))
-  else
-    let r ← multi_value.active_index data pos
-    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-    match cf with
-    | core.ops.control_flow.ControlFlow.Continue val =>
-      let (table_idx, p, explicit) := val
-      let i1 ← lift (UScalar.cast .Usize table_idx)
-      let i2 := alloc.vec.Vec.len env.table_types
-      if i1 >= i2
-      then
-        ok (done (core.result.Result.Err (error.Error.UnknownTable table_idx),
-          env))
-      else
-        let r1 ← module.decode_const_expr data p env types.ValueType.I32
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue val1 =>
-          let (offset, p1) := val1
-          if explicit
-          then
-            let r2 ← reader.read_byte data p1
-            let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-            match cf2 with
-            | core.ops.control_flow.ControlFlow.Continue val2 =>
-              let (kind, «end») := val2
-              if kind != 0#u8
-              then
-                ok (done (core.result.Result.Err (error.Error.InvalidType
-                  kind), env))
-              else
-                let r3 ← module.decode_func_indices data «end» env
-                let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
-                match cf3 with
-                | core.ops.control_flow.ControlFlow.Continue val3 =>
-                  let (init, end1) := val3
-                  let v ←
-                    alloc.vec.Vec.push env.elements
-                      ({ table_idx, offset, init } :
-                      _root_.Itasca.module.Element)
-                  let i3 ← i + 1#u32
-                  ok (cont ({ env with elements := v }, end1, i3))
-                | core.ops.control_flow.ControlFlow.Break residual =>
-                  let r4 ←
-                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                      Std.Usize (core.convert.FromSame
-                      _root_.Itasca.error.Error) residual
-                  ok (done (r4, env))
-            | core.ops.control_flow.ControlFlow.Break residual =>
-              let r3 ←
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  Std.Usize error.Error.Insts.CoreConvertFromOpError residual
-              ok (done (r3, env))
-          else
-            let r2 ← module.decode_func_indices data p1 env
-            let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-            match cf2 with
-            | core.ops.control_flow.ControlFlow.Continue val2 =>
-              let (init, «end») := val2
-              let v ←
-                alloc.vec.Vec.push env.elements ({ table_idx, offset, init } :
-                  _root_.Itasca.module.Element)
-              let i3 ← i + 1#u32
-              ok (cont ({ env with elements := v }, «end», i3))
-            | core.ops.control_flow.ControlFlow.Break residual =>
-              let r3 ←
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  Std.Usize (core.convert.FromSame _root_.Itasca.error.Error)
-                  residual
-              ok (done (r3, env))
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Std.Usize (core.convert.FromSame _root_.Itasca.error.Error)
-              residual
-          ok (done (r2, env))
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      let r1 ←
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          Std.Usize (core.convert.FromSame _root_.Itasca.error.Error) residual
-      ok (done (r1, env))
-
-/-- [itasca::multi_value::decode_elements]: loop 0:
-    Source: 'src/multi_value.rs', lines 548:4-572:5 -/
-@[rust_loop]
-def multi_value.decode_elements_loop
-  (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
-  (pos : Std.Usize) (i : Std.U32) :
-  Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
-    _root_.Itasca.module.Env)
-  := do
-  loop
-    (fun (env1, pos1, i1) => multi_value.decode_elements_loop.body data count
-      env1 pos1 i1)
-    (env, pos, i)
-
-/-- [itasca::multi_value::decode_elements]:
-    Source: 'src/multi_value.rs', lines 541:0-573:1 -/
-def multi_value.decode_elements
-  (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
-  Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
-    _root_.Itasca.module.Env)
-  := do
-  let r ← reader.read_u32_leb data pos
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue val =>
-    let (count, pos1) := val
-    multi_value.decode_elements_loop data env count pos1 0#u32
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    let r1 ←
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        Std.Usize error.Error.Insts.CoreConvertFromOpError residual
-    ok (r1, env)
-
-/-- [itasca::multi_value::decode_types]: loop body 0:
-    Source: 'src/multi_value.rs', lines 385:4-392:1 -/
-@[rust_loop_body]
-def multi_value.decode_types_loop.body
-  (data : Slice Std.U8) (count : Std.U32) (pos : Std.Usize)
-  (out : alloc.vec.Vec _root_.Itasca.types.ValueType) (i : Std.U32) :
-  Result (ControlFlow (Std.Usize × (alloc.vec.Vec
-    _root_.Itasca.types.ValueType) × Std.U32) (core.result.Result
-    ((alloc.vec.Vec _root_.Itasca.types.ValueType) × Std.Usize)
-    _root_.Itasca.error.Error))
-  := do
-  if i < count
-  then
-    let r ← module.decode_value_type data pos
-    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-    match cf with
-    | core.ops.control_flow.ControlFlow.Continue val =>
-      let (ty, «end») := val
-      let out1 ← alloc.vec.Vec.push out ty
-      let i1 ← i + 1#u32
-      ok (cont («end», out1, i1))
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      let r1 ←
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          ((alloc.vec.Vec _root_.Itasca.types.ValueType) × Std.Usize)
-          (core.convert.FromSame _root_.Itasca.error.Error) residual
-      ok (done r1)
-  else ok (done (core.result.Result.Ok (out, pos)))
-
-/-- [itasca::multi_value::decode_types]: loop 0:
-    Source: 'src/multi_value.rs', lines 385:4-392:1 -/
-@[rust_loop]
-def multi_value.decode_types_loop
-  (data : Slice Std.U8) (count : Std.U32) (pos : Std.Usize)
-  (out : alloc.vec.Vec _root_.Itasca.types.ValueType) (i : Std.U32) :
-  Result (core.result.Result ((alloc.vec.Vec _root_.Itasca.types.ValueType) ×
-    Std.Usize) _root_.Itasca.error.Error)
-  := do
-  loop
-    (fun (pos1, out1, i1) => multi_value.decode_types_loop.body data count pos1
-      out1 i1)
-    (pos, out, i)
-
-/-- [itasca::multi_value::decode_types]:
-    Source: 'src/multi_value.rs', lines 372:0-392:1 -/
-def multi_value.decode_types
-  (data : Slice Std.U8) (pos : Std.Usize) (limit : Std.Usize)
-  (error1 : _root_.Itasca.error.OpError) :
-  Result (core.result.Result ((alloc.vec.Vec _root_.Itasca.types.ValueType) ×
-    Std.Usize) _root_.Itasca.error.Error)
-  := do
-  let r ← reader.read_u32_leb data pos
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue val =>
-    let (count, pos1) := val
-    let i ← lift (UScalar.cast .Usize count)
-    if i > limit
-    then ok (core.result.Result.Err (error.Error.Read error1))
-    else
-      multi_value.decode_types_loop data count pos1 (alloc.vec.Vec.new
-        _root_.Itasca.types.ValueType) 0#u32
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-      ((alloc.vec.Vec _root_.Itasca.types.ValueType) × Std.Usize)
-      error.Error.Insts.CoreConvertFromOpError residual
-
-/-- [itasca::multi_value::decode_type_section]: loop body 0:
-    Source: 'src/multi_value.rs', lines 401:4-413:1 -/
-@[rust_loop_body]
-def multi_value.decode_type_section_loop.body
-  (data : Slice Std.U8) (count : Std.U32) (env : _root_.Itasca.module.Env)
-  (pos : Std.Usize) (i : Std.U32) :
-  Result (ControlFlow (_root_.Itasca.module.Env × Std.Usize × Std.U32)
-    ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
-    _root_.Itasca.module.Env))
-  := do
-  if i < count
-  then
-    let r ← reader.read_byte data pos
-    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-    match cf with
-    | core.ops.control_flow.ControlFlow.Continue val =>
-      let (tag, p) := val
-      if tag != 96#u8
-      then
-        ok (done (core.result.Result.Err (error.Error.InvalidType tag), env))
-      else
-        let r1 ←
-          multi_value.decode_types data p multi_value.MAX_PARAMS
-            error.OpError.TooManyParams
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue val1 =>
-          let (params, p1) := val1
-          let r2 ←
-            multi_value.decode_types data p1 multi_value.MAX_RESULTS
-              error.OpError.TooManyResults
-          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-          match cf2 with
-          | core.ops.control_flow.ControlFlow.Continue val2 =>
-            let (results, p2) := val2
-            let v ←
-              alloc.vec.Vec.push env.types ({ params, results } :
-                _root_.Itasca.types.FuncType)
-            let i1 ← i + 1#u32
-            ok (cont ({ env with types := v }, p2, i1))
-          | core.ops.control_flow.ControlFlow.Break residual =>
-            let r3 ←
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                Std.Usize (core.convert.FromSame _root_.Itasca.error.Error)
-                residual
-            ok (done (r3, env))
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Std.Usize (core.convert.FromSame _root_.Itasca.error.Error)
-              residual
-          ok (done (r2, env))
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      let r1 ←
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          Std.Usize error.Error.Insts.CoreConvertFromOpError residual
-      ok (done (r1, env))
-  else ok (done (core.result.Result.Ok pos, env))
-
-/-- [itasca::multi_value::decode_type_section]: loop 0:
-    Source: 'src/multi_value.rs', lines 401:4-413:1 -/
-@[rust_loop]
-def multi_value.decode_type_section_loop
-  (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
-  (pos : Std.Usize) (i : Std.U32) :
-  Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
-    _root_.Itasca.module.Env)
-  := do
-  loop
-    (fun (env1, pos1, i1) => multi_value.decode_type_section_loop.body data
-      count env1 pos1 i1)
-    (env, pos, i)
-
-/-- [itasca::multi_value::decode_type_section]:
-    Source: 'src/multi_value.rs', lines 394:0-413:1 -/
-def multi_value.decode_type_section
-  (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
-  Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
-    _root_.Itasca.module.Env)
-  := do
-  let r ← reader.read_u32_leb data pos
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue val =>
-    let (count, pos1) := val
-    multi_value.decode_type_section_loop data env count pos1 0#u32
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    let r1 ←
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        Std.Usize error.Error.Insts.CoreConvertFromOpError residual
-    ok (r1, env)
-
 /-- [itasca::module::decode_element_section]: loop body 0:
-    Source: 'src/module.rs', lines 949:4-966:5 -/
+    Source: 'src/module.rs', lines 995:4-1020:5 -/
 @[rust_loop_body]
 def module.decode_element_section_loop.body
-  (data : Slice Std.U8) (count : Std.U32) (env : _root_.Itasca.module.Env)
-  (q : Std.Usize) (i : Std.U32) :
+  (data : Slice Std.U8) (profile : _root_.Itasca.ValidationProfile)
+  (count : Std.U32) (env : _root_.Itasca.module.Env) (q : Std.Usize)
+  (i : Std.U32) :
   Result (ControlFlow (_root_.Itasca.module.Env × Std.Usize × Std.U32)
     ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
     _root_.Itasca.module.Env))
@@ -10097,41 +11321,87 @@ def module.decode_element_section_loop.body
     let cf ← core.result.Result.Insts.CoreOpsTry.branch r
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
-      let (table_idx, q1) := val
-      let i1 ← lift (UScalar.cast .Usize table_idx)
-      let i2 := alloc.vec.Vec.len env.table_types
-      if i1 >= i2
-      then
-        ok (done (core.result.Result.Err (error.Error.UnknownTable table_idx),
-          env))
-      else
-        let r1 ← module.decode_const_expr data q1 env types.ValueType.I32
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue val1 =>
-          let (offset, q2) := val1
-          let r2 ← module.decode_func_indices data q2 env
+      let (index_or_flags, q1) := val
+      let r1 ← module.decode_segment_index data q1 index_or_flags profile
+      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+      match cf1 with
+      | core.ops.control_flow.ControlFlow.Continue val1 =>
+        let (table_idx, q11, explicit) := val1
+        let i1 ← lift (UScalar.cast .Usize table_idx)
+        let i2 := alloc.vec.Vec.len env.table_types
+        if i1 >= i2
+        then
+          ok (done (core.result.Result.Err (error.Error.UnknownTable
+            table_idx), env))
+        else
+          let r2 ← module.decode_const_expr data q11 env types.ValueType.I32
           let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
           match cf2 with
           | core.ops.control_flow.ControlFlow.Continue val2 =>
-            let (init, q3) := val2
-            let v ←
-              alloc.vec.Vec.push env.elements ({ table_idx, offset, init } :
-                _root_.Itasca.module.Element)
-            let i3 ← i + 1#u32
-            ok (cont ({ env with elements := v }, q3, i3))
+            let (offset, q2) := val2
+            if explicit
+            then
+              let r3 ← reader.read_byte data q2
+              let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
+              match cf3 with
+              | core.ops.control_flow.ControlFlow.Continue val3 =>
+                let (kind, next) := val3
+                if kind != 0#u8
+                then
+                  ok (done (core.result.Result.Err (error.Error.InvalidType
+                    kind), env))
+                else
+                  let r4 ← module.decode_func_indices data next env
+                  let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
+                  match cf4 with
+                  | core.ops.control_flow.ControlFlow.Continue val4 =>
+                    let (init, q3) := val4
+                    let v ←
+                      alloc.vec.Vec.push env.elements
+                        ({ table_idx, offset, init } :
+                        _root_.Itasca.module.Element)
+                    let i3 ← i + 1#u32
+                    ok (cont ({ env with elements := v }, q3, i3))
+                  | core.ops.control_flow.ControlFlow.Break residual =>
+                    let r5 ←
+                      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                        Std.Usize (core.convert.FromSame
+                        _root_.Itasca.error.Error) residual
+                    ok (done (r5, env))
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                let r4 ←
+                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                    Std.Usize error.Error.Insts.CoreConvertFromOpError residual
+                ok (done (r4, env))
+            else
+              let r3 ← module.decode_func_indices data q2 env
+              let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
+              match cf3 with
+              | core.ops.control_flow.ControlFlow.Continue val3 =>
+                let (init, q3) := val3
+                let v ←
+                  alloc.vec.Vec.push env.elements ({ table_idx, offset, init }
+                    : _root_.Itasca.module.Element)
+                let i3 ← i + 1#u32
+                ok (cont ({ env with elements := v }, q3, i3))
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                let r4 ←
+                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                    Std.Usize (core.convert.FromSame _root_.Itasca.error.Error)
+                    residual
+                ok (done (r4, env))
           | core.ops.control_flow.ControlFlow.Break residual =>
             let r3 ←
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                 Std.Usize (core.convert.FromSame _root_.Itasca.error.Error)
                 residual
             ok (done (r3, env))
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Std.Usize (core.convert.FromSame _root_.Itasca.error.Error)
-              residual
-          ok (done (r2, env))
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r2 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Std.Usize (core.convert.FromSame _root_.Itasca.error.Error)
+            residual
+        ok (done (r2, env))
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r1 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -10139,23 +11409,25 @@ def module.decode_element_section_loop.body
       ok (done (r1, env))
 
 /-- [itasca::module::decode_element_section]: loop 0:
-    Source: 'src/module.rs', lines 949:4-966:5 -/
+    Source: 'src/module.rs', lines 995:4-1020:5 -/
 @[rust_loop]
 def module.decode_element_section_loop
-  (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
-  (q : Std.Usize) (i : Std.U32) :
+  (data : Slice Std.U8) (env : _root_.Itasca.module.Env)
+  (profile : _root_.Itasca.ValidationProfile) (count : Std.U32) (q : Std.Usize)
+  (i : Std.U32) :
   Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
     _root_.Itasca.module.Env)
   := do
   loop
-    (fun (env1, q1, i1) => module.decode_element_section_loop.body data count
-      env1 q1 i1)
+    (fun (env1, q1, i1) => module.decode_element_section_loop.body data profile
+      count env1 q1 i1)
     (env, q, i)
 
 /-- [itasca::module::decode_element_section]:
-    Source: 'src/module.rs', lines 945:0-967:1 -/
+    Source: 'src/module.rs', lines 989:0-1021:1 -/
 def module.decode_element_section
-  (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
+  (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env)
+  (profile : _root_.Itasca.ValidationProfile) :
   Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
     _root_.Itasca.module.Env)
   := do
@@ -10164,7 +11436,7 @@ def module.decode_element_section
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
     let (count, p) := val
-    module.decode_element_section_loop data env count p 0#u32
+    module.decode_element_section_loop data env profile count p 0#u32
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -10172,7 +11444,7 @@ def module.decode_element_section
     ok (r1, env)
 
 /-- [itasca::module::decode_start_section]:
-    Source: 'src/module.rs', lines 913:0-924:1 -/
+    Source: 'src/module.rs', lines 939:0-950:1 -/
 def module.decode_start_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
   Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
@@ -10206,7 +11478,7 @@ def module.decode_start_section
     ok (r1, env)
 
 /-- [itasca::module::export_desc]:
-    Source: 'src/module.rs', lines 860:0-889:1 -/
+    Source: 'src/module.rs', lines 886:0-915:1 -/
 def module.export_desc
   (env : _root_.Itasca.module.Env) (kind : Std.U8) (idx : Std.U32) :
   Result (core.result.Result _root_.Itasca.module.ExportDesc
@@ -10237,7 +11509,7 @@ def module.export_desc
   | _ => ok (core.result.Result.Err (error.Error.InvalidType kind))
 
 /-- [itasca::module::names_equal]: loop body 0:
-    Source: 'src/module.rs', lines 834:4-842:5 -/
+    Source: 'src/module.rs', lines 860:4-868:5 -/
 @[rust_loop_body]
 def module.names_equal_loop.body
   (a : Slice Std.U8) (b : Slice Std.U8) (i : Std.Usize) :
@@ -10255,7 +11527,7 @@ def module.names_equal_loop.body
          ok (cont i4)
 
 /-- [itasca::module::names_equal]: loop 0:
-    Source: 'src/module.rs', lines 834:4-842:5 -/
+    Source: 'src/module.rs', lines 860:4-868:5 -/
 @[rust_loop]
 def module.names_equal_loop
   (a : Slice Std.U8) (b : Slice Std.U8) (i : Std.Usize) : Result Bool := do
@@ -10264,7 +11536,7 @@ def module.names_equal_loop
     i
 
 /-- [itasca::module::names_equal]:
-    Source: 'src/module.rs', lines 829:0-843:1 -/
+    Source: 'src/module.rs', lines 855:0-869:1 -/
 def module.names_equal
   (a : Slice Std.U8) (b : Slice Std.U8) : Result Bool := do
   let i := Slice.len a
@@ -10274,7 +11546,7 @@ def module.names_equal
   else module.names_equal_loop a b 0#usize
 
 /-- [itasca::module::export_name_taken]: loop body 0:
-    Source: 'src/module.rs', lines 849:4-858:1 -/
+    Source: 'src/module.rs', lines 875:4-884:1 -/
 @[rust_loop_body]
 def module.export_name_taken_loop.body
   (env : _root_.Itasca.module.Env) («name» : Slice Std.U8) (i : Std.Usize) :
@@ -10295,7 +11567,7 @@ def module.export_name_taken_loop.body
          ok (cont i2)
 
 /-- [itasca::module::export_name_taken]: loop 0:
-    Source: 'src/module.rs', lines 849:4-858:1 -/
+    Source: 'src/module.rs', lines 875:4-884:1 -/
 @[rust_loop]
 def module.export_name_taken_loop
   (env : _root_.Itasca.module.Env) («name» : Slice Std.U8) (i : Std.Usize) :
@@ -10306,7 +11578,7 @@ def module.export_name_taken_loop
     i
 
 /-- [itasca::module::export_name_taken]:
-    Source: 'src/module.rs', lines 847:0-858:1 -/
+    Source: 'src/module.rs', lines 873:0-884:1 -/
 @[reducible]
 def module.export_name_taken
   (env : _root_.Itasca.module.Env) («name» : Slice Std.U8) :
@@ -10315,7 +11587,7 @@ def module.export_name_taken
   module.export_name_taken_loop env «name» 0#usize
 
 /-- [itasca::module::decode_export_section]: loop body 0:
-    Source: 'src/module.rs', lines 895:4-909:5 -/
+    Source: 'src/module.rs', lines 921:4-935:5 -/
 @[rust_loop_body]
 def module.decode_export_section_loop.body
   (data : Slice Std.U8) (count : Std.U32) (env : _root_.Itasca.module.Env)
@@ -10380,7 +11652,7 @@ def module.decode_export_section_loop.body
       ok (done (r1, env))
 
 /-- [itasca::module::decode_export_section]: loop 0:
-    Source: 'src/module.rs', lines 895:4-909:5 -/
+    Source: 'src/module.rs', lines 921:4-935:5 -/
 @[rust_loop]
 def module.decode_export_section_loop
   (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
@@ -10394,7 +11666,7 @@ def module.decode_export_section_loop
     (env, q, i)
 
 /-- [itasca::module::decode_export_section]:
-    Source: 'src/module.rs', lines 891:0-910:1 -/
+    Source: 'src/module.rs', lines 917:0-936:1 -/
 def module.decode_export_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
   Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
@@ -10413,7 +11685,7 @@ def module.decode_export_section
     ok (r1, env)
 
 /-- [itasca::module::decode_global_type]:
-    Source: 'src/module.rs', lines 434:0-454:1 -/
+    Source: 'src/module.rs', lines 458:0-478:1 -/
 def module.decode_global_type
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result (_root_.Itasca.types.GlobalType × Std.Usize)
@@ -10447,7 +11719,7 @@ def module.decode_global_type
       _root_.Itasca.error.Error) residual
 
 /-- [itasca::module::decode_global_section]: loop body 0:
-    Source: 'src/module.rs', lines 816:4-826:5 -/
+    Source: 'src/module.rs', lines 842:4-852:5 -/
 @[rust_loop_body]
 def module.decode_global_section_loop.body
   (data : Slice Std.U8) (count : Std.U32) (env : _root_.Itasca.module.Env)
@@ -10488,7 +11760,7 @@ def module.decode_global_section_loop.body
       ok (done (r1, env))
 
 /-- [itasca::module::decode_global_section]: loop 0:
-    Source: 'src/module.rs', lines 816:4-826:5 -/
+    Source: 'src/module.rs', lines 842:4-852:5 -/
 @[rust_loop]
 def module.decode_global_section_loop
   (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
@@ -10502,7 +11774,7 @@ def module.decode_global_section_loop
     (env, q, i)
 
 /-- [itasca::module::decode_global_section]:
-    Source: 'src/module.rs', lines 812:0-827:1 -/
+    Source: 'src/module.rs', lines 838:0-853:1 -/
 def module.decode_global_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
   Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
@@ -10521,7 +11793,7 @@ def module.decode_global_section
     ok (r1, env)
 
 /-- [itasca::module::decode_limits]:
-    Source: 'src/module.rs', lines 387:0-407:1 -/
+    Source: 'src/module.rs', lines 411:0-431:1 -/
 def module.decode_limits
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result (_root_.Itasca.types.Limits × Std.Usize)
@@ -10594,7 +11866,7 @@ def limits.validate_limits
 @[global_simps, irreducible] def limits.MAX_MEMORY_PAGES : Std.U32 := 65536#u32
 
 /-- [itasca::module::decode_mem_type]:
-    Source: 'src/module.rs', lines 427:0-431:1 -/
+    Source: 'src/module.rs', lines 451:0-455:1 -/
 def module.decode_mem_type
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result (_root_.Itasca.types.MemType × Std.Usize)
@@ -10625,7 +11897,7 @@ def module.decode_mem_type
 @[global_simps, irreducible] def limits.MAX_MEMORIES : Std.Usize := 1#usize
 
 /-- [itasca::module::decode_memory_section]: loop body 0:
-    Source: 'src/module.rs', lines 798:4-809:5 -/
+    Source: 'src/module.rs', lines 824:4-835:5 -/
 @[rust_loop_body]
 def module.decode_memory_section_loop.body
   (data : Slice Std.U8) (count : Std.U32) (env : _root_.Itasca.module.Env)
@@ -10657,7 +11929,7 @@ def module.decode_memory_section_loop.body
       ok (done (r1, env))
 
 /-- [itasca::module::decode_memory_section]: loop 0:
-    Source: 'src/module.rs', lines 798:4-809:5 -/
+    Source: 'src/module.rs', lines 824:4-835:5 -/
 @[rust_loop]
 def module.decode_memory_section_loop
   (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
@@ -10671,7 +11943,7 @@ def module.decode_memory_section_loop
     (env, q, i)
 
 /-- [itasca::module::decode_memory_section]:
-    Source: 'src/module.rs', lines 794:0-810:1 -/
+    Source: 'src/module.rs', lines 820:0-836:1 -/
 def module.decode_memory_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
   Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
@@ -10696,7 +11968,7 @@ def module.decode_memory_section
 def limits.MAX_TABLE_ELEMS : Std.U32 := core.num.U32.MAX
 
 /-- [itasca::module::decode_table_type]:
-    Source: 'src/module.rs', lines 410:0-424:1 -/
+    Source: 'src/module.rs', lines 434:0-448:1 -/
 def module.decode_table_type
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result (_root_.Itasca.types.TableType × Std.Usize)
@@ -10740,7 +12012,7 @@ def module.decode_table_type
 @[global_simps, irreducible] def limits.MAX_TABLES : Std.Usize := 1#usize
 
 /-- [itasca::module::decode_table_section]: loop body 0:
-    Source: 'src/module.rs', lines 780:4-791:5 -/
+    Source: 'src/module.rs', lines 806:4-817:5 -/
 @[rust_loop_body]
 def module.decode_table_section_loop.body
   (data : Slice Std.U8) (count : Std.U32) (env : _root_.Itasca.module.Env)
@@ -10773,7 +12045,7 @@ def module.decode_table_section_loop.body
       ok (done (r1, env))
 
 /-- [itasca::module::decode_table_section]: loop 0:
-    Source: 'src/module.rs', lines 780:4-791:5 -/
+    Source: 'src/module.rs', lines 806:4-817:5 -/
 @[rust_loop]
 def module.decode_table_section_loop
   (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
@@ -10787,7 +12059,7 @@ def module.decode_table_section_loop
     (env, q, i)
 
 /-- [itasca::module::decode_table_section]:
-    Source: 'src/module.rs', lines 776:0-792:1 -/
+    Source: 'src/module.rs', lines 802:0-818:1 -/
 def module.decode_table_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
   Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
@@ -10806,7 +12078,7 @@ def module.decode_table_section
     ok (r1, env)
 
 /-- [itasca::module::copy_func_type]:
-    Source: 'src/module.rs', lines 654:0-659:1 -/
+    Source: 'src/module.rs', lines 678:0-683:1 -/
 def module.copy_func_type
   (ft : _root_.Itasca.types.FuncType) :
   Result _root_.Itasca.types.FuncType
@@ -10818,7 +12090,7 @@ def module.copy_func_type
   ok { params := v, results := v1 }
 
 /-- [itasca::module::lookup_type]:
-    Source: 'src/module.rs', lines 662:0-668:1 -/
+    Source: 'src/module.rs', lines 686:0-692:1 -/
 def module.lookup_type
   (env : _root_.Itasca.module.Env) (idx : Std.U32) :
   Result (core.result.Result _root_.Itasca.types.FuncType
@@ -10836,7 +12108,7 @@ def module.lookup_type
     ok (core.result.Result.Ok ft1)
 
 /-- [itasca::module::decode_function_section]: loop body 0:
-    Source: 'src/module.rs', lines 763:4-773:5 -/
+    Source: 'src/module.rs', lines 789:4-799:5 -/
 @[rust_loop_body]
 def module.decode_function_section_loop.body
   (data : Slice Std.U8) (count : Std.U32) (env : _root_.Itasca.module.Env)
@@ -10875,7 +12147,7 @@ def module.decode_function_section_loop.body
       ok (done (r1, env))
 
 /-- [itasca::module::decode_function_section]: loop 0:
-    Source: 'src/module.rs', lines 763:4-773:5 -/
+    Source: 'src/module.rs', lines 789:4-799:5 -/
 @[rust_loop]
 def module.decode_function_section_loop
   (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
@@ -10889,7 +12161,7 @@ def module.decode_function_section_loop
     (env, q, i)
 
 /-- [itasca::module::decode_function_section]:
-    Source: 'src/module.rs', lines 759:0-774:1 -/
+    Source: 'src/module.rs', lines 785:0-800:1 -/
 def module.decode_function_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
   Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
@@ -10908,7 +12180,7 @@ def module.decode_function_section
     ok (r1, env)
 
 /-- [itasca::module::decode_import]:
-    Source: 'src/module.rs', lines 688:0-744:1 -/
+    Source: 'src/module.rs', lines 714:0-770:1 -/
 def module.decode_import
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
   Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
@@ -11067,7 +12339,7 @@ def module.decode_import
     ok (r1, env)
 
 /-- [itasca::module::decode_import_section]: loop body 0:
-    Source: 'src/module.rs', lines 750:4-756:5 -/
+    Source: 'src/module.rs', lines 776:4-782:5 -/
 @[rust_loop_body]
 def module.decode_import_section_loop.body
   (data : Slice Std.U8) (count : Std.U32) (env : _root_.Itasca.module.Env)
@@ -11092,7 +12364,7 @@ def module.decode_import_section_loop.body
       ok (done (r1, env1))
 
 /-- [itasca::module::decode_import_section]: loop 0:
-    Source: 'src/module.rs', lines 750:4-756:5 -/
+    Source: 'src/module.rs', lines 776:4-782:5 -/
 @[rust_loop]
 def module.decode_import_section_loop
   (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
@@ -11106,7 +12378,7 @@ def module.decode_import_section_loop
     (env, q, i)
 
 /-- [itasca::module::decode_import_section]:
-    Source: 'src/module.rs', lines 746:0-757:1 -/
+    Source: 'src/module.rs', lines 772:0-783:1 -/
 def module.decode_import_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
   Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
@@ -11125,9 +12397,9 @@ def module.decode_import_section
     ok (r1, env)
 
 /-- [itasca::module::decode_value_types]: loop body 0:
-    Source: 'src/module.rs', lines 359:4-367:5 -/
+    Source: 'src/module.rs', lines 369:4-377:5 -/
 @[rust_loop_body]
-def module.decode_value_types_loop.body
+def module.decode_value_types_loop0.body
   (data : Slice Std.U8) (count : Std.U32)
   (out : alloc.vec.Vec _root_.Itasca.types.ValueType) (q : Std.Usize)
   (i : Std.U32) :
@@ -11154,9 +12426,9 @@ def module.decode_value_types_loop.body
       ok (done r1)
 
 /-- [itasca::module::decode_value_types]: loop 0:
-    Source: 'src/module.rs', lines 359:4-367:5 -/
+    Source: 'src/module.rs', lines 369:4-377:5 -/
 @[rust_loop]
-def module.decode_value_types_loop
+def module.decode_value_types_loop0
   (data : Slice Std.U8) (count : Std.U32)
   (out : alloc.vec.Vec _root_.Itasca.types.ValueType) (q : Std.Usize)
   (i : Std.U32) :
@@ -11164,14 +12436,59 @@ def module.decode_value_types_loop
     Std.Usize) _root_.Itasca.error.Error)
   := do
   loop
-    (fun (out1, q1, i1) => module.decode_value_types_loop.body data count out1
+    (fun (out1, q1, i1) => module.decode_value_types_loop0.body data count out1
+      q1 i1)
+    (out, q, i)
+
+/-- [itasca::module::decode_value_types]: loop body 1:
+    Source: 'src/module.rs', lines 369:4-377:5 -/
+@[rust_loop_body]
+def module.decode_value_types_loop1.body
+  (data : Slice Std.U8) (count : Std.U32)
+  (out : alloc.vec.Vec _root_.Itasca.types.ValueType) (q : Std.Usize)
+  (i : Std.U32) :
+  Result (ControlFlow ((alloc.vec.Vec _root_.Itasca.types.ValueType) ×
+    Std.Usize × Std.U32) (core.result.Result ((alloc.vec.Vec
+    _root_.Itasca.types.ValueType) × Std.Usize) _root_.Itasca.error.Error))
+  := do
+  if i >= count
+  then ok (done (core.result.Result.Ok (out, q)))
+  else
+    let r ← module.decode_value_type data q
+    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      let (vt, q1) := val
+      let out1 ← alloc.vec.Vec.push out vt
+      let i1 ← i + 1#u32
+      ok (cont (out1, q1, i1))
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r1 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          ((alloc.vec.Vec _root_.Itasca.types.ValueType) × Std.Usize)
+          (core.convert.FromSame _root_.Itasca.error.Error) residual
+      ok (done r1)
+
+/-- [itasca::module::decode_value_types]: loop 1:
+    Source: 'src/module.rs', lines 369:4-377:5 -/
+@[rust_loop]
+def module.decode_value_types_loop1
+  (data : Slice Std.U8) (count : Std.U32)
+  (out : alloc.vec.Vec _root_.Itasca.types.ValueType) (q : Std.Usize)
+  (i : Std.U32) :
+  Result (core.result.Result ((alloc.vec.Vec _root_.Itasca.types.ValueType) ×
+    Std.Usize) _root_.Itasca.error.Error)
+  := do
+  loop
+    (fun (out1, q1, i1) => module.decode_value_types_loop1.body data count out1
       q1 i1)
     (out, q, i)
 
 /-- [itasca::module::decode_value_types]:
-    Source: 'src/module.rs', lines 354:0-368:1 -/
+    Source: 'src/module.rs', lines 355:0-378:1 -/
 def module.decode_value_types
-  (data : Slice Std.U8) (pos : Std.Usize) :
+  (data : Slice Std.U8) (pos : Std.Usize)
+  (bound : Option (Std.Usize × _root_.Itasca.error.OpError)) :
   Result (core.result.Result ((alloc.vec.Vec _root_.Itasca.types.ValueType) ×
     Std.Usize) _root_.Itasca.error.Error)
   := do
@@ -11180,17 +12497,28 @@ def module.decode_value_types
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
     let (count, p) := val
-    module.decode_value_types_loop data count (alloc.vec.Vec.new
-      _root_.Itasca.types.ValueType) p 0#u32
+    match bound with
+    | none =>
+      module.decode_value_types_loop0 data count (alloc.vec.Vec.new
+        _root_.Itasca.types.ValueType) p 0#u32
+    | some p1 =>
+      let (limit, error1) := p1
+      let i ← lift (UScalar.cast .Usize count)
+      if i > limit
+      then ok (core.result.Result.Err (error.Error.Read error1))
+      else
+        module.decode_value_types_loop1 data count (alloc.vec.Vec.new
+          _root_.Itasca.types.ValueType) p 0#u32
   | core.ops.control_flow.ControlFlow.Break residual =>
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
       ((alloc.vec.Vec _root_.Itasca.types.ValueType) × Std.Usize)
       error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::module::decode_func_type]:
-    Source: 'src/module.rs', lines 373:0-384:1 -/
+    Source: 'src/module.rs', lines 381:0-408:1 -/
 def module.decode_func_type
-  (data : Slice Std.U8) (pos : Std.Usize) :
+  (data : Slice Std.U8) (pos : Std.Usize)
+  (profile : _root_.Itasca.ValidationProfile) :
   Result (core.result.Result (_root_.Itasca.types.FuncType × Std.Usize)
     _root_.Itasca.error.Error)
   := do
@@ -11202,20 +12530,30 @@ def module.decode_func_type
     if tag != 96#u8
     then ok (core.result.Result.Err (error.Error.InvalidType tag))
     else
-      let r1 ← module.decode_value_types data p
+      let (params_bound, results_bound) ←
+        match profile with
+        | ValidationProfile.Wasm1 => ok (none, none)
+        | ValidationProfile.MultiValue =>
+          ok (some (multi_value.MAX_PARAMS, error.OpError.TooManyParams), some
+            (multi_value.MAX_RESULTS, error.OpError.TooManyResults))
+      let r1 ← module.decode_value_types data p params_bound
       let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
       match cf1 with
       | core.ops.control_flow.ControlFlow.Continue val1 =>
         let (params, p1) := val1
-        let r2 ← module.decode_value_types data p1
+        let r2 ← module.decode_value_types data p1 results_bound
         let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
         match cf2 with
         | core.ops.control_flow.ControlFlow.Continue val2 =>
           let (results, p2) := val2
-          let i := alloc.vec.Vec.len results
-          if i > limits.MAX_RESULTS
-          then ok (core.result.Result.Err error.Error.TooManyResults)
-          else ok (core.result.Result.Ok ({ params, results }, p2))
+          match profile with
+          | ValidationProfile.Wasm1 =>
+            let i := alloc.vec.Vec.len results
+            if i > limits.MAX_RESULTS
+            then ok (core.result.Result.Err error.Error.TooManyResults)
+            else ok (core.result.Result.Ok ({ params, results }, p2))
+          | ValidationProfile.MultiValue =>
+            ok (core.result.Result.Ok ({ params, results }, p2))
         | core.ops.control_flow.ControlFlow.Break residual =>
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
             (_root_.Itasca.types.FuncType × Std.Usize) (core.convert.FromSame
@@ -11230,11 +12568,12 @@ def module.decode_func_type
       error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::module::decode_type_section]: loop body 0:
-    Source: 'src/module.rs', lines 676:4-684:5 -/
+    Source: 'src/module.rs', lines 702:4-710:5 -/
 @[rust_loop_body]
 def module.decode_type_section_loop.body
-  (data : Slice Std.U8) (count : Std.U32) (env : _root_.Itasca.module.Env)
-  (q : Std.Usize) (i : Std.U32) :
+  (data : Slice Std.U8) (profile : _root_.Itasca.ValidationProfile)
+  (count : Std.U32) (env : _root_.Itasca.module.Env) (q : Std.Usize)
+  (i : Std.U32) :
   Result (ControlFlow (_root_.Itasca.module.Env × Std.Usize × Std.U32)
     ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
     _root_.Itasca.module.Env))
@@ -11242,7 +12581,7 @@ def module.decode_type_section_loop.body
   if i >= count
   then ok (done (core.result.Result.Ok q, env))
   else
-    let r ← module.decode_func_type data q
+    let r ← module.decode_func_type data q profile
     let cf ← core.result.Result.Insts.CoreOpsTry.branch r
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
@@ -11257,23 +12596,25 @@ def module.decode_type_section_loop.body
       ok (done (r1, env))
 
 /-- [itasca::module::decode_type_section]: loop 0:
-    Source: 'src/module.rs', lines 676:4-684:5 -/
+    Source: 'src/module.rs', lines 702:4-710:5 -/
 @[rust_loop]
 def module.decode_type_section_loop
-  (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
-  (q : Std.Usize) (i : Std.U32) :
+  (data : Slice Std.U8) (env : _root_.Itasca.module.Env)
+  (profile : _root_.Itasca.ValidationProfile) (count : Std.U32) (q : Std.Usize)
+  (i : Std.U32) :
   Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
     _root_.Itasca.module.Env)
   := do
   loop
-    (fun (env1, q1, i1) => module.decode_type_section_loop.body data count env1
-      q1 i1)
+    (fun (env1, q1, i1) => module.decode_type_section_loop.body data profile
+      count env1 q1 i1)
     (env, q, i)
 
 /-- [itasca::module::decode_type_section]:
-    Source: 'src/module.rs', lines 672:0-685:1 -/
+    Source: 'src/module.rs', lines 696:0-711:1 -/
 def module.decode_type_section
-  (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
+  (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env)
+  (profile : _root_.Itasca.ValidationProfile) :
   Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
     _root_.Itasca.module.Env)
   := do
@@ -11282,7 +12623,7 @@ def module.decode_type_section
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
     let (count, p) := val
-    module.decode_type_section_loop data env count p 0#u32
+    module.decode_type_section_loop data env profile count p 0#u32
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -11290,15 +12631,16 @@ def module.decode_type_section
     ok (r1, env)
 
 /-- [itasca::module::decode_env_section]:
-    Source: 'src/module.rs', lines 969:0-982:1 -/
+    Source: 'src/module.rs', lines 1023:0-1038:1 -/
 def module.decode_env_section
   (data : Slice Std.U8) (pos : Std.Usize) (id : Std.U8)
-  (env : _root_.Itasca.module.Env) :
+  (env : _root_.Itasca.module.Env) (profile : _root_.Itasca.ValidationProfile)
+  :
   Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) ×
     _root_.Itasca.module.Env)
   := do
   match id with
-  | 1#uscalar => module.decode_type_section data pos env
+  | 1#uscalar => module.decode_type_section data pos env profile
   | 2#uscalar => module.decode_import_section data pos env
   | 3#uscalar => module.decode_function_section data pos env
   | 4#uscalar => module.decode_table_section data pos env
@@ -11306,11 +12648,11 @@ def module.decode_env_section
   | 6#uscalar => module.decode_global_section data pos env
   | 7#uscalar => module.decode_export_section data pos env
   | 8#uscalar => module.decode_start_section data pos env
-  | 9#uscalar => module.decode_element_section data pos env
+  | 9#uscalar => module.decode_element_section data pos env profile
   | _ => ok (core.result.Result.Err (error.Error.UnknownSection id), env)
 
 /-- [itasca::module::read_header]:
-    Source: 'src/module.rs', lines 313:0-329:1 -/
+    Source: 'src/module.rs', lines 314:0-330:1 -/
 def module.read_header
   (data : Slice Std.U8) :
   Result (core.result.Result Std.Usize _root_.Itasca.error.Error)
@@ -11400,7 +12742,7 @@ def module.read_header
       Std.Usize error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::module::{itasca::module::Env}::new]:
-    Source: 'src/module.rs', lines 155:4-171:5
+    Source: 'src/module.rs', lines 156:4-172:5
     Visibility: public -/
 def module.Env.new : Result _root_.Itasca.module.Env := do
   ok
@@ -11420,1621 +12762,14 @@ def module.Env.new : Result _root_.Itasca.module.Env := do
       num_imported_globals := 0#usize
     }
 
-/-- [itasca::multi_value::decode_environment]: loop body 0:
-    Source: 'src/multi_value.rs', lines 419:4-445:5 -/
-@[rust_loop_body]
-def multi_value.decode_environment_loop.body
-  (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (pos : Std.Usize)
-  (last_id : Std.U8) :
-  Result (ControlFlow (_root_.Itasca.module.Env × Std.Usize × Std.U8)
-    (core.result.Result (_root_.Itasca.module.Env × Std.Usize)
-    _root_.Itasca.error.Error))
-  := do
-  let i := Slice.len data
-  if pos >= i
-  then ok (done (core.result.Result.Ok (env, pos)))
-  else
-    let r ← module.read_section_header data pos
-    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-    match cf with
-    | core.ops.control_flow.ControlFlow.Continue val =>
-      let (id, start, «end») := val
-      if id = 0#u8
-      then
-        let r1 ← module.decode_custom_section data start «end»
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          ok (cont (env, «end», last_id))
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              (_root_.Itasca.module.Env × Std.Usize) (core.convert.FromSame
-              _root_.Itasca.error.Error) residual
-          ok (done r2)
-      else if id >= module.SECTION_CODE
-      then ok (done (core.result.Result.Ok (env, pos)))
-      else if id <= last_id
-      then ok (done (core.result.Result.Err error.Error.SectionOutOfOrder))
-      else if id = 1#u8
-      then
-        let (r1, env1) ← multi_value.decode_type_section data start env
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue val1 =>
-          if val1 != «end»
-          then
-            ok (done (core.result.Result.Err error.Error.SectionSizeMismatch))
-          else ok (cont (env1, «end», id))
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              (_root_.Itasca.module.Env × Std.Usize) (core.convert.FromSame
-              _root_.Itasca.error.Error) residual
-          ok (done r2)
-      else if id = 9#u8
-      then
-        let (r1, env1) ← multi_value.decode_elements data start env
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue val1 =>
-          if val1 != «end»
-          then
-            ok (done (core.result.Result.Err error.Error.SectionSizeMismatch))
-          else ok (cont (env1, «end», id))
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              (_root_.Itasca.module.Env × Std.Usize) (core.convert.FromSame
-              _root_.Itasca.error.Error) residual
-          ok (done r2)
-      else
-        let (r1, env1) ← module.decode_env_section data start id env
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue val1 =>
-          if val1 != «end»
-          then
-            ok (done (core.result.Result.Err error.Error.SectionSizeMismatch))
-          else ok (cont (env1, «end», id))
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              (_root_.Itasca.module.Env × Std.Usize) (core.convert.FromSame
-              _root_.Itasca.error.Error) residual
-          ok (done r2)
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      let r1 ←
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          (_root_.Itasca.module.Env × Std.Usize) (core.convert.FromSame
-          _root_.Itasca.error.Error) residual
-      ok (done r1)
-
-/-- [itasca::multi_value::decode_environment]: loop 0:
-    Source: 'src/multi_value.rs', lines 419:4-445:5 -/
-@[rust_loop]
-def multi_value.decode_environment_loop
-  (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (pos : Std.Usize)
-  (last_id : Std.U8) :
-  Result (core.result.Result (_root_.Itasca.module.Env × Std.Usize)
-    _root_.Itasca.error.Error)
-  := do
-  loop
-    (fun (env1, pos1, last_id1) => multi_value.decode_environment_loop.body
-      data env1 pos1 last_id1)
-    (env, pos, last_id)
-
-/-- [itasca::multi_value::decode_environment]:
-    Source: 'src/multi_value.rs', lines 415:0-446:1 -/
-def multi_value.decode_environment
-  (data : Slice Std.U8) :
-  Result (core.result.Result (_root_.Itasca.module.Env × Std.Usize)
-    _root_.Itasca.error.Error)
-  := do
-  let env ← module.Env.new
-  let r ← module.read_header data
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue val =>
-    multi_value.decode_environment_loop data env val 0#u8
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-      (_root_.Itasca.module.Env × Std.Usize) (core.convert.FromSame
-      _root_.Itasca.error.Error) residual
-
-/-- [itasca::limits::MAX_MODULE_BYTES]
-    Source: 'src/limits.rs', lines 37:0-37:50
-    Visibility: public -/
-@[global_simps, irreducible]
-def limits.MAX_MODULE_BYTES : Std.Usize := 1073741824#usize
-
-/-- [itasca::multi_value::validate_module]:
-    Source: 'src/multi_value.rs', lines 480:0-488:1
-    Visibility: public -/
-def multi_value.validate_module
-  (data : Slice Std.U8) :
-  Result (core.result.Result _root_.Itasca.module.Module
-    _root_.Itasca.error.Error)
-  := do
-  let i := Slice.len data
-  if i > limits.MAX_MODULE_BYTES
-  then ok (core.result.Result.Err error.Error.ModuleTooLarge)
-  else
-    let r ← multi_value.decode_environment data
-    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-    match cf with
-    | core.ops.control_flow.ControlFlow.Continue val =>
-      let (env, pos) := val
-      let r1 ← multi_value.validate_code data pos env
-      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-      match cf1 with
-      | core.ops.control_flow.ControlFlow.Continue val1 =>
-        let r2 ← multi_value.validate_tail data val1 env
-        let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-        match cf2 with
-        | core.ops.control_flow.ControlFlow.Continue val2 =>
-          ok (core.result.Result.Ok { env, tail := val2 })
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            _root_.Itasca.module.Module (core.convert.FromSame
-            _root_.Itasca.error.Error) residual
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          _root_.Itasca.module.Module (core.convert.FromSame
-          _root_.Itasca.error.Error) residual
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        _root_.Itasca.module.Module (core.convert.FromSame
-        _root_.Itasca.error.Error) residual
-
-/-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::tail_ready]:
-    Source: 'src/stream.rs', lines 587:4-590:5
-    Visibility: public -/
-def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.tail_ready
-  (self : _root_.Itasca.stream.SyncVisitor) (tail : _root_.Itasca.module.Tail)
-  :
-  Result ((core.result.Result Unit _root_.Itasca.error.Error) ×
-    _root_.Itasca.stream.SyncVisitor)
-  := do
-  ok (core.result.Result.Ok (), { self with tail := (some tail) })
-
-/-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::code_end]:
-    Source: 'src/stream.rs', lines 583:4-585:5
-    Visibility: public -/
-def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.code_end
-  (self : _root_.Itasca.stream.SyncVisitor) :
-  Result ((core.result.Result Unit _root_.Itasca.error.Error) ×
-    _root_.Itasca.stream.SyncVisitor)
-  := do
-  ok (core.result.Result.Ok (), self)
-
-/-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::poll_code_batch]:
-    Source: 'src/stream.rs', lines 576:4-581:5
-    Visibility: public -/
-def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.poll_code_batch
-  (self : _root_.Itasca.stream.SyncVisitor) :
-  Result ((core.result.Result _root_.Itasca.stream.CodeBatch
-    _root_.Itasca.error.Error) × _root_.Itasca.stream.SyncVisitor)
-  := do
-  let (o, o1) := core.option.Option.take self.completed
-  match o with
-  | none =>
-    ok (core.result.Result.Err error.Error.Host, { self with completed := o1 })
-  | some cb => ok (core.result.Result.Ok cb, { self with completed := o1 })
-
-/-- [itasca::module::validate_code_entry_with]:
-    Source: 'src/module.rs', lines 1094:0-1137:1
-    Visibility: public -/
-def module.validate_code_entry_with
-  {V : Type} (codeOpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
-  (pos : Std.Usize) (env : _root_.Itasca.module.Env) (index : Std.Usize)
-  (v : V) :
-  Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) × V)
-  := do
-  let i := alloc.vec.Vec.len env.func_type_indices
-  if index >= i
-  then ok (core.result.Result.Err error.Error.FuncCodeMismatch, v)
-  else
-    let r ← reader.read_u32_leb data pos
-    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-    match cf with
-    | core.ops.control_flow.ControlFlow.Continue val =>
-      let (size, p) := val
-      let n ← lift (UScalar.cast .Usize size)
-      let r1 ← module.have_bytes data p n
-      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-      match cf1 with
-      | core.ops.control_flow.ControlFlow.Continue _ =>
-        let «end» ← p + n
-        let r2 ← module.decode_locals data p
-        let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-        match cf2 with
-        | core.ops.control_flow.ControlFlow.Continue val1 =>
-          let (declared, p1) := val1
-          if p1 > «end»
-          then ok (core.result.Result.Err error.Error.SectionSizeMismatch, v)
-          else
-            let type_idx ←
-              alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-                Std.U32) env.func_type_indices index
-            let t ← lift (UScalar.cast .Usize type_idx)
-            let i1 := alloc.vec.Vec.len env.types
-            if t >= i1
-            then
-              ok (core.result.Result.Err (error.Error.UnknownType type_idx), v)
-            else
-              let ft ←
-                alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-                  _root_.Itasca.types.FuncType) env.types t
-              let s := alloc.vec.Vec.deref ft.params
-              let s1 := alloc.vec.Vec.deref declared
-              let v1 ← module.build_func_locals s s1
-              let s2 := alloc.vec.Vec.deref ft.results
-              let v2 ← module.copy_value_types s2
-              let (r3, v3) ←
-                codeOpVisitorInst.on_function_start v
-                  { locals := v1, results := v2 } type_idx p1 «end»
-              match r3 with
-              | core.result.Result.Ok _ =>
-                let s3 ←
-                  core.slice.index.Slice.index
-                    (core.slice.index.SliceIndexRangeUsizeSlice Std.U8) data
-                    { start := p1, «end» }
-                let (r4, v4) ←
-                  code.validate_body_with codeOpVisitorInst s3 env
-                    { locals := v1, results := v2 } v3
-                match r4 with
-                | core.result.Result.Ok _ =>
-                  ok (core.result.Result.Ok «end», v4)
-                | core.result.Result.Err e =>
-                  ok (core.result.Result.Err (error.Error.Body e), v4)
-              | core.result.Result.Err e =>
-                ok (core.result.Result.Err (error.Error.Body
-                  (error.OpError.Visitor e)), v3)
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r3 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Std.Usize (core.convert.FromSame _root_.Itasca.error.Error)
-              residual
-          ok (r3, v)
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r2 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Std.Usize (core.convert.FromSame _root_.Itasca.error.Error)
-            residual
-        ok (r2, v)
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      let r1 ←
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          Std.Usize error.Error.Insts.CoreConvertFromOpError residual
-      ok (r1, v)
-
-/-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::validate_next]:
-    Source: 'src/stream.rs', lines 219:4-224:5 -/
-def stream.CodeBatch.validate_next
-  {V : Type} (codeOpVisitorInst : code.OpVisitor V)
-  (self : _root_.Itasca.stream.CodeBatch) (index : Std.Usize) (visitor : V) :
-  Result ((core.result.Result Std.Usize _root_.Itasca.error.Error) × V)
-  := do
-  if self.num_validated >= self.num_funcs
-  then ok (core.result.Result.Err error.Error.Host, visitor)
-  else
-    let i ← self.first_func + self.num_validated
-    if index != i
-    then ok (core.result.Result.Err error.Error.Host, visitor)
-    else
-      module.validate_code_entry_with codeOpVisitorInst self.code
-        self.validated_end self.env index visitor
-
-/-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::validate_func]:
-    Source: 'src/stream.rs', lines 193:4-207:5
-    Visibility: public -/
-def stream.CodeBatch.validate_func
-  {V : Type} (codeOpVisitorInst : code.OpVisitor V)
-  (self : _root_.Itasca.stream.CodeBatch) (index : Std.Usize) (visitor : V) :
-  Result ((core.result.Result Unit _root_.Itasca.error.Error) ×
-    _root_.Itasca.stream.CodeBatch × V)
-  := do
-  let b := core.option.Option.is_none self.error
-  let (i, i1, o, visitor1) ←
-    if b
-    then
-      do
-      let (r, visitor2) ←
-        stream.CodeBatch.validate_next codeOpVisitorInst self index visitor
-      let (i2, i3, o1) ←
-        match r with
-        | core.result.Result.Ok «end» =>
-          do
-          let i4 ← self.num_validated + 1#usize
-          ok (i4, «end», self.error)
-        | core.result.Result.Err e =>
-          ok (self.num_validated, self.validated_end, some e)
-      ok (i2, i3, o1, visitor2)
-    else ok (self.num_validated, self.validated_end, self.error, visitor)
-  match o with
-  | none =>
-    ok (core.result.Result.Ok (),
-      { self with num_validated := i, validated_end := i1, error := none },
-      visitor1)
-  | some e =>
-    ok (core.result.Result.Err e,
-      { self with num_validated := i, validated_end := i1, error := o },
-      visitor1)
-
-/-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::validate_all]: loop body 0:
-    Source: 'src/stream.rs', lines 211:8-216:9 -/
-@[rust_loop_body]
-def stream.CodeBatch.validate_all_loop.body
-  (self : _root_.Itasca.stream.CodeBatch) (ok1 : Bool) :
-  Result (ControlFlow (_root_.Itasca.stream.CodeBatch × Bool) (Std.U64 ×
-    Std.Usize × _root_.Itasca.module.Env × (Slice Std.U8) × Std.Usize ×
-    Std.Usize × Std.Usize × Std.Usize × Std.Usize × Std.Usize × Std.Usize
-    × (Option _root_.Itasca.error.Error)))
-  := do
-  if self.num_validated < self.num_funcs
-  then
-    if ok1
-    then
-      let index ← self.first_func + self.num_validated
-      let (r, self1, _) ←
-        stream.CodeBatch.validate_func
-          code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor self index ()
-      let ok2 ← core.result.Result.is_ok r
-      ok (cont (self1, ok2))
-    else
-      ok (done (self.module_id, self.batch_id, self.env, self.code,
-        self.code_offset, self.first_func, self.num_funcs, self.num_dispatched,
-        self.dispatch_end, self.num_validated, self.validated_end, self.error))
-  else
-    ok (done (self.module_id, self.batch_id, self.env, self.code,
-      self.code_offset, self.first_func, self.num_funcs, self.num_dispatched,
-      self.dispatch_end, self.num_validated, self.validated_end, self.error))
-
-/-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::validate_all]: loop 0:
-    Source: 'src/stream.rs', lines 211:8-216:9 -/
-@[rust_loop]
-def stream.CodeBatch.validate_all_loop
-  (self : _root_.Itasca.stream.CodeBatch) (ok1 : Bool) :
-  Result (Std.U64 × Std.Usize × _root_.Itasca.module.Env × (Slice Std.U8) ×
-    Std.Usize × Std.Usize × Std.Usize × Std.Usize × Std.Usize × Std.Usize
-    × Std.Usize × (Option _root_.Itasca.error.Error))
-  := do
-  loop
-    (fun (self1, ok2) => stream.CodeBatch.validate_all_loop.body self1 ok2)
-    (self, ok1)
-
-/-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::validate_all]:
-    Source: 'src/stream.rs', lines 209:4-217:5 -/
-def stream.CodeBatch.validate_all
-  (self : _root_.Itasca.stream.CodeBatch) :
-  Result _root_.Itasca.stream.CodeBatch
-  := do
-  let (i, i1, e, s, i2, i3, i4, i5, i6, i7, i8, o) ←
-    stream.CodeBatch.validate_all_loop self true
-  ok
-    {
-      module_id := i,
-      batch_id := i1,
-      env := e,
-      code := s,
-      code_offset := i2,
-      first_func := i3,
-      num_funcs := i4,
-      num_dispatched := i5,
-      dispatch_end := i6,
-      num_validated := i7,
-      validated_end := i8,
-      error := o
-    }
-
-/-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::submit_code_batch]:
-    Source: 'src/stream.rs', lines 570:4-574:5
-    Visibility: public -/
-def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.submit_code_batch
-  (self : _root_.Itasca.stream.SyncVisitor)
-  (batch : _root_.Itasca.stream.CodeBatch) :
-  Result ((core.result.Result Unit _root_.Itasca.error.Error) ×
-    _root_.Itasca.stream.SyncVisitor)
-  := do
-  let batch1 ← stream.CodeBatch.validate_all batch
-  ok (core.result.Result.Ok (), { self with completed := (some batch1) })
-
-/-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::environment_ready]:
-    Source: 'src/stream.rs', lines 563:4-568:5
-    Visibility: public -/
-def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.environment_ready
-  (self : _root_.Itasca.stream.SyncVisitor) (_env : _root_.Itasca.module.Env) :
-  Result ((core.result.Result _root_.Itasca.stream.Config
-    _root_.Itasca.error.Error) × _root_.Itasca.stream.SyncVisitor)
-  := do
-  ok (core.result.Result.Ok
-    { batch_bytes := 25000#usize, max_batches := 1#usize }, self)
-
-/-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::custom_region]:
-    Source: 'src/stream.rs', lines 561:4-561:51
-    Visibility: public -/
-def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.custom_region
-  (self : _root_.Itasca.stream.SyncVisitor)
-  (_region : _root_.Itasca.stream.Region) :
-  Result _root_.Itasca.stream.SyncVisitor
-  := do
-  ok self
-
-/-- [itasca::module::ModuleVisitor::on_custom_section]:
-    Source: 'src/module.rs', lines 1286:4-1288:5
-    Visibility: public -/
-@[trait_default]
-def module.ModuleVisitor.on_custom_section.default
-  {Self : Type} (self : Self) (_section : _root_.Itasca.types.CustomSection) :
-  Result ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  := do
-  ok (core.result.Result.Ok (), self)
-
-/-- Trait implementation: [itasca::stream::{impl itasca::module::ModuleVisitor for itasca::stream::SyncVisitor<'_0>}]
-    Source: 'src/stream.rs', lines 558:0-558:49 -/
-@[reducible]
-def stream.SyncVisitor.Insts.ItascaModuleModuleVisitor : module.ModuleVisitor
-  _root_.Itasca.stream.SyncVisitor := {
-  on_custom_section := module.ModuleVisitor.on_custom_section.default
-}
-
-/-- Trait implementation: [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}]
-    Source: 'src/stream.rs', lines 560:0-591:1 -/
-@[reducible]
-def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor :
-  stream.StreamingVisitor _root_.Itasca.stream.SyncVisitor := {
-  moduleModuleVisitorInst := stream.SyncVisitor.Insts.ItascaModuleModuleVisitor
-  custom_region :=
-    stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.custom_region
-  environment_ready :=
-    stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.environment_ready
-  submit_code_batch :=
-    stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.submit_code_batch
-  poll_code_batch :=
-    stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.poll_code_batch
-  code_end := stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.code_end
-  tail_ready :=
-    stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.tail_ready
-}
-
-/-- [itasca::stream::{impl itasca::stream::Source for itasca::stream::SliceSource<'_0>}::tail]:
-    Source: 'src/stream.rs', lines 546:4-548:5
-    Visibility: public -/
-def stream.SliceSource.Insts.ItascaStreamSource.tail
-  (self : _root_.Itasca.stream.SliceSource) :
-  Result (core.result.Result (Slice Std.U8) _root_.Itasca.error.Error)
-  := do
-  ok (core.result.Result.Ok self.tail)
-
-/-- [itasca::stream::{impl itasca::stream::Source for itasca::stream::SliceSource<'_0>}::code]:
-    Source: 'src/stream.rs', lines 539:4-544:5
-    Visibility: public -/
-def stream.SliceSource.Insts.ItascaStreamSource.code
-  (self : _root_.Itasca.stream.SliceSource) (start : Std.Usize)
-  («end» : Std.Usize) :
-  Result (core.result.Result (Slice Std.U8) _root_.Itasca.error.Error)
-  := do
-  if start > «end»
-  then ok (core.result.Result.Err error.Error.Host)
-  else
-    let i := Slice.len self.code
-    if «end» > i
-    then ok (core.result.Result.Err error.Error.Host)
-    else
-      let s ←
-        core.slice.index.Slice.index
-          (core.slice.index.SliceIndexRangeUsizeSlice Std.U8) self.code
-          { start, «end» }
-      ok (core.result.Result.Ok s)
-
-/-- [itasca::stream::{impl itasca::stream::Source for itasca::stream::SliceSource<'_0>}::code_len]:
-    Source: 'src/stream.rs', lines 535:4-537:5
-    Visibility: public -/
-def stream.SliceSource.Insts.ItascaStreamSource.code_len
-  (self : _root_.Itasca.stream.SliceSource) : Result Std.Usize := do
-  ok (Slice.len self.code)
-
-/-- [itasca::stream::{impl itasca::stream::Source for itasca::stream::SliceSource<'_0>}::environment]:
-    Source: 'src/stream.rs', lines 531:4-533:5
-    Visibility: public -/
-def stream.SliceSource.Insts.ItascaStreamSource.environment
-  (self : _root_.Itasca.stream.SliceSource) :
-  Result (core.result.Result (Slice Std.U8) _root_.Itasca.error.Error)
-  := do
-  ok (core.result.Result.Ok self.env)
-
-/-- Trait implementation: [itasca::stream::{impl itasca::stream::Source for itasca::stream::SliceSource<'_0>}]
-    Source: 'src/stream.rs', lines 530:0-549:1 -/
-@[reducible]
-def stream.SliceSource.Insts.ItascaStreamSource : stream.Source
-  _root_.Itasca.stream.SliceSource := {
-  environment := stream.SliceSource.Insts.ItascaStreamSource.environment
-  code_len := stream.SliceSource.Insts.ItascaStreamSource.code_len
-  code := stream.SliceSource.Insts.ItascaStreamSource.code
-  tail := stream.SliceSource.Insts.ItascaStreamSource.tail
-}
-
-/-- [itasca::stream::read_len]:
-    Source: 'src/stream.rs', lines 456:0-462:1 -/
-def stream.read_len
-  (data : Slice Std.U8) (pos : Std.Usize) :
-  Result (core.result.Result (Std.Usize × Std.Usize)
-    _root_.Itasca.error.Error)
-  := do
-  let r ← reader.read_u32_leb data pos
-  match r with
-  | core.result.Result.Ok p =>
-    let (value, «end») := p
-    let i ← lift (UScalar.cast .Usize value)
-    ok (core.result.Result.Ok (i, «end»))
-  | core.result.Result.Err oe =>
-    match oe with
-    | error.OpError.UnexpectedEof =>
-      ok (core.result.Result.Err error.Error.UnexpectedEof)
-    | error.OpError.LebTooLong =>
-      ok (core.result.Result.Err (error.Error.Read error.OpError.LebTooLong))
-    | error.OpError.UnrecognizedOpcode =>
-      ok (core.result.Result.Err (error.Error.Read
-        error.OpError.UnrecognizedOpcode))
-    | error.OpError.InvalidBlockType =>
-      ok (core.result.Result.Err (error.Error.Read
-        error.OpError.InvalidBlockType))
-    | error.OpError.TypeMismatch =>
-      ok (core.result.Result.Err (error.Error.Read error.OpError.TypeMismatch))
-    | error.OpError.EmptyStack =>
-      ok (core.result.Result.Err (error.Error.Read error.OpError.EmptyStack))
-    | error.OpError.StackMismatch =>
-      ok (core.result.Result.Err (error.Error.Read
-        error.OpError.StackMismatch))
-    | error.OpError.StackTooLarge =>
-      ok (core.result.Result.Err (error.Error.Read
-        error.OpError.StackTooLarge))
-    | error.OpError.UnknownLabel =>
-      ok (core.result.Result.Err (error.Error.Read error.OpError.UnknownLabel))
-    | error.OpError.UnknownLocal =>
-      ok (core.result.Result.Err (error.Error.Read error.OpError.UnknownLocal))
-    | error.OpError.UnknownGlobal =>
-      ok (core.result.Result.Err (error.Error.Read
-        error.OpError.UnknownGlobal))
-    | error.OpError.ImmutableGlobal =>
-      ok (core.result.Result.Err (error.Error.Read
-        error.OpError.ImmutableGlobal))
-    | error.OpError.UnknownMemory =>
-      ok (core.result.Result.Err (error.Error.Read
-        error.OpError.UnknownMemory))
-    | error.OpError.UnknownFunc =>
-      ok (core.result.Result.Err (error.Error.Read error.OpError.UnknownFunc))
-    | error.OpError.UnknownType =>
-      ok (core.result.Result.Err (error.Error.Read error.OpError.UnknownType))
-    | error.OpError.UnknownTable =>
-      ok (core.result.Result.Err (error.Error.Read error.OpError.UnknownTable))
-    | error.OpError.TooManyResults =>
-      ok (core.result.Result.Err (error.Error.Read
-        error.OpError.TooManyResults))
-    | error.OpError.TooManyParams =>
-      ok (core.result.Result.Err (error.Error.Read
-        error.OpError.TooManyParams))
-    | error.OpError.ReservedByteNotZero =>
-      ok (core.result.Result.Err (error.Error.Read
-        error.OpError.ReservedByteNotZero))
-    | error.OpError.InvalidAlignment =>
-      ok (core.result.Result.Err (error.Error.Read
-        error.OpError.InvalidAlignment))
-    | error.OpError.TrailingBytes =>
-      ok (core.result.Result.Err (error.Error.Read
-        error.OpError.TrailingBytes))
-    | error.OpError.BodyTooLarge =>
-      ok (core.result.Result.Err (error.Error.Read error.OpError.BodyTooLarge))
-    | error.OpError.Visitor _ =>
-      ok (core.result.Result.Err (error.Error.Read oe))
-
-/-- [itasca::stream::find_code_region]: loop body 0:
-    Source: 'src/stream.rs', lines 501:4-521:1 -/
-@[rust_loop_body]
-def stream.find_code_region_loop.body
-  (bytes : Slice Std.U8) (len : Std.Usize) (pos : Std.Usize) :
-  Result (ControlFlow Std.Usize (Std.Usize × Std.Usize))
-  := do
-  if pos >= len
-  then ok (done (len, len))
-  else
-    let id ← Slice.index_usize bytes pos
-    if id > module.SECTION_CODE
-    then ok (done (pos, pos))
-    else
-      let i ← pos + 1#usize
-      let r ← stream.read_len bytes i
-      let «end» ←
-        match r with
-        | core.result.Result.Ok p =>
-          do
-          let (size, contents) := p
-          let i1 ← len - contents
-          let i2 ← lift (core.cmp.impls.OrdUsize.min size i1)
-          contents + i2
-        | core.result.Result.Err _ => ok len
-      if id = module.SECTION_CODE
-      then ok (done (pos, «end»))
-      else if «end» = len
-      then ok (done (len, len))
-      else ok (cont «end»)
-
-/-- [itasca::stream::find_code_region]: loop 0:
-    Source: 'src/stream.rs', lines 501:4-521:1 -/
-@[rust_loop]
-def stream.find_code_region_loop
-  (bytes : Slice Std.U8) (len : Std.Usize) (pos : Std.Usize) :
-  Result (Std.Usize × Std.Usize)
-  := do
-  loop
-    (fun pos1 => stream.find_code_region_loop.body bytes len pos1)
-    pos
-
-/-- [itasca::stream::find_code_region]:
-    Source: 'src/stream.rs', lines 498:0-521:1 -/
-def stream.find_code_region
-  (bytes : Slice Std.U8) : Result (Std.Usize × Std.Usize) := do
-  let len := Slice.len bytes
-  stream.find_code_region_loop bytes len 8#usize
-
-/-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::finish]:
-    Source: 'src/stream.rs', lines 226:4-236:5 -/
-def stream.CodeBatch.finish
-  (self : _root_.Itasca.stream.CodeBatch) :
-  Result (core.result.Result Unit _root_.Itasca.error.Error)
-  := do
-  match self.error with
-  | none =>
-    if self.num_validated = self.num_funcs
-    then
-      let i := Slice.len self.code
-      if self.validated_end = i
-      then ok (core.result.Result.Ok ())
-      else ok (core.result.Result.Err error.Error.Host)
-    else ok (core.result.Result.Err error.Error.Host)
-  | some e => ok (core.result.Result.Err e)
-
-/-- [itasca::stream::retire_code_batch]: loop body 0:
-    Source: 'src/stream.rs', lines 417:4-419:5 -/
-@[rust_loop_body]
-def stream.retire_code_batch_loop.body
-  (pending : alloc.vec.Vec Std.Usize) (i : Std.Usize) (i1 : Std.Usize) :
-  Result (ControlFlow Std.Usize Std.Usize)
-  := do
-  let i2 := alloc.vec.Vec.len pending
-  if i1 < i2
-  then
-    let i3 ←
-      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Std.Usize)
-        pending i1
-    if i3 != i
-    then let i4 ← i1 + 1#usize
-         ok (cont i4)
-    else ok (done i1)
-  else ok (done i1)
-
-/-- [itasca::stream::retire_code_batch]: loop 0:
-    Source: 'src/stream.rs', lines 417:4-419:5 -/
-@[rust_loop]
-def stream.retire_code_batch_loop
-  (pending : alloc.vec.Vec Std.Usize) (i : Std.Usize) (i1 : Std.Usize) :
-  Result Std.Usize
-  := do
-  loop
-    (fun i2 => stream.retire_code_batch_loop.body pending i i2)
-    i1
-
-/-- [itasca::stream::retire_code_batch]:
-    Source: 'src/stream.rs', lines 407:0-427:1 -/
-def stream.retire_code_batch
-  {V : Type} (StreamingVisitorInst : stream.StreamingVisitor V)
-  (module_id : Std.U64) (visitor : V) (pending : alloc.vec.Vec Std.Usize) :
-  Result ((core.result.Result Unit _root_.Itasca.error.Error) × V ×
-    (alloc.vec.Vec Std.Usize))
-  := do
-  let (r, visitor1) ← StreamingVisitorInst.poll_code_batch visitor
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue cb =>
-    if cb.module_id != module_id
-    then ok (core.result.Result.Err error.Error.Host, visitor1, pending)
-    else
-      let i ← stream.retire_code_batch_loop pending cb.batch_id 0#usize
-      let i1 := alloc.vec.Vec.len pending
-      if i = i1
-      then ok (core.result.Result.Err error.Error.Host, visitor1, pending)
-      else
-        let i2 := alloc.vec.Vec.len pending
-        let last ← i2 - 1#usize
-        let i3 ←
-          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Std.Usize)
-            pending last
-        let (_, index_mut_back) ←
-          alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
-            Std.Usize) pending i
-        let pending1 := index_mut_back i3
-        let (_, pending2) ← alloc.vec.Vec.pop Global pending1
-        let r1 ← stream.CodeBatch.finish cb
-        ok (r1, visitor1, pending2)
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    let r1 ←
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        Unit (core.convert.FromSame _root_.Itasca.error.Error) residual
-    ok (r1, visitor1, pending)
-
-/-- [itasca::stream::retire_all_code_batches]: loop body 0:
-    Source: 'src/stream.rs', lines 436:4-440:1 -/
-@[rust_loop_body]
-def stream.retire_all_code_batches_loop.body
-  {V : Type} (StreamingVisitorInst : stream.StreamingVisitor V)
-  (module_id : Std.U64) (visitor : V) (pending : alloc.vec.Vec Std.Usize) :
-  Result (ControlFlow (V × (alloc.vec.Vec Std.Usize)) ((core.result.Result
-    Unit _root_.Itasca.error.Error) × V × (alloc.vec.Vec Std.Usize)))
-  := do
-  let b ← alloc.vec.Vec.is_empty Global pending
-  if b
-  then ok (done (core.result.Result.Ok (), visitor, pending))
-  else
-    let (r, visitor1, pending1) ←
-      stream.retire_code_batch StreamingVisitorInst module_id visitor pending
-    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-    match cf with
-    | core.ops.control_flow.ControlFlow.Continue _ =>
-      ok (cont (visitor1, pending1))
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      let r1 ←
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          Unit (core.convert.FromSame _root_.Itasca.error.Error) residual
-      ok (done (r1, visitor1, pending1))
-
-/-- [itasca::stream::retire_all_code_batches]: loop 0:
-    Source: 'src/stream.rs', lines 436:4-440:1 -/
-@[rust_loop]
-def stream.retire_all_code_batches_loop
-  {V : Type} (StreamingVisitorInst : stream.StreamingVisitor V)
-  (module_id : Std.U64) (visitor : V) (pending : alloc.vec.Vec Std.Usize) :
-  Result ((core.result.Result Unit _root_.Itasca.error.Error) × V ×
-    (alloc.vec.Vec Std.Usize))
-  := do
-  loop
-    (fun (visitor1, pending1) => stream.retire_all_code_batches_loop.body
-      StreamingVisitorInst module_id visitor1 pending1)
-    (visitor, pending)
-
-/-- [itasca::stream::retire_all_code_batches]:
-    Source: 'src/stream.rs', lines 431:0-440:1 -/
-@[reducible]
-def stream.retire_all_code_batches
-  {V : Type} (StreamingVisitorInst : stream.StreamingVisitor V)
-  (module_id : Std.U64) (visitor : V) (pending : alloc.vec.Vec Std.Usize) :
-  Result ((core.result.Result Unit _root_.Itasca.error.Error) × V ×
-    (alloc.vec.Vec Std.Usize))
-  := do
-  stream.retire_all_code_batches_loop StreamingVisitorInst module_id visitor
-    pending
-
-/-- [itasca::stream::read_exact]:
-    Source: 'src/stream.rs', lines 464:0-470:1 -/
-def stream.read_exact
-  {S : Type} (SourceInst : stream.Source S) (source : S) (start : Std.Usize)
-  («end» : Std.Usize) :
-  Result (core.result.Result (Slice Std.U8) _root_.Itasca.error.Error)
-  := do
-  let r ← SourceInst.code source start «end»
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue val =>
-    let i := Slice.len val
-    let i1 ← «end» - start
-    if i != i1
-    then ok (core.result.Result.Err error.Error.UnexpectedEof)
-    else ok (core.result.Result.Ok val)
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-      (Slice Std.U8) (core.convert.FromSame _root_.Itasca.error.Error) residual
-
-/-- [itasca::limits::add_offset]:
-    Source: 'src/limits.rs', lines 71:0-76:1 -/
-def limits.add_offset
-  (a : Std.Usize) (b : Std.Usize) :
-  Result (core.result.Result Std.Usize _root_.Itasca.error.Error)
-  := do
-  if a > limits.MAX_MODULE_BYTES
-  then ok (core.result.Result.Err error.Error.ModuleTooLarge)
-  else
-    let i ← limits.MAX_MODULE_BYTES - a
-    if b > i
-    then ok (core.result.Result.Err error.Error.ModuleTooLarge)
-    else let i1 ← a + b
-         ok (core.result.Result.Ok i1)
-
-/-- [itasca::limits::MAX_LEB_BYTES]
-    Source: 'src/limits.rs', lines 42:0-42:35
-    Visibility: public -/
-@[global_simps, irreducible] def limits.MAX_LEB_BYTES : Std.Usize := 5#usize
-
-/-- [itasca::stream::get_next_batch]: loop body 0:
-    Source: 'src/stream.rs', lines 386:4-403:1 -/
-@[rust_loop_body]
-def stream.get_next_batch_loop.body
-  {S : Type} (SourceInst : stream.Source S) (source : S) (code_len : Std.Usize)
-  (first_func : Std.Usize) (num_funcs : Std.Usize) (threshold : Std.Usize)
-  (pos : Std.Usize) (func : Std.Usize) (batch_bytes : Std.Usize) (done1 : Bool)
-  :
-  Result (ControlFlow (Std.Usize × Std.Usize × Std.Usize × Bool)
-    (core.result.Result (Std.Usize × Std.Usize) _root_.Itasca.error.Error))
-  := do
-  if func < num_funcs
-  then
-    if done1
-    then ok (done (core.result.Result.Ok (pos, func)))
-    else
-      let i ← pos + limits.MAX_LEB_BYTES
-      let i1 ← lift (core.cmp.impls.OrdUsize.min code_len i)
-      let r ← stream.read_exact SourceInst source pos i1
-      let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-      match cf with
-      | core.ops.control_flow.ControlFlow.Continue val =>
-        let r1 ← stream.read_len val 0#usize
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue val1 =>
-          let (len, prefix_len) := val1
-          if func != first_func
-          then
-            let i2 ← threshold - batch_bytes
-            if len > i2
-            then ok (cont (pos, func, batch_bytes, true))
-            else
-              let r2 ← limits.add_offset pos prefix_len
-              let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-              match cf2 with
-              | core.ops.control_flow.ControlFlow.Continue val2 =>
-                let r3 ← limits.add_offset val2 len
-                let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
-                match cf3 with
-                | core.ops.control_flow.ControlFlow.Continue val3 =>
-                  if val3 > code_len
-                  then
-                    ok (done (core.result.Result.Err
-                      error.Error.UnexpectedEof))
-                  else
-                    let batch_bytes1 ← batch_bytes + len
-                    let func1 ← func + 1#usize
-                    ok (cont (val3, func1, batch_bytes1, batch_bytes1 >=
-                      threshold))
-                | core.ops.control_flow.ControlFlow.Break residual =>
-                  let r4 ←
-                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                      (Std.Usize × Std.Usize) (core.convert.FromSame
-                      _root_.Itasca.error.Error) residual
-                  ok (done r4)
-              | core.ops.control_flow.ControlFlow.Break residual =>
-                let r3 ←
-                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                    (Std.Usize × Std.Usize) (core.convert.FromSame
-                    _root_.Itasca.error.Error) residual
-                ok (done r3)
-          else
-            let r2 ← limits.add_offset pos prefix_len
-            let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-            match cf2 with
-            | core.ops.control_flow.ControlFlow.Continue val2 =>
-              let r3 ← limits.add_offset val2 len
-              let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
-              match cf3 with
-              | core.ops.control_flow.ControlFlow.Continue val3 =>
-                if val3 > code_len
-                then
-                  ok (done (core.result.Result.Err error.Error.UnexpectedEof))
-                else
-                  let batch_bytes1 ← batch_bytes + len
-                  let func1 ← func + 1#usize
-                  ok (cont (val3, func1, batch_bytes1, batch_bytes1 >=
-                    threshold))
-              | core.ops.control_flow.ControlFlow.Break residual =>
-                let r4 ←
-                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                    (Std.Usize × Std.Usize) (core.convert.FromSame
-                    _root_.Itasca.error.Error) residual
-                ok (done r4)
-            | core.ops.control_flow.ControlFlow.Break residual =>
-              let r3 ←
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  (Std.Usize × Std.Usize) (core.convert.FromSame
-                  _root_.Itasca.error.Error) residual
-              ok (done r3)
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              (Std.Usize × Std.Usize) (core.convert.FromSame
-              _root_.Itasca.error.Error) residual
-          ok (done r2)
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r1 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            (Std.Usize × Std.Usize) (core.convert.FromSame
-            _root_.Itasca.error.Error) residual
-        ok (done r1)
-  else ok (done (core.result.Result.Ok (pos, func)))
-
-/-- [itasca::stream::get_next_batch]: loop 0:
-    Source: 'src/stream.rs', lines 386:4-403:1 -/
-@[rust_loop]
-def stream.get_next_batch_loop
-  {S : Type} (SourceInst : stream.Source S) (source : S) (code_len : Std.Usize)
-  (first_func : Std.Usize) (num_funcs : Std.Usize) (threshold : Std.Usize)
-  (pos : Std.Usize) (func : Std.Usize) (batch_bytes : Std.Usize) (done1 : Bool)
-  :
-  Result (core.result.Result (Std.Usize × Std.Usize)
-    _root_.Itasca.error.Error)
-  := do
-  loop
-    (fun (pos1, func1, batch_bytes1, done2) => stream.get_next_batch_loop.body
-      SourceInst source code_len first_func num_funcs threshold pos1 func1
-      batch_bytes1 done2)
-    (pos, func, batch_bytes, done1)
-
-/-- [itasca::stream::get_next_batch]:
-    Source: 'src/stream.rs', lines 374:0-403:1 -/
-@[reducible]
-def stream.get_next_batch
-  {S : Type} (SourceInst : stream.Source S) (source : S) (code_len : Std.Usize)
-  (start : Std.Usize) (first_func : Std.Usize) (num_funcs : Std.Usize)
-  (threshold : Std.Usize) :
-  Result (core.result.Result (Std.Usize × Std.Usize)
-    _root_.Itasca.error.Error)
-  := do
-  stream.get_next_batch_loop SourceInst source code_len first_func num_funcs
-    threshold start first_func 0#usize false
-
-/-- [itasca::stream::submit_code_batches]: loop body 0:
-    Source: 'src/stream.rs', lines 338:4-368:1 -/
-@[rust_loop_body]
-def stream.submit_code_batches_loop.body
-  {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
-  stream.StreamingVisitor V) (module_id : Std.U64) (source : S)
-  (v : alloc.vec.Vec _root_.Itasca.types.FuncType)
-  (v1 : alloc.vec.Vec _root_.Itasca.module.Import)
-  (v2 : alloc.vec.Vec _root_.Itasca.module.Global)
-  (v3 : alloc.vec.Vec _root_.Itasca.module.Export)
-  (v4 : alloc.vec.Vec _root_.Itasca.module.Element) (o : Option Std.U32)
-  (v5 : alloc.vec.Vec Std.U32)
-  (v6 : alloc.vec.Vec _root_.Itasca.types.FuncType)
-  (v7 : alloc.vec.Vec _root_.Itasca.types.TableType)
-  (v8 : alloc.vec.Vec _root_.Itasca.types.MemType)
-  (v9 : alloc.vec.Vec _root_.Itasca.types.GlobalType) (i : Std.Usize)
-  (i1 : Std.Usize) (code_len : Std.Usize)
-  (config : _root_.Itasca.stream.Config) (num_funcs : Std.Usize) (visitor : V)
-  (pending : alloc.vec.Vec Std.Usize) (pos : Std.Usize) (func : Std.Usize)
-  (batch_id : Std.Usize) :
-  Result (ControlFlow (V × (alloc.vec.Vec Std.Usize) × Std.Usize × Std.Usize
-    × Std.Usize) ((core.result.Result (alloc.vec.Vec Std.Usize)
-    _root_.Itasca.error.Error) × V))
-  := do
-  if func < num_funcs
-  then
-    let i2 := alloc.vec.Vec.len pending
-    if i2 >= config.max_batches
-    then
-      let (r, visitor1, pending1) ←
-        stream.retire_code_batch StreamingVisitorInst module_id visitor pending
-      let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-      match cf with
-      | core.ops.control_flow.ControlFlow.Continue _ =>
-        let r1 ←
-          stream.get_next_batch SourceInst source code_len pos func num_funcs
-            config.batch_bytes
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue val =>
-          let («end», next_func) := val
-          let r2 ← stream.read_exact SourceInst source pos «end»
-          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-          match cf2 with
-          | core.ops.control_flow.ControlFlow.Continue val1 =>
-            let pending2 ← alloc.vec.Vec.push pending1 batch_id
-            let i3 ← next_func - func
-            let (r3, visitor2) ←
-              StreamingVisitorInst.submit_code_batch visitor1
-                {
-                  module_id,
-                  batch_id,
-                  env :=
-                    {
-                      types := v,
-                      imports := v1,
-                      globals := v2,
-                      exports := v3,
-                      elements := v4,
-                      start := o,
-                      func_type_indices := v5,
-                      func_types := v6,
-                      table_types := v7,
-                      mem_types := v8,
-                      global_types := v9,
-                      num_imported_funcs := i,
-                      num_imported_globals := i1
-                    },
-                  code := val1,
-                  code_offset := pos,
-                  first_func := func,
-                  num_funcs := i3,
-                  num_dispatched := 0#usize,
-                  dispatch_end := 0#usize,
-                  num_validated := 0#usize,
-                  validated_end := 0#usize,
-                  error := none
-                }
-            let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
-            match cf3 with
-            | core.ops.control_flow.ControlFlow.Continue _ =>
-              let batch_id1 ← batch_id + 1#usize
-              ok (cont (visitor2, pending2, «end», next_func, batch_id1))
-            | core.ops.control_flow.ControlFlow.Break residual =>
-              let r4 ←
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  (alloc.vec.Vec Std.Usize) (core.convert.FromSame
-                  _root_.Itasca.error.Error) residual
-              ok (done (r4, visitor2))
-          | core.ops.control_flow.ControlFlow.Break residual =>
-            let r3 ←
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                (alloc.vec.Vec Std.Usize) (core.convert.FromSame
-                _root_.Itasca.error.Error) residual
-            ok (done (r3, visitor1))
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              (alloc.vec.Vec Std.Usize) (core.convert.FromSame
-              _root_.Itasca.error.Error) residual
-          ok (done (r2, visitor1))
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r1 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            (alloc.vec.Vec Std.Usize) (core.convert.FromSame
-            _root_.Itasca.error.Error) residual
-        ok (done (r1, visitor1))
-    else
-      let r ←
-        stream.get_next_batch SourceInst source code_len pos func num_funcs
-          config.batch_bytes
-      let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-      match cf with
-      | core.ops.control_flow.ControlFlow.Continue val =>
-        let («end», next_func) := val
-        let r1 ← stream.read_exact SourceInst source pos «end»
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue val1 =>
-          let pending1 ← alloc.vec.Vec.push pending batch_id
-          let i3 ← next_func - func
-          let (r2, visitor1) ←
-            StreamingVisitorInst.submit_code_batch visitor
-              {
-                module_id,
-                batch_id,
-                env :=
-                  {
-                    types := v,
-                    imports := v1,
-                    globals := v2,
-                    exports := v3,
-                    elements := v4,
-                    start := o,
-                    func_type_indices := v5,
-                    func_types := v6,
-                    table_types := v7,
-                    mem_types := v8,
-                    global_types := v9,
-                    num_imported_funcs := i,
-                    num_imported_globals := i1
-                  },
-                code := val1,
-                code_offset := pos,
-                first_func := func,
-                num_funcs := i3,
-                num_dispatched := 0#usize,
-                dispatch_end := 0#usize,
-                num_validated := 0#usize,
-                validated_end := 0#usize,
-                error := none
-              }
-          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-          match cf2 with
-          | core.ops.control_flow.ControlFlow.Continue _ =>
-            let batch_id1 ← batch_id + 1#usize
-            ok (cont (visitor1, pending1, «end», next_func, batch_id1))
-          | core.ops.control_flow.ControlFlow.Break residual =>
-            let r3 ←
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                (alloc.vec.Vec Std.Usize) (core.convert.FromSame
-                _root_.Itasca.error.Error) residual
-            ok (done (r3, visitor1))
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              (alloc.vec.Vec Std.Usize) (core.convert.FromSame
-              _root_.Itasca.error.Error) residual
-          ok (done (r2, visitor))
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r1 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            (alloc.vec.Vec Std.Usize) (core.convert.FromSame
-            _root_.Itasca.error.Error) residual
-        ok (done (r1, visitor))
-  else if pos != code_len
-  then
-    ok (done (core.result.Result.Err error.Error.SectionSizeMismatch, visitor))
-  else ok (done (core.result.Result.Ok pending, visitor))
-
-/-- [itasca::stream::submit_code_batches]: loop 0:
-    Source: 'src/stream.rs', lines 338:4-368:1 -/
-@[rust_loop]
-def stream.submit_code_batches_loop
-  {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
-  stream.StreamingVisitor V) (module_id : Std.U64) (source : S)
-  (v : alloc.vec.Vec _root_.Itasca.types.FuncType)
-  (v1 : alloc.vec.Vec _root_.Itasca.module.Import)
-  (v2 : alloc.vec.Vec _root_.Itasca.module.Global)
-  (v3 : alloc.vec.Vec _root_.Itasca.module.Export)
-  (v4 : alloc.vec.Vec _root_.Itasca.module.Element) (o : Option Std.U32)
-  (v5 : alloc.vec.Vec Std.U32)
-  (v6 : alloc.vec.Vec _root_.Itasca.types.FuncType)
-  (v7 : alloc.vec.Vec _root_.Itasca.types.TableType)
-  (v8 : alloc.vec.Vec _root_.Itasca.types.MemType)
-  (v9 : alloc.vec.Vec _root_.Itasca.types.GlobalType) (i : Std.Usize)
-  (i1 : Std.Usize) (code_len : Std.Usize)
-  (config : _root_.Itasca.stream.Config) (visitor : V)
-  (pending : alloc.vec.Vec Std.Usize) (pos : Std.Usize) (func : Std.Usize)
-  (batch_id : Std.Usize) (num_funcs : Std.Usize) :
-  Result ((core.result.Result (alloc.vec.Vec Std.Usize)
-    _root_.Itasca.error.Error) × V)
-  := do
-  loop
-    (fun (visitor1, pending1, pos1, func1, batch_id1) =>
-      stream.submit_code_batches_loop.body SourceInst StreamingVisitorInst
-      module_id source v v1 v2 v3 v4 o v5 v6 v7 v8 v9 i i1 code_len config
-      num_funcs visitor1 pending1 pos1 func1 batch_id1)
-    (visitor, pending, pos, func, batch_id)
-
-/-- [itasca::stream::submit_code_batches]:
-    Source: 'src/stream.rs', lines 324:0-368:1 -/
-def stream.submit_code_batches
-  {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
-  stream.StreamingVisitor V) (module_id : Std.U64) (source : S)
-  (env : _root_.Itasca.module.Env) (code_len : Std.Usize) (pos : Std.Usize)
-  (config : _root_.Itasca.stream.Config) (visitor : V) :
-  Result ((core.result.Result (alloc.vec.Vec Std.Usize)
-    _root_.Itasca.error.Error) × V)
-  := do
-  let num_funcs := alloc.vec.Vec.len env.func_type_indices
-  stream.submit_code_batches_loop SourceInst StreamingVisitorInst module_id
-    source env.types env.imports env.globals env.exports env.elements 
-    env.start env.func_type_indices env.func_types env.table_types
-    env.mem_types env.global_types env.num_imported_funcs
-    env.num_imported_globals code_len config visitor (alloc.vec.Vec.new
-    Std.Usize) pos 0#usize 0#usize num_funcs
-
-/-- [itasca::limits::MAX_CODE_HEADER_BYTES]
-    Source: 'src/limits.rs', lines 46:0-46:63
-    Visibility: public -/
-@[global_simps, irreducible]
-def limits.MAX_CODE_HEADER_BYTES : Result Std.Usize := do
-  let i ← 2#usize * limits.MAX_LEB_BYTES
-  1#usize + i
-
-/-- [itasca::stream::read_code_header]:
-    Source: 'src/stream.rs', lines 293:0-320:1 -/
-def stream.read_code_header
-  {S : Type} (SourceInst : stream.Source S) (source : S) (code_len : Std.Usize)
-  (env : _root_.Itasca.module.Env) :
-  Result (core.result.Result Std.Usize _root_.Itasca.error.Error)
-  := do
-  if code_len = 0#usize
-  then
-    let b ← alloc.vec.Vec.is_empty Global env.func_type_indices
-    if b
-    then ok (core.result.Result.Ok 0#usize)
-    else ok (core.result.Result.Err error.Error.MissingCodeSection)
-  else
-    let i ← limits.MAX_CODE_HEADER_BYTES
-    let i1 ← lift (core.cmp.impls.OrdUsize.min code_len i)
-    let r ← stream.read_exact SourceInst source 0#usize i1
-    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-    match cf with
-    | core.ops.control_flow.ControlFlow.Continue val =>
-      let i2 ← Slice.index_usize val 0#usize
-      if i2 != module.SECTION_CODE
-      then ok (core.result.Result.Err error.Error.Host)
-      else
-        let r1 ← stream.read_len val 1#usize
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue val1 =>
-          let (len, contents) := val1
-          let r2 ← limits.add_offset contents len
-          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-          match cf2 with
-          | core.ops.control_flow.ControlFlow.Continue val2 =>
-            if val2 > code_len
-            then ok (core.result.Result.Err error.Error.UnexpectedEof)
-            else if val2 < code_len
-            then ok (core.result.Result.Err error.Error.SectionSizeMismatch)
-            else
-              let r3 ← stream.read_len val contents
-              let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
-              match cf3 with
-              | core.ops.control_flow.ControlFlow.Continue val3 =>
-                let (count, entries) := val3
-                if entries > val2
-                then
-                  ok (core.result.Result.Err error.Error.SectionSizeMismatch)
-                else
-                  let i3 := alloc.vec.Vec.len env.func_type_indices
-                  if count != i3
-                  then ok (core.result.Result.Err error.Error.FuncCodeMismatch)
-                  else ok (core.result.Result.Ok entries)
-              | core.ops.control_flow.ControlFlow.Break residual =>
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  Std.Usize (core.convert.FromSame _root_.Itasca.error.Error)
-                  residual
-          | core.ops.control_flow.ControlFlow.Break residual =>
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Std.Usize (core.convert.FromSame _root_.Itasca.error.Error)
-              residual
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Std.Usize (core.convert.FromSame _root_.Itasca.error.Error)
-            residual
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        Std.Usize (core.convert.FromSame _root_.Itasca.error.Error) residual
-
-/-- [itasca::module::decode_data_segment]:
-    Source: 'src/module.rs', lines 1155:0-1173:1 -/
-def module.decode_data_segment
-  (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
-  Result (core.result.Result (_root_.Itasca.module.Data × Std.Usize)
-    _root_.Itasca.error.Error)
-  := do
-  let r ← reader.read_u32_leb data pos
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue val =>
-    let (memory_idx, p1) := val
-    let i ← lift (UScalar.cast .Usize memory_idx)
-    let i1 := alloc.vec.Vec.len env.mem_types
-    if i >= i1
-    then ok (core.result.Result.Err (error.Error.UnknownMemory memory_idx))
-    else
-      let r1 ← module.decode_const_expr data p1 env types.ValueType.I32
-      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-      match cf1 with
-      | core.ops.control_flow.ControlFlow.Continue val1 =>
-        let (offset, p2) := val1
-        let r2 ← reader.read_u32_leb data p2
-        let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-        match cf2 with
-        | core.ops.control_flow.ControlFlow.Continue val2 =>
-          let (len, p3) := val2
-          let n ← lift (UScalar.cast .Usize len)
-          let r3 ← module.have_bytes data p3 n
-          let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
-          match cf3 with
-          | core.ops.control_flow.ControlFlow.Continue _ =>
-            let i2 ← p3 + n
-            let init ← module.copy_bytes data p3 i2
-            ok (core.result.Result.Ok ({ memory_idx, offset, init }, i2))
-          | core.ops.control_flow.ControlFlow.Break residual =>
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              (_root_.Itasca.module.Data × Std.Usize) (core.convert.FromSame
-              _root_.Itasca.error.Error) residual
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            (_root_.Itasca.module.Data × Std.Usize)
-            error.Error.Insts.CoreConvertFromOpError residual
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          (_root_.Itasca.module.Data × Std.Usize) (core.convert.FromSame
-          _root_.Itasca.error.Error) residual
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-      (_root_.Itasca.module.Data × Std.Usize)
-      error.Error.Insts.CoreConvertFromOpError residual
-
-/-- [itasca::module::decode_data_section]: loop body 0:
-    Source: 'src/module.rs', lines 1180:4-1188:5 -/
-@[rust_loop_body]
-def module.decode_data_section_loop.body
-  (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
-  (out : alloc.vec.Vec _root_.Itasca.module.Data) (q : Std.Usize) (i : Std.U32)
-  :
-  Result (ControlFlow ((alloc.vec.Vec _root_.Itasca.module.Data) × Std.Usize
-    × Std.U32) (core.result.Result ((alloc.vec.Vec _root_.Itasca.module.Data)
-    × Std.Usize) _root_.Itasca.error.Error))
-  := do
-  if i >= count
-  then ok (done (core.result.Result.Ok (out, q)))
-  else
-    let r ← module.decode_data_segment data q env
-    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-    match cf with
-    | core.ops.control_flow.ControlFlow.Continue val =>
-      let (segment, q1) := val
-      let out1 ← alloc.vec.Vec.push out segment
-      let i1 ← i + 1#u32
-      ok (cont (out1, q1, i1))
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      let r1 ←
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          ((alloc.vec.Vec _root_.Itasca.module.Data) × Std.Usize)
-          (core.convert.FromSame _root_.Itasca.error.Error) residual
-      ok (done r1)
-
-/-- [itasca::module::decode_data_section]: loop 0:
-    Source: 'src/module.rs', lines 1180:4-1188:5 -/
-@[rust_loop]
-def module.decode_data_section_loop
-  (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
-  (out : alloc.vec.Vec _root_.Itasca.module.Data) (q : Std.Usize) (i : Std.U32)
-  :
-  Result (core.result.Result ((alloc.vec.Vec _root_.Itasca.module.Data) ×
-    Std.Usize) _root_.Itasca.error.Error)
-  := do
-  loop
-    (fun (out1, q1, i1) => module.decode_data_section_loop.body data env count
-      out1 q1 i1)
-    (out, q, i)
-
-/-- [itasca::module::decode_data_section]:
-    Source: 'src/module.rs', lines 1175:0-1189:1 -/
-def module.decode_data_section
-  (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
-  Result (core.result.Result ((alloc.vec.Vec _root_.Itasca.module.Data) ×
-    Std.Usize) _root_.Itasca.error.Error)
-  := do
-  let r ← reader.read_u32_leb data pos
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue val =>
-    let (count, p) := val
-    module.decode_data_section_loop data env count (alloc.vec.Vec.new
-      _root_.Itasca.module.Data) p 0#u32
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-      ((alloc.vec.Vec _root_.Itasca.module.Data) × Std.Usize)
-      error.Error.Insts.CoreConvertFromOpError residual
-
-/-- [itasca::module::SECTION_DATA]
-    Source: 'src/module.rs', lines 44:0-44:28 -/
-@[global_simps, irreducible] def module.SECTION_DATA : Std.U8 := 11#u8
-
-/-- [itasca::module::SECTION_CUSTOM]
-    Source: 'src/module.rs', lines 33:0-33:29 -/
-@[global_simps, irreducible] def module.SECTION_CUSTOM : Std.U8 := 0#u8
-
-/-- [itasca::module::validate_tail_with]: loop body 0:
-    Source: 'src/module.rs', lines 1213:4-1236:5
-    Visibility: public -/
-@[rust_loop_body]
-def module.validate_tail_with_loop.body
-  {V : Type} (ModuleVisitorInst : module.ModuleVisitor V) (data : Slice Std.U8)
-  (env : _root_.Itasca.module.Env) (v : V)
-  (segments : alloc.vec.Vec _root_.Itasca.module.Data) (q : Std.Usize)
-  (seen_data : Bool) :
-  Result (ControlFlow (V × (alloc.vec.Vec _root_.Itasca.module.Data) ×
-    Std.Usize × Bool) ((core.result.Result _root_.Itasca.module.Tail
-    _root_.Itasca.error.Error) × V))
-  := do
-  let i := Slice.len data
-  if q >= i
-  then ok (done (core.result.Result.Ok { data := segments }, v))
-  else
-    let r ← module.read_section_header data q
-    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-    match cf with
-    | core.ops.control_flow.ControlFlow.Continue val =>
-      let (id, start, «end») := val
-      if id = module.SECTION_CUSTOM
-      then
-        let r1 ← module.decode_custom_section data start «end»
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue val1 =>
-          let (r2, v1) ← ModuleVisitorInst.on_custom_section v val1
-          match r2 with
-          | core.result.Result.Ok _ =>
-            ok (cont (v1, segments, «end», seen_data))
-          | core.result.Result.Err e =>
-            ok (done (core.result.Result.Err (error.Error.Visitor e), v1))
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              _root_.Itasca.module.Tail (core.convert.FromSame
-              _root_.Itasca.error.Error) residual
-          ok (done (r2, v))
-      else if id != module.SECTION_DATA
-      then ok (done (core.result.Result.Err error.Error.SectionOutOfOrder, v))
-      else if seen_data
-      then ok (done (core.result.Result.Err error.Error.SectionOutOfOrder, v))
-      else
-        let r1 ← module.decode_data_section data start env
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue val1 =>
-          let (decoded, p) := val1
-          if p != «end»
-          then
-            ok (done (core.result.Result.Err error.Error.SectionSizeMismatch,
-              v))
-          else ok (cont (v, decoded, «end», true))
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              _root_.Itasca.module.Tail (core.convert.FromSame
-              _root_.Itasca.error.Error) residual
-          ok (done (r2, v))
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      let r1 ←
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          _root_.Itasca.module.Tail (core.convert.FromSame
-          _root_.Itasca.error.Error) residual
-      ok (done (r1, v))
-
-/-- [itasca::module::validate_tail_with]: loop 0:
-    Source: 'src/module.rs', lines 1213:4-1236:5
-    Visibility: public -/
-@[rust_loop]
-def module.validate_tail_with_loop
-  {V : Type} (ModuleVisitorInst : module.ModuleVisitor V) (data : Slice Std.U8)
-  (env : _root_.Itasca.module.Env) (v : V)
-  (segments : alloc.vec.Vec _root_.Itasca.module.Data) (q : Std.Usize)
-  (seen_data : Bool) :
-  Result ((core.result.Result _root_.Itasca.module.Tail
-    _root_.Itasca.error.Error) × V)
-  := do
-  loop
-    (fun (v1, segments1, q1, seen_data1) => module.validate_tail_with_loop.body
-      ModuleVisitorInst data env v1 segments1 q1 seen_data1)
-    (v, segments, q, seen_data)
-
-/-- [itasca::module::validate_tail_with]:
-    Source: 'src/module.rs', lines 1204:0-1237:1
-    Visibility: public -/
-@[reducible]
-def module.validate_tail_with
-  {V : Type} (ModuleVisitorInst : module.ModuleVisitor V) (data : Slice Std.U8)
-  (pos : Std.Usize) (env : _root_.Itasca.module.Env) (v : V) :
-  Result ((core.result.Result _root_.Itasca.module.Tail
-    _root_.Itasca.error.Error) × V)
-  := do
-  module.validate_tail_with_loop ModuleVisitorInst data env v
-    (alloc.vec.Vec.new _root_.Itasca.module.Data) pos false
-
-/-- [itasca::stream::validate_remaining]:
-    Source: 'src/stream.rs', lines 265:0-289:1 -/
-def stream.validate_remaining
-  {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
-  stream.StreamingVisitor V) (module_id : Std.U64) (source : S)
-  (env : _root_.Itasca.module.Env) (env_len : Std.Usize) (visitor : V) :
-  Result ((core.result.Result Unit _root_.Itasca.error.Error) × V)
-  := do
-  let code_len ← SourceInst.code_len source
-  let r ← limits.add_offset env_len code_len
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue val =>
-    let r1 ← stream.read_code_header SourceInst source code_len env
-    let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-    match cf1 with
-    | core.ops.control_flow.ControlFlow.Continue val1 =>
-      let (r2, visitor1) ← StreamingVisitorInst.environment_ready visitor env
-      let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-      match cf2 with
-      | core.ops.control_flow.ControlFlow.Continue val2 =>
-        if val2.batch_bytes = 0#usize
-        then ok (core.result.Result.Err error.Error.Host, visitor1)
-        else if val2.max_batches = 0#usize
-        then ok (core.result.Result.Err error.Error.Host, visitor1)
-        else
-          let (r3, visitor2) ←
-            stream.submit_code_batches SourceInst StreamingVisitorInst
-              module_id source env code_len val1 val2 visitor1
-          let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
-          match cf3 with
-          | core.ops.control_flow.ControlFlow.Continue val3 =>
-            let (r4, visitor3) ← StreamingVisitorInst.code_end visitor2
-            let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
-            match cf4 with
-            | core.ops.control_flow.ControlFlow.Continue _ =>
-              let r5 ← SourceInst.tail source
-              let cf5 ← core.result.Result.Insts.CoreOpsTry.branch r5
-              match cf5 with
-              | core.ops.control_flow.ControlFlow.Continue val4 =>
-                let i := Slice.len val4
-                let r6 ← limits.add_offset val i
-                let cf6 ← core.result.Result.Insts.CoreOpsTry.branch r6
-                match cf6 with
-                | core.ops.control_flow.ControlFlow.Continue _ =>
-                  let visitor4 ←
-                    StreamingVisitorInst.custom_region visitor3
-                      stream.Region.Tail
-                  let (r7, visitor5) ←
-                    module.validate_tail_with
-                      StreamingVisitorInst.moduleModuleVisitorInst val4 0#usize
-                      env visitor4
-                  let cf7 ← core.result.Result.Insts.CoreOpsTry.branch r7
-                  match cf7 with
-                  | core.ops.control_flow.ControlFlow.Continue val5 =>
-                    let (r8, visitor6) ←
-                      StreamingVisitorInst.tail_ready visitor5 val5
-                    let cf8 ← core.result.Result.Insts.CoreOpsTry.branch r8
-                    match cf8 with
-                    | core.ops.control_flow.ControlFlow.Continue _ =>
-                      let (r9, visitor7, _) ←
-                        stream.retire_all_code_batches StreamingVisitorInst
-                          module_id visitor6 val3
-                      ok (r9, visitor7)
-                    | core.ops.control_flow.ControlFlow.Break residual =>
-                      let r9 ←
-                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                          Unit (core.convert.FromSame
-                          _root_.Itasca.error.Error) residual
-                      ok (r9, visitor6)
-                  | core.ops.control_flow.ControlFlow.Break residual =>
-                    let r8 ←
-                      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                        Unit (core.convert.FromSame _root_.Itasca.error.Error)
-                        residual
-                    ok (r8, visitor5)
-                | core.ops.control_flow.ControlFlow.Break residual =>
-                  let r7 ←
-                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                      Unit (core.convert.FromSame _root_.Itasca.error.Error)
-                      residual
-                  ok (r7, visitor3)
-              | core.ops.control_flow.ControlFlow.Break residual =>
-                let r6 ←
-                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                    Unit (core.convert.FromSame _root_.Itasca.error.Error)
-                    residual
-                ok (r6, visitor3)
-            | core.ops.control_flow.ControlFlow.Break residual =>
-              let r5 ←
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  Unit (core.convert.FromSame _root_.Itasca.error.Error)
-                  residual
-              ok (r5, visitor3)
-          | core.ops.control_flow.ControlFlow.Break residual =>
-            let r4 ←
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                Unit (core.convert.FromSame _root_.Itasca.error.Error) residual
-            ok (r4, visitor2)
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r3 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Unit (core.convert.FromSame _root_.Itasca.error.Error) residual
-        ok (r3, visitor1)
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      let r2 ←
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          Unit (core.convert.FromSame _root_.Itasca.error.Error) residual
-      ok (r2, visitor)
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    let r1 ←
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        Unit (core.convert.FromSame _root_.Itasca.error.Error) residual
-    ok (r1, visitor)
-
 /-- [itasca::module::validate_env_with]: loop body 0:
-    Source: 'src/module.rs', lines 1004:4-1030:5
+    Source: 'src/module.rs', lines 1062:4-1088:5
     Visibility: public -/
 @[rust_loop_body]
 def module.validate_env_with_loop.body
   {V : Type} (ModuleVisitorInst : module.ModuleVisitor V) (data : Slice Std.U8)
-  (v : V) (env : _root_.Itasca.module.Env) (q : Std.Usize) (last_id : Std.U8) :
+  (profile : _root_.Itasca.ValidationProfile) (v : V)
+  (env : _root_.Itasca.module.Env) (q : Std.Usize) (last_id : Std.U8) :
   Result (ControlFlow (V × _root_.Itasca.module.Env × Std.Usize × Std.U8)
     ((core.result.Result (_root_.Itasca.module.Env × Std.Usize)
     _root_.Itasca.error.Error) × V))
@@ -13070,7 +12805,7 @@ def module.validate_env_with_loop.body
       else if id <= last_id
       then ok (done (core.result.Result.Err error.Error.SectionOutOfOrder, v))
       else
-        let (r1, env1) ← module.decode_env_section data start id env
+        let (r1, env1) ← module.decode_env_section data start id env profile
         let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
         match cf1 with
         | core.ops.control_flow.ControlFlow.Continue val1 =>
@@ -13093,26 +12828,27 @@ def module.validate_env_with_loop.body
       ok (done (r1, v))
 
 /-- [itasca::module::validate_env_with]: loop 0:
-    Source: 'src/module.rs', lines 1004:4-1030:5
+    Source: 'src/module.rs', lines 1062:4-1088:5
     Visibility: public -/
 @[rust_loop]
 def module.validate_env_with_loop
   {V : Type} (ModuleVisitorInst : module.ModuleVisitor V) (data : Slice Std.U8)
-  (v : V) (env : _root_.Itasca.module.Env) (q : Std.Usize) (last_id : Std.U8) :
+  (profile : _root_.Itasca.ValidationProfile) (v : V)
+  (env : _root_.Itasca.module.Env) (q : Std.Usize) (last_id : Std.U8) :
   Result ((core.result.Result (_root_.Itasca.module.Env × Std.Usize)
     _root_.Itasca.error.Error) × V)
   := do
   loop
     (fun (v1, env1, q1, last_id1) => module.validate_env_with_loop.body
-      ModuleVisitorInst data v1 env1 q1 last_id1)
+      ModuleVisitorInst data profile v1 env1 q1 last_id1)
     (v, env, q, last_id)
 
 /-- [itasca::module::validate_env_with]:
-    Source: 'src/module.rs', lines 1000:0-1031:1
+    Source: 'src/module.rs', lines 1056:0-1089:1
     Visibility: public -/
 def module.validate_env_with
   {V : Type} (ModuleVisitorInst : module.ModuleVisitor V) (data : Slice Std.U8)
-  (v : V) :
+  (profile : _root_.Itasca.ValidationProfile) (v : V) :
   Result ((core.result.Result (_root_.Itasca.module.Env × Std.Usize)
     _root_.Itasca.error.Error) × V)
   := do
@@ -13121,7 +12857,7 @@ def module.validate_env_with
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
-    module.validate_env_with_loop ModuleVisitorInst data v env val 0#u8
+    module.validate_env_with_loop ModuleVisitorInst data profile v env val 0#u8
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -13130,11 +12866,12 @@ def module.validate_env_with
     ok (r1, v)
 
 /-- [itasca::stream::validate_streaming]:
-    Source: 'src/stream.rs', lines 247:0-262:1
+    Source: 'src/stream.rs', lines 264:0-280:1
     Visibility: public -/
 def stream.validate_streaming
   {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
-  stream.StreamingVisitor V) (module_id : Std.U64) (source : S) (visitor : V)
+  stream.StreamingVisitor V) (module_id : Std.U64)
+  (profile : _root_.Itasca.ValidationProfile) (source : S) (visitor : V)
   (env : _root_.Itasca.module.Env) :
   Result ((core.result.Result Unit _root_.Itasca.error.Error) × V ×
     _root_.Itasca.module.Env)
@@ -13152,7 +12889,7 @@ def stream.validate_streaming
         StreamingVisitorInst.custom_region visitor stream.Region.Environment
       let (r2, visitor2) ←
         module.validate_env_with StreamingVisitorInst.moduleModuleVisitorInst
-          val visitor1
+          val profile visitor1
       let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
       match cf2 with
       | core.ops.control_flow.ControlFlow.Continue val2 =>
@@ -13162,7 +12899,7 @@ def stream.validate_streaming
         else
           let (r3, visitor3) ←
             stream.validate_remaining SourceInst StreamingVisitorInst module_id
-              source decoded val1 visitor2
+              profile source decoded val1 visitor2
           ok (r3, visitor3, decoded)
       | core.ops.control_flow.ControlFlow.Break residual =>
         let r3 ←
@@ -13181,9 +12918,9 @@ def stream.validate_streaming
     ok (r1, visitor, env)
 
 /-- [itasca::stream::validate_module_slice]:
-    Source: 'src/stream.rs', lines 476:0-493:1 -/
+    Source: 'src/stream.rs', lines 498:0-518:1 -/
 def stream.validate_module_slice
-  (bytes : Slice Std.U8) :
+  (bytes : Slice Std.U8) (profile : _root_.Itasca.ValidationProfile) :
   Result (core.result.Result _root_.Itasca.module.Module
     _root_.Itasca.error.Error)
   := do
@@ -13201,7 +12938,7 @@ def stream.validate_module_slice
   let env ← module.Env.new
   let (r, visitor, env1) ←
     stream.validate_streaming stream.SliceSource.Insts.ItascaStreamSource
-      stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor 0#u64
+      stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor 0#u64 profile
       { env := s, code := s1, tail := s2 } { completed := none, tail := none }
       env
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
@@ -13216,65 +12953,63 @@ def stream.validate_module_slice
       _root_.Itasca.error.Error) residual
 
 /-- [itasca::module::validate_module]:
-    Source: 'src/module.rs', lines 200:0-202:1
+    Source: 'src/module.rs', lines 201:0-203:1
     Visibility: public -/
 def module.validate_module
-  (data : Slice Std.U8) :
+  (data : Slice Std.U8) (profile : _root_.Itasca.ValidationProfile) :
   Result (core.result.Result _root_.Itasca.module.Module
     _root_.Itasca.error.Error)
   := do
-  stream.validate_module_slice data
+  stream.validate_module_slice data profile
 
 /-- [itasca::validate_module_with_profile]:
-    Source: 'src/lib.rs', lines 87:0-94:1
+    Source: 'src/lib.rs', lines 91:0-96:1
     Visibility: public -/
 def validate_module_with_profile
   (data : Slice Std.U8) (profile : _root_.Itasca.ValidationProfile) :
   Result (core.result.Result _root_.Itasca.module.Module
     _root_.Itasca.error.Error)
   := do
-  match profile with
-  | ValidationProfile.Wasm1 => module.validate_module data
-  | ValidationProfile.MultiValue => multi_value.validate_module data
+  module.validate_module data profile
 
 /-- [itasca::module::SECTION_TYPE]
-    Source: 'src/module.rs', lines 34:0-34:27 -/
+    Source: 'src/module.rs', lines 35:0-35:27 -/
 @[global_simps, irreducible] def module.SECTION_TYPE : Std.U8 := 1#u8
 
 /-- [itasca::module::SECTION_IMPORT]
-    Source: 'src/module.rs', lines 35:0-35:29 -/
+    Source: 'src/module.rs', lines 36:0-36:29 -/
 @[global_simps, irreducible] def module.SECTION_IMPORT : Std.U8 := 2#u8
 
 /-- [itasca::module::SECTION_FUNCTION]
-    Source: 'src/module.rs', lines 36:0-36:31 -/
+    Source: 'src/module.rs', lines 37:0-37:31 -/
 @[global_simps, irreducible] def module.SECTION_FUNCTION : Std.U8 := 3#u8
 
 /-- [itasca::module::SECTION_TABLE]
-    Source: 'src/module.rs', lines 37:0-37:28 -/
+    Source: 'src/module.rs', lines 38:0-38:28 -/
 @[global_simps, irreducible] def module.SECTION_TABLE : Std.U8 := 4#u8
 
 /-- [itasca::module::SECTION_MEMORY]
-    Source: 'src/module.rs', lines 38:0-38:29 -/
+    Source: 'src/module.rs', lines 39:0-39:29 -/
 @[global_simps, irreducible] def module.SECTION_MEMORY : Std.U8 := 5#u8
 
 /-- [itasca::module::SECTION_GLOBAL]
-    Source: 'src/module.rs', lines 39:0-39:29 -/
+    Source: 'src/module.rs', lines 40:0-40:29 -/
 @[global_simps, irreducible] def module.SECTION_GLOBAL : Std.U8 := 6#u8
 
 /-- [itasca::module::SECTION_EXPORT]
-    Source: 'src/module.rs', lines 40:0-40:29 -/
+    Source: 'src/module.rs', lines 41:0-41:29 -/
 @[global_simps, irreducible] def module.SECTION_EXPORT : Std.U8 := 7#u8
 
 /-- [itasca::module::SECTION_START]
-    Source: 'src/module.rs', lines 41:0-41:28 -/
+    Source: 'src/module.rs', lines 42:0-42:28 -/
 @[global_simps, irreducible] def module.SECTION_START : Std.U8 := 8#u8
 
 /-- [itasca::module::SECTION_ELEMENT]
-    Source: 'src/module.rs', lines 42:0-42:30 -/
+    Source: 'src/module.rs', lines 43:0-43:30 -/
 @[global_simps, irreducible] def module.SECTION_ELEMENT : Std.U8 := 9#u8
 
 /-- [itasca::module::import_types]: loop body 0:
-    Source: 'src/module.rs', lines 217:4-232:5
+    Source: 'src/module.rs', lines 218:4-233:5
     Visibility: public -/
 @[rust_loop_body]
 def module.import_types_loop.body
@@ -13320,7 +13055,7 @@ def module.import_types_loop.body
       ok (cont (out1, i3))
 
 /-- [itasca::module::import_types]: loop 0:
-    Source: 'src/module.rs', lines 217:4-232:5
+    Source: 'src/module.rs', lines 218:4-233:5
     Visibility: public -/
 @[rust_loop]
 def module.import_types_loop
@@ -13334,7 +13069,7 @@ def module.import_types_loop
     (out, i)
 
 /-- [itasca::module::import_types]:
-    Source: 'src/module.rs', lines 214:0-233:1
+    Source: 'src/module.rs', lines 215:0-234:1
     Visibility: public -/
 @[reducible]
 def module.import_types
@@ -13346,7 +13081,7 @@ def module.import_types
     _root_.Itasca.types.ExternType) 0#usize
 
 /-- [itasca::module::export_types]: loop body 0:
-    Source: 'src/module.rs', lines 245:4-281:5
+    Source: 'src/module.rs', lines 246:4-282:5
     Visibility: public -/
 @[rust_loop_body]
 def module.export_types_loop.body
@@ -13415,7 +13150,7 @@ def module.export_types_loop.body
         ok (cont (out1, i3))
 
 /-- [itasca::module::export_types]: loop 0:
-    Source: 'src/module.rs', lines 245:4-281:5
+    Source: 'src/module.rs', lines 246:4-282:5
     Visibility: public -/
 @[rust_loop]
 def module.export_types_loop
@@ -13429,7 +13164,7 @@ def module.export_types_loop
     (out, i)
 
 /-- [itasca::module::export_types]:
-    Source: 'src/module.rs', lines 242:0-282:1
+    Source: 'src/module.rs', lines 243:0-283:1
     Visibility: public -/
 @[reducible]
 def module.export_types
@@ -13441,7 +13176,7 @@ def module.export_types
     _root_.Itasca.types.ExternType) 0#usize
 
 /-- Trait implementation: [itasca::module::{impl itasca::module::ModuleVisitor for itasca::module::EmptyModuleVisitor}]
-    Source: 'src/module.rs', lines 1294:0-1294:44 -/
+    Source: 'src/module.rs', lines 1368:0-1368:44 -/
 @[reducible]
 def module.EmptyModuleVisitor.Insts.ItascaModuleModuleVisitor :
   module.ModuleVisitor _root_.Itasca.module.EmptyModuleVisitor := {
@@ -13449,46 +13184,49 @@ def module.EmptyModuleVisitor.Insts.ItascaModuleModuleVisitor :
 }
 
 /-- [itasca::module::validate_env]:
-    Source: 'src/module.rs', lines 985:0-988:1
+    Source: 'src/module.rs', lines 1041:0-1044:1
     Visibility: public -/
 def module.validate_env
-  (data : Slice Std.U8) :
+  (data : Slice Std.U8) (profile : _root_.Itasca.ValidationProfile) :
   Result (core.result.Result (_root_.Itasca.module.Env × Std.Usize)
     _root_.Itasca.error.Error)
   := do
   let (r, _) ←
     module.validate_env_with
-      module.EmptyModuleVisitor.Insts.ItascaModuleModuleVisitor data ()
+      module.EmptyModuleVisitor.Insts.ItascaModuleModuleVisitor data profile ()
   ok r
 
 /-- [itasca::module::validate_code_entry]:
-    Source: 'src/module.rs', lines 1143:0-1151:1
+    Source: 'src/module.rs', lines 1208:0-1217:1
     Visibility: public -/
 def module.validate_code_entry
   (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env)
-  (index : Std.Usize) :
+  (index : Std.Usize) (profile : _root_.Itasca.ValidationProfile) :
   Result (core.result.Result Std.Usize _root_.Itasca.error.Error)
   := do
   let (r, _) ←
     module.validate_code_entry_with
-      code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor data pos env index ()
+      code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor data pos env index profile
+      ()
   ok r
 
 /-- [itasca::module::validate_tail]:
-    Source: 'src/module.rs', lines 1192:0-1195:1
+    Source: 'src/module.rs', lines 1263:0-1268:1
     Visibility: public -/
 def module.validate_tail
-  (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env) :
+  (data : Slice Std.U8) (pos : Std.Usize) (env : _root_.Itasca.module.Env)
+  (profile : _root_.Itasca.ValidationProfile) :
   Result (core.result.Result _root_.Itasca.module.Tail
     _root_.Itasca.error.Error)
   := do
   let (r, _) ←
     module.validate_tail_with
-      module.EmptyModuleVisitor.Insts.ItascaModuleModuleVisitor data pos env ()
+      module.EmptyModuleVisitor.Insts.ItascaModuleModuleVisitor data pos env
+      profile ()
   ok r
 
 /-- [itasca::module::code_entry_extent]:
-    Source: 'src/module.rs', lines 1247:0-1252:1 -/
+    Source: 'src/module.rs', lines 1321:0-1326:1 -/
 def module.code_entry_extent
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result (Std.Usize × Std.Usize)
@@ -13515,22 +13253,156 @@ def module.code_entry_extent
       (Std.Usize × Std.Usize) error.Error.Insts.CoreConvertFromOpError
       residual
 
+/-- [itasca::multi_value::enter]:
+    Source: 'src/multi_value.rs', lines 137:0-140:1 -/
+def multi_value.enter
+  (st : _root_.Itasca.multi_value.State) (data : Slice Std.U8)
+  (env : _root_.Itasca.module.Env) (kind : _root_.Itasca.code.LabelKind) :
+  Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
+    _root_.Itasca.multi_value.State)
+  := do
+  let (r, st1) ← multi_value.enter_info st data env kind
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue _ =>
+    ok (core.result.Result.Ok (), st1)
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    let r1 ←
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+        Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+    ok (r1, st1)
+
+/-- [itasca::multi_value::end_frame]:
+    Source: 'src/multi_value.rs', lines 180:0-183:1 -/
+def multi_value.end_frame
+  (st : _root_.Itasca.multi_value.State) (env : _root_.Itasca.module.Env)
+  (is_else : Bool) :
+  Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
+    _root_.Itasca.multi_value.State)
+  := do
+  let (r, st1) ← multi_value.end_frame_info st env is_else
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue _ =>
+    ok (core.result.Result.Ok (), st1)
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    let r1 ←
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+        Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+    ok (r1, st1)
+
+/-- [itasca::multi_value::read_label]:
+    Source: 'src/multi_value.rs', lines 207:0-210:1 -/
+def multi_value.read_label
+  (st : _root_.Itasca.multi_value.State) (data : Slice Std.U8) :
+  Result ((core.result.Result _root_.Itasca.signature.ResultType
+    _root_.Itasca.error.OpError) × _root_.Itasca.multi_value.State)
+  := do
+  let (r, st1) ← multi_value.read_label_info st data
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue val =>
+    let (_, types1) := val
+    ok (core.result.Result.Ok types1, st1)
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    let r1 ←
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+        _root_.Itasca.signature.ResultType (core.convert.FromSame
+        _root_.Itasca.error.OpError) residual
+    ok (r1, st1)
+
+/-- [itasca::multi_value::branch]:
+    Source: 'src/multi_value.rs', lines 233:0-236:1 -/
+def multi_value.branch
+  (st : _root_.Itasca.multi_value.State) (data : Slice Std.U8)
+  (env : _root_.Itasca.module.Env) (conditional : Bool) :
+  Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
+    _root_.Itasca.multi_value.State)
+  := do
+  let (r, st1) ← multi_value.branch_info st data env conditional
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue _ =>
+    ok (core.result.Result.Ok (), st1)
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    let r1 ←
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+        Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+    ok (r1, st1)
+
+/-- [itasca::multi_value::branch_table]:
+    Source: 'src/multi_value.rs', lines 307:0-310:1 -/
+def multi_value.branch_table
+  (st : _root_.Itasca.multi_value.State) (data : Slice Std.U8)
+  (env : _root_.Itasca.module.Env) :
+  Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
+    _root_.Itasca.multi_value.State)
+  := do
+  let (r, st1, _) ←
+    multi_value.branch_table_with code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+      st data env ()
+  ok (r, st1)
+
+/-- [itasca::multi_value::call]:
+    Source: 'src/multi_value.rs', lines 351:0-354:1 -/
+def multi_value.call
+  (st : _root_.Itasca.multi_value.State) (data : Slice Std.U8)
+  (env : _root_.Itasca.module.Env) (indirect : Bool) :
+  Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
+    _root_.Itasca.multi_value.State)
+  := do
+  let (r, st1) ← multi_value.call_info st data env indirect
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue _ =>
+    ok (core.result.Result.Ok (), st1)
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    let r1 ←
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+        Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
+    ok (r1, st1)
+
+/-- [itasca::multi_value::validate_body]:
+    Source: 'src/multi_value.rs', lines 527:0-539:1
+    Visibility: public -/
+def multi_value.validate_body
+  (data : Slice Std.U8) (env : _root_.Itasca.module.Env)
+  (locals : alloc.vec.Vec _root_.Itasca.types.ValueType) (type_index : Std.U32)
+  :
+  Result (core.result.Result Unit _root_.Itasca.error.OpError)
+  := do
+  let (r, _) ←
+    multi_value.validate_body_with
+      code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor data env
+      { locals, results := (alloc.vec.Vec.new _root_.Itasca.types.ValueType) }
+      type_index ()
+  ok r
+
+/-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::profile]:
+    Source: 'src/stream.rs', lines 157:4-159:5
+    Visibility: public -/
+def stream.CodeBatch.impl.profile
+  (self : _root_.Itasca.stream.CodeBatch) :
+  Result _root_.Itasca.ValidationProfile
+  := do
+  ok self.profile
+
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::len]:
-    Source: 'src/stream.rs', lines 154:4-156:5
+    Source: 'src/stream.rs', lines 161:4-163:5
     Visibility: public -/
 def stream.CodeBatch.len
   (self : _root_.Itasca.stream.CodeBatch) : Result Std.Usize := do
   ok self.num_funcs
 
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::is_empty]:
-    Source: 'src/stream.rs', lines 158:4-160:5
+    Source: 'src/stream.rs', lines 165:4-167:5
     Visibility: public -/
 def stream.CodeBatch.is_empty
   (self : _root_.Itasca.stream.CodeBatch) : Result Bool := do
   ok (self.num_funcs = 0#usize)
 
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::is_last]:
-    Source: 'src/stream.rs', lines 163:4-165:5
+    Source: 'src/stream.rs', lines 170:4-172:5
     Visibility: public -/
 def stream.CodeBatch.is_last
   (self : _root_.Itasca.stream.CodeBatch) : Result Bool := do
@@ -13539,21 +13411,21 @@ def stream.CodeBatch.is_last
   ok (i = i1)
 
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::code]:
-    Source: 'src/stream.rs', lines 168:4-170:5
+    Source: 'src/stream.rs', lines 175:4-177:5
     Visibility: public -/
 def stream.CodeBatch.impl.code
   (self : _root_.Itasca.stream.CodeBatch) : Result (Slice Std.U8) := do
   ok self.code
 
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::code_offset]:
-    Source: 'src/stream.rs', lines 173:4-175:5
+    Source: 'src/stream.rs', lines 180:4-182:5
     Visibility: public -/
 def stream.CodeBatch.impl.code_offset
   (self : _root_.Itasca.stream.CodeBatch) : Result Std.Usize := do
   ok self.code_offset
 
 /-- [itasca::stream::frame_entry]:
-    Source: 'src/stream.rs', lines 444:0-452:1 -/
+    Source: 'src/stream.rs', lines 466:0-474:1 -/
 def stream.frame_entry
   (code1 : Slice Std.U8) (pos : Std.Usize) (index : Std.Usize)
   (code_offset : Std.Usize) :
@@ -13597,7 +13469,7 @@ def stream.frame_entry
       _root_.Itasca.error.Error) residual
 
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::next_entry]:
-    Source: 'src/stream.rs', lines 178:4-187:5
+    Source: 'src/stream.rs', lines 185:4-194:5
     Visibility: public -/
 def stream.CodeBatch.next_entry
   (self : _root_.Itasca.stream.CodeBatch) :

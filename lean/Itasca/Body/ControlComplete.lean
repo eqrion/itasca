@@ -176,7 +176,7 @@ theorem code.read_br.complete (st : code.OpIterState) (data : Slice U8)
     (hbase : c.value_stack_base.val = outer.length)
     (ht : Sequence.Realizes c.polymorphic_base segment
       (front ++ (Control.targetTypes target).map Translate.valueType)) :
-    code.read_br st data ⦃ r => r.1 = .Ok (depth, target.block_type) ∧
+    code.read_br st data ⦃ r => r.1 = .Ok (depth, Control.targetBlockType target) ∧
       r.2.vals.val = outer ∧
       r.2.ctrls.val = cs ++ [{ c with polymorphic_base := true }] ∧ r.2.pos = next ⦄ := by
   obtain ⟨_, hlabel, rfl⟩ := WP.spec_imp_exists
@@ -193,8 +193,8 @@ theorem code.read_br.complete (st : code.OpIterState) (data : Slice U8)
     (code.mark_unreachable.spec s cs c (by simpa [hc] using hctrls)
       (by simp [hv, hbase]))
   rw [WP.spec_equiv_exists]
-  refine ⟨(.Ok (depth, target.block_type), s'), ?_, rfl, ?_, hc', hp'.trans hp⟩
-  · simp [code.read_br, hlabel, hrs, hr, hm, core.result.Result.Insts.CoreOpsTry.branch]
+  refine ⟨(.Ok (depth, Control.targetBlockType target), s'), ?_, rfl, ?_, hc', hp'.trans hp⟩
+  · simp [code.read_br, hlabel, hrs, hr, hm, core.result.Result.Insts.CoreOpsTry.branch, code.branch_target_bt.eq]
   · simpa [hv, hbase] using hv'
 
 /-- Conditional branching consumes its condition and restores the checked
@@ -210,7 +210,7 @@ theorem code.read_br_if.complete (st : code.OpIterState) (data : Slice U8)
     (hsize : st.vals.val.length < Usize.max)
     (ht : Sequence.Realizes (Control.polymorphic st) segment
       ((front ++ (Control.targetTypes target).map Translate.valueType) ++ [.I32])) :
-    code.read_br_if st data ⦃ r => r.1 = .Ok (depth, target.block_type) ∧
+    code.read_br_if st data ⦃ r => r.1 = .Ok (depth, Control.targetBlockType target) ∧
       r.2.ctrls = st.ctrls ∧ r.2.pos = next ∧
       ∃ rest, r.2.vals.val = outer ++ rest ∧ rest.length ≤ segment.length + 1 ∧
         Sequence.Realizes (Control.polymorphic st) rest
@@ -238,10 +238,10 @@ theorem code.read_br_if.complete (st : code.OpIterState) (data : Slice U8)
   obtain ⟨s'', hpush, hv'', hc'', hp''⟩ := WP.spec_imp_exists
     (code.push_types.spec s' (alloc.vec.Vec.deref rs) hcap)
   rw [WP.spec_equiv_exists]
-  refine ⟨(.Ok (depth, target.block_type), s''), ?_, rfl,
+  refine ⟨(.Ok (depth, Control.targetBlockType target), s''), ?_, rfl,
     hc''.trans (hc'.trans hc), hp''.trans (hp'.trans hp),
     rest ++ rs.val.map code.StackType.Val, ?_, ?_, ?_⟩
-  · simp [code.read_br_if, hlabel, hrs, hpop, hr, hpush, core.result.Result.Insts.CoreOpsTry.branch]
+  · simp [code.read_br_if, hlabel, hrs, hpop, hr, hpush, core.result.Result.Insts.CoreOpsTry.branch, code.branch_target_bt.eq]
   · simpa [hv', alloc.vec.Vec.deref, List.append_assoc] using hv''
   · simp only [List.length_append, List.length_map]
     omega

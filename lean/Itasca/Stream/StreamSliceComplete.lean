@@ -97,14 +97,14 @@ private theorem split_skip_customs {data : Slice U8} {bytes : List U8}
     rw [split_skip_section data pos content middle 0#u8 hh (by decide)]
     exact ih hrest
 
-private theorem split_skip_chain {data : Slice U8} {raw n bytes}
-    (h : ModuleEnv.Chain raw n bytes) {pos next : Usize}
+private theorem split_skip_chain {profile} {data : Slice U8} {raw n bytes}
+    (h : ModuleEnv.Chain raw n bytes profile) {pos next : Usize}
     (hb : Wasm.BytesAt data pos bytes next) :
     stream.find_code_region_loop data (Slice.len data) pos =
       stream.find_code_region_loop data (Slice.len data) next := by
   induction h generalizing pos with
   | done hc => exact split_skip_customs hc hb
-  | @step n id first rest hn hid hslot _ ih =>
+  | @step profile n id first rest hn hid hslot _ ih =>
     obtain ⟨middle, hfirst, hrest⟩ := hb.split
     obtain ⟨customs, sec, hc, hs, he⟩ := hslot
     rw [he] at hfirst
@@ -114,13 +114,13 @@ private theorem split_skip_chain {data : Slice U8} {raw n bytes}
     · rw [← hsection.empty]
       exact ih hrest
     · obtain ⟨content, hh, _⟩ := (show
-        At (SectionEncoding id (ModuleEnv.Payload raw id.val)) data afterCustoms () middle
+        At (SectionEncoding id (fun u bs => ModuleEnv.Payload raw id.val u bs profile)) data afterCustoms () middle
         from ⟨_, hs, hsection⟩).section_split
       rw [split_skip_section data afterCustoms content middle id hh (by omega)]
       exact ih hrest
 
-theorem split_skip_prefix {data : Slice U8} {decls next}
-    (h : At ModuleEnv.PrefixEncoding data 0#usize decls next) :
+theorem split_skip_prefix {profile} {data : Slice U8} {decls next}
+    (h : At (fun ds bs => ModuleEnv.PrefixEncoding ds bs profile) data 0#usize decls next) :
     stream.find_code_region_loop data (Slice.len data) 8#usize =
       stream.find_code_region_loop data (Slice.len data) next := by
   obtain ⟨bytes, hp, hb⟩ := h
@@ -135,8 +135,8 @@ theorem split_skip_prefix {data : Slice U8} {decls next}
 
 /-- On an independently valid normalized layout, the concrete splitter chooses
 exactly the environment/code/tail boundaries used by component completeness. -/
-theorem stream.find_code_region.complete_layout {data : Slice U8} {raw decls codePos tailPos}
-    (h : ModuleLayout.Layout data raw decls codePos tailPos) :
+theorem stream.find_code_region.complete_layout {profile} {data : Slice U8} {raw decls codePos tailPos}
+    (h : ModuleLayout.Layout data raw decls codePos tailPos profile) :
     stream.find_code_region data = .ok (codePos, tailPos) := by
   simp only [stream.find_code_region]
   rw [split_skip_prefix h.environment]
@@ -164,9 +164,9 @@ theorem stream.find_code_region.complete_layout {data : Slice U8} {raw decls cod
 
 /-- Independent module encoding supplies canonical splitter boundaries without
 assuming any successful parser run. -/
-theorem stream.find_code_region.complete (data : Slice U8) (raw : ModuleBinary.Module)
-    (h : ModuleEncodingWithinLimits raw data.val) :
-    ∃ decls codePos tailPos, ModuleLayout.Layout data raw decls codePos tailPos ∧
+theorem stream.find_code_region.complete {profile} (data : Slice U8) (raw : ModuleBinary.Module)
+    (h : ModuleEncodingWithinLimits raw data.val profile) :
+    ∃ decls codePos tailPos, ModuleLayout.Layout data raw decls codePos tailPos profile ∧
       stream.find_code_region data = .ok (codePos, tailPos) := by
   obtain ⟨decls, codePos, tailPos, hl⟩ := ModuleLayout.normalize data raw h
   exact ⟨decls, codePos, tailPos, hl, stream.find_code_region.complete_layout hl⟩

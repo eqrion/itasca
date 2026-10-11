@@ -24,15 +24,15 @@ theorem At.on_region {α : Type} {R : α → List U8 → Prop}
   · simp
   · simpa using hregion.length
 
-theorem Rep.locals_within_limits {entries bytes}
-    (h : Rep CodeEncodingWithinLimits entries bytes) :
+theorem Rep.locals_within_limits {entries bytes profile}
+    (h : Rep (Itasca.Profile.CodeEncodingWithinLimits profile) entries bytes) :
     ∀ entry ∈ entries, entry.declared.length ≤ limits.MAX_LOCALS.val := by
   induction h with
   | nil => simp
   | @cons entry entries first rest he hs ih =>
     intro value hv
     rcases List.mem_cons.mp hv with rfl | hv
-    · exact he.local_bound
+    · exact he.1
     · exact ih value hv
 
 end Itasca.ModuleBinary
@@ -41,10 +41,10 @@ namespace Itasca.ModuleCode
 
 /-- Generated typing in index order and independent local-limit witnesses
 supply the entry certificates used by streaming batches. -/
-theorem EntriesTyped.of_forall₂ {env entries i}
-    (ht : List.Forall₂ (CodeEntry.Typed env) (env.func_type_indices.val.drop i) entries)
+theorem EntriesTyped.of_forall₂ {env entries i profile}
+    (ht : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry profile) (env.func_type_indices.val.drop i) entries)
     (hb : ∀ entry ∈ entries, entry.declared.length ≤ limits.MAX_LOCALS.val) :
-    EntriesTyped env i entries := by
+    EntriesTyped (profile := profile) env i entries := by
   induction entries generalizing i with
   | nil => exact .nil _
   | cons entry entries ih =>
@@ -79,19 +79,21 @@ def Split (data : Slice U8) (source : stream.SliceSource) : Prop :=
 They expose the shared component parser results, while body checking remains
 a consequence of typed bounded encodings for the later streaming driver. -/
 structure Certificate (data : Slice U8) (raw : ModuleBinary.Module)
-    (source : stream.SliceSource) (env : module.Env) (tail : module.Tail) : Prop where
+    (source : stream.SliceSource) (env : module.Env) (tail : module.Tail)
+    (validationProfile : ValidationProfile := .Wasm1) : Prop where
   split : Split data source
   bytes : data.val = source.env.val ++ source.code.val ++ source.tail.val
   bounded : data.length ≤ limits.MAX_MODULE_BYTES.val
-  environment : module.validate_env source.env = .ok (.Ok (env, Slice.len source.env))
+  environment : module.validate_env source.env validationProfile = .ok (.Ok (env, Slice.len source.env))
   ready : ∃ decls, ModuleEnv.Ready raw 9 decls env
   entry_bounds : CodeEntry.Bounds env
-  profile : Wasm1.Environment env
+  profile : Itasca.Profile.Environment validationProfile env
+  signature_limits : Itasca.Profile.EnvironmentWithinLimits validationProfile env
   code : ∃ entries, StreamFraming.HeaderAt source.code env entries ∧
-    At (Rep CodeEncodingWithinLimits) source.code entries raw.codes (Slice.len source.code)
-  typed : ModuleCode.EntriesTyped env 0 raw.codes
+    At (Rep (Itasca.Profile.CodeEncodingWithinLimits validationProfile)) source.code entries raw.codes (Slice.len source.code)
+  typed : ModuleCode.EntriesTyped (profile := validationProfile) env 0 raw.codes
   code_count : raw.codes.length = env.func_type_indices.val.length
-  tail_accepted : module.validate_tail source.tail 0#usize env = .ok (.Ok tail)
+  tail_accepted : module.validate_tail source.tail 0#usize env validationProfile = .ok (.Ok tail)
   realization : Matches env tail raw
   metadata : AccessorTypes env raw
 
@@ -105,13 +107,14 @@ private theorem slice_spec (data : Slice U8) (first last : Usize)
 
 /-- Component completeness for the canonical streaming regions. No legacy
 module/code driver execution or assumed parser/body success is required. -/
-theorem prepare (data : Slice U8) (raw : ModuleBinary.Module)
-    (hb : ModuleEncodingWithinLimits raw data.val)
+theorem prepare (data : Slice U8) (raw : ModuleBinary.Module) (profile : ValidationProfile)
+    (hb : ModuleEncodingWithinLimits raw data.val profile)
+    (hsignatures : ModuleSignaturesWithinLimits raw profile)
     (he : Elaborates raw (moduleOf raw))
-    (ht : Module_ok (moduleOf raw)) (hp : Profile raw) :
-    ∃ source env tail, Certificate data raw source env tail := by
+    (ht : Module_ok (moduleOf raw)) (hp : Profile raw profile) :
+    ∃ source env tail, Certificate data raw source env tail profile := by
   have hs := sections_of_typing he ht
-  have hr := requirements_of_typing he hs hp
+  have hr := profile_requirements_of_typing he hs hp.toModuleConditions hsignatures
   obtain ⟨decls, codePos, tailPos, hl⟩ := ModuleLayout.normalize data raw hb
   have hsplit := stream.find_code_region.complete_layout hl
   obtain ⟨hcodePos, htailPos⟩ := stream.find_code_region.bounds data codePos tailPos hsplit
@@ -122,24 +125,20 @@ theorem prepare (data : Slice U8) (raw : ModuleBinary.Module)
   obtain ⟨tailBytes, htailSlice, htailSpan⟩ := WP.spec_imp_exists
     (slice_spec data tailPos (Slice.len data) (by simpa using htailPos) (by simp))
   have henvEnc := hl.environment.on_region henvSpan
-  obtain ⟨env, finalDecls, henv, hready⟩ := module.validate_env.complete
-    environment raw decls (Slice.len environment) henvEnc hl.raw_eq (.inl rfl) hr
+  obtain ⟨env, finalDecls, henv, hready⟩ := module.validate_env.profile_complete
+    environment raw profile decls (Slice.len environment) henvEnc hl.raw_eq (.inl rfl) hr
   have henvSize : environment.length ≤ limits.MAX_MODULE_BYTES.val := by
     have := henvSpan.length
     have := hb.1
     have := hl.environment.span.2
     simp only [Slice.length] at *
     omega
-  have hbounds := (ModuleEnv.accepted_entry_conditions environment env
-    (Slice.len environment) henvSize henv).1
-  have harity : ∀ ft ∈ env.types.val, ft.results.val.length ≤ 1 := by
-    simpa [hready.types_eq (by omega)] using hp.arity
-  have hprofile : Wasm1.Environment env :=
-    ⟨hready.represents.cache.func_arity harity, harity⟩
+  obtain ⟨hbounds, hprofile, hlimits⟩ := ModuleEnv.profile_accepted_entry_conditions
+    environment env (Slice.len environment) profile henvSize henv
   have htypes := hl.code.typed hready hs hp
   have hcount : raw.codes.length = env.func_type_indices.val.length := htypes.length_eq.symm
   have hcode : ∃ entries, StreamFraming.HeaderAt code env entries ∧
-      At (Rep CodeEncodingWithinLimits) code entries raw.codes (Slice.len code) := by
+      At (Rep (Itasca.Profile.CodeEncodingWithinLimits profile)) code entries raw.codes (Slice.len code) := by
     rcases hl.code with hcode | ⟨hempty, hsame, _⟩
     · have henc := hcode.on_region hcodeSpan
       obtain ⟨content, hheader, hpayload⟩ := henc.section_split
@@ -155,9 +154,9 @@ theorem prepare (data : Slice U8) (raw : ModuleBinary.Module)
         apply List.eq_nil_of_length_eq_zero
         simpa [hempty] using hcount.symm
       refine ⟨0#usize, .inl ⟨hzero, rfl, hfuncs⟩, [], ?_, ?_⟩
-      · simpa [hempty] using (Rep.nil : Rep CodeEncodingWithinLimits [] [])
+      · simpa [hempty] using (Rep.nil : Rep (Itasca.Profile.CodeEncodingWithinLimits profile) [] [])
       · exact ⟨by simp [hzero], by simp [hzero], by simp⟩
-  have htyped : ModuleCode.EntriesTyped env 0 raw.codes := by
+  have htyped : ModuleCode.EntriesTyped (profile := profile) env 0 raw.codes := by
     obtain ⟨_, _, bytes, henc, _⟩ := hcode
     apply ModuleCode.EntriesTyped.of_forall₂ (by simpa using htypes)
     exact henc.locals_within_limits
@@ -167,7 +166,7 @@ theorem prepare (data : Slice U8) (raw : ModuleBinary.Module)
   let tail : module.Tail := ⟨segments⟩
   have htail := module.validate_tail.complete tail (by simpa [tail, hsegments] using htailEnc) hvalid
   have hmatches := hready.matches tail hsegments
-  have hsemantic := module.validate_env.semantic_spec environment
+  have hsemantic := module.validate_env.profile_semantic_spec environment profile
   rw [henv] at hsemantic
   simp only [WP.spec_ok] at hsemantic
   obtain ⟨_, hrep, hv, _, _, hprefix⟩ := hsemantic
@@ -181,7 +180,7 @@ theorem prepare (data : Slice U8) (raw : ModuleBinary.Module)
   refine ⟨⟨environment, code, tailBytes⟩, env, tail, ?_⟩
   exact ⟨⟨codePos, tailPos, hsplit, henvSlice, hcodeSlice, htailSlice⟩,
     by simpa using ((henvSpan.append hcodeSpan).append htailSpan).suffix,
-    hb.1, henv, ⟨finalDecls, hready⟩, hbounds, hprofile, hcode, htyped, hcount,
+    hb.1, henv, ⟨finalDecls, hready⟩, hbounds, hprofile, hlimits, hcode, htyped, hcount,
     htail, hmatches, hmeta⟩
 
 end Itasca.StreamCompleteRegions

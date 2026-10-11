@@ -99,7 +99,7 @@ theorem code.read_br.loop_backedge (st : code.OpIterState) (data : Slice U8)
     (hctrls : st.ctrls.val = cs ++ [c]) (hloop : c.kind = .Loop)
     (hbase : c.value_stack_base.val ≤ st.vals.val.length)
     (h : st.pos.val < data.length) (hbyte : data.val[st.pos.val] = 0#u8) :
-    ∃ st', code.read_br st data = .ok (.Ok (0#u32, c.block_type), st') ∧
+    ∃ st', code.read_br st data = .ok (.Ok (0#u32, .Empty), st') ∧
       st'.vals.val = st.vals.val.take c.value_stack_base.val ∧
       st'.ctrls.val = cs ++ [{ c with polymorphic_base := true }] ∧
       st'.pos.val = st.pos.val + 1 ∧
@@ -121,7 +121,7 @@ theorem code.read_br.loop_backedge (st : code.OpIterState) (data : Slice U8)
     have hpop := code.pop_types.empty { st with pos := next }
       (alloc.vec.Vec.deref (alloc.vec.Vec.new types.ValueType)) rfl
     simp [code.read_br, hlabel, core.result.Result.Insts.CoreOpsTry.branch,
-      htarget, hpop, hunreachable]
+      htarget, hpop, hunreachable, code.branch_target_bt, hloop]
   · intro expected
     apply code.pop_with_type.polymorphic
     · have hb : Control.base st' = c.value_stack_base := by simp [Control.base, hcs]
@@ -133,7 +133,7 @@ theorem code.step_br {V : Type} (visitor : code.OpVisitor V)
     (st st' : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (depth : U32) (bt : code.BlockType) (v v' : V)
     (hread : code.read_br st data = .ok (.Ok (depth, bt), st'))
-    (hvisit : visitor.on_br v st' depth bt = .ok (.Ok (), v')) :
+    (hvisit : visitor.on_br v st' depth (Control.resultView bt) = .ok (.Ok (), v')) :
     code.step visitor st data env ctx code.OP_BR v = .ok (.Ok (), st', v') := by
   simp [hread, hvisit, code.visit,
     core.result.Result.Insts.CoreOpsTry.branch]
@@ -145,7 +145,7 @@ theorem code.step_loop_backedge_typed {V : Type} (visitor : code.OpVisitor V)
     (C : context) (hC : wf_context C) (hlabels : C.LABELS = Control.labels st.ctrls.val)
     (hshape : Control.Shape st) (hctrls : st.ctrls.val = cs ++ [c]) (hloop : c.kind = .Loop)
     (h : st.pos.val < data.length) (hbyte : data.val[st.pos.val] = 0#u8)
-    (hvisit : ∀ s, visitor.on_br v s 0#u32 c.block_type = .ok (.Ok (), v'))
+    (hvisit : ∀ s, visitor.on_br v s 0#u32 .Empty = .ok (.Ok (), v'))
     (before after : List valtype) :
     ∃ st', code.step visitor st data env ctx code.OP_BR v = .ok (.Ok (), st', v') ∧
       st'.vals.val = st.vals.val.take c.value_stack_base.val ∧
@@ -157,7 +157,7 @@ theorem code.step_loop_backedge_typed {V : Type} (visitor : code.OpVisitor V)
     hshape.bounded c (by simp [hctrls])
   obtain ⟨st', hr, hv, hc, hp, hpop⟩ :=
     code.read_br.loop_backedge st data cs c hctrls hloop hbase h hbyte
-  refine ⟨st', code.step_br visitor st st' data env ctx 0#u32 c.block_type v v' hr (hvisit st'),
+  refine ⟨st', code.step_br visitor st st' data env ctx 0#u32 .Empty v v' hr (hvisit st'),
     hv, hc, hp, ?_, hpop, ?_⟩
   · apply Control.Shape.unreachable hshape cs c hctrls hc
     simp [hv, List.length_take, Nat.min_eq_left hbase]

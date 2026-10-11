@@ -9,20 +9,20 @@ open ModuleBinary ModuleSections ModuleEnv
 /-- Every recognized declaration section terminates, preserves allocation bounds,
 and returns its exact independent byte/semantic transition on success. -/
 @[step]
-theorem module.decode_env_section.spec (data : Slice U8) (pos : Usize) (id : U8)
-    (env : module.Env) (before : Declarations) (hb : Bounded env pos.val) :
-    module.decode_env_section data pos id env ⦃ r => match r.1 with
-      | .Ok next => ∃ after, Effect data pos env before id next r.2 after ∧ Bounded r.2 next.val
+theorem module.decode_env_section.profile_spec (data : Slice U8) (pos : Usize) (id : U8)
+    (env : module.Env) (before : Declarations) (profile : ValidationProfile) (hb : Bounded env pos.val) :
+    module.decode_env_section data pos id env profile ⦃ r => match r.1 with
+      | .Ok next => ∃ after, Effect (profile := profile) data pos env before id next r.2 after ∧ Bounded r.2 next.val
       | .Err _ => True ⦄ := by
   unfold module.decode_env_section
   split
-  · apply WP.spec_mono (module.decode_type_section.spec data pos env hb.types)
+  · apply WP.spec_mono (module.decode_type_section.profile_spec data pos env profile hb.types)
     rintro ⟨r, result⟩ hp
     cases r with
     | Err e => trivial
     | Ok next =>
       obtain ⟨added, hadd, hbytes, hv, hs⟩ := hp
-      refine ⟨_, .types hadd hbytes hv, ?_⟩
+      refine ⟨_, .types hadd hbytes (by intro ft hm; exact (Profile.funcTypeAdmissible_iff profile ft).mpr (hv ft hm)), ?_⟩
       have hold := hb.mono hbytes.span.1
       rw [hadd.1]
       cases hold
@@ -98,7 +98,7 @@ theorem module.decode_env_section.spec (data : Slice U8) (pos : Usize) (id : U8)
       rw [he]
       cases hold
       constructor <;> assumption
-  · apply WP.spec_mono (module.decode_element_section.spec data pos env hb.elements)
+  · apply WP.spec_mono (module.decode_element_section.profile_spec data pos env profile hb.elements)
     rintro ⟨r, result⟩ hp
     cases r with
     | Err e => trivial
@@ -111,5 +111,13 @@ theorem module.decode_env_section.spec (data : Slice U8) (pos : Usize) (id : U8)
       constructor <;> assumption
   ·
     simp
+
+@[step]
+theorem module.decode_env_section.spec (data : Slice U8) (pos : Usize) (id : U8)
+    (env : module.Env) (before : Declarations) (hb : Bounded env pos.val) :
+    module.decode_env_section data pos id env .Wasm1 ⦃ r => match r.1 with
+      | .Ok next => ∃ after, Effect data pos env before id next r.2 after ∧ Bounded r.2 next.val
+      | .Err _ => True ⦄ := by
+  exact module.decode_env_section.profile_spec data pos id env before .Wasm1 hb
 
 end Itasca

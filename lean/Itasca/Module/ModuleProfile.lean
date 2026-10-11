@@ -11,26 +11,30 @@ function label is obtained from the raw module's own type declaration. -/
 def profileContext (results : List types.ValueType) : context :=
   ⟨[], [], [], [], [], [], [], [], [.mk_list (results.map Translate.valueType)], none⟩
 
-def FunctionProfile (types : List types.FuncType) (idx : U32) (entry : ModuleBinary.Code) : Prop :=
+def FunctionProfile (types : List types.FuncType) (idx : U32) (entry : ModuleBinary.Code)
+    (validationProfile : ValidationProfile := .Wasm1) : Prop :=
   ∃ hi : idx.val < types.length,
-    Wasm1.Instructions (profileContext types[idx.val].results.val) entry.body
+    Itasca.Profile.Instructions validationProfile (profileContext types[idx.val].results.val) entry.body
 
 /-- The explicit version-specific conditions supplement the generated 2.0
 judgment. Neither these conditions nor elaboration mention validator calls. -/
-structure Profile (raw : ModuleBinary.Module) : Prop extends ModuleConditions raw where
-  bodies : List.Forall₂ (FunctionProfile raw.types) raw.functions raw.codes
+structure Profile (raw : ModuleBinary.Module) (validationProfile : ValidationProfile := .Wasm1) : Prop
+    extends ModuleConditions raw validationProfile where
+  bodies : List.Forall₂ (fun idx entry => FunctionProfile raw.types idx entry validationProfile) raw.functions raw.codes
 
-theorem typed_profile {env idx entry} (h : CodeEntry.Typed env idx entry) :
-    FunctionProfile env.types.val idx entry :=
+theorem typed_profile {env idx entry} {validationProfile : ValidationProfile}
+    (h : CodeEntry.Typed env idx entry validationProfile) :
+    FunctionProfile env.types.val idx entry validationProfile :=
   ⟨h.type_lt, h.profile.congr_labels _ rfl⟩
 
-theorem code_profiles {env indices codes} (h : List.Forall₂ (CodeEntry.Typed env) indices codes) :
-    List.Forall₂ (FunctionProfile env.types.val) indices codes := by
+theorem code_profiles {env indices codes} {validationProfile : ValidationProfile}
+    (h : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry validationProfile) indices codes) :
+    List.Forall₂ (fun idx entry => FunctionProfile env.types.val idx entry validationProfile) indices codes := by
   induction h with
   | nil => exact .nil
   | cons hp _ ih => exact .cons (typed_profile hp) ih
 
-theorem export_names_distinct {env : module.Env} (hv : ModuleEnv.Valid env) :
+theorem export_names_distinct {env : module.Env} {validationProfile : ValidationProfile} (hv : ModuleEnv.Valid env validationProfile) :
     (env.exports.val.map (fun e => ModuleBinary.nameOfBytes e.name.val)).Nodup := by
   have h := hv.distinctExports.map_on (f := ModuleBinary.nameOfBytes) ?_
   · simpa [List.map_map, Function.comp_def] using h
@@ -40,9 +44,9 @@ theorem export_names_distinct {env : module.Env} (hv : ModuleEnv.Valid env) :
     exact (hv.exportNames ex hex).nameOfBytes_injective (hv.exportNames ey hey) he
 
 theorem profile {env tables memories codes segments}
-    (hc : ModuleEnv.Cache env tables memories) (hv : ModuleEnv.Valid env)
-    (hcodes : List.Forall₂ (CodeEntry.Typed env) env.func_type_indices.val codes) :
-    Profile (fromEnv env tables memories codes segments) := by
+    (hc : ModuleEnv.Cache env tables memories) {validationProfile : ValidationProfile} (hv : ModuleEnv.Valid env validationProfile)
+    (hcodes : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry validationProfile) env.func_type_indices.val codes) :
+    Profile (fromEnv env tables memories codes segments) validationProfile := by
   constructor
   · constructor
     · simpa [fromEnv, ModuleEnv.rawExport, List.map_map, Function.comp_def] using export_names_distinct hv
@@ -52,12 +56,12 @@ theorem profile {env tables memories codes segments}
     · have h := hv.memoryCount
       rw [hc.memories, List.length_append] at h
       simpa [fromEnv, ModuleEnv.rawImport, List.map_map, Function.comp_def, mems_imports] using h
-    · exact hv.types
+    · exact (hv.environment hc).1
   · exact code_profiles hcodes
 
-theorem elaborates {env tables memories codes segments}
+theorem elaborates {env tables memories codes segments} {validationProfile : ValidationProfile}
     (hc : ModuleEnv.Cache env tables memories)
-    (hcodes : List.Forall₂ (CodeEntry.Typed env) env.func_type_indices.val codes) :
+    (hcodes : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry validationProfile) env.func_type_indices.val codes) :
     Elaborates (fromEnv env tables memories codes segments)
       (moduleOf (fromEnv env tables memories codes segments)) := by
   constructor

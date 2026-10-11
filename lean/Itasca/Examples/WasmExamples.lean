@@ -13,7 +13,7 @@ private theorem public_of_loop (data : Slice U8) (env : module.Env) (ctx : code.
       data env ctx.locals ctx.results () (Body.initial bt) = .ok (result, ())) :
     code.validate_body data env ctx = .ok result := by
   have hguard : ¬ Slice.len data > limits.MAX_FUNCTION_BYTES := by scalar_tac
-  simp [code.validate_body, code.validate_body_with, hguard,
+  simp [code.validate_body, code.validate_body_with.eq_model, code.validate_body_with_model, hguard,
     code.start_function.spec (alloc.vec.Vec.deref ctx.results) bt
       (by simpa [alloc.vec.Vec.deref] using hresults), hloop]
 
@@ -102,7 +102,7 @@ private theorem single_accepted (data : Slice U8) (env : module.Env) (ctx : code
     code.validate_body data env ctx = .ok (.Ok ()) := by
   let last := {s with pos := Slice.len data}
   obtain ⟨⟨_, finished⟩, hr, rfl, hc, _, hp⟩ := WP.spec_imp_exists
-    (code.read_end.concrete last [] ⟨.Body, bt, 0#usize, false⟩ []
+    (code.read_end.concrete last [] ⟨.Body, bt, Control.signature (bt), 0#usize, false⟩ []
       (by simp [last, hctrls, Body.initial]) (by simpa [last] using hvals) rfl (by simp))
   dsimp only at hc hp
   apply public_of_loop data env ctx bt (.Ok ()) hsize hresults
@@ -213,14 +213,14 @@ theorem reserved_byte_rejected (env : module.Env) :
 
 private theorem finish_empty (data : Slice U8) (env : module.Env)
     (st : code.OpIterState) (poly : Bool)
-    (hc : st.ctrls.val = [⟨.Body, .Empty, 0#usize, poly⟩]) (hv : st.vals.val = [])
+    (hc : st.ctrls.val = [⟨.Body, .Empty, Control.signature (.Empty), 0#usize, poly⟩]) (hv : st.vals.val = [])
     (hp : st.pos.val < data.length) (hb : data.val[st.pos.val] = code.OP_END)
     (hn : (Slice.len data).val = st.pos.val + 1) :
     code.validate_body_with_loop code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       data env emptyContext.locals emptyContext.results () st = .ok (.Ok (), ()) := by
   let last := {st with pos := Slice.len data}
   obtain ⟨⟨_, finished⟩, hr, rfl, hfc, _, hfp⟩ := WP.spec_imp_exists
-    (code.read_end.concrete last [] ⟨.Body, .Empty, 0#usize, poly⟩ [] hc
+    (code.read_end.concrete last [] ⟨.Body, .Empty, Control.signature (.Empty), 0#usize, poly⟩ [] hc
       (by simpa [last, Control.results] using hv) rfl (by simp))
   dsimp only at hfc hfp
   rw [loop_step data env emptyContext st last finished code.OP_END (by simp [hc])
@@ -235,7 +235,7 @@ theorem polymorphic_select_accepted (env : module.Env) :
   let data := bytes [0#u8, 0x1B#u8, 0x1A#u8, 0x0B#u8]
   let first := {Body.initial .Empty with pos := 1#usize}
   obtain ⟨s1, hm, hv1, _, hc1, hp1⟩ := WP.spec_imp_exists
-    (code.mark_unreachable.spec first [] ⟨.Body, .Empty, 0#usize, false⟩ rfl (by simp [first, Body.initial]))
+    (code.mark_unreachable.spec first [] ⟨.Body, .Empty, Control.signature (.Empty), 0#usize, false⟩ rfl (by simp [first, Body.initial]))
   have hv1' : s1.vals.val = [] := by simpa [first, Body.initial] using hv1
   have hunreachable : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor first data env emptyContext
       code.OP_UNREACHABLE () = .ok (.Ok (), s1, ()) := by
@@ -377,7 +377,7 @@ theorem trailing_bytes_rejected (env : module.Env) :
   let data := bytes [0x0B#u8, 1#u8]
   let first := {Body.initial .Empty with pos := 1#usize}
   obtain ⟨⟨_, finished⟩, hr, rfl, hc, _, hp⟩ := WP.spec_imp_exists
-    (code.read_end.empty first [] ⟨.Body, .Empty, 0#usize, false⟩ rfl rfl rfl)
+    (code.read_end.empty first [] ⟨.Body, .Empty, Control.signature (.Empty), 0#usize, false⟩ rfl rfl rfl)
   dsimp only at hc hp
   apply public_of_loop data env emptyContext .Empty (.Err .TrailingBytes)
     (by simp [data, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl

@@ -95,7 +95,7 @@ private theorem requirements : Requirements raw := by
 
 /-- A four-byte emoji import name remains Unicode, and the imported immutable
 I32 global is available to a defined global's `global.get` initializer. -/
-theorem imported_initializer_accepted : ∃ decoded, module.validate_module input = .ok (.Ok decoded) := by
+theorem imported_initializer_accepted : ∃ decoded, module.validate_module input .Wasm1 = .ok (.Ok decoded) := by
   have hp : At PrefixEncoding input 0#usize declarations (Slice.len input) := by
     refine ⟨magicVersion ++ layout.bytes, layout_valid.encoding, ?_⟩
     constructor <;> simp [input, ModuleExamples.bytes, alloc.vec.Vec.deref,
@@ -108,7 +108,7 @@ theorem imported_initializer_accepted : ∃ decoded, module.validate_module inpu
     (hr.functions_eq (by decide)) he⟩
 
 /-- The exact emoji/import/initializer bytes receive the full module certificate. -/
-theorem imported_initializer_validated : ∃ decoded, module.validate_module input = .ok (.Ok decoded) ∧
+theorem imported_initializer_validated : ∃ decoded, module.validate_module input .Wasm1 = .ok (.Ok decoded) ∧
     ModuleSound.Validated input decoded := by
   obtain ⟨decoded, ha⟩ := imported_initializer_accepted
   exact ⟨decoded, ha, module.validate_module.wasm_sound _ _ ha⟩
@@ -120,7 +120,7 @@ def definedGlobalInput : Slice U8 := ModuleExamples.bytes (magicVersion ++
 
 /-- An earlier defined immutable global is still unavailable in a Wasm 1.0
 constant expression; only imported immutable globals may be referenced. -/
-theorem defined_global_initializer_rejected : module.validate_module definedGlobalInput =
+theorem defined_global_initializer_rejected : module.validate_module definedGlobalInput .Wasm1 =
     .ok (.Err .MutableGlobalInConstExpr) := by
   let data := definedGlobalInput
   let initial := ModuleExamples.emptyEnv

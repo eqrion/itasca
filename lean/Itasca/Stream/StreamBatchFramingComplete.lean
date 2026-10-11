@@ -31,6 +31,8 @@ end Itasca.StreamSource
 
 namespace Itasca
 
+variable {profile : ValidationProfile}
+
 private theorem batch_prefix_read {S : Type} (source : stream.Source S) (state : S)
     (environment tail : List U8) (code : Slice U8)
     (ha : StreamSource.Available source state environment code.val tail)
@@ -132,7 +134,7 @@ retained, so the worker's body/local limits are not lost during framing. -/
 theorem stream.get_next_batch.complete_spec {S : Type}
     (source : stream.Source S) (state : S) (environment tail : List U8) (code : Slice U8)
     (ha : StreamSource.Available source state environment code.val tail)
-    (R : Code → List U8 → Prop) (hencoding : ∀ entry bytes, R entry bytes → CodeEncoding entry bytes)
+    (R : Code → List U8 → Prop) (hencoding : ∀ entry bytes, R entry bytes → Profile.CodeEncoding profile entry bytes)
     (codeLen start first num threshold : Usize) (entries : List Code)
     (hlen : codeLen.val = code.length) (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)
     (hmore : first.val < num.val) (hcount : first.val + entries.length = num.val)
@@ -146,7 +148,7 @@ theorem stream.get_next_batch.complete_spec {S : Type}
   have hextent {q finish : Usize} {entry : Code} (h : At R code q entry finish) :
       ∃ content, ModuleCode.Extent code q content finish := by
     obtain ⟨bytes, he, hs⟩ := h
-    exact (show At CodeEncoding code q entry finish from ⟨bytes, hencoding entry bytes he, hs⟩).code_extent
+    exact (show At (Profile.CodeEncoding profile) code q entry finish from ⟨bytes, hencoding entry bytes he, hs⟩).code_extent
   unfold stream.get_next_batch stream.get_next_batch_loop
   apply loop.spec_decr_nat
     (fun s => 2 * (num.val - s.2.1.val) + if s.2.2.2 then 0 else 1)
@@ -238,16 +240,16 @@ theorem stream.get_next_batch.complete {S : Type}
     (codeLen start first num threshold : Usize) (entries : List Code)
     (hlen : codeLen.val = code.length) (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)
     (hmore : first.val < num.val) (hcount : first.val + entries.length = num.val)
-    (hbytes : At (Rep CodeEncodingWithinLimits) code start entries codeLen) :
+    (hbytes : At (Rep (Profile.CodeEncodingWithinLimits profile)) code start entries codeLen) :
     ∃ finish next taken rest,
       stream.get_next_batch source state codeLen start first num threshold = .ok (.Ok (finish, next)) ∧
       StreamFraming.BatchPost codeLen start first num (.Ok (finish, next)) ∧
       entries = taken ++ rest ∧ taken ≠ [] ∧
       next.val = first.val + taken.length ∧ num.val = next.val + rest.length ∧
-      At (Rep CodeEncodingWithinLimits) code start taken finish ∧
-      At (Rep CodeEncodingWithinLimits) code finish rest codeLen := by
+      At (Rep (Profile.CodeEncodingWithinLimits profile)) code start taken finish ∧
+      At (Rep (Profile.CodeEncodingWithinLimits profile)) code finish rest codeLen := by
   obtain ⟨r, hr, finish, next, taken, rest, rfl, hp⟩ := WP.spec_imp_exists
-    (stream.get_next_batch.complete_spec source state environment tail code ha CodeEncodingWithinLimits
+    (stream.get_next_batch.complete_spec source state environment tail code ha (Profile.CodeEncodingWithinLimits profile)
       (fun _ _ h => h.encoding) codeLen start first num threshold entries hlen hcap hmore hcount hbytes)
   exact ⟨finish, next, taken, rest, hr, hp⟩
 
@@ -283,21 +285,21 @@ theorem stream.get_next_batch.complete_view {S : Type}
     (codeLen start first num threshold : Usize) (entries : List Code)
     (hlen : codeLen.val = code.length) (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)
     (hmore : first.val < num.val) (hcount : first.val + entries.length = num.val)
-    (hbytes : At (Rep CodeEncodingWithinLimits) code start entries codeLen) :
+    (hbytes : At (Rep (Profile.CodeEncodingWithinLimits profile)) code start entries codeLen) :
     ∃ finish next taken rest view,
       stream.get_next_batch source state codeLen start first num threshold = .ok (.Ok (finish, next)) ∧
       StreamFraming.BatchPost codeLen start first num (.Ok (finish, next)) ∧
       entries = taken ++ rest ∧ taken ≠ [] ∧
       next.val = first.val + taken.length ∧ num.val = next.val + rest.length ∧
-      At (Rep CodeEncodingWithinLimits) code start taken finish ∧
-      At (Rep CodeEncodingWithinLimits) code finish rest codeLen ∧
+      At (Rep (Profile.CodeEncodingWithinLimits profile)) code start taken finish ∧
+      At (Rep (Profile.CodeEncodingWithinLimits profile)) code finish rest codeLen ∧
       stream.read_exact source state start finish = .ok (.Ok view) ∧
-      Wasm.BytesAt code start view.val finish ∧ Rep CodeEncodingWithinLimits taken view.val := by
+      Wasm.BytesAt code start view.val finish ∧ Rep (Profile.CodeEncodingWithinLimits profile) taken view.val := by
   obtain ⟨finish, next, taken, rest, hrun, hp, heq, hne, hn, hr, htaken, hrest⟩ :=
     stream.get_next_batch.complete source state environment tail code ha codeLen start first num threshold
       entries hlen hcap hmore hcount hbytes
   obtain ⟨view, hread, hview, hrep⟩ := stream.read_exact.complete_rep source state environment tail code ha
-    CodeEncodingWithinLimits start finish taken htaken
+    (Profile.CodeEncodingWithinLimits profile) start finish taken htaken
   exact ⟨finish, next, taken, rest, view, hrun, hp, heq, hne, hn, hr, htaken, hrest, hread, hview, hrep⟩
 
 end Itasca

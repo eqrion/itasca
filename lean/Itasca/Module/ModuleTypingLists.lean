@@ -29,7 +29,8 @@ theorem forall₂_right {α β : Type} {R : α → β → Prop} {xs ys}
   | nil => simp [Forall]
   | cons hr _ ih => simpa [Forall] using And.intro (hp _ _ hr) ih
 
-theorem functions_typed {env indices codes} (h : List.Forall₂ (CodeEntry.Typed env) indices codes)
+theorem functions_typed {env indices codes} {profile : ValidationProfile}
+    (h : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry profile) indices codes)
     (C : context) (hc : CodeEntry.ModuleContext env C) :
     List.Forall₂ (fun ft f => Func_ok C f ft)
       (indices.map (functionType env.types.val)) (List.zipWith CodeEntry.function indices codes) := by

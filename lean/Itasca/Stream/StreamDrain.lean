@@ -5,17 +5,20 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.StreamScheduler
 
+variable {profile : ValidationProfile}
+
 /-- Final draining derives certificates for every originally pending issued
 identity, while retaining provenance after every poll. -/
 theorem drain_sound {V : Type} (visitor : stream.StreamingVisitor V)
-    (Tracks : U64 → List StreamBatch.Issued → V → Prop) (hp : Provenance visitor Tracks)
+    (Tracks : U64 → List StreamBatch.Issued → V → Prop) (hp : Provenance visitor Tracks profile)
     (id : U64) (history : List StreamBatch.Issued) (v v' : V)
     (pending remaining : alloc.vec.Vec Usize) (hv : Tracks id history v)
     (henv : ∀ issued ∈ history, CodeEntry.Bounds issued.env ∧
-      ∀ ft ∈ issued.env.types.val, ft.results.val.length ≤ 1)
+      ∀ ft ∈ issued.env.types.val, Profile.FuncType profile ft)
+    (hprofiles : ∀ issued ∈ history, issued.profile = profile)
     (h : stream.retire_all_code_batches visitor id v pending = .ok (.Ok (), v', remaining)) :
     Tracks id history v' ∧ remaining.val = [] ∧
-      ∀ issued ∈ history, issued.module_id = id → issued.batch_id ∈ pending.val → Completed issued := by
+      ∀ issued ∈ history, issued.module_id = id → issued.batch_id ∈ pending.val → Completed issued profile := by
   generalize hn : pending.val.length = n
   induction n using Nat.strong_induction_on generalizing v pending with
   | h n ih =>
@@ -36,7 +39,7 @@ theorem drain_sound {V : Type} (visitor : stream.StreamingVisitor V)
       | Ok u =>
         cases u
         obtain ⟨hvNext, batchId, hperm, hcomplete⟩ :=
-          retire_sound visitor Tracks hp id history v next pending rest hv henv hretire
+          retire_sound visitor Tracks hp id history v next pending rest hv henv hprofiles hretire
         have hlen := hperm.length_eq
         simp only [List.length_cons] at hlen
         have hlt : rest.val.length < n := by omega

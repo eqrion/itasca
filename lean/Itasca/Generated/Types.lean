@@ -30,7 +30,7 @@ inductive types.ValueType where
 | F64 : types.ValueType
 
 /-- [itasca::code::BlockType]
-    Source: 'src/code.rs', lines 39:0-42:1
+    Source: 'src/code.rs', lines 41:0-44:1
     Visibility: public -/
 @[discriminant isize]
 inductive code.BlockType where
@@ -38,14 +38,14 @@ inductive code.BlockType where
 | Value : _root_.Itasca.types.ValueType → code.BlockType
 
 /-- [itasca::code::MemArg]
-    Source: 'src/code.rs', lines 59:0-62:1
+    Source: 'src/code.rs', lines 61:0-64:1
     Visibility: public -/
 structure code.MemArg where
   align : Std.U32
   offset : Std.U32
 
 /-- [itasca::code::Context]
-    Source: 'src/code.rs', lines 73:0-77:1
+    Source: 'src/code.rs', lines 75:0-79:1
     Visibility: public -/
 structure code.Context where
   locals : alloc.vec.Vec _root_.Itasca.types.ValueType
@@ -88,7 +88,7 @@ inductive error.OpError where
 | Visitor : _root_.Itasca.error.VisitError → error.OpError
 
 /-- [itasca::code::StackType]
-    Source: 'src/code.rs', lines 97:0-100:1
+    Source: 'src/code.rs', lines 99:0-102:1
     Visibility: public -/
 @[discriminant isize]
 inductive code.StackType where
@@ -96,7 +96,7 @@ inductive code.StackType where
 | Bot : code.StackType
 
 /-- [itasca::code::LabelKind]
-    Source: 'src/code.rs', lines 106:0-112:1
+    Source: 'src/code.rs', lines 108:0-114:1
     Visibility: public -/
 @[discriminant isize]
 inductive code.LabelKind where
@@ -106,22 +106,52 @@ inductive code.LabelKind where
 | Then : code.LabelKind
 | Else : code.LabelKind
 
+/-- [itasca::signature::BlockType]
+    Source: 'src/signature.rs', lines 86:0-90:1
+    Visibility: public -/
+@[discriminant isize]
+inductive signature.BlockType where
+| Empty : signature.BlockType
+| Value : _root_.Itasca.types.ValueType → signature.BlockType
+| TypeIndex : Std.U32 → signature.BlockType
+
 /-- [itasca::code::Ctrl]
-    Source: 'src/code.rs', lines 117:0-124:1
+    Source: 'src/code.rs', lines 119:0-128:1
     Visibility: public -/
 structure code.Ctrl where
   kind : _root_.Itasca.code.LabelKind
   block_type : _root_.Itasca.code.BlockType
+  signature : _root_.Itasca.signature.BlockType
   value_stack_base : Std.Usize
   polymorphic_base : Bool
 
 /-- [itasca::code::OpIterState]
-    Source: 'src/code.rs', lines 129:0-133:1
+    Source: 'src/code.rs', lines 133:0-137:1
     Visibility: public -/
 structure code.OpIterState where
   vals : alloc.vec.Vec _root_.Itasca.code.StackType
   ctrls : alloc.vec.Vec _root_.Itasca.code.Ctrl
   pos : Std.Usize
+
+/-- [itasca::signature::TypePart]
+    Source: 'src/signature.rs', lines 13:0-16:1
+    Visibility: public -/
+@[discriminant isize]
+inductive signature.TypePart where
+| Params : signature.TypePart
+| Results : signature.TypePart
+
+/-- [itasca::signature::ResultType]
+    Source: 'src/signature.rs', lines 21:0-25:1
+    Visibility: public -/
+@[discriminant isize]
+inductive signature.ResultType where
+| Empty : signature.ResultType
+| One : _root_.Itasca.types.ValueType → signature.ResultType
+| «Type» :
+  Std.U32 →
+  _root_.Itasca.signature.TypePart →
+  signature.ResultType
 
 /-- [itasca::types::Mut]
     Source: 'src/types.rs', lines 36:0-39:1
@@ -184,7 +214,7 @@ inductive types.ConstExpr where
 | GlobalGet : Std.U32 → types.ConstExpr
 
 /-- [itasca::module::Element]
-    Source: 'src/module.rs', lines 97:0-101:1
+    Source: 'src/module.rs', lines 98:0-102:1
     Visibility: public -/
 structure module.Element where
   table_idx : Std.U32
@@ -192,7 +222,7 @@ structure module.Element where
   init : alloc.vec.Vec Std.U32
 
 /-- [itasca::module::ExportDesc]
-    Source: 'src/module.rs', lines 79:0-84:1
+    Source: 'src/module.rs', lines 80:0-85:1
     Visibility: public -/
 @[discriminant isize]
 inductive module.ExportDesc where
@@ -202,14 +232,14 @@ inductive module.ExportDesc where
 | Global : Std.U32 → module.ExportDesc
 
 /-- [itasca::module::Export]
-    Source: 'src/module.rs', lines 89:0-92:1
+    Source: 'src/module.rs', lines 90:0-93:1
     Visibility: public -/
 structure module.Export where
   «name» : alloc.vec.Vec Std.U8
   desc : _root_.Itasca.module.ExportDesc
 
 /-- [itasca::module::ImportDesc]
-    Source: 'src/module.rs', lines 59:0-64:1
+    Source: 'src/module.rs', lines 60:0-65:1
     Visibility: public -/
 @[discriminant isize]
 inductive module.ImportDesc where
@@ -219,7 +249,7 @@ inductive module.ImportDesc where
 | Global : _root_.Itasca.types.GlobalType → module.ImportDesc
 
 /-- [itasca::module::Import]
-    Source: 'src/module.rs', lines 70:0-74:1
+    Source: 'src/module.rs', lines 71:0-75:1
     Visibility: public -/
 structure module.Import where
   module : alloc.vec.Vec Std.U8
@@ -227,14 +257,14 @@ structure module.Import where
   desc : _root_.Itasca.module.ImportDesc
 
 /-- [itasca::module::Global]
-    Source: 'src/module.rs', lines 51:0-54:1
+    Source: 'src/module.rs', lines 52:0-55:1
     Visibility: public -/
 structure module.Global where
   gtype : _root_.Itasca.types.GlobalType
   init : _root_.Itasca.types.ConstExpr
 
 /-- [itasca::module::Env]
-    Source: 'src/module.rs', lines 113:0-145:1
+    Source: 'src/module.rs', lines 114:0-146:1
     Visibility: public -/
 structure module.Env where
   types : alloc.vec.Vec _root_.Itasca.types.FuncType
@@ -252,7 +282,7 @@ structure module.Env where
   num_imported_globals : Std.Usize
 
 /-- Trait declaration: [itasca::code::OpVisitor]
-    Source: 'src/code.rs', lines 1655:0-1830:1
+    Source: 'src/code.rs', lines 1662:0-1849:1
     Visibility: public -/
 structure code.OpVisitor (Self : Type) where
   on_function_start : Self → _root_.Itasca.code.Context → Std.U32 →
@@ -263,30 +293,30 @@ structure code.OpVisitor (Self : Type) where
   on_nop : Self → _root_.Itasca.code.OpIterState → Result
     ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
   on_block : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.BlockType → Result ((core.result.Result Unit
+    _root_.Itasca.signature.BlockType → Result ((core.result.Result Unit
     _root_.Itasca.error.VisitError) × Self)
   on_loop : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.BlockType → Result ((core.result.Result Unit
+    _root_.Itasca.signature.BlockType → Result ((core.result.Result Unit
     _root_.Itasca.error.VisitError) × Self)
   on_if : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.BlockType → Result ((core.result.Result Unit
+    _root_.Itasca.signature.BlockType → Result ((core.result.Result Unit
     _root_.Itasca.error.VisitError) × Self)
   on_else : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.BlockType → Result ((core.result.Result Unit
+    _root_.Itasca.signature.BlockType → Result ((core.result.Result Unit
     _root_.Itasca.error.VisitError) × Self)
   on_end : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.LabelKind → _root_.Itasca.code.BlockType → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
+    _root_.Itasca.code.LabelKind → _root_.Itasca.signature.BlockType →
+    Result ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
   on_br : Self → _root_.Itasca.code.OpIterState → Std.U32 →
-    _root_.Itasca.code.BlockType → Result ((core.result.Result Unit
+    _root_.Itasca.signature.ResultType → Result ((core.result.Result Unit
     _root_.Itasca.error.VisitError) × Self)
   on_br_if : Self → _root_.Itasca.code.OpIterState → Std.U32 →
-    _root_.Itasca.code.BlockType → Result ((core.result.Result Unit
+    _root_.Itasca.signature.ResultType → Result ((core.result.Result Unit
     _root_.Itasca.error.VisitError) × Self)
   on_br_table_label : Self → _root_.Itasca.code.OpIterState → Std.U32 →
     Result ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
   on_br_table : Self → _root_.Itasca.code.OpIterState → Std.U32 →
-    _root_.Itasca.code.BlockType → Result ((core.result.Result Unit
+    _root_.Itasca.signature.ResultType → Result ((core.result.Result Unit
     _root_.Itasca.error.VisitError) × Self)
   on_return : Self → _root_.Itasca.code.OpIterState → Result
     ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
@@ -638,8 +668,21 @@ structure code.OpVisitor (Self : Type) where
   on_f64_reinterpret_i64 : Self → _root_.Itasca.code.OpIterState → Result
     ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
 
+/-- [itasca::multi_value::State]
+    Source: 'src/multi_value.rs', lines 27:0-29:1 -/
+structure multi_value.State where
+  core : _root_.Itasca.code.OpIterState
+
+/-- [itasca::ValidationProfile]
+    Source: 'src/lib.rs', lines 83:0-86:1
+    Visibility: public -/
+@[discriminant isize]
+inductive ValidationProfile where
+| Wasm1 : ValidationProfile
+| MultiValue : ValidationProfile
+
 /-- [itasca::code::EmptyOpVisitor]
-    Source: 'src/code.rs', lines 1834:0-1834:26
+    Source: 'src/code.rs', lines 1853:0-1853:26
     Visibility: public -/
 @[reducible]
 def code.EmptyOpVisitor := Unit
@@ -679,84 +722,13 @@ inductive error.Error where
 | Visitor : _root_.Itasca.error.VisitError → error.Error
 | Host : error.Error
 
-/-- [itasca::ValidationProfile]
-    Source: 'src/lib.rs', lines 80:0-83:1
-    Visibility: public -/
-@[discriminant isize]
-inductive ValidationProfile where
-| Wasm1 : ValidationProfile
-| MultiValue : ValidationProfile
-
-/-- [itasca::types::CustomSection]
-    Source: 'src/types.rs', lines 136:0-144:1
-    Visibility: public -/
-structure types.CustomSection where
-  name_len : Std.Usize
-  payload_start : Std.Usize
-  payload_end : Std.Usize
-
-/-- [itasca::module::Data]
-    Source: 'src/module.rs', lines 176:0-180:1
-    Visibility: public -/
-structure module.Data where
-  memory_idx : Std.U32
-  offset : _root_.Itasca.types.ConstExpr
-  init : alloc.vec.Vec Std.U8
-
-/-- [itasca::module::Tail]
-    Source: 'src/module.rs', lines 184:0-186:1
-    Visibility: public -/
-structure module.Tail where
-  data : alloc.vec.Vec _root_.Itasca.module.Data
-
-/-- [itasca::signature::BlockType]
-    Source: 'src/signature.rs', lines 86:0-90:1
-    Visibility: public -/
-@[discriminant isize]
-inductive signature.BlockType where
-| Empty : signature.BlockType
-| Value : _root_.Itasca.types.ValueType → signature.BlockType
-| TypeIndex : Std.U32 → signature.BlockType
-
-/-- [itasca::signature::TypePart]
-    Source: 'src/signature.rs', lines 13:0-16:1
-    Visibility: public -/
-@[discriminant isize]
-inductive signature.TypePart where
-| Params : signature.TypePart
-| Results : signature.TypePart
-
-/-- [itasca::signature::ResultType]
-    Source: 'src/signature.rs', lines 21:0-25:1
-    Visibility: public -/
-@[discriminant isize]
-inductive signature.ResultType where
-| Empty : signature.ResultType
-| One : _root_.Itasca.types.ValueType → signature.ResultType
-| «Type» :
-  Std.U32 →
-  _root_.Itasca.signature.TypePart →
-  signature.ResultType
-
-/-- [itasca::multi_value::State]
-    Source: 'src/multi_value.rs', lines 27:0-30:1 -/
-structure multi_value.State where
-  core : _root_.Itasca.code.OpIterState
-  blocks : alloc.vec.Vec _root_.Itasca.signature.BlockType
-
-/-- [itasca::module::Module]
-    Source: 'src/module.rs', lines 190:0-193:1
-    Visibility: public -/
-structure module.Module where
-  env : _root_.Itasca.module.Env
-  tail : _root_.Itasca.module.Tail
-
 /-- [itasca::stream::CodeBatch]
-    Source: 'src/stream.rs', lines 131:0-151:1
+    Source: 'src/stream.rs', lines 131:0-153:1
     Visibility: public -/
 structure stream.CodeBatch where
   module_id : Std.U64
   batch_id : Std.Usize
+  profile : _root_.Itasca.ValidationProfile
   env : _root_.Itasca.module.Env
   code : Slice Std.U8
   code_offset : Std.Usize
@@ -768,8 +740,22 @@ structure stream.CodeBatch where
   validated_end : Std.Usize
   error : Option _root_.Itasca.error.Error
 
+/-- [itasca::module::Data]
+    Source: 'src/module.rs', lines 177:0-181:1
+    Visibility: public -/
+structure module.Data where
+  memory_idx : Std.U32
+  offset : _root_.Itasca.types.ConstExpr
+  init : alloc.vec.Vec Std.U8
+
+/-- [itasca::module::Tail]
+    Source: 'src/module.rs', lines 185:0-187:1
+    Visibility: public -/
+structure module.Tail where
+  data : alloc.vec.Vec _root_.Itasca.module.Data
+
 /-- [itasca::stream::SyncVisitor]
-    Source: 'src/stream.rs', lines 553:0-556:1 -/
+    Source: 'src/stream.rs', lines 578:0-581:1 -/
 structure stream.SyncVisitor where
   completed : Option _root_.Itasca.stream.CodeBatch
   tail : Option _root_.Itasca.module.Tail
@@ -789,8 +775,16 @@ inductive stream.Region where
 | Environment : stream.Region
 | Tail : stream.Region
 
+/-- [itasca::types::CustomSection]
+    Source: 'src/types.rs', lines 136:0-144:1
+    Visibility: public -/
+structure types.CustomSection where
+  name_len : Std.Usize
+  payload_start : Std.Usize
+  payload_end : Std.Usize
+
 /-- Trait declaration: [itasca::module::ModuleVisitor]
-    Source: 'src/module.rs', lines 1279:0-1289:1
+    Source: 'src/module.rs', lines 1353:0-1363:1
     Visibility: public -/
 structure module.ModuleVisitor (Self : Type) where
   on_custom_section : Self → _root_.Itasca.types.CustomSection → Result
@@ -815,7 +809,7 @@ structure stream.StreamingVisitor (Self : Type) where
     ((core.result.Result Unit _root_.Itasca.error.Error) × Self)
 
 /-- [itasca::stream::SliceSource]
-    Source: 'src/stream.rs', lines 524:0-528:1 -/
+    Source: 'src/stream.rs', lines 549:0-553:1 -/
 structure stream.SliceSource where
   env : Slice Std.U8
   code : Slice Std.U8
@@ -833,6 +827,13 @@ structure stream.Source (Self : Type) where
   tail : Self → Result (core.result.Result (Slice Std.U8)
     _root_.Itasca.error.Error)
 
+/-- [itasca::module::Module]
+    Source: 'src/module.rs', lines 191:0-194:1
+    Visibility: public -/
+structure module.Module where
+  env : _root_.Itasca.module.Env
+  tail : _root_.Itasca.module.Tail
+
 /-- [itasca::types::ExternType]
     Source: 'src/types.rs', lines 102:0-107:1
     Visibility: public -/
@@ -844,7 +845,7 @@ inductive types.ExternType where
 | Global : _root_.Itasca.types.GlobalType → types.ExternType
 
 /-- [itasca::module::EmptyModuleVisitor]
-    Source: 'src/module.rs', lines 1293:0-1293:30
+    Source: 'src/module.rs', lines 1367:0-1367:30
     Visibility: public -/
 @[reducible]
 def module.EmptyModuleVisitor := Unit

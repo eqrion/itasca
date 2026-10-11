@@ -43,19 +43,19 @@ namespace Itasca
 open ModuleBinary ModuleSections
 
 @[step]
-theorem module.decode_type_section_loop.spec (data : Slice U8) (env : module.Env)
-    (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
+theorem module.decode_type_section_loop.profile_spec (data : Slice U8) (env : module.Env)
+    (profile : ValidationProfile) (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
     (hsize : env.types.val.length ≤ start.val) :
-    module.decode_type_section_loop data env count start 0#u32 ⦃ r => match r.1 with
+    module.decode_type_section_loop data env profile count start 0#u32 ⦃ r => match r.1 with
       | .Ok next => ∃ added, added.length = count.val ∧ TypesAdded env r.2 added ∧
           At (Rep FuncTypeEncoding) data start added next ∧
-          (∀ ft ∈ added, ft.results.val.length ≤ 1) ∧ r.2.types.val.length ≤ next.val
+          (∀ ft ∈ added, Profile.FuncType profile ft ∧ Profile.FuncTypeWithinLimits profile ft) ∧ r.2.types.val.length ≤ next.val
       | .Err _ => True ⦄ := by
   unfold module.decode_type_section_loop
   apply loop.spec_decr_nat (fun s => count.val - s.2.2.val)
     (fun s => s.2.2.val ≤ count.val ∧ ∃ added, added.length = s.2.2.val ∧
       TypesAdded env s.1 added ∧ At (Rep FuncTypeEncoding) data start added s.2.1 ∧
-      (∀ ft ∈ added, ft.results.val.length ≤ 1) ∧ s.1.types.val.length ≤ s.2.1.val)
+      (∀ ft ∈ added, Profile.FuncType profile ft ∧ Profile.FuncTypeWithinLimits profile ft) ∧ s.1.types.val.length ≤ s.2.1.val)
   · rintro ⟨current, pos, i⟩ ⟨hi, added, hlen, henv, hbytes, hvalid, hsize⟩
     dsimp only at hi hlen henv hbytes hvalid hsize
     unfold module.decode_type_section_loop.body
@@ -65,7 +65,7 @@ theorem module.decode_type_section_loop.spec (data : Slice U8) (env : module.Env
       have heq : i.val = count.val := by scalar_tac
       exact ⟨added, by omega, henv, hbytes, hvalid, hsize⟩
     · rename_i hmore
-      obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (module.decode_func_type.spec data pos)
+      obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (module.decode_func_type.profile_spec data pos profile)
       rw [hr]
       cases r with
       | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
@@ -96,12 +96,12 @@ theorem module.decode_type_section_loop.spec (data : Slice U8) (env : module.Env
       ⟨[], .nil, Wasm.BytesAt.nil data start hstart⟩, by simp, hsize⟩
 
 @[step]
-theorem module.decode_type_section.spec (data : Slice U8) (pos : Usize) (env : module.Env)
-    (hsize : env.types.val.length ≤ pos.val) :
-    module.decode_type_section data pos env ⦃ r => match r.1 with
+theorem module.decode_type_section.profile_spec (data : Slice U8) (pos : Usize) (env : module.Env)
+    (profile : ValidationProfile) (hsize : env.types.val.length ≤ pos.val) :
+    module.decode_type_section data pos env profile ⦃ r => match r.1 with
       | .Ok next => ∃ added, TypesAdded env r.2 added ∧
           At (VecEncoding FuncTypeEncoding) data pos added next ∧
-          (∀ ft ∈ added, ft.results.val.length ≤ 1) ∧ r.2.types.val.length ≤ next.val
+          (∀ ft ∈ added, Profile.FuncType profile ft ∧ Profile.FuncTypeWithinLimits profile ft) ∧ r.2.types.val.length ≤ next.val
       | .Err _ => True ⦄ := by
   obtain ⟨r, hr, hc⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
   cases r with
@@ -112,7 +112,7 @@ theorem module.decode_type_section.spec (data : Slice U8) (pos : Usize) (env : m
     obtain ⟨count, start⟩ := pair
     have hs := hc.span
     obtain ⟨⟨r, result⟩, hloop, hp⟩ := WP.spec_imp_exists
-      (module.decode_type_section_loop.spec data env count start hs.2.2 (by omega))
+      (module.decode_type_section_loop.profile_spec data env profile count start hs.2.2 (by omega))
     simp [module.decode_type_section, hr, core.result.Result.Insts.CoreOpsTry.branch]
     rw [hloop]
     cases r with
@@ -120,5 +120,33 @@ theorem module.decode_type_section.spec (data : Slice U8) (pos : Usize) (env : m
     | Ok next =>
       obtain ⟨added, hlen, henv, hb, ht, hsize⟩ := hp
       exact ⟨added, henv, At.vector hc hb hlen, ht, hsize⟩
+
+
+@[step]
+theorem module.decode_type_section_loop.spec (data : Slice U8) (env : module.Env)
+    (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
+    (hsize : env.types.val.length ≤ start.val) :
+    module.decode_type_section_loop data env .Wasm1 count start 0#u32 ⦃ r => match r.1 with
+      | .Ok next => ∃ added, added.length = count.val ∧ TypesAdded env r.2 added ∧
+          At (Rep FuncTypeEncoding) data start added next ∧
+          (∀ ft ∈ added, ft.results.val.length ≤ 1) ∧ r.2.types.val.length ≤ next.val
+      | .Err _ => True ⦄ := by
+  obtain ⟨⟨r, result⟩, hr, hp⟩ := WP.spec_imp_exists
+    (module.decode_type_section_loop.profile_spec data env .Wasm1 count start hstart hsize)
+  rw [hr]
+  cases r <;> simpa [Profile.FuncType, Profile.FuncTypeWithinLimits] using hp
+
+@[step]
+theorem module.decode_type_section.spec (data : Slice U8) (pos : Usize) (env : module.Env)
+    (hsize : env.types.val.length ≤ pos.val) :
+    module.decode_type_section data pos env .Wasm1 ⦃ r => match r.1 with
+      | .Ok next => ∃ added, TypesAdded env r.2 added ∧
+          At (VecEncoding FuncTypeEncoding) data pos added next ∧
+          (∀ ft ∈ added, ft.results.val.length ≤ 1) ∧ r.2.types.val.length ≤ next.val
+      | .Err _ => True ⦄ := by
+  obtain ⟨⟨r, result⟩, hr, hp⟩ := WP.spec_imp_exists
+    (module.decode_type_section.profile_spec data pos env .Wasm1 hsize)
+  rw [hr]
+  cases r <;> simpa [Profile.FuncType, Profile.FuncTypeWithinLimits] using hp
 
 end Itasca

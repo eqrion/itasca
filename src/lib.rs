@@ -1,8 +1,9 @@
-//! Formally verified WebAssembly 1.0 module validator.
+//! WebAssembly validator with explicit Wasm 1.0 and multi-value profiles.
+//! Whole-module formal guarantees cover the Wasm 1.0 profile.
 //!
 //! ```
 //! # let wasm_bytes = b"\x00asm\x01\x00\x00\x00";
-//! let module = itasca::validate_module(wasm_bytes)?;
+//! let module = itasca::validate_module(wasm_bytes, itasca::ValidationProfile::Wasm1)?;
 //! # Ok::<(), itasca::error::Error>(())
 //! ```
 //!
@@ -10,7 +11,7 @@
 //! [`stream::validate_streaming`], the sole module driver. Streaming consumers
 //! provide coherent environment, code, and tail regions and schedule the issued
 //! batches. The driver accepts only after every issued batch has validated and
-//! the regions together encode a valid Wasm 1.0 module.
+//! the regions together encode a valid module under the selected profile.
 //!
 //! A compiler gets at function bodies through [`code::validate_body_with`]
 //! and an [`OpVisitor`]: validation calls one hook per operator, with its
@@ -24,11 +25,13 @@
 //! # Trust boundary
 //!
 //! [`validate_module`] takes arbitrary bytes with no caller preconditions.
-//! Its Lean contracts prove ordinary return, acceptance soundness, and acceptance
-//! of independently typed Wasm 1.0 binaries within the implementation limits,
+//! With [`ValidationProfile::Wasm1`], its Lean contracts prove ordinary return,
+//! acceptance soundness, and acceptance of independently typed Wasm 1.0 binaries
+//! within the implementation limits,
 //! including exact returned declarations, data, and external-type metadata.
 //!
-//! [`stream::validate_streaming`] has explicit source-coherence and batch-
+//! The Wasm 1.0 contracts for [`stream::validate_streaming`] have explicit
+//! source-coherence and batch-
 //! provenance obligations; its totality contract instead requires returning
 //! callbacks. Source availability and an accepting worker/scheduler policy give
 //! completeness. See [`stream`] for storage and worker-lifetime obligations.
@@ -54,9 +57,9 @@ extern crate alloc;
 pub mod code;
 pub mod error;
 pub mod module;
-pub mod types;
-pub mod signature;
 pub mod multi_value;
+pub mod signature;
+pub mod types;
 
 /// Numeric bounds the validator enforces. Private: a consumer has no use
 /// for the bounds themselves, only for the fact that validation enforces them.
@@ -82,13 +85,12 @@ pub enum ValidationProfile {
     MultiValue,
 }
 
-/// Select an explicit profile. The default `validate_module` remains Wasm 1.0.
-/// Only the Wasm 1.0 branch currently has whole-module verification.
-pub fn validate_module_with_profile(data: &[u8], profile: ValidationProfile)
-    -> core::result::Result<Module, Error>
-{
-    match profile {
-        ValidationProfile::Wasm1 => validate_module(data),
-        ValidationProfile::MultiValue => multi_value::validate_module(data),
-    }
+/// Alias for [`validate_module`] with an explicit validation profile.
+/// Both profiles use the shared streaming module driver.
+/// Whole-module formal guarantees currently cover the Wasm 1.0 profile.
+pub fn validate_module_with_profile(
+    data: &[u8],
+    profile: ValidationProfile,
+) -> core::result::Result<Module, Error> {
+    validate_module(data, profile)
 }

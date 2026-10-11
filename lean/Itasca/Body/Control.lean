@@ -4,6 +4,16 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Control
 
+/-- The shared visitor API retains the full encoded signature vocabulary. -/
+def signature : code.BlockType → Itasca.signature.BlockType
+  | .Empty => .Empty
+  | .Value t => .Value t
+
+/-- A Wasm 1.0 branch supplies an empty or singleton label result vector. -/
+def resultView : code.BlockType → Itasca.signature.ResultType
+  | .Empty => .Empty
+  | .Value t => .One t
+
 /-- Wasm 1.0 blocks have zero or one result and no input parameters. -/
 def results : code.BlockType → List types.ValueType
   | .Empty => []
@@ -29,7 +39,7 @@ def labels (cs : List code.Ctrl) : List resulttype :=
   cs.reverse.map (fun c => .mk_list ((targetTypes c).map Translate.valueType))
 
 def frame (st : code.OpIterState) (kind : code.LabelKind) (bt : code.BlockType) : code.Ctrl :=
-  ⟨kind, bt, alloc.vec.Vec.len st.vals, false⟩
+  ⟨kind, bt, signature bt, alloc.vec.Vec.len st.vals, false⟩
 
 def base (st : code.OpIterState) : Usize :=
   match st.ctrls.val.getLast? with
@@ -105,6 +115,14 @@ end Itasca.Control
 
 namespace Itasca
 
+@[simp, global_simps]
+theorem code.visitor_block_type.eq (bt : code.BlockType) :
+    code.visitor_block_type bt = .ok (Control.signature bt) := by cases bt <;> rfl
+
+@[simp, global_simps]
+theorem code.visitor_result_type.eq (bt : code.BlockType) :
+    code.visitor_result_type bt = .ok (Control.resultView bt) := by cases bt <;> rfl
+
 @[step]
 theorem code.block_results.spec (bt : code.BlockType) :
     code.block_results bt ⦃ (v : alloc.vec.Vec types.ValueType) => v.val = Control.results bt ⦄ := by
@@ -115,11 +133,16 @@ theorem code.block_results.spec (bt : code.BlockType) :
     step*
     simp_all [Control.results]
 
+theorem code.branch_target_bt.eq (c : code.Ctrl) :
+    code.branch_target_bt c = .ok (Control.targetBlockType c) := by
+  cases c with
+  | mk kind bt full base poly => cases kind <;> rfl
+
 @[step]
 theorem code.branch_target_bt.spec (c : code.Ctrl) :
     code.branch_target_bt c ⦃ (bt : code.BlockType) => bt = Control.targetBlockType c ⦄ := by
   cases c with
-  | mk kind bt base poly => cases kind <;> simp [code.branch_target_bt, Control.targetBlockType]
+  | mk kind bt full base poly => cases kind <;> simp [code.branch_target_bt, Control.targetBlockType]
 
 @[step]
 theorem code.branch_target_types.spec (c : code.Ctrl) :
@@ -137,6 +160,7 @@ theorem code.push_ctrl.spec (st : code.OpIterState) (kind : code.LabelKind) (bt 
   unfold code.push_ctrl
   step*
   simp_all [Control.frame]
+  step*
 
 @[step]
 theorem code.cur_base.spec (st : code.OpIterState) :

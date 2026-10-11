@@ -123,7 +123,8 @@ theorem code.validate_body_with.trace_of_contract {V : Type}
     (h : code.validate_body_with visitor data env ctx v = .ok (result, v')) :
     ∃ observations, observe v' = observe v ++ observations ∧
       VisitorTrace.BodyTrace data 0#usize observations result := by
-  unfold code.validate_body_with at h
+  simp only [code.validate_body_with.eq_model] at h
+  unfold code.validate_body_with_model at h
   dsimp only at h
   by_cases hsize : Slice.len data > limits.MAX_FUNCTION_BYTES
   · simp [hsize] at h

@@ -6,8 +6,8 @@ open Aeneas Aeneas.Std
 namespace Itasca
 
 /-- The extracted initial environment represents the empty declaration prefix. -/
-theorem module.Env.new.declarations : module.Env.new ⦃ env =>
-    ModuleEnv.Represents env {} ∧ ModuleEnv.Valid env ∧
+theorem module.Env.new.profile_declarations (profile : ValidationProfile) : module.Env.new ⦃ env =>
+    ModuleEnv.Represents env {} ∧ ModuleEnv.Valid env profile ∧
     ModuleEnv.SignatureBounded env 0 ∧ ModuleEnv.Bounded env 0 ∧ ModuleEnv.Phase 0 {} ⦄ := by
   unfold module.Env.new
   simp only [WP.spec_ok]
@@ -19,6 +19,11 @@ theorem module.Env.new.declarations : module.Env.new ⦃ env =>
   · simp [ModuleEnv.SignatureBounded]
   · constructor <;> simp
   · simp [ModuleEnv.Phase]
+
+theorem module.Env.new.declarations : module.Env.new ⦃ env =>
+    ModuleEnv.Represents env {} ∧ ModuleEnv.Valid env ∧
+    ModuleEnv.SignatureBounded env 0 ∧ ModuleEnv.Bounded env 0 ∧ ModuleEnv.Phase 0 {} ⦄ :=
+  module.Env.new.profile_declarations .Wasm1
 
 end Itasca
 
@@ -127,8 +132,8 @@ open ModuleBinary ModuleSections
 
 /-- Every section preserves the bound on nested parameter vectors; newly
 declared signatures obtain their bound from their own independent byte span. -/
-theorem Effect.signatureBounded {data pos env before id next result after}
-    (h : Effect data pos env before id next result after) (hs : SignatureBounded env pos.val) :
+theorem Effect.signatureBounded {profile} {data pos env before id next result after}
+    (h : Effect (profile := profile) data pos env before id next result after) (hs : SignatureBounded env pos.val) :
     SignatureBounded result next.val := by
   have hspan := h.span
   have hm := hs.mono hspan.1
@@ -164,8 +169,8 @@ theorem Effect.signatureBounded {data pos env before id next result after}
 
 /-- An ordered section update preserves the exact relationship between raw
 section declarations and the merged runtime index-space caches. -/
-theorem Effect.represents {data pos env before id next result after last}
-    (h : Effect data pos env before id next result after) (hr : Represents env before)
+theorem Effect.represents {profile} {data pos env before id next result after last}
+    (h : Effect (profile := profile) data pos env before id next result after) (hr : Represents env before)
     (hp : Phase last before) (horder : last < id.val) : Represents result after := by
   obtain ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9⟩ := hp
   cases h with
@@ -264,8 +269,8 @@ theorem Effect.represents {data pos env before id next result after last}
     · exact ⟨hr.cache.funcs, hr.cache.numFuncs, hr.cache.globals, hr.cache.numGlobals, hr.cache.tables, hr.cache.memories⟩
 
 
-theorem Run.represents {data initial decls start initialId after afterDecls next id}
-    (h : Run data initial decls start initialId after afterDecls next id)
+theorem Run.represents {profile} {data initial decls start initialId after afterDecls next id}
+    (h : Run (profile := profile) data initial decls start initialId after afterDecls next id)
     (hr : Represents initial decls) (hp : Phase initialId.val decls) :
     Represents after afterDecls := by
   induction h with
@@ -273,8 +278,8 @@ theorem Run.represents {data initial decls start initialId after afterDecls next
   | custom _ _ ih => exact ih
   | step previous horder hh he ih => exact he.represents ih (previous.phase hp) horder
 
-theorem Run.signatureBounded {data initial decls start initialId after afterDecls next id}
-    (h : Run data initial decls start initialId after afterDecls next id)
+theorem Run.signatureBounded {profile} {data initial decls start initialId after afterDecls next id}
+    (h : Run (profile := profile) data initial decls start initialId after afterDecls next id)
     (hs : SignatureBounded initial start.val) : SignatureBounded after next.val := by
   induction h with
   | nil => exact hs

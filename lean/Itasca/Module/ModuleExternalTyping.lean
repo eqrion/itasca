@@ -105,7 +105,7 @@ theorem importType_wf (types : List types.FuncType) (desc : module.ImportDesc) :
   | Memory mt => exact .externtype_case_3 _ (EnvTranslation.memType_wf mt)
 
 theorem import_type_valid {env : module.Env} {tables memories entry}
-    (hc : ModuleEnv.Cache env tables memories) (hv : ModuleEnv.Valid env)
+    (hc : ModuleEnv.Cache env tables memories) {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile)
     (he : entry ∈ env.imports.val) : Externtype_ok (importType env.types.val entry.desc) := by
   cases hd : entry.desc with
   | Func idx => exact .func _ (functionType_valid _ _) (.externtype_case_0 _)
@@ -126,7 +126,7 @@ theorem import_type_valid {env : module.Env} {tables memories entry}
       (.externtype_case_3 _ (EnvTranslation.memType_wf mt))
 
 theorem import_typed {env : module.Env} {tables memories entry}
-    (hc : ModuleEnv.Cache env tables memories) (hv : ModuleEnv.Valid env)
+    (hc : ModuleEnv.Cache env tables memories) {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile)
     (he : entry ∈ env.imports.val)
     (hmod : wf_name (ModuleBinary.nameOfBytes entry.module.val))
     (hn : wf_name (ModuleBinary.nameOfBytes entry.name.val))
@@ -136,7 +136,7 @@ theorem import_typed {env : module.Env} {tables memories entry}
   exact .mk_Import_ok C _ _ _ (import_type_valid hc hv he) hC
     (.import_case_0 _ _ _ hmod hn (importType_wf _ _))
 
-theorem start_typed {env : module.Env} (hv : ModuleEnv.Valid env) (idx : U32)
+theorem start_typed {env : module.Env} {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile) (idx : U32)
     (hs : env.start = some idx) (C : context) (hC : CodeEntry.ModuleContext env C) :
     Start_ok C (start idx) := by
   obtain ⟨hi, hp, hr⟩ := hv.start idx hs

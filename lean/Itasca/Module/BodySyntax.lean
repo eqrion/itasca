@@ -1,4 +1,5 @@
 import Itasca.Module.ModuleNameFacts
+import Itasca.Profile.CodeEntry
 
 open Aeneas Aeneas.Std
 
@@ -117,4 +118,59 @@ theorem body_segmentFree {ops bytes} (h : ModuleBinary.BodyEncoding ops bytes) :
   obtain ⟨bs, he⟩ := htokens.member hm
   exact token_segmentFree he
 
+def MultiValueTokenSegmentFree : MultiValue.Token → Prop
+  | .plain op => SegmentFree op
+  | _ => True
+
+theorem multiValue_token_segmentFree {token bytes} (h : MultiValue.TokenEncoding token bytes) :
+    MultiValueTokenSegmentFree token := by
+  obtain ⟨_, _, _, h⟩ := h
+  cases h with
+  | plain h => exact immediate_segmentFree h
+  | _ => trivial
+
+theorem multiValue_emits_segmentFree {tokens ops} (h : MultiValue.Emits tokens ops)
+    (ht : Forall MultiValueTokenSegmentFree tokens) : Forall SegmentFree ops := by
+  induction h with
+  | nil => simp [Forall]
+  | simple he hs ih =>
+    have hp := ih (fun t hm => ht t (List.mem_append_left _ hm))
+    cases hs with
+    | plain op hw =>
+      have hl := ht _ (List.mem_append_right _ (List.mem_singleton_self _))
+      simpa [Forall, or_imp, forall_and, MultiValueTokenSegmentFree] using And.intro hp hl
+  | block bt he hb ih ihb =>
+    have hp := ih (fun t hm => ht t (by simp [hm]))
+    have hc := ihb (fun t hm => ht t (by simp [hm]))
+    simpa [Forall, or_imp, forall_and] using And.intro hp (SegmentFree.block (MultiValue.blockType bt) _ hc)
+  | loop bt he hb ih ihb =>
+    have hp := ih (fun t hm => ht t (by simp [hm]))
+    have hc := ihb (fun t hm => ht t (by simp [hm]))
+    simpa [Forall, or_imp, forall_and] using And.intro hp (SegmentFree.loop (MultiValue.blockType bt) _ hc)
+  | ifElse bt he hy hn ih ihy ihn =>
+    have hp := ih (fun t hm => ht t (by simp [hm]))
+    have hy := ihy (fun t hm => ht t (by simp [hm]))
+    have hn := ihn (fun t hm => ht t (by simp [hm]))
+    simpa [Forall, or_imp, forall_and] using And.intro hp (SegmentFree.ifElse (MultiValue.blockType bt) _ _ hy hn)
+  | ifEnd bt he hb ih ihb =>
+    have hp := ih (fun t hm => ht t (by simp [hm]))
+    have hc := ihb (fun t hm => ht t (by simp [hm]))
+    simpa [Forall, or_imp, forall_and] using And.intro hp
+      (SegmentFree.ifElse (MultiValue.blockType bt) _ [] hc (by simp [Forall]))
+
 end Itasca.BodyContext
+
+namespace Itasca.Profile
+
+theorem BodyBytes.segmentFree {profile ops bytes} (h : BodyBytes profile ops bytes) :
+    Forall BodyContext.SegmentFree ops := by
+  cases profile with
+  | Wasm1 => exact BodyContext.body_segmentFree h
+  | MultiValue =>
+    obtain ⟨tokens, htokens, inner, rfl, hemits⟩ := h
+    apply BodyContext.multiValue_emits_segmentFree hemits
+    intro token ht
+    obtain ⟨bs, he⟩ := htokens.member (List.mem_append_left _ ht)
+    exact BodyContext.multiValue_token_segmentFree he
+
+end Itasca.Profile

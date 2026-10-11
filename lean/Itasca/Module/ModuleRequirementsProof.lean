@@ -36,12 +36,14 @@ theorem external_index_valid {env : module.Env} {C : context} {desc : module.Exp
 
 /-- Generated typing and the independent Wasm 1.0 profile discharge every
 semantic prerequisite of the environment parser at every declaration prefix. -/
-theorem requirements_of_typing {raw : ModuleBinary.Module}
-    (he : Elaborates raw (moduleOf raw)) (hs : SectionsTyped raw) (hp : Profile raw) :
-    ModuleEnv.Requirements raw := by
+theorem profile_requirements_of_typing {profile : ValidationProfile} {raw : ModuleBinary.Module}
+    (he : Elaborates raw (moduleOf raw)) (hs : SectionsTyped raw) (hp : ModuleConditions raw profile)
+    (hl : ∀ ft ∈ raw.types, Itasca.Profile.FuncTypeWithinLimits profile ft) :
+    ModuleEnv.Requirements raw profile := by
   intro id decls env hlo hhi hr
   interval_cases id
-  · exact hp.arity
+  · intro ft hm
+    exact (Itasca.Profile.funcTypeAdmissible_iff profile ft).mpr ⟨hp.arity ft hm, hl ft hm⟩
   · constructor
     · intro entry hm
       have ht := hs.imports entry hm
@@ -93,5 +95,10 @@ theorem requirements_of_typing {raw : ModuleBinary.Module}
       have ht : Expr_ok_const (initializerContextOf raw) [instr.REF_FUNC (.mk_uN idx.val)] .FUNCREF :=
         hexprs _ (List.mem_map.mpr ⟨idx, hi, rfl⟩)
       simpa [initializerContextOf, hr.funcs_context (by decide)] using ref_func_index ht
+
+theorem requirements_of_typing {raw : ModuleBinary.Module}
+    (he : Elaborates raw (moduleOf raw)) (hs : SectionsTyped raw) (hp : Profile raw) :
+    ModuleEnv.Requirements raw := by
+  exact profile_requirements_of_typing he hs hp.toModuleConditions (by simp [Itasca.Profile.FuncTypeWithinLimits])
 
 end Itasca.ModuleElaboration

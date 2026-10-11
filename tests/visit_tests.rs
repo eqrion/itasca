@@ -4,6 +4,7 @@
 use itasca::module::*;
 use itasca::error::{OpError, VisitError};
 use itasca::code::*;
+use itasca::signature::{BlockType, ResultType};
 use itasca::types::*;
 
 fn env_with_memory() -> Env {
@@ -65,10 +66,10 @@ impl OpVisitor for Recorder {
     fn on_end(&mut self, _st: &OpIterState, kind: LabelKind, bt: BlockType) -> VisitResult {
         self.record(&format!("end {kind:?} {bt:?}"))
     }
-    fn on_br(&mut self, _st: &OpIterState, depth: u32, bt: BlockType) -> VisitResult {
+    fn on_br(&mut self, _st: &OpIterState, depth: u32, bt: ResultType) -> VisitResult {
         self.record(&format!("br {depth} {bt:?}"))
     }
-    fn on_br_if(&mut self, _st: &OpIterState, depth: u32, bt: BlockType) -> VisitResult {
+    fn on_br_if(&mut self, _st: &OpIterState, depth: u32, bt: ResultType) -> VisitResult {
         self.record(&format!("br_if {depth} {bt:?}"))
     }
     fn on_br_table_label(&mut self, _st: &OpIterState, depth: u32) -> VisitResult {
@@ -78,7 +79,7 @@ impl OpVisitor for Recorder {
         &mut self,
         _st: &OpIterState,
         default: u32,
-        common: BlockType,
+        common: ResultType,
     ) -> VisitResult {
         self.record(&format!("br_table default={default} {common:?}"))
     }
@@ -568,10 +569,10 @@ impl OpVisitor for FrameRecorder {
 fn a_code_entry_hands_over_its_frame() {
     // (module (func (param i32) (local i64 i64) (result i32) local.get 0))
     let wasm = wat_module();
-    let (env, pos) = itasca::module::validate_env(&wasm).expect("env");
+    let (env, pos) = itasca::module::validate_env(&wasm, itasca::ValidationProfile::Wasm1).expect("env");
     // `pos` is the code section's id byte; one entry, so id + size + count = 3
     let mut r = FrameRecorder::default();
-    let end_pos = itasca::module::validate_code_entry_with(&wasm, pos + 3, &env, 0, &mut r);
+    let end_pos = itasca::module::validate_code_entry_with(&wasm, pos + 3, &env, 0, itasca::ValidationProfile::Wasm1, &mut r);
     assert!(end_pos.is_ok(), "entry rejected: {:?}", end_pos);
     // params come first, then the declared locals, in order
     assert_eq!(
@@ -645,4 +646,154 @@ fn a_br_table_hands_over_every_label() {
             "end Body Empty"
         ]
     );
+}
+
+
+fn multi_value_env() -> Env {
+    let mut env = Env::new();
+    env.types.push(FuncType { params: vec![], results: vec![] });
+    env.types.push(FuncType {
+        params: vec![ValueType::I32, ValueType::I64],
+        results: vec![ValueType::I32, ValueType::I64],
+    });
+    env.types.push(FuncType { params: vec![ValueType::I32], results: vec![ValueType::I64] });
+    env.types.push(FuncType { params: vec![], results: vec![ValueType::I32] });
+    env.types.push(FuncType { params: vec![], results: vec![ValueType::I64] });
+    env
+}
+
+fn record_multi(body: &[u8]) -> Vec<String> {
+    let mut recorder = Recorder::default();
+    assert_eq!(itasca::multi_value::validate_body_with(
+        body, &multi_value_env(), &ctx(&[], &[]), 0, &mut recorder,
+    ), Ok(()));
+    recorder.ops
+}
+
+#[test]
+fn multi_value_hooks_preserve_indexed_signatures_and_loop_inputs() {
+    let block = record_multi(&[
+        OP_I32_CONST, 1, OP_I64_CONST, 2, OP_BLOCK, 1,
+        OP_BR, 0, OP_END, OP_DROP, OP_DROP, OP_END,
+    ]);
+    assert_eq!(&block[2..], [
+        "block TypeIndex(1)",
+        "br 0 Type { index: 1, part: Results }",
+        "end Block TypeIndex(1)", "drop Val(I64)", "drop Val(I32)",
+        "end Body TypeIndex(0)",
+    ]);
+    let loop_ops = record_multi(&[
+        OP_I32_CONST, 0, OP_LOOP, 2, OP_I32_CONST, 0, OP_BR_IF, 0,
+        OP_DROP, OP_I64_CONST, 0, OP_END, OP_DROP, OP_END,
+    ]);
+    assert!(loop_ops.contains(&"loop TypeIndex(2)".to_string()));
+    assert!(loop_ops.contains(&"br_if 0 Type { index: 2, part: Params }".to_string()));
+    assert!(loop_ops.contains(&"end Loop TypeIndex(2)".to_string()));
+    let if_ops = record_multi(&[
+        OP_I32_CONST, 1, OP_I64_CONST, 2, OP_I32_CONST, 0,
+        OP_IF, 1, OP_ELSE, OP_END, OP_DROP, OP_DROP, OP_END,
+    ]);
+    assert!(if_ops.contains(&"if TypeIndex(1)".to_string()));
+    assert!(if_ops.contains(&"else TypeIndex(1)".to_string()));
+    assert!(if_ops.contains(&"end Else TypeIndex(1)".to_string()));
+}
+
+#[test]
+fn multi_value_tables_stream_labels_with_distinct_bottom_compatible_targets() {
+    let ops = record_multi(&[
+        OP_BLOCK, 3, OP_BLOCK, 4, OP_UNREACHABLE,
+        OP_BR_TABLE, 1, 0, 1, OP_END, OP_DROP,
+        OP_UNREACHABLE, OP_END, OP_DROP, OP_END,
+    ]);
+    assert_eq!(&ops[..5], [
+        "block TypeIndex(3)", "block TypeIndex(4)", "unreachable",
+        "br_table label 0", "br_table default=1 Type { index: 3, part: Results }",
+    ]);
+}
+
+#[test]
+fn multi_value_table_rejection_stops_inside_label_decoding() {
+    let body = [OP_BLOCK, 3, OP_BLOCK, 4, OP_UNREACHABLE, OP_BR_TABLE, 1, 0, 99];
+    let mut recorder = Recorder::default();
+    assert_eq!(itasca::multi_value::validate_body_with(
+        &body, &multi_value_env(), &ctx(&[], &[]), 0, &mut recorder,
+    ), Err(OpError::UnknownLabel));
+    assert_eq!(recorder.ops.last().unwrap(), "br_table label 0");
+    let mut refusing = Recorder { ops: vec![], give_up_after: Some(3) };
+    assert_eq!(itasca::multi_value::validate_body_with(
+        &body, &multi_value_env(), &ctx(&[], &[]), 0, &mut refusing,
+    ), Err(OpError::Visitor(VisitError::OutOfMemory)));
+    assert_eq!(refusing.ops.last().unwrap(), "unreachable");
+}
+
+#[test]
+fn wasm1_loop_branch_callback_reports_empty_parameters() {
+    assert_eq!(record(&[OP_LOOP, 0x7f, OP_BR, 0, OP_END, OP_DROP, OP_END], &[], &[]), [
+        "loop Value(I32)", "br 0 Empty", "end Loop Value(I32)",
+        "drop Val(I32)", "end Body Empty",
+    ]);
+}
+
+#[test]
+fn shared_body_loop_preserves_profile_specific_branch_table_observations() {
+    #[derive(Default)]
+    struct StackObserver(Vec<usize>);
+    impl OpVisitor for StackObserver {
+        fn on_br_table_label(&mut self, st: &OpIterState, _depth: u32) -> VisitResult {
+            self.0.push(st.vals.len());
+            Ok(())
+        }
+    }
+
+    let body = [
+        OP_BLOCK, 0x40, OP_I32_CONST, 0, OP_BR_TABLE, 1, 0, 0, OP_END, OP_END,
+    ];
+    let env = multi_value_env();
+    let context = ctx(&[], &[]);
+    let mut wasm1 = StackObserver::default();
+    let mut multi = StackObserver::default();
+    assert_eq!(validate_body_with(&body, &env, &context, &mut wasm1), Ok(()));
+    assert_eq!(itasca::multi_value::validate_body_with(
+        &body, &env, &context, 0, &mut multi,
+    ), Ok(()));
+    // Wasm 1.0 reports labels before consuming the selector; multi-value
+    // consumes it first so it can check the common operand suffix.
+    assert_eq!(wasm1.0, [1]);
+    assert_eq!(multi.0, [0]);
+}
+
+#[test]
+fn shared_body_loop_preserves_function_end_state_and_exposes_signatures() {
+    #[derive(Default)]
+    struct StateObserver {
+        signature: Option<BlockType>,
+        end_stack: Option<Vec<StackType>>,
+    }
+    impl OpVisitor for StateObserver {
+        fn on_i32_const(&mut self, st: &OpIterState, _value: i32) -> VisitResult {
+            self.signature = Some(st.ctrls.last().unwrap().signature);
+            Ok(())
+        }
+        fn on_end(&mut self, st: &OpIterState, kind: LabelKind, _bt: BlockType) -> VisitResult {
+            assert_eq!(kind, LabelKind::Body);
+            assert!(st.ctrls.is_empty());
+            self.end_stack = Some(st.vals.clone());
+            Ok(())
+        }
+    }
+
+    let body = [OP_I32_CONST, 7, OP_END];
+    let mut env = Env::new();
+    env.types.push(FuncType { params: vec![], results: vec![ValueType::I32] });
+    let context = ctx(&[], &[ValueType::I32]);
+    let mut wasm1 = StateObserver::default();
+    let mut multi = StateObserver::default();
+    assert_eq!(validate_body_with(&body, &env, &context, &mut wasm1), Ok(()));
+    assert_eq!(itasca::multi_value::validate_body_with(
+        &body, &env, &context, 0, &mut multi,
+    ), Ok(()));
+    assert_eq!(wasm1.signature, Some(BlockType::Value(ValueType::I32)));
+    assert_eq!(multi.signature, Some(BlockType::TypeIndex(0)));
+    assert_eq!(wasm1.end_stack, Some(vec![StackType::Val(ValueType::I32)]));
+    assert_eq!(multi.end_stack, Some(vec![]));
 }

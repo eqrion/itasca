@@ -3,6 +3,11 @@ import Itasca.MultiValue.BlockDecode
 import Itasca.MultiValue.Typing
 import Itasca.MultiValue.Stack
 import Itasca.MultiValue.Signature
+import Itasca.MultiValue.BodyTotal
+import Itasca.MultiValue.Invariant
+import Itasca.MultiValue.Complete
+import Itasca.MultiValue.Visitor
+import Itasca.MultiValue.SuffixTyping
 import Itasca.Binary.SignedLeb33
 import Itasca.Body.EndTyping
 import Itasca.Examples.BrTableExamples
@@ -14,6 +19,9 @@ import Itasca.Examples.ModuleImportedGlobalExamples
 import Itasca.Examples.ModuleNegativeExamples
 import Itasca.Examples.ModuleSectionExamples
 import Itasca.Examples.ModuleTraceExamples
+import Itasca.Examples.MultiValueGrammar
+import Itasca.Examples.MultiValueBody
+import Itasca.Examples.MultiValueModule
 import Itasca.Examples.StreamExamples
 import Itasca.Examples.VisitorTraceExamples
 import Itasca.Examples.WasmCompletenessBoundary

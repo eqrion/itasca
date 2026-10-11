@@ -23,12 +23,12 @@ theorem Early.of_phase {env decls last} (hr : Represents env decls)
   · have h := hr.elements.symm.trans (hm (by omega))
     exact List.map_eq_nil_iff.mp h
 
-theorem Early.valid {env} (h : Early env)
-    (ht : ∀ ft ∈ env.types.val, ft.results.val.length ≤ 1)
+theorem Early.valid {profile} {env} (h : Early env)
+    (ht : ∀ ft ∈ env.types.val, Profile.FuncTypeAdmissible profile ft)
     (htt : ∀ tt ∈ env.table_types.val, ModuleTranslation.LimitsValid tt.limits (2 ^ 32 - 1))
     (hmt : ∀ mt ∈ env.mem_types.val, ModuleTranslation.LimitsValid mt.limits (2 ^ 16))
     (htc : env.table_types.val.length ≤ 1) (hmc : env.mem_types.val.length ≤ 1)
-    (hi : ∀ entry ∈ env.imports.val, Utf8 entry.module.val ∧ Utf8 entry.name.val) : Valid env := by
+    (hi : ∀ entry ∈ env.imports.val, Utf8 entry.module.val ∧ Utf8 entry.name.val) : Valid env profile := by
   refine ⟨ht, htt, hmt, htc, hmc, ?_, hi, ?_, ?_, ?_, ?_, ?_⟩
   all_goals simp [h.globals, h.exports, h.start, h.elements]
 
@@ -46,9 +46,9 @@ theorem ImportAdded.early {env result entry} (h : ImportAdded env result entry)
     rw [h]; exact ⟨he.globals, he.exports, he.start, he.elements⟩
   all_goals rw [h.1]; exact ⟨he.globals, he.exports, he.start, he.elements⟩
 
-theorem ImportAdded.valid {env result entry} (h : ImportAdded env result entry)
-    (hv : Valid env) (he : Early env)
-    (hn : Utf8 entry.module.val ∧ Utf8 entry.name.val) : Valid result := by
+theorem ImportAdded.valid {profile} {env result entry} (h : ImportAdded env result entry)
+    (hv : Valid env profile) (he : Early env)
+    (hn : Utf8 entry.module.val ∧ Utf8 entry.name.val) : Valid result profile := by
   have her := h.early he
   obtain ⟨hi, ha⟩ := h
   have hnames : ∀ e ∈ result.imports.val, Utf8 e.module.val ∧ Utf8 e.name.val := by
@@ -97,9 +97,9 @@ theorem ImportsAdded.early {env entries result} (h : ImportsAdded env entries re
   | nil => exact he
   | snoc hp ha ih => exact ha.early ih
 
-theorem ImportsAdded.valid {env entries result} (h : ImportsAdded env entries result)
-    (hv : Valid env) (he : Early env)
-    (hn : ∀ e ∈ entries, Utf8 e.module.val ∧ Utf8 e.name.val) : Valid result := by
+theorem ImportsAdded.valid {profile} {env entries result} (h : ImportsAdded env entries result)
+    (hv : Valid env profile) (he : Early env)
+    (hn : ∀ e ∈ entries, Utf8 e.module.val ∧ Utf8 e.name.val) : Valid result profile := by
   induction h with
   | nil => exact hv
   | snoc hp ha ih =>
@@ -152,8 +152,8 @@ namespace Itasca.ModuleSections
 
 open ModuleEnv ModuleBinary
 
-theorem ExportAdded.valid {env result entry} (h : ExportAdded env result entry)
-    (hv : Valid env) (hn : Utf8 entry.name.val) : Valid result := by
+theorem ExportAdded.valid {profile} {env result entry} (h : ExportAdded env result entry)
+    (hv : Valid env profile) (hn : Utf8 entry.name.val) : Valid result profile := by
   obtain ⟨he, hexports, hnew, hresolve⟩ := h
   have hc : SameCore env result := by constructor <;> rw [he]
   refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
@@ -188,8 +188,8 @@ theorem ExportAdded.valid {env result entry} (h : ExportAdded env result entry)
     have hm' : e ∈ env.elements.val := by simpa only [congrArg module.Env.elements he] using hm
     exact hc.element (hv.elements _ hm')
 
-theorem ExportsAdded.valid {env entries result} (h : ExportsAdded env entries result)
-    (hv : Valid env) (hn : ∀ e ∈ entries, Utf8 e.name.val) : Valid result := by
+theorem ExportsAdded.valid {profile} {env entries result} (h : ExportsAdded env entries result)
+    (hv : Valid env profile) (hn : ∀ e ∈ entries, Utf8 e.name.val) : Valid result profile := by
   induction h with
   | nil => exact hv
   | snoc hp ha ih =>
@@ -203,10 +203,10 @@ open ModuleBinary ModuleSections
 
 /-- The semantic checks carried by the ordered section history establish all
 stored environment obligations, including names, uniqueness, and initializers. -/
-theorem Effect.valid {data pos env before id next result after last}
-    (h : Effect data pos env before id next result after)
-    (hr : Represents env before) (hv : Valid env)
-    (hp : Phase last before) (ho : last < id.val) : Valid result := by
+theorem Effect.valid {profile} {data pos env before id next result after last}
+    (h : Effect (profile := profile) data pos env before id next result after)
+    (hr : Represents env before) (hv : Valid env profile)
+    (hp : Phase last before) (ho : last < id.val) : Valid result profile := by
   cases h with
   | types ha hb ht =>
     have hearly := Early.of_phase hr hp (by change last < 1 at ho; omega)

@@ -21,14 +21,16 @@
 //! immediates of their own and are written out. Every hook has a default
 //! that does nothing, so a consumer only writes the ones it wants.
 
-use alloc::vec::Vec;
-use crate::module::Env;
 use crate::error::{OpError, VisitError};
-use crate::limits::{MAX_FUNCTION_BYTES, MAX_RESULTS};
+#[cfg(test)]
+use crate::limits::MAX_FUNCTION_BYTES;
+use crate::limits::MAX_RESULTS;
+use crate::module::Env;
 use crate::reader::{
     read_byte, read_f32_bits, read_f64_bits, read_s32_leb, read_s64_leb, read_u32_leb,
 };
 use crate::types::{GlobalType, Mut, ValueType};
+use alloc::vec::Vec;
 
 /// Mirrors `block_type` (Wasm 1.0: single optional result).
 ///
@@ -79,7 +81,7 @@ pub struct Context {
 type Result<T> = core::result::Result<T, OpError>;
 
 /// A hook's verdict, translated into a validator verdict.
-fn visit(r: core::result::Result<(), VisitError>) -> Result<()> {
+pub(crate) fn visit(r: core::result::Result<(), VisitError>) -> Result<()> {
     match r {
         Ok(()) => Ok(()),
         Err(e) => Err(OpError::Visitor(e)),
@@ -117,6 +119,8 @@ pub enum LabelKind {
 pub struct Ctrl {
     pub kind: LabelKind,
     pub block_type: BlockType,
+    /// Full signature used by the shared body engine.
+    pub signature: crate::signature::BlockType,
     /// Operand stack height below this frame.
     pub value_stack_base: usize,
     /// Set once the frame's remaining code is unreachable.
@@ -414,6 +418,21 @@ pub(crate) fn push_types(st: &mut OpIterState, types: &[ValueType]) {
     }
 }
 
+/// Lift the Wasm 1.0 immediate into the shared visitor descriptor.
+fn visitor_block_type(bt: BlockType) -> crate::signature::BlockType {
+    match bt {
+        BlockType::Empty => crate::signature::BlockType::Empty,
+        BlockType::Value(t) => crate::signature::BlockType::Value(t),
+    }
+}
+
+fn visitor_result_type(bt: BlockType) -> crate::signature::ResultType {
+    match bt {
+        BlockType::Empty => crate::signature::ResultType::Empty,
+        BlockType::Value(t) => crate::signature::ResultType::One(t),
+    }
+}
+
 /// Result types of a block type. Wasm 1.0 allows at most one.
 fn block_results(bt: &BlockType) -> Vec<ValueType> {
     match bt {
@@ -449,6 +468,7 @@ pub(crate) fn push_ctrl(st: &mut OpIterState, kind: LabelKind, bt: BlockType) {
     st.ctrls.push(Ctrl {
         kind,
         block_type: bt,
+        signature: visitor_block_type(bt),
         value_stack_base: base,
         polymorphic_base: false,
     });
@@ -472,7 +492,7 @@ pub(crate) fn mark_unreachable(st: &mut OpIterState) {
 
 // --- Driving one body ---
 
-fn start_function(results: &[ValueType]) -> OpIterState {
+pub(crate) fn start_function(results: &[ValueType]) -> OpIterState {
     let mut st = OpIterState {
         vals: Vec::new(),
         ctrls: Vec::new(),
@@ -486,11 +506,13 @@ fn start_function(results: &[ValueType]) -> OpIterState {
     st
 }
 
+#[allow(dead_code)]
 fn control_stack_empty(st: &OpIterState) -> bool {
     st.ctrls.is_empty()
 }
 
 /// Read the next opcode and advance past it.
+#[allow(dead_code)]
 fn read_op(st: &mut OpIterState, data: &[u8]) -> Result<u8> {
     let (b, p) = read_byte(data, st.pos)?;
     st.pos = p;
@@ -814,7 +836,7 @@ fn read_br(st: &mut OpIterState, data: &[u8]) -> Result<(u32, BlockType)> {
     let types = branch_target_types(&target);
     pop_types(st, &types)?;
     mark_unreachable(st);
-    Ok((depth, target.block_type))
+    Ok((depth, branch_target_bt(&target)))
 }
 
 /// Return: the function's results must be on the stack, and the rest of the
@@ -835,7 +857,7 @@ fn read_br_if(st: &mut OpIterState, data: &[u8]) -> Result<(u32, BlockType)> {
     pop_with_type(st, ValueType::I32)?;
     pop_types(st, &types)?;
     push_types(st, &types);
-    Ok((depth, target.block_type))
+    Ok((depth, branch_target_bt(&target)))
 }
 
 /// Fold one more branch target into "every target read so far agrees on this
@@ -889,7 +911,7 @@ fn read_table_labels<V: OpVisitor>(
 /// **The depths are not returned.** Returning them means a `Vec` whose only
 /// bound is the byte count, which would put `Vec::push` back on the live
 /// panic list; the common target type is `Copy` and is all validation needs.
-/// A compiler consumer has to re-read them.
+/// The visitor receives each non-default depth during decoding.
 fn read_br_table<V: OpVisitor>(
     st: &mut OpIterState,
     data: &[u8],
@@ -953,11 +975,7 @@ fn read_call(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
 /// table is table 0, so the table index is the reserved zero byte. The table
 /// still has to exist, and its element type is `funcref`, which is the only
 /// one Wasm 1.0 has.
-fn read_call_indirect(
-    st: &mut OpIterState,
-    data: &[u8],
-    env: &Env,
-) -> Result<u32> {
+fn read_call_indirect(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
     let idx = take_index(st, data)?;
     read_reserved_zero(st, data)?;
     if env.table_types.is_empty() {
@@ -1170,42 +1188,42 @@ pub(crate) fn step<V: OpVisitor>(
         }
         OP_BLOCK => {
             let bt = read_block(st, data)?;
-            visit(v.on_block(st, bt))?;
+            visit(v.on_block(st, visitor_block_type(bt)))?;
             Ok(())
         }
         OP_LOOP => {
             let bt = read_loop(st, data)?;
-            visit(v.on_loop(st, bt))?;
+            visit(v.on_loop(st, visitor_block_type(bt)))?;
             Ok(())
         }
         OP_IF => {
             let bt = read_if(st, data)?;
-            visit(v.on_if(st, bt))?;
+            visit(v.on_if(st, visitor_block_type(bt)))?;
             Ok(())
         }
         OP_ELSE => {
             let bt = read_else(st)?;
-            visit(v.on_else(st, bt))?;
+            visit(v.on_else(st, visitor_block_type(bt)))?;
             Ok(())
         }
         OP_END => {
             let (kind, bt) = read_end(st)?;
-            visit(v.on_end(st, kind, bt))?;
+            visit(v.on_end(st, kind, visitor_block_type(bt)))?;
             Ok(())
         }
         OP_BR => {
             let (depth, bt) = read_br(st, data)?;
-            visit(v.on_br(st, depth, bt))?;
+            visit(v.on_br(st, depth, visitor_result_type(bt)))?;
             Ok(())
         }
         OP_BR_IF => {
             let (depth, bt) = read_br_if(st, data)?;
-            visit(v.on_br_if(st, depth, bt))?;
+            visit(v.on_br_if(st, depth, visitor_result_type(bt)))?;
             Ok(())
         }
         OP_BR_TABLE => {
             let (default, common) = read_br_table(st, data, v)?;
-            visit(v.on_br_table(st, default, common))?;
+            visit(v.on_br_table(st, default, visitor_result_type(common)))?;
             Ok(())
         }
         OP_RETURN => {
@@ -1367,11 +1385,7 @@ fn step_memory<V: OpVisitor>(
 /// The numeric operators, dispatched through the opcode table rather than
 /// through a branch each. `visit_numeric` is the one place that turns an opcode
 /// into a hook, so it is where a wrong row would show up.
-fn step_numeric<V: OpVisitor>(
-    st: &mut OpIterState,
-    opcode: u8,
-    v: &mut V,
-) -> Result<()> {
+fn step_numeric<V: OpVisitor>(st: &mut OpIterState, opcode: u8, v: &mut V) -> Result<()> {
     match convert_types(opcode) {
         Some((from, to)) => {
             read_conversion(st, from, to)?;
@@ -1420,21 +1434,14 @@ pub fn validate_body_with<V: OpVisitor>(
     ctx: &Context,
     v: &mut V,
 ) -> Result<()> {
-    if data.len() > MAX_FUNCTION_BYTES {
-        return Err(OpError::BodyTooLarge);
-    }
-    let mut st = start_function(&ctx.results);
-    loop {
-        if control_stack_empty(&st) {
-            // The body's `end` closed the outermost frame. Nothing may follow.
-            if st.pos == data.len() {
-                return Ok(());
-            }
-            return Err(OpError::TrailingBytes);
-        }
-        let opcode = read_op(&mut st, data)?;
-        step(&mut st, data, env, ctx, opcode, v)?;
-    }
+    crate::multi_value::validate_body_with_profile(
+        data,
+        env,
+        ctx,
+        0,
+        crate::ValidationProfile::Wasm1,
+        v,
+    )
 }
 
 /// Validate one function body and nothing else. [`validate_body_with`] with
@@ -1686,20 +1693,20 @@ pub trait OpVisitor {
         Ok(())
     }
 
-    fn on_block(&mut self, _st: &OpIterState, _bt: BlockType) -> VisitResult {
+    fn on_block(&mut self, _st: &OpIterState, _bt: crate::signature::BlockType) -> VisitResult {
         Ok(())
     }
 
-    fn on_loop(&mut self, _st: &OpIterState, _bt: BlockType) -> VisitResult {
+    fn on_loop(&mut self, _st: &OpIterState, _bt: crate::signature::BlockType) -> VisitResult {
         Ok(())
     }
 
-    fn on_if(&mut self, _st: &OpIterState, _bt: BlockType) -> VisitResult {
+    fn on_if(&mut self, _st: &OpIterState, _bt: crate::signature::BlockType) -> VisitResult {
         Ok(())
     }
 
     /// `_bt` is the block type of the `if` this switches sides on.
-    fn on_else(&mut self, _st: &OpIterState, _bt: BlockType) -> VisitResult {
+    fn on_else(&mut self, _st: &OpIterState, _bt: crate::signature::BlockType) -> VisitResult {
         Ok(())
     }
 
@@ -1710,17 +1717,28 @@ pub trait OpVisitor {
         &mut self,
         _st: &OpIterState,
         _kind: LabelKind,
-        _bt: BlockType,
+        _bt: crate::signature::BlockType,
     ) -> VisitResult {
         Ok(())
     }
 
-    /// `_bt` is the target frame's block type: what the branch must supply.
-    fn on_br(&mut self, _st: &OpIterState, _depth: u32, _bt: BlockType) -> VisitResult {
+    /// `_types` is the target label's operand signature: loop parameters, or
+    /// the results of another target frame.
+    fn on_br(
+        &mut self,
+        _st: &OpIterState,
+        _depth: u32,
+        _types: crate::signature::ResultType,
+    ) -> VisitResult {
         Ok(())
     }
 
-    fn on_br_if(&mut self, _st: &OpIterState, _depth: u32, _bt: BlockType) -> VisitResult {
+    fn on_br_if(
+        &mut self,
+        _st: &OpIterState,
+        _depth: u32,
+        _types: crate::signature::ResultType,
+    ) -> VisitResult {
         Ok(())
     }
 
@@ -1732,13 +1750,14 @@ pub trait OpVisitor {
         Ok(())
     }
 
-    /// The end of a `br_table`: its default label, and the target type every
-    /// label in it agrees on.
+    /// The end of a `br_table`: its default label and that label's operand
+    /// signature. Every target has the same arity; under the multi-value
+    /// profile, unreachable operands can match distinct concrete signatures.
     fn on_br_table(
         &mut self,
         _st: &OpIterState,
         _default: u32,
-        _common: BlockType,
+        _default_types: crate::signature::ResultType,
     ) -> VisitResult {
         Ok(())
     }

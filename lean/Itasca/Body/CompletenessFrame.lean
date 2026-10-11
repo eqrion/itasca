@@ -56,11 +56,12 @@ theorem Frame.Output.next {st} {f : Frame st} {out : List valtype} {s : code.OpI
     (h : f.Output out s) :
     ∃ g : Frame s, g.parents = f.parents ∧ g.outer = f.outer ∧
       g.current.kind = f.current.kind ∧ g.current.block_type = f.current.block_type ∧
+      g.current.signature = f.current.signature ∧
       g.current.value_stack_base = f.current.value_stack_base ∧
       Sequence.Realizes g.current.polymorphic_base g.operands out := by
   obtain ⟨poly, operands, hc, hv, ht⟩ := h
   exact ⟨⟨f.parents, {f.current with polymorphic_base := poly}, f.outer, operands,
-    hc, hv, f.base⟩, rfl, rfl, rfl, rfl, rfl, ht⟩
+    hc, hv, f.base⟩, rfl, rfl, rfl, rfl, rfl, rfl, ht⟩
 
 theorem Frame.Output.labels {st} {f : Frame st} {out : List valtype} {s : code.OpIterState}
     (h : f.Output out s) : Control.labels s.ctrls.val = Control.labels st.ctrls.val := by

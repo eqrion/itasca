@@ -48,7 +48,7 @@ open ModuleBinary
 
 /-- The prefix grammar supplies the Unicode-name size bounds as well as scalar
 validity, without adding assumptions about nested runtime vector lengths. -/
-theorem PrefixEncoding.import_names_wf {decls bytes} (h : PrefixEncoding decls bytes) :
+theorem PrefixEncoding.import_names_wf {decls bytes profile} (h : PrefixEncoding decls bytes profile) :
     ∀ entry ∈ decls.imports,
       wf_name (nameOfBytes entry.moduleName) ∧ wf_name (nameOfBytes entry.name) := by
   obtain ⟨_, _, _, _, _, _, _, _, _, _, _, hi, _⟩ := h
@@ -56,7 +56,7 @@ theorem PrefixEncoding.import_names_wf {decls bytes} (h : PrefixEncoding decls b
   obtain ⟨bs, he⟩ := hi.member hm
   exact he.names_wf
 
-theorem PrefixEncoding.export_names_wf {decls bytes} (h : PrefixEncoding decls bytes) :
+theorem PrefixEncoding.export_names_wf {decls bytes profile} (h : PrefixEncoding decls bytes profile) :
     ∀ entry ∈ decls.exports, wf_name (nameOfBytes entry.name) := by
   obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, he, _⟩ := h
   intro entry hm

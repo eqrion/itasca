@@ -60,7 +60,7 @@ fn spec_suite_agrees_with_wasmparser() {
         for path in files {
             let name = path.file_name().unwrap().to_string_lossy().to_string();
             let bytes = std::fs::read(path).unwrap();
-            let itasca_valid = itasca::validate_module(&bytes).is_ok();
+            let itasca_valid = itasca::validate_module(&bytes, itasca::ValidationProfile::Wasm1).is_ok();
 
             if KNOWN_WASMPARSER_DIVERGENCES.contains(&name.as_str()) {
                 if itasca_valid != expected_valid {
@@ -265,7 +265,7 @@ fn extern_types_agree_with_wasmparser() {
     for path in &files {
         let name = path.file_name().unwrap().to_string_lossy().to_string();
         let bytes = std::fs::read(path).unwrap();
-        let Ok(module) = itasca::validate_module(&bytes) else {
+        let Ok(module) = itasca::validate_module(&bytes, itasca::ValidationProfile::Wasm1) else {
             continue;
         };
         let Some((their_imports, their_exports)) = wasmparser_extern_types(&bytes) else {

@@ -7,7 +7,8 @@ set_option maxHeartbeats 800000
 namespace Itasca.ModuleEnv
 
 /-- The raw payload of each standard environment section. -/
-def Payload (raw : ModuleBinary.Module) (id : Nat) (_ : Unit) (bytes : List U8) : Prop :=
+def Payload (raw : ModuleBinary.Module) (id : Nat) (_ : Unit) (bytes : List U8)
+    (profile : ValidationProfile := .Wasm1) : Prop :=
   match id with
   | 1 => ModuleBinary.VecEncoding ModuleBinary.FuncTypeEncoding raw.types bytes
   | 2 => ModuleBinary.VecEncoding ModuleBinary.ImportEncoding raw.imports bytes
@@ -17,7 +18,7 @@ def Payload (raw : ModuleBinary.Module) (id : Nat) (_ : Unit) (bytes : List U8) 
   | 6 => ModuleBinary.VecEncoding ModuleBinary.GlobalEncoding raw.globals bytes
   | 7 => ModuleBinary.VecEncoding ModuleBinary.ExportEncoding raw.exports bytes
   | 8 => ModuleBinary.StartEncoding raw.start bytes
-  | 9 => ModuleBinary.VecEncoding ModuleBinary.ElementEncoding raw.elements bytes
+  | 9 => ModuleBinary.VecEncoding (ModuleBinary.ElementEncodingFor profile) raw.elements bytes
   | _ => False
 
 def Empty (raw : ModuleBinary.Module) (id : Nat) : Prop :=
@@ -47,10 +48,11 @@ def update (raw : ModuleBinary.Module) (id : Nat) (decls : Declarations) : Decla
   | _ => decls
 
 /-- An omitted empty section completes its slot just as a present section does. -/
-def SlotEncoding (raw : ModuleBinary.Module) (id : U8) (bytes : List U8) : Prop :=
+def SlotEncoding (raw : ModuleBinary.Module) (id : U8) (bytes : List U8)
+    (profile : ValidationProfile := .Wasm1) : Prop :=
   ∃ customs body, ModuleBinary.CustomsEncoding customs ∧
     ((Empty raw id.val ∧ body = []) ∨
-      ModuleBinary.SectionEncoding id (Payload raw id.val) () body) ∧
+      ModuleBinary.SectionEncoding id (fun u bytes => Payload raw id.val u bytes profile) () body) ∧
     bytes = customs ++ body
 
 theorem Ready.updated {raw id decls env result} (h : Ready raw (id - 1) decls env)

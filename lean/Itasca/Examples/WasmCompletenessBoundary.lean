@@ -113,7 +113,7 @@ private theorem public_of_loop (data : Slice U8) (env : module.Env) (ctx : code.
       data env ctx.locals ctx.results () (Body.initial bt) = .ok (result, ())) :
     code.validate_body data env ctx = .ok result := by
   have hguard : ¬ Slice.len data > limits.MAX_FUNCTION_BYTES := by scalar_tac
-  simp [code.validate_body, code.validate_body_with, hguard,
+  simp [code.validate_body, code.validate_body_with.eq_model, code.validate_body_with_model, hguard,
     code.start_function.spec (alloc.vec.Vec.deref ctx.results) bt
       (by simpa [alloc.vec.Vec.deref] using hresults), hloop]
 
@@ -200,8 +200,8 @@ theorem rejected (env : module.Env) :
     code.validate_body bytes env ctx = .ok (.Err .TypeMismatch) := by
   let initial := Body.initial (.Value .I32)
   let first := { initial with pos := 1#usize }
-  let body : code.Ctrl := ⟨.Body, .Value .I32, 0#usize, false⟩
-  let frame : code.Ctrl := ⟨.Block, .Value .I64, 0#usize, false⟩
+  let body : code.Ctrl := ⟨.Body, .Value .I32, Control.signature (.Value .I32), 0#usize, false⟩
+  let frame : code.Ctrl := ⟨.Block, .Value .I64, Control.signature (.Value .I64), 0#usize, false⟩
   let poly : code.Ctrl := { frame with polymorphic_base := true }
   obtain ⟨⟨_, opened⟩, hopen, rfl, hop, hov, hoc⟩ := WP.spec_imp_exists
     (code.read_block.spec first bytes (.Value .I64) (by decide) rfl

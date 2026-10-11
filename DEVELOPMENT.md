@@ -2,7 +2,7 @@
 
 The active pipeline is Rust → Charon → Aeneas → Lean. The proofs target
 SpecTec's generated declarative typing judgments with an independent binary
-grammar and explicit Wasm 1.0 restrictions. Read the
+grammar and explicit version-profile restrictions. Read the
 [public guarantees](README.md#formal-verification),
 [Lean architecture/setup](lean/README.md), and [Rocq comparison](lean/PARITY.md).
 
@@ -18,6 +18,8 @@ grammar and explicit Wasm 1.0 restrictions. Read the
 | `lean/Itasca/Generated/FunsExternal.lean` | Handwritten concrete models of `Vec.pop` and `Vec.is_empty`. |
 | `lean/Itasca/Binary/` | Independent grammars, byte readers, and structured-body/module decoding uniqueness. |
 | `lean/Itasca/Body/`, `Visitor/` | Body typing, completeness, shared dispatch, and callback proofs. |
+| `lean/Itasca/Profile/` | Shared profile predicates, body/entry certificates, and implementation adapters. |
+| `lean/Itasca/MultiValue/` | Multi-value signature/control semantics, grammar, body proofs, and visitor adapters. |
 | `lean/Itasca/Module/` | Shared parsing/typing, independent module certificates, metadata, and whole-module corollaries. |
 | `lean/Itasca/Stream/` | Source contracts, actual worker/driver proofs, and concrete adapter proofs. |
 | `lean/Itasca/Examples/`, `Support/` | Checked regression examples and common proof helpers. |
@@ -145,14 +147,56 @@ Consumer allocation and execution are outside these proofs.
 
 ## Streaming API
 
-`stream::validate_streaming` is the Wasm 1.0 module orchestrator for streaming and
-parallel validation. The experimental `multi_value` module currently has a
-contiguous driver sharing scalar readers and section validators; its control
-proofs must be completed and its profile threaded through issued batches before
-it can replace that temporary driver. `validate_module(bytes)` calls the Wasm 1.0
-driver through a private contiguous slice adapter and synchronous worker. The generic driver and adapter
-have soundness, totality, and independent completeness proofs; the existing
-public whole-module theorem statements are corollaries of that adapter.
+`stream::validate_streaming` is the sole module orchestrator for both profiles.
+The caller supplies an explicit `ValidationProfile`, which is threaded through
+the shared environment parser, code entries, tail parser, and immutable issued
+batches. `validate_module(bytes, profile)` supplies a private contiguous slice
+adapter and synchronous worker. `validate_module_with_profile` is an alias to
+that same entry point. `multi_value.rs` contains the shared profile-parameterized
+body loop and signature/control helpers; it has no separate module driver.
+Both historical body entry points delegate to that loop. Initialization and
+control dispatch select the profile; scalar operators use the existing shared
+dispatcher.
+
+Both profiles use the existing visitor callbacks. Control hooks expose
+`signature::BlockType`, and branch hooks expose `signature::ResultType`.
+`OpIterState.ctrls` stores each frame's height, kind, and full signature for
+both profiles. Multi-value state has no parallel signature vector. Keep the
+profile-specific control behavior, including branch-table callback order and
+the function-end stack, explicit when refactoring handlers. The generic driver and
+adapter have shared soundness, totality, and independent completeness proofs
+for either selected profile. The public theorem families use `profile_*` names;
+existing `wasm_*` names specialize them to Wasm 1.0.
+
+### Extending profiles
+
+Keep feature-specific semantics behind the contracts in `Itasca/Profile/`.
+`FuncType` and `Instructions` express language restrictions;
+`FuncTypeWithinLimits` and `EnvironmentWithinLimits` express allocation caps.
+`Body` and `Entry` connect exact independent bytes to generated declarative
+typing using the actual selected type index. Their execution adapters supply
+totality, acceptance soundness, and completeness with accepting visitor hooks.
+Shared entry framing, module assembly, and streaming proofs consume these
+contracts without a second module proof tree.
+
+A feature can change binary grammar outside function bodies. The current
+multi-value profile uses Core 2 active-segment flags 0 and 2, including the
+explicit element-kind byte; Wasm 1.0 keeps its original segment indices.
+`ElementEncodingFor`, `DataEncodingFor`, and `ModuleEncodingWith` select this
+grammar with the same profile as the parser. New sections, index spaces, or
+initializer rules also require updating their independent grammar and shared
+environment/assembly invariants. Do not assume a body adapter alone proves a
+new module feature.
+
+Extend these contracts and their implementation adapters as features arrive,
+then reuse the module/streaming composition. Preserve old profile behavior and
+keep resource limits as separate completeness hypotheses:
+`ModuleEncodingWithinLimits` bounds bytes and declared locals, while
+`ModuleSignaturesWithinLimits` bounds signatures. Add regressions for the new
+feature and for behavior that must remain different between profiles. Future
+Wasm 3.0 work also requires reviewing the pinned generated specification and
+its source patches; selecting a new runtime profile does not establish
+correspondence with a newer specification.
 
 ### Design
 
@@ -168,7 +212,7 @@ driver owns phase order and acceptance:
 4. Retire every outstanding batch, accepting each exactly once.
 
 The visitor schedules work and may return batches in any order, but cannot skip
-a phase or certify success. A batch carries private module and batch IDs, its
+a phase or certify success. A batch carries private module and batch IDs, its selected profile,
 environment and bytes, independent dispatch and validation cursors, and its
 first error. Only `CodeBatch::validate_func` advances validation. The driver
 keeps one ID per outstanding batch, bounded by `Config::max_batches`: no
@@ -234,7 +278,8 @@ removed module/code-section driver.
 
 The concrete `SliceSource` and private `SyncVisitor` discharge these obligations
 for `validate_module`. Its completeness premises remain independent module
-encoding within limits, elaboration, generated typing, and the Wasm 1.0 profile.
+encoding and signature bounds, elaboration, generated typing, and the selected
+profile. The current `MultiValue` profile does not claim full Wasm 2.0 support.
 No parser-success or prevalidated-body assumptions were added, and the trust
 base is unchanged.
 

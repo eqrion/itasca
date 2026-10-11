@@ -75,17 +75,18 @@ theorem code_end (state : stream.SyncVisitor) :
 
 /-- Submission executes the real worker even for malformed bytes, storing its
 reachable result; its administrative success is not a claim that finish passes. -/
-theorem submit (state : stream.SyncVisitor) (issued : StreamBatch.Issued)
-    (hissued : issued.Bounded) (hbound : CodeEntry.Bounds issued.env) :
+theorem submit {profile : ValidationProfile} (state : stream.SyncVisitor) (issued : StreamBatch.Issued)
+    (hissued : issued.Bounded) (hbound : CodeEntry.Bounds issued.env)
+    (hprofile : issued.profile = profile) :
     ∃ batch, (sync).submit_code_batch state issued.seed =
       .ok (.Ok (), { state with completed := some batch }) ∧
       StreamBatch.Reachable issued batch := by
-  obtain ⟨batch, hr, hp⟩ := stream.CodeBatch.validate_all.total issued issued.seed hissued hbound .seed
+  obtain ⟨batch, hr, hp⟩ := stream.CodeBatch.validate_all.total issued issued.seed hissued hbound .seed hprofile
   exact ⟨batch, by simp [stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.submit_code_batch, hr], hp⟩
 
 /-- The concrete source-free scheduler satisfies provenance across every
 callback, including custom regions and tail delivery. -/
-theorem provenance : StreamScheduler.Provenance sync Tracks := by
+theorem provenance {profile : ValidationProfile} : StreamScheduler.Provenance sync Tracks profile := by
   constructor
   · intro id history state chunk after hcall
     have he : state = after := by
@@ -101,8 +102,8 @@ theorem provenance : StreamScheduler.Provenance sync Tracks := by
     rw [environment_ready] at hcall
     simp only [Result.ok.injEq, Prod.mk.injEq] at hcall
     exact hcall.2 ▸ hs
-  · intro id history issued state after _ _ hissued hbound hfresh hcall
-    obtain ⟨batch, hr, hreach⟩ := submit state issued hissued hbound
+  · intro id history issued state after _ _ hissued hbound hprofile hfresh hcall
+    obtain ⟨batch, hr, hreach⟩ := submit state issued hissued hbound hprofile
     rw [hr] at hcall
     have he : { state with completed := some batch } = after := by simpa using hcall
     subst after
@@ -129,7 +130,7 @@ theorem provenance : StreamScheduler.Provenance sync Tracks := by
 
 /-- All callbacks return on legitimate issued seeds. Submission uses component
 termination; it needs neither valid bytes nor successful worker completion. -/
-theorem callbacks_total : StreamScheduler.CallbacksTotal sync := by
+theorem callbacks_total {profile : ValidationProfile} : StreamScheduler.CallbacksTotal sync profile := by
   constructor
   · intro state chunk
     exact ⟨(.Ok (), state), rfl⟩
@@ -137,8 +138,8 @@ theorem callbacks_total : StreamScheduler.CallbacksTotal sync := by
     exact ⟨state, rfl⟩
   · intro state env
     exact ⟨_, environment_ready state env⟩
-  · intro state issued hissued hbound
-    obtain ⟨batch, hr, _⟩ := submit state issued hissued hbound
+  · intro state issued hissued hbound hprofile
+    obtain ⟨batch, hr, _⟩ := submit state issued hissued hbound hprofile
     exact ⟨_, hr⟩
   · exact poll_total
   · intro state
@@ -149,18 +150,20 @@ theorem callbacks_total : StreamScheduler.CallbacksTotal sync := by
 /-- With its one slot empty, the synchronous scheduler validates independent
 batch contents, returns that same reachable worker, then restores the empty
 slot. It preserves the stored tail throughout both calls. -/
-theorem submit_poll_complete (state : stream.SyncVisitor) (issued : StreamBatch.Issued)
+theorem submit_poll_complete {profile : ValidationProfile} (state : stream.SyncVisitor) (issued : StreamBatch.Issued)
     (entries : List ModuleBinary.Code) (hempty : state.completed = none)
     (hissued : issued.Bounded) (hcount : entries.length = issued.num_funcs.val)
-    (htyped : ModuleCode.EntriesTyped issued.env issued.first_func.val entries)
-    (henv : Wasm1.Environment issued.env) (hbound : CodeEntry.Bounds issued.env)
-    (hbytes : ModuleBinary.Rep ModuleBinary.CodeEncodingWithinLimits entries issued.code.val) :
+    (htyped : ModuleCode.EntriesTyped (profile := profile) issued.env issued.first_func.val entries)
+    (henv : Profile.Environment profile issued.env)
+    (hlimits : Profile.EnvironmentWithinLimits profile issued.env) (hbound : CodeEntry.Bounds issued.env)
+    (hbytes : ModuleBinary.Rep (Profile.CodeEncodingWithinLimits profile) entries issued.code.val)
+    (hprofile : issued.profile = profile) :
     ∃ batch, (sync).submit_code_batch state issued.seed =
         .ok (.Ok (), { state with completed := some batch }) ∧
       (sync).poll_code_batch { state with completed := some batch } = .ok (.Ok batch, state) ∧
       StreamBatch.Reachable issued batch ∧ stream.CodeBatch.finish batch = .ok (.Ok ()) := by
   obtain ⟨batch, hr, hp, hf⟩ := stream.CodeBatch.validate_all.complete_seed
-    issued entries hissued hcount htyped henv hbound hbytes
+    issued entries hissued hcount htyped henv hlimits hbound hbytes hprofile
   refine ⟨batch, ?_, ?_, hp, hf⟩
   · simp [stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.submit_code_batch, hr]
   · have he : { state with completed := none } = state := by cases state; simp_all

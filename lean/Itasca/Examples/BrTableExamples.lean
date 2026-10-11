@@ -12,7 +12,7 @@ private theorem public_of_loop (data : Slice U8) (env : module.Env) (ctx : code.
       data env ctx.locals ctx.results () (Body.initial bt) = .ok (result, ())) :
     code.validate_body data env ctx = .ok result := by
   have hguard : ¬ Slice.len data > limits.MAX_FUNCTION_BYTES := by scalar_tac
-  simp [code.validate_body, code.validate_body_with, hguard,
+  simp [code.validate_body, code.validate_body_with.eq_model, code.validate_body_with_model, hguard,
     code.start_function.spec (alloc.vec.Vec.deref ctx.results) bt
       (by simpa [alloc.vec.Vec.deref] using hresults), hloop]
 
@@ -102,7 +102,7 @@ theorem br_table_body_accepted (env : module.Env) :
     code.validate_body brTableBytes env emptyContext = .ok (.Ok ()) := by
   let initial := Body.initial .Empty
   let first := { initial with pos := 1#usize }
-  let frame : code.Ctrl := ⟨.Body, .Empty, 0#usize, false⟩
+  let frame : code.Ctrl := ⟨.Body, .Empty, Control.signature (.Empty), 0#usize, false⟩
   let poly : code.Ctrl := { frame with polymorphic_base := true }
   obtain ⟨marked, hmark, hmv, hml, hmc, hmp⟩ := WP.spec_imp_exists
     (code.mark_unreachable.spec first [] frame rfl (by simp [frame]))

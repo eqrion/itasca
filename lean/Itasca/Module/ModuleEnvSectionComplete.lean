@@ -18,20 +18,21 @@ open ModuleBinary ModuleSections ModuleEnv
 
 /-- Each ordered raw slot yields the actual dispatcher result and its exact
 semantic update. No parser execution is assumed in the premises. -/
-theorem module.decode_env_section.complete (data : Slice U8) (pos : Usize) (id : U8)
-    (env : module.Env) (decls : Declarations) (raw : ModuleBinary.Module) (next : Usize)
+theorem module.decode_env_section.profile_complete (data : Slice U8) (pos : Usize) (id : U8)
+    (env : module.Env) (decls : Declarations) (raw : ModuleBinary.Module) (next : Usize) (profile : ValidationProfile)
     (hlo : 1 ≤ id.val) (hhi : id.val ≤ 9)
-    (hb : At (Payload raw id.val) data pos () next)
-    (hv : SectionValid raw id.val env) (hready : Ready raw (id.val - 1) decls env)
+    (hb : At (fun u bs => Payload raw id.val u bs profile) data pos () next)
+    (hv : SectionValid raw id.val env profile) (hready : Ready raw (id.val - 1) decls env)
     (hbound : Bounded env pos.val) :
-    ∃ result, module.decode_env_section data pos id env = .ok (.Ok next, result) ∧
-      Effect data pos env decls id next result (update raw id.val decls) := by
+    ∃ result, module.decode_env_section data pos id env profile = .ok (.Ok next, result) ∧
+      Effect (profile := profile) data pos env decls id next result (update raw id.val decls) := by
   have hc : id.val = 1 ∨ id.val = 2 ∨ id.val = 3 ∨ id.val = 4 ∨ id.val = 5 ∨
       id.val = 6 ∨ id.val = 7 ∨ id.val = 8 ∨ id.val = 9 := by omega
   rcases hc with h | h | h | h | h | h | h | h | h
   · have he : id = 1#u8 := UScalar.eq_of_val_eq h
     subst id
-    obtain ⟨result, hr, ha⟩ := module.decode_type_section.complete data pos env raw.types next hb hv hbound.types
+    obtain ⟨result, hr, ha⟩ := module.decode_type_section.profile_complete data pos env profile raw.types next hb
+      (by intro ft hm; exact (Profile.funcTypeAdmissible_iff profile ft).mp (hv ft hm)) hbound.types
     exact ⟨result, by simpa [module.decode_env_section, global_simps] using hr,
       .types ha hb hv⟩
   · have he : id = 2#u8 := UScalar.eq_of_val_eq h
@@ -39,7 +40,7 @@ theorem module.decode_env_section.complete (data : Slice U8) (pos : Usize) (id :
     change At (VecEncoding ImportEncoding) data pos raw.imports next at hb
     obtain ⟨result, actual, hr, hraw, ha⟩ := module.decode_import_section.complete data pos env raw.imports next hb hv hbound
     refine ⟨result, by simpa [module.decode_env_section, global_simps] using hr, ?_⟩
-    simpa [Payload, update, hraw] using (Effect.imports (before := decls) ha (by simpa [Payload, update, hraw] using hb))
+    simpa [Payload, update, hraw] using (Effect.imports (profile := profile) (before := decls) ha (by simpa [Payload, update, hraw] using hb))
   · have he : id = 3#u8 := UScalar.eq_of_val_eq h
     subst id
     obtain ⟨result, sigs, hr, ha⟩ := module.decode_function_section.complete data pos env raw.functions next hb hv hbound.funcs hbound.funcIndices
@@ -75,7 +76,7 @@ theorem module.decode_env_section.complete (data : Slice U8) (pos : Usize) (id :
       exact List.map_eq_nil_iff.mp hx
     obtain ⟨result, actual, hr, ha, hraw⟩ := module.decode_export_section.complete data pos env raw.exports next hb hempty hv.1 hv.2
     refine ⟨result, by simpa [module.decode_env_section, global_simps] using hr, ?_⟩
-    simpa [Payload, update, hraw] using (Effect.exports (before := decls) ha (by simpa [Payload, update, hraw] using hb))
+    simpa [Payload, update, hraw] using (Effect.exports (profile := profile) (before := decls) ha (by simpa [Payload, update, hraw] using hb))
   · have he : id = 8#u8 := UScalar.eq_of_val_eq h
     subst id
     obtain ⟨bs, ⟨idx, hstart, hi⟩, hs⟩ := hb
@@ -83,16 +84,27 @@ theorem module.decode_env_section.complete (data : Slice U8) (pos : Usize) (id :
     obtain ⟨hidx, hp, hr⟩ := hv idx hstart
     have hread := module.decode_start_section.complete data pos env idx next hbytes hidx hp hr
     refine ⟨{env with start := some idx}, by simpa [module.decode_env_section, global_simps] using hread, ?_⟩
-    simpa [update, hstart] using (Effect.start (before := decls) rfl hbytes ⟨hidx, hp, hr⟩)
+    simpa [update, hstart] using (Effect.start (profile := profile) (before := decls) rfl hbytes ⟨hidx, hp, hr⟩)
   · have he : id = 9#u8 := UScalar.eq_of_val_eq h
     subst id
-    change At (VecEncoding ElementEncoding) data pos raw.elements next at hb
-    obtain ⟨result, actual, hr, hraw, ha⟩ := module.decode_element_section.complete data pos env raw.elements next hb hv hbound.elements
+    change At (VecEncoding (ElementEncodingFor profile)) data pos raw.elements next at hb
+    obtain ⟨result, actual, hr, hraw, ha⟩ := module.decode_element_section.profile_complete data pos env profile raw.elements next hb hv hbound.elements
     refine ⟨result, by simpa [module.decode_env_section, global_simps] using hr, ?_⟩
     have hva : ∀ e ∈ actual, ElementValid env e := by
       intro e he
       have hm : ModuleEnv.rawElement e ∈ raw.elements := by rw [← hraw]; exact List.mem_map.mpr ⟨e, he, rfl⟩
       exact hv _ hm
-    simpa [Payload, update, hraw] using (Effect.elements (before := decls) ha (by simpa [Payload, update, hraw] using hb) hva)
+    simpa [Payload, update, hraw] using (Effect.elements (profile := profile) (before := decls) ha (by simpa [Payload, update, hraw] using hb) hva)
+
+theorem module.decode_env_section.complete (data : Slice U8) (pos : Usize) (id : U8)
+    (env : module.Env) (decls : Declarations) (raw : ModuleBinary.Module) (next : Usize)
+    (hlo : 1 ≤ id.val) (hhi : id.val ≤ 9)
+    (hb : At (Payload raw id.val) data pos () next)
+    (hv : SectionValid raw id.val env) (hready : Ready raw (id.val - 1) decls env)
+    (hbound : Bounded env pos.val) :
+    ∃ result, module.decode_env_section data pos id env .Wasm1 = .ok (.Ok next, result) ∧
+      Effect data pos env decls id next result (update raw id.val decls) := by
+  exact module.decode_env_section.profile_complete data pos id env decls raw next .Wasm1
+    hlo hhi hb hv hready hbound
 
 end Itasca

@@ -64,14 +64,14 @@ theorem module.decode_func_indices.complete (data : Slice U8) (pos : Usize)
     core.result.Result.Insts.CoreOpsTry.branch, hr]
 
 
-theorem module.decode_element_section_loop.complete
-    (data : Slice U8) (env : module.Env) (count : U32) (pos : Usize) (i : U32)
+theorem module.decode_element_section_loop.profile_complete
+    (data : Slice U8) (env : module.Env) (profile : ValidationProfile) (count : U32) (pos : Usize) (i : U32)
     (entries : List ModuleBinary.Element) (next : Usize)
-    (hb : At (Rep ElementEncoding) data pos entries next)
+    (hb : At (Rep (ElementEncodingFor profile)) data pos entries next)
     (hc : i.val + entries.length = count.val)
     (hv : ∀ entry ∈ entries, ElementValidRaw env entry)
     (hsize : env.elements.val.length ≤ pos.val) :
-    ∃ result actual, module.decode_element_section_loop data env count pos i = .ok (.Ok next, result) ∧
+    ∃ result actual, module.decode_element_section_loop data env profile count pos i = .ok (.Ok next, result) ∧
       actual.map ModuleEnv.rawElement = entries ∧ ElementsAdded env result actual := by
   induction entries generalizing env pos i with
   | nil =>
@@ -83,19 +83,26 @@ theorem module.decode_element_section_loop.complete
     simp [module.decode_element_section_loop.body, hstop, he]
   | cons entry entries ih =>
     obtain ⟨middle, hfirst, hrest⟩ := hb.rep_cons
-    obtain ⟨bs, ⟨tableBytes, offsetBytes, initBytes, ht, ho, hi, rfl⟩, hs⟩ := hfirst
-    obtain ⟨p1, htable, hremaining⟩ :=
-      (show Wasm.BytesAt data pos (tableBytes ++ (offsetBytes ++ initBytes)) middle from
-        by simpa [List.append_assoc] using hs).split
-    obtain ⟨p2, hoffset, hinit⟩ := hremaining.split
-    have htableAt : At IndexEncoding data pos entry.tableIdx p1 := ⟨_, ht, htable⟩
-    have hprogress := htableAt.index_decoded.span
+    obtain ⟨bs, he, hs⟩ := hfirst
+    obtain ⟨flags, explicit, flagBytes, tableBytes, offsetBytes, kindBytes, initBytes,
+      hf, ht, ho, hk, hi, rfl⟩ := he.parts
+    obtain ⟨kindPos, hbeforeKind, hinit⟩ := hs.split
+    obtain ⟨p2, hbeforeOffset, hkind⟩ := hbeforeKind.split
+    obtain ⟨p1, hbeforeIndex, hoffset⟩ := hbeforeOffset.split
+    obtain ⟨first, hflags, htable⟩ := hbeforeIndex.split
+    have hflagsAt : At IndexEncoding data pos flags first := ⟨_, hf, hflags⟩
+    have hindexAt : At (fun pair => SegmentIndexEncoding profile flags pair.1 pair.2)
+        data first (entry.tableIdx, explicit) p1 := ⟨_, ht, htable⟩
+    have hreadindex := module.decode_segment_index.profile_complete hindexAt
+    have hprogress := hflagsAt.index_decoded.span
+    have hindexSpan := hindexAt.span
+    have hkindSpan := hkind.length
     have hmore : ¬ i ≥ count := by simp only [List.length_cons] at hc; scalar_tac
     obtain ⟨htvalid, hovalid, hivalid⟩ := hv entry (by simp)
     have hntable : ¬ env.table_types.val.length ≤ entry.tableIdx.val := Nat.not_le.mpr htvalid
     have hvalid : ¬ UScalar.cast .Usize entry.tableIdx ≥ alloc.vec.Vec.len env.table_types := by scalar_tac
     have hreadexpr := module.decode_const_expr.complete (show At ConstEncoding data p1 entry.offset p2 from ⟨_, ho, hoffset⟩) hovalid
-    obtain ⟨init, hreadinit, hinitval⟩ := module.decode_func_indices.complete data p2 env entry.init middle ⟨_, hi, hinit⟩ hivalid
+    obtain ⟨init, hreadinit, hinitval⟩ := module.decode_func_indices.complete data kindPos env entry.init middle ⟨_, hi, hinit⟩ hivalid
     have hbound := hinit.bound
     let current : module.Element := ⟨entry.tableIdx, entry.offset, init⟩
     obtain ⟨elements, hpush, helements⟩ := WP.spec_imp_exists
@@ -114,8 +121,21 @@ theorem module.decode_element_section_loop.complete
     refine ⟨result, current :: actual, ?_, ?_, ?_⟩
     · unfold module.decode_element_section_loop at hloop ⊢
       rw [loop]
-      simpa [module.decode_element_section_loop.body, hmore, htableAt.read_index, hntable,
-        hreadexpr, hreadinit, hpush, hj, current, core.result.Result.Insts.CoreOpsTry.branch, lift] using hloop
+      cases explicit with
+      | false =>
+          have hkempty : kindBytes = [] := hk
+          subst kindBytes
+          obtain rfl := hkind.empty
+          simpa [module.decode_element_section_loop.body, hmore, hflagsAt.read_index, hreadindex,
+            hntable, hreadexpr, hreadinit, hpush, hj, current,
+            core.result.Result.Insts.CoreOpsTry.branch, lift] using hloop
+      | true =>
+          have hkkind : kindBytes = [0#u8] := hk
+          subst kindBytes
+          simpa [module.decode_element_section_loop.body, hmore, hflagsAt.read_index, hreadindex,
+            hntable, hreadexpr, hkind.read_byte, hreadinit, hpush, hj, current,
+            core.result.Result.Insts.CoreOpsTry.branch, lift] using hloop
+
     · simp only [List.map_cons, hraw]
       congr 1
       cases entry
@@ -124,19 +144,39 @@ theorem module.decode_element_section_loop.complete
       · rw [hadded.1]
       · simpa [updated, helements, List.append_assoc] using hadded.2
 
+theorem module.decode_element_section.profile_complete (data : Slice U8) (pos : Usize)
+    (env : module.Env) (profile : ValidationProfile) (entries : List ModuleBinary.Element) (next : Usize)
+    (hb : At (VecEncoding (ElementEncodingFor profile)) data pos entries next)
+    (hv : ∀ entry ∈ entries, ElementValidRaw env entry)
+    (hsize : env.elements.val.length ≤ pos.val) :
+    ∃ result actual, module.decode_element_section data pos env profile = .ok (.Ok next, result) ∧
+      actual.map ModuleEnv.rawElement = entries ∧ ElementsAdded env result actual := by
+  obtain ⟨count, middle, hc, hcount, hentries⟩ := hb.vector_split
+  obtain ⟨result, actual, hr, hp⟩ := module.decode_element_section_loop.profile_complete
+    data env profile count middle 0#u32 entries next hentries (by simpa using hc.symm) hv
+    (by have := hcount.span; omega)
+  refine ⟨result, actual, ?_, hp⟩
+  simp [module.decode_element_section, reader.read_u32_leb.complete data pos count middle hcount,
+    core.result.Result.Insts.CoreOpsTry.branch, hr]
+
+theorem module.decode_element_section_loop.complete
+    (data : Slice U8) (env : module.Env) (count : U32) (pos : Usize) (i : U32)
+    (entries : List ModuleBinary.Element) (next : Usize)
+    (hb : At (Rep ElementEncoding) data pos entries next)
+    (hc : i.val + entries.length = count.val)
+    (hv : ∀ entry ∈ entries, ElementValidRaw env entry)
+    (hsize : env.elements.val.length ≤ pos.val) :
+    ∃ result actual, module.decode_element_section_loop data env .Wasm1 count pos i = .ok (.Ok next, result) ∧
+      actual.map ModuleEnv.rawElement = entries ∧ ElementsAdded env result actual := by
+  exact module.decode_element_section_loop.profile_complete data env .Wasm1 count pos i entries next hb hc hv hsize
+
 theorem module.decode_element_section.complete (data : Slice U8) (pos : Usize)
     (env : module.Env) (entries : List ModuleBinary.Element) (next : Usize)
     (hb : At (VecEncoding ElementEncoding) data pos entries next)
     (hv : ∀ entry ∈ entries, ElementValidRaw env entry)
     (hsize : env.elements.val.length ≤ pos.val) :
-    ∃ result actual, module.decode_element_section data pos env = .ok (.Ok next, result) ∧
+    ∃ result actual, module.decode_element_section data pos env .Wasm1 = .ok (.Ok next, result) ∧
       actual.map ModuleEnv.rawElement = entries ∧ ElementsAdded env result actual := by
-  obtain ⟨count, middle, hc, hcount, hentries⟩ := hb.vector_split
-  obtain ⟨result, actual, hr, hp⟩ := module.decode_element_section_loop.complete
-    data env count middle 0#u32 entries next hentries (by simpa using hc.symm) hv
-    (by have := hcount.span; omega)
-  refine ⟨result, actual, ?_, hp⟩
-  simp [module.decode_element_section, reader.read_u32_leb.complete data pos count middle hcount,
-    core.result.Result.Insts.CoreOpsTry.branch, hr]
+  exact module.decode_element_section.profile_complete data pos env .Wasm1 entries next hb hv hsize
 
 end Itasca

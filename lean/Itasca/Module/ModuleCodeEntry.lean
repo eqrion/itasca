@@ -1,6 +1,7 @@
 import Itasca.Module.ModuleCodeContext
 import Itasca.Module.ModuleCodeBinary
 import Itasca.Body.Wasm1Soundness
+import Itasca.Profile.BodyExecution
 
 open Aeneas Aeneas.Std
 
@@ -15,7 +16,8 @@ def Bounds (env : module.Env) : Prop :=
 /-- Exact witnesses retained from the real entry pipeline, including the
 function-start callback and the slice-relative body invocation. -/
 structure Witness {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
-    (env : module.Env) (index start finish : Usize) (v v' : V) where
+    (env : module.Env) (index start finish : Usize) (v v' : V)
+    (profile : ValidationProfile := .Wasm1) where
   typeIdx : U32
   ft : types.FuncType
   groups : List (U32 × types.ValueType)
@@ -38,7 +40,7 @@ structure Witness {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
   context_results : ctx.results.val = ft.results.val
   body_bytes : Wasm.BytesAt data bodyStart body.val finish
   function_start : visitor.on_function_start v ctx typeIdx bodyStart finish = .ok (.Ok (), startedState)
-  body_accepted : code.validate_body_with visitor body env ctx startedState = .ok (.Ok (), v')
+  body_accepted : runBody visitor profile body env ctx typeIdx startedState = .ok (.Ok (), v')
 
 /-- The result used by code-section composition contains independent bytes and
 full generated body typing, with no validation-call premise. -/
@@ -96,11 +98,15 @@ end CodeEntry
 
 /-- Totality and exact successful-call decomposition of the extracted entry
 validator. Rejecting callbacks remain ordinary module errors. -/
-theorem module.validate_code_entry_with.pipeline {V : Type} (visitor : code.OpVisitor V)
+theorem module.validate_code_entry_with.pipeline_of_body_total {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (data : Slice U8) (pos : Usize)
-    (env : module.Env) (index : Usize) (v : V) (hbound : CodeEntry.Bounds env) :
-    module.validate_code_entry_with visitor data pos env index v ⦃ r =>
-      ∀ finish, r.1 = .Ok finish → Nonempty (CodeEntry.Witness visitor data env index pos finish v r.2) ⦄ := by
+    (env : module.Env) (index : Usize) (v : V) (hbound : CodeEntry.Bounds env)
+    (profile : ValidationProfile)
+    (hbody : ∀ body ctx typeIdx started,
+      ∃ r, CodeEntry.runBody visitor profile body env ctx typeIdx started = .ok r) :
+    module.validate_code_entry_with visitor data pos env index profile v ⦃ r =>
+      ∀ finish, r.1 = .Ok finish →
+        Nonempty (CodeEntry.Witness visitor data env index pos finish v r.2 profile) ⦄ := by
   unfold module.validate_code_entry_with
   dsimp only
   split
@@ -169,36 +175,48 @@ theorem module.validate_code_entry_with.pipeline {V : Type} (visitor : code.OpVi
                     | Err e => simp
                     | Ok u =>
                         cases u
-                        simp
-                        step
-                        obtain ⟨⟨result, finished⟩, hb⟩ := code.validate_body_with.wasm_total
-                          visitor hvisitor s3 env ⟨v1, v2⟩ started
-                        rw [hb]
-                        cases result with
-                        | Err e => simp
-                        | Ok u =>
-                            cases u
-                            simp
-                            refine ⟨{
-                              typeIdx := type_idx, ft := ft, groups := groups, ctx := ⟨v1, v2⟩
-                              content := content, bodyStart := bodyStart, body := s3, size := size
-                              startedState := started, index_lt := hi, index_type := type_idx_post.symm
-                              type_lt := hti, function_type := ?_, header := hp, extent := ?_
-                              locals_bytes := hg, locals_bound := ?_, context_locals := ?_
-                              context_results := ?_, body_bytes := ?_, function_start := hstart
-                              body_accepted := hb }⟩
-                            · simpa [t_post] using ft_post.symm
-                            · scalar_tac
-                            · simpa [hd] using hcap
-                            · simpa [alloc.vec.Vec.deref, hd] using v1_post
-                            · simpa [alloc.vec.Vec.deref] using v2_post
-                            · exact ModuleBinary.slice_bytes (by scalar_tac) (by scalar_tac) s3_post
+                        cases profile
+                        all_goals
+                          simp only [CodeEntry.runBody] at hbody
+                          simp
+                          step as ⟨s3, s3_post⟩
+                          obtain ⟨⟨result, finished⟩, hb⟩ := hbody s3 ⟨v1, v2⟩ type_idx started
+                          rw [hb]
+                          cases result with
+                          | Err e => simp
+                          | Ok u =>
+                              cases u
+                              simp
+                              refine ⟨{
+                                typeIdx := type_idx, ft := ft, groups := groups, ctx := ⟨v1, v2⟩
+                                content := content, bodyStart := bodyStart, body := s3, size := size
+                                startedState := started, index_lt := hi, index_type := type_idx_post.symm
+                                type_lt := hti, function_type := ?_, header := hp, extent := ?_
+                                locals_bytes := hg, locals_bound := ?_, context_locals := ?_
+                                context_results := ?_, body_bytes := ?_, function_start := hstart
+                                body_accepted := hb }⟩
+                              · simpa [t_post] using ft_post.symm
+                              · scalar_tac
+                              · simpa [hd] using hcap
+                              · simpa [alloc.vec.Vec.deref, hd] using v1_post
+                              · simpa [alloc.vec.Vec.deref] using v2_post
+                              · exact ModuleBinary.slice_bytes (by scalar_tac) (by scalar_tac) s3_post
+
+/-- The established Wasm 1.0 contract is a specialization of the shared entry
+pipeline. Only the body operation depends on the selected profile. -/
+theorem module.validate_code_entry_with.pipeline {V : Type} (visitor : code.OpVisitor V)
+    (hvisitor : FullVisitor.Total visitor) (data : Slice U8) (pos : Usize)
+    (env : module.Env) (index : Usize) (v : V) (hbound : CodeEntry.Bounds env) :
+    module.validate_code_entry_with visitor data pos env index .Wasm1 v ⦃ r =>
+      ∀ finish, r.1 = .Ok finish → Nonempty (CodeEntry.Witness visitor data env index pos finish v r.2) ⦄ :=
+  module.validate_code_entry_with.pipeline_of_body_total visitor hvisitor data pos env index v hbound
+    .Wasm1 (fun body ctx _ started => code.validate_body_with.wasm_total visitor hvisitor body env ctx started)
 
 theorem module.validate_code_entry_with.spec {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (data : Slice U8) (pos : Usize)
     (env : module.Env) (index : Usize) (v : V) (hbound : CodeEntry.Bounds env)
     (hresults : ∀ ft ∈ env.types.val, ft.results.val.length ≤ 1) :
-    module.validate_code_entry_with visitor data pos env index v ⦃ r =>
+    module.validate_code_entry_with visitor data pos env index .Wasm1 v ⦃ r =>
       ∀ finish, r.1 = .Ok finish → CodeEntry.Validated data env index pos finish ⦄ := by
   apply WP.spec_mono (module.validate_code_entry_with.pipeline visitor hvisitor data pos env index v hbound)
   intro r h finish he
@@ -208,7 +226,7 @@ theorem module.validate_code_entry_with.spec {V : Type} (visitor : code.OpVisito
 theorem module.validate_code_entry_with.total {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (data : Slice U8) (pos : Usize)
     (env : module.Env) (index : Usize) (v : V) (hbound : CodeEntry.Bounds env) :
-    ∃ r, module.validate_code_entry_with visitor data pos env index v = .ok r := by
+    ∃ r, module.validate_code_entry_with visitor data pos env index .Wasm1 v = .ok r := by
   obtain ⟨r, hr, _⟩ := WP.spec_imp_exists
     (module.validate_code_entry_with.pipeline visitor hvisitor data pos env index v hbound)
   exact ⟨r, hr⟩
@@ -216,7 +234,7 @@ theorem module.validate_code_entry_with.total {V : Type} (visitor : code.OpVisit
 theorem module.validate_code_entry.spec (data : Slice U8) (pos : Usize)
     (env : module.Env) (index : Usize) (hbound : CodeEntry.Bounds env)
     (hresults : ∀ ft ∈ env.types.val, ft.results.val.length ≤ 1) :
-    module.validate_code_entry data pos env index ⦃ r =>
+    module.validate_code_entry data pos env index .Wasm1 ⦃ r =>
       ∀ finish, r = .Ok finish → CodeEntry.Validated data env index pos finish ⦄ := by
   obtain ⟨⟨r, v⟩, hr, hp⟩ := WP.spec_imp_exists (module.validate_code_entry_with.spec
     code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_total data pos env index () hbound hresults)
@@ -224,7 +242,7 @@ theorem module.validate_code_entry.spec (data : Slice U8) (pos : Usize)
 
 theorem module.validate_code_entry.total (data : Slice U8) (pos : Usize)
     (env : module.Env) (index : Usize) (hbound : CodeEntry.Bounds env) :
-    ∃ r, module.validate_code_entry data pos env index = .ok r := by
+    ∃ r, module.validate_code_entry data pos env index .Wasm1 = .ok r := by
   obtain ⟨⟨r, v⟩, hr⟩ := module.validate_code_entry_with.total
     code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_total data pos env index () hbound
   exact ⟨r, by simp [module.validate_code_entry, hr]⟩

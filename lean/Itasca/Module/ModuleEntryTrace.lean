@@ -108,7 +108,7 @@ theorem module.validate_code_entry_with.trace_sound {V : Type} (visitor : code.O
     (data : Slice U8) (pos : Usize) (env : module.Env) (index finish : Usize)
     (v v' : V) (hbound : CodeEntry.Bounds env)
     (hresults : ∀ ft ∈ env.types.val, ft.results.val.length ≤ 1)
-    (h : module.validate_code_entry_with visitor data pos env index v = .ok (.Ok finish, v')) :
+    (h : module.validate_code_entry_with visitor data pos env index .Wasm1 v = .ok (.Ok finish, v')) :
     ∃ observations, observe v' = observe v ++ observations ∧
       CodeEntry.AcceptedTrace data env index pos finish observations := by
   obtain ⟨w⟩ := module.validate_code_entry_with.witness visitor data pos env index finish v v' hbound h

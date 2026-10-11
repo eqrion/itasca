@@ -1,15 +1,15 @@
-//! Multi-value validation under development.
+//! Shared body worker and multi-value control rules.
 //!
-//! This module is deliberately separate from the verified Wasm 1.0 entry
-//! points while the control-flow proofs are generalized. It accepts scalar
-//! Wasm 1.0 instructions plus multi-value function and block signatures, and
-//! uses Wasm 2.0 branch-table typing. It does not enable the other 2.0 proposals.
+//! Both profiles use one initialization path, one instruction loop, and the
+//! same operand and control stacks. Wasm 1.0 keeps its existing control rules;
+//! multi-value adds parameterized signatures and Wasm 2.0 branch-table typing.
+//! Both profiles share scalar instructions and invoke hooks during validation.
 //!
-//! The operand stack and scalar readers are shared with `code`. The legacy
-//! control slots supply only stack bases and reachability here; block signature
-//! descriptors are stored alongside them, never expanded into temporary vectors.
+//! Each control frame stores its full signature descriptor without expanding
+//! indexed signatures into temporary vectors. Other Wasm 2.0 proposals remain
+//! disabled.
 
-use crate::code::{self, Context, EmptyOpVisitor, LabelKind, OpIterState, StackType};
+use crate::code::{self, Context, EmptyOpVisitor, LabelKind, OpIterState, OpVisitor, StackType};
 use crate::error::OpError;
 use crate::limits::MAX_FUNCTION_BYTES;
 use crate::module::Env;
@@ -26,7 +26,6 @@ pub const MAX_RESULTS: usize = 1000;
 
 struct State {
     core: OpIterState,
-    blocks: Vec<BlockType>,
 }
 
 fn check_func_type(ft: &FuncType) -> Result<()> {
@@ -104,11 +103,16 @@ fn same_types(env: &Env, a: ResultType, b: ResultType) -> Result<bool> {
 }
 
 fn push_frame(st: &mut State, kind: LabelKind, bt: BlockType) {
-    code::push_ctrl(&mut st.core, kind, code::BlockType::Empty);
-    st.blocks.push(bt);
+    st.core.ctrls.push(code::Ctrl {
+        kind,
+        block_type: code::BlockType::Empty,
+        signature: bt,
+        value_stack_base: st.core.vals.len(),
+        polymorphic_base: false,
+    });
 }
 
-fn enter(st: &mut State, data: &[u8], env: &Env, kind: LabelKind) -> Result<()> {
+fn enter_info(st: &mut State, data: &[u8], env: &Env, kind: LabelKind) -> Result<BlockType> {
     let (bt, end) = signature::read_block_type(data, st.core.pos)?;
     st.core.pos = end;
     if let BlockType::TypeIndex(index) = bt {
@@ -124,15 +128,23 @@ fn enter(st: &mut State, data: &[u8], env: &Env, kind: LabelKind) -> Result<()> 
     pop_results(&mut st.core, env, bt.params())?;
     // The base excludes the inputs; both arms start with their declared inputs.
     push_frame(st, kind, bt);
-    push_results(&mut st.core, env, bt.params())
+    push_results(&mut st.core, env, bt.params())?;
+    Ok(bt)
 }
 
-fn end_frame(st: &mut State, env: &Env, is_else: bool) -> Result<()> {
-    let n = st.blocks.len();
+// Stable no-op projection used by the extracted semantic contracts.
+#[allow(dead_code)]
+fn enter(st: &mut State, data: &[u8], env: &Env, kind: LabelKind) -> Result<()> {
+    enter_info(st, data, env, kind)?;
+    Ok(())
+}
+
+fn end_frame_info(st: &mut State, env: &Env, is_else: bool) -> Result<(LabelKind, BlockType)> {
+    let n = st.core.ctrls.len();
     if n == 0 {
         return Err(OpError::UnknownLabel);
     }
-    let bt = st.blocks[n - 1];
+    let bt = st.core.ctrls[n - 1].signature;
     let frame = st.core.ctrls[n - 1];
     if is_else {
         match frame.kind {
@@ -152,50 +164,75 @@ fn end_frame(st: &mut State, env: &Env, is_else: bool) -> Result<()> {
     if is_else {
         st.core.ctrls[n - 1].kind = LabelKind::Else;
         st.core.ctrls[n - 1].polymorphic_base = false;
-        push_results(&mut st.core, env, bt.params())
+        push_results(&mut st.core, env, bt.params())?;
     } else {
         let _ = st.core.ctrls.pop();
-        let _ = st.blocks.pop();
-        if n == 1 {
-            // There is no enclosing operand stack at function end.
-            Ok(())
-        } else {
-            push_results(&mut st.core, env, bt.results())
+        // There is no enclosing operand stack at function end.
+        if n != 1 {
+            push_results(&mut st.core, env, bt.results())?;
         }
     }
+    Ok((frame.kind, bt))
+}
+
+// Stable no-op projection used by the extracted semantic contracts.
+#[allow(dead_code)]
+fn end_frame(st: &mut State, env: &Env, is_else: bool) -> Result<()> {
+    end_frame_info(st, env, is_else)?;
+    Ok(())
 }
 
 fn label(st: &State, depth: u32) -> Result<ResultType> {
-    let n = st.blocks.len();
+    let n = st.core.ctrls.len();
     let d = depth as usize;
     if d >= n {
         return Err(OpError::UnknownLabel);
     }
     let i = n - 1 - d;
     match st.core.ctrls[i].kind {
-        LabelKind::Loop => Ok(st.blocks[i].params()),
-        _ => Ok(st.blocks[i].results()),
+        LabelKind::Loop => Ok(st.core.ctrls[i].signature.params()),
+        _ => Ok(st.core.ctrls[i].signature.results()),
     }
 }
 
-fn read_label(st: &mut State, data: &[u8]) -> Result<ResultType> {
+fn read_label_info(st: &mut State, data: &[u8]) -> Result<(u32, ResultType)> {
     let (depth, end) = read_u32_leb(data, st.core.pos)?;
     st.core.pos = end;
-    label(st, depth)
+    let types = label(st, depth)?;
+    Ok((depth, types))
 }
 
-fn branch(st: &mut State, data: &[u8], env: &Env, conditional: bool) -> Result<()> {
-    let ts = read_label(st, data)?;
+// Stable no-op projection used by the extracted semantic contracts.
+#[allow(dead_code)]
+fn read_label(st: &mut State, data: &[u8]) -> Result<ResultType> {
+    let (_, types) = read_label_info(st, data)?;
+    Ok(types)
+}
+
+fn branch_info(
+    st: &mut State,
+    data: &[u8],
+    env: &Env,
+    conditional: bool,
+) -> Result<(u32, ResultType)> {
+    let (depth, ts) = read_label_info(st, data)?;
     if conditional {
         code::pop_with_type(&mut st.core, ValueType::I32)?;
     }
     pop_results(&mut st.core, env, ts)?;
     if conditional {
-        push_results(&mut st.core, env, ts)
+        push_results(&mut st.core, env, ts)?;
     } else {
         code::mark_unreachable(&mut st.core);
-        Ok(())
     }
+    Ok((depth, ts))
+}
+
+// Stable no-op projection used by the extracted semantic contracts.
+#[allow(dead_code)]
+fn branch(st: &mut State, data: &[u8], env: &Env, conditional: bool) -> Result<()> {
+    branch_info(st, data, env, conditional)?;
+    Ok(())
 }
 
 /// Check the same unchanged operand suffix against every branch-table target.
@@ -229,14 +266,22 @@ fn check_suffix(st: &OpIterState, env: &Env, ts: ResultType) -> Result<()> {
     }
 }
 
-fn branch_table(st: &mut State, data: &[u8], env: &Env) -> Result<()> {
+fn branch_table_with<V: OpVisitor>(
+    st: &mut State,
+    data: &[u8],
+    env: &Env,
+    visitor: &mut V,
+) -> Result<()> {
     let (count, end) = read_u32_leb(data, st.core.pos)?;
     st.core.pos = end;
     code::pop_with_type(&mut st.core, ValueType::I32)?;
     let mut arity = None;
     let mut i = 0;
     loop {
-        let ts = read_label(st, data)?;
+        let (depth, ts) = read_label_info(st, data)?;
+        if i != count {
+            code::visit(visitor.on_br_table_label(&st.core, depth))?;
+        }
         let n = ts.len(env)?;
         match arity {
             Some(expected) => {
@@ -250,10 +295,18 @@ fn branch_table(st: &mut State, data: &[u8], env: &Env) -> Result<()> {
         // Includes the default, without adding one to a possibly-maximal count.
         if i == count {
             code::mark_unreachable(&mut st.core);
+            code::visit(visitor.on_br_table(&st.core, depth, ts))?;
             return Ok(());
         }
         i += 1;
     }
+}
+
+// Stable no-op projection used by the extracted semantic contracts.
+#[allow(dead_code)]
+fn branch_table(st: &mut State, data: &[u8], env: &Env) -> Result<()> {
+    let mut visitor = EmptyOpVisitor;
+    branch_table_with(st, data, env, &mut visitor)
 }
 
 fn apply_func_type(st: &mut OpIterState, ft: &FuncType) -> Result<()> {
@@ -266,7 +319,7 @@ fn apply_func_type(st: &mut OpIterState, ft: &FuncType) -> Result<()> {
     Ok(())
 }
 
-fn call(st: &mut State, data: &[u8], env: &Env, indirect: bool) -> Result<()> {
+fn call_info(st: &mut State, data: &[u8], env: &Env, indirect: bool) -> Result<u32> {
     let (index, end) = read_u32_leb(data, st.core.pos)?;
     st.core.pos = end;
     let i = index as usize;
@@ -283,52 +336,65 @@ fn call(st: &mut State, data: &[u8], env: &Env, indirect: bool) -> Result<()> {
             return Err(OpError::UnknownType);
         }
         code::pop_with_type(&mut st.core, ValueType::I32)?;
-        apply_func_type(&mut st.core, &env.types[i])
+        apply_func_type(&mut st.core, &env.types[i])?;
     } else {
         if i >= env.func_types.len() {
             return Err(OpError::UnknownFunc);
         }
-        apply_func_type(&mut st.core, &env.func_types[i])
+        apply_func_type(&mut st.core, &env.func_types[i])?;
+    }
+    Ok(index)
+}
+
+// Stable no-op projection used by the extracted semantic contracts.
+#[allow(dead_code)]
+fn call(st: &mut State, data: &[u8], env: &Env, indirect: bool) -> Result<()> {
+    call_info(st, data, env, indirect)?;
+    Ok(())
+}
+
+/// Initialize the shared state using the selected profile's function signature.
+fn initial_state(
+    env: &Env,
+    ctx: &Context,
+    type_index: u32,
+    profile: crate::ValidationProfile,
+) -> Result<State> {
+    match profile {
+        crate::ValidationProfile::Wasm1 => Ok(State {
+            core: code::start_function(&ctx.results),
+        }),
+        crate::ValidationProfile::MultiValue => {
+            let i = type_index as usize;
+            if i >= env.types.len() {
+                return Err(OpError::UnknownType);
+            }
+            check_func_type(&env.types[i])?;
+            let mut st = State {
+                core: OpIterState {
+                    vals: Vec::new(),
+                    ctrls: Vec::new(),
+                    pos: 0,
+                },
+            };
+            push_frame(&mut st, LabelKind::Body, BlockType::TypeIndex(type_index));
+            Ok(st)
+        }
     }
 }
 
-/// Validate a body using an existing type-section entry for its signature.
-/// `locals` contains parameters followed by declared locals. Function parameters
-/// are locals, and do not appear on the initial operand stack.
-///
-/// The implementation is extracted, but whole-body multi-value soundness and
-/// completeness are not yet proved. Use `code::validate_body` for the verified
-/// Wasm 1.0 API. Other Wasm 2.0 proposals remain disabled here.
-pub fn validate_body(
+/// The sole body loop; profile-specific control rules are selected per step.
+fn body_loop<V: OpVisitor>(
     data: &[u8],
     env: &Env,
-    locals: Vec<ValueType>,
+    ctx: &Context,
     type_index: u32,
+    profile: crate::ValidationProfile,
+    visitor: &mut V,
+    mut st: State,
 ) -> Result<()> {
-    if data.len() > MAX_FUNCTION_BYTES {
-        return Err(OpError::BodyTooLarge);
-    }
-    let i = type_index as usize;
-    if i >= env.types.len() {
-        return Err(OpError::UnknownType);
-    }
-    check_func_type(&env.types[i])?;
-    let mut st = State {
-        core: OpIterState {
-            vals: Vec::new(),
-            ctrls: Vec::new(),
-            pos: 0,
-        },
-        blocks: Vec::new(),
-    };
-    push_frame(&mut st, LabelKind::Body, BlockType::TypeIndex(type_index));
-    let ctx = Context {
-        locals,
-        results: Vec::new(),
-    };
-    let mut visitor = EmptyOpVisitor;
     loop {
-        if st.blocks.is_empty() {
+        if st.core.ctrls.is_empty() {
             if st.core.pos != data.len() {
                 return Err(OpError::TrailingBytes);
             }
@@ -336,297 +402,138 @@ pub fn validate_body(
         }
         let (op, end) = read_byte(data, st.core.pos)?;
         st.core.pos = end;
-        match op {
-            code::OP_BLOCK => enter(&mut st, data, env, LabelKind::Block)?,
-            code::OP_LOOP => enter(&mut st, data, env, LabelKind::Loop)?,
-            code::OP_IF => enter(&mut st, data, env, LabelKind::Then)?,
-            code::OP_ELSE => end_frame(&mut st, env, true)?,
-            code::OP_END => end_frame(&mut st, env, false)?,
-            code::OP_BR => branch(&mut st, data, env, false)?,
-            code::OP_BR_IF => branch(&mut st, data, env, true)?,
-            code::OP_BR_TABLE => branch_table(&mut st, data, env)?,
-            code::OP_RETURN => {
-                pop_results(
-                    &mut st.core,
-                    env,
-                    ResultType::Type {
-                        index: type_index,
-                        part: TypePart::Results,
-                    },
-                )?;
-                code::mark_unreachable(&mut st.core);
-            }
-            code::OP_CALL => call(&mut st, data, env, false)?,
-            code::OP_CALL_INDIRECT => call(&mut st, data, env, true)?,
-            _ => {
-                // Every scalar instruction pushes at most one value.
-                if st.core.vals.len() == usize::MAX {
-                    return Err(OpError::StackTooLarge);
+        step_profile(&mut st, data, env, ctx, type_index, profile, op, visitor)?;
+    }
+}
+
+/// Select the control rules while retaining the shared scalar dispatcher.
+fn step_profile<V: OpVisitor>(
+    st: &mut State,
+    data: &[u8],
+    env: &Env,
+    ctx: &Context,
+    type_index: u32,
+    profile: crate::ValidationProfile,
+    op: u8,
+    visitor: &mut V,
+) -> Result<()> {
+    match profile {
+        crate::ValidationProfile::Wasm1 => code::step(&mut st.core, data, env, ctx, op, visitor),
+        crate::ValidationProfile::MultiValue => {
+            match op {
+                code::OP_BLOCK => {
+                    let bt = enter_info(st, data, env, LabelKind::Block)?;
+                    code::visit(visitor.on_block(&st.core, bt))?;
                 }
-                code::step(&mut st.core, data, env, &ctx, op, &mut visitor)?;
+                code::OP_LOOP => {
+                    let bt = enter_info(st, data, env, LabelKind::Loop)?;
+                    code::visit(visitor.on_loop(&st.core, bt))?;
+                }
+                code::OP_IF => {
+                    let bt = enter_info(st, data, env, LabelKind::Then)?;
+                    code::visit(visitor.on_if(&st.core, bt))?;
+                }
+                code::OP_ELSE => {
+                    let (_, bt) = end_frame_info(st, env, true)?;
+                    code::visit(visitor.on_else(&st.core, bt))?;
+                }
+                code::OP_END => {
+                    let (kind, bt) = end_frame_info(st, env, false)?;
+                    code::visit(visitor.on_end(&st.core, kind, bt))?;
+                }
+                code::OP_BR => {
+                    let (depth, ts) = branch_info(st, data, env, false)?;
+                    code::visit(visitor.on_br(&st.core, depth, ts))?;
+                }
+                code::OP_BR_IF => {
+                    let (depth, ts) = branch_info(st, data, env, true)?;
+                    code::visit(visitor.on_br_if(&st.core, depth, ts))?;
+                }
+                code::OP_BR_TABLE => branch_table_with(st, data, env, visitor)?,
+                code::OP_RETURN => {
+                    pop_results(
+                        &mut st.core,
+                        env,
+                        ResultType::Type {
+                            index: type_index,
+                            part: TypePart::Results,
+                        },
+                    )?;
+                    code::mark_unreachable(&mut st.core);
+                    code::visit(visitor.on_return(&st.core))?;
+                }
+                code::OP_CALL => {
+                    let idx = call_info(st, data, env, false)?;
+                    code::visit(visitor.on_call(&st.core, idx))?;
+                }
+                code::OP_CALL_INDIRECT => {
+                    let idx = call_info(st, data, env, true)?;
+                    code::visit(visitor.on_call_indirect(&st.core, idx))?;
+                }
+                _ => {
+                    // Every scalar instruction pushes at most one value.
+                    if st.core.vals.len() == usize::MAX {
+                        return Err(OpError::StackTooLarge);
+                    }
+                    code::step(&mut st.core, data, env, ctx, op, visitor)?;
+                }
             }
+            Ok(())
         }
     }
 }
 
-fn decode_types(
+/// Validate a body in either supported profile through the same worker.
+pub(crate) fn validate_body_with_profile<V: OpVisitor>(
     data: &[u8],
-    pos: usize,
-    limit: usize,
-    error: OpError,
-) -> core::result::Result<(Vec<ValueType>, usize), crate::Error> {
-    let (count, mut pos) = read_u32_leb(data, pos)?;
-    // Reject the encoded count before allocating or reading element payloads.
-    if count as usize > limit {
-        return Err(crate::Error::Read(error));
-    }
-    let mut out = Vec::new();
-    let mut i = 0;
-    while i < count {
-        let (ty, end) = crate::module::decode_value_type(data, pos)?;
-        out.push(ty);
-        pos = end;
-        i += 1;
-    }
-    Ok((out, pos))
-}
-
-fn decode_type_section(
-    data: &[u8],
-    pos: usize,
-    env: &mut Env,
-) -> core::result::Result<usize, crate::Error> {
-    let (count, mut pos) = read_u32_leb(data, pos)?;
-    let mut i = 0;
-    while i < count {
-        let (tag, p) = read_byte(data, pos)?;
-        if tag != 0x60 {
-            return Err(crate::Error::InvalidType(tag));
-        }
-        let (params, p) = decode_types(data, p, MAX_PARAMS, OpError::TooManyParams)?;
-        let (results, p) = decode_types(data, p, MAX_RESULTS, OpError::TooManyResults)?;
-        env.types.push(FuncType { params, results });
-        pos = p;
-        i += 1;
-    }
-    Ok(pos)
-}
-
-fn decode_environment(data: &[u8]) -> core::result::Result<(Env, usize), crate::Error> {
-    let mut env = Env::new();
-    let mut pos = crate::module::read_header(data)?;
-    let mut last_id = 0;
-    loop {
-        if pos >= data.len() {
-            return Ok((env, pos));
-        }
-        let (id, start, end) = crate::module::read_section_header(data, pos)?;
-        if id == 0 {
-            crate::module::decode_custom_section(data, start, end)?;
-        } else if id >= crate::module::SECTION_CODE {
-            return Ok((env, pos));
-        } else {
-            if id <= last_id {
-                return Err(crate::Error::SectionOutOfOrder);
-            }
-            last_id = id;
-            let actual = if id == 1 {
-                decode_type_section(data, start, &mut env)?
-            } else if id == 9 {
-                decode_elements(data, start, &mut env)?
-            } else {
-                crate::module::decode_env_section(data, start, id, &mut env)?
-            };
-            if actual != end {
-                return Err(crate::Error::SectionSizeMismatch);
-            }
-        }
-        pos = end;
-    }
-}
-
-fn validate_entry(
-    data: &[u8],
-    pos: usize,
     env: &Env,
-    index: usize,
-) -> core::result::Result<usize, crate::Error> {
-    if index >= env.func_type_indices.len() {
-        return Err(crate::Error::FuncCodeMismatch);
+    ctx: &Context,
+    type_index: u32,
+    profile: crate::ValidationProfile,
+    visitor: &mut V,
+) -> Result<()> {
+    if data.len() > MAX_FUNCTION_BYTES {
+        return Err(OpError::BodyTooLarge);
     }
-    let (size, p) = read_u32_leb(data, pos)?;
-    crate::module::have_bytes(data, p, size as usize)?;
-    let end = p + size as usize;
-    let (declared, start) = crate::module::decode_locals(data, p)?;
-    if start > end {
-        return Err(crate::Error::SectionSizeMismatch);
-    }
-    let type_index = env.func_type_indices[index];
-    let i = type_index as usize;
-    if i >= env.types.len() {
-        return Err(crate::Error::UnknownType(type_index));
-    }
-    let locals = crate::module::build_func_locals(&env.types[i].params, &declared);
-    match validate_body(&data[start..end], env, locals, type_index) {
-        Ok(()) => Ok(end),
-        Err(e) => Err(crate::Error::Body(e)),
-    }
+    let st = initial_state(env, ctx, type_index, profile)?;
+    body_loop(data, env, ctx, type_index, profile, visitor, st)
 }
 
-/// Validate a contiguous module with multi-value enabled. This experimental
-/// entry point shares the scalar readers and section validators with the
-/// Wasm 1.0 implementation, but does not yet have its whole-module proofs,
-/// visitor API, or parallel streaming integration.
-pub fn validate_module(data: &[u8]) -> core::result::Result<crate::Module, crate::Error> {
-    if data.len() > crate::limits::MAX_MODULE_BYTES {
-        return Err(crate::Error::ModuleTooLarge);
-    }
-    let (env, mut pos) = decode_environment(data)?;
-    pos = validate_code(data, pos, &env)?;
-    let tail = validate_tail(data, pos, &env)?;
-    Ok(crate::Module { env, tail })
-}
-
-fn validate_code(data: &[u8], pos: usize, env: &Env) -> core::result::Result<usize, crate::Error> {
-    if pos < data.len() && data[pos] == crate::module::SECTION_CODE {
-        let (_, start, end) = crate::module::read_section_header(data, pos)?;
-        let (count, entry) = read_u32_leb(data, start)?;
-        if count as usize != env.func_type_indices.len() {
-            return Err(crate::Error::FuncCodeMismatch);
-        }
-        return validate_entries(data, entry, end, count, env);
-    } else if !env.func_type_indices.is_empty() {
-        return Err(crate::Error::MissingCodeSection);
-    }
-    Ok(pos)
-}
-
-fn validate_entries(
+/// Validate a multi-value body through the shared worker.
+/// `ctx.locals` contains parameters followed by declared locals; `type_index`
+/// selects function results. Parameters do not enter the operand stack.
+/// The enclosing module entry emits `on_function_start` before this function.
+/// Hooks receive the encoded block and label descriptors. `Ctrl.signature`
+/// records each enclosing signature; `Ctrl.block_type` is a compatibility
+/// field for Wasm 1.0 and remains empty in this profile.
+pub fn validate_body_with<V: OpVisitor>(
     data: &[u8],
-    mut entry: usize,
-    end: usize,
-    count: u32,
     env: &Env,
-) -> core::result::Result<usize, crate::Error> {
-    let mut i = 0;
-    loop {
-        if i >= count as usize {
-            if entry != end {
-                return Err(crate::Error::SectionSizeMismatch);
-            }
-            return Ok(end);
-        }
-        entry = validate_entry(data, entry, env, i)?;
-        if entry > end {
-            return Err(crate::Error::SectionSizeMismatch);
-        }
-        i += 1;
-    }
+    ctx: &Context,
+    type_index: u32,
+    visitor: &mut V,
+) -> Result<()> {
+    validate_body_with_profile(
+        data,
+        env,
+        ctx,
+        type_index,
+        crate::ValidationProfile::MultiValue,
+        visitor,
+    )
 }
 
-// Core 2's active segment encodings, including explicit index zero. Passive
-// and declarative segments belong to bulk memory/reference types and stay off.
-fn active_index(data: &[u8], pos: usize) -> core::result::Result<(u32, usize, bool), crate::Error> {
-    let (flags, pos) = read_u32_leb(data, pos)?;
-    match flags {
-        0 => Ok((0, pos, false)),
-        2 => {
-            let (index, pos) = read_u32_leb(data, pos)?;
-            Ok((index, pos, true))
-        }
-        _ => Err(crate::Error::InvalidType(0xff)),
-    }
-}
-
-fn decode_elements(
+/// Validate a body using the same visiting worker with no-op hooks.
+pub fn validate_body(
     data: &[u8],
-    pos: usize,
-    env: &mut Env,
-) -> core::result::Result<usize, crate::Error> {
-    let (count, mut pos) = read_u32_leb(data, pos)?;
-    let mut i = 0;
-    loop {
-        if i >= count {
-            return Ok(pos);
-        }
-        let (table_idx, p, explicit) = active_index(data, pos)?;
-        if table_idx as usize >= env.table_types.len() {
-            return Err(crate::Error::UnknownTable(table_idx));
-        }
-        let (offset, mut p) = crate::module::decode_const_expr(data, p, env, ValueType::I32)?;
-        if explicit {
-            let (kind, end) = read_byte(data, p)?;
-            if kind != 0 {
-                return Err(crate::Error::InvalidType(kind));
-            }
-            p = end;
-        }
-        let (init, end) = crate::module::decode_func_indices(data, p, env)?;
-        env.elements.push(crate::module::Element {
-            table_idx,
-            offset,
-            init,
-        });
-        pos = end;
-        i += 1;
-    }
-}
-
-fn decode_data(
-    data: &[u8],
-    pos: usize,
     env: &Env,
-) -> core::result::Result<(Vec<crate::module::Data>, usize), crate::Error> {
-    let (count, mut pos) = read_u32_leb(data, pos)?;
-    let mut segments = Vec::new();
-    let mut i = 0;
-    loop {
-        if i >= count {
-            return Ok((segments, pos));
-        }
-        let (memory_idx, p, _) = active_index(data, pos)?;
-        if memory_idx as usize >= env.mem_types.len() {
-            return Err(crate::Error::UnknownMemory(memory_idx));
-        }
-        let (offset, p) = crate::module::decode_const_expr(data, p, env, ValueType::I32)?;
-        let (size, p) = read_u32_leb(data, p)?;
-        crate::module::have_bytes(data, p, size as usize)?;
-        let end = p + size as usize;
-        let init = crate::module::copy_bytes(data, p, end);
-        segments.push(crate::module::Data {
-            memory_idx,
-            offset,
-            init,
-        });
-        pos = end;
-        i += 1;
-    }
-}
-
-fn validate_tail(
-    data: &[u8],
-    mut pos: usize,
-    env: &Env,
-) -> core::result::Result<crate::module::Tail, crate::Error> {
-    let mut segments = Vec::new();
-    let mut seen_data = false;
-    loop {
-        if pos >= data.len() {
-            return Ok(crate::module::Tail { data: segments });
-        }
-        let (id, start, end) = crate::module::read_section_header(data, pos)?;
-        if id == 0 {
-            crate::module::decode_custom_section(data, start, end)?;
-        } else if id != 11 || seen_data {
-            return Err(crate::Error::SectionOutOfOrder);
-        } else {
-            seen_data = true;
-            let (decoded, actual) = decode_data(data, start, env)?;
-            if actual != end {
-                return Err(crate::Error::SectionSizeMismatch);
-            }
-            segments = decoded;
-        }
-        pos = end;
-    }
+    locals: Vec<ValueType>,
+    type_index: u32,
+) -> Result<()> {
+    let ctx = Context {
+        locals,
+        results: Vec::new(),
+    };
+    let mut visitor = EmptyOpVisitor;
+    validate_body_with(data, env, &ctx, type_index, &mut visitor)
 }

@@ -24,14 +24,16 @@ end Itasca.ModuleTail
 
 namespace Itasca
 
+variable {profile : ValidationProfile}
+
 theorem module.validate_env_with_loop.accepted_transfer {V W : Type}
     (visitor : module.ModuleVisitor V) (replacement : module.ModuleVisitor W)
     (haccept : ModuleTail.HooksAccept replacement) (data : Slice U8)
     (v : V) (w : W) (env : module.Env) (pos : Usize) (lastId : U8)
     (result : module.Env) (next : Usize) (v' : V)
-    (h : module.validate_env_with_loop visitor data v env pos lastId =
+    (h : module.validate_env_with_loop visitor data profile v env pos lastId =
       .ok (.Ok (result, next), v')) :
-    ∃ w', module.validate_env_with_loop replacement data w env pos lastId =
+    ∃ w', module.validate_env_with_loop replacement data profile w env pos lastId =
       .ok (.Ok (result, next), w') := by
   generalize hn : data.length - pos.val = n
   induction n using Nat.strong_induction_on generalizing v w env pos lastId with
@@ -108,8 +110,8 @@ theorem module.validate_env_with.accepted_transfer {V W : Type}
     (visitor : module.ModuleVisitor V) (replacement : module.ModuleVisitor W)
     (haccept : ModuleTail.HooksAccept replacement) (data : Slice U8)
     (v : V) (w : W) (result : module.Env) (next : Usize) (v' : V)
-    (h : module.validate_env_with visitor data v = .ok (.Ok (result, next), v')) :
-    ∃ w', module.validate_env_with replacement data w = .ok (.Ok (result, next), w') := by
+    (h : module.validate_env_with visitor data profile v = .ok (.Ok (result, next), v')) :
+    ∃ w', module.validate_env_with replacement data profile w = .ok (.Ok (result, next), w') := by
   unfold module.validate_env_with at h ⊢
   obtain ⟨initial, hi, ht⟩ := ResultFacts.bind_ok_inv _ _ _ h
   rw [hi]
@@ -131,8 +133,8 @@ and cursor, with no assumption about any other callback execution. -/
 theorem module.validate_env_with.accepted_erase {V : Type}
     (visitor : module.ModuleVisitor V) (data : Slice U8) (v : V)
     (result : module.Env) (next : Usize) (v' : V)
-    (h : module.validate_env_with visitor data v = .ok (.Ok (result, next), v')) :
-    module.validate_env data = .ok (.Ok (result, next)) := by
+    (h : module.validate_env_with visitor data profile v = .ok (.Ok (result, next), v')) :
+    module.validate_env data profile = .ok (.Ok (result, next)) := by
   obtain ⟨w', hw⟩ := module.validate_env_with.accepted_transfer visitor
     module.EmptyModuleVisitor.Insts.ItascaModuleModuleVisitor ModuleTail.empty_hooks_accept
     data v () result next v' h
@@ -141,8 +143,8 @@ theorem module.validate_env_with.accepted_erase {V : Type}
 theorem module.validate_env_with.accepted_lift {V : Type}
     (visitor : module.ModuleVisitor V) (haccept : ModuleTail.HooksAccept visitor)
     (data : Slice U8) (v : V) (result : module.Env) (next : Usize)
-    (h : module.validate_env data = .ok (.Ok (result, next))) :
-    ∃ v', module.validate_env_with visitor data v = .ok (.Ok (result, next), v') := by
+    (h : module.validate_env data profile = .ok (.Ok (result, next))) :
+    ∃ v', module.validate_env_with visitor data profile v = .ok (.Ok (result, next), v') := by
   unfold module.validate_env at h
   obtain ⟨⟨read, w⟩, hr, ht⟩ := ResultFacts.bind_ok_inv _ _ _ h
   have ht : read = .Ok (result, next) := by simpa using ht
@@ -156,9 +158,9 @@ theorem module.validate_tail_with_loop.accepted_transfer {V W : Type}
     (haccept : ModuleTail.HooksAccept replacement) (data : Slice U8) (env : module.Env)
     (v : V) (w : W) (segments : alloc.vec.Vec module.Data) (pos : Usize) (seen : Bool)
     (result : module.Tail) (v' : V)
-    (h : module.validate_tail_with_loop visitor data env v segments pos seen =
+    (h : module.validate_tail_with_loop visitor data env profile v segments pos seen =
       .ok (.Ok result, v')) :
-    ∃ w', module.validate_tail_with_loop replacement data env w segments pos seen =
+    ∃ w', module.validate_tail_with_loop replacement data env profile w segments pos seen =
       .ok (.Ok result, w') := by
   generalize hn : data.length - pos.val = n
   induction n using Nat.strong_induction_on generalizing v w segments pos seen with
@@ -233,8 +235,8 @@ theorem module.validate_tail_with.accepted_transfer {V W : Type}
     (visitor : module.ModuleVisitor V) (replacement : module.ModuleVisitor W)
     (haccept : ModuleTail.HooksAccept replacement) (data : Slice U8) (start : Usize)
     (env : module.Env) (v : V) (w : W) (result : module.Tail) (v' : V)
-    (h : module.validate_tail_with visitor data start env v = .ok (.Ok result, v')) :
-    ∃ w', module.validate_tail_with replacement data start env w = .ok (.Ok result, w') :=
+    (h : module.validate_tail_with visitor data start env profile v = .ok (.Ok result, v')) :
+    ∃ w', module.validate_tail_with replacement data start env profile w = .ok (.Ok result, w') :=
   module.validate_tail_with_loop.accepted_transfer visitor replacement haccept data env
     v w (alloc.vec.Vec.new _) start false result v' h
 
@@ -243,8 +245,8 @@ no termination premise for the source visitor. -/
 theorem module.validate_tail_with.accepted_erase {V : Type}
     (visitor : module.ModuleVisitor V) (data : Slice U8) (start : Usize) (env : module.Env)
     (v : V) (result : module.Tail) (v' : V)
-    (h : module.validate_tail_with visitor data start env v = .ok (.Ok result, v')) :
-    module.validate_tail data start env = .ok (.Ok result) := by
+    (h : module.validate_tail_with visitor data start env profile v = .ok (.Ok result, v')) :
+    module.validate_tail data start env profile = .ok (.Ok result) := by
   obtain ⟨w', hw⟩ := module.validate_tail_with.accepted_transfer visitor
     module.EmptyModuleVisitor.Insts.ItascaModuleModuleVisitor ModuleTail.empty_hooks_accept
     data start env v () result v' h
@@ -253,8 +255,8 @@ theorem module.validate_tail_with.accepted_erase {V : Type}
 theorem module.validate_tail_with.accepted_lift {V : Type}
     (visitor : module.ModuleVisitor V) (haccept : ModuleTail.HooksAccept visitor)
     (data : Slice U8) (start : Usize) (env : module.Env) (v : V) (result : module.Tail)
-    (h : module.validate_tail data start env = .ok (.Ok result)) :
-    ∃ v', module.validate_tail_with visitor data start env v = .ok (.Ok result, v') := by
+    (h : module.validate_tail data start env profile = .ok (.Ok result)) :
+    ∃ v', module.validate_tail_with visitor data start env profile v = .ok (.Ok result, v') := by
   unfold module.validate_tail at h
   obtain ⟨⟨read, w⟩, hr, ht⟩ := ResultFacts.bind_ok_inv _ _ _ h
   have ht : read = .Ok result := by simpa using ht

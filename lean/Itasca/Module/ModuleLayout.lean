@@ -13,12 +13,12 @@ open ModuleBinary
 
 /-- The code boundary retains the absence lookahead required by the actual
 parser; an empty optional byte span alone does not justify that lookahead. -/
-def CodeAt (data : Slice U8) (start : Usize) (entries : List Code) (finish : Usize) : Prop :=
-  At (SectionEncoding 10#u8 (VecEncoding CodeEncodingWithinLimits)) data start entries finish ∨
+def CodeAt (data : Slice U8) (start : Usize) (entries : List Code) (finish : Usize) (profile : ValidationProfile := .Wasm1) : Prop :=
+  At (SectionEncoding 10#u8 (VecEncoding (Profile.CodeEncodingWithinLimits profile))) data start entries finish ∨
     entries = [] ∧ finish = start ∧ ModuleCode.AbsentAt data start
 
-theorem CodeAt.optional {data start entries finish} (h : CodeAt data start entries finish) :
-    At (OptionalSectionEncoding 10#u8 (VecEncoding CodeEncodingWithinLimits) [])
+theorem CodeAt.optional {profile data start entries finish} (h : CodeAt data start entries finish profile) :
+    At (OptionalSectionEncoding 10#u8 (VecEncoding (Profile.CodeEncodingWithinLimits profile)) [])
       data start entries finish := by
   rcases h with ⟨bytes, he, hs⟩ | ⟨he, hn, hstop⟩
   · exact ⟨bytes, .present he, hs⟩
@@ -30,22 +30,22 @@ theorem CodeAt.optional {data start entries finish} (h : CodeAt data start entri
       · have := hh.span; omega
     exact ⟨[], .absent, Wasm.BytesAt.nil data start hb⟩
 
-theorem CodeAt.segmentFree {data start entries finish} (h : CodeAt data start entries finish)
+theorem CodeAt.segmentFree {profile data start entries finish} (h : CodeAt data start entries finish profile)
     {entry : Code} (hm : entry ∈ entries) : Forall BodyContext.SegmentFree entry.body := by
   rcases h with ⟨bytes, hs, _⟩ | ⟨he, _, _⟩
   · obtain ⟨_, _, _, hv, _⟩ := hs
     obtain ⟨_, _, _, _, _, _, _, hbody, _, _⟩ := hv.member hm
-    exact BodyContext.body_segmentFree hbody
+    exact hbody.segmentFree
   · simp [he] at hm
 
 /-- Independent byte spans arranged exactly as the greedy environment/code/tail
 parser consumes them. The raw module and all per-body limits are unchanged. -/
 structure Layout (data : Slice U8) (raw : Module) (decls : ModuleEnv.Declarations)
-    (codePos tailPos : Usize) : Prop where
+    (codePos tailPos : Usize) (profile : ValidationProfile := .Wasm1) : Prop where
   raw_eq : raw = decls.module raw.codes raw.data
-  environment : At ModuleEnv.PrefixEncoding data 0#usize decls codePos
-  code : CodeAt data codePos raw.codes tailPos
-  tail : At ModuleTail.Encoding data tailPos raw.data (Slice.len data)
+  environment : At (fun ds bs => ModuleEnv.PrefixEncoding ds bs profile) data 0#usize decls codePos
+  code : CodeAt data codePos raw.codes tailPos profile
+  tail : At (fun ds bs => ModuleTail.Encoding ds bs profile) data tailPos raw.data (Slice.len data)
   stop : ModuleEnv.StopAt data codePos
 
 private theorem whole (data : Slice U8) : Wasm.BytesAt data 0#usize data.val (Slice.len data) := by
@@ -71,9 +71,9 @@ private theorem optional_cases {α : Type} {id R absent value bytes}
 
 /-- Custom sections preceding an absent code section are consumed by the
 preceding environment scan, through the next data header or EOF. -/
-theorem normalize (data : Slice U8) (raw : Module)
-    (h : ModuleEncodingWithinLimits raw data.val) :
-    ∃ decls codePos tailPos, Layout data raw decls codePos tailPos := by
+theorem normalize {profile} (data : Slice U8) (raw : Module)
+    (h : ModuleEncodingWithinLimits raw data.val profile) :
+    ∃ decls codePos tailPos, Layout data raw decls codePos tailPos profile := by
   obtain ⟨types, imports, functions, tables, memories, globals, exports, start, elements,
     codes, datas, customs, ht, hi, hf, hta, hm, hg, he, hst, hel, hc, hd, hcustom, hbytes⟩ := h.2
   let decls : ModuleEnv.Declarations :=
@@ -82,7 +82,7 @@ theorem normalize (data : Slice U8) (raw : Module)
   have hr : raw = decls.module raw.codes raw.data := by cases raw; rfl
   let before := magicVersion ++ types ++ imports ++ functions ++ tables ++ memories ++
     globals ++ exports ++ start ++ elements
-  have hp : ∀ cs, CustomsEncoding cs → ModuleEnv.PrefixEncoding decls (before ++ cs) := by
+  have hp : ∀ cs, CustomsEncoding cs → ModuleEnv.PrefixEncoding decls (before ++ cs) profile := by
     intro cs hs
     exact ⟨types, imports, functions, tables, memories, globals, exports, start, elements,
       cs, ht, hi, hf, hta, hm, hg, he, hst, hel, hs, rfl⟩
@@ -109,7 +109,7 @@ theorem normalize (data : Slice U8) (raw : Module)
       subst tailPos
       obtain ⟨dataEnd, hdataSpan, _⟩ := ht.split
       obtain ⟨first, hheader, _⟩ :=
-        (show At (SectionEncoding 11#u8 (VecEncoding DataEncoding)) data codePos raw.data dataEnd from
+        (show At (SectionEncoding 11#u8 (VecEncoding (DataEncodingFor profile))) data codePos raw.data dataEnd from
           ⟨dataBytes, hdata, hdataSpan⟩).section_split
       exact ⟨decls, codePos, codePos, hr, ⟨_, hprefix, hb⟩,
         .inr ⟨hnoCode, rfl, .inr ⟨11#u8, first, dataEnd, hheader, by decide⟩⟩,
@@ -121,7 +121,7 @@ theorem normalize (data : Slice U8) (raw : Module)
       simpa [before, hcodes, List.append_assoc] using hbytes
     obtain ⟨codePos, tailPos, hb, hc, ht⟩ := split_three hb
     obtain ⟨first, hheader, _⟩ :=
-      (show At (SectionEncoding 10#u8 (VecEncoding CodeEncodingWithinLimits))
+      (show At (SectionEncoding 10#u8 (VecEncoding (Profile.CodeEncodingWithinLimits profile)))
         data codePos raw.codes tailPos from ⟨codeBytes, hcode, hc⟩).section_split
     exact ⟨decls, codePos, tailPos, hr, ⟨_, hprefix, hb⟩,
       .inl ⟨codeBytes, hcode, hc⟩, ⟨_, ⟨datas, customs, hd, hcustom, rfl⟩, ht⟩,

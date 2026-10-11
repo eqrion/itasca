@@ -71,7 +71,7 @@ theorem Execution.public {data env ctx bt final}
     code.validate_body data env ctx = .ok (.Ok ()) := by
   have hlimit : ¬ Slice.len data > limits.MAX_FUNCTION_BYTES := by scalar_tac
   have hloop := h.finish hc hp
-  simp [code.validate_body, code.validate_body_with, hlimit,
+  simp [code.validate_body, code.validate_body_with.eq_model, code.validate_body_with_model, hlimit,
     code.start_function.spec (alloc.vec.Vec.deref ctx.results) bt
       (by simpa [alloc.vec.Vec.deref] using hresults), hloop]
 

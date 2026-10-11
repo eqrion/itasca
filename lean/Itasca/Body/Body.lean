@@ -1,4 +1,5 @@
 import Itasca.Body.Control
+import Itasca.Body.SharedLoop
 import Itasca.Binary.ReadByte
 
 open Aeneas Aeneas.Std
@@ -7,7 +8,7 @@ namespace Itasca.Body
 
 def initial (bt : code.BlockType) : code.OpIterState :=
   ⟨alloc.vec.Vec.new _,
-    alloc.vec.Vec.from [⟨.Body, bt, 0#usize, false⟩] (by scalar_tac), 0#usize⟩
+    alloc.vec.Vec.from [⟨.Body, bt, Control.signature bt, 0#usize, false⟩] (by scalar_tac), 0#usize⟩
 
 theorem initial_shape (bt : code.BlockType) : Control.Shape (initial bt) := by
   constructor <;> simp [initial]
@@ -59,8 +60,9 @@ theorem code.read_op.eof (st : code.OpIterState) (data : Slice U8)
     core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-/-- Termination and invariant induction for the actual extracted public body's
-loop. The profile-specific step proof is an explicit parameter of this lemma. -/
+/-- Termination and invariant induction for the Wasm 1.0 view of the shared
+loop. `code.validate_body_with.eq_model` connects this view to the extracted
+worker. The profile-specific step proof is an explicit parameter here. -/
 theorem code.validate_body_with_loop.spec {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (inv : V → code.OpIterState → Prop) (post : V → Prop)
@@ -120,7 +122,8 @@ theorem code.validate_body_with.spec {V : Type} (visitor : code.OpVisitor V)
       st.pos.val = data.length → post v)
     (v : V) (hinit : data.length ≤ limits.MAX_FUNCTION_BYTES.val → inv v (Body.initial bt)) :
     code.validate_body_with visitor data env ctx v ⦃ r => r.1 = .Ok () → post r.2 ⦄ := by
-  unfold code.validate_body_with
+  rw [code.validate_body_with.eq_model]
+  unfold code.validate_body_with_model
   dsimp only
   split
   · simp [WP.spec_ok]

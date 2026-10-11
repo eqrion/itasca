@@ -119,9 +119,10 @@ structure Ready (raw : ModuleBinary.Module) (last : Nat) (decls : Declarations)
 
 /-- Pure semantic requirements of the next declaration section. Binary framing,
 UTF-8 names, and cursor/capacity bounds are supplied separately by the grammar. -/
-def SectionValid (raw : ModuleBinary.Module) (id : Nat) (env : module.Env) : Prop :=
+def SectionValid (raw : ModuleBinary.Module) (id : Nat) (env : module.Env)
+    (profile : ValidationProfile := .Wasm1) : Prop :=
   match id with
-  | 1 => ∀ ft ∈ raw.types, ft.results.val.length ≤ 1
+  | 1 => ∀ ft ∈ raw.types, Profile.FuncTypeAdmissible profile ft
   | 2 => ModuleSections.ImportsValid env raw.imports
   | 3 => ∀ idx ∈ raw.functions, idx.val < env.types.val.length
   | 4 => (∀ tt ∈ raw.tables, ModuleBinary.LimitsValid tt.limits limits.MAX_TABLE_ELEMS) ∧
@@ -138,7 +139,7 @@ def SectionValid (raw : ModuleBinary.Module) (id : Nat) (env : module.Env) : Pro
 
 /-- Declarative assembly discharges this aggregate once. It contains no parser
 execution or successful-decoding premise. -/
-def Requirements (raw : ModuleBinary.Module) : Prop :=
-  ∀ id decls env, 1 ≤ id → id ≤ 9 → Ready raw (id - 1) decls env → SectionValid raw id env
+def Requirements (raw : ModuleBinary.Module) (profile : ValidationProfile := .Wasm1) : Prop :=
+  ∀ id decls env, 1 ≤ id → id ≤ 9 → Ready raw (id - 1) decls env → SectionValid raw id env profile
 
 end Itasca.ModuleEnv

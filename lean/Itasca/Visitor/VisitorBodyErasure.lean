@@ -79,7 +79,8 @@ theorem code.validate_body_with.accepted_erase_of_contract {V : Type}
     (h : code.validate_body_with visitor data env ctx v = .ok (.Ok (), v')) :
     code.validate_body_with code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor data env ctx () =
       .ok (.Ok (), ()) := by
-  unfold code.validate_body_with at h ⊢
+  simp only [code.validate_body_with.eq_model] at h ⊢
+  unfold code.validate_body_with_model at h ⊢
   dsimp only at h ⊢
   by_cases hsize : Slice.len data > limits.MAX_FUNCTION_BYTES
   · simp [hsize] at h

@@ -1,5 +1,6 @@
 import Itasca.Module.BodyContext
 import Itasca.Binary.ModuleBinary
+import Itasca.Profile.Instructions
 
 open Aeneas Aeneas.Std
 
@@ -33,12 +34,13 @@ def instructionType (ft : types.FuncType) : functype :=
 
 /-- A code entry refers to the actual type table, and its body uses parameter
 locals followed by the decoded local declarations. -/
-structure Typed (env : module.Env) (typeIdx : U32) (entry : ModuleBinary.Code) : Prop where
+structure Typed (env : module.Env) (typeIdx : U32) (entry : ModuleBinary.Code)
+    (validationProfile : ValidationProfile := .Wasm1) : Prop where
   type_lt : typeIdx.val < env.types.val.length
   typed : Instrs_ok (bodyContext env env.types.val[typeIdx.val].params.val
     entry.declared env.types.val[typeIdx.val].results.val) entry.body
     (instructionType env.types.val[typeIdx.val])
-  profile : Wasm1.Instructions (bodyContext env env.types.val[typeIdx.val].params.val
+  profile : Profile.Instructions validationProfile (bodyContext env env.types.val[typeIdx.val].params.val
     entry.declared env.types.val[typeIdx.val].results.val) entry.body
 
 def function (typeIdx : U32) (entry : ModuleBinary.Code) : func :=
@@ -62,10 +64,13 @@ theorem ModuleContext.wf {env C} (h : ModuleContext env C) : wf_context C := by
 
 /-- Generated function typing in the full module context. No equality of the
 body API's empty segment spaces with the module's segment spaces is assumed. -/
-theorem Typed.func_ok {env : module.Env} {typeIdx : U32} {entry : ModuleBinary.Code}
-    (h : Typed env typeIdx entry) (C : context) (hc : ModuleContext env C) :
-    Func_ok C (function typeIdx entry) (EnvTranslation.funcType (env.types.val[typeIdx.val]'h.type_lt)) := by
-  let ft := env.types.val[typeIdx.val]'h.type_lt
+theorem typed_func_ok {env : module.Env} {typeIdx : U32} {entry : ModuleBinary.Code}
+    (hindex : typeIdx.val < env.types.val.length)
+    (htyped : Instrs_ok (bodyContext env env.types.val[typeIdx.val].params.val
+      entry.declared env.types.val[typeIdx.val].results.val) entry.body
+      (instructionType env.types.val[typeIdx.val])) (C : context) (hc : ModuleContext env C) :
+    Func_ok C (function typeIdx entry) (EnvTranslation.funcType (env.types.val[typeIdx.val]'hindex)) := by
+  let ft := env.types.val[typeIdx.val]'hindex
   let ps := ft.params.val.map Translate.valueType
   let ds := entry.declared.map Translate.valueType
   let rs := ft.results.val.map Translate.valueType
@@ -84,8 +89,8 @@ theorem Typed.func_ok {env : module.Env} {typeIdx : U32} {entry : ModuleBinary.C
     · change [.mk_list rs] = [.mk_list rs] ++ C.LABELS
       simp [hc.labels]
     · rfl
-  have ht := BodyContext.instrs_transport h.typed rfl rfl hcore
-  have hw := (DeclarativeComplete.wellFormed h.typed).2
+  have ht := BodyContext.instrs_transport htyped rfl rfl hcore
+  have hw := (DeclarativeComplete.wellFormed htyped).2
   have he : Expr_ok (localC ++ C) entry.body (.mk_list rs) :=
     .mk_Expr_ok _ _ _ ht
       ((DeclarativeComplete.wellFormed ht).1) hw
@@ -93,14 +98,20 @@ theorem Typed.func_ok {env : module.Env} {typeIdx : U32} {entry : ModuleBinary.C
     simp only [ds, Forall, List.mem_map]
     rintro _ ⟨t, _, rfl⟩
     cases t <;> simp [Translate.valueType]
-  have hi : typeIdx.val < C.TYPES.length := by simpa [hc.types] using h.type_lt
+  have hi : typeIdx.val < C.TYPES.length := by simpa [hc.types] using hindex
   have hlookup : C.TYPES[typeIdx.val]! = EnvTranslation.funcType ft := by
-    rw [hc.types, getElem!_pos _ _ (by simpa using h.type_lt), List.getElem_map]
+    rw [hc.types, getElem!_pos _ _ (by simpa using hindex), List.getElem_map]
   have hf : wf_func (function typeIdx entry) :=
     .func_case_0 _ _ _ (EnvTranslation.index_wf typeIdx) hw
   simpa only [function, EnvTranslation.funcType, Map, List.map_map,
     Function.comp_def, ds, ps, rs, ft, localC] using
     Func_ok.mk_Func_ok C (.mk_uN typeIdx.val) ds entry.body ps rs hi hlookup hn he hc.wf (by simpa [function, Map, ds, List.map_map, Function.comp_def] using hf) hlwf
+
+/-- The Wasm 1.0 certificate specializes the common function-typing bridge. -/
+theorem Typed.func_ok {env : module.Env} {typeIdx : U32} {entry : ModuleBinary.Code}
+    {profile : ValidationProfile} (h : Typed env typeIdx entry profile) (C : context) (hc : ModuleContext env C) :
+    Func_ok C (function typeIdx entry) (EnvTranslation.funcType (env.types.val[typeIdx.val]'h.type_lt)) :=
+  typed_func_ok h.type_lt h.typed C hc
 
 /-- The function-body soundness result uses this same context when its locals
 and results are the vectors constructed by the code-entry validator. -/

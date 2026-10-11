@@ -19,7 +19,7 @@ def emptyBytes : Slice U8 := bytes []
 
 /-- This descriptor has no valid function to validate. -/
 def impossibleIssued : StreamBatch.Issued :=
-  ⟨0#u64, 0#usize, emptyEnv, emptyBytes, 0#usize, 0#usize, 1#usize⟩
+  ⟨0#u64, 0#usize, emptyEnv, emptyBytes, 0#usize, 0#usize, 1#usize, .Wasm1⟩
 
 /-- An arbitrary extracted record can forge the private validation cursor. -/
 def forgedBatch : stream.CodeBatch :=
@@ -40,7 +40,7 @@ theorem forged_unreachable : ¬ StreamBatch.Reachable impossibleIssued forgedBat
     intro count pos hp
     induction hp with
     | nil => rfl
-    | snoc previous index run ih =>
+    | snoc visitor previous index run ih =>
       simp [impossibleIssued, emptyEnv, module.validate_code_entry,
         module.validate_code_entry_with] at run
   have hz := hzero h.validation.2.1
@@ -137,7 +137,7 @@ theorem empty_split : stream.find_code_region emptyBytes = .ok (0#usize, 0#usize
 
 /-- Safe splitting of a short buffer does not make it a valid module: the
 actual contiguous adapter still rejects the missing header. -/
-theorem empty_slice_rejected : stream.validate_module_slice emptyBytes =
+theorem empty_slice_rejected : stream.validate_module_slice emptyBytes .Wasm1 =
     .ok (.Err (.Read .UnexpectedEof)) := by
   have hslice : core.slice.index.Slice.index (core.slice.index.SliceIndexRangeUsizeSlice U8)
       emptyBytes { start := 0#usize, «end» := 0#usize } = .ok emptyBytes := by

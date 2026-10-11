@@ -19,8 +19,8 @@ def Queued (_id : U64) (queue : List StreamBatch.Issued) (state : stream.SyncVis
 
 /-- The private synchronous worker discharges the accepting scheduler policy;
 capacity one prevents overwriting a queued batch. -/
-theorem accepts : StreamAcceptingScheduler.Accepts sync
-    { batch_bytes := 25000#usize, max_batches := 1#usize } Queued := by
+theorem accepts {profile : ValidationProfile} : StreamAcceptingScheduler.Accepts sync
+    { batch_bytes := 25000#usize, max_batches := 1#usize } Queued profile := by
   constructor
   · decide
   · decide
@@ -39,7 +39,7 @@ theorem accepts : StreamAcceptingScheduler.Accepts sync
     subst queue
     obtain ⟨entries, hn, ht, hb⟩ := hvalid.entries
     obtain ⟨after, hr, _, _⟩ := stream.CodeBatch.validate_all.complete_seed
-      issued entries hvalid.bounded hn ht hvalid.profile hvalid.entry_bounds hb
+      issued entries hvalid.bounded hn ht hvalid.profile hvalid.limits hvalid.entry_bounds hb hvalid.validation_profile
     refine ⟨{ state with completed := some after }, ?_, after, rfl, hr⟩
     simp [stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.submit_code_batch, hr]
   · intro id queue state hqueue _ hnonempty
@@ -62,9 +62,9 @@ theorem accepts : StreamAcceptingScheduler.Accepts sync
 
 /-- The actual tail delivery survives final draining, so the slice wrapper
 returns precisely the metadata witness used by the generic driver theorem. -/
-theorem delivered_tail {S : Type} {source : stream.Source S} {id : U64} {state : S}
+theorem delivered_tail {profile : ValidationProfile} {S : Type} {source : stream.Source S} {id : U64} {state : S}
     {env : module.Env} {environmentLength : Usize} {before after : stream.SyncVisitor}
-    (run : StreamRun.Remaining source sync id state env environmentLength before after) :
+    (run : StreamRun.Remaining source sync id state env environmentLength before after profile) :
     after.tail = some run.tail := by
   have hready := run.ready_call
   rw [tail_ready] at hready

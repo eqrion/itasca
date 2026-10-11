@@ -97,7 +97,8 @@ theorem code.validate_body_with.refines_of_contract {V W : Type}
     (res : core.result.Result Unit error.OpError) (v' : V)
     (h : code.validate_body_with visitor data env ctx v = .ok (res, v')) :
     ∃ w', code.validate_body_with replacement data env ctx w = .ok (res, w') ∧ related v' w' := by
-  unfold code.validate_body_with at h ⊢
+  simp only [code.validate_body_with.eq_model] at h ⊢
+  unfold code.validate_body_with_model at h ⊢
   dsimp only at h ⊢
   by_cases hsize : Slice.len data > limits.MAX_FUNCTION_BYTES
   · simp [hsize] at h ⊢

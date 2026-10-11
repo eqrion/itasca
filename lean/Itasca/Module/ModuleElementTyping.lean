@@ -27,7 +27,7 @@ theorem element_wf (entry : ModuleBinary.Element) : wf_elem (element entry) := b
   · exact .elemmode_case_0 _ _ (EnvTranslation.index_wf entry.tableIdx)
       (ModuleConstants.expression_wf entry.offset)
 
-theorem element_typed {env : module.Env} (hv : ModuleEnv.Valid env)
+theorem element_typed {env : module.Env} {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile)
     (entry : module.Element) (he : entry ∈ env.elements.val) :
     Elem_ok (initializerContext env) (element (ModuleEnv.rawElement entry)) .FUNCREF := by
   obtain ⟨hi, hoffset, hfuncs⟩ := hv.elements entry he
@@ -53,7 +53,7 @@ theorem element_typed {env : module.Env} (hv : ModuleEnv.Valid env)
   · exact element_wf (ModuleEnv.rawElement entry)
 
 theorem table_typed {env tables memories} (hc : ModuleEnv.Cache env tables memories)
-    (hv : ModuleEnv.Valid env) (tt : types.TableType) (ht : tt ∈ tables)
+    {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile) (tt : types.TableType) (ht : tt ∈ tables)
     (C : context) (hC : wf_context C) :
     Table_ok C (table tt) (EnvTranslation.tableType tt) := by
   have hm : tt ∈ env.table_types.val := by rw [hc.tables]; exact List.mem_append_right _ ht
@@ -61,7 +61,7 @@ theorem table_typed {env tables memories} (hc : ModuleEnv.Cache env tables memor
     (.table_case_0 _ (EnvTranslation.tableType_wf tt))
 
 theorem memory_typed {env tables memories} (hc : ModuleEnv.Cache env tables memories)
-    (hv : ModuleEnv.Valid env) (mt : types.MemType) (ht : mt ∈ memories)
+    {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile) (mt : types.MemType) (ht : mt ∈ memories)
     (C : context) (hC : wf_context C) :
     Mem_ok C (memory mt) (EnvTranslation.memType mt) := by
   have hm : mt ∈ env.mem_types.val := by rw [hc.memories]; exact List.mem_append_right _ ht

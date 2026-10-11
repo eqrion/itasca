@@ -1,4 +1,5 @@
 import Itasca.Module.ModuleCodeLimits
+import Itasca.Profile.CodeEntry
 
 open Aeneas Aeneas.Std
 
@@ -27,9 +28,9 @@ theorem PaddedEncoding.imp {α : Type} {R S : α → List U8 → Prop} {id absen
     obtain ⟨size, payload, hn, hval, hb⟩ := hp
     exact .present ⟨size, payload, hn, hs _ _ hval, hb⟩
 
-theorem ModuleEncodingWith.imp {R S : Code → List U8 → Prop} {raw bytes}
-    (h : ModuleEncodingWith R raw bytes) (hs : ∀ code bs, R code bs → S code bs) :
-    ModuleEncodingWith S raw bytes := by
+theorem ModuleEncodingWith.imp {profile} {R S : Code → List U8 → Prop} {raw bytes}
+    (h : ModuleEncodingWith R raw bytes profile) (hs : ∀ code bs, R code bs → S code bs) :
+    ModuleEncodingWith S raw bytes profile := by
   obtain ⟨types, imports, functions, tables, memories, globals, exports, start, elements,
     codes, datas, customs, ht, hi, hf, htt, hm, hg, he, hst, hel, hc, hd, hcs, hb⟩ := h
   exact ⟨types, imports, functions, tables, memories, globals, exports, start, elements,
@@ -38,11 +39,19 @@ theorem ModuleEncodingWith.imp {R S : Code → List U8 → Prop} {raw bytes}
 
 /-- This strengthens only the code entries' exact encoding witnesses. It
 retains padded LEB encodings and constrains the actual encoded body bytes. -/
-def ModuleEncodingWithinLimits (raw : Module) (bytes : List U8) : Prop :=
+def ModuleEncodingWithinLimits (raw : Module) (bytes : List U8)
+    (profile : ValidationProfile := .Wasm1) : Prop :=
   bytes.length ≤ limits.MAX_MODULE_BYTES.val ∧
-    ModuleEncodingWith CodeEncodingWithinLimits raw bytes
+    ModuleEncodingWith (Profile.CodeEncodingWithinLimits profile) raw bytes profile
 
-theorem ModuleEncodingWithinLimits.encoding {raw bytes} (h : ModuleEncodingWithinLimits raw bytes) :
-    ModuleEncoding raw bytes := h.2.imp (fun _ _ hc => hc.encoding)
+theorem ModuleEncodingWithinLimits.encoding {profile raw bytes}
+    (h : ModuleEncodingWithinLimits raw bytes profile) :
+    ModuleEncodingWith (Profile.CodeEncoding profile) raw bytes profile :=
+  h.2.imp (fun _ _ hc => hc.encoding)
+
+/-- Signature allocation caps are explicit completeness conditions rather than
+language restrictions; Wasm 1.0 keeps its existing unbounded parameter behavior. -/
+def ModuleSignaturesWithinLimits (raw : Module) (profile : ValidationProfile) : Prop :=
+  ∀ ft ∈ raw.types, Profile.FuncTypeWithinLimits profile ft
 
 end Itasca.ModuleBinary

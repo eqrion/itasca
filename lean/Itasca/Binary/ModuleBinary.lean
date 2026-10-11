@@ -170,6 +170,84 @@ def ElementEncoding (entry : Element) (bytes : List U8) : Prop :=
     ConstEncoding entry.offset offset ∧ VecEncoding IndexEncoding entry.init entries ∧
     bytes = table ++ offset ++ entries
 
+/-- The active segment forms enabled by the multi-value profile. Flags are
+unsigned LEB encodings, so valid nonminimal flag encodings remain admissible. -/
+inductive ActiveIndexEncoding : U32 → Bool → List U8 → Prop where
+  | implicit {flags} : IndexEncoding 0#u32 flags → ActiveIndexEncoding 0#u32 false flags
+  | explicit {index flags bytes} : IndexEncoding 2#u32 flags → IndexEncoding index bytes →
+      ActiveIndexEncoding index true (flags ++ bytes)
+
+/-- The extra bytes following the already decoded index-or-flags field. This
+independent relation connects segment prefix decoding to the binary grammar. -/
+def SegmentIndexEncoding (profile : ValidationProfile) (flags index : U32)
+    (explicit : Bool) (bytes : List U8) : Prop :=
+  match profile with
+  | .Wasm1 => index = flags ∧ explicit = false ∧ bytes = []
+  | .MultiValue =>
+      (flags = 0#u32 ∧ index = 0#u32 ∧ explicit = false ∧ bytes = []) ∨
+      (flags = 2#u32 ∧ explicit = true ∧ IndexEncoding index bytes)
+
+/-- The explicit active element form carries the legacy funcref elemkind. -/
+def ElementKindEncoding (explicit : Bool) (bytes : List U8) : Prop :=
+  if explicit then bytes = [0#u8] else bytes = []
+
+def ElementEncodingFor (profile : ValidationProfile) (entry : Element)
+    (bytes : List U8) : Prop :=
+  match profile with
+  | .Wasm1 => ElementEncoding entry bytes
+  | .MultiValue =>
+      ∃ explicit index offset kind entries,
+        ActiveIndexEncoding entry.tableIdx explicit index ∧
+        ConstEncoding entry.offset offset ∧ ElementKindEncoding explicit kind ∧
+        VecEncoding IndexEncoding entry.init entries ∧ bytes = index ++ offset ++ kind ++ entries
+
+theorem SegmentIndexEncoding.active {flags index explicit bytes headBytes}
+    (h : SegmentIndexEncoding .MultiValue flags index explicit bytes)
+    (hf : IndexEncoding flags headBytes) : ActiveIndexEncoding index explicit (headBytes ++ bytes) := by
+  rcases h with ⟨rfl, rfl, rfl, rfl⟩ | ⟨rfl, rfl, hi⟩
+  · simpa using ActiveIndexEncoding.implicit hf
+  · exact .explicit hf hi
+
+theorem ActiveIndexEncoding.parts {index explicit bytes}
+    (h : ActiveIndexEncoding index explicit bytes) :
+    ∃ flags headBytes suffix, IndexEncoding flags headBytes ∧
+      SegmentIndexEncoding .MultiValue flags index explicit suffix ∧ bytes = headBytes ++ suffix := by
+  cases h with
+  | implicit hf => exact ⟨0#u32, _, [], hf, Or.inl ⟨rfl, rfl, rfl, rfl⟩, by simp⟩
+  | explicit hf hi => exact ⟨2#u32, _, _, hf, Or.inr ⟨rfl, rfl, hi⟩, rfl⟩
+
+theorem ElementEncodingFor.of_parts {profile entry flags explicit headBytes index offset kind entries}
+    (hf : IndexEncoding flags headBytes)
+    (hs : SegmentIndexEncoding profile flags entry.tableIdx explicit index)
+    (ho : ConstEncoding entry.offset offset) (hk : ElementKindEncoding explicit kind)
+    (hi : VecEncoding IndexEncoding entry.init entries) :
+    ElementEncodingFor profile entry (headBytes ++ index ++ offset ++ kind ++ entries) := by
+  cases profile with
+  | Wasm1 =>
+    obtain ⟨he, rfl, rfl⟩ := hs
+    have hkind : kind = [] := hk
+    subst kind
+    exact ⟨headBytes, offset, entries, he ▸ hf, ho, hi, by simp⟩
+  | MultiValue => exact ⟨explicit, headBytes ++ index, offset, kind, entries,
+      hs.active hf, ho, hk, hi, rfl⟩
+
+theorem ElementEncodingFor.parts {profile entry bytes}
+    (h : ElementEncodingFor profile entry bytes) :
+    ∃ flags explicit headBytes index offset kind entries,
+      IndexEncoding flags headBytes ∧ SegmentIndexEncoding profile flags entry.tableIdx explicit index ∧
+      ConstEncoding entry.offset offset ∧ ElementKindEncoding explicit kind ∧
+      VecEncoding IndexEncoding entry.init entries ∧
+      bytes = headBytes ++ index ++ offset ++ kind ++ entries := by
+  cases profile with
+  | Wasm1 =>
+    obtain ⟨index, offset, entries, hi, ho, he, rfl⟩ := h
+    exact ⟨entry.tableIdx, false, index, [], offset, [], entries, hi,
+      ⟨rfl, rfl, rfl⟩, ho, rfl, he, by simp⟩
+  | MultiValue =>
+    obtain ⟨explicit, index, offset, kind, entries, hi, ho, hk, he, rfl⟩ := h
+    obtain ⟨flags, headBytes, suffix, hf, hs, rfl⟩ := hi.parts
+    exact ⟨flags, explicit, headBytes, suffix, offset, kind, entries, hf, hs, ho, hk, he, rfl⟩
+
 def LocalEncoding (entry : U32 × types.ValueType) (bytes : List U8) : Prop :=
   ∃ count, IndexEncoding entry.1 count ∧ bytes = count ++ [valueByte entry.2]
 
@@ -187,6 +265,41 @@ def DataEncoding (entry : Data) (bytes : List U8) : Prop :=
   ∃ memory offset entries, IndexEncoding entry.memoryIdx memory ∧
     ConstEncoding entry.offset offset ∧ ByteVecEncoding entry.init entries ∧
     bytes = memory ++ offset ++ entries
+
+def DataEncodingFor (profile : ValidationProfile) (entry : Data) (bytes : List U8) : Prop :=
+  match profile with
+  | .Wasm1 => DataEncoding entry bytes
+  | .MultiValue =>
+      ∃ explicit index offset entries,
+        ActiveIndexEncoding entry.memoryIdx explicit index ∧
+        ConstEncoding entry.offset offset ∧ ByteVecEncoding entry.init entries ∧
+        bytes = index ++ offset ++ entries
+
+theorem DataEncodingFor.of_parts {profile entry flags explicit headBytes index offset entries}
+    (hf : IndexEncoding flags headBytes)
+    (hs : SegmentIndexEncoding profile flags entry.memoryIdx explicit index)
+    (ho : ConstEncoding entry.offset offset) (hi : ByteVecEncoding entry.init entries) :
+    DataEncodingFor profile entry (headBytes ++ index ++ offset ++ entries) := by
+  cases profile with
+  | Wasm1 =>
+    obtain ⟨he, _, rfl⟩ := hs
+    exact ⟨headBytes, offset, entries, he ▸ hf, ho, hi, by simp⟩
+  | MultiValue => exact ⟨explicit, headBytes ++ index, offset, entries, hs.active hf, ho, hi, rfl⟩
+
+theorem DataEncodingFor.parts {profile entry bytes} (h : DataEncodingFor profile entry bytes) :
+    ∃ flags explicit headBytes index offset entries,
+      IndexEncoding flags headBytes ∧ SegmentIndexEncoding profile flags entry.memoryIdx explicit index ∧
+      ConstEncoding entry.offset offset ∧ ByteVecEncoding entry.init entries ∧
+      bytes = headBytes ++ index ++ offset ++ entries := by
+  cases profile with
+  | Wasm1 =>
+    obtain ⟨index, offset, entries, hi, ho, he, rfl⟩ := h
+    exact ⟨entry.memoryIdx, false, index, [], offset, entries, hi,
+      ⟨rfl, rfl, rfl⟩, ho, he, by simp⟩
+  | MultiValue =>
+    obtain ⟨explicit, index, offset, entries, hi, ho, he, rfl⟩ := h
+    obtain ⟨flags, headBytes, suffix, hf, hs, rfl⟩ := hi.parts
+    exact ⟨flags, explicit, headBytes, suffix, offset, entries, hf, hs, ho, he, rfl⟩
 
 /-- Section payloads occupy exactly the declared byte count. -/
 def SectionEncoding {α : Type} (id : U8) (R : α → List U8 → Prop)
@@ -222,7 +335,8 @@ def magicVersion : List U8 := [0#u8, 0x61#u8, 0x73#u8, 0x6D#u8, 1#u8, 0#u8, 0#u8
 
 /-- The complete Wasm 1.0 module format, with custom sections between ordered
 optional sections. Semantic checks remain separate from this byte grammar. -/
-def ModuleEncodingWith (codeRel : Code → List U8 → Prop) (value : Module) (bytes : List U8) : Prop :=
+def ModuleEncodingWith (codeRel : Code → List U8 → Prop) (value : Module) (bytes : List U8)
+    (profile : ValidationProfile := .Wasm1) : Prop :=
   ∃ types imports functions tables memories globals exports start elements codes datas customs,
     PaddedEncoding 1#u8 (VecEncoding FuncTypeEncoding) [] value.types types ∧
     PaddedEncoding 2#u8 (VecEncoding ImportEncoding) [] value.imports imports ∧
@@ -232,9 +346,9 @@ def ModuleEncodingWith (codeRel : Code → List U8 → Prop) (value : Module) (b
     PaddedEncoding 6#u8 (VecEncoding GlobalEncoding) [] value.globals globals ∧
     PaddedEncoding 7#u8 (VecEncoding ExportEncoding) [] value.exports exports ∧
     PaddedEncoding 8#u8 StartEncoding none value.start start ∧
-    PaddedEncoding 9#u8 (VecEncoding ElementEncoding) [] value.elements elements ∧
+    PaddedEncoding 9#u8 (VecEncoding (ElementEncodingFor profile)) [] value.elements elements ∧
     PaddedEncoding 10#u8 (VecEncoding codeRel) [] value.codes codes ∧
-    PaddedEncoding 11#u8 (VecEncoding DataEncoding) [] value.data datas ∧
+    PaddedEncoding 11#u8 (VecEncoding (DataEncodingFor profile)) [] value.data datas ∧
     CustomsEncoding customs ∧
     bytes = magicVersion ++ types ++ imports ++ functions ++ tables ++ memories ++
       globals ++ exports ++ start ++ elements ++ codes ++ datas ++ customs

@@ -342,7 +342,7 @@ theorem code.step_br_table.dispatch {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_BR_TABLE v = (do
       let (res, s, w) ← code.read_br_table visitor st data v
-      CoreVisitor.run (.ok (res, s)) (fun v s a => visitor.on_br_table v s a.1 a.2) w) := by
+      CoreVisitor.run (.ok (res, s)) (fun v s a => visitor.on_br_table v s a.1 (Control.resultView a.2)) w) := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -362,8 +362,8 @@ theorem code.step_br_table.of_read {V : Type} (visitor : code.OpVisitor V)
   rw [code.step_br_table.dispatch, hr]
   simp only [bind_ok]
   apply WP.spec_mono (CoreVisitor.run.spec (.ok (res, s))
-    (fun v s a => visitor.on_br_table v s a.1 a.2) w (fun _ => True) P
-    (by simpa using hp) (fun s a => hhook w s a.1 a.2))
+    (fun v s a => visitor.on_br_table v s a.1 (Control.resultView a.2)) w (fun _ => True) P
+    (by simpa using hp) (fun s a => hhook w s a.1 (Control.resultView a.2)))
   exact fun _ h => h.2
 
 end Itasca

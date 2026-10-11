@@ -7,22 +7,24 @@ open Aeneas Aeneas.Std
 
 namespace Itasca
 
+variable {profile : ValidationProfile}
+
 /-- Acceptance of the actual streaming driver certifies the concatenated bytes,
 its returned environment, and the tail from its actual delivery call. Soundness
 requires coherent views and worker provenance, not callback termination or
 prevalidated bodies. -/
-theorem stream.validate_streaming.wasm_sound {S V : Type}
+theorem stream.validate_streaming.profile_sound {S V : Type}
     (source : stream.Source S) (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List StreamBatch.Issued → V → Prop)
-    (hp : StreamScheduler.Provenance visitor Tracks)
+    (hp : StreamScheduler.Provenance visitor Tracks profile)
     (id : U64) (state : S) (v v' : V) (storage env : module.Env)
     (data environment code tail : Slice U8)
     (hsource : StreamSource.Coherent source state environment.val code.val tail.val)
     (hbytes : data.val = environment.val ++ code.val ++ tail.val)
     (hv : Tracks id [] v)
-    (h : stream.validate_streaming source visitor id state v storage = .ok (.Ok (), v', env)) :
-    ∃ run : StreamRun.Accepted source visitor id state v v' env,
-      ModuleSound.Validated data ⟨env, run.remaining.tail⟩ ∧
+    (h : stream.validate_streaming source visitor id profile state v storage = .ok (.Ok (), v', env)) :
+    ∃ run : StreamRun.Accepted source visitor id state v v' env profile,
+      ModuleSound.Validated data ⟨env, run.remaining.tail⟩ profile ∧
       data.length ≤ limits.MAX_MODULE_BYTES.val := by
   obtain ⟨run⟩ := stream.validate_streaming.accepted source visitor id state v v' storage env h
   have heq := hsource.environment_eq run.environment run.environment_call
@@ -49,8 +51,9 @@ theorem stream.validate_streaming.wasm_sound {S V : Type}
     simpa using this
   have hdecoded := module.validate_env_with.accepted_erase visitor.moduleModuleVisitorInst
     run.environment run.region env run.environmentLength run.decoded run.decode_environment
-  obtain ⟨henv, hresults⟩ := ModuleEnv.accepted_entry_conditions _ _ _ hecap hdecoded
-  have hsem := module.validate_env.semantic_spec run.environment
+  obtain ⟨henv, hsignatures, _⟩ := ModuleEnv.profile_accepted_entry_conditions _ _ _ profile hecap hdecoded
+  have hresults := hsignatures.1
+  have hsem := module.validate_env.profile_semantic_spec run.environment profile
   rw [hdecoded] at hsem
   simp only [WP.spec_ok] at hsem
   obtain ⟨decls, hrep, hvalid, _, _, before, hprefix, hspan⟩ := hsem
@@ -83,13 +86,13 @@ theorem stream.validate_streaming.wasm_sound {S V : Type}
     run.remaining.tail run.remaining.decode_tail htailRegion
   have hready := hp.tail_ready id history _ _ _ htailDecoded run.remaining.ready_call
   have hentry : ∀ issued ∈ history, CodeEntry.Bounds issued.env ∧
-      ∀ ft ∈ issued.env.types.val, ft.results.val.length ≤ 1 := by
+      ∀ ft ∈ issued.env.types.val, Profile.FuncType profile ft := by
     intro issued hi
     have he := (hinv.issued issued hi).2.1
     simpa [he] using And.intro henv hresults
   obtain ⟨_, _, hcompleted⟩ := StreamScheduler.drain_sound visitor Tracks hp id history
-    run.remaining.ready v' run.remaining.pending run.remaining.remaining hready hentry run.remaining.drain_call
-  have hall : ∀ issued ∈ history, StreamScheduler.Completed issued := by
+    run.remaining.ready v' run.remaining.pending run.remaining.remaining hready hentry hinv.profiles run.remaining.drain_call
+  have hall : ∀ issued ∈ history, StreamScheduler.Completed issued profile := by
     intro issued hi
     rcases hinv.accounted issued hi with hpend | hdone
     · exact hcompleted issued hi (hinv.issued issued hi).1 hpend
@@ -98,7 +101,7 @@ theorem stream.validate_streaming.wasm_sound {S V : Type}
   have htail := module.validate_tail_with.accepted_erase visitor.moduleModuleVisitorInst
     run.remaining.tailBytes 0#usize env run.remaining.region run.remaining.tail run.remaining.decodedTail
     run.remaining.decode_tail
-  have htailSem := module.validate_tail.spec run.remaining.tailBytes 0#usize env (by simp)
+  have htailSem := module.validate_tail.spec run.remaining.tailBytes 0#usize env (by simp) profile
   rw [htail] at htailSem
   simp only [WP.spec_ok] at htailSem
   obtain ⟨⟨tailBytes, ht, hts⟩, hsegments⟩ := htailSem
@@ -112,5 +115,22 @@ theorem stream.validate_streaming.wasm_sound {S V : Type}
     simp only [List.length_append] at hdLength
     simp only [Slice.len_val, Slice.length] at he hc hm ⊢
     omega
+
+/-- Compatibility specialization of the shared module soundness theorem. -/
+theorem stream.validate_streaming.wasm_sound {S V : Type}
+    (source : stream.Source S) (visitor : stream.StreamingVisitor V)
+    (Tracks : U64 → List StreamBatch.Issued → V → Prop)
+    (hp : StreamScheduler.Provenance visitor Tracks)
+    (id : U64) (state : S) (v v' : V) (storage env : module.Env)
+    (data environment code tail : Slice U8)
+    (hsource : StreamSource.Coherent source state environment.val code.val tail.val)
+    (hbytes : data.val = environment.val ++ code.val ++ tail.val)
+    (hv : Tracks id [] v)
+    (h : stream.validate_streaming source visitor id .Wasm1 state v storage = .ok (.Ok (), v', env)) :
+    ∃ run : StreamRun.Accepted source visitor id state v v' env,
+      ModuleSound.Validated data ⟨env, run.remaining.tail⟩ ∧
+      data.length ≤ limits.MAX_MODULE_BYTES.val :=
+  stream.validate_streaming.profile_sound source visitor Tracks hp id state v v' storage env
+    data environment code tail hsource hbytes hv h
 
 end Itasca

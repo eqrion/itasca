@@ -38,7 +38,7 @@ callback ends at the independently checked framing boundary. -/
 theorem module.code_entry_extent.frames (data : Slice U8) (pos content finish : Usize)
     (env : module.Env) (index next : Usize) (hbound : CodeEntry.Bounds env)
     (hext : ModuleCode.Extent data pos content finish)
-    (hentry : module.validate_code_entry data pos env index = .ok (.Ok next)) : finish = next := by
+    (hentry : module.validate_code_entry data pos env index .Wasm1 = .ok (.Ok next)) : finish = next := by
   obtain ⟨⟨r, v⟩, hr, hp⟩ := WP.spec_imp_exists (module.validate_code_entry_with.pipeline
     code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_total data pos env index () hbound)
   have he : r = .Ok next := by simpa [module.validate_code_entry, hr] using hentry

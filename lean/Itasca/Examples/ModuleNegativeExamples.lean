@@ -27,7 +27,7 @@ private theorem section_header (data : Slice U8) (pos middle first last : Usize)
 private theorem env_from_loop (data : Slice U8)
     (hbytes : Wasm.BytesAt data 0#usize magicVersion 8#usize) (e : error.Error)
     (hloop : parseLoop data ModuleExamples.emptyEnv 8#usize 0#u8 = .ok (.Err e, ())) :
-    module.validate_env data = .ok (.Err e) := by
+    module.validate_env data .Wasm1 = .ok (.Err e) := by
   have hh := module.read_header.complete data 8#usize hbytes
   simp only [parseLoop, ModuleExamples.emptyEnv] at hloop
   simp [module.validate_env, module.validate_env_with, module.Env.new,
@@ -94,7 +94,7 @@ private theorem duplicate_exports_decode (env : module.Env)
   exact ⟨updated, by simp [module.decode_export_section, hcount, hloop,
     core.result.Result.Insts.CoreOpsTry.branch, data]⟩
 
-theorem duplicate_unicode_exports_rejected : module.validate_module duplicateUnicodeExports =
+theorem duplicate_unicode_exports_rejected : module.validate_module duplicateUnicodeExports .Wasm1 =
     .ok (.Err .DuplicateExportName) := by
   let data := duplicateUnicodeExports
   let mt : types.MemType := ⟨⟨0#u32, none⟩⟩
@@ -121,7 +121,7 @@ theorem duplicate_unicode_exports_rejected : module.validate_module duplicateUni
     all_goals first | rfl | (apply Wasm.BytesAt.mk <;> simp [data, duplicateUnicodeExports,
       ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion]) |
       simp [data, duplicateUnicodeExports, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion]
-  have hstep := module.validate_env_with_loop.complete_section data ModuleExamples.emptyEnv
+  have hstep := module.validate_env_with_loop.complete_section (profile := .Wasm1) data ModuleExamples.emptyEnv
     env 8#usize 10#usize 13#usize 0#u8 5#u8 hhmem (by decide) (by decide) (by decide)
     (by simpa [module.decode_env_section, global_simps] using hread)
   have hhexport : SectionHeader data 13#usize 7#u8 15#usize 30#usize := by
@@ -156,9 +156,9 @@ private theorem first_section_error (data : Slice U8)
     (hlo : 0 < id.val) (hhi : id.val < 10)
     (hsection : SectionHeader data 8#usize id first last)
     (hfinish : last = Slice.len data)
-    (hread : module.decode_env_section data first id ModuleExamples.emptyEnv = .ok (.Err e, updated))
+    (hread : module.decode_env_section data first id ModuleExamples.emptyEnv .Wasm1 = .ok (.Err e, updated))
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val) :
-    module.validate_module data = .ok (.Err e) := by
+    module.validate_module data .Wasm1 = .ok (.Err e) := by
   have hsplit : stream.find_code_region data = .ok (Slice.len data, Slice.len data) := by
     unfold stream.find_code_region
     rw [split_skip_section data 8#usize first last id hsection hhi, hfinish, split_loop_eof]
@@ -191,7 +191,7 @@ private theorem empty_section_header (id : U8) :
   all_goals first | rfl | (apply Wasm.BytesAt.mk <;> simp [emptySection,
     ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion])
 
-theorem invalid_start_index_rejected : module.validate_module (shortSection 8#u8 1#u8 0#u8) =
+theorem invalid_start_index_rejected : module.validate_module (shortSection 8#u8 1#u8 0#u8) .Wasm1 =
     .ok (.Err (.UnknownFunc 0#u32)) := by
   let data := shortSection 8#u8 1#u8 0#u8
   have hh : SectionHeader data 8#usize 8#u8 10#usize 11#usize := by
@@ -210,7 +210,7 @@ theorem invalid_start_index_rejected : module.validate_module (shortSection 8#u8
   · simp [data, shortSection, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion,
       limits.MAX_MODULE_BYTES]
 
-theorem invalid_function_type_rejected : module.validate_module invalidType =
+theorem invalid_function_type_rejected : module.validate_module invalidType .Wasm1 =
     .ok (.Err (.InvalidType 0#u8)) := by
   let data := invalidType
   have hh : SectionHeader data 8#usize 1#u8 10#usize 12#usize := by
@@ -223,7 +223,7 @@ theorem invalid_function_type_rejected : module.validate_module invalidType =
   have ht := (show At ByteEncoding data 11#usize 0#u8 12#usize from
     ⟨[0#u8], rfl, by constructor <;> simp [data, invalidType,
       ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_byte
-  have hd : module.decode_type_section data 10#usize ModuleExamples.emptyEnv =
+  have hd : module.decode_type_section data 10#usize ModuleExamples.emptyEnv .Wasm1 =
       .ok (.Err (.InvalidType 0#u8), ModuleExamples.emptyEnv) := by
     simp [module.decode_type_section, hc, core.result.Result.Insts.CoreOpsTry.branch]
     unfold module.decode_type_section_loop
@@ -239,7 +239,7 @@ theorem invalid_function_type_rejected : module.validate_module invalidType =
   · simp [data, invalidType, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion,
       limits.MAX_MODULE_BYTES]
 
-theorem truncated_type_count_rejected : module.validate_module (emptySection 1#u8) =
+theorem truncated_type_count_rejected : module.validate_module (emptySection 1#u8) .Wasm1 =
     .ok (.Err (.Read .UnexpectedEof)) := by
   let data := emptySection 1#u8
   have heof := reader.read_u32_leb.reject_complete data 10#usize .UnexpectedEof
@@ -257,7 +257,7 @@ theorem truncated_type_count_rejected : module.validate_module (emptySection 1#u
   · simp [data, emptySection, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion,
       limits.MAX_MODULE_BYTES]
 
-theorem truncated_section_payload_rejected : module.validate_module (shortSection 1#u8 2#u8 0#u8) =
+theorem truncated_section_payload_rejected : module.validate_module (shortSection 1#u8 2#u8 0#u8) .Wasm1 =
     .ok (.Err .UnexpectedEof) := by
   let data := shortSection 1#u8 2#u8 0#u8
   have hid := (show At ByteEncoding data 8#usize 1#u8 9#usize from
@@ -326,7 +326,7 @@ def repeatedTypeSection : Slice U8 :=
   ModuleExamples.bytes (magicVersion ++ [1#u8,1#u8,0#u8,1#u8,1#u8,0#u8])
     (by simp [magicVersion]; scalar_tac)
 
-theorem repeated_type_section_rejected : module.validate_module repeatedTypeSection =
+theorem repeated_type_section_rejected : module.validate_module repeatedTypeSection .Wasm1 =
     .ok (.Err .SectionOutOfOrder) := by
   let data := repeatedTypeSection
   have hfirst : SectionHeader data 8#usize 1#u8 10#usize 11#usize := by
@@ -344,14 +344,14 @@ theorem repeated_type_section_rejected : module.validate_module repeatedTypeSect
   have hcount := (show At IndexEncoding data 10#usize 0#u32 11#usize from
     ⟨[0#u8], leb 0#u8, by constructor <;> simp [data, repeatedTypeSection,
       ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_index
-  have hread : module.decode_env_section data 10#usize 1#u8 ModuleExamples.emptyEnv =
+  have hread : module.decode_env_section data 10#usize 1#u8 ModuleExamples.emptyEnv .Wasm1 =
       .ok (.Ok 11#usize, ModuleExamples.emptyEnv) := by
     simp [module.decode_env_section, module.decode_type_section, global_simps, hcount,
       core.result.Result.Insts.CoreOpsTry.branch]
     unfold module.decode_type_section_loop
     rw [loop]
     simp [module.decode_type_section_loop.body]
-  have hstep := module.validate_env_with_loop.complete_section data ModuleExamples.emptyEnv
+  have hstep := module.validate_env_with_loop.complete_section (profile := .Wasm1) data ModuleExamples.emptyEnv
     ModuleExamples.emptyEnv 8#usize 10#usize 11#usize 0#u8 1#u8 hfirst
     (by decide) (by decide) (by decide) hread
   have hheader := module.read_section_header.complete data 11#usize 1#u8 13#usize 14#usize hsecond
@@ -374,7 +374,7 @@ theorem repeated_type_section_rejected : module.validate_module repeatedTypeSect
     core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Code framing reports its streaming EOF variant for a missing count. -/
-theorem truncated_code_count_rejected : module.validate_module (emptySection 10#u8) =
+theorem truncated_code_count_rejected : module.validate_module (emptySection 10#u8) .Wasm1 =
     .ok (.Err .UnexpectedEof) := by
   let data := emptySection 10#u8
   let code := ModuleExamples.bytes [10#u8,0#u8]
@@ -436,7 +436,7 @@ def invalidTypeIndex : Slice U8 :=
   ModuleExamples.bytes (magicVersion ++ [3#u8,2#u8,1#u8,0#u8])
     (by simp [magicVersion]; scalar_tac)
 
-theorem invalid_type_index_rejected : module.validate_module invalidTypeIndex =
+theorem invalid_type_index_rejected : module.validate_module invalidTypeIndex .Wasm1 =
     .ok (.Err (.UnknownType 0#u32)) := by
   let data := invalidTypeIndex
   have hh : SectionHeader data 8#usize 3#u8 10#usize 12#usize := by
@@ -471,7 +471,7 @@ def longEmptyTypeSection : Slice U8 :=
 
 /-- The declared payload is available, but the empty type vector consumes one
 byte less than the section size. The extra byte cannot be silently skipped. -/
-theorem section_size_mismatch_rejected : module.validate_module longEmptyTypeSection =
+theorem section_size_mismatch_rejected : module.validate_module longEmptyTypeSection .Wasm1 =
     .ok (.Err .SectionSizeMismatch) := by
   let data := longEmptyTypeSection
   have hh : SectionHeader data 8#usize 1#u8 10#usize 12#usize := by
@@ -482,7 +482,7 @@ theorem section_size_mismatch_rejected : module.validate_module longEmptyTypeSec
   have hc := (show At IndexEncoding data 10#usize 0#u32 11#usize from
     ⟨[0#u8], leb 0#u8, by constructor <;> simp [data, longEmptyTypeSection,
       ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_index
-  have hd : module.decode_type_section data 10#usize ModuleExamples.emptyEnv =
+  have hd : module.decode_type_section data 10#usize ModuleExamples.emptyEnv .Wasm1 =
       .ok (.Ok 11#usize, ModuleExamples.emptyEnv) := by
     simp [module.decode_type_section, hc, core.result.Result.Insts.CoreOpsTry.branch]
     unfold module.decode_type_section_loop
