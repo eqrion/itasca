@@ -222,10 +222,10 @@ mutabilities in SpecTec output; their scope and regression cases are in
 [lean/upstream/](lean/upstream/README.md).
 
 The representative core-profile checkpoint is retained in
-`Itasca/CoreSoundness.lean`. The full body milestone now extends the actual
+`Itasca/Body/CoreSoundness.lean`. The full body milestone now extends the actual
 extracted `validate_body` and `validate_body_with` APIs to **every Wasm 1.0
 instruction and every input byte sequence**, removing `Core.Profile` and
-valid-immediate premises. `Itasca/WasmSoundness.lean` establishes termination
+valid-immediate premises. `Itasca/Body/WasmSoundness.lean` establishes termination
 and acceptance soundness; `VisitorBodyErasure.lean` removes hook termination
 from the acceptance theorem. Termination of the visiting API still requires
 terminating hooks.
@@ -243,7 +243,7 @@ results, preserving Wasm 1.0 behavior; termination also handles arbitrary result
 vectors exactly as the implementation does. This does not prove that module
 parsing constructs coherent environment caches.
 
-`Itasca/WasmComplete.lean` now proves completeness of the actual public
+`Itasca/Body/WasmComplete.lean` now proves completeness of the actual public
 `validate_body` directly from independent byte encoding and generated
 `Instrs_ok`, within the body size cap and the Wasm 1.0 signature restrictions.
 `DeclarativeComplete` normalizes sequence, framing, and subtyping derivations;

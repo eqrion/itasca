@@ -20,11 +20,11 @@ the patches automatically; see [upstream/](upstream/README.md) for their scope
 and regressions.
 
 The full Wasm 1.0 function-body proof is checked in
-[`Itasca/WasmSoundness.lean`](Itasca/WasmSoundness.lean) and
-[`Itasca/VisitorBodyErasure.lean`](Itasca/VisitorBodyErasure.lean), with completeness
-in [`Itasca/WasmComplete.lean`](Itasca/WasmComplete.lean) and
-[`Itasca/VisitorBodyComplete.lean`](Itasca/VisitorBodyComplete.lean), and visitor traces
-in [`Itasca/VisitorBodyTrace.lean`](Itasca/VisitorBodyTrace.lean). It covers the
+[`Itasca/Body/WasmSoundness.lean`](Itasca/Body/WasmSoundness.lean) and
+[`Itasca/Visitor/VisitorBodyErasure.lean`](Itasca/Visitor/VisitorBodyErasure.lean), with completeness
+in [`Itasca/Body/WasmComplete.lean`](Itasca/Body/WasmComplete.lean) and
+[`Itasca/Visitor/VisitorBodyComplete.lean`](Itasca/Visitor/VisitorBodyComplete.lean), and visitor traces
+in [`Itasca/Visitor/VisitorBodyTrace.lean`](Itasca/Visitor/VisitorBodyTrace.lean). It covers the
 **actual extracted public `validate_body` and `validate_body_with` functions**,
 including their size guard, initialization, streaming loop, final `end`,
 trailing-byte check, and visitor dispatch.
@@ -98,7 +98,7 @@ The target-equality condition matters: Wasm 2.0 accepts some differently typed
 branch-table targets in unreachable code through a common `BOT` subtype;
 Wasm 1.0 requires identical signatures. Merely restricting the bytes to 1.0
 opcodes does not remove that difference. The kernel-checked
-[`WasmCompletenessBoundary`](Itasca/WasmCompletenessBoundary.lean) example proves
+[`WasmCompletenessBoundary`](Itasca/Examples/WasmCompletenessBoundary.lean) example proves
 generated 2.0 typing and actual `TypeMismatch` rejection for the same 11 bytes.
 The profile preserves existing Wasm 1.0 behavior without changing Rust or the
 upstream specification.
@@ -109,13 +109,13 @@ corollaries of the concrete slice and synchronous-worker proofs:
 
 | Theorem | Checked claim |
 | --- | --- |
-| [`module.validate_module.wasm_spec`, `wasm_total`, `wasm_sound`](Itasca/ModuleValidation.lean) | Every input returns an ordinary result; acceptance establishes the complete module certificate without source, scheduler, or body-validation assumptions. |
-| [`module.validate_module.wasm_complete`, `wasm_complete_with_metadata`](Itasca/ModuleCompleteness.lean) | Independent module encoding within limits, elaboration, generated typing, and the Wasm 1.0 profile imply acceptance and exact returned metadata. |
-| [`stream.validate_streaming.wasm_sound`](Itasca/StreamValidation.lean) | An accepted run, coherent source views, and worker provenance establish `ModuleSound.Validated` for the concatenated bytes, returned environment, and exact tail from the actual `tail_ready` call. |
-| [`stream.validate_streaming.wasm_total`](Itasca/StreamDriverTotal.lean) | Returning source and scheduler callbacks imply an ordinary result on arbitrary bytes. Unfinished or malformed returned batches need no provenance premise. |
-| [`stream.validate_streaming.wasm_complete`](Itasca/StreamDriverComplete.lean) | The same independent valid-module premises, canonical available source regions, and an accepting scheduler policy imply actual acceptance and metadata for that same raw module. |
-| [`stream.validate_module_slice.wasm_total`, `wasm_sound`, `wasm_spec`](Itasca/StreamSlice.lean) | The private contiguous adapter discharges source coherence, callback totality, and worker provenance. |
-| [`stream.validate_module_slice.wasm_complete`, `wasm_complete_with_metadata`](Itasca/StreamSliceCompleteness.lean) | The concrete source and synchronous worker discharge generic completeness obligations, returning the exact environment/tail pair. |
+| [`module.validate_module.wasm_spec`, `wasm_total`, `wasm_sound`](Itasca/Module/ModuleValidation.lean) | Every input returns an ordinary result; acceptance establishes the complete module certificate without source, scheduler, or body-validation assumptions. |
+| [`module.validate_module.wasm_complete`, `wasm_complete_with_metadata`](Itasca/Module/ModuleCompleteness.lean) | Independent module encoding within limits, elaboration, generated typing, and the Wasm 1.0 profile imply acceptance and exact returned metadata. |
+| [`stream.validate_streaming.wasm_sound`](Itasca/Stream/StreamValidation.lean) | An accepted run, coherent source views, and worker provenance establish `ModuleSound.Validated` for the concatenated bytes, returned environment, and exact tail from the actual `tail_ready` call. |
+| [`stream.validate_streaming.wasm_total`](Itasca/Stream/StreamDriverTotal.lean) | Returning source and scheduler callbacks imply an ordinary result on arbitrary bytes. Unfinished or malformed returned batches need no provenance premise. |
+| [`stream.validate_streaming.wasm_complete`](Itasca/Stream/StreamDriverComplete.lean) | The same independent valid-module premises, canonical available source regions, and an accepting scheduler policy imply actual acceptance and metadata for that same raw module. |
+| [`stream.validate_module_slice.wasm_total`, `wasm_sound`, `wasm_spec`](Itasca/Stream/StreamSlice.lean) | The private contiguous adapter discharges source coherence, callback totality, and worker provenance. |
+| [`stream.validate_module_slice.wasm_complete`, `wasm_complete_with_metadata`](Itasca/Stream/StreamSliceCompleteness.lean) | The concrete source and synchronous worker discharge generic completeness obligations, returning the exact environment/tail pair. |
 
 `ModuleSound.Validated` supplies one raw module whose independent
 `ModuleBinary.ModuleEncoding` accounts for the whole input. `Elaborates`
@@ -193,9 +193,9 @@ entry/body hooks remain. Body and entry callback traces retain their guarantees:
 | Independently valid body with accepting callbacks | `code.validate_body_with.trace_complete` |
 | Rejecting body callback is last and matches the result | `code.validate_body_with.trace_rejection_last` |
 
-[Entry traces](Itasca/ModuleEntryTrace.lean) include the function-start event and
+[Entry traces](Itasca/Module/ModuleEntryTrace.lean) include the function-start event and
 exact body operators, with the body start tied to the entry's encoded locals.
-[Custom ranges](Itasca/ModuleCustomRanges.lean) identify exact UTF-8 name bytes
+[Custom ranges](Itasca/Module/ModuleCustomRanges.lean) identify exact UTF-8 name bytes
 before `payload_start` and bound both name and payload intervals in their input
 buffer. A general trace specification for rejected module/entry runs is not
 claimed; the body API separately covers rejection traces.
@@ -220,8 +220,10 @@ hook mnemonics independently of the extracted dispatcher.
 `Chunk`, `Completed`, and `PartialTable` relate the observations to independent
 instruction bytes. The semantic token projection removes runtime snapshots and
 derived metadata; the original observations retain them. `WasmBinaryUnique`
-proves unique token/cursor decoding, so an accepted trace spells the same typed
-body rather than an unrelated syntax witness. Nested delimiters are explicit:
+proves unique token/cursor and structured-body decoding, so an accepted trace
+spells the same typed body. `ModuleBinaryUnique` proves unique raw-module
+decoding, including custom sections and omitted standard sections. Both
+uniqueness results are independent of typing and implementation-size limits. Nested delimiters are explicit:
 a bare if has no synthetic else, and the final body end is recorded. The body
 API never calls `on_function_start`; that callback belongs to code entries.
 
@@ -257,38 +259,23 @@ Rocq baseline was reused.
 
 ## Proof architecture
 
-| Files | Role |
+Implementations are grouped by proof layer. The root `Itasca` directory retains
+public entry modules such as `WasmSoundness`, `ModuleValidation`, and
+`StreamValidation`; existing imports and exported theorem names remain available.
+Internal imports use the directories below.
+
+| Directory | Main responsibilities |
 | --- | --- |
-| `ReadByte`, `Leb128`, `SignedLeb`, `SignedLeb64`, `FloatBits` | Total readers, exact bytes/cursors, completeness, and malformed-input errors. |
-| `WasmSyntax`, `WasmBinary`, `WasmBinaryLabels` | Independent Wasm 1.0 opcode/immediate encoding and consumed byte prefixes, with no assumption about the unread suffix. |
-| `StackSemantics`, `ScalarConst`, `NumericMeaning`, `AllNumeric`, `Select` | Mixed concrete/polymorphic operands, all constants and numeric effects, and independent numeric table agreement. |
-| `EnvTranslation`, `EnvReaders`, `EnvOps`, `EnvCalls`, `MemoryMeaning`, `MemoryTyping`, `EnvMemory` | Actual environment lookup, call restrictions, reserved immediates, memory alignment, and generated typing rules. |
-| `RawControl`, `CoreBranch`, `BrTable`, `WasmControlFlow` | Arbitrary-input control handlers and common-target branch-table checking. |
-| `Sequence`, `WasmFrames`, `WasmInvariant` | Declarative prefix typing for active/suspended frames, nested syntax reconstruction, and byte-based stack bounds. |
-| `FullVisitor`, `EnvDispatch`, `WasmStepScalar`, `WasmStepEnv`, `WasmStepControl`, `WasmStepBranch`, `WasmStep` | Actual dispatch and all successful-step preservation cases. |
-| `Body`, `WasmBody`, `WasmSoundness` | Induction over remaining bytes and public termination/soundness theorems. |
-| `VisitorErasure`, `BrTableErasure`, `VisitorStepErasure`, `VisitorBodyErasure` | Successful execution transfers to the empty visitor without assuming arbitrary hooks terminate. |
-| `Wasm1Profile`, `WasmCompletenessBoundary` | Independent Wasm 1.0 semantic restrictions and a checked witness of the 1.0/2.0 branch-table difference. |
-| `WasmBinaryComplete`, `WasmSyntaxComplete`, `DeclarativeComplete` | Reverse decoding, instruction boundaries, and normalization of generated declarative typing. |
-| `StackComplete`, `ScalarComplete`, `BrTableComplete`, `ControlComplete`, `EnvComplete*` | Compatible declarative operands and exact bytes force actual handlers to succeed. |
-| `ScalarStepComplete`, `BrTableStepComplete`, `ControlDispatchComplete`, `EnvStepComplete`, `CompletenessStep` | Actual dispatcher completeness for every leaf instruction. |
-| `WasmExecution`, `CompletenessFrame`, `CompletenessProgram`, `StructuredProgram`, `BodyProgramComplete`, `WasmComplete` | Compose actual executions through nested syntax and close the public body completeness theorem. |
-| `FullVisitorAccept`, `VisitorComplete`, `VisitorBodyComplete` | Accepting hooks preserve successful steps, including branch-table label callbacks, and lift public body acceptance/completeness to visitors. |
-| `VisitorEvents`, `VisitorEventMeaning`, `VisitorEventTables` | Hook identities, exact arguments, independent semantic maps, and exhaustive dispatcher agreement. |
-| `VisitorRecording`, `VisitorRunTrace`, `VisitorRefinement`, `VisitorTableRefinement`, `VisitorStepRefinement`, `VisitorBodyRefinement` | Concrete recorders, ordinary callback outcomes, and two-way instrumentation preservation through the actual API. |
-| `VisitorTraceBytes`, `BrTableTrace`, `VisitorSingleTrace`, `VisitorStepLeaves`, `VisitorControlTrace`, `VisitorStepTrace` | Independent complete/partial trace relations and all instruction-level trace proofs. |
-| `VisitorBodyTraceGeneric`, `WasmBinaryUnique`, `VisitorBodyTrace`, `VisitorTraceProperties`, `VisitorTraceCorollaries` | Whole-body composition, unique decoding, public trace soundness/completeness, projection, and stopping properties. |
-| `VisitorTraceExamples`, `BrTableTraceExamples` | Public recording-visitor regressions for raw bits, nested control, branch-table ordering, and callback rejection. |
-| `CoreExamples`, `WasmExamples`, `WasmScalarExamples`, `BrTableExamples` | Kernel-checked public acceptance/rejection examples and applications of soundness. |
-| `CompletenessExamples` | Independent encoding/typing/profile derivations imply actual acceptance for nested control, result-carrying branch tables, and memory/calls. |
-| `ModuleCodeSemantic`, `ModuleLayout`, `ModuleSoundness` | Driver-independent framing, typed entry certificates, normalized regions, and complete module assembly. |
-| `StreamSource`, `StreamHeader*`, `StreamBatchFraming*` | Coherent/available/returning reads, bounded prefix transport, actual code-header and batch framing. |
-| `StreamBatch`, `StreamBatchSteps`, `StreamBatchTotal`, `StreamBatchComplete` | Actual worker reachability, independent cursors, sticky errors, typed coverage, totality and completeness. |
-| `StreamScheduler`, `StreamRetirement`, `StreamDrain`, `StreamSubmission` | Provenance through every callback, pending-ID checks/removal, and exact submitted code coverage. |
-| `StreamAcceptingScheduler`, `StreamSubmissionComplete`, `StreamCompleteRegions` | Accepting queue policy, actual worker/submission completeness, and certificates from independent module assumptions. |
-| `StreamDriverTotal`, `StreamRun`, `StreamValidation`, `StreamDriverComplete` | Generic driver's ordinary return, exact accepted phase/tail witnesses, soundness, and completeness. |
-| `StreamSliceSplit`, `StreamSliceComplete`, `StreamSync*`, `StreamSlice`, `StreamSliceCompleteness` | Actual contiguous splitting and concrete source/worker discharge; public whole-module corollaries. |
-| `Audit` | Transitive axiom checks for every imported public Itasca theorem, including generated auxiliary declarations and explicitly listed proof-bearing adapters. |
+| `Binary/` | Independent body/module grammars; unsigned and signed LEB, floating bits and UTF-8; prefix, structured-body and raw-module uniqueness. `SignedLebGeneric` supplies one signed-reader proof specialized by `SignedLeb` and `SignedLeb64`. |
+| `Body/` | Stack/control/environment semantics, generated typing, the recursive Wasm 1.0 profile, soundness and completeness. `WasmFrames`, `WasmInvariant`, and `WasmStep*` share the stronger profile-preserving invariant; both public soundness contracts project from this proof. |
+| `Visitor/` | Total/accepting hooks, erasure, instrumentation, and exact callback traces. `OpDispatch` supplies common dispatcher equations to erasure, completeness, and trace proofs. |
+| `Module/` | Environment/entry/tail parsing, elaboration, index spaces, metadata, independent module certificates, and public whole-module corollaries. |
+| `Stream/` | Source contracts, framing, worker provenance, scheduler policy, the driver, and concrete synchronous slice adapters. |
+| `Examples/` | Kernel-checked acceptance/rejection, trace, completeness, Unicode, streaming, and Wasm 1.0/2.0 boundary regressions. |
+| `Support/` | Common result inversion and extracted-to-SpecTec type translation. |
+| `Generated/` | Committed extracted types/functions and handwritten external models. |
+| `Audit.lean` | Transitive axiom checks for every declaration originating in a local module, across namespaces and declaration kinds. |
+
 
 ## Dependencies
 
@@ -375,7 +362,7 @@ exclusions explicitly. `--sysroot=default` uses distributed standard-library
 MIR; the missing `Vec.pop` and `Vec.is_empty` operations have concrete models
 in the handwritten `Itasca/Generated/FunsExternal.lean`.
 
-For proof iteration, run `lake build Itasca.Branch` (or the changed module) from
+For proof iteration, run `lake build Itasca.Body.Branch` (or the changed module) from
 `lean/`; this updates its dependencies without building unrelated proof modules.
 Run `just prove` when integrating changes so audit coverage and axiom checks run.
 The `lean-extract` and `lean-prove` names remain compatibility aliases.
@@ -405,13 +392,13 @@ public body and module validators. Earlier focused modules (`Block`, `End`, `Num
 
 `scripts/check_audit.py` checks that every implementation/proof source module
 is reachable from the audit and rejects importing the external-model template.
-`Audit.lean` automatically discovers public theorems in the `Itasca` namespace
-from its imports and checks their transitive dependencies. Private helpers are
-covered through their callers. It rejects every axiom except `propext`,
-`Classical.choice`, and `Quot.sound`; new proof modules must be imported into the
-audit. It also checks the numeric/memory opcode maps, floating-point translation,
-environment context, and final validity predicate directly. This prevents new
-exported theorems from being omitted accidentally from a manually maintained list.
+`Audit.lean` selects every declaration whose originating module is under
+`Itasca`, irrespective of its namespace or declaration kind. This directly
+checks private helpers, definitions with proof fields, generated auxiliaries,
+semantic adapters, and external models as well as public theorems. It rejects
+every transitive axiom except `propext`, `Classical.choice`, and `Quot.sound`.
+New proof modules must be reachable from the audit; new adapters need no
+separately maintained list of roots.
 
 The regenerated specification still contains unfinished upstream lemmas and
 opaque execution models. The local theorems must not depend on `sorryAx` or

@@ -122,23 +122,23 @@ outside this model. “Decodes to” uses the independent handwritten binary gra
 
 | Entry point | Checked guarantees and proof sources |
 | --- | --- |
-| Whole module | [`module.validate_module.wasm_total` and `wasm_sound`](lean/Itasca/ModuleValidation.lean) prove arbitrary-byte termination and acceptance soundness through the synchronous streaming adapter. The certificate includes full binary encoding, generated `Module_ok`, the Wasm 1.0 profile, coherent index spaces, and exact public import/export metadata. [`wasm_complete` and `wasm_complete_with_metadata`](lean/Itasca/ModuleCompleteness.lean) derive acceptance from independent encoding and declarative typing within the implementation limits. |
-| Generic streaming | [`stream.validate_streaming.wasm_sound`](lean/Itasca/StreamValidation.lean) requires coherent source views and provenance linking returned workers to issued batches. [`wasm_total`](lean/Itasca/StreamDriverTotal.lean) requires returning callbacks, even when returned batches are malformed or unfinished. [`wasm_complete`](lean/Itasca/StreamDriverComplete.lean) requires independent valid module bytes, available canonical regions, and an accepting scheduler policy. Its execution witness identifies the exact delivered tail. |
-| Batches and scheduling | [Actual batch reachability and successful finish](lean/Itasca/StreamBatch.lean) derive ordered entry validation and exact byte coverage. [Submission](lean/Itasca/StreamSubmission.lean) and [retirement](lean/Itasca/StreamRetirement.lean) connect this evidence to the actual pending IDs and driver checks, permitting arbitrary completion order. [Worker completeness](lean/Itasca/StreamBatchComplete.lean) runs the real validation loop on independently typed entry encodings. |
-| Function body | [`code.validate_body.wasm_total` and `wasm_sound`](lean/Itasca/WasmSoundness.lean) cover every Wasm 1.0 opcode and arbitrary bytes. [`wasm1_sound`](lean/Itasca/Wasm1Soundness.lean) also establishes the recursive 1.0 profile. [`wasm_complete`](lean/Itasca/WasmComplete.lean) proves completeness from encoding, declarative typing, and that profile. |
-| Visiting components | [Body acceptance soundness](lean/Itasca/VisitorBodyErasure.lean) and [entry acceptance transfer](lean/Itasca/ModuleEntryVisitor.lean) hold for arbitrary opcode visitors. Termination requires returning hooks; completeness requires accepting hooks. [Entry contracts](lean/Itasca/ModuleDecomposed.lean) derive environment obligations from an actual environment decode, and [entry completeness](lean/Itasca/ModuleCodeEntryComplete.lean) covers independently typed entries within the limits. |
-| Callback traces | [Body traces](lean/Itasca/VisitorBodyTrace.lean) identify hook names, order, and original immediates, including float bits and branch-table labels. [Entry traces](lean/Itasca/ModuleEntryTrace.lean) add the function-start context and precise body/local boundaries. [Rejection properties](lean/Itasca/VisitorTraceCorollaries.lean) prove an observed rejecting body callback is last and matches the returned visitor error. |
+| Whole module | [`module.validate_module.wasm_total` and `wasm_sound`](lean/Itasca/Module/ModuleValidation.lean) prove arbitrary-byte termination and acceptance soundness through the synchronous streaming adapter. The certificate includes full binary encoding, generated `Module_ok`, the Wasm 1.0 profile, coherent index spaces, and exact public import/export metadata. [`wasm_complete` and `wasm_complete_with_metadata`](lean/Itasca/Module/ModuleCompleteness.lean) derive acceptance from independent encoding and declarative typing within the implementation limits. |
+| Generic streaming | [`stream.validate_streaming.wasm_sound`](lean/Itasca/Stream/StreamValidation.lean) requires coherent source views and provenance linking returned workers to issued batches. [`wasm_total`](lean/Itasca/Stream/StreamDriverTotal.lean) requires returning callbacks, even when returned batches are malformed or unfinished. [`wasm_complete`](lean/Itasca/Stream/StreamDriverComplete.lean) requires independent valid module bytes, available canonical regions, and an accepting scheduler policy. Its execution witness identifies the exact delivered tail. |
+| Batches and scheduling | [Actual batch reachability and successful finish](lean/Itasca/Stream/StreamBatch.lean) derive ordered entry validation and exact byte coverage. [Submission](lean/Itasca/Stream/StreamSubmission.lean) and [retirement](lean/Itasca/Stream/StreamRetirement.lean) connect this evidence to the actual pending IDs and driver checks, permitting arbitrary completion order. [Worker completeness](lean/Itasca/Stream/StreamBatchComplete.lean) runs the real validation loop on independently typed entry encodings. |
+| Function body | [`code.validate_body.wasm_total` and `wasm_sound`](lean/Itasca/Body/WasmSoundness.lean) cover every Wasm 1.0 opcode and arbitrary bytes. [`wasm1_sound`](lean/Itasca/Body/Wasm1Soundness.lean) also establishes the recursive 1.0 profile. [`wasm_complete`](lean/Itasca/Body/WasmComplete.lean) proves completeness from encoding, declarative typing, and that profile. |
+| Visiting components | [Body acceptance soundness](lean/Itasca/Visitor/VisitorBodyErasure.lean) and [entry acceptance transfer](lean/Itasca/Module/ModuleEntryVisitor.lean) hold for arbitrary opcode visitors. Termination requires returning hooks; completeness requires accepting hooks. [Entry contracts](lean/Itasca/Module/ModuleDecomposed.lean) derive environment obligations from an actual environment decode, and [entry completeness](lean/Itasca/Module/ModuleCodeEntryComplete.lean) covers independently typed entries within the limits. |
+| Callback traces | [Body traces](lean/Itasca/Visitor/VisitorBodyTrace.lean) identify hook names, order, and original immediates, including float bits and branch-table labels. [Entry traces](lean/Itasca/Module/ModuleEntryTrace.lean) add the function-start context and precise body/local boundaries. [Rejection properties](lean/Itasca/Visitor/VisitorTraceCorollaries.lean) prove an observed rejecting body callback is last and matches the returned visitor error. |
 
 Soundness, totality, and completeness have separate streaming premises.
-[Source coherence](lean/Itasca/StreamSource.lean) fixes logical environment,
+[Source coherence](lean/Itasca/Stream/StreamSource.lean) fixes logical environment,
 code, and tail bytes and relates successful range reads to those bytes; it does
-not assume valid input or available reads. [Scheduler provenance](lean/Itasca/StreamScheduler.lean)
+not assume valid input or available reads. [Scheduler provenance](lean/Itasca/Stream/StreamScheduler.lean)
 relates worker states to actual batch operations and is preserved through every
 callback. It does not assume a polled batch is finished: the driver checks that.
 Returning callbacks suffice for totality without either soundness premise.
 
 Completeness additionally uses available regions from the canonical split and
-an [accepting scheduler policy](lean/Itasca/StreamAcceptingScheduler.lean).
+an [accepting scheduler policy](lean/Itasca/Stream/StreamAcceptingScheduler.lean).
 The checked policy permits any positive batch settings and arbitrary return
 order, with returned workers produced by actual `validate_all` executions.
 Their successful finish is derived from independent byte encoding and typing.
@@ -162,7 +162,7 @@ specification context.
 ### Wasm 1.0 profile and limits
 
 The generated specification describes Wasm 2.0. The independent grammar and
-[`Profile`](lean/Itasca/ModuleProfile.lean) restrict the result to Wasm 1.0:
+[`Profile`](lean/Itasca/Module/ModuleProfile.lean) restrict the result to Wasm 1.0:
 scalar value types and 1.0 instruction/section forms, at most one table and one
 memory counting imports and definitions together, and at most one function or
 block result. The profile also requires unique decoded export names, a condition
@@ -170,9 +170,9 @@ missing from the current generated module judgment.
 
 Branch-table targets must have identical signatures, including in unreachable
 code. Wasm 2.0 permits some cases through its `BOT` subtype that this 1.0
-validator rejects. A [checked counterexample](lean/Itasca/WasmCompletenessBoundary.lean)
+validator rejects. A [checked counterexample](lean/Itasca/Examples/WasmCompletenessBoundary.lean)
 shows why 1.0 opcode bytes alone are insufficient for completeness against the
-2.0 typing judgment. [Elaboration](lean/Itasca/ModuleElaboration.lean) separately
+2.0 typing judgment. [Elaboration](lean/Itasca/Module/ModuleElaboration.lean) separately
 requires valid function-type references and matching function/code counts.
 
 Completeness respects the actual limits in [src/limits.rs](src/limits.rs):
@@ -183,8 +183,8 @@ Completeness respects the actual limits in [src/limits.rs](src/limits.rs):
 | Instruction-body bytes, including the final `end` and excluding local declarations | 7,654,321 |
 | Declared locals per function, excluding parameters | 50,000 |
 
-These caps are represented by [`ModuleEncodingWithinLimits`](lean/Itasca/ModuleLimits.lean)
-and [`CodeEncodingWithinLimits`](lean/Itasca/ModuleCodeLimits.lean). Valid modules
+These caps are represented by [`ModuleEncodingWithinLimits`](lean/Itasca/Module/ModuleLimits.lean)
+and [`CodeEncodingWithinLimits`](lean/Itasca/Module/ModuleCodeLimits.lean). Valid modules
 outside them may be rejected. Specification limits, such as the 65,536-page
 memory bound, also remain in force.
 
@@ -200,8 +200,8 @@ and specification:
   intended WebAssembly judgments. Known repairs and gaps are listed in
   [UPSTREAM.md](UPSTREAM.md). Generated typing is supplemented by the explicit
   profile above.
-- The handwritten [body grammar](lean/Itasca/WasmBinary.lean),
-  [module grammar](lean/Itasca/ModuleBinary.lean), and translations must describe
+- The handwritten [body grammar](lean/Itasca/Binary/WasmBinary.lean),
+  [module grammar](lean/Itasca/Binary/ModuleBinary.lean), and translations must describe
   the intended binary format and map it to the intended specification syntax.
   The pinned backend does not provide a generated binary-format judgment or an
   executable validator used by these proofs.
@@ -213,8 +213,9 @@ and specification:
   compiler/runtime/hardware when running the resulting Rust library.
 
 There are **no project-specific axioms or kernel bypasses** in the checked proof
-dependencies. [`Audit.lean`](lean/Itasca/Audit.lean) checks every imported Itasca
-theorem transitively, plus the semantic adapters and public predicates. It permits
+dependencies. [`Audit.lean`](lean/Itasca/Audit.lean) checks every declaration
+originating in an imported Itasca module, including private helpers, definitions,
+semantic adapters, and external models in other namespaces. It permits
 only `propext`, `Classical.choice`, and `Quot.sound`, and rejects `sorryAx` and
 other domain axioms. Upstream's generated file still contains unfinished lemmas
 and opaque execution definitions; the audited proofs do not depend on them.
@@ -233,11 +234,11 @@ must be selected are not claimed. Individual rejection regressions do check exac
 errors. The API consolidation changes no trust-base assumptions.
 
 The [comparison](lean/PARITY.md) records narrower premises for some
-arbitrary-environment and oversized-region helper statements. Full uniqueness
-of the independently encoded structured-body and raw-module ASTs remains an
-unported auxiliary guarantee; flat instruction/token decoding uniqueness is
-proved. No equivalence theorem between the complete Rocq and SpecTec
-specifications is claimed.
+arbitrary-environment and oversized-region helper statements. Independent
+[structured-body decoding](lean/Itasca/Binary/WasmBinaryUnique.lean) and
+[raw-module decoding](lean/Itasca/Binary/ModuleBinaryUnique.lean) are unique, with no
+typing or implementation-size premises. No equivalence theorem between the
+complete Rocq and SpecTec specifications is claimed.
 
 Lean is the active verification pipeline. The previous Rocq implementation,
 proofs, and toolchain are retained in the annotated `rocq-baseline` tag at

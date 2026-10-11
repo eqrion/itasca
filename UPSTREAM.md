@@ -97,7 +97,7 @@ the original failing form. `make -C lean spec-repro` regenerates its output in
 `lean/.build/optional-mutability.lean`; this reproducer intentionally continues
 to exhibit the unfixed general defect. [SpecChecks](lean/Itasca/SpecChecks.lean)
 checks both mutabilities in the patched full specification, and
-[TypeTranslation](lean/Itasca/TypeTranslation.lean) covers every extracted global type.
+[TypeTranslation](lean/Itasca/Support/TypeTranslation.lean) covers every extracted global type.
 
 - [x] Minimize and locate the transformation defect; regenerate an equivalent local workaround.
 - [ ] File the reproducer and proposed source workaround with the SpecTec maintainers.
@@ -116,9 +116,9 @@ containing characters such as U+1F600.
 
 [The module source patch](patches/spectec-wasm2-module.patch) corrects the bound.
 [SpecChecks](lean/Itasca/SpecChecks.lean) proves actual byte encodings for
-U+10000, U+1F600, and U+10FFFF. [ModuleUnicodeExamples](lean/Itasca/ModuleUnicodeExamples.lean)
+U+10000, U+1F600, and U+10FFFF. [ModuleUnicodeExamples](lean/Itasca/Examples/ModuleUnicodeExamples.lean)
 checks public acceptance at the upper scalar boundary and rejection above it;
-[ModuleImportedGlobalExamples](lean/Itasca/ModuleImportedGlobalExamples.lean)
+[ModuleImportedGlobalExamples](lean/Itasca/Examples/ModuleImportedGlobalExamples.lean)
 covers an emoji-named import. Run `just spec-check` and `just prove`.
 
 - [x] Correct the source and regenerate the committed specification.
@@ -139,7 +139,7 @@ module's index spaces.
 [The module source patch](patches/spectec-wasm2-module.patch) replaces each
 fallback in `specification/wasm-2.0/2-syntax-aux.spectec` with explicit cases for
 the three nonmatching external-type constructors. No matching case can then be
-silently discarded. [ModuleTranslation](lean/Itasca/ModuleTranslation.lean)
+silently discarded. [ModuleTranslation](lean/Itasca/Module/ModuleTranslation.lean)
 proves exact canonical projections and their uniqueness.
 
 [otherwise-projection.spectec](lean/upstream/otherwise-projection.spectec)
@@ -156,7 +156,7 @@ patched full-spec projections cannot drop a singleton matching import.
 ## Additional module specification gaps
 
 These are **not repaired in the upstream source patches**. The local
-[ModuleConditions/Profile](lean/Itasca/ModuleProfile.lean) supplies them explicitly;
+[ModuleConditions/Profile](lean/Itasca/Module/ModuleProfile.lean) supplies them explicitly;
 module soundness establishes them and completeness requires them. They are not
 hidden assumptions that an unchecked parser happened to enforce.
 
@@ -169,8 +169,8 @@ hidden assumptions that an unchecked parser happened to enforce.
 `TODO: disjoint export names`. Its generated constructor therefore admits
 otherwise well-typed modules with duplicate export names. The local condition
 is `unique_exports`, a `Nodup` statement about **decoded Unicode names**, with
-strict UTF-8 injectivity proved in [ModuleUnicodeUnique](lean/Itasca/ModuleUnicodeUnique.lean).
-[ModuleNegativeExamples](lean/Itasca/ModuleNegativeExamples.lean) checks public
+strict UTF-8 injectivity proved in [ModuleUnicodeUnique](lean/Itasca/Binary/ModuleUnicodeUnique.lean).
+[ModuleNegativeExamples](lean/Itasca/Examples/ModuleNegativeExamples.lean) checks public
 rejection of duplicate U+10FFFF export names.
 
 - [ ] Add a minimized source-level duplicate-name case to an upstream report.
@@ -195,7 +195,7 @@ that bound.
 The table count, single-result function/block restriction, and homogeneous
 `br_table` targets are separate **Wasm 1.0 profile differences**, not requests to
 restrict a Wasm 2.0 specification. The
-[branch-table boundary example](lean/Itasca/WasmCompletenessBoundary.lean)
+[branch-table boundary example](lean/Itasca/Examples/WasmCompletenessBoundary.lean)
 demonstrates a valid 2.0 typing derivation rejected by the unchanged 1.0 validator.
 
 ## Investigations to preserve
@@ -220,9 +220,9 @@ admits unintended byte decompositions. No general source repair or isolated
 regression for this concern is included in the current patches.
 
 The proofs here do not assume that generated `fun_utf8` is a unique or strict
-decoder. [ModuleBinary](lean/Itasca/ModuleBinary.lean) uses an independent strict
-UTF-8 grammar; [ModuleUnicode](lean/Itasca/ModuleUnicode.lean) constructs generated
-witnesses from it, and [ModuleUnicodeUnique](lean/Itasca/ModuleUnicodeUnique.lean)
+decoder. [ModuleBinary](lean/Itasca/Binary/ModuleBinary.lean) uses an independent strict
+UTF-8 grammar; [ModuleUnicode](lean/Itasca/Binary/ModuleUnicode.lean) constructs generated
+witnesses from it, and [ModuleUnicodeUnique](lean/Itasca/Binary/ModuleUnicodeUnique.lean)
 proves canonical re-encoding and decoded-name injectivity from that strict grammar.
 
 - [ ] Create a minimized invalid-byte decomposition and check the source and generated judgments.

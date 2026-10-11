@@ -79,10 +79,10 @@ Inspect these source groups before choosing the first proof edit:
 | [src/stream.rs](src/stream.rs) | The actual driver, batch operations, source trait, slice splitter, and synchronous visitor. |
 | [src/module.rs](src/module.rs), [src/code.rs](src/code.rs), [src/limits.rs](src/limits.rs) | Shared components, legacy APIs to retire, body callbacks, and enforced bounds. |
 | [Generated Types](lean/Itasca/Generated/Types.lean), [Generated Funs](lean/Itasca/Generated/Funs.lean) | Exact extracted signatures, callback records, loop states, and returned environment/visitor values. Read only; regenerate after Rust edits. |
-| `ModuleRegions` (retired), [ModuleSoundness](lean/Itasca/ModuleSoundness.lean), [ModuleCompleteness](lean/Itasca/ModuleCompleteness.lean) | Existing public certificate, semantic assembly, and independent completeness premises. |
-| [ModuleDecomposed](lean/Itasca/ModuleDecomposed.lean), [ModuleEntryVisitor](lean/Itasca/ModuleEntryVisitor.lean), [ModuleCodeEntryComplete](lean/Itasca/ModuleCodeEntryComplete.lean) | Environment-derived entry conditions, visitor erasure, and entry completeness. |
-| `ModuleCodeSection` (retired), `ModuleCodeEntries` (retired), `ModuleCode` (retired), [ModuleLayout](lean/Itasca/ModuleLayout.lean) | Reusable framing/typing/layout facts currently mixed with legacy driver proofs. |
-| [ModuleCustomVisitor](lean/Itasca/ModuleCustomVisitor.lean), [ModuleCustomObservation](lean/Itasca/ModuleCustomObservation.lean) | Custom-hook erasure and preserving observations through environment/tail callbacks. |
+| `ModuleRegions` (retired), [ModuleSoundness](lean/Itasca/Module/ModuleSoundness.lean), [ModuleCompleteness](lean/Itasca/Module/ModuleCompleteness.lean) | Existing public certificate, semantic assembly, and independent completeness premises. |
+| [ModuleDecomposed](lean/Itasca/Module/ModuleDecomposed.lean), [ModuleEntryVisitor](lean/Itasca/Module/ModuleEntryVisitor.lean), [ModuleCodeEntryComplete](lean/Itasca/Module/ModuleCodeEntryComplete.lean) | Environment-derived entry conditions, visitor erasure, and entry completeness. |
+| `ModuleCodeSection` (retired), `ModuleCodeEntries` (retired), `ModuleCode` (retired), [ModuleLayout](lean/Itasca/Module/ModuleLayout.lean) | Reusable framing/typing/layout facts currently mixed with legacy driver proofs. |
+| [ModuleCustomVisitor](lean/Itasca/Module/ModuleCustomVisitor.lean), [ModuleCustomObservation](lean/Itasca/Module/ModuleCustomObservation.lean) | Custom-hook erasure and preserving observations through environment/tail callbacks. |
 | [tests/stream.rs](tests/stream.rs), [tests/wasm_tests.rs](tests/wasm_tests.rs) | Current protocol regressions and legacy API callers to migrate. |
 | [Audit](lean/Itasca/Audit.lean), [audit coverage checker](lean/scripts/check_audit.py) | Import coverage and transitive axiom checks. |
 
@@ -160,7 +160,7 @@ vector, and extracted helper boundaries. In particular, preserve the
 already solve extraction constraints.
 
 The main simplification is to assemble semantic certificates directly with
-[`ModuleSound.assembled_regions`](lean/Itasca/ModuleSoundness.lean). Do not first
+[`ModuleSound.assembled_regions`](lean/Itasca/Module/ModuleSoundness.lean). Do not first
 prove that the streaming execution replays the old `validate_code_with` loop.
 That would introduce unnecessary equivalence proofs between different buffer
 offsets, framing reads, and callback schedules. The new proof should survive
@@ -210,7 +210,7 @@ Prove the following invariant by induction over reachability:
 - The validation prefix is a chain of successful default
   `module.validate_code_entry` executions from byte zero, for exactly
   `first_func .. first_func + num_validated`. Derive each link using
-  [`validate_code_entry_with.accepted_erase`](lean/Itasca/ModuleEntryVisitor.lean).
+  [`validate_code_entry_with.accepted_erase`](lean/Itasca/Module/ModuleEntryVisitor.lean).
 - Dispatch operations preserve that chain. Validation does not require prior
   dispatch. Keep dispatch framing facts separate from validation evidence.
 - Once an error is stored, every later `validate_func` returns that same error
@@ -219,7 +219,7 @@ Prove the following invariant by induction over reachability:
 
 From reachability and successful `finish`, derive exact byte consumption and
 exactly `num_funcs` successful entry validations. Then apply
-[`ModuleDecomposed`](lean/Itasca/ModuleDecomposed.lean) and
+[`ModuleDecomposed`](lean/Itasca/Module/ModuleDecomposed.lean) and
 ``ModuleCodeEntries`` (retired) to obtain a batch-local
 `Rep CodeEncoding` and `EntriesTyped env first_func`. Environment bounds and
 result arities come from the driver's actual environment decode.
@@ -306,7 +306,7 @@ just to make these arithmetic proofs easier.
 ## Composition, completeness, and the concrete adapter
 
 Erase custom callbacks using
-[`ModuleCustomVisitor`](lean/Itasca/ModuleCustomVisitor.lean), recover the
+[`ModuleCustomVisitor`](lean/Itasca/Module/ModuleCustomVisitor.lean), recover the
 environment and tail semantic certificates, and apply `assembled_regions` to
 the completed code certificate. This gives encoding, generated `Module_ok`,
 the Wasm 1.0 profile, cache/index correspondence, and public metadata together.
@@ -315,7 +315,7 @@ state-preservation lemma; acceptance erasure alone does not preserve ghost
 work observations.
 
 Completeness starts with the same independent premises as
-[`ModuleCompleteness`](lean/Itasca/ModuleCompleteness.lean). Reuse
+[`ModuleCompleteness`](lean/Itasca/Module/ModuleCompleteness.lean). Reuse
 `ModuleLayout.normalize`, environment completeness, typed-entry completeness,
 and tail completeness on the appropriate region slices. Show every framed
 batch of a valid module can validate its next function repeatedly using

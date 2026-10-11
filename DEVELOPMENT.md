@@ -16,10 +16,12 @@ grammar and explicit Wasm 1.0 restrictions. Read the
 | `src/reader.rs`, `types.rs`, `limits.rs`, `error.rs` | Byte readers, API types, implementation bounds and errors. |
 | `lean/Itasca/Generated/Types.lean`, `Funs.lean` | Committed Aeneas extraction; never edit by hand. |
 | `lean/Itasca/Generated/FunsExternal.lean` | Handwritten concrete models of `Vec.pop` and `Vec.is_empty`. |
-| `lean/Itasca/Wasm*.lean`, `Visitor*.lean` | Body grammar, typing, completeness and callback proofs. |
-| `lean/Itasca/Module*.lean` | Shared parsing/typing, independent module certificates, metadata, and whole-module corollaries. |
-| `lean/Itasca/Stream*.lean` | Source contracts, actual worker/driver proofs, and concrete adapter proofs. |
-| `lean/Itasca/Audit.lean` | Transitive theorem/adapter axiom audit. |
+| `lean/Itasca/Binary/` | Independent grammars, byte readers, and structured-body/module decoding uniqueness. |
+| `lean/Itasca/Body/`, `Visitor/` | Body typing, completeness, shared dispatch, and callback proofs. |
+| `lean/Itasca/Module/` | Shared parsing/typing, independent module certificates, metadata, and whole-module corollaries. |
+| `lean/Itasca/Stream/` | Source contracts, actual worker/driver proofs, and concrete adapter proofs. |
+| `lean/Itasca/Examples/`, `Support/` | Checked regression examples and common proof helpers. |
+| `lean/Itasca/*.lean` | Stable public entry modules, specification checks, and the transitive audit of all local declarations. |
 | `lean/SpecTec/wasm2.0.lean` | Specification regenerated from pinned sources and patches. |
 | `lean/Makefile`, `lake-manifest.json`, `lean-toolchain` | Extraction, generation and pinned Lean dependencies. |
 | `vendor/aeneas-lean`, `vendor/spectec` | Pinned upstream source checkouts. |
@@ -42,7 +44,7 @@ cargo test
 cargo test --no-default-features
 just extract                 # Regenerate after Rust changes
 just extract-check           # Regenerate separately and compare models
-just check Itasca.ModuleValidation # One module and dependencies
+just check Itasca.Module.ModuleValidation # One module and dependencies
 just prove                   # Integrated build, import coverage and axiom audit
 just trust                   # Rerun the transitive axiom report
 just spec-check              # Regenerate and compare the specification

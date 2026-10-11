@@ -1,0 +1,119 @@
+import Itasca.Module.BodyContext
+import Itasca.Binary.ModuleBinary
+
+open Aeneas Aeneas.Std
+
+namespace Itasca.CodeEntry
+
+/-- The statically resolved module tables used by body validation. Segment
+spaces are supplied later; module-level local and label spaces are empty. -/
+structure ModuleContext (env : module.Env) (C : context) : Prop where
+  types : C.TYPES = env.types.val.map EnvTranslation.funcType
+  funcs : C.FUNCS = env.func_types.val.map EnvTranslation.funcType
+  globals : C.GLOBALS = env.global_types.val.map Translate.globalType
+  tables : C.TABLES = env.table_types.val.map EnvTranslation.tableType
+  mems : C.MEMS = env.mem_types.val.map EnvTranslation.memType
+  locals : C.LOCALS = []
+  labels : C.LABELS = []
+
+def bodyContext (env : module.Env) (params declared results : List types.ValueType) : context :=
+  { TYPES := env.types.val.map EnvTranslation.funcType
+    FUNCS := env.func_types.val.map EnvTranslation.funcType
+    GLOBALS := env.global_types.val.map Translate.globalType
+    TABLES := env.table_types.val.map EnvTranslation.tableType
+    MEMS := env.mem_types.val.map EnvTranslation.memType
+    ELEMS := []
+    DATAS := []
+    LOCALS := (params ++ declared).map Translate.valueType
+    LABELS := [.mk_list (results.map Translate.valueType)]
+    RETURN := some (.mk_list (results.map Translate.valueType)) }
+
+def instructionType (ft : types.FuncType) : functype :=
+  .mk_functype (.mk_list []) (.mk_list (ft.results.val.map Translate.valueType))
+
+/-- A code entry refers to the actual type table, and its body uses parameter
+locals followed by the decoded local declarations. -/
+structure Typed (env : module.Env) (typeIdx : U32) (entry : ModuleBinary.Code) : Prop where
+  type_lt : typeIdx.val < env.types.val.length
+  typed : Instrs_ok (bodyContext env env.types.val[typeIdx.val].params.val
+    entry.declared env.types.val[typeIdx.val].results.val) entry.body
+    (instructionType env.types.val[typeIdx.val])
+  profile : Wasm1.Instructions (bodyContext env env.types.val[typeIdx.val].params.val
+    entry.declared env.types.val[typeIdx.val].results.val) entry.body
+
+def function (typeIdx : U32) (entry : ModuleBinary.Code) : func :=
+  .FUNC (.mk_uN typeIdx.val) (entry.declared.map (fun t => .LOCAL (Translate.valueType t))) entry.body
+
+theorem ModuleContext.wf {env C} (h : ModuleContext env C) : wf_context C := by
+  have ht := h.tables
+  have hm := h.mems
+  cases C
+  constructor
+  · dsimp only at ht
+    rw [ht]
+    simp only [Forall, List.mem_map]
+    rintro _ ⟨tt, _, rfl⟩
+    exact EnvTranslation.tableType_wf tt
+  · dsimp only at hm
+    rw [hm]
+    simp only [Forall, List.mem_map]
+    rintro _ ⟨mt, _, rfl⟩
+    exact EnvTranslation.memType_wf mt
+
+/-- Generated function typing in the full module context. No equality of the
+body API's empty segment spaces with the module's segment spaces is assumed. -/
+theorem Typed.func_ok {env : module.Env} {typeIdx : U32} {entry : ModuleBinary.Code}
+    (h : Typed env typeIdx entry) (C : context) (hc : ModuleContext env C) :
+    Func_ok C (function typeIdx entry) (EnvTranslation.funcType (env.types.val[typeIdx.val]'h.type_lt)) := by
+  let ft := env.types.val[typeIdx.val]'h.type_lt
+  let ps := ft.params.val.map Translate.valueType
+  let ds := entry.declared.map Translate.valueType
+  let rs := ft.results.val.map Translate.valueType
+  let localC : context := ⟨[], [], [], [], [], [], [], ps ++ ds, [.mk_list rs], some (.mk_list rs)⟩
+  have hlwf : wf_context localC := by constructor <;> simp [Forall]
+  have hcore : BodyContext.SameCore
+      (bodyContext env ft.params.val entry.declared ft.results.val) (localC ++ C) := by
+    constructor
+    · exact hc.types.symm
+    · exact hc.funcs.symm
+    · exact hc.globals.symm
+    · exact hc.tables.symm
+    · exact hc.mems.symm
+    · change (ft.params.val ++ entry.declared).map Translate.valueType = (ps ++ ds) ++ C.LOCALS
+      simp [hc.locals, ps, ds]
+    · change [.mk_list rs] = [.mk_list rs] ++ C.LABELS
+      simp [hc.labels]
+    · rfl
+  have ht := BodyContext.instrs_transport h.typed rfl rfl hcore
+  have hw := (DeclarativeComplete.wellFormed h.typed).2
+  have he : Expr_ok (localC ++ C) entry.body (.mk_list rs) :=
+    .mk_Expr_ok _ _ _ ht
+      ((DeclarativeComplete.wellFormed ht).1) hw
+  have hn : Forall (fun t => t ≠ valtype.BOT) ds := by
+    simp only [ds, Forall, List.mem_map]
+    rintro _ ⟨t, _, rfl⟩
+    cases t <;> simp [Translate.valueType]
+  have hi : typeIdx.val < C.TYPES.length := by simpa [hc.types] using h.type_lt
+  have hlookup : C.TYPES[typeIdx.val]! = EnvTranslation.funcType ft := by
+    rw [hc.types, getElem!_pos _ _ (by simpa using h.type_lt), List.getElem_map]
+  have hf : wf_func (function typeIdx entry) :=
+    .func_case_0 _ _ _ (EnvTranslation.index_wf typeIdx) hw
+  simpa only [function, EnvTranslation.funcType, Map, List.map_map,
+    Function.comp_def, ds, ps, rs, ft, localC] using
+    Func_ok.mk_Func_ok C (.mk_uN typeIdx.val) ds entry.body ps rs hi hlookup hn he hc.wf (by simpa [function, Map, ds, List.map_map, Function.comp_def] using hf) hlwf
+
+/-- The function-body soundness result uses this same context when its locals
+and results are the vectors constructed by the code-entry validator. -/
+theorem body_context {env : module.Env} {ctx : code.Context} {bt : code.BlockType}
+    {params declared results : List types.ValueType}
+    (hl : ctx.locals.val = params ++ declared) (hr : ctx.results.val = results)
+    (hbt : results = Control.results bt) :
+    WasmFrames.enter (EnvTranslation.context env ctx) .body bt =
+      bodyContext env params declared results := by
+  cases env
+  cases ctx
+  simp_all [WasmFrames.enter, WasmFrames.Form.label, Control.labelContext,
+    EnvTranslation.context, bodyContext, Control.resultTypes]
+  rfl
+
+end Itasca.CodeEntry
