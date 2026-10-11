@@ -1,4 +1,3 @@
-import Itasca.Body.Wasm1Profile
 import Itasca.Body.Wasm1ProfileTransport
 
 open Aeneas Aeneas.Std

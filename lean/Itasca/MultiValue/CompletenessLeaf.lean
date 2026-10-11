@@ -1,4 +1,5 @@
-import Itasca.MultiValue.ScalarDispatch
+import Itasca.MultiValue.StepContext
+import Itasca.MultiValue.ScalarComplete
 import Itasca.MultiValue.CompletenessProgram
 
 open Aeneas Aeneas.Std

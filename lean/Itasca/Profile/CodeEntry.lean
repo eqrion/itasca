@@ -1,4 +1,5 @@
-import Itasca.Profile.Body
+import Itasca.Profile.BodySpec
+import Itasca.MultiValue.BinaryComplete
 import Itasca.Module.ModuleCodeContext
 import Itasca.Module.ModuleCodeBinary
 

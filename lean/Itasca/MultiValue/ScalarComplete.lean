@@ -1,27 +1,11 @@
-import Itasca.MultiValue.ScalarTotal
-import Itasca.Body.CompletenessStep
+import Itasca.MultiValue.ScalarContext
+import Itasca.Body.BasicStepComplete
+import Itasca.Body.ScalarStepComplete
+import Itasca.Body.EnvStepComplete
 
 open Aeneas Aeneas.Std
 
 namespace Itasca.MultiValue
-
-set_option maxRecDepth 4096 in
-set_option maxHeartbeats 1000000 in
-/-- Shared scalar dispatch observes local types but never function results. -/
-theorem scalar_context {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env)
-    (ctx ctx' : code.Context) (opcode : U8) (v : V)
-    (hscalar : opcode.val ∉ controlOpcodes) (hlocals : ctx.locals = ctx'.locals) :
-    code.step visitor st data env ctx opcode v =
-      code.step visitor st data env ctx' opcode v := by
-  obtain ⟨⟨n, hn⟩⟩ := opcode
-  change n < 256 at hn
-  change n ∉ controlOpcodes at hscalar
-  simp only [controlOpcodes, List.mem_cons, not_or] at hscalar
-  interval_cases n <;> try simp_all
-  all_goals try simp only [code.step, global_simps]
-  all_goals try (first | rfl | simp [code.read_local_get, code.read_local_set, code.read_local_tee,
-    code.take_local, code.local_type, hlocals])
 
 /-- Every independently encoded scalar instruction accepts its principal
 SpecTec typing. This imposes neither a Wasm 1.0 environment restriction nor a
@@ -48,8 +32,8 @@ theorem scalar_complete (data : Slice U8) (env : module.Env) (ctx : code.Context
   | globalGet idx he => exact Completeness.globalGet f data env ctx C hc idx _ next he hb front input output ht hr hsize
   | globalSet idx he => exact Completeness.globalSet f data env ctx C hc idx _ next he hb front input output ht hr
   | memory opcode operation arg hmap ha ho =>
-      exact Completeness.memory_contract data env ctx C st f opcode operation arg _ _ next front input output
-        hc hsize hmap ha ho hb hr ht
+      exact Completeness.memory f data env ctx C hc opcode operation hmap arg _ _ next ha ho hb
+        front input output ht hr hsize
   | memorySize => exact Completeness.memorySize f data env ctx C hc next hb front input output ht hr hsize
   | memoryGrow => exact Completeness.memoryGrow f data env ctx C hc next hb front input output ht hr hsize
   | i32Const value he => exact f.step_i32Const data env ctx value _ next C front input output he hb hsize ht hr

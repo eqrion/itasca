@@ -19,7 +19,7 @@ CHARON_FLAGS := --preset=aeneas --sysroot=default --rustc-arg=--cfg=charon \
 
 .PHONY: tools patch-aeneas patch-spectec aeneas-build extract extract-check llbc \
  prove trust audit-coverage clean checkpoint spec-build spec-generate spec-update \
- spec-check regressions
+ spec-compare spec-check regressions
 
 # Source patches are repeatable and fail if the checkout has incompatible edits.
 patch-aeneas:
@@ -60,7 +60,7 @@ prove: audit-coverage
 	lake build
 
 trust: prove
-	lake env lean Itasca/Audit.lean
+	ITASCA_AUDIT_VERBOSE=1 lake env lean Itasca/Audit.lean
 
 # Preserve dependency caches; remove only this project's compiled artifacts.
 clean:
@@ -84,8 +84,10 @@ spec-update: spec-generate
 	mkdir -p SpecTec
 	cp .build/wasm2.0.lean SpecTec/wasm2.0.lean
 
-spec-check: spec-generate
+spec-compare: spec-generate
 	cmp .build/wasm2.0.lean SpecTec/wasm2.0.lean
+
+spec-check: spec-compare
 	lake build SpecTecGenerated Itasca.SpecChecks
 
 # Use upstream's test runner and compile its regenerated outputs in our Lake env.

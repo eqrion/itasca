@@ -1,5 +1,5 @@
 import Itasca.MultiValue.VisitorTransfer
-import Itasca.MultiValue.ScalarComplete
+import Itasca.MultiValue.ScalarContext
 import Itasca.Visitor.VisitorComplete
 
 open Aeneas Aeneas.Std Result ControlFlow

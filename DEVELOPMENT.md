@@ -34,12 +34,16 @@ with extensive caller preconditions.
 
 ## Build and verification
 
+Choose commands for the files you changed; this is a command reference, not a
+sequence to repeat after every edit.
+
 ```sh
 cargo test
 cargo test --no-default-features
 just extract          # Refresh committed Rust models after source changes
 just extract-check    # Regenerate separately and compare
 just check Itasca.Module.ModuleValidation
+just profile Itasca.MultiValue.ScalarContext  # Re-elaborate one module with timings
 just prove            # Build all proofs and check audit coverage and axioms
 just trust            # Rerun the transitive axiom report
 just spec-check       # Regenerate and compare the specification
@@ -67,6 +71,21 @@ Use `just check Itasca.ModuleName` while iterating. Preserve `lean/.lake/` and
 Scratch files belong in `$TMPDIR`, outside the proof tree. Use the committed Lake
 manifest during ordinary builds; `lake update` is for intentional dependency
 changes. `lean-extract` and `lean-prove` remain command aliases.
+
+`just check` accepts multiple module names in one Lake invocation. It rebuilds
+changed dependencies and reuses the rest. `just profile Itasca.ModuleName` builds
+the imports, then re-elaborates that module with Lean's profiler; it is a
+diagnostic command, not an additional verification requirement. Compare timings
+with warm dependencies and without another build competing for resources.
+
+For a proof-only change, use targeted checks until the proof works, then run
+`just prove` once for integration. Extraction, specification regeneration, and
+toolchain regressions are required when their inputs change, as listed above;
+they add no new evidence about an edit confined to handwritten proofs.
+`just prove` already checks transitive axioms, so `just trust` is optional unless
+you want the per-declaration report. Ordinary builds print the audit summary.
+`just verify` retains every full-pipeline check and uses its final integrated
+build to compile the compared specification and `Itasca.SpecChecks`.
 
 ## Rust extraction constraints
 

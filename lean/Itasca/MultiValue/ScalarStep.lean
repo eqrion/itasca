@@ -1,6 +1,6 @@
 import Itasca.MultiValue.ScalarMemory
 import Itasca.MultiValue.Invariant
-import Itasca.MultiValue.ScalarComplete
+import Itasca.MultiValue.ScalarContext
 import Itasca.Body.WasmStepEnv
 
 open Aeneas Aeneas.Std
@@ -540,14 +540,6 @@ theorem Pending.step_memory {data env locals index st} (p : Pending data env loc
 end Itasca.MultiValue
 namespace Itasca.MultiValue
 
-private theorem scalar_memory_meaning (opcode : U8)
-    (hlo : 0x28 ≤ opcode.val) (hhi : opcode.val ≤ 0x3E) :
-    ∃ operation, MemoryMeaning.opcodeMeaning opcode = some operation := by
-  rcases opcode with ⟨⟨n, hn⟩⟩
-  change 40 ≤ n at hlo
-  change n ≤ 62 at hhi
-  interval_cases n <;> exact ⟨_, rfl⟩
-
 /-- Successful shared scalar dispatch preserves the multi-value control zipper
 and appends exactly the independently decoded instruction. -/
 theorem Pending.scalar {data env locals index st} (p : Pending data env locals index st)
@@ -562,7 +554,7 @@ theorem Pending.scalar {data env locals index st} (p : Pending data env locals i
   by_cases hhigh : 0x45 ≤ opcode.val
   · exact p.step_numeric visitor hvisitor v hsize opcode hbyte hhigh
   by_cases hmemory : 0x28 ≤ opcode.val ∧ opcode.val ≤ 0x3E
-  · obtain ⟨operation, hm⟩ := scalar_memory_meaning opcode hmemory.1 hmemory.2
+  · obtain ⟨operation, hm⟩ := memory_meaning_exists opcode hmemory.1 hmemory.2
     exact p.step_memory visitor v hsize hvisitor opcode operation hbyte hm
   by_cases h_nop : opcode = code.OP_NOP
   · rw [h_nop] at hbyte ⊢; exact p.step_nop visitor hvisitor v hsize hbyte

@@ -22,8 +22,12 @@ extract-check:
 prove:
     @make prove
 
-check module:
-    @cd lean && lake build {{ module }}
+check +modules:
+    @cd lean && lake build {{ modules }}
+
+# Build imports, then report elaboration/type-checking costs for one module.
+profile module:
+    @make profile MODULE={{ module }}
 
 trust:
     @make trust

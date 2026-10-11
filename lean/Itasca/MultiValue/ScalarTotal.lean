@@ -1,3 +1,4 @@
+import Itasca.MultiValue.ScalarContext
 import Itasca.MultiValue.ScalarReaders
 import Itasca.Body.AllNumeric
 import Itasca.Body.WasmStepScalar
@@ -6,9 +7,6 @@ import Itasca.Visitor.OpDispatch
 open Aeneas Aeneas.Std
 
 namespace Itasca.MultiValue
-
-/-- Opcodes whose control effects are handled by the multi-value dispatcher. -/
-def controlOpcodes : List Nat := [2, 3, 4, 5, 11, 12, 13, 14, 15, 16, 17]
 
 private theorem run_total {A V : Type}
     (read : Result (core.result.Result A error.OpError × code.OpIterState))
@@ -40,7 +38,7 @@ private theorem run_scalar {A V : Type} (st : code.OpIterState)
     exact ⟨hs, by simp [hc], hp⟩
   · exact hh
 
-private theorem memory_meaning_exists (opcode : U8)
+theorem memory_meaning_exists (opcode : U8)
     (hlo : 0x28 ≤ opcode.val) (hhi : opcode.val ≤ 0x3E) :
     ∃ operation, MemoryMeaning.opcodeMeaning opcode = some operation := by
   rcases opcode with ⟨⟨n, hn⟩⟩

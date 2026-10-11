@@ -54,17 +54,25 @@ import Lean.Util.CollectAxioms
 open Lean Elab Command in
 run_cmd do
   let env ← getEnv
+  -- In Lean 4.31 this accessor maps the entire module array. Compute it once,
+  -- rather than once per declaration in the imported environment.
+  let moduleNames := env.header.moduleNames
+  -- Reporting is optional; declaration selection and axiom checks are not.
+  let verbose := (← IO.getEnv "ITASCA_AUDIT_VERBOSE") == some "1"
   let allowed := #[``propext, ``Classical.choice, ``Quot.sound]
   let declarations ← env.constants.foldM (init := #[]) fun names n _ => do
     if let some idx := env.getModuleIdxFor? n then
-      if (`Itasca).isPrefixOf env.header.moduleNames[idx.toNat]! then
+      if (`Itasca).isPrefixOf moduleNames[idx.toNat]! then
         return names.push n
     return names
-  let declarations := declarations.qsort (fun a b => a.toString < b.toString)
+  let declarations := if verbose then
+    declarations.qsort (fun a b => a.toString < b.toString)
+    else declarations
   for decl in declarations do
     let axioms ← Lean.collectAxioms decl
     for ax in axioms do
       unless allowed.contains ax do
         throwError "{decl} depends on unapproved axiom {ax}"
-    logInfo m!"{decl}: {axioms}"
+    if verbose then
+      logInfo m!"{decl}: {axioms}"
   logInfo m!"Audited {declarations.size} Itasca declarations (all kinds and namespaces); only standard Lean logical axioms are allowed."
