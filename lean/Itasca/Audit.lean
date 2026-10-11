@@ -1,3 +1,9 @@
+import Itasca.MultiValue.Profile
+import Itasca.MultiValue.BlockDecode
+import Itasca.MultiValue.Typing
+import Itasca.MultiValue.Stack
+import Itasca.MultiValue.Signature
+import Itasca.Binary.SignedLeb33
 import Itasca.Body.EndTyping
 import Itasca.Examples.BrTableExamples
 import Itasca.Examples.BrTableTraceExamples

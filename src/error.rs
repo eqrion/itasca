@@ -23,6 +23,7 @@ pub enum OpError {
     TypeMismatch,
     EmptyStack,
     StackMismatch,
+    StackTooLarge,
     UnknownLabel,
     UnknownLocal,
     UnknownGlobal,
@@ -31,8 +32,9 @@ pub enum OpError {
     UnknownFunc,
     UnknownType,
     UnknownTable,
-    /// A callee returns more than one value, which Wasm 1.0 has no encoding for.
+    /// A callee exceeds the selected profile's result limit.
     TooManyResults,
+    TooManyParams,
     /// A byte the specification writes out as a literal zero was not zero.
     ReservedByteNotZero,
     InvalidAlignment,

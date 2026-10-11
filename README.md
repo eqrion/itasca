@@ -4,6 +4,14 @@
 
 A formally verified streaming WebAssembly 1.0 validator.
 
+An experimental multi-value profile is also available through
+`validate_module_with_profile(bytes, ValidationProfile::MultiValue)`.
+It supports multi-result functions, indexed block signatures with parameters,
+and Wasm 2.0 branch-table typing. The default API and `ValidationProfile::Wasm1`
+retain Wasm 1.0 behavior. **The multi-value whole-body/module proofs and
+visitor/parallel streaming integration are unfinished**; the formal guarantees
+below apply to the Wasm 1.0 APIs.
+
 ## Background
 
 This project was built using Claude extensively. It's meant to be an experiment of AI-assisted formal verification.
@@ -82,7 +90,10 @@ proved; the new streaming protocol has its own batch and phase contracts.
 
 In addition to formal verification, the validator has been conventionally tested.
 
-`/tests/` contains both an ad-hoc unit test suite, along with an import of the Wasm 1.0 spec-test suite.
+`/tests/` contains focused tests, imported Wasm 1.0 specification binaries,
+and a [pinned Wasm 2.0 control-flow corpus](tests/spec2/README.md). The
+multi-value tests also compare generated modules and mutated binaries against
+wasmparser with the same feature selection.
 `/fuzz/` contains a differential fuzzer against the `wasmparser` Rust crate.
 
 It has also been integrated into SpiderMonkey in an experimental

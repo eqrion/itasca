@@ -156,6 +156,12 @@ pub fn read_f64_bits(data: &[u8], pos: usize) -> Result<(u64, usize)> {
     read_fn_bits(data, pos, 8)
 }
 
+/// Signed 33-bit LEB128, used by the multi-value block type grammar.
+pub fn read_s33_leb(data: &[u8], pos: usize) -> Result<(i64, usize)> {
+    let (v, p) = read_sn_leb(data, pos, 4, -4294967296, 4294967295)?;
+    Ok((v as i64, p))
+}
+
 // Declared here at the bottom so that adding them moved no line above: the
 // extraction records a source line per definition and `Itasca_Funs.v` is
 // generated and committed.

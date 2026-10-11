@@ -6,6 +6,14 @@ This is itasca's active verification pipeline, implementing the
 [final validation record](baseline/VALIDATION.md), and
 [upstream change tracker](../UPSTREAM.md).
 
+Multi-value work is in progress. `Itasca/Binary/SignedLeb33.lean` proves the
+signed block-index reader; `Itasca/MultiValue/` proves descriptor lookup, block
+immediate decoding, and its connection to generated `Blocktype_ok`. These are
+foundation proofs, not a whole-body or whole-module multi-value theorem.
+The extracted experimental runtime is in `src/multi_value.rs`; its control
+invariant, independent body grammar, soundness/completeness, and visitor/stream
+integration remain to be completed. The trust base is unchanged.
+
 The whole-module claims cover the actual streaming driver and its synchronous
 `validate_module` wrapper, with shared environment, entry, body, and tail
 components. Generic streaming theorems separate source coherence, callback

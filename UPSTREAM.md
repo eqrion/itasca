@@ -153,6 +153,39 @@ patched full-spec projections cannot drop a singleton matching import.
 - [ ] Implement general guard preservation, including overlapping and ordered source clauses.
 - [ ] Restore the original fallbacks only after the no-drop and uniqueness proofs pass on regenerated output.
 
+Duplicate **import** names are legal. The projection repair above preserves
+every matching import in order, including repeated module/field name pairs;
+it is not an import-name uniqueness restriction. Export-name uniqueness is a
+separate condition below.
+
+## Wasm 2.0 extension review
+
+These items concern proposals beyond the experimental multi-value profile.
+They are not covered by the current Wasm 1.0 whole-module theorem.
+
+### `ref.func` declared-reference membership
+
+**Status:** missing source condition; not patched. **Issue/PR:** not filed.
+
+The pinned `Instr_ok/ref.func` rule in
+`specification/wasm-2.0/6-typing.spectec` checks `C.FUNCS[x]`, but does not
+check membership in the module's declared function-reference set. The module
+rule still has `TODO: refs`. Before enabling reference types, add the declared
+reference context and its construction, plus a regression distinguishing an
+existing function from a declared function reference. This is outside
+multi-value and does not change the current trust base.
+
+### SIMD lane extraction
+
+**Status:** investigate the source TODO; no confirmed missing condition.
+
+The `Instr_ok/vextract_lane` source TODO says some shape/signedness combinations
+may be too liberal. The generated instruction well-formedness rules already
+restrict those combinations, and the typing rule bounds the lane index.
+The TODO alone is not evidence that the generated judgments admit an illegal
+instruction. Check syntax well-formedness and typing together before proposing
+a patch when SIMD support is added.
+
 ## Additional module specification gaps
 
 These are **not repaired in the upstream source patches**. The local

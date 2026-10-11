@@ -339,7 +339,7 @@ fn read_block_type(data: &[u8], pos: usize) -> Result<(BlockType, usize)> {
 
 // --- Operand and control stack ---
 
-fn cur_base(st: &OpIterState) -> usize {
+pub(crate) fn cur_base(st: &OpIterState) -> usize {
     let n = st.ctrls.len();
     if n == 0 {
         return 0;
@@ -347,7 +347,7 @@ fn cur_base(st: &OpIterState) -> usize {
     st.ctrls[n - 1].value_stack_base
 }
 
-fn cur_polymorphic(st: &OpIterState) -> bool {
+pub(crate) fn cur_polymorphic(st: &OpIterState) -> bool {
     let n = st.ctrls.len();
     if n == 0 {
         return false;
@@ -376,7 +376,7 @@ fn pop_stack_type(st: &mut OpIterState) -> Result<StackType> {
 
 /// Pop one operand and require it to match `expected`. `Bot` matches
 /// anything, since it stands for a value of unknown type in unreachable code.
-fn pop_with_type(st: &mut OpIterState, expected: ValueType) -> Result<StackType> {
+pub(crate) fn pop_with_type(st: &mut OpIterState, expected: ValueType) -> Result<StackType> {
     let t = pop_stack_type(st)?;
     match t {
         StackType::Bot => Ok(t),
@@ -392,7 +392,7 @@ fn pop_with_type(st: &mut OpIterState, expected: ValueType) -> Result<StackType>
 
 /// Pop `types` in reverse, since the last one is what sits on top of the
 /// stack.
-fn pop_types(st: &mut OpIterState, types: &[ValueType]) -> Result<()> {
+pub(crate) fn pop_types(st: &mut OpIterState, types: &[ValueType]) -> Result<()> {
     let mut i: usize = types.len();
     loop {
         if i == 0 {
@@ -403,7 +403,7 @@ fn pop_types(st: &mut OpIterState, types: &[ValueType]) -> Result<()> {
     }
 }
 
-fn push_types(st: &mut OpIterState, types: &[ValueType]) {
+pub(crate) fn push_types(st: &mut OpIterState, types: &[ValueType]) {
     let mut i: usize = 0;
     loop {
         if i >= types.len() {
@@ -444,7 +444,7 @@ fn branch_target_types(c: &Ctrl) -> Vec<ValueType> {
     block_results(&branch_target_bt(c))
 }
 
-fn push_ctrl(st: &mut OpIterState, kind: LabelKind, bt: BlockType) {
+pub(crate) fn push_ctrl(st: &mut OpIterState, kind: LabelKind, bt: BlockType) {
     let base = st.vals.len();
     st.ctrls.push(Ctrl {
         kind,
@@ -455,7 +455,7 @@ fn push_ctrl(st: &mut OpIterState, kind: LabelKind, bt: BlockType) {
 }
 
 /// Discard the current frame's operands and mark it unreachable.
-fn mark_unreachable(st: &mut OpIterState) {
+pub(crate) fn mark_unreachable(st: &mut OpIterState) {
     let base = cur_base(st);
     loop {
         if st.vals.len() <= base {
@@ -1120,7 +1120,7 @@ pub(crate) fn binary_types(opcode: u8) -> Option<(ValueType, ValueType)> {
 /// The hook runs after the reader, so it sees the immediates the reader
 /// decoded, the checks it made, and the state its effect left behind. A hook
 /// that declines stops the loop, reported as `OpError::Visitor`.
-fn step<V: OpVisitor>(
+pub(crate) fn step<V: OpVisitor>(
     st: &mut OpIterState,
     data: &[u8],
     env: &Env,

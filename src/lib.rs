@@ -55,6 +55,8 @@ pub mod code;
 pub mod error;
 pub mod module;
 pub mod types;
+pub mod signature;
+pub mod multi_value;
 
 /// Numeric bounds the validator enforces. Private: a consumer has no use
 /// for the bounds themselves, only for the fact that validation enforces them.
@@ -70,3 +72,23 @@ pub use module::*;
 pub use types::*;
 
 pub mod stream;
+
+/// Selectable validation rules. `MultiValue` is an experimental step towards
+/// Wasm 2.0; the remaining 2.0 proposals are not enabled by this profile.
+#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
+#[derive(Clone, Copy)]
+pub enum ValidationProfile {
+    Wasm1,
+    MultiValue,
+}
+
+/// Select an explicit profile. The default `validate_module` remains Wasm 1.0.
+/// Only the Wasm 1.0 branch currently has whole-module verification.
+pub fn validate_module_with_profile(data: &[u8], profile: ValidationProfile)
+    -> core::result::Result<Module, Error>
+{
+    match profile {
+        ValidationProfile::Wasm1 => validate_module(data),
+        ValidationProfile::MultiValue => multi_value::validate_module(data),
+    }
+}

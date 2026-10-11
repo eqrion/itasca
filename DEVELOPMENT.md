@@ -117,11 +117,21 @@ consumers use separate buffers.
 
 ## Implementation limits and consumers
 
-Do not import SpiderMonkey-specific type/function/import/export/parameter caps.
-Extra caps reject valid modules and strengthen completeness hypotheses.
+Implementation limits follow SpiderMonkey and the JavaScript embedding where
+appropriate. Every cap must be checked before allocation when the encoded count
+is available, and must appear in completeness hypotheses. The experimental
+multi-value profile permits up to 1000 parameters and 1000 results per signature;
+Wasm 1.0 retains its existing single-result restriction and parameter behavior.
+Do not silently tighten Wasm 1.0 acceptance while adding the new profile.
+
 `MAX_LOCALS` bounds declared locals, excluding parameters.
 `MAX_FUNCTION_BYTES` bounds actual body bytes including final `end`, excluding
 local declarations. Consumers enforce tighter limits while building metadata.
+
+`cargo run --release --example multi_value_bench` compares repeated empty and
+single-result blocks across the two profiles, then measures 2-, 16-, and
+1000-result blocks. Encoding is outside the measured region. This is a control
+signature microbenchmark, not a whole-application performance claim.
 
 Error values do not carry byte positions. Adding positions throughout the
 validator changes many extracted branches and proofs. Body callback traces
@@ -135,9 +145,12 @@ Consumer allocation and execution are outside these proofs.
 
 ## Streaming API
 
-`stream::validate_streaming` is the sole module orchestrator for streaming and
-parallel validation. `validate_module(bytes)` calls it through a private
-contiguous slice adapter and synchronous worker. The generic driver and adapter
+`stream::validate_streaming` is the Wasm 1.0 module orchestrator for streaming and
+parallel validation. The experimental `multi_value` module currently has a
+contiguous driver sharing scalar readers and section validators; its control
+proofs must be completed and its profile threaded through issued batches before
+it can replace that temporary driver. `validate_module(bytes)` calls the Wasm 1.0
+driver through a private contiguous slice adapter and synchronous worker. The generic driver and adapter
 have soundness, totality, and independent completeness proofs; the existing
 public whole-module theorem statements are corollaries of that adapter.
 

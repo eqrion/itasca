@@ -286,7 +286,7 @@ pub fn export_types(env: &Env) -> Result<Vec<ExternType>> {
 /// The bytes in `[from, to)`, copied out. Only for the two things a module
 /// keeps: a name and a data segment's contents. A byte range that is merely
 /// read, like a function body, is passed as a sub-slice instead.
-fn copy_bytes(data: &[u8], from: usize, to: usize) -> Vec<u8> {
+pub(crate) fn copy_bytes(data: &[u8], from: usize, to: usize) -> Vec<u8> {
     let mut out = Vec::new();
     let mut i: usize = from;
     loop {
@@ -300,7 +300,7 @@ fn copy_bytes(data: &[u8], from: usize, to: usize) -> Vec<u8> {
 
 /// `n` bytes are available at `pos`. Written as a subtraction rather than
 /// `pos + n <= data.len()` so that the sum cannot overflow.
-fn have_bytes(data: &[u8], pos: usize, n: usize) -> Result<()> {
+pub(crate) fn have_bytes(data: &[u8], pos: usize, n: usize) -> Result<()> {
     if n > data.len() - pos {
         return Err(Error::UnexpectedEof);
     }
@@ -310,7 +310,7 @@ fn have_bytes(data: &[u8], pos: usize, n: usize) -> Result<()> {
 // --- Header and section framing ---
 
 /// Spec 5.5.16: the magic number and the version, eight bytes.
-fn read_header(data: &[u8]) -> Result<usize> {
+pub(crate) fn read_header(data: &[u8]) -> Result<usize> {
     let (m0, p1) = read_byte(data, 0)?;
     let (m1, p2) = read_byte(data, p1)?;
     let (m2, p3) = read_byte(data, p2)?;
@@ -330,7 +330,7 @@ fn read_header(data: &[u8]) -> Result<usize> {
 
 /// Spec 5.5.2: a section is an id, a byte count, and that many bytes.
 /// Returns the id, where the contents start, and where they end.
-fn read_section_header(data: &[u8], pos: usize) -> Result<(u8, usize, usize)> {
+pub(crate) fn read_section_header(data: &[u8], pos: usize) -> Result<(u8, usize, usize)> {
     let (id, p) = read_byte(data, pos)?;
     let (size, q) = read_u32_leb(data, p)?;
     let n = size as usize;
@@ -340,7 +340,7 @@ fn read_section_header(data: &[u8], pos: usize) -> Result<(u8, usize, usize)> {
 
 // --- Types (spec 5.3) ---
 
-fn decode_value_type(data: &[u8], pos: usize) -> Result<(ValueType, usize)> {
+pub(crate) fn decode_value_type(data: &[u8], pos: usize) -> Result<(ValueType, usize)> {
     let (b, p) = read_byte(data, pos)?;
     match b {
         0x7f => Ok((ValueType::I32, p)),
@@ -546,7 +546,7 @@ fn decode_name(data: &[u8], pos: usize) -> Result<(Vec<u8>, usize)> {
 /// Returns where the section's contents are, not what its name says: the
 /// name is read, checked, and dropped, and its length is what locates the
 /// contents.
-fn decode_custom_section(data: &[u8], pos: usize, end: usize) -> Result<CustomSection> {
+pub(crate) fn decode_custom_section(data: &[u8], pos: usize, end: usize) -> Result<CustomSection> {
     let (name, p) = decode_name(data, pos)?;
     if p > end {
         return Err(Error::SectionSizeMismatch);
@@ -594,7 +594,7 @@ fn const_global(env: &Env, idx: u32) -> Result<GlobalType> {
 
 /// Decode a constant expression and check that it has the type the context
 /// wants, both in one read.
-fn decode_const_expr(
+pub(crate) fn decode_const_expr(
     data: &[u8],
     pos: usize,
     env: &Env,
@@ -923,7 +923,7 @@ fn decode_start_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize>
     Ok(p)
 }
 
-fn decode_func_indices(data: &[u8], pos: usize, env: &Env) -> Result<(Vec<u32>, usize)> {
+pub(crate) fn decode_func_indices(data: &[u8], pos: usize, env: &Env) -> Result<(Vec<u32>, usize)> {
     let (count, p) = read_u32_leb(data, pos)?;
     let mut out = Vec::new();
     let mut q = p;
@@ -966,7 +966,7 @@ fn decode_element_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usiz
     }
 }
 
-fn decode_env_section(data: &[u8], pos: usize, id: u8, env: &mut Env) -> Result<usize> {
+pub(crate) fn decode_env_section(data: &[u8], pos: usize, id: u8, env: &mut Env) -> Result<usize> {
     match id {
         SECTION_TYPE => decode_type_section(data, pos, env),
         SECTION_IMPORT => decode_import_section(data, pos, env),
@@ -1044,7 +1044,7 @@ fn push_locals(out: &mut Vec<ValueType>, count: u32, vt: ValueType) {
 }
 
 /// Spec 5.5.13's `locals`: run-length encoded, flattened here.
-fn decode_locals(data: &[u8], pos: usize) -> Result<(Vec<ValueType>, usize)> {
+pub(crate) fn decode_locals(data: &[u8], pos: usize) -> Result<(Vec<ValueType>, usize)> {
     let (groups, p) = read_u32_leb(data, pos)?;
     let mut out = Vec::new();
     let mut q = p;
@@ -1066,7 +1066,7 @@ fn decode_locals(data: &[u8], pos: usize) -> Result<(Vec<ValueType>, usize)> {
     }
 }
 
-fn build_func_locals(params: &[ValueType], declared: &[ValueType]) -> Vec<ValueType> {
+pub(crate) fn build_func_locals(params: &[ValueType], declared: &[ValueType]) -> Vec<ValueType> {
     let mut locals = copy_value_types(params);
     let mut i: usize = 0;
     loop {
