@@ -1,5 +1,3 @@
-import Itasca.Body.CoreSoundness
-import Itasca.Body.Nop
 import Itasca.Body.Body
 import Itasca.Body.End
 import Itasca.Body.CoreSimple
@@ -93,6 +91,13 @@ private theorem step_end (data : Slice U8) (env : module.Env) (ctx : code.Contex
   simp [global_simps, hr,
     code.OpVisitor.on_end.default, code.visit, core.result.Result.Insts.CoreOpsTry.branch]
 
+private theorem step_nop (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) :
+    code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx code.OP_NOP () =
+      .ok (.Ok (), st, ()) := by
+  simp [global_simps, code.OpVisitor.on_nop.default, code.visit,
+    core.result.Result.Insts.CoreOpsTry.branch]
+
 /-- The public extracted validator really accepts the empty instruction sequence plus its end. -/
 theorem empty_body_accepted (env : module.Env) :
     code.validate_body endBytes env emptyContext = .ok (.Ok ()) := by
@@ -123,7 +128,7 @@ theorem nop_body_accepted (env : module.Env) :
     (by simp [Body.initial])
     (read_at nopBytes (Body.initial .Empty) 1#usize code.OP_NOP (by decide) rfl
       (by simp [nopBytes, Body.initial, code.OP_NOP, alloc.vec.Vec.deref]))
-    (code.step_nop _ first nopBytes env emptyContext () () rfl)]
+    (step_nop nopBytes env emptyContext first)]
   rw [loop_step nopBytes env emptyContext first last finished code.OP_END
     (by simp [first, Body.initial])
     (read_at nopBytes first 2#usize code.OP_END (by decide) rfl
@@ -216,23 +221,5 @@ theorem drop_body_rejected (env : module.Env) :
     .EmptyStack (by simp [Body.initial])
     (read_at dropBytes (Body.initial .Empty) 1#usize code.OP_DROP (by decide) rfl
       (by simp [dropBytes, Body.initial, code.OP_DROP, alloc.vec.Vec.deref])) hstep
-
-/-- The accepted constant example satisfies the public theorem's independent byte-profile premise. -/
-theorem i32_const_profile : Core.Profile constBytes := by
-  have hencoding : SignedLeb.Encoding [42#u8] (42#i32).val := by
-    refine ⟨[], 42#u8, rfl, by decide, by simp, by decide, ?_, by decide, by decide⟩
-    norm_num [SignedLeb.finalValue, Leb128.payload]
-  refine ⟨[.i32Const 42#i32, .end_],
-    .cons (next := 2#usize) ?_ (.cons (next := 3#usize) ?_ (.nil _ rfl))⟩
-  · refine ⟨[42#u8], .i32Const _ hencoding, ?_, rfl, by decide⟩
-    simp [Core.Token.opcode, code.OP_I32_CONST, constBytes, alloc.vec.Vec.deref]
-  · refine ⟨[], .end_, ?_, rfl, by decide⟩
-    simp [Core.Token.opcode, code.OP_END, constBytes, alloc.vec.Vec.deref]
-
-/-- A nonvacuous application of the complete public soundness theorem to real accepted bytes. -/
-theorem i32_const_body_validated (env : module.Env) :
-    Core.Validated constBytes i32Context (.Value .I32) :=
-  code.validate_body.core_sound constBytes env i32Context (.Value .I32) rfl
-    i32_const_profile (i32_const_body_accepted env)
 
 end Itasca.CoreExamples

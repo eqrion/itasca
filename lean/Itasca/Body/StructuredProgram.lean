@@ -285,7 +285,7 @@ theorem atom_block {data : Slice U8} {env : module.Env} {ctx : code.Context}
   apply f.output_of_same_ctrls (alloc.vec.Vec.ext _ _ hc')
     (operands := f.operands ++ (Control.results bt).map code.StackType.Val)
   · simpa [child, Control.frame, f.vals, List.append_assoc] using hv'
-  · apply (WasmFrames.realizes_append_concrete _ _ _ _).mpr
+  · apply (Frames.realizes_append_concrete _ _ _ _).mpr
     exact ⟨front, by simpa [f.poly_eq] using hreal, rfl⟩
 
 theorem atom_loop {data : Slice U8} {env : module.Env} {ctx : code.Context}
@@ -313,7 +313,7 @@ theorem atom_loop {data : Slice U8} {env : module.Env} {ctx : code.Context}
   apply f.output_of_same_ctrls (alloc.vec.Vec.ext _ _ hc')
     (operands := f.operands ++ (Control.results bt).map code.StackType.Val)
   · simpa [child, Control.frame, f.vals, List.append_assoc] using hv'
-  · apply (WasmFrames.realizes_append_concrete _ _ _ _).mpr
+  · apply (Frames.realizes_append_concrete _ _ _ _).mpr
     exact ⟨front, by simpa [f.poly_eq] using hreal, rfl⟩
 
 theorem empty_if_result {C : context} (bt : code.BlockType)
@@ -349,7 +349,7 @@ theorem atom_ifEnd {data : Slice U8} {env : module.Env} {ctx : code.Context}
   apply f.output_of_same_ctrls (alloc.vec.Vec.ext _ _ hc')
     (operands := rest ++ (Control.results bt).map code.StackType.Val)
   · simpa [child, Control.frame, hv, List.append_assoc] using hv'
-  · apply (WasmFrames.realizes_append_concrete _ _ _ _).mpr
+  · apply (Frames.realizes_append_concrete _ _ _ _).mpr
     exact ⟨front, by simpa [f.poly_eq] using hreal, rfl⟩
 
 theorem atom_ifElse {data : Slice U8} {env : module.Env} {ctx : code.Context}
@@ -404,7 +404,7 @@ theorem atom_ifElse {data : Slice U8} {env : module.Env} {ctx : code.Context}
   apply f.output_of_same_ctrls (alloc.vec.Vec.ext _ _ hc')
     (operands := rest ++ (Control.results bt).map code.StackType.Val)
   · simpa [elseFrame, yesFrame, child, Control.frame, hv, List.append_assoc] using hv'
-  · apply (WasmFrames.realizes_append_concrete _ _ _ _).mpr
+  · apply (Frames.realizes_append_concrete _ _ _ _).mpr
     exact ⟨front, by simpa [f.poly_eq] using hreal, rfl⟩
 
 end Itasca.Completeness

@@ -18,7 +18,7 @@ theorem TypedPrefix.start (C : context) (hC : wf_context C) (inputs : List types
   constructor
   · simp [Forall]
   · intro ts ht
-    obtain ⟨pre, hp, rfl⟩ := (WasmFrames.realizes_append_concrete false [] inputs ts).mp
+    obtain ⟨pre, hp, rfl⟩ := (Frames.realizes_append_concrete false [] inputs ts).mp
       (by simpa using ht)
     have he := (Sequence.realizes_empty pre).mp hp
     subst pre
@@ -63,7 +63,7 @@ theorem ResumePrefix.finish {C inputs ops poly vals args}
   constructor
   · simpa [Forall, or_imp, forall_and] using And.intro h.wellFormed hwf
   · intro ts ht
-    obtain ⟨pre, hp, rfl⟩ := (WasmFrames.realizes_append_concrete poly vals results ts).mp ht
+    obtain ⟨pre, hp, rfl⟩ := (Frames.realizes_append_concrete poly vals results ts).mp ht
     exact .seq C ops [op] inputs (pre ++ results.map Translate.valueType) (pre ++ args)
       (h.typed pre hp)
       (.frame C [op] pre args (results.map Translate.valueType)

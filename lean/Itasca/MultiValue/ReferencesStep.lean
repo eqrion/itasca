@@ -151,7 +151,7 @@ theorem Pending.ref_func {data env locals index st} (p : Pending data env locals
       ⟨hbytes, hlen, hbound⟩) ?_ ?_ ?_ ?_ hdecl
   · apply typed.append hC.wf _ (.instr_case_41 _ (EnvTranslation.index_wf idx))
     intro ts ht
-    obtain ⟨front, hfront, rfl⟩ := (WasmFrames.realizes_append_concrete _ _ [.FuncRef] ts).mp ht
+    obtain ⟨front, hfront, rfl⟩ := (Frames.realizes_append_concrete _ _ [.FuncRef] ts).mp ht
     exact ⟨front, hfront, by simpa [Frames.enter, Translate.valueType] using (Instrs_ok.frame _ _ front [] [.FUNCREF]
       (.instr _ _ [] [.FUNCREF] (hC.ref_func idx hi) hC.wf
         (.instr_case_41 _ (EnvTranslation.index_wf idx))) hC.wf

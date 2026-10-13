@@ -1,5 +1,5 @@
 import Itasca.Body.StackSemantics
-import Itasca.Binary.CoreBinary
+import Itasca.Binary.CoreSyntax
 import Itasca.Body.Frames
 
 open Aeneas Aeneas.Std

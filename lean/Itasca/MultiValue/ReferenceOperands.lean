@@ -291,7 +291,7 @@ theorem code.read_ref_is_null.segment (st : code.OpIterState)
       intro _
       refine ⟨rt, ?_⟩
       intro ts hts
-      obtain ⟨front, hfront, rfl⟩ := (WasmFrames.realizes_append_concrete _ _ [.I32] ts).mp hts
+      obtain ⟨front, hfront, rfl⟩ := (Frames.realizes_append_concrete _ _ [.I32] ts).mp hts
       refine ⟨front, rfl, ?_⟩
       have hh := hpop.realizes front (valtype_reftype (Translate.referenceType rt)) ht hfront
       cases rt <;> simpa [MultiValue.Simd.inputTypes, ModuleConstants.referenceValueType, Translate.referenceType,

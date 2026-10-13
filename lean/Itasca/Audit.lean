@@ -1,4 +1,3 @@
-import Itasca.Body.EndTyping
 import Itasca.Examples.BrTableExamples
 import Itasca.Examples.BrTableTraceExamples
 import Itasca.Examples.CompletenessExamples
@@ -19,6 +18,7 @@ import Itasca.Module.ModuleCustomRanges
 import Itasca.Module.ModuleEntryTrace
 import Itasca.MultiValue.CallbackCorrespondence
 import Itasca.Profile.BinaryUnique
+import Itasca.SpecChecks
 import Itasca.Stream.StreamBatchBounds
 import Itasca.Visitor.VisitorTraceCorollaries
 import Lean.Elab.Command

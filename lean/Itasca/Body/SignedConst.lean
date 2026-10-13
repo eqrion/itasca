@@ -1,3 +1,4 @@
+import Itasca.Body.Numeric
 import Itasca.Binary.SignedLeb
 import Itasca.Binary.CoreSyntax
 import Itasca.Body.Sequence
