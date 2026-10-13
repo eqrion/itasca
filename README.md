@@ -139,7 +139,7 @@ checked. Local tool/specification repairs are versioned [source patches](patches
 with their scope described in the [Lean guide](lean/README.md#source-patches).
 The explicit profile supplements gaps in the generated module judgment, including
 export-name uniqueness. The independent
-[declared-reference condition](lean/Itasca/Profile/DeclaredReferences.lean) requires
+[declared-reference condition](lean/Itasca/Spec/DeclaredReferences.lean) requires
 every `ref.func` target to occur in the module outside function definitions and
 the start declaration. This supplements the pinned model's missing reference
 declaration context without modifying its generated typing rules. Elaboration

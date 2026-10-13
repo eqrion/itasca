@@ -44,8 +44,8 @@ cargo test
 cargo test --no-default-features
 just extract          # Refresh committed Rust models after source changes
 just extract-check    # Regenerate separately and compare
-just check Itasca.Module.ModuleValidation
-just profile Itasca.MultiValue.ScalarContext  # Re-elaborate one module with timings
+just check Itasca.Module.Validation
+just profile Itasca.Wasm2.Step.ScalarContext  # Re-elaborate one module with timings
 just prove            # Build all proofs and check audit coverage and axioms
 just trust            # Rerun the transitive axiom report
 just spec-check       # Regenerate and compare the specification
@@ -87,7 +87,7 @@ they add no new evidence about an edit confined to handwritten proofs.
 `just prove` already checks transitive axioms, so `just trust` is optional unless
 you want the per-declaration report. Ordinary builds print the audit summary.
 `just verify` retains every full-pipeline check and uses its final integrated
-build to compile the compared specification and `Itasca.SpecChecks`.
+build to compile the compared specification and `Itasca.Spec.Checks`.
 
 ## Rust extraction constraints
 

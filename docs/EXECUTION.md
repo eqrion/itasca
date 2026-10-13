@@ -142,7 +142,7 @@ preservation, and full simulation against usable SpecTec execution rules remain
 separate proof obligations. Do
 not infer execution correctness from accepted module typing or a passing corpus.
 
-The checked [Core 2.0 callback correspondence](../lean/Itasca/MultiValue/CallbackCorrespondence.lean)
+The checked [Core 2.0 callback correspondence](../lean/Itasca/Wasm2/Trace/Correspondence.lean)
 extends the existing Wasm 1.0 body trace guarantees. It relates actual callback
 names, order, and immediates to independent byte encodings, aligns accepted
 traces with generated typing, and preserves ordinary outcomes under

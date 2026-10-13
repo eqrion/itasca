@@ -66,8 +66,8 @@ Run these commands from the repository root:
 ```sh
 just extract          # Rust -> LLBC -> committed Lean program model
 just extract-check    # Regenerate separately and reject stale models
-just check Itasca.Module.ModuleValidation
-just profile Itasca.MultiValue.ScalarContext  # Build imports, then profile this file
+just check Itasca.Module.Validation
+just profile Itasca.Wasm2.Step.ScalarContext  # Build imports, then profile this file
 just prove            # Audit import coverage and build the integrated proofs
 just trust            # Rerun the transitive axiom report
 just spec-check       # Regenerate, compare, and compile the specification
@@ -111,15 +111,15 @@ component functions are private in the consumer API.
 
 | Layer | Principal contracts |
 | --- | --- |
-| Whole module | [ModuleValidation](Itasca/Module/ModuleValidation.lean): `module.validate_module.profile_total`, `profile_sound`, and `profile_spec`. [ModuleCompleteness](Itasca/Module/ModuleCompleteness.lean): `profile_complete` and `profile_complete_with_metadata`. |
-| Generic streaming | [StreamValidation](Itasca/Stream/StreamValidation.lean): `stream.validate_streaming.profile_sound`. [StreamDriverTotal](Itasca/Stream/StreamDriverTotal.lean) and [StreamDriverComplete](Itasca/Stream/StreamDriverComplete.lean): `profile_total` and `profile_complete`. |
-| Contiguous adapter | [StreamSlice](Itasca/Stream/StreamSlice.lean) and [StreamSliceCompleteness](Itasca/Stream/StreamSliceCompleteness.lean) discharge the generic contracts for the private source and synchronous worker. |
-| Worker batches | [StreamBatch](Itasca/Stream/StreamBatch.lean) connects actual operations, ordered entry validation, and exact coverage. [StreamBatchComplete](Itasca/Stream/StreamBatchComplete.lean) derives successful validation from independently typed entries. |
+| Whole module | [ModuleValidation](Itasca/Module/Validation.lean): `module.validate_module.profile_total`, `profile_sound`, and `profile_spec`. [ModuleCompleteness](Itasca/Module/Completeness.lean): `profile_complete` and `profile_complete_with_metadata`. |
+| Generic streaming | [StreamValidation](Itasca/Stream/DriverSound.lean): `stream.validate_streaming.profile_sound`. [StreamDriverTotal](Itasca/Stream/DriverTotal.lean) and [StreamDriverComplete](Itasca/Stream/DriverComplete.lean): `profile_total` and `profile_complete`. |
+| Contiguous adapter | [StreamSlice](Itasca/Stream/SliceSound.lean) and [StreamSliceCompleteness](Itasca/Stream/SliceComplete.lean) discharge the generic contracts for the private source and synchronous worker. |
+| Worker batches | [StreamBatch](Itasca/Stream/Batch.lean) connects actual operations, ordered entry validation, and exact coverage. [StreamBatchComplete](Itasca/Stream/BatchComplete.lean) derives successful validation from independently typed entries. |
 | Shared body and entry | [Profile/BodyVisitor](Itasca/Profile/BodyVisitor.lean), [EntrySound](Itasca/Profile/EntrySound.lean), and [EntryComplete](Itasca/Profile/EntryComplete.lean) supply both profiles' certificates and visitor contracts. |
-| Wasm 1.0 body | [WasmSoundness](Itasca/Body/WasmSoundness.lean), [Wasm1Soundness](Itasca/Body/Wasm1Soundness.lean), and [WasmComplete](Itasca/Body/WasmComplete.lean) establish termination, generated typing, profile restrictions, and independent completeness. |
-| Wasm 2.0 body | [BodyTotal](Itasca/MultiValue/BodyTotal.lean), [Soundness](Itasca/MultiValue/Soundness.lean), and [Complete](Itasca/MultiValue/Complete.lean) connect the shared worker to the complete Core 2.0 grammar, generated typing, and independent reference declarations. |
-| Wasm 1.0 callback traces | [VisitorBodyTrace](Itasca/Visitor/VisitorBodyTrace.lean), [ModuleEntryTrace](Itasca/Module/ModuleEntryTrace.lean), and [VisitorTraceCorollaries](Itasca/Visitor/VisitorTraceCorollaries.lean) identify accepted traces and rejection stopping behavior. |
-| Core 2.0 callback traces | [CallbackCorrespondence](Itasca/MultiValue/CallbackCorrespondence.lean) and [CallbackBodyRefinement](Itasca/MultiValue/CallbackBodyRefinement.lean) establish exact body callback bytes, accepted typing, completeness, instrumentation, and rejection stopping behavior. |
+| Wasm 1.0 body | [WasmSoundness](Itasca/Wasm1/Soundness.lean), [Wasm1Soundness](Itasca/Wasm1/ProfileSoundness.lean), and [WasmComplete](Itasca/Wasm1/Completeness.lean) establish termination, generated typing, profile restrictions, and independent completeness. |
+| Wasm 2.0 body | [BodyTotal](Itasca/Wasm2/Totality.lean), [Soundness](Itasca/Wasm2/Soundness.lean), and [Complete](Itasca/Wasm2/Completeness.lean) connect the shared worker to the complete Core 2.0 grammar, generated typing, and independent reference declarations. |
+| Wasm 1.0 callback traces | [VisitorBodyTrace](Itasca/Wasm1/Trace/Body.lean), [ModuleEntryTrace](Itasca/Module/Code/EntryTrace.lean), and [VisitorTraceCorollaries](Itasca/Wasm1/Trace/Corollaries.lean) identify accepted traces and rejection stopping behavior. |
+| Core 2.0 callback traces | [CallbackCorrespondence](Itasca/Wasm2/Trace/Correspondence.lean) and [CallbackBodyRefinement](Itasca/Wasm2/Trace/BodyRefinement.lean) establish exact body callback bytes, accepted typing, completeness, instrumentation, and rejection stopping behavior. |
 
 `ModuleSound.Validated` identifies one independently encoded raw module,
 elaborates it to generated syntax, proves `Module_ok` and the selected profile,
@@ -171,7 +171,7 @@ covers indexed block parameters/results, branch tables with a common `BOT`
 subtype, sign extension, saturating conversions, reference/table operations,
 bulk memory, and all 236 Core 2.0 SIMD operations. Instruction typing uses the
 actual element types and declared data count from the environment.
-[WasmCompletenessBoundary](Itasca/Examples/WasmCompletenessBoundary.lean) checks
+[WasmCompletenessBoundary](Itasca/Examples/Wasm1/ProfileBoundary.lean) checks
 why Wasm 1.0 branch-table equality must be an explicit restriction of Wasm 2.0.
 
 Body traces for both profiles identify operator hooks, their order, state
@@ -186,8 +186,8 @@ checks. The default label appears in the closing table callback.
 Trace statements quantify ordinary returned executions. They do not claim a
 trace for a panicking or diverging callback, a complete trace specification for
 rejected module/entry runs, or an exact error variant for every malformed input.
-[WasmBinaryUnique](Itasca/Binary/WasmBinaryUnique.lean) and
-[ModuleBinaryUnique](Itasca/Binary/ModuleBinaryUnique.lean) prove independent
+[WasmBinaryUnique](Itasca/Binary/Wasm1/EncodingUnique.lean) and
+[ModuleBinaryUnique](Itasca/Binary/ModuleUnique.lean) prove independent
 decoding uniqueness without typing or implementation-size assumptions.
 [Profile/BinaryUnique](Itasca/Profile/BinaryUnique.lean) extends these guarantees
 to body, code-entry, and complete-module decoding under either profile.
@@ -209,26 +209,26 @@ to body, code-entry, and complete-module decoding under either profile.
 
 Root entry modules retain stable proof imports. The common runtime body loop
 lives in Rust's `code` module alongside both profiles' handlers.
-[SharedLoop](Itasca/Body/SharedLoop.lean) relates it to the proof-only
-[LegacyExecution](Itasca/Body/LegacyExecution.lean) model used by the Wasm 1.0
+[SharedLoop](Itasca/Wasm1/SharedLoop.lean) relates it to the proof-only
+[LegacyExecution](Itasca/Wasm1/LegacyExecution.lean) model used by the Wasm 1.0
 proofs. Both profile adapters feed one shared module and streaming proof chain.
 
 Independent body contracts live in
-[MultiValue/Body](Itasca/MultiValue/Body.lean) and
+[MultiValue/Body](Itasca/Wasm2/BodySpec.lean) and
 [Profile/BodySpec](Itasca/Profile/BodySpec.lean). Grammar, module certificates,
 and context-transport lemmas can import these without importing the full body
 soundness and completeness proofs. [Profile/Body](Itasca/Profile/Body.lean)
 connects those contracts to the validators. Keep dependencies in this direction
 when adding instructions.
 
-[ScalarContext](Itasca/MultiValue/ScalarContext.lean) records the control-opcode
+[ScalarContext](Itasca/Wasm2/Step/ScalarContext.lean) records the control-opcode
 boundary and the shared scalar dispatch's dependence on locals.
-[StepContext](Itasca/MultiValue/StepContext.lean) lifts this fact to the
+[StepContext](Itasca/Wasm2/Step/Context.lean) lifts this fact to the
 Wasm 2.0 dispatcher. Soundness and completeness both use these execution
 equalities; neither needs the other's scalar correctness proof. Dispatch
 equalities should follow the extracted match branches instead of enumerating
 every possible byte. Scalar termination and soundness also share one memory
-opcode-range lemma in [ScalarTotal](Itasca/MultiValue/ScalarTotal.lean).
+opcode-range lemma in [ScalarTotal](Itasca/Wasm2/Scalar/Total.lean).
 
 ### Expanding the supported profile
 
@@ -241,7 +241,7 @@ and independent completeness together. Keep language restrictions separate from
 the bounds in [Profile/Types](Itasca/Profile/Types.lean).
 
 The pinned generated specification omits the `C.refs` condition on `ref.func`.
-[DeclaredReferences](Itasca/Profile/DeclaredReferences.lean) supplies an
+[DeclaredReferences](Itasca/Spec/DeclaredReferences.lean) supplies an
 independent syntactic condition: every `ref.func` target must occur in the
 module after removing function definitions and the start declaration. Module
 certificates identify that declaration set, and body/entry certificates preserve
@@ -249,11 +249,11 @@ membership for every `ref.func`, including nested instructions. This condition
 is checked alongside generated typing; the vendored specification remains
 unchanged. Function-index bounds remain a separate typing obligation.
 
-[SimdBinary](Itasca/MultiValue/SimdBinary.lean) defines SIMD immediates independently
-of runtime dispatch. [SimdMeaning](Itasca/MultiValue/SimdMeaning.lean) and the lane,
+[SimdBinary](Itasca/Binary/Wasm2/Simd.lean) defines SIMD immediates independently
+of runtime dispatch. [SimdMeaning](Itasca/Binary/Wasm2/SimdPureMeaning.lean) and the lane,
 memory, and bit-pattern meaning modules connect them to generated typing rules.
-[SimdSound](Itasca/MultiValue/SimdSound.lean) and
-[SimdComplete](Itasca/MultiValue/SimdComplete.lean) establish both directions,
+[SimdSound](Itasca/Wasm2/Simd/Sound.lean) and
+[SimdComplete](Itasca/Wasm2/Simd/Complete.lean) establish both directions,
 including alignment, lane bounds, shuffle bytes, and valid nonminimal prefix
 encodings. Relaxed SIMD opcodes are excluded.
 
@@ -265,13 +265,13 @@ binary decoding relation. This binary-table discrepancy is recorded explicitly;
 it does not require a vendor edit or a new logical assumption.
 
 Bulk-memory and table-segment instructions cross a module/body boundary.
-[BodyContext](Itasca/Module/BodyContext.lean) transports typing while preserving
+[BodyContext](Itasca/Module/Code/BodyContext.lean) transports typing while preserving
 existing segment indices and types. Wasm 1.0's restriction on instructions that
-index segments remains in [BodySyntax](Itasca/Module/BodySyntax.lean); it is not
+index segments remains in [BodySyntax](Itasca/Module/Code/BodySyntax.lean); it is not
 imposed on Wasm 2.0.
 Changes to tables, value types, segment forms, or constant expressions must also
-update [ModuleElaboration](Itasca/Module/ModuleElaboration.lean),
-[ModuleProfile](Itasca/Module/ModuleProfile.lean), and independent module encodings.
+update [ModuleElaboration](Itasca/Module/Elab/Elaboration.lean),
+[ModuleProfile](Itasca/Module/Elab/Profile.lean), and independent module encodings.
 Preserve the Wasm 1.0 specialization and source/worker contracts throughout.
 
 ## Source patches
@@ -290,7 +290,7 @@ Build targets apply these versioned patches reproducibly to pinned checkouts:
 General upstream issue tracking and reproducers are maintained elsewhere.
 The local source patches remain build inputs; deleting a tracker does not
 remove a patch or change the trust boundary. Regeneration and
-[SpecChecks](Itasca/SpecChecks.lean) check the specification used by these proofs.
+[SpecChecks](Itasca/Spec/Checks.lean) check the specification used by these proofs.
 
 ## Audit
 
