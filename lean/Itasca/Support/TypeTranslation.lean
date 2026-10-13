@@ -1,8 +1,17 @@
 import Itasca.Generated.Funs
 import «wasm2.0»
 
+/-!
+# Type translation
+
+Translates the Rust value, reference, mutability and global types into their SpecTec counterparts
+(`Translate.valueType`, `referenceType`, `mutability`, `globalType`), with injectivity and
+equality-agreement lemmas.
+-/
+
 namespace Itasca.Translate
 
+/-- The SpecTec value type of a Rust value type. -/
 def valueType : types.ValueType → valtype
   | .I32 => .I32
   | .I64 => .I64
@@ -12,19 +21,22 @@ def valueType : types.ValueType → valtype
   | .FuncRef => .FUNCREF
   | .ExternRef => .EXTERNREF
 
-/-- Numeric value types admitted by the original binary profile. -/
+/-- Holds for the numeric value types `i32`, `i64`, `f32` and `f64`, the only ones in Wasm 1.0. -/
 def scalar : types.ValueType → Prop
   | .I32 | .I64 | .F32 | .F64 => True
   | _ => False
 
+/-- The SpecTec reference type of a Rust element type. -/
 def referenceType : types.ElemType → reftype
   | .FuncRef => .FUNCREF
   | .ExternRef => .EXTERNREF
 
+/-- The SpecTec mutability of a Rust mutability. -/
 def mutability : types.Mut → «mut»
   | .Const => none
   | .Var => some .MUT
 
+/-- The SpecTec global type of a Rust global type. -/
 def globalType (g : types.GlobalType) : globaltype :=
   .mk_globaltype (mutability g.mutability) (valueType g.valtype)
 
@@ -42,7 +54,7 @@ theorem valueType_eq (a b : types.ValueType) :
       Aeneas.Std.Result.ok (decide (valueType a = valueType b)) := by
   cases a <;> cases b <;> rfl
 
-/-- Covers every Rust global type, including immutable globals. -/
+/-- The translation of every Rust global type, mutable or not, satisfies `Globaltype_ok`. -/
 theorem globalType_valid (g : types.GlobalType) : Globaltype_ok (globalType g) :=
   .mk_Globaltype_ok _ _
 

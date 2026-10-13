@@ -1,29 +1,46 @@
 import Itasca.Support.TypeTranslation
 
+/-!
+# Environment translation
+
+Translates the extracted `module.Env` and `code.Context` into a SpecTec `context`
+(`EnvTranslation.context`). `Matches` states that a context agrees with this translation in
+every field except the labels, and its lemmas turn bounds and lookups in `module.Env` into the
+premises of the generated `Instr_ok` rules for `local.*`, `global.*`, `call`, `call_indirect` and
+`memory.size`/`memory.grow`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.EnvTranslation
 
+/-- The SpecTec function type of a Rust function type. -/
 def funcType (ft : types.FuncType) : functype :=
   .mk_functype (.mk_list (ft.params.val.map Translate.valueType))
     (.mk_list (ft.results.val.map Translate.valueType))
 
+/-- The SpecTec limits of Rust limits. -/
 def limitsType (lim : types.Limits) : limits :=
   .mk_limits (.mk_uN lim.min.val) (lim.max.map fun x => .mk_uN x.val)
 
+/-- The SpecTec table type of a Rust table type. -/
 def tableType (tt : types.TableType) : tabletype :=
   .mk_tabletype (limitsType tt.limits) (Translate.referenceType tt.elem)
 
+/-- The SpecTec memory type of a Rust memory type. -/
 def memType (mt : types.MemType) : memtype := .PAGE (limitsType mt.limits)
 
+/-- The element segment types of `env`. -/
 def elementTypes (env : module.Env) : List elemtype :=
   env.elements.val.map (fun entry => Translate.referenceType entry.elem)
 
+/-- The data segment types of `env`, one `OK` per declared data segment. -/
 def dataTypes (env : module.Env) : List datatype :=
   List.replicate ((env.data_count.map (fun count => count.val)).getD 0) .OK
 
-/-- The body validator uses the environment's resolved function-type cache. Its
-    coherence with the module's type indices is a separate module invariant. -/
+/-- The SpecTec context for a function body, with no labels. Function types come from the
+environment's resolved function-type cache; its coherence with the module's type indices is a
+separate module invariant. -/
 def context (env : module.Env) (ctx : code.Context) : _root_.context :=
   { TYPES := env.types.val.map funcType
     FUNCS := env.func_types.val.map funcType
@@ -36,6 +53,7 @@ def context (env : module.Env) (ctx : code.Context) : _root_.context :=
     LABELS := []
     RETURN := some (.mk_list (ctx.results.val.map Translate.valueType)) }
 
+/-- Every `u32` index is a well-formed 32-bit `uN`. -/
 theorem index_wf (x : U32) : wf_uN 32 (.mk_uN x.val) := by
   apply wf_uN.uN_case_0
   have h := x.hmax
@@ -66,7 +84,8 @@ theorem context_wf (env : module.Env) (ctx : code.Context) :
     rintro _ ⟨mt, _, rfl⟩
     exact memType_wf mt
 
-/-- Static fields stay fixed while structured control adds and removes labels. -/
+/-- A context `C` agrees with `context env ctx` in every field except the labels, which change as
+structured control adds and removes them. -/
 structure Matches (env : module.Env) (ctx : code.Context) (C : _root_.context) : Prop where
   types : C.TYPES = env.types.val.map funcType
   funcs : C.FUNCS = env.func_types.val.map funcType
@@ -78,9 +97,11 @@ structure Matches (env : module.Env) (ctx : code.Context) (C : _root_.context) :
   locals : C.LOCALS = ctx.locals.val.map Translate.valueType
   ret : C.RETURN = some (.mk_list (ctx.results.val.map Translate.valueType))
 
+/-- The root context matches itself. -/
 theorem Matches.root (env : module.Env) (ctx : code.Context) :
     Matches env ctx (context env ctx) := ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
+/-- Contexts that match a translated environment are well-formed. -/
 theorem Matches.wf {env ctx C} (h : Matches env ctx C) : wf_context C := by
   cases C
   constructor
@@ -255,6 +276,7 @@ theorem Matches.table_lookup {env ctx C} (h : Matches env ctx C)
       env.table_types.val[idx.val] = tt ∧ tableType tt = t := by
   exact mapped_lookup _ _ _ _ (by simpa [h.tables] using hi) (by simpa [h.tables] using ht)
 
+/-- A `funcref` table in the context is a `FuncRef` table in the environment. -/
 theorem Matches.table_funcref {env ctx C} (h : Matches env ctx C)
     (idx : U32) (lim : limits) (hi : idx.val < C.TABLES.length)
     (ht : C.TABLES[idx.val]! = .mk_tabletype lim .FUNCREF) :

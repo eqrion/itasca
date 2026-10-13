@@ -1,11 +1,18 @@
 import Itasca.Generated.Funs
 
+/-!
+# Block signatures of the body state
+
+`code.BodyState.blocks` projects the signature of every control frame out of the single runtime
+control stack `st.core.ctrls`, with simp lemmas for its length, emptiness and indexing.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- The signatures used by the body proof are a projection of the single
-runtime control stack. No separate signature vector is stored by Rust. -/
+/-- The block signatures seen by the body proofs: a projection of the runtime control stack.
+Rust stores no separate signature vector. -/
 def code.BodyState.blocks (st : code.BodyState) : alloc.vec.Vec signature.BlockType :=
   alloc.vec.Vec.from (st.core.ctrls.val.map code.Ctrl.signature) (by simp)
 

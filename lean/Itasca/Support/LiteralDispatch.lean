@@ -1,13 +1,21 @@
 import Itasca.Generated.Funs
 
+/-!
+# Literal dispatch simprocs
+
+Simprocs that reduce the extracted opcode dispatchers (`code.step`, `code.step_memory`,
+`code.visit_numeric`, `code.visit_memory`, `code.convert_types`, `code.binary_types`) and
+scalar-literal pattern matches when the opcode is a concrete literal.
+-/
+
 open Lean Meta
 
 namespace Itasca
 
-/-- Reduce a dispatcher only when its opcode is a concrete scalar literal.
-The simplifier normally uses instance transparency, which does not unfold the
-scalar constructors in Aeneas's patterns. Kernel reduction supplies the equality
-proof; this does not evaluate Rust or introduce any assumptions. -/
+/-- Reduces a dispatcher, whose opcode argument is at position `opcodePos`, only when the opcode is
+a concrete scalar literal. The simplifier's instance transparency does not unfold the scalar
+constructors in Aeneas patterns, so this unfolds at full transparency. Kernel reduction supplies
+the equality proof, so it adds no assumptions. -/
 meta def reduceLiteralDispatch (opcodePos : Nat) : Simp.Simproc := fun e => do
   let args := e.getAppArgs
   if opcodePos ≥ args.size then return .continue
@@ -26,7 +34,8 @@ simproc ↓ reduceVisitMemory (Itasca.code.visit_memory _ _ _ _ _) := reduceLite
 simproc ↓ reduceStepMemory (Itasca.code.step_memory _ _ _ _ _ _) := reduceLiteralDispatch 5
 simproc ↓ reduceStep (Itasca.code.step _ _ _ _ _ _ _) := reduceLiteralDispatch 6
 
-/-- The same reduction handles literal patterns after a parser has read its tag. -/
+/-- Reduces a single-discriminant match on a scalar literal, such as a parser dispatching on a
+tag. -/
 simproc ↓ reduceScalarMatcher (_) := fun e => do
   let .const declName _ := e.getAppFn | return .continue
   let some info := getMatcherInfoCore? (← getEnv) declName | return .continue

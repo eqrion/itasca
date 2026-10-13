@@ -1,5 +1,12 @@
 import Aeneas
 
+/-!
+# Loop state conjugation
+
+`LoopMap.conjugate` shows that an Aeneas `loop` is unchanged by a change of loop state
+representation that commutes with the body.
+-/
+
 open Aeneas Aeneas.Std Lean.Order
 
 namespace Itasca.LoopMap
@@ -9,8 +16,8 @@ private theorem admissible_bounded {α : Type} [CCPO α] (y : α) :
   intro c hc h
   exact csup_le hc h
 
-/-- Changing only the representation of loop state preserves the complete
-partial computation, including rejection, modeled failure, and divergence. -/
+/-- Changing the representation of the loop state along `f` preserves the whole computation,
+including rejection, modeled failure and divergence. -/
 theorem conjugate {α β γ : Type} (body : α → Result (ControlFlow α γ))
     (body' : β → Result (ControlFlow β γ)) (f : α → β)
     (hbody : ∀ x, body' (f x) = do
