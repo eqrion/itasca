@@ -1,12 +1,19 @@
 import Itasca.Profile.EntryPipeline
 import Itasca.Profile.BodyVisitor
 
+/-!
+# Profile code-entry soundness
+
+Acceptance by `module.validate_code_entry_with` yields the specification `Profile.Entry`
+(`module.validate_code_entry_with.profile_sound`), for either profile and any visitor.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- The entry parser contributes framing and locals; the body contract
-contributes the same independently decoded and typed instruction tree. -/
+/-- An execution witness and a `Profile.Body` fact for its body give `Profile.Entry`. The entry
+parser supplies framing and locals, and the body fact supplies the decoded and typed tree. -/
 theorem CodeEntry.Witness.profile_validated
     {V : Type} {visitor : code.OpVisitor V} {data env index start finish v v' profile}
     (w : CodeEntry.Witness visitor data env index start finish v v' profile)
@@ -22,8 +29,8 @@ theorem CodeEntry.Witness.profile_validated
   rw [w.index_type]
   exact Profile.EntryTyped.of_body hlookup hsignature w.context_locals htyped hinstructions w.locals_allowed hdeclared
 
-/-- Actual visiting acceptance yields an independent entry certificate for
-the selected profile, without a visitor totality assumption. -/
+/-- If the entry validator accepts, the entry satisfies `Profile.Entry`. This needs no visitor
+totality assumption. -/
 theorem module.validate_code_entry_with.profile_sound {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (pos : Usize) (env : module.Env) (index finish : Usize)
     (v v' : V) (hbound : CodeEntry.Bounds env) (profile : ValidationProfile)

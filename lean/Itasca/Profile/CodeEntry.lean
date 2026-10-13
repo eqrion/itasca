@@ -3,26 +3,36 @@ import Itasca.Binary.Wasm2.EncodingComplete
 import Itasca.Module.Code.Context
 import Itasca.Module.Code.Encoding
 
+/-!
+# Profile code entries
+
+Profile-parametric specification of a code entry: `CodeEncoding` (size prefix, local declarations
+and `BodyBytes`), `EntryTyped` (declarative typing, profile restrictions and declared references)
+and `Entry`, which combines them for the entry an accepted validation run describes. Also relates
+the Wasm 2.0 token consumption to `ModuleBinary.Rep`, and `EntryTyped` to `CodeEntry.Typed`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Profile
 
-/-- Independent bytes for the selected instruction grammar. -/
+/-- The bytes of a body for the profile's instruction grammar. -/
 def BodyBytes (profile : ValidationProfile) (ops : List instr) (bytes : List U8) : Prop :=
   match profile with
   | .Wasm1 => ModuleBinary.BodyEncoding ops bytes
   | .Wasm2 => ∃ tokens, ModuleBinary.Rep Wasm2.TokenEncoding tokens bytes ∧
       Wasm2.BodyTokens tokens ops
 
-/-- Entry framing and locals are shared across the supported profiles. -/
+/-- The bytes of a code entry: size prefix, local declarations and body. Only the body grammar
+depends on the profile. -/
 def CodeEncoding (profile : ValidationProfile) (entry : ModuleBinary.Code)
     (bytes : List U8) : Prop :=
   ∃ size locals body, Leb128.Encoding size (locals.length + body.length) ∧
     ModuleBinary.VecEncoding ModuleBinary.LocalEncoding entry.locals locals ∧
     BodyBytes profile entry.body body ∧ bytes = size ++ locals ++ body
 
-/-- Completeness bounds constrain declared locals and the exact body bytes;
-function parameters and the entry size prefix are counted separately. -/
+/-- `CodeEncoding` with bounds on the declared locals and the body bytes. Function parameters and
+the size prefix are not counted. -/
 def CodeEncodingWithinLimits (profile : ValidationProfile) (entry : ModuleBinary.Code)
     (bytes : List U8) : Prop :=
   entry.declared.length ≤ limits.MAX_LOCALS.val ∧
@@ -31,11 +41,15 @@ def CodeEncodingWithinLimits (profile : ValidationProfile) (entry : ModuleBinary
     BodyBytes profile entry.body body ∧ body.length ≤ limits.MAX_FUNCTION_BYTES.val ∧
     bytes = size ++ locals ++ body
 
+/-- A bounded code entry encoding is a code entry encoding. -/
 theorem CodeEncodingWithinLimits.encoding {profile entry bytes}
     (h : CodeEncodingWithinLimits profile entry bytes) : CodeEncoding profile entry bytes := by
   obtain ⟨_, size, locals, body, hs, hl, hb, _, he⟩ := h
   exact ⟨size, locals, body, hs, hl, hb, he⟩
 
+/-- The typing facts about a code entry under the type at `typeIdx`: the signature is allowed, the
+body is typed and meets the profile restrictions, the locals are allowed, and references are
+declared. -/
 structure EntryTyped (profile : ValidationProfile) (env : module.Env)
     (typeIdx : U32) (entry : ModuleBinary.Code) : Prop where
   type_lt : typeIdx.val < env.types.val.length
@@ -50,8 +64,9 @@ structure EntryTyped (profile : ValidationProfile) (env : module.Env)
   declared : DeclaredReferences.Instructions
     (env.declared_funcs.val.map (fun idx => uN.mk_uN idx.val)) entry.body
 
-/-- An accepted entry is described entirely by independent binary syntax and
-declarative typing, using the original function-index and type-index spaces. -/
+/-- The specification of the code entry for function `index` between byte offsets `start` and
+`finish`: it parses as a `CodeEncoding`, satisfies `EntryTyped` against the function's type, and
+stays within the local limit. -/
 def Entry (profile : ValidationProfile) (data : Slice U8) (env : module.Env)
     (index start finish : Usize) : Prop :=
   ∃ entry, ModuleBinary.At (CodeEncoding profile) data start entry finish ∧
@@ -59,6 +74,7 @@ def Entry (profile : ValidationProfile) (data : Slice U8) (env : module.Env)
       EntryTyped profile env env.func_type_indices.val[index.val] entry ∧
       entry.declared.length ≤ limits.MAX_LOCALS.val
 
+/-- Wasm 2.0 tokens consumed from `data` form a `Rep` of `TokenEncoding` over the same span. -/
 theorem wasm2_consumed_rep {data start tokens next}
     (h : Wasm2.Consumed data start tokens next) :
     ModuleBinary.At (ModuleBinary.Rep Wasm2.TokenEncoding) data start tokens next := by
@@ -69,6 +85,7 @@ theorem wasm2_consumed_rep {data start tokens next}
     obtain ⟨cs, hc, hp⟩ := ht
     exact ⟨bs ++ cs, he.snoc hc, hs.append hp⟩
 
+/-- A `Rep` of `TokenEncoding` over a span of `data` is consumed as Wasm 2.0 tokens. -/
 theorem wasm2_rep_consumed {data start next tokens bytes}
     (he : ModuleBinary.Rep Wasm2.TokenEncoding tokens bytes)
     (hs : Wasm1.BytesAt data start bytes next) : Wasm2.Consumed data start tokens next := by
@@ -81,6 +98,7 @@ theorem wasm2_rep_consumed {data start next tokens bytes}
     obtain ⟨middle, hfirst, hrest⟩ := hs.split
     exact Wasm2.Consumed.cons_iff.mpr ⟨middle, ⟨_, ht, hfirst⟩, ih hrest⟩
 
+/-- `BodyEncoding` over a slice gives `BodyBytes` of its contents. -/
 theorem BodyEncoding.bytes {profile data ops} (h : BodyEncoding profile data ops) :
     BodyBytes profile ops data.val := by
   cases profile with
@@ -91,6 +109,7 @@ theorem BodyEncoding.bytes {profile data ops} (h : BodyEncoding profile data ops
     have heq : data.val = bytes := by simpa [hn] using hb.suffix
     exact ⟨tokens, heq.symm ▸ he, ht⟩
 
+/-- `BodyBytes` of a slice's contents gives `BodyEncoding` over the slice. -/
 theorem BodyBytes.body {profile} {data : Slice U8} {ops}
     (h : BodyBytes profile ops data.val) : BodyEncoding profile data ops := by
   cases profile with
@@ -100,8 +119,8 @@ theorem BodyBytes.body {profile} {data : Slice U8} {ops}
     exact ⟨tokens, Slice.len data, wasm2_rep_consumed ht
       ⟨by simp, by simp, by simp⟩, rfl, hb⟩
 
-/-- Framing is proved once; only the independent body grammar is selected by
-the profile. -/
+/-- A code entry parses as `CodeEncoding` when its size, locals and body parse in turn. The framing
+proof is shared by both profiles. -/
 theorem codeEncoding_of_parts {profile data start content localEnd last size groups body ops}
     (hsize : Leb128.Decoded data start size content)
     (hlength : last.val = content.val + size.val)
@@ -121,6 +140,8 @@ theorem codeEncoding_of_parts {profile data start content localEnd last size gro
   · simpa [hlen] using he
   · exact ((⟨hh, hn, hb⟩ : Wasm1.BytesAt data start header content).append hls).append hbodybytes
 
+/-- `functionContext` is the code entry body context when locals are parameters then declared
+locals. -/
 theorem functionContext_entry {env : module.Env} {locals : alloc.vec.Vec types.ValueType}
     {ft : types.FuncType} {declared : List types.ValueType}
     (hl : locals.val = ft.params.val ++ declared) :
@@ -129,6 +150,7 @@ theorem functionContext_entry {env : module.Env} {locals : alloc.vec.Vec types.V
     Control.labelContext, CodeEntry.bodyContext, hl]
   rfl
 
+/-- A typed body with allowed locals and declared references gives `EntryTyped`. -/
 theorem EntryTyped.of_body {profile env locals index ft groups ops}
     (hi : env.types.val[index.val]? = some ft) (hs : FuncType profile ft)
     (hl : locals.val = ft.params.val ++ ModuleLocals.declared groups)
@@ -148,6 +170,7 @@ theorem EntryTyped.of_body {profile env locals index ft groups ops}
   · rw [functionContext_entry hl] at hp
     simpa only [hlt.2, ModuleBinary.Code.declared, ModuleLocals.declared] using hp
 
+/-- `EntryTyped` and a body encoding give `Profile.Body`. -/
 theorem EntryTyped.body {profile env index entry}
     (h : EntryTyped profile env index entry) (data : Slice U8)
     (locals : alloc.vec.Vec types.ValueType)
@@ -161,7 +184,7 @@ theorem EntryTyped.body {profile env index entry}
   · rw [functionContext_entry hl]
     exact h.instructions
 
-/-- Generated function typing uses a single proof for every profile. -/
+/-- `EntryTyped` gives the generated `Func_ok` judgment for the entry, for either profile. -/
 theorem EntryTyped.func_ok {profile env typeIdx entry}
     (h : EntryTyped profile env typeIdx entry) (C : context)
     (hc : CodeEntry.ModuleContext env C) (hsegments : CodeEntry.SegmentContext env C) :
@@ -169,18 +192,20 @@ theorem EntryTyped.func_ok {profile env typeIdx entry}
       (EnvTranslation.funcType (env.types.val[typeIdx.val]'h.type_lt)) :=
   CodeEntry.typed_func_ok h.type_lt h.typed C hc hsegments
 
-/-- Shared module composition needs the typing and instruction-profile facts;
-the signature restriction is retained separately by the entry certificate. -/
+/-- `EntryTyped` gives `CodeEntry.Typed`, which omits the signature restriction. -/
 theorem EntryTyped.core {profile env typeIdx entry} (h : EntryTyped profile env typeIdx entry) :
     CodeEntry.Typed env typeIdx entry profile := ⟨h.type_lt, h.typed, h.instructions, h.locals_allowed, h.declared⟩
 
+/-- `CodeEntry.Typed` and the signature restriction give `EntryTyped`. -/
 theorem EntryTyped.of_core {profile env typeIdx entry} (h : CodeEntry.Typed env typeIdx entry profile)
     (hs : FuncType profile (env.types.val[typeIdx.val]'h.type_lt)) : EntryTyped profile env typeIdx entry :=
   ⟨h.type_lt, hs, h.typed, h.profile, h.locals_allowed, h.declared⟩
 
+/-- For Wasm 1.0, `EntryTyped` gives `CodeEntry.Typed`. -/
 theorem EntryTyped.wasm1 {env typeIdx entry} (h : EntryTyped .Wasm1 env typeIdx entry) :
     CodeEntry.Typed env typeIdx entry := ⟨h.type_lt, h.typed, h.instructions, h.locals_allowed, h.declared⟩
 
+/-- For Wasm 1.0, `CodeEntry.Typed` and the signature restriction give `EntryTyped`. -/
 theorem EntryTyped.of_wasm1 {env typeIdx entry} (h : CodeEntry.Typed env typeIdx entry)
     (hs : FuncType .Wasm1 (env.types.val[typeIdx.val]'h.type_lt)) : EntryTyped .Wasm1 env typeIdx entry :=
   ⟨h.type_lt, hs, h.typed, h.profile, h.locals_allowed, h.declared⟩

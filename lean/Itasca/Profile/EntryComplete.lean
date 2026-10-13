@@ -2,14 +2,24 @@ import Itasca.Profile.EntryPipeline
 import Itasca.Profile.BodyVisitor
 import Itasca.Module.Code.LocalsComplete
 
+/-!
+# Profile code-entry completeness
+
+Completeness of `module.validate_code_entry_with`: a code entry that meets the independent
+specification (`Profile.EntryTyped`, `CodeEncodingWithinLimits`) is accepted.
+`complete_spec_of_body` takes a body completeness hypothesis, and `profile_complete_spec` and
+`profile_complete` discharge it for both profiles.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
 open ModuleBinary
 
-/-- Successful code-entry validation follows from independent exact bytes,
-declarative function typing, the selected profile, and explicit byte/local caps. -/
+/-- Code-entry validation succeeds with end offset `next` when the entry has exact bytes, is typed
+for the profile, and meets the byte and local limits, given a completeness hypothesis for the body
+step. -/
 theorem module.validate_code_entry_with.complete_spec_of_body {V : Type} (visitor : code.OpVisitor V)
     (haccept : FullVisitor.Accepts visitor) (data : Slice U8) (pos : Usize)
     (env : module.Env) (index : Usize) (entry : Code) (next : Usize) (v : V)
@@ -101,7 +111,8 @@ theorem module.validate_code_entry_with.complete_spec_of_body {V : Type} (visito
     rw [hfinished]
     simp [hendEq]
 
-/-- One entry completeness proof for every selected profile. -/
+/-- Entry validation succeeds, as a weakest-precondition statement, for either profile under the
+profile's environment and size bounds. -/
 theorem module.validate_code_entry_with.profile_complete_spec {V : Type} (visitor : code.OpVisitor V)
     (haccept : FullVisitor.Accepts visitor) (data : Slice U8) (pos : Usize)
     (env : module.Env) (index : Usize) (entry : Code) (next : Usize) (v : V)
@@ -117,6 +128,8 @@ theorem module.validate_code_entry_with.profile_complete_spec {V : Type} (visito
   exact CodeEntry.runBody.complete visitor haccept profile body env ctx typeIdx ft started
     hlookup hresults henv hlimits hsize hcert
 
+/-- Entry validation returns `.Ok next` for either profile under the profile's environment and size
+bounds. -/
 theorem module.validate_code_entry_with.profile_complete {V : Type} (visitor : code.OpVisitor V)
     (haccept : FullVisitor.Accepts visitor) (data : Slice U8) (pos : Usize)
     (env : module.Env) (index : Usize) (entry : Code) (next : Usize) (v : V)

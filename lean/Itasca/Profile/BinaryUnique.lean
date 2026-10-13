@@ -3,14 +3,21 @@ import Itasca.Binary.Wasm2.EncodingUnique
 import Itasca.Binary.ModuleUniquePrimitives
 import Itasca.Binary.ModuleUnique
 
+/-!
+# Profile binary uniqueness
+
+Lifts the uniqueness of the binary grammars to both profiles: `BodyBytes.unique` for body bytes,
+`code_prefix_unique` for code entries, and `module_unique` for complete modules.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Profile
 
 open ModuleBinary
 
-/-- The selected profile's raw body bytes determine one structured tree,
-independently of typing and implementation bounds. -/
+/-- The profile's body bytes determine one instruction tree, independently of typing and
+implementation bounds. -/
 theorem BodyBytes.unique (profile : ValidationProfile) : Unique (BodyBytes profile) := by
   cases profile with
   | Wasm1 => exact ModuleBinary.BodyEncoding.unique
@@ -19,7 +26,8 @@ theorem BodyBytes.unique (profile : ValidationProfile) : Unique (BodyBytes profi
     obtain rfl := Wasm2.tokens_unique hx hy
     exact hxs.unique hys
 
-/-- Entry sizes and local declarations retain uniqueness for both grammars. -/
+/-- Code entries, with their size prefix and local declarations, are prefix-unique under either
+profile. -/
 theorem code_prefix_unique (profile : ValidationProfile) : PrefixUnique (CodeEncoding profile) := by
   intro x y a b rest tail hx hy he
   obtain ⟨xn, xl, xb, hn, hl, hb, rfl⟩ := hx

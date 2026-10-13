@@ -4,10 +4,20 @@ import Itasca.Wasm1.ProfileSoundness
 import Itasca.Wasm1.Completeness
 import Itasca.Wasm2.Completeness
 
+/-!
+# Profile body contracts
+
+`Body.wasm1_iff` and `Body.wasm2_iff` identify `Profile.Body` with the Wasm 1.0 and Wasm 2.0 body
+specifications. `Profile.run` selects the visitor-free body validator, with `run.total`,
+`run.sound` and `run.complete` stating its totality, soundness for `Profile.Body`, and
+completeness under the profile's environment and size bounds.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Profile
 
+/-- For Wasm 1.0, `functionContext` is the frame entered from the translated environment. -/
 theorem functionContext_wasm1 {env : module.Env} {ctx : code.Context}
     {ft : types.FuncType} {bt : code.BlockType}
     (hr : ctx.results.val = ft.results.val) (hb : ft.results.val = Control.results bt) :
@@ -18,6 +28,7 @@ theorem functionContext_wasm1 {env : module.Env} {ctx : code.Context}
   congr 1
   simp only [EnvTranslation.context, hr]
 
+/-- `Profile.Body` for Wasm 1.0 is the Wasm 1.0 body specification. -/
 theorem Body.wasm1_iff (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (index : U32) (ft : types.FuncType) (bt : code.BlockType)
     (hi : env.types.val[index.val]? = some ft)
@@ -44,6 +55,7 @@ theorem Body.wasm1_iff (data : Slice U8) (env : module.Env) (ctx : code.Context)
     · change Wasm1.Instructions (functionContext env ctx.locals ft) ops
       exact hc.symm ▸ hp
 
+/-- `Profile.Body` for Wasm 2.0 is the Wasm 2.0 body specification. -/
 theorem Body.wasm2_iff (data : Slice U8) (env : module.Env)
     (locals : alloc.vec.Vec types.ValueType) (index : U32) :
     Body .Wasm2 data env locals index ↔ Wasm2.Validated data env locals index := by
@@ -53,19 +65,22 @@ theorem Body.wasm2_iff (data : Slice U8) (env : module.Env)
   · rintro ⟨ft, ops, hi, he, ht, hd⟩
     exact ⟨ft, ops, hi, trivial, he, ht, trivial, hd⟩
 
-/-- The no-op body calls selected by the entry pipeline. -/
+/-- The visitor-free body validator for a profile: `code.validate_body` for Wasm 1.0 and
+`code.validate_multi_value_body` for Wasm 2.0. -/
 def run (profile : ValidationProfile) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) :=
   match profile with
   | .Wasm1 => code.validate_body data env ctx
   | .Wasm2 => code.validate_multi_value_body data env ctx.locals index
 
+/-- The body validator always returns a result for either profile. -/
 theorem run.total (profile : ValidationProfile) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) : ∃ r, run profile data env ctx index = .ok r := by
   cases profile with
   | Wasm1 => exact code.validate_body.wasm_total data env ctx
   | Wasm2 => exact code.validate_multi_value_body.wasm_total data env ctx.locals index
 
+/-- If the body validator accepts, the body meets `Profile.Body`. -/
 theorem run.sound (profile : ValidationProfile) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (ft : types.FuncType)
     (hi : env.types.val[index.val]? = some ft)
@@ -89,6 +104,8 @@ theorem run.sound (profile : ValidationProfile) (data : Slice U8) (env : module.
     exact (Body.wasm2_iff data env ctx.locals index).mpr
       (code.validate_multi_value_body.wasm_sound data env ctx.locals index haccepted)
 
+/-- If the body meets `Profile.Body` and the environment and size bounds hold, the body validator
+accepts. -/
 theorem run.complete (profile : ValidationProfile) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (ft : types.FuncType)
     (hi : env.types.val[index.val]? = some ft)

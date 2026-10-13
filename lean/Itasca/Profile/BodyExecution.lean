@@ -1,11 +1,18 @@
 import Itasca.Generated.Funs
 
+/-!
+# Profile body dispatch
+
+`CodeEntry.runBody` names the extracted body validator that the code-entry pipeline selects for a
+profile, and `runBody_slice` frames it inside a slice-indexing step.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.CodeEntry
 
-/-- The body operation selected by the actual entry validator. This adapter
-only names the extracted dispatch; its semantic contracts are independent. -/
+/-- The extracted body validator selected by profile: `code.validate_body_with` for Wasm 1.0 and
+`code.validate_multi_value_body_with` for Wasm 2.0. -/
 def runBody {V : Type} (visitor : code.OpVisitor V) (profile : ValidationProfile)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32) (v : V) :
     Result (core.result.Result Unit error.OpError × V) :=
@@ -13,7 +20,7 @@ def runBody {V : Type} (visitor : code.OpVisitor V) (profile : ValidationProfile
   | .Wasm1 => code.validate_body_with visitor data env ctx v
   | .Wasm2 => code.validate_multi_value_body_with visitor data env ctx index v
 
-/-- Framing is common to both branches of the extracted body dispatch. -/
+/-- Indexing the data slice before the dispatch commutes with `runBody` for both profiles. -/
 theorem runBody_slice {V : Type} (visitor : code.OpVisitor V) (profile : ValidationProfile)
     (data : Slice U8) (first last : Usize) (env : module.Env) (ctx : code.Context)
     (index : U32) (v : V) :
