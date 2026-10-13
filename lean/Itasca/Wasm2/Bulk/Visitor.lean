@@ -1,6 +1,13 @@
 import Itasca.Wasm2.Bulk.Dispatch
 import Itasca.Wasm2.NumericExt.Visitor
 
+/-!
+# Visitor transfer for bulk instructions
+
+`bulk_transfer` shows that if `code.step_bulk` accepts with one visitor, it accepts with any
+replacement visitor whose callbacks accept, reaching the same reader state.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Visitor

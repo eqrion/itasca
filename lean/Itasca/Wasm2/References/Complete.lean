@@ -4,12 +4,21 @@ import Itasca.Wasm2.Step.Context
 import Itasca.Wasm2.Step.Dispatch
 import Itasca.Wasm2.Bulk.Dispatch
 
+/-!
+# Completeness of reference and table instructions
+
+For each reference and table instruction handled by `code.step_wasm2` (`ref.null`, `ref.is_null`,
+`ref.func`, `table.get`, `table.set`, `table.grow`, `table.size`, `table.fill` and typed
+`select`), the `Completeness.Frame.*` lemmas show that `Wasm2.step` accepts the independent
+encoding at a realized operand stack and produces the expected output. Wasm 2.0 only.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Completeness
 
 /-- Complete metadata decoding followed by the shared fixed operand checker.
-The contract retains exactly the final cursor and original control frames. -/
+The contract fixes the final cursor and keeps the original control frames. -/
 theorem Frame.metadata_read {st} (f : Frame st) {A B : Type}
     (decode : Result (core.result.Result A error.OpError × code.OpIterState))
     (a : A) (next : Usize) (pops : A → List types.ValueType)

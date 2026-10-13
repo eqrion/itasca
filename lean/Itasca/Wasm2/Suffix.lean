@@ -1,5 +1,15 @@
 import Itasca.Wasm2.ResultStackSemantics
 
+/-!
+# Operand suffix compatibility
+
+The non-destructive operand check that `br_table` applies to each target. `Wasm2.Fits`
+and `Wasm2.Suffix` independently specify that the top of an operand stack is compatible with a
+signature, `code.check_suffix_loop.spec` is the exact contract of the extracted loop, and
+`code.check_suffix.spec` and `.complete` give soundness, totality and completeness of
+`code.check_suffix`.
+-/
+
 open Aeneas Aeneas.Std
 
 set_option maxRecDepth 2048
@@ -120,7 +130,7 @@ theorem code.check_suffix_loop.spec (st : code.OpIterState) (env : module.Env)
   · exact ⟨hb, hs, hi, Iff.rfl⟩
 
 /-- The actual non-destructive suffix checker is total, sound, and complete
-for the independently specified multi-value operand compatibility relation. -/
+for the independently specified operand compatibility relation. -/
 theorem code.check_suffix.spec (st : code.OpIterState) (env : module.Env)
     (view : signature.ResultType) (hshape : Control.Shape st) :
     code.check_suffix st env view ⦃ r =>
@@ -141,6 +151,7 @@ theorem code.check_suffix.spec (st : code.OpIterState) (env : module.Env)
     intro res hs
     simpa [hts, hn, Wasm2.Suffix] using hs
 
+/-- A signature that is independently compatible with the operand suffix is accepted. -/
 theorem code.check_suffix.complete (st : code.OpIterState) (env : module.Env)
     (view : signature.ResultType) (ts : List types.ValueType)
     (hshape : Control.Shape st) (hts : Wasm2.resolve env view = some ts)

@@ -2,11 +2,22 @@ import Itasca.Support.BodyState
 import Itasca.Visitor.Accepts
 import Itasca.Support.Result
 
+/-!
+# Visitor transfer for `br_table`
+
+Factors the extracted `code.branch_table_with_loop` body into `tableBody`, `tableRest` and
+`tableCheck`, and proves that a successful table iteration transfers to any replacement visitor
+with accepting callbacks while preserving the observed validator state (`tableBody.transfer`).
+`code.branch_table_with_loop.accepted_transfer` and `code.branch_table_with.accepted_transfer`
+lift this to the whole loop and to the selector-decoding wrapper.
+-/
+
 open Aeneas Aeneas.Std Result ControlFlow
 
 namespace Itasca.Wasm2.Visitor
 
-/-- The silent suffix check, factored from the generated table loop. -/
+/-- The suffix check of one `br_table` target, factored from the extracted loop. It compares the
+target arity with the first target's arity and checks the operand suffix. -/
 def tableCheck (st : code.BodyState) (env : module.Env) (ts : signature.ResultType)
     (arity : Option Usize) : Result (core.result.Result (Option Usize) error.OpError) := do
   let r ← signature.ResultType.len ts env
@@ -26,7 +37,8 @@ def tableCheck (st : code.BodyState) (env : module.Env) (ts : signature.ResultTy
         | .Err e => .ok (.Err e)
         | .Ok () => .ok (.Ok arity)
 
-/-- An iteration after its label callback. -/
+/-- The part of a table iteration after its label callback: checks the target, and at the default
+target (`i = count`) marks the code unreachable and calls the `br_table` callback. -/
 def tableRest {V : Type} (visitor : code.OpVisitor V) (st : code.BodyState)
     (env : module.Env) (count i depth : U32) (ts : signature.ResultType)
     (arity : Option Usize) (v : V) :
@@ -45,6 +57,8 @@ def tableRest {V : Type} (visitor : code.OpVisitor V) (st : code.BodyState)
       let j ← i + 1#u32
       .ok (.cont (st.core, v, nextArity, j))
 
+/-- One iteration of the `br_table` target loop: reads a label, calls the label callback for
+every target but the default, and continues with `tableRest`. -/
 def tableBody {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
     (env : module.Env) (count : U32) (st : code.BodyState)
     (v : V) (arity : Option Usize) (i : U32) :
@@ -109,6 +123,7 @@ def tableObserve {V : Type} :
   | .cont (core, _, arity, i) => .cont (core, arity, i)
   | .done (r, st, _) => .done (r, st)
 
+/-- A table iteration result that continues or returns `Ok ()`. -/
 def tableGood {V : Type} (cf :
     ControlFlow (code.OpIterState × V × Option Usize × U32)
       (core.result.Result Unit error.OpError × code.BodyState × V)) : Prop :=

@@ -1,5 +1,15 @@
 import Itasca.Wasm1.Frames
 
+/-!
+# Typed instruction prefixes
+
+`TypedPrefix` says that the instructions read so far in a frame are well formed and typed by the
+generated `Instrs_ok` rules for every interpretation of the current operand stack. `ResumePrefix`
+is the form kept for a suspended parent frame. `TypedPrefix.append` extends a prefix by one typed
+instruction, and `ResumePrefix.finish` appends the finished child construct to a suspended
+parent.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
@@ -12,6 +22,7 @@ structure TypedPrefix (C : context) (inputs : List valtype) (ops : List instr)
   typed : ∀ ts, Sequence.Realizes poly vals ts →
     Instrs_ok C ops (.mk_functype (.mk_list inputs) (.mk_list ts))
 
+/-- A frame with no instructions is a typed prefix of its parameter vector. -/
 theorem TypedPrefix.start (C : context) (hC : wf_context C) (inputs : List types.ValueType) :
     TypedPrefix C (inputs.map Translate.valueType) [] false
       (inputs.map code.StackType.Val) := by
@@ -25,6 +36,7 @@ theorem TypedPrefix.start (C : context) (hC : wf_context C) (inputs : List types
     simpa using Instrs_ok.frame C [] (inputs.map Translate.valueType) [] []
       (.empty C hC) hC (by simp [Forall])
 
+/-- Appending a typed instruction to a typed prefix gives a typed prefix. -/
 theorem TypedPrefix.append {C inputs ops poly poly' vals vals'}
     (h : TypedPrefix C inputs ops poly vals) (hC : wf_context C)
     (op : instr) (hwf : wf_instr op)
@@ -47,6 +59,7 @@ structure ResumePrefix (C : context) (inputs : List valtype) (ops : List instr)
   typed : ∀ ts, Sequence.Realizes poly vals ts →
     Instrs_ok C ops (.mk_functype (.mk_list inputs) (.mk_list (ts ++ args)))
 
+/-- Popping the child's arguments from a typed prefix gives the parent's resume prefix. -/
 theorem ResumePrefix.after_pop {C inputs ops poly before after args}
     (h : TypedPrefix C inputs ops poly before)
     (hpop : ∀ ts, Sequence.Realizes poly after ts →
@@ -54,6 +67,8 @@ theorem ResumePrefix.after_pop {C inputs ops poly before after args}
     ResumePrefix C inputs ops poly after args :=
   ⟨h.wellFormed, fun ts ht => h.typed _ (hpop ts ht)⟩
 
+/-- A finished child construct typed from the saved arguments to its results extends the suspended
+parent to a typed prefix. -/
 theorem ResumePrefix.finish {C inputs ops poly vals args}
     (h : ResumePrefix C inputs ops poly vals args) (hC : wf_context C)
     (op : instr) (results : List types.ValueType) (hwf : wf_instr op)

@@ -1,10 +1,22 @@
 import Itasca.Wasm2.Totality
 import Itasca.Wasm2.Execution
 
+/-!
+# Soundness of the body loop
+
+Reduces soundness of `code.validate_multi_value_body` to a per-opcode obligation. `Steps` says
+that every opcode step from a `Pending` state preserves the invariant on success, `run.sound`
+and `run.spec` lift it through the loop by induction on the cursor, and `public_spec_of_steps`
+concludes `Wasm2.Validated` for the public validator. `Steps` is discharged in
+`Wasm2/Soundness`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
 
+/-- Every opcode step from a `Pending` state either fails or yields a state satisfying
+`Pending.After`. -/
 def Steps (data : Slice U8) (env : module.Env) (locals : alloc.vec.Vec types.ValueType)
     (ctx : code.Context) (index : U32) : Prop :=
   ∀ st (p : Pending data env locals index st),
@@ -53,6 +65,8 @@ theorem run.sound (data : Slice U8) (env : module.Env)
       · rw [reader.read_byte.eof data st.core.pos (by omega)] at haccepted
         simp at haccepted
 
+/-- If every opcode step preserves the invariant, an accepting run from any `State` proves
+`Validated`. -/
 theorem run.spec (data : Slice U8) (env : module.Env)
     (locals : alloc.vec.Vec types.ValueType) (ctx : code.Context) (index : U32)
     (hsteps : Steps data env locals ctx index) (st : code.BodyState)
@@ -67,6 +81,8 @@ theorem run.spec (data : Slice U8) (env : module.Env)
   intro hok
   exact run.sound data env locals ctx index hsteps st hi (by simpa [hok] using hr)
 
+/-- If every opcode step preserves the invariant, `code.validate_multi_value_body` accepts only
+`Validated` bodies. -/
 theorem public_spec_of_steps (data : Slice U8) (env : module.Env)
     (locals : alloc.vec.Vec types.ValueType) (index : U32)
     (hsteps : Steps data env locals ⟨locals, alloc.vec.Vec.new _⟩ index) :

@@ -6,6 +6,15 @@ import Itasca.Wasm2.Control.BranchStep
 import Itasca.Support.EnvTranslation
 import Itasca.Wasm2.References.Complete
 
+/-!
+# Leaf contracts for every plain instruction
+
+Proves `LeafContract` for control leaves (`Frame.call`, `Frame.call_indirect`, `Frame.branch`,
+`Frame.branch_if`, `Frame.return_`, `Frame.branch_table`), reference leaves and bulk leaves, and
+combines them with the scalar, sign extension, saturating and SIMD families in `leaf_contract`.
+The result covers every plain instruction of the independent Wasm 2.0 grammar.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
@@ -44,6 +53,8 @@ theorem Labels.lookup {env st C} (hl : Labels env st C) (depth : U32)
 
 namespace Completeness
 
+/-- Conclusion of a leaf contract: `Wasm2.step` accepts, ends at `next` with output `out`, and
+grows the operand stack by at most 500 per encoded byte. -/
 def LeafResult {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (index : U32) (opcode : U8) (bytes : List U8) (next : Usize) (out : List valtype) : Prop :=
   ∃ s, step st data env ctx index opcode = .ok (.Ok (), s) ∧ s.core.pos = next ∧
@@ -235,7 +246,7 @@ theorem Frame.branch_table {st} (f : Frame st) (data : Slice U8) (env : module.E
     simp only [hv, f.core.vals, List.length_append]
     omega
 
-/-- All multi-value control leaves satisfy the shared byte-weighted execution
+/-- All control leaves satisfy the shared byte-weighted execution
 contract directly from independent encodings and generated primitive rules. -/
 theorem control_leaf (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
     (henv : EnvironmentWithinLimits env)
@@ -259,7 +270,7 @@ theorem control_leaf (data : Slice U8) (env : module.Env) (ctx : code.Context) (
   | callIndirect idx he => exact f.call_indirect data env ctx index C hmatch henv idx _ next he hb front input output hr ht hcap
 
 /-- Reference immediates use ordinary generated typing together with the
-independent declaration condition for ref.func. -/
+independent declaration condition for `ref.func`. -/
 theorem reference_leaf (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
     (henv : EnvironmentWithinLimits env)
     (C : context) (st : code.BodyState) (f : Frame st) (opcode : U8)
@@ -319,7 +330,7 @@ private theorem reference_type_injective {a b : types.ElemType}
       Translate.valueType (ModuleConstants.referenceValueType b)) : a = b := by
   cases a <;> cases b <;> simp_all [ModuleConstants.referenceValueType, Translate.valueType]
 
-/-- Bulk memory and table instructions are complete for the Core 2.0
+/-- Bulk memory and table instructions are complete for the Wasm 2.0
 reserved-byte grammar and the actual segment and table contexts. -/
 theorem bulk_leaf (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
     (C : context) (st : code.BodyState) (f : Frame st) (subopcode : U32)
@@ -408,7 +419,7 @@ theorem bulk_leaf (data : Slice U8) (env : module.Env) (ctx : code.Context) (ind
         (by simpa [Simd.inputTypes, hty, show Translate.valueType .I32 = valtype.I32 from rfl] using hr)
       exact ⟨s, hs, hp, by simpa [Simd.outputTypes] using ho, by omega⟩
 
-/-- Every plain instruction of the independent multi-value grammar has a
+/-- Every plain instruction of the independent Wasm 2.0 grammar has a
 complete actual dispatch contract, including all shared scalar instructions. -/
 theorem leaf_contract (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
     (henv : EnvironmentWithinLimits env)

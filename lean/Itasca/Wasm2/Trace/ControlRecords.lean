@@ -1,13 +1,22 @@
 import Itasca.Wasm2.Trace.ControlBytes
 import Itasca.Wasm2.Control.Return
 
+/-!
+# Callback byte provenance for control instructions
+
+`ProfileStepRecords` states the exact callback trace of one control step of `code.step_profile`
+at `.Wasm2`. `step_block`, `step_loop`, `step_if`, `step_else`, `step_end`, `step_br`,
+`step_br_if`, `step_return`, `step_call` and `step_call_indirect` prove it for each control
+opcode except `br_table`, which is in `Wasm2/Trace/TableBytes`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
 attribute [local step] code.pop_with_type.total code.check_suffix.spec
 
-/-- Call stack adjustment retains the exact encoded function index. -/
+/-- Call stack adjustment returns the exact encoded function index. -/
 theorem code.call_info.bytes (st : code.BodyState) (data : Slice U8)
     (env : module.Env) (hs : Control.Shape st.core) :
     code.call_info st data env ⦃ r => ∀ index, r.1 = .Ok index →
@@ -18,7 +27,7 @@ theorem code.call_info.bytes (st : code.BodyState) (data : Slice U8)
     ⟨by simpa [hc] using hs.ordered, by simpa [hc, hv] using hs.bounded⟩
   cases r <;> step*; simp_all
 
-/-- Indirect-call callbacks retain both independently decoded indices. -/
+/-- Indirect-call callbacks receive both independently decoded indices. -/
 theorem code.call_indirect_info.bytes (st : code.BodyState) (data : Slice U8)
     (env : module.Env) (hs : Control.Shape st.core) :
     code.call_indirect_info st data env ⦃ r => ∀ index table, r.1 = .Ok (index, table) →

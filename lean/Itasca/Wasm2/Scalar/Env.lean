@@ -1,11 +1,19 @@
 import Itasca.Wasm2.Scalar.Prefix
 
+/-!
+# Local and global readers
+
+Typed-prefix specs of the extracted `code.read_local_get`, `code.read_local_set`,
+`code.read_local_tee`, `code.read_global_get` and `code.read_global_set` against the Wasm 2.0
+`TypedPrefix` zipper. `Wasm2.Scalar.IndexPost` is their shared postcondition.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Scalar
 
 /-- Successful indexed instructions expose both byte provenance and the typed
-    operand segment. The surrounding WP also proves totality on rejection. -/
+operand segment. The surrounding WP also proves totality on rejection. -/
 def IndexPost (inputs : List valtype) (data : Slice U8) (st : code.OpIterState)
     (outer segment : List code.StackType) (C : context) (ops : List instr)
     (op : U32 → instr)

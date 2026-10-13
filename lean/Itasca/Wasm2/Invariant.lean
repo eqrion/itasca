@@ -1,10 +1,21 @@
 import Itasca.Wasm2.BodySpec
 import Itasca.Wasm2.Frames
 
+/-!
+# Body loop invariant
+
+The invariant of the extracted body loop. `State` says that the loop state is a running typed
+frame zipper (`Frames.Open`) or a completed typed body, with exact provenance for the consumed
+bytes. `Pending` is the state just after an opcode byte is read, and `Pending.After` is the
+postcondition that every per-opcode handler proves. `Pending.finish_body` and
+`Pending.append_result` are the shared steps for closing the body and appending results.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
 
+/-- Implementation limits on the body size, the byte cursor and the number of open frames. -/
 structure Bounds (data : Slice U8) (st : code.BodyState) : Prop where
   size : data.length ≤ limits.MAX_FUNCTION_BYTES.val
   pos : st.core.pos.val ≤ data.length
@@ -47,10 +58,12 @@ theorem State.finished {data env locals index st} (h : State data env locals ind
   | closed ft ops tokens hi _ _ _ ht htyped hc hd =>
     exact ⟨ft, ops, hi, ⟨tokens, st.core.pos, hc, hpos, ht⟩, htyped, (ht.declared_iff _).mp hd⟩
 
+/-- The loop's initial body state: one body frame for the function type at `index`. -/
 def initial (index : U32) : code.BodyState :=
   { core := ⟨alloc.vec.Vec.new _,
       alloc.vec.Vec.from [⟨.Body, .Empty, .TypeIndex index, 0#usize, false⟩] (by scalar_tac), 0#usize⟩ }
 
+/-- The initial state satisfies `State` for a body within the size limit. -/
 theorem State.start (data : Slice U8) (env : module.Env) (locals : alloc.vec.Vec types.ValueType)
     (index : U32) (ft : types.FuncType) (hi : env.types.val[index.val]? = some ft)
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val) :
@@ -86,6 +99,7 @@ structure Pending (data : Slice U8) (env : module.Env) (locals : alloc.vec.Vec t
   pos : st.core.pos.val = start.val + 1
   ctrls : st.blocks.val.length ≤ start.val + 1
 
+/-- A running state with bytes left yields a `Pending` after reading one opcode byte. -/
 theorem State.pending {data env locals index st} (h : State data env locals index st)
     (hblocks : st.blocks.val ≠ []) (hpos : st.core.pos.val < data.length)
     (next : Usize) (hnext : next.val = st.core.pos.val + 1) :
@@ -97,6 +111,8 @@ theorem State.pending {data env locals index st} (h : State data env locals inde
     exact ⟨⟨st.core.pos, ft, parents, current, hi, bounds.size, ho.with_pos next, hbody,
       hc, hd, hpos, hnext, bounds.ctrls⟩, rfl⟩
 
+/-- The postcondition of one opcode step: the resulting state satisfies `State` and its cursor has
+advanced within the data. -/
 def Pending.After {data env locals index st} (_ : Pending data env locals index st)
     (s : code.BodyState) : Prop :=
   State data env locals index s ∧ st.core.pos.val ≤ s.core.pos.val ∧ s.core.pos.val ≤ data.length
@@ -179,7 +195,7 @@ end Itasca.Wasm2
 
 namespace Itasca
 
-/-- The ghost initial state is exactly the extracted frame initialization. -/
+/-- `Wasm2.initial` is exactly the state `code.push_frame` builds for the body frame. -/
 theorem code.push_frame.initial (index : U32) :
     code.push_frame
       { core := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _, 0#usize⟩ } .Body (.TypeIndex index) =

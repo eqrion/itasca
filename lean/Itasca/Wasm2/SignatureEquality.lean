@@ -1,5 +1,13 @@
 import Itasca.Wasm2.Typing
 
+/-!
+# Signature descriptor equality
+
+Specs of the extracted `code.same_types` and its loop `code.same_types_loop`, which compare the
+resolved type lists of two `signature.ResultType` descriptors. `code.same_types.spec` gives
+totality and exact equality, and `code.same_types.complete` gives acceptance from equal lists.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
@@ -98,6 +106,7 @@ theorem code.same_types.spec (env : module.Env) (a b : signature.ResultType) :
         rintro r ⟨equal, rfl, hs⟩
         exact ⟨ts, us, ha, hb, hs⟩
 
+/-- Descriptors that resolve to the same list are accepted as equal. -/
 theorem code.same_types.complete (env : module.Env) (a b : signature.ResultType)
     (ts : List types.ValueType) (ha : Wasm2.resolve env a = some ts)
     (hb : Wasm2.resolve env b = some ts) :

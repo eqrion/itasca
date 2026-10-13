@@ -3,11 +3,21 @@ import Itasca.Wasm2.Trace.ControlRecords
 import Itasca.Wasm2.Trace.Body
 import Itasca.Wasm2.Trace.TableBytes
 
+/-!
+# Step-level callback byte provenance
+
+`steps` shows that the extracted `code.step_profile` at `.Wasm2` satisfies `StepContract`: every
+ordinary return has an exact independent callback byte trace, without a total-visitor premise.
+`step_contract_of_table` assembles the scalar, control and non-control leaf traces once the
+`br_table` case is supplied.
+-/
+
 open Aeneas Aeneas.Std
 namespace Itasca.Wasm2.CallbackTrace
 open VisitorTrace
 
-/-- Factor the capacity-guarded scalar arm without changing error outcomes. -/
+/-- Factors the capacity-guarded scalar arm of `code.step_profile` without changing error
+outcomes. -/
 theorem dispatch_scalar {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (opcode : U8) (v : V)
@@ -85,7 +95,7 @@ theorem step_contract_of_table {V : Type} (visitor : code.OpVisitor V)
     · exact step_call p visitor observe records ctx byte v result out v' run
     · exact step_call_indirect p visitor observe records ctx byte v result out v' run
 
-/-- The full extracted Core 2.0 dispatcher satisfies independent callback byte
+/-- The full extracted Wasm 2.0 dispatcher satisfies independent callback byte
 provenance for every ordinary return, without a total-visitor premise. -/
 theorem steps {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (records : Records visitor observe)

@@ -1,9 +1,19 @@
 import Itasca.Wasm2.Control.EnterSound
 
+/-!
+# Completeness of block entry
+
+Completeness of the extracted `code.enter` for `block`, `loop` and `if`. `checkBlock.complete`,
+`enterParams.complete` and `enterArgs.complete` cover its pieces, `EnterForward` states the
+forward effect of opening a frame, and `code.enter.complete` accepts every independently encoded
+block type whose signature is compatible with the operand stack.
+-/
+
 open Aeneas Aeneas.Std Result
 
 namespace Itasca.Wasm2
 
+/-- A block type whose resolved signature is within the limits passes `checkBlock`. -/
 theorem checkBlock.complete (env : module.Env) (bt : signature.BlockType)
     (ins outs : List types.ValueType)
     (hin : resolve env (inputs bt) = some ins) (hout : resolve env (outputs bt) = some outs)
@@ -43,6 +53,8 @@ def EnterForward (st s : code.BodyState) (form : Frames.Form) (bt : signature.Bl
     s.blocks.val = st.blocks.val ++ [bt] ∧
     s.core.vals.val = outer ++ remaining ++ ins.map code.StackType.Val
 
+/-- A compatible operand segment makes `enterParams` accept and open the frame with effect
+`EnterForward`. -/
 theorem enterParams.complete (st : code.BodyState) (env : module.Env)
     (form : Frames.Form) (bt : signature.BlockType) (ins outs : List types.ValueType)
     (outer segment : List code.StackType) (ts : List valtype)
@@ -68,6 +80,7 @@ theorem enterParams.complete (st : code.BodyState) (env : module.Env)
   · simp [hc2, hc1, hc, Frames.Saved.fresh, Wasm2.frame]
   · simpa [hv1, hv'] using hvs
 
+/-- `enterArgs` also accepts when the stack carries the `i32` condition of `if`. -/
 theorem enterArgs.complete (st : code.BodyState) (env : module.Env)
     (form : Frames.Form) (bt : signature.BlockType) (ins outs : List types.ValueType)
     (outer segment : List code.StackType) (ts : List valtype) (initial : form.Initial)

@@ -3,6 +3,15 @@ import Itasca.Wasm2.TableAdapters
 import Itasca.Wasm2.Control.FuncType
 import Itasca.Handler.EnvReaders
 
+/-!
+# Totality of the control handlers
+
+Termination and structural-invariant preservation for the extracted control handlers
+`code.push_frame`, `code.branch`, `code.enter`, `code.branch_table`, `code.call` and their
+metadata-returning helpers, on arbitrary bytes and environments. Each result keeps
+`Control.Shape` and the alignment of the `blocks` vector with the control vector.
+-/
+
 open Aeneas Aeneas.Std
 
 set_option maxHeartbeats 1000000
@@ -35,6 +44,7 @@ theorem code.mark_unreachable_total (st : code.OpIterState)
     exact ⟨hs.unreachable cs c he hc hl, by simp [hc, he], hp,
       by simp [hv], by simp [hc, he]⟩
 
+/-- `code.push_frame` is total and adds one aligned frame at the current stack height. -/
 @[step]
 theorem code.push_frame.total (st : code.BodyState)
     (kind : code.LabelKind) (bt : signature.BlockType)
@@ -66,7 +76,7 @@ theorem code.branch.total (st : code.BodyState) (data : Slice U8)
   cases conditional <;> step* <;> simp_all
 
 /-- Reading and entering a block is total on arbitrary bytes. Popping block
-parameters before fixing the new base preserves nested frame bounds. -/
+parameters before fixing the frame's base preserves nested frame bounds. -/
 theorem code.enter_info.total (st : code.BodyState) (data : Slice U8)
     (env : module.Env) (kind : code.LabelKind) (hs : Control.Shape st.core)
     (hcap : st.blocks.val.length < Usize.max) :
@@ -149,6 +159,7 @@ theorem Wasm2.branchTableLoop.total (st : code.BodyState) (data : Slice U8)
   obtain ⟨⟨res, final, visitor⟩, hr, hp⟩ := WP.spec_imp_exists hlo
   simpa [hr] using hp
 
+/-- `code.branch_table` is total and preserves frame alignment and bounds. -/
 @[step]
 theorem code.branch_table.total (st : code.BodyState) (data : Slice U8)
     (env : module.Env) (hs : Control.Shape st.core)
@@ -230,6 +241,8 @@ theorem code.call_indirect_info.total (st : code.BodyState) (data : Slice U8)
   unfold code.call_indirect_info
   step* <;> simp_all <;> omega
 
+/-- `code.call` is total, preserves frame alignment and bounds, and never moves the cursor
+backwards. -/
 @[step]
 theorem code.call.total (st : code.BodyState) (data : Slice U8)
     (env : module.Env) (indirect : Bool) (hs : Control.Shape st.core) :

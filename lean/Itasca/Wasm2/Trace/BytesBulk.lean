@@ -1,5 +1,13 @@
 import Itasca.Wasm2.Trace.BytesReferences
 
+/-!
+# Byte provenance for bulk and table callbacks
+
+`ReadBytes` facts for each bulk memory and table reader (`memory_init_bytes`, `table_copy_bytes`,
+`table_grow_bytes`, ...), assembled in `bulk` into an exact callback trace for `code.step_bulk`,
+including reader rejection and callback rejection.
+-/
+
 open Aeneas Aeneas.Std
 namespace Itasca.Wasm2.CallbackBytes
 open VisitorTrace CallbackTrace

@@ -2,6 +2,16 @@ import Itasca.Wasm2.References.Operands
 import Itasca.Wasm2.References.EnvMatches
 import Itasca.Wasm2.Scalar.Step
 
+/-!
+# Preservation for reference and table instructions
+
+`Pending.table_get`, `Pending.table_set`, `Pending.ref_null`, `Pending.ref_func`,
+`Pending.typed_select`, `Pending.table_grow`, `Pending.table_size`, `Pending.table_fill`,
+`Pending.data_drop`, `Pending.elem_drop` and `Pending.ref_is_null` show that the corresponding
+extracted readers preserve the body invariant `Pending` (Wasm 2.0). `Pending.metadata_read` is the
+shared argument for readers that decode metadata and then apply a fixed stack effect.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2

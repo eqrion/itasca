@@ -1,5 +1,13 @@
 import Itasca.Wasm2.Control.EndComplete
 
+/-!
+# `end` and `else` step
+
+`Pending.end_after` shows that `code.end_frame` for `else` (`0x05`) and `end` (`0x0b`) preserves
+`Pending`, by closing the child frame into its suspended parent or, for the body frame, finishing
+the function.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2

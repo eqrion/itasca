@@ -1,10 +1,21 @@
 import Itasca.Wasm2.Simd.LaneReaders
 import Itasca.Binary.Wasm1.MemoryTyping
 
+/-!
+# Constant and memory reader factorization
+
+Factors the extracted `code.read_simd_const`, `code.read_load`/`code.read_store` at `v128` and
+`code.read_simd_memory_lane` into a decode followed by `carryFixed` (`const_fixed`,
+`full_memory_fixed`, `memory_lane_fixed`). `MemoryOperation.conditions` and
+`MemoryOperation.typed_runtime` connect the typing of SIMD memory operations to the runtime memory
+and alignment checks.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Simd
 
+/-- Reads the sixteen immediate bytes of `v128.const` and pushes a `v128`. -/
 def constReader (st : code.OpIterState) (data : Slice U8) :
     Result (core.result.Result (U64 × U64) error.OpError × code.OpIterState) := do
   let (r, s) ← code.take_simd_bits st data
@@ -22,12 +33,16 @@ theorem const_fixed (st : code.OpIterState) (data : Slice U8) :
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
     carryFixed, readFixed, Std.bind_assoc]
 
+/-- Operand types of a full-width `v128` load (an address) or store (a vector and an address). -/
 def fullMemoryInputs (store : Bool) : List types.ValueType :=
   if store then [.V128, .I32] else [.I32]
 
+/-- Result type of a `v128` memory operation: nothing for stores, a vector otherwise. -/
 def memoryOutput (store : Bool) : Option types.ValueType :=
   if store then none else some .V128
 
+/-- Reads a memory argument, checks that memory zero exists and the alignment bound, then applies
+the operand effect of a full-width `v128` load or store. -/
 def fullMemoryReader (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (align : U32) (store : Bool) :
     Result (core.result.Result code.MemArg error.OpError × code.OpIterState) := do
@@ -69,6 +84,8 @@ theorem full_memory_fixed (st : code.OpIterState) (data : Slice U8) (env : modul
                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
                Std.bind_assoc])
 
+/-- Reads a memory argument and a lane index, checks memory and alignment, then applies the
+operand effect of a `v128` load or store lane operation. -/
 def memoryLaneReader (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (align : U32) (store : Bool) (count : U8) :
     Result (core.result.Result (code.MemArg × U8) error.OpError × code.OpIterState) := do

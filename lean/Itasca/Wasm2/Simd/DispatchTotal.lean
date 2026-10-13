@@ -1,6 +1,13 @@
 import Itasca.Wasm2.Simd.Dispatch
 import Itasca.Wasm2.Simd.Tables
 
+/-!
+# Totality of the SIMD dispatcher
+
+`simd_total` shows that the extracted `code.step_simd` never panics under a total visitor, keeps
+the control stack and moves the cursor forward, for every subopcode and immediate.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Simd

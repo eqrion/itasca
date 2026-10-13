@@ -1,10 +1,18 @@
 import Itasca.Wasm2.Step.Dispatch
 
+/-!
+# Dispatch of bulk instructions
+
+`Wasm2.bulkStep` unfolds the extracted `code.step_bulk` (the `0xFC` subopcodes 8 to 17) into
+`CoreVisitor.run` applied to each bulk reader and its visitor callback. `code.step_bulk.eq_runs`
+proves the two equal.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
 
-/-- Exact factorization of bulk instruction callbacks around their readers. -/
+/-- Factorization of the bulk instruction callbacks around their readers. -/
 def bulkStep {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
     (data : Slice U8) (env : module.Env) (opcode : U32) (v : V) :
     Result (core.result.Result Unit error.OpError × code.OpIterState × V) :=
@@ -25,6 +33,7 @@ end Itasca.Wasm2
 
 namespace Itasca
 
+/-- `code.step_bulk` equals its unfolded form `Wasm2.bulkStep`. -/
 theorem code.step_bulk.eq_runs {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (opcode : U32) (v : V) :
     code.step_bulk visitor st data env opcode v = Wasm2.bulkStep visitor st data env opcode v := by

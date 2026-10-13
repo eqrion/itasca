@@ -1,6 +1,15 @@
 import Itasca.Support.BodyState
 import Itasca.Support.Result
 
+/-!
+# `br_table` handler adapters
+
+State-only presentations of the `br_table` handler `code.branch_table` and its worker loop
+`code.branch_table_with_loop` with the empty visitor. `Wasm2.branchTableLoop` and
+`Wasm2.tableCore` project away the visitor, `Wasm2.tableBody_eq` relates the loop bodies, and
+`code.branch_table.eq_core` shows that the extracted `code.branch_table` equals `Wasm2.tableCore`.
+-/
+
 open Aeneas Aeneas.Std Result ControlFlow
 
 namespace Itasca
@@ -11,9 +20,7 @@ theorem ResultFacts.map_spec {A B : Type} (m : Result A) (f : A → B) (P : B �
     (do let x ← m; .ok (f x)) ⦃ P ⦄ :=
   WP.spec_bind h (fun _ hx => by simpa only [WP.spec_ok] using hx)
 
-/- Proof-only no-op projections of the shared visiting table loop. The equations
-below connect these state views to the actual extracted generic worker. -/
-
+/-- One iteration of `code.branch_table_with_loop` with the empty visitor removed. -/
 def Wasm2.branchTableLoop.body
   (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
   (ois : _root_.Itasca.code.OpIterState)
@@ -80,7 +87,8 @@ def Wasm2.branchTableLoop.body
         Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
     ok (done (r1, st))
 
-/-- The legacy state view is a projection of the actual visiting loop. -/
+/-- The extracted `code.branch_table_with_loop` with the empty visitor, returning only the result
+and body state. -/
 def Wasm2.branchTableLoop
   (ois : code.OpIterState)
   (data : Slice U8) (env : module.Env) (count : U32) (arity : Option Usize) (i : U32) :
@@ -89,6 +97,7 @@ def Wasm2.branchTableLoop
     code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor ois data env () count arity i
   .ok (r, s)
 
+/-- `code.branch_table` with `code.branch_table_with` unfolded to `Wasm2.branchTableLoop`. -/
 def Wasm2.tableCore
   (st : _root_.Itasca.code.BodyState) (data : Slice Std.U8)
   (env : _root_.Itasca.module.Env) :
@@ -136,6 +145,8 @@ namespace Wasm2
 
 set_option maxRecDepth 4096 in
 set_option maxHeartbeats 800000 in
+/-- The extracted loop body with the empty visitor equals `Wasm2.branchTableLoop.body` up to the
+visitor component. -/
 theorem tableBody_eq (data : Slice U8) (env : module.Env) (count : U32)
     (ois : code.OpIterState) (arity : Option Usize) (i : U32) :
     code.branch_table_with_loop.body code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
@@ -171,7 +182,7 @@ theorem tableBody_eq (data : Slice U8) (env : module.Env) (count : U32)
 
 end Wasm2
 
-/-- The non-visiting table wrapper executes the same generic reader and loop. -/
+/-- The extracted `code.branch_table` equals `Wasm2.tableCore`. -/
 theorem code.branch_table.eq_core (st : code.BodyState) (data : Slice U8) (env : module.Env) :
     code.branch_table st data env = Wasm2.tableCore st data env := by
   simp only [code.branch_table, code.branch_table_with, Wasm2.tableCore,

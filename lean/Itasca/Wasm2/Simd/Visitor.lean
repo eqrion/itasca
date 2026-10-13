@@ -1,6 +1,13 @@
 import Itasca.Wasm2.Simd.DispatchTotal
 import Itasca.Visitor.StepLift
 
+/-!
+# Visitor transfer for SIMD instructions
+
+`simd_transfer` shows that if `code.step_simd` accepts with one visitor, it accepts with any
+replacement visitor whose callbacks accept, reaching the same reader state.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Simd

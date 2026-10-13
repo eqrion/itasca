@@ -3,6 +3,16 @@ import Itasca.Wasm2.Prefix
 import Itasca.Wasm2.SuffixTyping
 import Itasca.Handler.BrTableComplete
 
+/-!
+# Branch soundness
+
+Typing facts for `br` and `br_if` against the generated Wasm 2.0 rules. `BranchLabels` ties the
+runtime label lookup to the context's label space, `branch_typed` and `branchIf_typed` give the
+generated `Instr_ok` derivations, and `code.branch.prefix` and `code.branch.conditional_prefix`
+extend a `TypedPrefix` across an accepted `code.branch`. Completeness is in
+`Wasm2/Control/BranchComplete`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
@@ -12,6 +22,7 @@ def BranchLabels (env : module.Env) (st : code.BodyState) (C : context) : Prop :
   ∀ (depth : U32) view, labelAt st depth.val = some view → ∃ ts,
     resolve env view = some ts ∧ C.LABELS[depth.val]? = some (.mk_list (ts.map Translate.valueType))
 
+/-- `br` to a label with types `ts` has the generated polymorphic stack type. -/
 theorem branch_typed {C : context} (hC : wf_context C) (depth : U32) (ts : List valtype)
     (hl : C.LABELS[depth.val]? = some (.mk_list ts)) (before after : List valtype) :
     Instr_ok C (.BR (.mk_uN depth.val))
@@ -25,6 +36,7 @@ theorem branch_typed {C : context} (hC : wf_context C) (depth : U32) (ts : List 
   · exact hC
   · exact .instr_case_7 _ (Spec.label_wf depth)
 
+/-- `br_if` to a label with types `ts` has type `ts ++ [i32] → ts`. -/
 theorem branchIf_typed {C : context} (hC : wf_context C) (depth : U32) (ts : List valtype)
     (hl : C.LABELS[depth.val]? = some (.mk_list ts)) :
     Instr_ok C (.BR_IF (.mk_uN depth.val))
@@ -42,6 +54,7 @@ end Itasca.Wasm2
 
 namespace Itasca
 
+/-- Reading an independently encoded depth that resolves to a label succeeds with that label. -/
 theorem code.read_multi_value_label.complete (st : code.BodyState) (data : Slice U8)
     (depth : U32) (next : Usize) (view : signature.ResultType)
     (ha : st.blocks.val.length = st.core.ctrls.val.length)

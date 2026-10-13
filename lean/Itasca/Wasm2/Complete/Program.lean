@@ -1,6 +1,16 @@
 import Itasca.Wasm2.Complete.Frame
 import Itasca.Wasm2.Execution
 
+/-!
+# Programs and atoms for completeness
+
+`Program` says that every typed instruction list emitted from a token list executes under the
+actual body loop within a concrete control frame, and `AtomProgram` says the same for one
+normalized head instruction. `program_of_atoms` derives `Program` from `AtomProgram` by
+induction on the token list, following an arbitrary declarative derivation (sequence, framing and
+subsumption rules included).
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Completeness
@@ -32,6 +42,7 @@ def AtomProgram (data : Slice U8) (env : module.Env) (ctx : code.Context) (index
     ∃ s, Execution data env ctx index st s ∧ s.core.pos = next ∧
       f.Output (front ++ output) s ∧ Bounds data s
 
+/-- `Program` holds for every emitted token list shorter than `n`. -/
 def SmallerPrograms (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
     (n : Nat) : Prop :=
   ∀ tokens ops, tokens.length < n → Emits tokens ops → Program data env ctx index tokens ops

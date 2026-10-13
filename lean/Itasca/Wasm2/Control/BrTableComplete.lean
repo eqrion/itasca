@@ -1,5 +1,14 @@
 import Itasca.Wasm2.Control.BrTableSound
 
+/-!
+# `br_table` completeness
+
+Completeness of the extracted `code.branch_table`. `code.check_suffix.complete_of_base` and
+`Wasm2.branchTableLoop.complete` cover the suffix check and the label loop, and
+`code.branch_table.complete` accepts a table whose targets satisfy the generated common-subtype
+premise of the Wasm 2.0 `br_table` rule.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca

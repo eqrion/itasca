@@ -1,11 +1,19 @@
 import Itasca.Wasm2.Bulk.Total
 import Itasca.Wasm2.Simd.DispatchTotal
 
+/-!
+# Totality of `step_wasm2`
+
+`wasm2_total` shows that `code.step_wasm2` terminates on every non-control opcode, preserves
+`Control.Shape` and control depth, and never moves the cursor back, whenever the visitor's
+callbacks return.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
 
-/-- Every Core 2.0 opcode is total on a bounded active operand stack when the
+/-- Every non-control Wasm 2.0 opcode is total on a bounded active operand stack when the
 visitor hooks return; the cursor never moves backwards. -/
 theorem wasm2_total {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)

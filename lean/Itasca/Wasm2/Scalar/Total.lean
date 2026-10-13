@@ -4,6 +4,15 @@ import Itasca.Handler.NumericDispatch
 import Itasca.Wasm1.StepScalar
 import Itasca.Visitor.Dispatch
 
+/-!
+# Scalar totality
+
+Totality of the shared `code.step` arms for non-control opcodes. `scalar_total` shows that the
+dispatcher terminates on structurally bounded stacks, preserves control depth and never moves the
+cursor back, for any visitor whose callbacks return. `memory_meaning_exists` shows that every
+memory opcode has a meaning.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
@@ -38,6 +47,7 @@ private theorem run_scalar {A V : Type} (st : code.OpIterState)
     exact ⟨hs, by simp [hc], hp⟩
   · exact hh
 
+/-- Every opcode in the load and store range `0x28` to `0x3e` has a memory meaning. -/
 theorem memory_meaning_exists (opcode : U8)
     (hlo : 0x28 ≤ opcode.val) (hhi : opcode.val ≤ 0x3E) :
     ∃ operation, MemoryMeaning.opcodeMeaning opcode = some operation := by
@@ -47,7 +57,7 @@ theorem memory_meaning_exists (opcode : U8)
   interval_cases n <;> exact ⟨_, rfl⟩
 
 /-- The shared scalar dispatcher is total for arbitrary structurally bounded
-multi-value frames. It preserves control depth and never moves the cursor back. -/
+frames. It preserves control depth and never moves the cursor back. -/
 theorem scalar_total {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (opcode : U8) (v : V) (hs : Control.Shape st)

@@ -3,6 +3,15 @@ import Itasca.Wasm2.Complete.Frame
 import Itasca.Wasm2.NumericExt.Total
 import Itasca.Handler.ScalarComplete
 
+/-!
+# Numeric extension completeness
+
+Acceptance of the sign-extension and saturating truncation opcodes by `code.step_extended` from
+independent premises. `Frame.sign_extension` and `Frame.saturating` give the two arms, and
+`base_immediate` and `wasm2_base_immediate` show which Wasm 1.0 opcodes stay with the shared
+dispatcher.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Completeness
@@ -85,7 +94,7 @@ end Itasca.Wasm2.Completeness
 
 namespace Itasca.Wasm2
 
-/-- The inherited Wasm 1.0 leaf grammar never enters an extension dispatch arm. -/
+/-- The Wasm 1.0 leaf grammar never enters a sign-extension or `0xfc` prefix arm. -/
 theorem base_immediate {opcode op bytes} (hi : Wasm1.Immediate opcode (.plain op) bytes) :
     NumericExtensions.signMeaning opcode = none ∧ opcode ≠ code.OP_MISC_PREFIX := by
   have hb : opcode.val < 192 := by
@@ -106,7 +115,8 @@ theorem base_immediate {opcode op bytes} (hi : Wasm1.Immediate opcode (.plain op
     change opcode.val = 252 at this
     omega
 
-/-- The inherited grammar never selects the new reference, table, or vector arms. -/
+/-- The Wasm 1.0 leaf grammar never selects a reference, table, or vector arm of `code.step_wasm2`
+(opcodes `0x1c`, `0x25`, `0x26`, `0xd0` to `0xd2`, `0xfc`, `0xfd`). -/
 theorem wasm2_base_immediate {opcode op bytes} (hi : Wasm1.Immediate opcode (.plain op) bytes) :
     opcode.val ∉ [28, 37, 38, 208, 209, 210, 252, 253] := by
   cases hi with

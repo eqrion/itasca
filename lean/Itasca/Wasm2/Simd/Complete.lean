@@ -8,6 +8,15 @@ import Itasca.Wasm2.Simd.Visitor
 import Itasca.Wasm2.Step.Context
 import Itasca.Wasm2.Complete.Frame
 
+/-!
+# Completeness of SIMD instructions
+
+For each SIMD class (pure operators, lane access, `v128.const`, memory access, memory lane access
+and `i8x16.shuffle`) a `Completeness.Frame.simd_*` lemma shows that `Wasm2.step` accepts the
+independent `0xFD` encoding at a realized operand stack. `Frame.simd` combines them for every
+independently encoded and typed SIMD instruction (Wasm 2.0).
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Completeness

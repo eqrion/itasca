@@ -1,6 +1,16 @@
 import Itasca.Wasm2.Control.BranchSound
 import Itasca.Binary.Wasm1.BrTableLabels
 
+/-!
+# `br_table` soundness
+
+Soundness of the extracted `code.branch_table` against the generated Wasm 2.0 `br_table` rule,
+which requires a common subtype for all targets. `TableTargets` records that every target was
+checked against the original operand suffix, `Wasm2.branchTableLoop.spec` shows the loop
+establishes it, and `code.branch_table.prefix` extends a `TypedPrefix` across an accepted
+`br_table`. Completeness is in `Wasm2/Control/BrTableComplete`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
@@ -40,6 +50,8 @@ end Itasca.Wasm2
 
 namespace Itasca
 
+/-- One table iteration after a successful label read, length and suffix check either finishes at
+the default or continues with the arity fixed. -/
 theorem Wasm2.branchTableLoop.body_checked (st s : code.BodyState) (data : Slice U8) (env : module.Env)
     (count i : U32) (arity : Option Usize) (view : signature.ResultType) (n : Usize)
     (hr : code.read_multi_value_label st data = .ok (.Ok view, s))
@@ -159,6 +171,7 @@ end Itasca
 
 namespace Itasca.Wasm2
 
+/-- Checked targets give the generated `br_table` typing at the common least operand types. -/
 theorem TableTargets.typed {env st depths default n C}
     (h : TableTargets env st (depths ++ [default]) (some n))
     (hl : BranchLabels env st C) (hC : wf_context C) (before after : List valtype) :
@@ -193,6 +206,7 @@ theorem TableTargets.typed {env st depths default n C}
   · exact hC
   · exact BrTable.instruction_wf depths default
 
+/-- Checked targets leave the operand segment realizing the common least operand types. -/
 theorem TableTargets.realizes {env st depths default n}
     (h : TableTargets env st (depths ++ [default]) (some n)) :
     ∃ front, Sequence.Realizes (Control.polymorphic st.core)

@@ -3,10 +3,13 @@ import Itasca.Visitor.TraceBytes
 import Itasca.Visitor.RunTrace
 
 /-!
-Independent Core 2.0 callback byte provenance, including indexed block signatures.
-This module provides the trace relation and its compositional laws. Concrete
-Core 2.0 body-dispatch correspondence is a separate obligation; defining the
-relation does not claim that an arbitrary visitor emits such a trace.
+# Callback byte provenance for Wasm 2.0
+
+Defines the relations that tie a visitor's callback observations to the independent encoding of a
+body: `Chunk` (the callbacks of one decoded instruction), `StepTrace` (one step, including failure),
+`Completed` (a sequence of chunks) and `BodyTrace` (a whole run). Block tokens keep their indexed
+signatures. This file gives the relations and their composition laws; `Wasm2/Trace/Correspondence`
+shows that the extracted validator satisfies them.
 -/
 
 open Aeneas Aeneas.Std
@@ -15,7 +18,8 @@ namespace Itasca.Wasm2.CallbackTrace
 
 open VisitorTrace
 
-/-- Embed a Wasm 1.0 token without changing its specification instruction. -/
+/-- Embeds a Wasm 1.0 token into the Wasm 2.0 token type without changing its SpecTec
+instruction. -/
 def liftToken : Wasm1.Token → Token
   | .plain op => .plain op
   | .block bt => .block (Control.signature bt)
@@ -24,8 +28,8 @@ def liftToken : Wasm1.Token → Token
   | .else_ => .else_
   | .end_ => .end_
 
-/-- Recover the complete Core 2.0 token of an operator callback. Indexed block
-parameters/results are retained, rather than erased to the older token type. -/
+/-- The Wasm 2.0 token of an operator callback. Block, loop and if tokens keep their indexed
+parameter and result signatures. -/
 def actionToken (action : Action) (pending : List U32) : Option Token :=
   match action with
   | .block bt => some (.block bt)
@@ -109,8 +113,8 @@ theorem BodyTrace.accepted {data start observations}
   exact ⟨ho, tokens, cursor, heq ▸ hc, hp⟩
 
 
-/-- Lift independent success-byte provenance through a single recorded callback.
-Failure before the callback is silent; the callback's own rejection is retained. -/
+/-- Lifts independent success-byte provenance through a single recorded callback.
+Failure before the callback is silent; the callback's own rejection is recorded. -/
 theorem run_step_trace {A V : Type} (data : Slice U8) (start : Usize)
     (read : Result (core.result.Result A error.OpError × code.OpIterState))
     (visitor : code.OpVisitor V) (observe : V → List Observation)

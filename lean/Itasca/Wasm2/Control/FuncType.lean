@@ -1,10 +1,20 @@
 import Itasca.Wasm2.ResultStackSemantics
 import Itasca.Handler.ResumePrefix
 
+/-!
+# Function type application
+
+Specs of the extracted `code.apply_func_type`, which pops a function type's parameters and pushes
+its results for calls. `code.apply_func_type.total` and `.realizes` give totality and the effect on
+the backward stack interpretation, `.complete` gives acceptance from declarative operand
+compatibility, and `code.check_func_type.complete` gives acceptance of limit-respecting types.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
+/-- Function types within the parameter and result limits pass `code.check_func_type`. -/
 theorem code.check_func_type.complete (ft : types.FuncType)
     (hp : ft.params.val.length ≤ 1000) (hr : ft.results.val.length ≤ 1000) :
     code.check_func_type ft = .ok (.Ok ()) := by
@@ -14,7 +24,7 @@ theorem code.check_func_type.complete (ft : types.FuncType)
     simp only [limits.MAX_MULTI_VALUE_RESULTS]; scalar_tac
   simp [code.check_func_type, hp', hr']
 
-/-- Multi-value calls are total on structurally bounded stacks. The explicit
+/-- Function type application is total on structurally bounded stacks. The explicit
 capacity guard also covers arbitrary oversized caller-supplied environments. -/
 @[step]
 theorem code.apply_func_type.total (st : code.OpIterState) (ft : types.FuncType)

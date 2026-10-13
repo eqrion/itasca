@@ -4,6 +4,15 @@ import Itasca.Wasm2.Prefix
 import Itasca.Handler.EnvCalls
 import Itasca.Handler.EnvComplete
 
+/-!
+# Calls
+
+Soundness and completeness of the extracted `code.call` for `call` and `call_indirect`.
+`code.call.direct_prefix` and `code.call.indirect_prefix` extend a `TypedPrefix` across an accepted
+call, and `code.call.direct_complete` and `code.call.indirect_complete` accept independently
+encoded indices with compatible operands. Both are stated against the generated Wasm 2.0 rules.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca

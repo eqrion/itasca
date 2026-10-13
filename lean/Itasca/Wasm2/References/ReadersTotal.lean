@@ -1,6 +1,14 @@
 import Itasca.Wasm2.Scalar.ReadersTotal
 import Itasca.Module.Env.References
 
+/-!
+# Totality of reference and table readers
+
+`@[step]` lemmas showing that the extracted index, type, table, element, data, bulk-memory,
+`ref.*`, table and typed-`select` readers never panic. Each preserves `Control.Shape`, the
+control stack and the operand count bound, and moves the cursor forward.
+-/
+
 open Aeneas Aeneas.Std
 
 set_option maxHeartbeats 2000000

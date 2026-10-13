@@ -4,6 +4,15 @@ import Itasca.Wasm2.Step.ScalarContext
 import Itasca.Wasm1.StepEnv
 import Itasca.Binary.Wasm1.DeclaredReferences
 
+/-!
+# Scalar steps
+
+`Pending` preservation for the shared `code.step` arms for non-control opcodes: `nop`,
+`unreachable`, `drop`, `select`, constants, locals, globals, memory and numeric instructions.
+`Pending.scalar` dispatches on the opcode and shows that a successful scalar step preserves the
+typed zipper and appends exactly the independently decoded instruction.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
@@ -348,6 +357,7 @@ private theorem Pending.index_post_after {data env locals index st} (p : Pending
     exact .of_immediate p.inbounds hbyte p.pos (himm idx bytes he) ⟨hs, hn, hb⟩
   · simp [hc, ctrls]
 
+/-- `local.get` preserves `Pending` on success. -/
 theorem Pending.step_local_get {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hsize : st.core.vals.val.length < Usize.max) (hvisitor : FullVisitor.Total visitor)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x20#u8) :
@@ -366,6 +376,7 @@ theorem Pending.step_local_get {data env locals index st} (p : Pending data env 
     (fun idx => .instr_case_43 _ (EnvTranslation.index_wf idx))
     (fun idx _ he => .localGet idx he) r hr idx hi
 
+/-- `local.set` preserves `Pending` on success. -/
 theorem Pending.step_local_set {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hvisitor : FullVisitor.Total visitor)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x21#u8) :
@@ -384,6 +395,7 @@ theorem Pending.step_local_set {data env locals index st} (p : Pending data env 
     (fun idx => .instr_case_44 _ (EnvTranslation.index_wf idx))
     (fun idx _ he => .localSet idx he) r hr idx hi
 
+/-- `local.tee` preserves `Pending` on success. -/
 theorem Pending.step_local_tee {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hsize : st.core.vals.val.length < Usize.max) (hvisitor : FullVisitor.Total visitor)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x22#u8) :
@@ -403,6 +415,7 @@ theorem Pending.step_local_tee {data env locals index st} (p : Pending data env 
     (fun idx => .instr_case_45 _ (EnvTranslation.index_wf idx))
     (fun idx _ he => .localTee idx he) r hr idx hi
 
+/-- `global.get` preserves `Pending` on success. -/
 theorem Pending.step_global_get {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hsize : st.core.vals.val.length < Usize.max) (hvisitor : FullVisitor.Total visitor)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x23#u8) :
@@ -421,6 +434,7 @@ theorem Pending.step_global_get {data env locals index st} (p : Pending data env
     (fun idx => .instr_case_46 _ (EnvTranslation.index_wf idx))
     (fun idx _ he => .globalGet idx he) r hr idx hi
 
+/-- `global.set` preserves `Pending` on success. -/
 theorem Pending.step_global_set {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hvisitor : FullVisitor.Total visitor)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x24#u8) :
@@ -461,6 +475,7 @@ private theorem Pending.reserved_post_after {data env locals index st} (p : Pend
   · exact .of_immediate p.inbounds hbyte p.pos himm (.byte data st.core.pos r.2.pos 0#u8 hp hz hn)
   · simp [hc, ctrls]
 
+/-- `memory.size` preserves `Pending` on success. -/
 theorem Pending.step_memory_size {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hsize : st.core.vals.val.length < Usize.max) (hvisitor : FullVisitor.Total visitor)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x3F#u8) :
@@ -479,6 +494,7 @@ theorem Pending.step_memory_size {data env locals index st} (p : Pending data en
   exact p.reserved_post_after C outer spine header base ctrls vals 0x3F#u8 _ hbyte
     .instr_case_62 .memorySize r hr hi
 
+/-- `memory.grow` preserves `Pending` on success. -/
 theorem Pending.step_memory_grow {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hsize : st.core.vals.val.length < Usize.max) (hvisitor : FullVisitor.Total visitor)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x40#u8) :
@@ -498,6 +514,7 @@ theorem Pending.step_memory_grow {data env locals index st} (p : Pending data en
   exact p.reserved_post_after C outer spine header base ctrls vals 0x40#u8 _ hbyte
     .instr_case_63 .memoryGrow r hr hi
 
+/-- Loads and stores preserve `Pending` on success. -/
 theorem Pending.step_memory {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hsize : st.core.vals.val.length < Usize.max) (hvisitor : FullVisitor.Total visitor)
     (opcode : U8) (operation : MemoryMeaning.Operation)
@@ -541,7 +558,7 @@ theorem Pending.step_memory {data env locals index st} (p : Pending data env loc
 end Itasca.Wasm2
 namespace Itasca.Wasm2
 
-/-- Successful shared scalar dispatch preserves the multi-value control zipper
+/-- Successful shared scalar dispatch preserves the control zipper
 and appends exactly the independently decoded instruction. -/
 theorem Pending.scalar {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hvisitor : FullVisitor.Total visitor)

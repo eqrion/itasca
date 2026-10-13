@@ -4,9 +4,13 @@ import Itasca.Wasm2.NumericExt.Dispatch
 import Itasca.Visitor.EventDispatch
 
 /-!
-Independent byte provenance for inherited scalar and numeric-extension callbacks.
-The reader lemmas operate on the Core 2.0 control zipper. Callback rejection is
-retained, and an undecodable instruction contributes no operator callback.
+# Byte provenance for scalar callbacks
+
+Independent byte provenance for the Wasm 1.0 scalar instructions and the Wasm 2.0 numeric
+extensions (sign extension and saturating conversion) under `code.step_wasm2`. Each
+`step_*` lemma covers one instruction, and `base_scalar_records`, `extended_scalar_records` and
+`scalar` assemble them. Callback rejection is recorded, and an undecodable instruction contributes
+no operator callback.
 -/
 
 open Aeneas Aeneas.Std
@@ -15,7 +19,7 @@ namespace Itasca.Wasm2.CallbackBytes
 
 open VisitorTrace CallbackTrace
 
-/-- The inherited scalar dispatcher records independently decoded Core 2.0 tokens. -/
+/-- The Wasm 1.0 scalar dispatcher records independently decoded tokens. -/
 def BaseRecords {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (opcode : U8) : Prop :=
@@ -416,7 +420,7 @@ private theorem memory_meaning_exists (opcode : U8)
   change n ≤ 62 at hhi
   interval_cases n <;> exact ⟨_, rfl⟩
 
-/-- All inherited scalar byte values, including reserved-opcode rejection. -/
+/-- All Wasm 1.0 scalar opcode bytes, including reserved-opcode rejection, satisfy `BaseRecords`. -/
 theorem base_scalar_records {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
@@ -522,7 +526,8 @@ theorem conversion_trace {data env locals index st} (p : Pending data env locals
   dsimp only at spec
   exact ⟨_, token, not_table, by simpa only [spec.2.1] using bytes⟩
 
-/-- Scalar extension callbacks retain their complete opcode and prefix bytes. -/
+/-- Sign-extension and saturating conversion callbacks record their complete opcode and prefix
+bytes. -/
 theorem extended_scalar_records {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
@@ -614,7 +619,8 @@ theorem extended_scalar_records {data env locals index st} (p : Pending data env
       rw [scalar_context visitor st.core data env ctx ⟨locals, p.ft.results⟩ opcode v hscalar hlocals] at run
       exact base_scalar_records p visitor observe records capacity opcode hscalar hbyte v result final v' run
 
-/-- Core 2.0 delegates inherited scalar and sign-extension bytes unchanged. -/
+/-- Every scalar step of `code.step_wasm2` (Wasm 1.0 scalar, sign extension and saturating
+conversion) has an exact independent callback byte trace. -/
 theorem scalar {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)

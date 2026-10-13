@@ -3,12 +3,22 @@ import Itasca.Wasm2.Execution
 import Itasca.Wasm2.Complete.LeafContracts
 import Itasca.Wasm2.Soundness
 
+/-!
+# Wasm 2.0 body completeness
+
+Completeness of the extracted `code.validate_multi_value_body` (which validates all of Wasm 2.0)
+from independent premises. `code.validate_multi_value_body.wasm_complete` accepts every
+`Wasm2.Validated` body within the implementation limits, and `wasm_accepts_iff` combines it with
+soundness from `Wasm2/Soundness`. The per-opcode contracts it builds on are in `Wasm2/Complete/`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Completeness
 
-/-- Independent typing starts the body with no operands, even when its type
-has parameters. The final end closes the selected multi-result signature. -/
+/-- A body with independent encoding, typing and declared references is accepted, given a
+`Program` contract for every token sequence. Typing starts the body with no operands, even when
+its type has parameters, and the final `end` closes the selected result signature. -/
 theorem body_of_programs (data : Slice U8) (env : module.Env)
     (locals : alloc.vec.Vec types.ValueType) (index : U32) (ft : types.FuncType)
     (hi : env.types.val[index.val]? = some ft)
@@ -57,6 +67,8 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Completeness
 
+/-- Every token sequence emitted by a syntax tree has a `Program` contract for arbitrary
+environments within limits. -/
 theorem programs (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
     (henv : EnvironmentWithinLimits env)
     (hret : resolve env (.Type index .Results) = some ctx.results.val)
@@ -77,7 +89,7 @@ end Itasca.Wasm2.Completeness
 
 namespace Itasca
 
-/-- Completeness of the extracted public multi-value body validator from
+/-- Completeness of the extracted public body validator from
 independent binary encoding, generated Wasm 2.0 typing, and the independent
 function-reference declaration condition. Implementation bounds constrain body
 bytes and signature sizes. -/
@@ -94,6 +106,7 @@ theorem code.validate_multi_value_body.wasm_complete (data : Slice U8) (env : mo
     (Wasm2.Completeness.programs data env ⟨locals, ft.results⟩ index henv
       (by simp [Wasm2.resolve, hi])) ops hbytes htyped hdecl
 
+/-- `wasm_complete` with the `Wasm2.Validated` witnesses supplied as separate premises. -/
 theorem code.validate_multi_value_body.wasm_complete_of_typing (data : Slice U8) (env : module.Env)
     (locals : alloc.vec.Vec types.ValueType) (index : U32) (ft : types.FuncType) (ops : List instr)
     (henv : Wasm2.EnvironmentWithinLimits env)
@@ -104,6 +117,8 @@ theorem code.validate_multi_value_body.wasm_complete_of_typing (data : Slice U8)
     code.validate_multi_value_body data env locals index = .ok (.Ok ()) :=
   code.validate_multi_value_body.wasm_complete data env locals index henv hsize ⟨ft, ops, hi, hbytes, htyped, hdecl⟩
 
+/-- Within the implementation limits, the body validator accepts exactly the `Wasm2.Validated`
+bodies. -/
 theorem code.validate_multi_value_body.wasm_accepts_iff (data : Slice U8) (env : module.Env)
     (locals : alloc.vec.Vec types.ValueType) (index : U32)
     (henv : Wasm2.EnvironmentWithinLimits env)

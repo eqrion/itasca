@@ -2,6 +2,16 @@ import Itasca.Wasm2.Complete.Program
 import Itasca.Wasm2.Control.EnterStep
 import Itasca.Wasm2.Control.EndStep
 
+/-!
+# Completeness of structured control
+
+Executes `block`, `loop` and `if` (with and without `else`) from independent encodings and
+generated typing. `execute_enter`, `execute_else` and `execute_end` run the delimiters,
+`execute_body` and `run_closed_child` run nested bodies with the parent frame suspended, and
+`atom_block`, `atom_loop`, `atom_ifEnd` and `atom_ifElse` yield an `AtomProgram` for each form.
+`blocktype_signature` and `labels_push` connect block descriptors to the SpecTec label context.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Completeness

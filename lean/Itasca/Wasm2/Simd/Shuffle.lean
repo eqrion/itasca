@@ -2,6 +2,15 @@ import Itasca.Wasm2.Simd.Decode
 import Itasca.Wasm2.Simd.MemoryReaders
 import Itasca.Binary.Wasm2.SimdBitsMeaning
 
+/-!
+# The `i8x16.shuffle` reader
+
+Specs of the extracted `code.read_simd_shuffle`: `shuffle_scan` and `shuffle_complete` show that
+the operand reader runs only after all sixteen lane bytes are range checked below 32, and
+`shuffle_segment` gives its stack effect and the encoding of the accepted words. `shuffleFinish`
+is the operand step that follows the scan.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Simd

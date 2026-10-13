@@ -3,12 +3,20 @@ import Itasca.Wasm2.Control.FuncType
 import Itasca.Binary.Wasm2.EncodingComplete
 import Itasca.Wasm2.Step.Context
 
+/-!
+# Successful loop prefixes
+
+`Execution` is the relation of successful runs of the extracted body loop (`code.body_loop_loop`
+with the empty visitor) between two states. `Execution.public` turns a run that ends with no open
+frames at the end of the body into acceptance by `code.validate_multi_value_body`. This is proof
+infrastructure for completeness, which starts from independent typing.
+-/
+
 open Aeneas Aeneas.Std Result
 
 namespace Itasca.Wasm2
 
-/-- Successful prefixes of the real byte reader and opcode dispatch. This is
-proof infrastructure; public completeness starts from independent typing. -/
+/-- Successful prefixes of the real byte reader and opcode dispatch. -/
 inductive Execution (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32) :
     code.BodyState → code.BodyState → Prop where
   | nil (st) : Execution data env ctx index st st
@@ -69,6 +77,8 @@ theorem Execution.finish {data env ctx index st final}
   have hpos : final.core.pos = Slice.len data := by scalar_tac
   simp [hc, hpos]
 
+/-- A successful prefix from the initial state to a closed body at the end of the data makes
+`code.validate_multi_value_body` accept. -/
 theorem Execution.public {data env locals index ft final}
     (h : Execution data env ⟨locals, alloc.vec.Vec.new _⟩ index (initial index) final)
     (hi : env.types.val[index.val]? = some ft)

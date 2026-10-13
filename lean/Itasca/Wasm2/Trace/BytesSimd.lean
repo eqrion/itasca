@@ -1,6 +1,15 @@
 import Itasca.Wasm2.Trace.BytesBulk
 import Itasca.Wasm2.Simd.Sound
 
+/-!
+# Byte provenance for SIMD callbacks
+
+Independent byte provenance for each SIMD class dispatched by `code.step_simd` (`simd_pure`,
+`simd_lane`, `simd_const`, `simd_shuffle`, `simd_memory`, `simd_memory_lane`), assembled in
+`simd` for every ordinary return. `fixed_trace` is the shared case where the operand checker
+fails after a decoded immediate.
+-/
+
 open Aeneas Aeneas.Std
 namespace Itasca.Wasm2.CallbackBytes
 open VisitorTrace CallbackTrace

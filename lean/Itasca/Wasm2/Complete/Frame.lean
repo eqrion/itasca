@@ -2,16 +2,27 @@ import Itasca.Binary.Wasm2.EncodingComplete
 import Itasca.Wasm2.Invariant
 import Itasca.Wasm1.Complete.Program
 
+/-!
+# Frames for Wasm 2.0 completeness
+
+Defines `Completeness.Frame`, a Wasm 2.0 body state with an explicit control frame and block
+descriptor stack, together with its output relation `Frame.Output`. `Completeness.Bounds` records
+the size invariants that keep operand and control counts below `Usize.max`. `Labels` relates the
+runtime block descriptors to the SpecTec label context, and `EnvironmentWithinLimits` states the
+signature size limits that the structured-control proofs use.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
 
-/-- The experimental profile's actual per-signature limits, including the
-direct-call cache used by the standalone body API. -/
+/-- Every type signature and function signature of the environment has at most 1000 parameters
+and 1000 results. -/
 structure EnvironmentWithinLimits (env : module.Env) : Prop where
   types : ∀ ft ∈ env.types.val, ft.params.val.length ≤ 1000 ∧ ft.results.val.length ≤ 1000
   funcs : ∀ ft ∈ env.func_types.val, ft.params.val.length ≤ 1000 ∧ ft.results.val.length ≤ 1000
 
+/-- The SpecTec result type of the label at `depth`, with innermost labels first, if any. -/
 def labelTypes (env : module.Env) (st : code.BodyState) (depth : Nat) : Option resulttype :=
   ((labelAt st depth).bind (resolve env)).map (fun ts => .mk_list (ts.map Translate.valueType))
 
@@ -41,6 +52,8 @@ theorem labelAt_congr {st s : code.BodyState}
 
 namespace Completeness
 
+/-- A Wasm 2.0 body state viewed as a Wasm 1.0 control frame plus its stack of block
+descriptors. -/
 structure Frame (st : code.BodyState) where
   core : Itasca.Wasm1.Completeness.Frame st.core
   parents : List signature.BlockType
@@ -50,6 +63,8 @@ structure Frame (st : code.BodyState) where
 
 theorem Frame.nonempty {st} (f : Frame st) : st.blocks.val ≠ [] := by simp [f.blocks]
 
+/-- The state `s` realizes the operand stack `out` in the control frame of `st` and keeps its
+block descriptors. -/
 def Frame.Output {st} (f : Frame st) (out : List valtype) (s : code.BodyState) : Prop :=
   f.core.Output out s.core ∧ s.blocks = st.blocks
 
@@ -93,9 +108,9 @@ theorem Frame.Output.transfer {st s t out} {f : Frame st} {g : Frame s}
     simpa using hl
   exact ⟨h.1.transfer hp ho hk hb hsig hbase, h.2.trans hs⟩
 
-/-- Two-byte vector-producing instructions add at most 1000 values. Nested
-control is bounded from its entry stack, so one-byte ends need no extra
-platform restriction. This bound fits even a 32-bit usize. -/
+/-- Size invariants of a body prefix: the function is within `MAX_FUNCTION_BYTES`, and operand
+and control counts grow at most linearly in the cursor. Each byte adds at most 500 values, and
+the resulting bound fits even a 32-bit `usize`. -/
 structure Bounds (data : Slice U8) (st : code.BodyState) : Prop where
   size : data.length ≤ limits.MAX_FUNCTION_BYTES.val
   pos : st.core.pos.val ≤ data.length

@@ -3,11 +3,20 @@ import Itasca.Handler.EnvDispatch
 import Itasca.Handler.Select
 import Itasca.Handler.ScalarConst
 
+/-!
+# Totality of the scalar readers
+
+Totality of the extracted `code.take_*` and `code.read_*` helpers used by the shared scalar
+`code.step` arms (locals, globals, memory, constants, `drop` and `select`). Each lemma in
+`Wasm2.ScalarReaders` shows that the reader terminates, preserves `Control.Shape` and never moves
+the cursor back, on arbitrary bytes and environments.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- Scalar instructions preserve frame bounds for arbitrary multi-value frames. -/
+/-- Pushing a value preserves frame bounds for arbitrary frames. -/
 theorem code.push_val.shape_total (st : code.OpIterState) (t : code.StackType)
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.push_val st t ⦃ s => Control.Shape s ∧ s.ctrls = st.ctrls ∧ s.pos = st.pos ∧

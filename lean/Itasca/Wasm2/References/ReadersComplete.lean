@@ -2,6 +2,16 @@ import Itasca.Wasm2.Bulk.Operands
 import Itasca.Binary.Wasm1.EncodingComplete
 import Itasca.Support.EnvTranslation
 
+/-!
+# Completeness of reference and table readers
+
+Converse of `Wasm2/References/Readers`. If the independent encoding is present and the
+environment bounds hold, `code.take_reference_type`, `code.take_value_type`, `code.take_table`,
+`code.take_element`, `code.take_data_index`, `code.read_reserved_zero` and `code.read_bulk_memory`
+succeed and return the expected metadata. `Matches.table_reference`, `Matches.element_reference`
+and `Matches.data_bound` transfer SpecTec context lookups to the runtime environment.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca

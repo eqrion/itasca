@@ -1,5 +1,13 @@
 import Itasca.Wasm2.Visitor.Total
 
+/-!
+# Wasm 2.0 body totality
+
+`Wasm2.emptyVisitorLoop.total` specializes the visitor-generic totality proof to the empty
+visitor. `code.validate_multi_value_body.wasm_total` shows that the extracted body validator
+(which validates all of Wasm 2.0) returns a value on every input.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
@@ -21,7 +29,7 @@ theorem Wasm2.emptyVisitorLoop.total (data : Slice U8) (env : module.Env)
       data env ⟨locals, results⟩ type_index st () hdata hs ha hb)
   simp [Wasm2.emptyVisitorLoop, hr]
 
-/-- Every input to the public multi-value body validator returns an ordinary
+/-- Every input to the public body validator returns an ordinary
 success or validation error, without modeled panic or divergence. No validity
 assumption is required of the bytes, environment, locals, or type index. -/
 theorem code.validate_multi_value_body.wasm_total (data : Slice U8) (env : module.Env)

@@ -1,5 +1,13 @@
 import Itasca.Wasm2.Control.BranchSound
 
+/-!
+# Branch completeness
+
+`code.branch.complete` and `code.branch.conditional_complete` show that the extracted
+`code.branch` accepts `br` and `br_if` when the immediate is independently encoded and the operand
+stack is compatible with the target label.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca

@@ -1,5 +1,15 @@
 import Itasca.Wasm2.References.Operands
 
+/-!
+# Operand factorization of bulk readers
+
+Defines the metadata decoders `memoryInitMetadata`, `memoryCopyMetadata` and
+`referencePairMetadata`, and shows that `code.read_memory_init`, `code.read_memory_copy`,
+`code.read_memory_fill`, `code.read_table_init` and `code.read_table_copy` equal a decoder
+followed by the fixed operand checker (`*.fixed`). Their specs (`*.spec`) give byte provenance
+and the type agreement of the table pair.
+-/
+
 open Aeneas Aeneas.Std
 
 noncomputable section
@@ -20,7 +30,7 @@ def memoryInitMetadata (st : code.OpIterState) (data : Slice U8) (env : module.E
     | .Err e => .ok (.Err e, out)
     | .Ok () => .ok (.Ok idx, out)
 
-/-- Core 2 memory.copy uses two reserved literal memory-zero bytes. -/
+/-- Wasm 2.0 `memory.copy` reads two reserved literal memory-zero bytes. -/
 def memoryCopyMetadata (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
     Result (core.result.Result Unit error.OpError × code.OpIterState) := do
   let (r, s) ← code.read_bulk_memory st data env
@@ -28,7 +38,8 @@ def memoryCopyMetadata (st : code.OpIterState) (data : Slice U8) (env : module.E
   | .Err e => .ok (.Err e, s)
   | .Ok () => code.read_reserved_zero s data
 
-/-- Both table.copy and table.init compare the actual resolved reference types. -/
+/-- Reads a second table index and requires its reference type to equal the first one's, as
+`table.copy` and `table.init` do. -/
 def referencePairMetadata
     (first : Result (core.result.Result (U32 × types.ValueType) error.OpError × code.OpIterState))
     (data : Slice U8) (env : module.Env) :

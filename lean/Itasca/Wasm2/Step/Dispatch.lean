@@ -1,6 +1,15 @@
 import Itasca.Wasm2.NumericExt.Dispatch
 import Itasca.Binary.Leb128
 
+/-!
+# `step_wasm2` dispatch
+
+Unfolding equations for the extracted `code.step_wasm2`, which adds references, bulk memory and
+SIMD on top of `code.step_extended`. `code.step_wasm2.base` delegates ordinary opcodes,
+`code.step_wasm2.prefixed` and `Wasm2.wasm2PrefixedStep` describe the `0xfc` prefix, and the
+remaining `code.step_wasm2.*` lemmas give the reference, table and bulk arms as visitor runs.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
@@ -15,8 +24,8 @@ theorem wasm2_context {V : Type} (visitor : code.OpVisitor V)
   unfold code.step_wasm2
   simp only [extended_context visitor st data env ctx ctx' opcode v hscalar hlocals]
 
-/-- Core 2.0's miscellaneous prefix chooses the scalar and bulk families after
-one complete unsigned-LEB subopcode. -/
+/-- The `0xfc` arm of `code.step_wasm2`: the miscellaneous prefix chooses the saturating
+truncation and bulk families after one complete unsigned-LEB subopcode. -/
 def wasm2PrefixedStep {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     Result (core.result.Result Unit error.OpError × code.OpIterState × V) := do
@@ -31,7 +40,8 @@ end Itasca.Wasm2
 
 namespace Itasca
 
-/-- The extended dispatcher delegates ordinary opcodes without changing state. -/
+/-- Opcodes outside the reference, table, bulk and SIMD arms are handled by `code.step_extended`
+without changing state. -/
 theorem code.step_wasm2.base {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (opcode : U8) (v : V)
@@ -53,6 +63,7 @@ theorem code.step_wasm2.saturating {V : Type} (visitor : code.OpVisitor V)
   have hr := reader.read_u32_leb.complete data st.pos subopcode next hd
   simp [code.step_wasm2, hr, core.result.Result.Insts.CoreOpsTry.branch, hs]
 
+/-- The `0xfc` arm of `code.step_wasm2` equals `Wasm2.wasm2PrefixedStep`. -/
 theorem code.step_wasm2.prefixed {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step_wasm2 visitor st data env ctx 0xfc#u8 v =
@@ -67,6 +78,7 @@ theorem code.step_wasm2.prefixed {V : Type} (visitor : code.OpVisitor V)
     obtain ⟨subopcode, next⟩ := pair
     simp [core.result.Result.Insts.CoreOpsTry.branch]
 
+/-- `ref.null` (`0xd0`) runs `code.read_ref_null` and its visitor callback. -/
 theorem code.step_wasm2.ref_null {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step_wasm2 visitor st data env ctx 208#u8 v =
@@ -82,6 +94,7 @@ theorem code.step_wasm2.ref_null {V : Type} (visitor : code.OpVisitor V)
   obtain ⟨reply, w⟩ := pair
   cases reply <;> simp [code.visit]
 
+/-- `ref.is_null` (`0xd1`) runs `code.read_ref_is_null` and its visitor callback. -/
 theorem code.step_wasm2.ref_is_null {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step_wasm2 visitor st data env ctx 209#u8 v =
@@ -97,6 +110,7 @@ theorem code.step_wasm2.ref_is_null {V : Type} (visitor : code.OpVisitor V)
   obtain ⟨reply, w⟩ := pair
   cases reply <;> simp [code.visit]
 
+/-- `ref.func` (`0xd2`) runs `code.read_ref_func` and its visitor callback. -/
 theorem code.step_wasm2.ref_func {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step_wasm2 visitor st data env ctx 210#u8 v =
@@ -112,6 +126,7 @@ theorem code.step_wasm2.ref_func {V : Type} (visitor : code.OpVisitor V)
   obtain ⟨reply, w⟩ := pair
   cases reply <;> simp [code.visit]
 
+/-- Typed `select` (`0x1c`) runs `code.read_typed_select` and its visitor callback. -/
 theorem code.step_wasm2.typed_select {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step_wasm2 visitor st data env ctx 28#u8 v =
@@ -127,6 +142,7 @@ theorem code.step_wasm2.typed_select {V : Type} (visitor : code.OpVisitor V)
   obtain ⟨reply, w⟩ := pair
   cases reply <;> simp [code.visit]
 
+/-- `table.get` (`0x25`) runs `code.read_table_get` and its visitor callback. -/
 theorem code.step_wasm2.table_get {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step_wasm2 visitor st data env ctx 37#u8 v =
@@ -142,6 +158,7 @@ theorem code.step_wasm2.table_get {V : Type} (visitor : code.OpVisitor V)
   obtain ⟨reply, w⟩ := pair
   cases reply <;> simp [code.visit]
 
+/-- `table.set` (`0x26`) runs `code.read_table_set` and its visitor callback. -/
 theorem code.step_wasm2.table_set {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step_wasm2 visitor st data env ctx 38#u8 v =

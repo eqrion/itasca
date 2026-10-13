@@ -3,16 +3,24 @@ import Itasca.Wasm2.Trace.Refinement
 import Itasca.Wasm2.References.Step
 import Itasca.Wasm2.Bulk.Step
 
-/-! Concrete byte provenance for Core 2.0 callback leaves. Reader failures are
-silent; successful reads retain the precise decoded arguments even when the
-callback itself rejects. No accepting-visitor premise is used. -/
+/-!
+# Byte provenance for Wasm 2.0 leaf callbacks
+
+Defines `StepRecords` and `ReadBytes`, the contracts for the callback trace of one
+`code.step_wasm2` leaf, and proves the shared lemmas `metadata_post`, `metadata_bytes` and
+`metadata_bytes_at` for readers that decode metadata and then apply a fixed operand effect. Reader
+failures are silent, successful reads record the decoded arguments even when the callback rejects,
+and no accepting-visitor premise is used.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.CallbackBytes
 
 open VisitorTrace CallbackTrace
 
-/-- Exact observed Core 2.0 leaf trace under the independent pending-byte cursor. -/
+/-- The callback trace of one `code.step_wasm2` leaf is a `StepTrace` under the independent
+pending-byte cursor. -/
 def StepRecords {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (ctx : code.Context) (opcode : U8) : Prop :=
@@ -21,8 +29,9 @@ def StepRecords {data env locals index st} (p : Pending data env locals index st
     ∃ observations, observe v' = observe v ++ observations ∧
       CallbackTrace.StepTrace data p.start observations result final
 
-/-- Metadata survives the fixed checker, whose stack operations cannot move the
-byte cursor. This applies to ordinary successful returns without visitor premises. -/
+/-- A property of the decoded metadata and cursor still holds after the fixed checker, whose
+stack operations do not move the byte cursor. It applies to ordinary successful returns without
+visitor premises. -/
 theorem metadata_post {A B : Type} (st : code.OpIterState)
     (outer segment : List code.StackType)
     (values : st.vals.val = outer ++ segment) (base : (Control.base st).val = outer.length)
@@ -86,7 +95,7 @@ theorem metadata_bytes_at {data env locals index st} (p : Pending data env local
   exact metadata_post {st.core with pos := next} outer p.current.vals stack
     (by simp [Control.base, ctrls, base]) capacity decode pops output metadata P decoded value final run
 
-/-- A single accepted metadata reader supplies an independent token and span. -/
+/-- A metadata reader that succeeds supplies an independent token and its byte span. -/
 def ReadBytes {A : Type} (data : Slice U8) (start : Usize)
     (read : Result (core.result.Result A error.OpError × code.OpIterState))
     (action : A → Action) : Prop :=

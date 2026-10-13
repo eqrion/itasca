@@ -1,5 +1,13 @@
 import Itasca.Wasm2.References.Complete
 
+/-!
+# Completeness of bulk instructions
+
+For `memory.fill`, `memory.copy`, `memory.init`, `data.drop`, `elem.drop`, `table.init` and
+`table.copy`, the `Completeness.Frame.*` lemmas show that `Wasm2.step` accepts the independent
+encoding (the `0xFC` prefix and its immediates) at a realized operand stack (Wasm 2.0).
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Completeness

@@ -3,6 +3,16 @@ import Itasca.Wasm2.Control.EndTotal
 import Itasca.Wasm2.Step.Total
 import Itasca.Visitor.Accepts
 
+/-!
+# Totality of visiting body validation
+
+Shows that `code.validate_multi_value_body_with` terminates for every input when the visitor's
+callbacks return (`FullVisitor.Total`), without byte validity or environment hypotheses
+(`code.validate_multi_value_body_with.wasm_total`). The supporting lemmas cover the body loop
+(`code.body_loop_loop.wasm2_total`), its initial state, branch tables and branch information; each
+iteration preserves `Control.Shape` and advances the cursor.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
@@ -327,7 +337,7 @@ attribute [local step] code.body_loop_loop.wasm2_total
   unfold code.initial_state
   step* <;> simp_all; scalar_tac
 
-/-- Returning opcode hooks suffice for totality on arbitrary multi-value input;
+/-- Returning opcode hooks suffice for totality on arbitrary Wasm 2.0 input;
 no byte validity, signature, or environment hypothesis is required. -/
 theorem code.validate_multi_value_body_with.wasm_total {V : Type} (visitor : code.OpVisitor V)
     (hv : FullVisitor.Total visitor) (data : Slice U8) (env : module.Env)

@@ -2,6 +2,17 @@ import Itasca.Wasm2.Prefix
 import Itasca.Wasm2.Scalar.Total
 import Itasca.Handler.EnvMemory
 
+/-!
+# Scalar typed prefixes
+
+Re-proves the typed-prefix effect of the shared scalar handlers against the Wasm 2.0
+`TypedPrefix` zipper. `TypedPrefix.nop`, `.unreachable` and the constant lemmas extend a prefix
+by one instruction, `NumericEffect.wasm2_prefix`, `Popped.wasm2_prefix_drop` and
+`SelectEffect.wasm2_prefix` do so for stack effects, and `code.step_numeric.wasm2_prefix`,
+`code.step.numeric_wasm2_prefix` and `code.step_select.wasm2_prefix` lift them to the extracted
+handlers.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
@@ -64,6 +75,7 @@ theorem TypedPrefix.f64Const {C : context} {inputs : List valtype} {ops : List i
   obtain ⟨before, rfl, hb⟩ := Realizes.snoc_val .F64 hout
   exact ⟨before, hb, ScalarConst.f64_framed C hC value before⟩
 
+/-- A typed prefix is a resume prefix with no saved arguments. -/
 theorem ResumePrefix.of_prefix {C inputs ops poly vals}
     (h : TypedPrefix C inputs ops poly vals) : ResumePrefix C inputs ops poly vals [] :=
   ⟨h.wellFormed, fun ts ht => by simpa using h.typed ts ht⟩
@@ -121,6 +133,8 @@ end Itasca.StackSemantics
 
 namespace Itasca
 
+/-- `code.step_numeric` on a mapped numeric opcode is total, keeps frames and cursor, and extends
+the typed prefix by the opcode's instruction on success. -/
 theorem code.step_numeric.wasm2_prefix {inputs : List valtype} {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (opcode : U8) (op : Numeric.Operation)
     (outer segment : List code.StackType) (v : V) (C : context) (hC : wf_context C)
@@ -159,6 +173,7 @@ theorem code.step_numeric.wasm2_prefix {inputs : List valtype} {V : Type} (visit
       simp [CoreVisitor.run, hr, hvst, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
+/-- `code.step` on a mapped numeric opcode has the same effect as `code.step_numeric`. -/
 theorem code.step.numeric_wasm2_prefix {inputs : List valtype} {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (opcode : U8) (op : Numeric.Operation)
@@ -178,6 +193,7 @@ theorem code.step.numeric_wasm2_prefix {inputs : List valtype} {V : Type} (visit
   exact code.step_numeric.wasm2_prefix visitor st opcode op outer segment v C hC ops htyped
     hmap hvals hbase hsize hvisit
 
+/-- `code.step_select` extends the typed prefix by an untyped `select` on success. -/
 theorem code.step_select.wasm2_prefix {inputs : List valtype} {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (outer segment : List code.StackType) (v : V) (C : context) (hC : wf_context C)

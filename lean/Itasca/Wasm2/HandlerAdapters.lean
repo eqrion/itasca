@@ -1,12 +1,20 @@
 import Itasca.Support.BodyState
 import Itasca.Support.Result
 
+/-!
+# Branch and call handler adapters
+
+State-only presentations of `code.branch` and `code.call`, which the extracted code builds from the
+metadata-returning `code.branch_info`, `code.call_info` and `code.call_indirect_info`.
+`Wasm2.branchCore` and `Wasm2.callCore` unfold those helpers, and `code.branch.eq_core` and
+`code.call.eq_core` show that the extracted handlers equal them.
+-/
+
 open Aeneas Aeneas.Std Result
 
 namespace Itasca
 
-/- State-only presentations of metadata-returning handlers. -/
-
+/-- `code.branch` with `code.branch_info` unfolded, so it returns only the result and state. -/
 def Wasm2.branchCore
   (st : _root_.Itasca.code.BodyState) (data : Slice Std.U8)
   (env : _root_.Itasca.module.Env) (conditional : Bool) :
@@ -67,6 +75,8 @@ def Wasm2.branchCore
         Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
     ok (r1, st1)
 
+/-- `code.call` with `code.call_info` and `code.call_indirect_info` unfolded, so it returns only
+the result and state. -/
 def Wasm2.callCore (st : code.BodyState) (data : Slice U8)
     (env : module.Env) (indirect : Bool) :
     Result (core.result.Result Unit error.OpError × code.BodyState) := do
@@ -90,6 +100,7 @@ def Wasm2.callCore (st : code.BodyState) (data : Slice U8)
         .ok (r, { st with core := out })
 
 
+/-- The extracted `code.branch` equals `Wasm2.branchCore`. -/
 theorem code.branch.eq_core (st : code.BodyState) (data : Slice U8)
     (env : module.Env) (conditional : Bool) :
     code.branch st data env conditional = Wasm2.branchCore st data env conditional := by
@@ -121,6 +132,7 @@ theorem code.branch.eq_core (st : code.BodyState) (data : Slice U8)
       obtain ⟨r, ois⟩ := x
       cases r <;> simp
 
+/-- The extracted `code.call` equals `Wasm2.callCore`. -/
 theorem code.call.eq_core (st : code.BodyState) (data : Slice U8)
     (env : module.Env) (indirect : Bool) :
     code.call st data env indirect = Wasm2.callCore st data env indirect := by

@@ -2,11 +2,20 @@ import Itasca.Wasm2.Simd.ReadersTotal
 import Itasca.Visitor.Basic
 import Itasca.Wasm2.Simd.Tables
 
+/-!
+# Dispatch of SIMD instructions
+
+`Simd.prefixStep` and `Simd.subStep` unfold the extracted `code.step_simd` (opcode `0xFD`) into
+`CoreVisitor.run` applied to the reader for each operation class. `code.step_simd.eq_runs` proves
+the two equal, and the `subStep.*` equations specialize it to pure, lane, memory, memory lane,
+constant and shuffle subopcodes using the table agreement of `Wasm2/Simd/Tables`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Simd
 
-/-- Exact callback factorization of the SIMD prefix dispatcher. -/
+/-- Factorization of the SIMD subopcode dispatcher around its readers and visitor callbacks. -/
 def subStep {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
     (data : Slice U8) (env : module.Env) (subopcode : U32) (v : V) :
     Result (core.result.Result Unit error.OpError × code.OpIterState × V) := do
@@ -44,6 +53,7 @@ def subStep {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
             (fun v s a => visitor.on_simd_shuffle v s a.1 a.2) v
         | _ => .ok (.Err .UnrecognizedOpcode, st, v)
 
+/-- Reads the subopcode after `0xFD` and continues with `subStep`. -/
 def prefixStep {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
     (data : Slice U8) (env : module.Env) (v : V) :
     Result (core.result.Result Unit error.OpError × code.OpIterState × V) := do
@@ -74,6 +84,7 @@ macro "finish_simd_run" : tactic => `(tactic| (
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 ))
 
+/-- `code.step_simd` equals its unfolded form `Wasm2.Simd.prefixStep`. -/
 theorem code.step_simd.eq_runs {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (v : V) :
     code.step_simd visitor st data env v = Wasm2.Simd.prefixStep visitor st data env v := by

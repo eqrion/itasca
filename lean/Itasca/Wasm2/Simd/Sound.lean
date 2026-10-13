@@ -7,6 +7,15 @@ import Itasca.Wasm2.Simd.Dispatch
 import Itasca.Binary.Wasm2.SimdBitsMeaning
 import Itasca.Wasm2.Simd.MemoryReaders
 
+/-!
+# Preservation for SIMD instructions
+
+`Pending.simd` shows that the extracted `code.step_simd` preserves the body invariant `Pending`
+for every SIMD instruction (Wasm 2.0). It combines `Pending.simd_pure`, `Pending.simd_lane`,
+`Pending.simd_const`, `Pending.simd_memory`, `Pending.simd_memory_lane` and `Pending.simd_shuffle`,
+which rest on `Pending.fixed`, the extension of the typed prefix by a fixed operand effect.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2

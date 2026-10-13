@@ -1,11 +1,21 @@
 import Itasca.Wasm2.Visitor.Transfer
 
+/-!
+# Visiting body validation against the public validator
+
+Relates `code.validate_multi_value_body_with`, the body validator with an arbitrary visitor
+(the extracted name says "multi_value" but it validates all of Wasm 2.0), to the empty-visitor
+validator `code.validate_multi_value_body`. `accepted_erase` and `accepted_lift` give acceptance in
+both directions, `wasm_sound` and `wasm_complete` lift soundness and completeness to arbitrary
+accepting visitors, and `wasm_spec` combines totality with soundness.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- An accepted visiting multi-value body is accepted by the public empty
-visitor validator. No totality assumption is required of the source visitor. -/
+/-- An accepted visiting body is accepted by the public empty visitor validator. The source
+visitor needs no totality assumption. -/
 theorem code.validate_multi_value_body_with.accepted_erase {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32) (v v' : V)
     (h : code.validate_multi_value_body_with visitor data env ctx index v = .ok (.Ok (), v')) :
@@ -16,7 +26,7 @@ theorem code.validate_multi_value_body_with.accepted_erase {V : Type} (visitor :
   cases w
   simp [code.validate_multi_value_body, hw]
 
-/-- Accepting hooks preserve public multi-value acceptance. The scalar context's
+/-- Accepting hooks preserve public acceptance. The scalar context's
 result vector does not constrain the signature selected by the type index. -/
 theorem code.validate_multi_value_body_with.accepted_lift {V : Type} (visitor : code.OpVisitor V)
     (ha : FullVisitor.Accepts visitor) (data : Slice U8) (env : module.Env)
@@ -32,8 +42,8 @@ theorem code.validate_multi_value_body_with.accepted_lift {V : Type} (visitor : 
     code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor visitor ha data env
     ⟨ctx.locals, alloc.vec.Vec.new _⟩ ctx rfl index () v () hr
 
-/-- Arbitrary accepted visitors establish independent multi-value binary
-encoding and generated Wasm 2.0 typing, without a callback totality premise. -/
+/-- Arbitrary accepted visitors establish independent Wasm 2.0 binary encoding and generated
+typing, without a callback totality premise. -/
 theorem code.validate_multi_value_body_with.wasm_sound {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32) (v v' : V)
     (h : code.validate_multi_value_body_with visitor data env ctx index v = .ok (.Ok (), v')) :

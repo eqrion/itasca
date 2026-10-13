@@ -2,11 +2,19 @@ import Itasca.Wasm2.Step.Sound
 import Itasca.Wasm2.NumericExt.Sound
 import Itasca.Wasm2.Step.Context
 
+/-!
+# Soundness of the non-control opcodes
+
+`Pending.scalar_step` shows that every non-control opcode, including the capacity guard in front
+of `code.step_wasm2`, preserves `Pending` on success.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
 
-/-- Scalar preservation includes the extracted capacity guard. -/
+/-- Every non-control opcode preserves `Pending` on success. The extracted capacity guard is
+included. -/
 theorem Pending.scalar_step {data env locals index st} (p : Pending data env locals index st)
     (ctx : code.Context) (hlocals : ctx.locals = locals)
     (opcode : U8) (hscalar : opcode.val ∉ controlOpcodes)

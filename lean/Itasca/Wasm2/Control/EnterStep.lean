@@ -1,24 +1,33 @@
 import Itasca.Wasm2.Control.EnterComplete
 import Itasca.Wasm2.Totality
 
+/-!
+# `block`, `loop` and `if` step
+
+`Pending.enter_after` shows that `code.enter` for `block` (`0x02`), `loop` (`0x03`) and `if`
+(`0x04`) preserves `Pending`, by pushing a fresh frame onto the typed zipper with
+`Frames.Open.enter_child`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
 
+/-- The syntax token that opens a frame of the given initial form. -/
 def Frames.Form.token (form : Frames.Form) (bt : signature.BlockType) : Token :=
   match form with
   | .loop => .loop bt
   | .then_ => .if_ bt
   | _ => .block bt
 
+/-- The opcode byte that opens a frame of the given initial form. -/
 def Frames.Form.opcode (form : Frames.Form) : U8 :=
   match form with
   | .loop => 0x03#u8
   | .then_ => 0x04#u8
   | _ => 0x02#u8
 
-/-- Independent syntax and semantic entry, instantiated directly at the
-actual block/loop/if handlers in whole-body soundness. -/
+/-- Opening a `block`, `loop` or `if` frame with `code.enter` preserves `Pending` on success. -/
 theorem Pending.enter_after {data env locals index st} (p : Pending data env locals index st)
     (form : Frames.Form) (initial : form.Initial)
     (hbyte : data.val[p.start.val]'p.inbounds = form.opcode) :

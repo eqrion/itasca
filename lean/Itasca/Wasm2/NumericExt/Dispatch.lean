@@ -2,6 +2,16 @@ import Itasca.Binary.Wasm2.NumericExtensions
 import Itasca.Wasm2.Step.ScalarContext
 import Itasca.Visitor.Accepts
 
+/-!
+# Numeric extension dispatch
+
+Unfolding equations for the extracted `code.step_extended`, which adds the sign-extension and
+saturating truncation opcodes on top of the shared `code.step`. `sign_table` and `saturating_table`
+relate the extracted type tables to the independent meanings, `code.step_extended.sign`,
+`code.step_extended.base` and `code.step_extended.prefixed` give the three dispatch arms, and
+`Wasm2.prefixedStep` is the independent view of the `0xfc` prefix arm.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.NumericExtensions
@@ -35,12 +45,14 @@ theorem saturating_table (opcode : U32) :
     split <;> simp_all
     all_goals exact (by decide : ¬ (8 ≤ _)) hn
 
+/-- Sign extensions are unary, keep their type, and occupy opcodes `0xc0` to `0xc4`. -/
 theorem sign_properties {opcode op} (h : signMeaning opcode = some op) :
     op.binary = false ∧ op.output = op.input ∧ 192 ≤ opcode.val ∧ opcode.val ≤ 196 := by
   unfold signMeaning at h
   split at h <;> simp only [Option.some.injEq, reduceCtorEq] at h <;> try contradiction
   all_goals subst op; simp_all [i32Extend8, i32Extend16, i64Extend8, i64Extend16, i64Extend32]
 
+/-- Saturating truncations are unary. -/
 theorem saturating_unary {opcode op} (h : saturatingMeaning opcode = some op) :
     op.binary = false := by
   unfold saturatingMeaning at h
@@ -51,7 +63,7 @@ end Itasca.Wasm2.NumericExtensions
 
 namespace Itasca.Wasm2
 
-/-- The new scalar dispatcher retains the same context dependence as base instructions. -/
+/-- `code.step_extended` observes local types but never function results, like `code.step`. -/
 theorem extended_context {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (ctx ctx' : code.Context) (opcode : U8) (v : V)
@@ -87,7 +99,7 @@ theorem code.step_extended.sign {V : Type} (visitor : code.OpVisitor V)
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
 
-/-- Ordinary scalar opcodes retain the previous dispatcher. -/
+/-- Opcodes that are neither sign extensions nor the `0xfc` prefix are handled by `code.step`. -/
 theorem code.step_extended.base {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (opcode : U8) (v : V)
@@ -103,7 +115,8 @@ end Itasca
 
 namespace Itasca.Wasm2
 
-/-- Prefix decoding keeps the full unsigned LEB subopcode and exact reader state. -/
+/-- The `0xfc` arm of `code.step_extended`. Prefix decoding keeps the full unsigned LEB subopcode
+and exact reader state. -/
 def prefixedStep {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
     (data : Slice U8) (v : V) :
     Result (core.result.Result Unit error.OpError × code.OpIterState × V) := do
@@ -122,7 +135,7 @@ end Itasca.Wasm2
 
 namespace Itasca
 
-/-- The independent prefix adapter is an exact factorization of extracted dispatch. -/
+/-- `Wasm2.prefixedStep` is an exact factorization of the `0xfc` arm of extracted dispatch. -/
 theorem code.step_extended.prefixed {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (v : V) :

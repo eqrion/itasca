@@ -5,6 +5,16 @@ import Itasca.Wasm2.Control.EndStep
 import Itasca.Wasm2.Control.BranchStep
 import Itasca.Wasm2.Control.Return
 
+/-!
+# Wasm 2.0 body soundness
+
+Discharges `Steps` for every opcode by dispatching to the non-control, block entry, `end`,
+branch and `return` families, and concludes `code.validate_multi_value_body.wasm_sound`: an
+accepted body (the extracted function validates all of Wasm 2.0) is `Wasm2.Validated`, that is,
+has a binary-grammar encoding typed by the generated Wasm 2.0 rules. `wasm_spec` is the same
+statement as a weakest-precondition spec.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
@@ -39,7 +49,7 @@ end Itasca.Wasm2
 
 namespace Itasca
 
-/-- The actual public multi-value body validator is sound for independent
+/-- The extracted public body validator is sound for independent
 binary grammar and generated Wasm 2.0 typing, on arbitrary bytes and contexts. -/
 theorem code.validate_multi_value_body.wasm_spec (data : Slice U8) (env : module.Env)
     (locals : alloc.vec.Vec types.ValueType) (index : U32) :
@@ -48,6 +58,7 @@ theorem code.validate_multi_value_body.wasm_spec (data : Slice U8) (env : module
   Wasm2.public_spec_of_steps data env locals index
     (Wasm2.steps data env locals ⟨locals, alloc.vec.Vec.new _⟩ index rfl)
 
+/-- Accepted bodies are `Wasm2.Validated`. -/
 theorem code.validate_multi_value_body.wasm_sound (data : Slice U8) (env : module.Env)
     (locals : alloc.vec.Vec types.ValueType) (index : U32)
     (haccepted : code.validate_multi_value_body data env locals index = .ok (.Ok ())) :

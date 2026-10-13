@@ -1,11 +1,19 @@
 import Itasca.Wasm2.Scalar.Step
 import Itasca.Wasm2.NumericExt.Total
 
+/-!
+# Numeric extension steps
+
+`Pending` preservation for `code.step_extended`. `Pending.extended_numeric` handles a unary
+numeric extension, and `Pending.extended_scalar` combines the sign-extension, saturating and
+shared-scalar arms into one successful-step certificate.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
 
-/-- A unary numeric extension preserves the multi-value zipper while recording
+/-- A unary numeric extension preserves the control zipper while recording
 its independently encoded instruction, including any consumed prefix bytes. -/
 theorem Pending.extended_numeric {data env locals index st}
     (p : Pending data env locals index st) {V : Type} (v : V)

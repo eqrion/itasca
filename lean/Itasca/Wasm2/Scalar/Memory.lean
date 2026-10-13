@@ -1,9 +1,19 @@
 import Itasca.Wasm2.Scalar.Env
 
+/-!
+# Memory readers
+
+Typed-prefix specs of the extracted `code.read_load`, `code.read_store`, `code.read_memory_size`
+and `code.read_memory_grow` against the Wasm 2.0 `TypedPrefix` zipper. `MemoryPost` and
+`ReservedPost` are their shared postconditions for memory arguments and reserved bytes.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Scalar
 
+/-- Successful memory instructions expose the decoded alignment and offset, the unchanged frames,
+and the typed operand segment. -/
 def MemoryPost (inputs : List valtype) (data : Slice U8) (st : code.OpIterState)
     (outer segment : List code.StackType) (C : context) (ops : List instr)
     (op : code.MemArg → instr)
@@ -14,6 +24,8 @@ def MemoryPost (inputs : List valtype) (data : Slice U8) (st : code.OpIterState)
       ∃ rest, r.2.vals.val = outer ++ rest ∧ rest.length ≤ segment.length + 1 ∧
         Wasm2.TypedPrefix C inputs (ops ++ [op arg]) (Control.polymorphic st) rest
 
+/-- Successful `memory.size` and `memory.grow` expose the consumed zero reserved byte, the
+unchanged frames, and the typed operand segment. -/
 def ReservedPost (inputs : List valtype) (data : Slice U8) (st : code.OpIterState)
     (outer segment : List code.StackType) (C : context) (ops : List instr)
     (op : instr) (r : core.result.Result Unit error.OpError × code.OpIterState) : Prop :=

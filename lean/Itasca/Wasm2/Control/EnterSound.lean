@@ -1,5 +1,15 @@
 import Itasca.Wasm2.Control.EndSound
 
+/-!
+# Soundness of block entry
+
+Soundness of the extracted `code.enter`, which opens `block`, `loop` and `if` frames.
+`enterParams`, `enterArgs` and `checkBlock` factor out the pieces shared by its branches, and
+`enter_eq` unfolds `code.enter` into them. `EnterEffect` is the exact semantic effect of opening a
+frame, and `code.enter.sound` shows that a successful entry has that effect on a decoded block
+type. Completeness is in `Wasm2/Control/EnterComplete`.
+-/
+
 open Aeneas Aeneas.Std Result
 
 namespace Itasca.Wasm2
@@ -21,6 +31,8 @@ def enterParams (st : code.BodyState) (env : module.Env)
       Unit (core.convert.FromSame error.OpError) residual
     .ok (r, { st with core := s })
 
+/-- Entry for all forms: `if` first pops its `i32` condition, then every form runs
+`enterParams`. -/
 def enterArgs (st : code.BodyState) (env : module.Env)
     (kind : code.LabelKind) (bt : signature.BlockType) :
     Result (core.result.Result Unit error.OpError × code.BodyState) := do
@@ -36,6 +48,8 @@ def enterArgs (st : code.BodyState) (env : module.Env)
       .ok (r, { st with core := s })
   | _ => enterParams st env kind bt
 
+/-- The validity check of an indexed block type: the index is in range and the function type is
+within the limits. -/
 def checkBlock (env : module.Env) (bt : signature.BlockType) :
     Result (core.result.Result Unit error.OpError) := do
   match bt with
@@ -47,6 +61,7 @@ def checkBlock (env : module.Env) (bt : signature.BlockType) :
       code.check_func_type ft
   | _ => .ok (.Ok ())
 
+/-- `code.enter` unfolds to the block type read, `checkBlock` and `enterArgs`. -/
 theorem enter_eq (st : code.BodyState) (data : Slice U8) (env : module.Env)
     (kind : code.LabelKind) : code.enter st data env kind = (do
       let r ← signature.read_block_type data st.core.pos
@@ -199,6 +214,8 @@ end Itasca.Wasm2
 
 namespace Itasca
 
+/-- A successful `code.enter` decodes a block type whose signature resolves within the limits and
+opens the frame with effect `EnterEffect`. -/
 theorem code.enter.sound (st : code.BodyState) (data : Slice U8) (env : module.Env)
     (form : Wasm2.Frames.Form) (initial : form.Initial)
     (outer segment : List code.StackType)

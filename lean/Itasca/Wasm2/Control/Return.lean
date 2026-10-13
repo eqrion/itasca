@@ -1,6 +1,15 @@
 import Itasca.Wasm2.Control.BranchStep
 import Itasca.Wasm2.LoopDispatch
 
+/-!
+# `return`
+
+Soundness and completeness of `Wasm2.returnStep`, the `return` arm of the extracted body loop.
+`returnStep.prefix` extends a `TypedPrefix` across an accepted return, `returnStep.complete`
+accepts when the operands match the function's result vector, and `Pending.return_` shows that the
+`return` opcode (`0x0f`) preserves `Pending`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
@@ -40,6 +49,7 @@ theorem returnStep.prefix (st : code.BodyState) (env : module.Env) (index : U32)
     exact ⟨(.Ok (), ⟨s'⟩), by simp [returnStep, hr, hm],
       fun _ => ⟨by simpa [hv', hb] using hmv, hmc, by simp [hmc, hctrls], hmp.trans hp, htyping⟩⟩
 
+/-- Operands that realize the function's results make `returnStep` accept. -/
 theorem returnStep.complete (st : code.BodyState) (env : module.Env) (index : U32)
     (results : List types.ValueType) (cs : List code.Ctrl) (c : code.Ctrl)
     (outer segment : List code.StackType) (before : List valtype)
@@ -61,6 +71,7 @@ theorem returnStep.complete (st : code.BodyState) (env : module.Env) (index : U3
   exact ⟨⟨s⟩, by simp [returnStep, hpop, hm], hc', by simp [hc', hctrls],
     hp'.trans hp, by simpa [hvals, hb] using hv'⟩
 
+/-- The `return` opcode (`0x0f`) preserves `Pending` on success. -/
 theorem Pending.return_ {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x0F#u8) :
     returnStep st env index ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by

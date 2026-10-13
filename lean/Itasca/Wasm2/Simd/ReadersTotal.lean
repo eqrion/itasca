@@ -1,6 +1,15 @@
 import Itasca.Wasm2.Scalar.ReadersTotal
 import Itasca.Visitor.Accepts
 
+/-!
+# Totality of SIMD readers
+
+`@[step]` lemmas showing that the extracted SIMD readers (`code.take_simd_bits`,
+`code.take_simd_lane`, `code.read_simd_signature`, `code.read_simd_lane`, memory loads and stores,
+`code.read_simd_const` and `code.read_simd_shuffle`) never panic. `ReaderPost` is the shared
+postcondition: structural shape, unchanged controls, forward cursor and bounded operand growth.
+-/
+
 open Aeneas Aeneas.Std
 
 set_option maxHeartbeats 2000000

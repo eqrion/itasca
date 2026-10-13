@@ -4,10 +4,11 @@ import Itasca.Visitor.Refinement
 import Itasca.Visitor.StepRefinement
 
 /-!
-Exact visitor replacement for Core 2.0 bulk and SIMD dispatch. Unlike accepting
-transfer, these statements preserve callback rejection, exact immediate values,
-and both final states. They form part of the Core 2.0 trace extension; they do
-not by themselves establish whole-body independent byte provenance.
+# Exact visitor refinement for Wasm 2.0 dispatch
+
+Exact visitor replacement for the extracted `code.step_bulk`, `code.step_extended`,
+`code.step_simd` and `code.step_wasm2`. Unlike accepting transfer in `Wasm2/Visitor/Transfer`,
+these statements preserve callback rejection, exact immediate values and both final states.
 -/
 
 open Aeneas Aeneas.Std
@@ -71,8 +72,8 @@ namespace Itasca
 
 open VisitorTrace Wasm2
 
-/-- Exact replacement for sign-extension, saturating conversion, and inherited
-scalar callbacks, preserving errors and the full post-operator state. -/
+/-- Exact replacement for sign-extension, saturating conversion and Wasm 1.0 scalar
+callbacks, preserving errors and the full post-operator state. -/
 theorem code.step_extended.refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
@@ -158,8 +159,8 @@ namespace Itasca.Wasm2.Simd
 
 open VisitorTrace
 
-/-- Exact refinement covers all SIMD classes and retains raw constants, shuffle
-words, memory arguments, and lane indices delivered to callbacks. -/
+/-- Exact refinement covers all SIMD classes and preserves the raw constants, shuffle
+words, memory arguments and lane indices delivered to callbacks. -/
 theorem subStep.refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
@@ -253,8 +254,8 @@ namespace Itasca
 
 open VisitorTrace Wasm2
 
-/-- Exact callback refinement for the complete Core 2.0 scalar/reference/SIMD
- dispatcher, preserving reader failure, callback rejection, and both states. -/
+/-- Exact callback refinement for the complete `code.step_wasm2` dispatcher (scalar, reference,
+bulk and SIMD), preserving reader failure, callback rejection and both states. -/
 theorem code.step_wasm2.refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)

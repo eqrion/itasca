@@ -1,12 +1,22 @@
 import Itasca.Wasm2.References.Readers
 import Itasca.Wasm2.FixedOperands
 
+/-!
+# Operand factorization of reference readers
+
+Each extracted `code.read_ref_null`, `code.read_table_get`, `code.read_table_set`,
+`code.read_table_grow`, `code.read_table_size`, `code.read_table_fill` and
+`code.read_typed_select` equals `Wasm2.metadataOperands` applied to its metadata decoder, which
+is the decoder followed by the fixed pop and push of `Simd.readFixed`.
+`code.read_ref_is_null.segment` gives the typing of the polymorphic null test.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
 
-/-- A checked metadata reader followed by a fixed stack effect. This adapter
-retains the original metadata for the instruction's explicit visitor hook. -/
+/-- A checked metadata reader followed by a fixed stack effect. The result keeps the decoded
+metadata for the instruction's visitor hook. -/
 def metadataOperands {A B : Type}
     (decode : Result (core.result.Result A error.OpError × code.OpIterState))
     (pops : A → List types.ValueType) (output : A → Option types.ValueType)

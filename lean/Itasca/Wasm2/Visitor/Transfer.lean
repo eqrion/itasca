@@ -4,22 +4,35 @@ import Itasca.Wasm2.Scalar.Complete
 import Itasca.Wasm2.Soundness
 import Itasca.Wasm2.Completeness
 
+/-!
+# Visitor transfer for the body loop
+
+`body.transfer` shows that one successful iteration of the extracted body loop transfers to a
+replacement visitor with accepting callbacks, with the same validator state. This lifts to the
+whole loop (`code.body_loop_loop.wasm2_accepted_transfer`) and to
+`code.validate_multi_value_body_with.accepted_transfer`, which includes the size guard and
+initialization.
+-/
+
 open Aeneas Aeneas.Std Result ControlFlow
 
 namespace Itasca.Wasm2.Visitor
 
+/-- Drops the visitor state from the result of one body iteration. -/
 def bodyObserve {V : Type} :
     ControlFlow (V × code.BodyState) (core.result.Result Unit error.OpError × V) →
     ControlFlow code.BodyState (core.result.Result Unit error.OpError)
   | .cont (_, s) => .cont s
   | .done (r, _) => .done r
 
+/-- A body iteration result that continues or returns `Ok ()`. -/
 def bodyGood {V : Type} (cf :
     ControlFlow (V × code.BodyState) (core.result.Result Unit error.OpError × V)) : Prop :=
   match cf with
   | .cont _ => True
   | .done (r, _) => r = .Ok ()
 
+/-- One iteration of the extracted body loop at `.Wasm2`. -/
 abbrev body {V : Type} (visitor : code.OpVisitor V) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (v : V) (st : code.BodyState) :=
   code.body_loop_loop.body visitor data env ctx index .Wasm2 v st

@@ -2,14 +2,25 @@ import Itasca.Wasm2.Trace.Step
 import Itasca.Wasm2.Trace.BodyRefinement
 import Itasca.Wasm2.Visitor.Body
 
+/-!
+# Callback traces of Wasm 2.0 body validation
+
+Top-level results for `code.validate_multi_value_body_with` (the extracted name says "multi_value"
+but it validates all of Wasm 2.0). `trace` gives exact byte provenance for every ordinary return,
+`trace_sound` shows that accepted callbacks spell an independently encoded, SpecTec-typed body
+(`AcceptedBody`), and `trace_complete` shows that every such body forces the complete callback
+sequence. `instrument_trace` and `recorder_total` show that instrumenting a visitor or running
+the recorder yields these traces without changing the validation result.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.CallbackTrace
 
 open VisitorTrace
 
-/-- The accepted Core 2.0 callbacks spell the same independently encoded and
-SpecTec-typed body, retaining indexed block signatures and declared references. -/
+/-- The accepted callbacks spell the same independently encoded and SpecTec-typed body, with
+indexed block signatures and declared references. -/
 def AcceptedBody (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (index : U32) (observations : List Observation) : Prop :=
   AllAccepted observations ∧ ∃ ft tokens ops next,
@@ -24,9 +35,9 @@ namespace Itasca
 
 open VisitorTrace
 
-/-- Every ordinary Core 2.0 body return has exact callback byte provenance.
-A rejected final table may be partial; an observed rejecting callback is retained
-and no callback follows it. No valid-input or total-callback premise is needed. -/
+/-- Every ordinary Wasm 2.0 body return has exact callback byte provenance.
+A rejected final table may be partial; an observed rejecting callback is the last
+one recorded. No valid-input or total-callback premise is needed. -/
 theorem code.validate_multi_value_body_with.trace {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (records : Records visitor observe)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
@@ -38,7 +49,7 @@ theorem code.validate_multi_value_body_with.trace {V : Type} (visitor : code.OpV
     (Wasm2.CallbackTrace.steps visitor observe records data env ctx.locals ctx index rfl)
     v v' result run
 
-/-- Accepted callback syntax and generated typing refer to the same Core 2.0
+/-- Accepted callback syntax and generated typing refer to the same Wasm 2.0
 body, by uniqueness of the independent byte grammar. -/
 theorem code.validate_multi_value_body_with.trace_sound {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (records : Records visitor observe)
@@ -58,7 +69,7 @@ theorem code.validate_multi_value_body_with.trace_sound {V : Type} (visitor : co
   exact ⟨observations, log, accepted, ft, tokens, ops, next, entry, chunks,
     endpos, hsyntax, typed, declared⟩
 
-/-- Independently encoded and typed Core 2.0 bodies force a complete callback
+/-- Independently encoded and typed Wasm 2.0 bodies force a complete callback
 trace for accepting recording visitors within the documented resource bounds. -/
 theorem code.validate_multi_value_body_with.trace_complete {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (records : Records visitor observe)
@@ -76,8 +87,8 @@ theorem code.validate_multi_value_body_with.trace_complete {V : Type} (visitor :
     visitor observe records data env ctx index v v' run
   exact ⟨v', observations, run, log, trace⟩
 
-/-- Instrument an ordinary Core 2.0 execution without changing its result or
-underlying visitor state. The actual added observations satisfy byte provenance. -/
+/-- Instrumenting an ordinary Wasm 2.0 execution does not change its result or
+underlying visitor state. The added observations satisfy byte provenance. -/
 theorem code.validate_multi_value_body_with.instrument_trace {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32) (v : V)
     (log : List Observation) (result : BodyResult) (v' : V)
@@ -94,7 +105,7 @@ theorem code.validate_multi_value_body_with.instrument_trace {V : Type} (visitor
   have equal : added = observations := List.append_cancel_left equal_log
   exact ⟨added, instrumented, equal ▸ trace⟩
 
-/-- The concrete recorder returns a byte-provenance trace on arbitrary Core 2.0
+/-- The concrete recorder returns a byte-provenance trace on arbitrary
 input, including malformed instructions and reserved opcodes. -/
 theorem code.validate_multi_value_body_with.recorder_total (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) : ∃ result observations,

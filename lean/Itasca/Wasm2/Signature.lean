@@ -1,5 +1,14 @@
 import Itasca.Support.LiteralDispatch
 
+/-!
+# Signature descriptors
+
+`Wasm2.resolve` gives the list of value types denoted by a `signature.ResultType` descriptor in a
+module environment. Specs of the extracted `signature.ResultType.len` and
+`signature.ResultType.get` relate them to `resolve`, and the `complete` versions give acceptance
+from independent premises.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2

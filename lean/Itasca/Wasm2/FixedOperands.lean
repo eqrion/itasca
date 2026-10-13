@@ -1,11 +1,20 @@
 import Itasca.Handler.ScalarComplete
 import Itasca.Wasm2.Prefix
 
+/-!
+# Fixed-arity operand checking
+
+`Wasm2.Simd.readFixed` models the pop-then-push operand checking of handlers with a fixed
+signature, independently of opcode dispatch. `readFixed.segment` gives its totality and stack
+effect (`FixedEffect`), `readFixed.complete` shows that it accepts every stack that fits the
+inputs, and `FixedEffect.wasm2_prefix` extends a `TypedPrefix` by a typed instruction.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Simd
 
-/-- Fixed arity operand checking, normalized independently of SIMD dispatch.
+/-- Fixed arity operand checking, normalized independently of opcode dispatch.
 Inputs are listed in pop order; there is at most one concrete result. -/
 def readFixed (st : code.OpIterState) (inputs : List types.ValueType)
     (output : Option types.ValueType) :
@@ -23,9 +32,11 @@ def readFixed (st : code.OpIterState) (inputs : List types.ValueType)
       | .Err e => .ok (.Err e, s)
       | .Ok _ => readFixed s rest output
 
+/-- The spec input types for pop-order `inputs`, in stack order. -/
 def inputTypes (inputs : List types.ValueType) : List valtype :=
   inputs.reverse.map Translate.valueType
 
+/-- The spec result types of an optional output. -/
 def outputTypes (output : Option types.ValueType) : List valtype :=
   output.toList.map Translate.valueType
 
@@ -37,6 +48,7 @@ def FixedEffect (poly : Bool) (before : List code.StackType)
     ts = front ++ outputTypes output ∧
     Sequence.Realizes poly before (front ++ inputTypes inputs)
 
+/-- A typed instruction with the fixed effect extends a typed prefix. -/
 theorem FixedEffect.wasm2_prefix {poly before inputs output after}
     (h : FixedEffect poly before inputs output after)
     (C : context) (hC : wf_context C) (initial : List valtype) (ops : List instr) (op : instr)
@@ -49,7 +61,8 @@ theorem FixedEffect.wasm2_prefix {poly before inputs output after}
   exact ⟨front ++ inputTypes inputs, hb,
     .frame C [op] front _ _ (.instr C op _ _ ht hC hw) hC (by simpa [Forall] using hw)⟩
 
-/-- Totality, unchanged controls/cursor, and the successful fixed stack effect. -/
+/-- `readFixed` is total, leaves the control frames and cursor unchanged, and on success has the
+fixed stack effect. -/
 theorem readFixed.segment (st : code.OpIterState) (inputs : List types.ValueType)
     (output : Option types.ValueType) (outer segment : List code.StackType)
     (hv : st.vals.val = outer ++ segment) (hb : (Control.base st).val = outer.length)

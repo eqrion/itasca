@@ -2,14 +2,27 @@ import Itasca.Binary.Wasm2.Encoding
 import Itasca.Wasm2.Control.Frame
 import Itasca.Wasm2.Prefix
 
+/-!
+# Typed frame zipper
+
+The zipper that relates the extracted control stack (`code.BodyState.core.ctrls` and
+`code.BodyState.blocks`) to the syntax and typing of the body read so far. A `Saved` frame records
+the typed prefix of one open construct, `Spine` chains the suspended parents, and `Open` is the
+control invariant. `Open.enter_child`, `Open.else_`, `Open.close` and `Open.finish_body` show how
+opening a block, switching to `else`, closing a frame and closing the body maintain it.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Frames
 
+/-- The kind of an open construct. An `else_` frame remembers the tokens and instructions of its
+`then` arm. -/
 inductive Form where
   | body | block | loop | then_
   | else_ (thenTokens : List Token) (thenOps : List instr)
 
+/-- The runtime label kind of a frame form. -/
 def Form.kind : Form → code.LabelKind
   | .body => .Body
   | .block => .Block
@@ -24,17 +37,22 @@ def Form.params (form : Form) (ins : List types.ValueType) : List types.ValueTyp
   | .body => []
   | _ => ins
 
+/-- The operands consumed on entry: the block parameters, plus the `i32` condition of `if`. -/
 def Form.args (form : Form) (ins : List types.ValueType) : List valtype :=
   ins.map Translate.valueType ++ match form with
   | .then_ | .else_ _ _ => [.I32]
   | _ => []
 
+/-- The types a branch to the frame carries: the parameters for `loop`, the results otherwise. -/
 def Form.label (form : Form) (ins outs : List types.ValueType) : List valtype :=
   (match form with | .loop => ins | _ => outs).map Translate.valueType
 
+/-- The typing context inside a frame: its label pushed onto the enclosing context. -/
 def enter (C : context) (form : Form) (ins outs : List types.ValueType) : context :=
   Control.labelContext (form.label ins outs) ++ C
 
+/-- The already completed material of a frame is well typed. Only an `else_` frame has any: its
+`then` arm. -/
 def Form.Valid (C : context) (ins outs : List types.ValueType) : Form → Prop
   | .else_ tokens ops => Emits tokens ops ∧
       Instrs_ok (enter C (.else_ tokens ops) ins outs) ops
@@ -42,6 +60,8 @@ def Form.Valid (C : context) (ins outs : List types.ValueType) : Form → Prop
           (.mk_list (outs.map Translate.valueType)))
   | _ => True
 
+/-- A frame of the zipper: its runtime control entry, block type, resolved signature, form, and
+the instructions, operand stack and tokens read so far. -/
 structure Saved where
   ctrl : code.Ctrl
   bt : signature.BlockType
@@ -52,6 +72,8 @@ structure Saved where
   vals : List code.StackType
   tokens : List Token
 
+/-- The static facts about a frame: its control entry matches its form, its signature resolves
+from its block type, and its completed material is valid and emitted by its tokens. -/
 structure Header (env : module.Env) (C : context) (f : Saved) : Prop where
   kind : f.ctrl.kind = f.form.kind
   placeholder : f.ctrl.block_type = .Empty
@@ -112,6 +134,7 @@ theorem Spine.returns {env root parents C outer form ins}
   | root => rfl
   | push _ _ _ _ _ _ _ _ _ _ _ ih => exact ih
 
+/-- The label types of a list of frames, innermost first. -/
 def labels (frames : List Saved) : List resulttype :=
   frames.reverse.map (fun f => .mk_list (f.form.label f.ins f.outs))
 
@@ -183,6 +206,7 @@ theorem Closed.typed {env C f op}
     rw [hf] at hp
     exact .if C _ _ _ _ _ hbt hp.2 hbody hC hwf (Control.labelContext_wf _)
 
+/-- The tokens emitted when a frame is opened (and, for `else_`, its `then` arm is closed). -/
 def Form.opening (form : Form) (bt : signature.BlockType) : List Token :=
   match form with
   | .body => []
@@ -191,8 +215,10 @@ def Form.opening (form : Form) (bt : signature.BlockType) : List Token :=
   | .then_ => [.if_ bt]
   | .else_ tokens _ => [.if_ bt] ++ tokens ++ [.else_]
 
+/-- The tokens of a frame from its opening onwards. -/
 def Saved.trace (f : Saved) : List Token := f.form.opening f.bt ++ f.tokens
 
+/-- The tokens read so far across all open frames, outermost first. -/
 def trace (parents : List Saved) (current : Saved) : List Token :=
   parents.flatMap Saved.trace ++ current.trace
 
@@ -255,6 +281,8 @@ theorem Spine.change_form {env root parents C outer before after ins}
     exact .push ps pc out parent after ins spine header base
       (by simpa [hargs] using resume) (fun heq => notBody (hbody.mpr heq))
 
+/-- The frame after `else`: the `then` arm is saved in the form and the arm restarts with the
+block parameters. -/
 def Saved.nextElse (current : Saved) : Saved :=
   { current with
     ctrl := { current.ctrl with kind := .Else, polymorphic_base := false }
@@ -287,13 +315,17 @@ theorem Open.else_ {env root st st' parents current}
     · simpa [vals, base, Saved.nextElse] using hvals
   · simp [trace, Saved.trace, Saved.nextElse, hform, Form.opening, List.append_assoc]
 
+/-- A newly opened frame with the given stack base and an empty body. -/
 def Saved.fresh (base : Usize) (form : Form) (bt : signature.BlockType)
     (ins outs : List types.ValueType) : Saved :=
   { ctrl := ⟨form.kind, .Empty, bt, base, false⟩, bt, ins, outs, form,
     ops := [], vals := (form.params ins).map code.StackType.Val, tokens := [] }
 
+/-- The forms that `block`, `loop` and `if` open. -/
 def Form.Initial (form : Form) : Prop := form = .block ∨ form = .loop ∨ form = .then_
 
+/-- Opening a `block`, `loop` or `if` pushes a fresh frame and keeps `Open`, extending the trace
+by the form's opening token. -/
 theorem Open.enter_child {env root st st' parents current}
     (h : Open env root st parents current) (hroot : wf_context root)
     (form : Form) (bt : signature.BlockType) (ins outs : List types.ValueType)
@@ -329,6 +361,7 @@ theorem Open.enter_child {env root st st' parents current}
     · simpa [vals, pbase, Saved.fresh, hp, List.append_assoc] using hvals
   · simp [trace, Saved.trace, Saved.fresh, List.flatMap_append, List.append_assoc]
 
+/-- The state with a single fresh body frame satisfies `Open`. -/
 theorem Open.start (env : module.Env) (root : context) (hroot : wf_context root)
     (st : code.BodyState) (bt : signature.BlockType) (ins outs : List types.ValueType)
     (hin : resolve env (inputs bt) = some ins) (hout : resolve env (outputs bt) = some outs)
@@ -345,6 +378,8 @@ theorem Spine.body {env root parents C outer ins}
   | root => exact ⟨rfl, rfl, rfl⟩
   | push _ _ _ _ _ _ _ _ _ _ notBody => exact False.elim (notBody rfl)
 
+/-- A body frame whose operands realize the result type is the only frame, its tokens form a
+body, and its instructions are typed by `Instrs_ok`. -/
 theorem Open.finish_body {env root st parents current}
     (h : Open env root st parents current) (hform : current.form = .body)
     (hresults : Sequence.Realizes current.ctrl.polymorphic_base current.vals
@@ -377,6 +412,7 @@ theorem Spine.bounds {env root parents C outer form ins}
         omega
       · simp [base]
 
+/-- `Open` implies the structural `Shape` invariant of the body state. -/
 theorem Open.shape {env root st parents current} (h : Open env root st parents current) :
     Shape st := by
   obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, vals⟩ := h
@@ -428,6 +464,7 @@ theorem resolved_labelAt (env : module.Env) (st : code.BodyState) (frames : List
   · have hout : (labels frames).length ≤ depth := by simp [labels]; omega
     simp [labelAt, hb, hd, List.getElem?_eq_none hout]
 
+/-- Resolving a branch depth in the body state gives the label types of the zipper's frames. -/
 theorem Open.labels {env root st parents current}
     (h : Open env root st parents current) (depth : Nat) :
     ((labelAt st depth).bind (resolve env)).map
@@ -458,6 +495,7 @@ def bodyType (parents : List Saved) (current : Saved) : Option signature.BlockTy
 @[simp]
 theorem bodyType_root (current : Saved) : bodyType [] current = some current.bt := rfl
 
+/-- The frame after one more instruction, with the given operand stack and polymorphism flag. -/
 def Saved.advance (current : Saved) (token : Token) (op : instr)
     (poly : Bool) (vals : List code.StackType) : Saved :=
   { current with
@@ -486,6 +524,7 @@ theorem bodyType_close (grandparents : List Saved) (parent current : Saved) (op 
         bodyType (grandparents ++ [parent]) current := by
   cases grandparents <;> rfl
 
+/-- `Open` does not depend on the byte cursor. -/
 theorem Open.with_pos {env root st parents current} (h : Open env root st parents current)
     (pos : Usize) : Open env root { st with core := { st.core with pos := pos } } parents current := h
 

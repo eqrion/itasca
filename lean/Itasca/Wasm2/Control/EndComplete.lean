@@ -1,5 +1,13 @@
 import Itasca.Wasm2.Control.EndSound
 
+/-!
+# Completeness of frame closing
+
+Completeness of the extracted `code.end_frame` for `end` and `else`. `finishFrame.complete`
+accepts when the operand segment realizes the declared results, and `code.end_frame.complete`
+accepts when in addition the frame kind permits the close and an omitted else is the identity.
+-/
+
 open Aeneas Aeneas.Std Result
 
 namespace Itasca.Wasm2

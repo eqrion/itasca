@@ -1,6 +1,14 @@
 import Itasca.Wasm2.Invariant
 import Itasca.Wasm2.EmptyVisitorLoop
 
+/-!
+# Opcode dispatch in the body loop
+
+Proof-side view of one iteration of the extracted body loop with the empty visitor. `step` is
+the dispatch on one opcode, `loopBody` the whole iteration, and `loopBody_eq` unfolds the
+iteration into the end-of-body check, `reader.read_byte` and `step`.
+-/
+
 open Aeneas Aeneas.Std Result
 
 namespace Itasca.Wasm2
@@ -15,8 +23,8 @@ def returnStep (st : code.BodyState) (env : module.Env) (index : U32) :
     let ois ← code.mark_unreachable ois
     .ok (.Ok (), { st with core := ois })
 
-/-- Proof adapter for one opcode of the actual multi-value loop. Its exact
-factorization is checked below; this is not a separate validity judgment. -/
+/-- Proof adapter for one opcode of the extracted Wasm 2.0 body loop. Its exact factorization is
+checked by `loopBody_eq`; it is not a separate validity judgment. -/
 def step (st : code.BodyState) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (opcode : U8) :
     Result (core.result.Result Unit error.OpError × code.BodyState) := do
@@ -40,20 +48,25 @@ def step (st : code.BodyState) (data : Slice U8) (env : module.Env)
         st.core data env ctx opcode ()
       .ok (r, { st with core := ois })
 
+/-- The extracted body loop with the empty visitor. -/
 abbrev run (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (index : U32) (st : code.BodyState) :=
   Wasm2.emptyVisitorLoop data env index st ctx.locals ctx.results ()
 
+/-- One iteration of `run`. -/
 abbrev loopBody (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (index : U32) (st : code.BodyState) :=
   Wasm2.emptyVisitorLoop.body data env index ctx.locals ctx.results st ()
 
+/-- The loop control flow after one opcode: continue on success and stop with the error otherwise. -/
 def continueStep (r : core.result.Result Unit error.OpError × code.BodyState) :
     ControlFlow (code.BodyState × code.EmptyOpVisitor) (core.result.Result Unit error.OpError) :=
   match r.1 with
   | .Ok () => .cont (r.2, ())
   | .Err e => .done (.Err e)
 
+/-- One loop iteration stops at the end of the body (with `TrailingBytes` if bytes remain) and
+otherwise reads an opcode and runs `step`. -/
 theorem loopBody_eq (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (index : U32) (st : code.BodyState) :
     loopBody data env ctx index st =

@@ -1,12 +1,20 @@
 import Itasca.Support.BodyState
 
+/-!
+# Body loop with the empty visitor
+
+Proof-side views of the extracted visiting loop `code.body_loop_loop` instantiated with
+`code.EmptyOpVisitor` for Wasm 2.0. `Wasm2.emptyVisitorLoop.body` drops the visitor from the loop
+body, `Wasm2.emptyVisitorLoop.body_eq` relates it to the extracted body, and
+`code.validate_multi_value_body.eq_core` relates the public validator to `code.bodyCore`.
+-/
+
 open Aeneas Aeneas.Std Result ControlFlow
 
 namespace Itasca
 
-/-! Checked projections of the actual visiting body loop. The normalized body
-keeps semantic proofs independent of the empty visitor's bookkeeping. -/
-
+/-- One iteration of the extracted loop body with the visitor argument kept only as a pass-through
+value, so semantic proofs do not track the empty visitor. -/
 def Wasm2.emptyVisitorLoop.body
   (data : Slice U8) (env : module.Env) (type_index : U32)
   (locals : alloc.vec.Vec types.ValueType)
@@ -210,6 +218,8 @@ def Wasm2.emptyVisitorLoop.body
           Unit (core.convert.FromSame error.OpError) residual
       ok (done r1)
 
+/-- The extracted loop `code.body_loop_loop` run with the empty visitor and `.Wasm2`, returning
+only the validation result. -/
 def Wasm2.emptyVisitorLoop
   (data : Slice U8) (env : module.Env) (type_index : U32)
   (st : code.BodyState)
@@ -271,6 +281,8 @@ theorem Wasm2.emptyVisitorLoop.body_eq (data : Slice U8) (env : module.Env)
         cases v
         cases r <;> simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
+/-- The body of `code.validate_multi_value_body` with the loop replaced by
+`Wasm2.emptyVisitorLoop`. -/
 def code.bodyCore
   (data : Slice U8) (env : module.Env)
   (locals : alloc.vec.Vec types.ValueType) (type_index : U32)
@@ -310,7 +322,8 @@ def code.bodyCore
           Unit (core.convert.FromSame error.OpError) residual
 
 
- theorem code.validate_multi_value_body.eq_core (data : Slice U8) (env : module.Env)
+ /-- The public validator factors through `code.bodyCore`. -/
+theorem code.validate_multi_value_body.eq_core (data : Slice U8) (env : module.Env)
     (locals : alloc.vec.Vec types.ValueType) (index : U32) :
     code.validate_multi_value_body data env locals index = code.bodyCore data env locals index := by
   unfold code.validate_multi_value_body code.validate_multi_value_body_with code.validate_body_with_profile code.initial_state code.bodyCore

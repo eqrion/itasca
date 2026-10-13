@@ -2,12 +2,20 @@ import Itasca.Wasm2.Visitor.BrTable
 import Itasca.Wasm2.Step.Visitor
 import Itasca.Visitor.StepLift
 
+/-!
+# Visitor transfer for one Wasm 2.0 step
+
+`step_transfer` shows that a successful `code.step_profile` at `.Wasm2` under one visitor
+succeeds under any replacement visitor with accepting callbacks, ending in the same validator
+state.
+-/
+
 open Aeneas Aeneas.Std Result ControlFlow
 
 namespace Itasca.Wasm2.Visitor
 
 set_option maxHeartbeats 2000000 in
-/-- Accepting hooks preserve successful multi-value steps and the exact
+/-- Accepting hooks preserve successful Wasm 2.0 steps and the exact
 validator state. Scalar steps depend on locals, not the context result vector. -/
 theorem step_transfer {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (ha : FullVisitor.Accepts replacement)

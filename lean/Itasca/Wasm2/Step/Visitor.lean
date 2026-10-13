@@ -1,12 +1,20 @@
 import Itasca.Wasm2.Bulk.Visitor
 import Itasca.Wasm2.Simd.Visitor
 
+/-!
+# Visitor transfer for `step_wasm2`
+
+`Wasm2.Visitor.wasm2_transfer` shows that a successful `code.step_wasm2` run under any visitor
+can be replayed with a replacement visitor whose callbacks accept, ending in the same operand
+state. It combines the SIMD, bulk, reference, table and `code.step_extended` transfers.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Visitor
 
 /-- Replacing callbacks by accepting callbacks preserves every successful
-Core 2.0 step and its exact final validator state. -/
+non-control Wasm 2.0 step and its exact final validator state. -/
 theorem wasm2_transfer {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (ha : FullVisitor.Accepts replacement)
     (st final : code.OpIterState) (data : Slice U8) (env : module.Env)

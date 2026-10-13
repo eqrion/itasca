@@ -1,5 +1,14 @@
 import Itasca.Wasm2.Trace.ControlRecords
 
+/-!
+# Callback byte provenance for `br_table`
+
+`TableSuffix` describes the callbacks of the remaining targets of a branch table, and
+`table_loop_records` shows that the extracted `code.branch_table_with_loop` produces one for every
+ordinary return. `table_records` adds the count and default target, and `step_br_table` gives the
+`ProfileStepRecords` for opcode `0x0e`.
+-/
+
 open Aeneas Aeneas.Std Result ControlFlow
 
 namespace Itasca.Wasm2.CallbackTrace
@@ -33,8 +42,8 @@ theorem TableSuffix.prepend {data start middle depth remaining observations resu
       (by simpa using count) fallback (by simpa [AllAccepted] using outcomes)
 
 set_option maxHeartbeats 1500000 in
-/-- Ordinary returns of the actual multi-value table loop retain all observed
-label bytes, including a rejecting label or a label preceding a suffix error. -/
+/-- Ordinary returns of the `br_table` target loop record the bytes of every observed label,
+including a rejecting label or a label preceding a suffix error. -/
 theorem table_loop_records {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (records : Records visitor observe)
     (st : code.BodyState) (data : Slice U8) (env : module.Env)

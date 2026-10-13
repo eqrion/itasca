@@ -1,6 +1,15 @@
 import Itasca.Binary.Wasm2.References
 import Itasca.Wasm2.References.ReadersTotal
 
+/-!
+# Specifications of reference and table readers
+
+Specs of the extracted `code.take_reference_type`, `code.take_value_type`, `code.take_table`,
+`code.take_element`, `code.take_data_index`, `code.read_bulk_memory` and `code.read_ref_func`.
+A successful read leaves the operand and control stacks unchanged, consumes exactly the bytes of
+the independent encoding, and establishes the environment bounds the typing rules need.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca

@@ -2,6 +2,14 @@ import Itasca.Wasm2.Bulk.Dispatch
 import Itasca.Wasm2.References.ReadersTotal
 import Itasca.Wasm2.NumericExt.Total
 
+/-!
+# Totality of bulk instructions
+
+`bulk_total` shows that `code.step_bulk` never panics under a total visitor, and preserves
+`Control.Shape`, the control stack depth and cursor monotonicity for arbitrary immediate bytes.
+`run_reader_total` lifts a reader's termination contract through its callback.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2

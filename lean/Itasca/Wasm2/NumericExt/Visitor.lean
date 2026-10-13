@@ -1,6 +1,14 @@
 import Itasca.Wasm2.NumericExt.Total
 import Itasca.Visitor.StepLift
 
+/-!
+# Numeric extension visitor transfer
+
+`Wasm2.Visitor.extended_transfer` shows that a successful `code.step_extended` run under any
+visitor can be replayed with a replacement visitor whose callbacks accept, ending in the same
+operand state.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Visitor

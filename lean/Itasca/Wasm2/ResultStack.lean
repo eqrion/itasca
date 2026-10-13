@@ -1,10 +1,21 @@
 import Itasca.Wasm2.Signature
 import Itasca.Handler.Stack
 
+/-!
+# Descriptor stack operations
+
+Specs of the extracted operand-stack operations that take a `signature.ResultType` descriptor:
+`code.check_func_type`, `code.push_results` and `code.pop_results`. `push_results.spec` and
+`pop_results.concrete` and `.polymorphic` describe their effect on the stack for a resolved
+descriptor, and the semantic and totality statements are in `Wasm2/ResultStackSemantics`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
+/-- `code.check_func_type` accepts exactly the function types within the parameter and result
+limits and reports which limit is exceeded otherwise. -/
 @[step]
 theorem code.check_func_type.spec (ft : types.FuncType) :
     code.check_func_type ft ⦃ r =>

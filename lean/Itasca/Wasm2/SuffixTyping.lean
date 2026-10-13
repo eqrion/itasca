@@ -2,6 +2,16 @@ import Itasca.Wasm2.Suffix
 import Itasca.Spec.TypingInversion
 import Itasca.Handler.Select
 
+/-!
+# Suffix compatibility and typing
+
+Connects the suffix relation `Wasm2.Suffix` to the typing rules. `Fits.realizes` and
+`Fits.of_realizes` relate it to the backward stack interpretation, `Suffix.common_subtype` gives
+the common-subtype premise of the generated Wasm 2.0 `br_table` rule, and
+`code.check_suffix.wasm_spec` and `.complete_of_subtype` are the declarative contract of
+`code.check_suffix`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2

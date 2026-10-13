@@ -2,6 +2,16 @@ import Itasca.Wasm2.Trace.BodyRefinement
 import Itasca.Wasm2.Trace.Basic
 import Itasca.Wasm2.Control.EnterStep
 
+/-!
+# Byte provenance for control handlers
+
+Byte lemmas for the extracted control helpers (`code.enter_info.bytes`,
+`code.read_label_info.bytes`, `code.branch_info.bytes`), and `bodyRun.trace`, which gives an exact `StepTrace` for any control
+handler followed by one named callback. `dispatch_block`, `dispatch_loop`, `dispatch_if`,
+`dispatch_else`, `dispatch_end`, `dispatch_br`, `dispatch_br_if`, `dispatch_call` and
+`dispatch_call_indirect` factor the profile dispatcher into such handlers.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca

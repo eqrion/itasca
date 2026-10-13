@@ -1,6 +1,15 @@
 import Itasca.Wasm2.ResultStack
 import Itasca.Handler.StackComplete
 
+/-!
+# Descriptor stack operations, semantics and totality
+
+Semantic specs of `code.pop_results` and `code.push_results`. `code.pop_results.realizes` relates
+a successful pop to the backward stack interpretation, `.complete` gives acceptance from
+independent stack compatibility, and `.total` and `code.push_results.total` show that neither
+panics or diverges on arbitrary descriptors and environments.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca

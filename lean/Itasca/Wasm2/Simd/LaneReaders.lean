@@ -1,6 +1,14 @@
 import Itasca.Wasm2.Simd.Operands
 import Itasca.Wasm2.Simd.Carry
 
+/-!
+# Lane reader factorization
+
+`laneReader` is a lane-index decode followed by `carryFixed`, and `lane_fixed` shows that the
+extracted `code.read_simd_lane` equals it. `laneInputs` and `laneOutput` give the stack effect of
+extract and replace lane operations.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Simd
@@ -18,12 +26,15 @@ theorem carryFixed.cons {A : Type} (a : A) (st : code.OpIterState) (ty : types.V
   obtain ⟨r, s⟩ := pair
   cases r <;> simp
 
+/-- Operand types of a lane operation: a vector, preceded by the replacement scalar if any. -/
 def laneInputs (ty : types.ValueType) (replace : Bool) : List types.ValueType :=
   if replace then [ty, .V128] else [.V128]
 
+/-- Result type of a lane operation: a vector when replacing, otherwise the scalar. -/
 def laneOutput (ty : types.ValueType) (replace : Bool) : Option types.ValueType :=
   if replace then some .V128 else some ty
 
+/-- Reads a lane index below `count` and applies the lane operation's stack effect. -/
 def laneReader (st : code.OpIterState) (data : Slice U8)
     (ty : types.ValueType) (count : U8) (replace : Bool) :
     Result (core.result.Result U8 error.OpError × code.OpIterState) := do

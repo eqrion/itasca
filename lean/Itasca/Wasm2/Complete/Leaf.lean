@@ -2,12 +2,22 @@ import Itasca.Wasm2.NumericExt.Complete
 import Itasca.Wasm2.Scalar.Complete
 import Itasca.Wasm2.Complete.Program
 
+/-!
+# Leaf contracts and scalar completeness
+
+`LeafContract` is the interface a leaf instruction family must meet: given an independent
+encoding and a generated typing, `Wasm2.step` accepts with a byte-weighted capacity bound.
+`atom_of_leaf` turns a `LeafContract` into an `AtomProgram`. This file discharges the contract for
+the scalar family (`Frame.scalar`, `scalar_leaf`, `scalar_atom`); `classify_plain` splits plain
+instructions into scalar and control cases.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
 
-/-- Read the opcode of an independent token encoding with the actual byte
-reader used by the multi-value body loop. -/
+/-- Reads the opcode of an independent token encoding with the byte reader used by the Wasm 2.0
+body loop. -/
 theorem At.read_byte {data start token next} (h : At data start token next) :
     ∃ opcode pos immediate,
       reader.read_byte data start = .ok (.Ok (opcode, pos)) ∧
@@ -18,8 +28,8 @@ theorem At.read_byte {data start token next} (h : At data start token next) :
   obtain ⟨opcode, imm, hi, ⟨_, hbyte⟩, hs⟩ := h.immediate pos hpos
   exact ⟨opcode, pos, imm, by simpa [hbyte] using hr, hpos, hi, hs⟩
 
-/-- The shared leaf grammar's control cases are exactly branches, return, and
-calls. Structured tokens belong to the separate multi-value grammar. -/
+/-- The control cases of the leaf grammar are branches, `return` and calls. Structured control
+(`block`, `loop`, `if`) is handled through `Token` in `Wasm2/Complete/Control`. -/
 inductive ControlImmediate : U8 → instr → List U8 → Prop where
   | br (idx : U32) {bytes} : Leb128.Encoding bytes idx.val →
       ControlImmediate 0x0C#u8 (.BR (.mk_uN idx.val)) bytes
@@ -64,7 +74,7 @@ end Itasca.Wasm2
 namespace Itasca.Wasm2.Completeness
 
 /-- Scalar dispatch accepts an independently encoded principal typing and
-preserves the current multi-value descriptor. The semantic return vector can
+preserves the current block descriptor. The semantic return vector can
 differ from the runtime scalar context's unused return vector. -/
 theorem Frame.scalar {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx semantic : code.Context) (index : U32) (C : context)

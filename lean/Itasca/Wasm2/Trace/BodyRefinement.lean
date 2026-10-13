@@ -1,18 +1,29 @@
 import Itasca.Wasm2.Trace.ControlRefinement
 import Itasca.Wasm2.Visitor.Transfer
 
+/-!
+# Exact refinement of the body loop
+
+Lifts exact callback refinement to one body iteration (`body.refines`), the body loop
+(`code.body_loop_loop.wasm2_refines`) and `code.validate_multi_value_body_with.refines`, which
+preserves every ordinary outcome including rejection. `instrument_forward` and
+`instrument_backward` show that wrapping a visitor with `instrument` leaves the outcome and
+visitor state unchanged and appends exactly the observed callbacks.
+-/
+
 open Aeneas Aeneas.Std Result ControlFlow
 
 namespace Itasca.Wasm2.Visitor
 
 open VisitorTrace
 
+/-- The visitor state of one body iteration result. -/
 def bodyVisitor {V : Type} :
     ControlFlow (V × code.BodyState) (core.result.Result Unit error.OpError × V) → V
   | .cont (v, _) => v
   | .done (_, v) => v
 
-/-- Exact callback refinement of one body iteration retains both validator and
+/-- Exact callback refinement of one body iteration preserves both validator and
 visitor state, regardless of whether the iteration accepts or rejects. -/
 theorem body.refines {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (related : V → W → Prop)
@@ -63,7 +74,7 @@ namespace Itasca
 
 open VisitorTrace Wasm2.Visitor
 
-/-- The actual Core 2.0 body loop preserves every ordinary result under exact
+/-- The Wasm 2.0 body loop preserves every ordinary result under exact
 callback refinement. The empty visitor supplies structural progress only. -/
 theorem code.body_loop_loop.wasm2_refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
@@ -126,7 +137,7 @@ theorem code.body_loop_loop.wasm2_refines {V W : Type}
             hinv.1 hinv.2.1 hinv.2.2 ht rfl
           exact ⟨w', by simpa only [bind_ok, code.body_loop_loop, Std.uncurry] using hw', hr'⟩
 
-/-- Core 2.0 callback refinement preserves every ordinary public body outcome.
+/-- Callback refinement preserves every ordinary public body outcome.
 No valid-byte, well-typed-context, or total-callback premise is assumed. -/
 theorem code.validate_multi_value_body_with.refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
@@ -158,7 +169,7 @@ theorem code.validate_multi_value_body_with.refines {V W : Type}
       exact code.body_loop_loop.wasm2_refines visitor replacement related hrefines
         data env ctx index st v w hrelated (by scalar_tac) hp.1 hp.2.1 hp.2.2 res v' h
 
-/-- Instrumenting Core 2.0 validation preserves its exact outcome and underlying
+/-- Instrumenting Wasm 2.0 body validation preserves its exact outcome and underlying
 visitor state and appends the actual callbacks, including rejection. -/
 theorem code.validate_multi_value_body_with.instrument_forward {V : Type}
     (visitor : code.OpVisitor V) (data : Slice U8) (env : module.Env)
@@ -175,7 +186,7 @@ theorem code.validate_multi_value_body_with.instrument_forward {V : Type}
   subst out
   exact ⟨added, hw⟩
 
-/-- Removing Core 2.0 instrumentation preserves its exact ordinary outcome and
+/-- Removing instrumentation preserves its exact ordinary outcome and
 the original visitor state; no validity or termination premise is required. -/
 theorem code.validate_multi_value_body_with.instrument_backward {V : Type}
     (visitor : code.OpVisitor V) (data : Slice U8) (env : module.Env)

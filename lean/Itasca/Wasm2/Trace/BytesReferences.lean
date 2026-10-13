@@ -1,5 +1,12 @@
 import Itasca.Wasm2.Trace.Bytes
 
+/-!
+# Byte provenance for reference and table callbacks
+
+`StepRecords` facts for `ref.null`, `ref.is_null`, `ref.func`, `table.get`, `table.set` and typed
+`select`: each callback receives the independently decoded instruction and its exact byte span.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.CallbackBytes

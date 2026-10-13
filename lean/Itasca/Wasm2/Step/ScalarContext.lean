@@ -1,10 +1,20 @@
 import Itasca.Generated.Funs
 
+/-!
+# Scalar context independence
+
+`Wasm2.controlOpcodes` lists the opcodes that the body loop dispatches itself, and
+`scalar_context` shows that the shared `code.step` arms for all other opcodes use only the locals
+of the context.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
 
-/-- Opcodes whose control effects are handled by the multi-value dispatcher. -/
+/-- Opcodes whose control effects are handled by the body loop rather than `code.step`:
+`block`, `loop`, `if`, `else`, `end`, `br`, `br_if`, `br_table`, `return`, `call` and
+`call_indirect`. -/
 def controlOpcodes : List Nat := [2, 3, 4, 5, 11, 12, 13, 14, 15, 16, 17]
 
 /-- Shared scalar dispatch observes local types but never function results. -/

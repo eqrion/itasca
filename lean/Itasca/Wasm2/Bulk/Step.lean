@@ -1,6 +1,14 @@
 import Itasca.Wasm2.Bulk.Operands
 import Itasca.Wasm2.References.Step
 
+/-!
+# Preservation for bulk instructions
+
+`Pending.memory_fill`, `Pending.memory_copy`, `Pending.memory_init`, `Pending.table_init` and
+`Pending.table_copy` show that the extracted bulk readers preserve the body invariant `Pending`
+(Wasm 2.0). They take the already decoded `0xFC` prefix as a premise.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2

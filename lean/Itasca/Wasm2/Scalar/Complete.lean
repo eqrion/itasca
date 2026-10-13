@@ -2,6 +2,14 @@ import Itasca.Wasm2.Step.ScalarContext
 import Itasca.Wasm1.Complete.Scalar
 import Itasca.Wasm1.Complete.Env
 
+/-!
+# Scalar completeness
+
+`scalar_complete` shows that the shared `code.step` arms for non-control opcodes accept every
+independently encoded scalar instruction at its principal typing under a Wasm 2.0 environment. It
+reuses the Wasm 1.0 leaf completeness proofs, which place no restriction on the frame's arity.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2

@@ -1,6 +1,15 @@
 import Itasca.Binary.Wasm2.References
 import Itasca.Binary.Wasm2.Bulk
 
+/-!
+# Environment matching for reference and bulk instructions
+
+Lemmas about `EnvTranslation.Matches`, the agreement between a runtime `module.Env` and a
+SpecTec context. Each `Matches.table_get`, `Matches.table_copy`, `Matches.memory_init`, ... turns
+bounds on the runtime environment into the corresponding `Instr_ok` judgment for the reference,
+table and bulk-memory instructions.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.EnvTranslation

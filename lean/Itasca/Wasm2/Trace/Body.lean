@@ -2,13 +2,22 @@ import Itasca.Wasm2.Trace.Basic
 import Itasca.Wasm2.Visitor.Transfer
 import Itasca.Wasm1.Trace.BodyContract
 
+/-!
+# Body-level callback byte provenance
+
+`StepContract` states that every ordinary `code.step_profile` step at `.Wasm2` has an exact
+`StepTrace`. `code.body_loop_loop.wasm2_trace_of_contract` lifts it through the body loop, and
+`code.validate_multi_value_body_with.trace_of_contract` through initialization, giving a
+`BodyTrace` for every ordinary outcome of the extracted Wasm 2.0 validator.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.CallbackTrace
 
 open VisitorTrace
 
-/-- Byte provenance and stopping for every ordinary Core 2.0 step. -/
+/-- Byte provenance and stopping for every ordinary Wasm 2.0 step. -/
 def StepContract {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (data : Slice U8) (env : module.Env) (locals : alloc.vec.Vec types.ValueType)
     (ctx : code.Context) (index : U32) : Prop :=
@@ -48,8 +57,8 @@ namespace Itasca
 
 open Wasm2
 
-/-- Lift returned-step Core 2.0 byte provenance through the actual body loop.
-The existing accepting-visitor invariant supplies strict cursor progress. -/
+/-- Lifts returned-step byte provenance through the Wasm 2.0 body loop. The accepting-visitor
+invariant supplies strict cursor progress. -/
 theorem code.body_loop_loop.wasm2_trace_of_contract {V : Type}
     (visitor : code.OpVisitor V) (observe : V → List VisitorTrace.Observation)
     (data : Slice U8) (env : module.Env) (locals : alloc.vec.Vec types.ValueType)
@@ -156,7 +165,7 @@ theorem code.body_loop_loop.wasm2_trace_of_contract {V : Type}
         obtain ⟨rfl, rfl⟩ := ht
         exact ⟨[], by simp, .empty hi.bounds.pos (by simp)⟩
 
-/-- Successful Core 2.0 initialization selects the actual type entry and the
+/-- Successful Wasm 2.0 initialization selects the actual type entry and the
 same root frame used by the independent syntax invariant. -/
 theorem code.initial_state.wasm2_start (env : module.Env) (ctx : code.Context)
     (index : U32) :
@@ -181,7 +190,7 @@ theorem code.initial_state.wasm2_start (env : module.Env) (ctx : code.Context)
       simp [core.result.Result.Insts.CoreOpsTry.branch, code.push_frame.initial]
       exact ⟨ft, hi⟩
 
-/-- Initialization emits no Core 2.0 callback. Step provenance therefore gives
+/-- Initialization emits no callback. Step provenance therefore gives
 an exact whole-body trace for every ordinary public outcome, including errors. -/
 theorem code.validate_multi_value_body_with.trace_of_contract {V : Type}
     (visitor : code.OpVisitor V) (observe : V → List VisitorTrace.Observation)

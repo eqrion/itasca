@@ -3,6 +3,15 @@ import Itasca.Wasm2.Bulk.Step
 import Itasca.Wasm2.Bulk.Dispatch
 import Itasca.Wasm2.NumericExt.Sound
 
+/-!
+# Soundness of `step_wasm2`
+
+`Pending` preservation for `code.step_wasm2`, which adds references, bulk memory and SIMD on top
+of `code.step_extended`. `Pending.bulk` covers the `0xfc` bulk arm, `Pending.wasm2_dispatch`
+combines the reference, table, bulk and numeric arms with a SIMD contract, and
+`Pending.wasm2_scalar` states that every non-control Wasm 2.0 instruction preserves `Pending`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
@@ -24,7 +33,7 @@ theorem Pending.reader_run {data env locals index st} (p : Pending data env loca
     intro r h
     exact ⟨trivial, fun a ha => h ⟨a, ha⟩⟩
 
-/-- The 0xfc bulk dispatcher transports each independently decoded immediate. -/
+/-- The `0xfc` bulk dispatcher transports each independently decoded immediate. -/
 theorem Pending.bulk {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hv : FullVisitor.Total visitor)
     (subopcode : U32) (next : Usize)
@@ -111,8 +120,8 @@ theorem Pending.wasm2_dispatch {data env locals index st} (p : Pending data env 
   rw [code.step_wasm2.base visitor st.core data env ctx opcode v hbase]
   exact p.extended_scalar visitor v hv ctx hlocals opcode hscalar hsize hbyte
 
-/-- Every non-control Core 2.0 instruction preserves the independent body
-certificate, including declaration membership for ref.func. -/
+/-- Every non-control Wasm 2.0 instruction preserves the independent body
+certificate, including declaration membership for `ref.func`. -/
 theorem Pending.wasm2_scalar {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hv : FullVisitor.Total visitor)
     (ctx : code.Context) (hlocals : ctx.locals = locals)

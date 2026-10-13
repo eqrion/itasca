@@ -2,6 +2,15 @@ import Itasca.Binary.Wasm2.Simd
 import Itasca.Binary.Wasm1.EncodingComplete
 import Itasca.Wasm2.Simd.ReadersTotal
 
+/-!
+# Decoding SIMD lane indices and 128-bit immediates
+
+Specs and completeness for the extracted `code.take_simd_lane` and `code.take_simd_bits`.
+Accepted lane bytes lie below the instruction's lane count (`take_lane_spec`), and accepted
+immediates decode to low and high 64-bit words (`take_bits_spec`, `BitsDecoded`). The `*_complete`
+lemmas give the converse.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Simd

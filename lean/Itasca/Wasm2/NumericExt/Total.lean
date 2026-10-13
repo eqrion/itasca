@@ -1,6 +1,15 @@
 import Itasca.Wasm2.NumericExt.Dispatch
 import Itasca.Wasm2.Scalar.Total
 
+/-!
+# Numeric extension totality
+
+Totality of `code.step_extended`. `extended_total` shows that it terminates on structurally
+bounded stacks and keeps control depth for any visitor whose callbacks return, and the
+`FullVisitor.Total` and `FullVisitor.Accepts` lemmas show that the sign-extension and saturating
+callbacks return or accept accordingly.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.FullVisitor
@@ -90,7 +99,7 @@ private theorem conversion_run_total {V : Type} (st : code.OpIterState)
   · apply WP.spec_mono (conversion_total st input output hs hsize)
     exact fun _ h => ⟨h, by simp⟩
 
-/-- Added numeric instructions terminate with ordinary returning hooks. -/
+/-- `code.step_extended` terminates with ordinary returning hooks. -/
 theorem extended_total {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (opcode : U8) (v : V) (hs : Control.Shape st)

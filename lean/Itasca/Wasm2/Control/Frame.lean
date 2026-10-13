@@ -3,6 +3,16 @@ import Itasca.Wasm2.HandlerAdapters
 import Itasca.Binary.Wasm2.BlockType
 import Itasca.Wasm2.Suffix
 
+/-!
+# Control frames and labels
+
+The structural invariant of the extracted control stack and its label lookup. `Wasm2.Shape` says
+that frame bases are ordered and within the operand stack and that the `blocks` vector is aligned
+with the control vector. `code.push_frame.spec`, `code.label.spec` and
+`code.read_multi_value_label.spec` describe frame creation and label decoding, with `Wasm2.labelAt`
+as the specification of a branch depth.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
@@ -13,9 +23,11 @@ structure Shape (st : code.BodyState) : Prop where
   core : Control.Shape st.core
   aligned : st.blocks.val.length = st.core.ctrls.val.length
 
+/-- The control entry that `code.push_frame` creates, with its base at the current stack height. -/
 def frame (st : code.OpIterState) (kind : code.LabelKind) (bt : signature.BlockType) : code.Ctrl :=
   ⟨kind, .Empty, bt, alloc.vec.Vec.len st.vals, false⟩
 
+/-- Pushing a frame at the current stack height preserves `Control.Shape`. -/
 theorem shape_push {st st' : code.OpIterState} (h : Control.Shape st)
     (kind : code.LabelKind) (bt : signature.BlockType)
     (hctrls : st'.ctrls.val = st.ctrls.val ++ [frame st kind bt])
@@ -30,11 +42,14 @@ theorem shape_push {st st' : code.OpIterState} (h : Control.Shape st)
     · have heq : c = frame st kind bt := by simpa using hc
       simp [heq, frame, hvals]
 
+/-- The descriptor a branch to a frame carries: the parameters for `loop`, the results
+otherwise. -/
 def target (kind : code.LabelKind) (bt : signature.BlockType) : signature.ResultType :=
   match kind with
   | .Loop => inputs bt
   | _ => outputs bt
 
+/-- The label descriptor at a branch depth, counted from the innermost frame. -/
 def labelAt (st : code.BodyState) (depth : Nat) : Option signature.ResultType := do
   if depth < st.blocks.val.length then
     let i := st.blocks.val.length - 1 - depth
@@ -97,6 +112,8 @@ theorem code.label.complete (st : code.BodyState) (depth : U32)
     have he : actual = view := by simpa [hs] using hl
     simpa [he] using hr
 
+/-- `code.read_multi_value_label` decodes a LEB128 depth and resolves it with `Wasm2.labelAt`,
+leaving the stack and frames unchanged. -/
 @[step]
 theorem code.read_multi_value_label.spec (st : code.BodyState) (data : Slice U8)
     (ha : st.blocks.val.length = st.core.ctrls.val.length) :

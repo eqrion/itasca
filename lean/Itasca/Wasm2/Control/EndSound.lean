@@ -1,13 +1,23 @@
 import Itasca.Wasm2.Control.EndTotal
 import Itasca.Wasm2.Invariant
 
+/-!
+# Soundness of frame closing
+
+Soundness of the extracted `code.end_frame`, which handles `end` and `else`. `EndAllowed` and
+`EndEffect` specify which closes are permitted and the exact physical transition, and
+`code.end_frame.sound` shows that a successful close satisfies both and that the operand segment
+realizes the frame's result types. Completeness is in `Wasm2/Control/EndComplete`.
+-/
+
 open Aeneas Aeneas.Std Result
 
 namespace Itasca.Wasm2
 
 noncomputable local instance : DecidableEq code.LabelKind := Classical.decEq _
 
-/-- Factorization of the shared end continuation, checked against extraction. -/
+/-- Which closes are allowed: `else` only closes a `then` frame, and `end` of a `then` frame
+needs equal parameters and results (the omitted-else identity). -/
 def EndAllowed (frame : code.Ctrl) (isElse : Bool) (ins outs : List types.ValueType) : Prop :=
   if isElse then frame.kind = .Then else frame.kind = .Then → ins = outs
 
@@ -23,6 +33,8 @@ def EndEffect (st s : code.BodyState) (parents : List code.Ctrl)
     s.core.ctrls.val = parents ∧ s.blocks.val = blocks ∧
     s.core.vals.val = if blocks = [] then outer else outer ++ outs.map code.StackType.Val
 
+/-- `code.end_frame` on a state with a known innermost frame unfolds to the kind check,
+`code.same_types` for an omitted else, and `finishFrame`. -/
 theorem end_frame_eq (st : code.BodyState) (env : module.Env) (isElse : Bool)
     (parents : List code.Ctrl) (blocks : List signature.BlockType)
     (frame : code.Ctrl) (bt : signature.BlockType)

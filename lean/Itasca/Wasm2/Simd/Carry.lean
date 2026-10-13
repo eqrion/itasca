@@ -1,11 +1,19 @@
 import Itasca.Wasm2.FixedOperands
 import Itasca.Visitor.Basic
 
+/-!
+# Fixed operand effects that carry an immediate
+
+`carryFixed` applies `readFixed` and then returns an already parsed immediate. Its segment,
+completeness and visitor-runner lemmas (`carryFixed.segment`, `carryFixed.complete`,
+`carryFixed.run`) are the shared interface for the SIMD lane, constant, shuffle and memory readers.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Simd
 
-/-- Retain the parsed immediate while applying a fixed operand effect. -/
+/-- Applies a fixed operand effect and returns the already parsed immediate. -/
 def carryFixed {A : Type} (a : A) (st : code.OpIterState) (inputs : List types.ValueType)
     (output : Option types.ValueType) : Result (core.result.Result A error.OpError × code.OpIterState) := do
   let (r, s) ← readFixed st inputs output

@@ -3,10 +3,21 @@ import Itasca.Wasm2.Control.Call
 import Itasca.Wasm2.Invariant
 import Itasca.Wasm2.Control.BrTableComplete
 
+/-!
+# Branch, `br_table` and call steps
+
+`Pending` preservation for the opcodes `call` (`0x10`), `call_indirect` (`0x11`), `br` (`0x0c`),
+`br_if` (`0x0d`) and `br_table` (`0x0e`). Each of `Pending.call`, `Pending.call_indirect`,
+`Pending.branch`, `Pending.branch_if` and `Pending.branch_table` combines the handler's prefix
+theorem with `Pending.append_result`. `Frames.Open.branchLabels` supplies the label agreement they
+all need.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
 
+/-- In a zipper whose root has no labels, the runtime labels agree with the context's. -/
 theorem Frames.Open.branchLabels {env root st parents current}
     (h : Frames.Open env root st parents current) (hroot : root.LABELS = [])
     (C : context) (outer : List code.StackType)
@@ -30,6 +41,7 @@ theorem Frames.Open.branchLabels {env root st parents current}
       simp [Frames.enter, Control.labelContext_labels, spine.labels, hroot, Frames.labels]
     simpa [hr, hcontext] using he.symm
 
+/-- The direct `call` opcode (`0x10`) preserves `Pending` on success. -/
 theorem Pending.call {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x10#u8) :
     code.call st data env false ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
@@ -49,6 +61,7 @@ theorem Pending.call {data env locals index st} (p : Pending data env locals ind
     (by simpa [hpoly, Frames.enter] using ht) _ (by simpa [hb] using blocks) hv
   simpa [hc] using ctrls
 
+/-- The `call_indirect` opcode (`0x11`) preserves `Pending` on success. -/
 theorem Pending.call_indirect {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x11#u8) :
     code.call st data env true ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
@@ -72,6 +85,7 @@ theorem Pending.call_indirect {data env locals index st} (p : Pending data env l
     (by simpa [hpoly, Frames.enter] using ht) _ (by simpa [hb] using blocks) hv
   simpa [hc] using ctrls
 
+/-- The `br` opcode (`0x0c`) preserves `Pending` on success. -/
 theorem Pending.branch {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x0C#u8) :
     code.branch st data env false ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
@@ -89,6 +103,7 @@ theorem Pending.branch {data env locals index st} (p : Pending data env locals i
     (.plain (.of_u32 depth p.inbounds hbyte p.pos (fun _ => .br depth) hd)) ht hc
     (by simpa [hb] using blocks) (by simpa using hv)
 
+/-- The `br_if` opcode (`0x0d`) preserves `Pending` on success. -/
 theorem Pending.branch_if {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x0D#u8) :
     code.branch st data env true ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
@@ -115,6 +130,7 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
 
+/-- The `br_table` opcode (`0x0e`) preserves `Pending` on success. -/
 theorem Pending.branch_table {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x0E#u8) :
     code.branch_table st data env ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by

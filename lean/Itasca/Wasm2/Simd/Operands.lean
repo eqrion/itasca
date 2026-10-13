@@ -1,10 +1,18 @@
 import Itasca.Wasm2.FixedOperands
 import Itasca.Wasm2.Simd.Tables
 
+/-!
+# Operand types of SIMD signatures
+
+Gives the popped and pushed value types of each pure SIMD `Signature` and shows that the
+extracted `code.read_simd_signature` equals `readFixed` at those types (`signature_fixed`).
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Simd
 
+/-- Operand types popped by a pure SIMD signature, listed from the top of the stack. -/
 def Signature.popTypes : Signature → List types.ValueType
   | .unary | .test => [.V128]
   | .binary => [.V128, .V128]
@@ -15,6 +23,7 @@ def Signature.popTypes : Signature → List types.ValueType
   | .splatF32 => [.F32]
   | .splatF64 => [.F64]
 
+/-- Result type pushed by a pure SIMD signature. -/
 def Signature.output : Signature → types.ValueType
   | .test => .I32
   | _ => .V128

@@ -1,12 +1,20 @@
 import Itasca.Wasm2.Trace.BytesSimd
 import Itasca.Wasm2.Trace.BytesScalar
 
+/-!
+# Byte provenance for the Wasm 2.0 dispatcher
+
+`wasm2_dispatch` combines the reference, bulk and SIMD byte traces with a scalar contract for the
+remaining opcodes. `wasm2_scalar` discharges that contract, giving an exact independent callback
+byte trace for every non-control step of `code.step_wasm2`.
+-/
+
 open Aeneas Aeneas.Std
 namespace Itasca.Wasm2.CallbackBytes
 open VisitorTrace CallbackTrace
 
-/-- Assemble concrete Core 2.0 scalar dispatch from an exact extended-scalar
-contract; all reference, bulk, and SIMD cases are discharged here. -/
+/-- Assembles `code.step_wasm2` dispatch from a contract for the scalar opcodes; the reference,
+bulk and SIMD cases are discharged here. -/
 theorem wasm2_dispatch {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (ctx : code.Context)
@@ -66,7 +74,7 @@ theorem wasm2_dispatch {data env locals index st} (p : Pending data env locals i
   rw [code.step_wasm2.base visitor st.core data env ctx opcode v hbase] at run
   exact extended opcode hscalar hbyte v result final v' run
 
-/-- Every non-control Core 2.0 step has an exact independent callback byte trace,
+/-- Every non-control Wasm 2.0 step has an exact independent callback byte trace,
 including ordinary reader failure and rejecting callbacks. -/
 theorem wasm2_scalar {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)

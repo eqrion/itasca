@@ -1,12 +1,22 @@
 import Itasca.Wasm2.Trace.Refinement
 import Itasca.Wasm2.Visitor.Step
 
+/-!
+# Exact refinement of control dispatch
+
+Exact visitor refinement for the `br_table` loop (`tableRest.refines`, `tableBody.refines`,
+`code.branch_table_with_loop.refines`, `code.branch_table_with.refines`) and for the whole
+`code.step_profile` at `.Wasm2` (`code.step_profile.wasm2_refines`), preserving computed
+signatures, partial tables and callback rejection.
+-/
+
 open Aeneas Aeneas.Std Result ControlFlow
 
 namespace Itasca.Wasm2.Visitor
 
 open VisitorTrace
 
+/-- The visitor state of one `br_table` iteration result. -/
 def tableVisitor {V : Type} :
     ControlFlow (code.OpIterState × V × Option Usize × U32)
       (core.result.Result Unit error.OpError × code.BodyState × V) → V
@@ -186,8 +196,8 @@ namespace Itasca
 open VisitorTrace Wasm2.Visitor
 
 set_option maxHeartbeats 2000000 in
-/-- Complete Core 2.0 control dispatch preserves every ordinary result under
-exact callback refinement, including computed signatures and partial tables. -/
+/-- Wasm 2.0 profile dispatch, including control instructions, preserves every ordinary
+result under exact callback refinement, including computed signatures and partial tables. -/
 theorem code.step_profile.wasm2_refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)

@@ -1,14 +1,24 @@
 import Itasca.Wasm2.Signature
 import Itasca.Support.ControlTranslation
 
+/-!
+# Block type signatures
+
+`Wasm2.inputs` and `Wasm2.outputs` give the parameter and result descriptors of a block type, as
+read by the extracted `signature.BlockType.params` and `signature.BlockType.results`.
+`Wasm2.blockType_ok` relates their resolved types to the generated `Blocktype_ok` rule.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
 
+/-- The parameter descriptor of a block type. Only an indexed block type has parameters. -/
 def inputs : signature.BlockType → signature.ResultType
   | .TypeIndex i => .Type i .Params
   | _ => .Empty
 
+/-- The result descriptor of a block type. -/
 def outputs : signature.BlockType → signature.ResultType
   | .Empty => .Empty
   | .Value t => .One t
