@@ -19,7 +19,7 @@ theorem code.validate_multi_value_body_loop.total (data : Slice U8) (env : modul
       type_index st locals results visitor ⦃ _ => True ⦄ := by
   cases visitor
   obtain ⟨⟨r, v⟩, hr, _⟩ := WP.spec_imp_exists
-    (code.validate_multi_value_body_with_loop.total
+    (code.body_loop_loop.wasm2_total
       code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_total
       data env ⟨locals, results⟩ type_index st () hdata hs ha hb)
   simp [code.validate_multi_value_body_loop, hr]

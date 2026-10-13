@@ -41,7 +41,7 @@ theorem run_unfold (data : Slice U8) (env : module.Env) (ctx : code.Context)
       match r with
       | .done result => .ok result
       | .cont (s, _) => run data env ctx index s) := by
-  unfold run code.validate_multi_value_body_loop code.validate_multi_value_body_with_loop code.body_loop_loop
+  unfold run code.validate_multi_value_body_loop code.body_loop_loop
   conv_lhs => rw [loop]
   dsimp only
   rw [code.validate_multi_value_body_loop.body_eq data env ctx]

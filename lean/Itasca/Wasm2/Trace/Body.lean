@@ -50,23 +50,20 @@ open Wasm2
 
 /-- Lift returned-step Core 2.0 byte provenance through the actual body loop.
 The existing accepting-visitor invariant supplies strict cursor progress. -/
-theorem code.validate_multi_value_body_with_loop.trace_of_contract {V : Type}
+theorem code.body_loop_loop.wasm2_trace_of_contract {V : Type}
     (visitor : code.OpVisitor V) (observe : V → List VisitorTrace.Observation)
     (data : Slice U8) (env : module.Env) (locals : alloc.vec.Vec types.ValueType)
     (ctx : code.Context) (index : U32) (hlocals : ctx.locals = locals)
     (htrace : CallbackTrace.StepContract visitor observe data env locals ctx index)
     (st : code.BodyState) (v v' : V) (result : VisitorTrace.BodyResult)
     (hi : State data env locals index st)
-    (h : code.validate_multi_value_body_with_loop visitor data env.types env.imports env.globals
-      env.exports env.elements env.data_count env.declared_funcs env.start env.func_type_indices
-      env.func_types env.table_types env.mem_types env.global_types env.num_imported_funcs
-      env.num_imported_globals ctx index v st = .ok (result, v')) :
+    (h : code.body_loop_loop visitor data env ctx index .Wasm2 v st = .ok (result, v')) :
     ∃ observations, observe v' = observe v ++ observations ∧
       CallbackTrace.BodyTrace data st.core.pos observations result := by
   generalize hn : data.length - st.core.pos.val = n
   induction n using Nat.strong_induction_on generalizing st v with
   | h n ih =>
-    unfold code.validate_multi_value_body_with_loop code.body_loop_loop at h
+    unfold code.body_loop_loop at h
     rw [loop] at h
     simp only [Std.uncurry] at h
     obtain ⟨cf, hb, ht⟩ := ResultFacts.bind_ok_inv _ _ _ h
@@ -145,11 +142,8 @@ theorem code.validate_multi_value_body_with_loop.trace_of_contract {V : Type}
             obtain ⟨hi', hge, hbound⟩ := hafter rfl
             change next.val ≤ out.core.pos.val at hge
             have hmeasure : data.length - out.core.pos.val < n := by omega
-            have ht' : code.validate_multi_value_body_with_loop visitor data env.types env.imports
-                env.globals env.exports env.elements env.data_count env.declared_funcs env.start
-                env.func_type_indices env.func_types env.table_types env.mem_types env.global_types
-                env.num_imported_funcs env.num_imported_globals ctx index w out = .ok (result, v') := by
-              simpa [code.validate_multi_value_body_with_loop, code.body_loop_loop] using ht
+            have ht' : code.body_loop_loop visitor data env ctx index .Wasm2 w out = .ok (result, v') := by
+              simpa [code.body_loop_loop] using ht
             obtain ⟨rest, hrest, hbody⟩ := ih (data.length - out.core.pos.val)
               hmeasure out w hi' ht' rfl
             obtain ⟨token, hencoded⟩ := hchunk.accepted
@@ -216,7 +210,7 @@ theorem code.validate_multi_value_body_with.trace_of_contract {V : Type}
       have hp := code.initial_state.multi_value_start env ctx index
       rw [hr, WP.spec_ok] at hp
       obtain ⟨rfl, ft, hi⟩ := hp
-      exact code.validate_multi_value_body_with_loop.trace_of_contract visitor observe
+      exact code.body_loop_loop.wasm2_trace_of_contract visitor observe
         data env ctx.locals ctx index rfl htrace (initial index) v v' result
         (State.start data env ctx.locals index ft hi (by scalar_tac)) h
 

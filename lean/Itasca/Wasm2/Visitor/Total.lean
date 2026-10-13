@@ -214,24 +214,21 @@ attribute [local step] code.enter_info.total
 set_option maxHeartbeats 2000000 in
 /-- Every returned body iteration preserves the structural invariant and every
 continuing iteration advances the byte cursor. Returning hooks may reject. -/
-theorem code.validate_multi_value_body_with_loop.body_total {V : Type}
+theorem code.body_loop_loop.body.wasm2_total {V : Type}
     (visitor : code.OpVisitor V) (hv : FullVisitor.Total visitor)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (type_index : U32)
     (s : code.BodyState) (v : V)
     (hdata : data.length ≤ limits.MAX_FUNCTION_BYTES.val) (hs : Control.Shape s.core)
     (ha : s.blocks.val.length = s.core.ctrls.val.length)
     (hb : s.blocks.val.length ≤ s.core.pos.val + 1) :
-    code.validate_multi_value_body_with_loop.body visitor data env.types env.imports env.globals
-      env.exports env.elements env.data_count env.declared_funcs env.start env.func_type_indices env.func_types env.table_types
-      env.mem_types env.global_types env.num_imported_funcs env.num_imported_globals
-      ctx type_index v s ⦃ r =>
+    code.body_loop_loop.body visitor data env ctx type_index .Wasm2 v s ⦃ r =>
       match r with
       | .done _ => True
       | .cont p => (Control.Shape p.2.core ∧
           p.2.blocks.val.length = p.2.core.ctrls.val.length ∧
           p.2.blocks.val.length ≤ p.2.core.pos.val + 1) ∧
           Usize.max - p.2.core.pos.val < Usize.max - s.core.pos.val ⦄ := by
-  unfold code.validate_multi_value_body_with_loop.body code.body_loop_loop.body code.step_profile
+  unfold code.body_loop_loop.body code.step_profile
   simp only [alloc.vec.Vec.is_empty, bind_ok]
   split
   · split <;> simp
@@ -296,29 +293,26 @@ theorem code.validate_multi_value_body_with_loop.body_total {V : Type}
 set_option maxHeartbeats 2000000 in
 /-- The actual visiting body loop terminates for structurally bounded states.
 Every continuing iteration consumes an opcode; rejecting hooks terminate early. -/
-theorem code.validate_multi_value_body_with_loop.total {V : Type} (visitor : code.OpVisitor V)
+theorem code.body_loop_loop.wasm2_total {V : Type} (visitor : code.OpVisitor V)
     (hv : FullVisitor.Total visitor) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (type_index : U32) (st : code.BodyState) (v : V)
     (hdata : data.length ≤ limits.MAX_FUNCTION_BYTES.val) (hs : Control.Shape st.core)
     (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (hb : st.blocks.val.length ≤ st.core.pos.val + 1) :
-    code.validate_multi_value_body_with_loop visitor data env.types env.imports env.globals
-      env.exports env.elements env.data_count env.declared_funcs env.start env.func_type_indices env.func_types env.table_types
-      env.mem_types env.global_types env.num_imported_funcs env.num_imported_globals
-      ctx type_index v st ⦃ _ => True ⦄ := by
-  unfold code.validate_multi_value_body_with_loop code.body_loop_loop
+    code.body_loop_loop visitor data env ctx type_index .Wasm2 v st ⦃ _ => True ⦄ := by
+  unfold code.body_loop_loop
   apply loop.spec_decr_nat (fun p => Usize.max - p.2.core.pos.val)
     (fun p => Control.Shape p.2.core ∧ p.2.blocks.val.length = p.2.core.ctrls.val.length ∧
       p.2.blocks.val.length ≤ p.2.core.pos.val + 1)
   · rintro ⟨v, s⟩ ⟨hs, ha, hb⟩
     dsimp only
-    apply WP.spec_mono (code.validate_multi_value_body_with_loop.body_total visitor hv data env ctx type_index
+    apply WP.spec_mono (code.body_loop_loop.body.wasm2_total visitor hv data env ctx type_index
       s v hdata hs ha hb)
     intro r hr
     cases r <;> exact hr
   · exact ⟨hs, ha, hb⟩
 
-attribute [local step] code.validate_multi_value_body_with_loop.total
+attribute [local step] code.body_loop_loop.wasm2_total
 
 /-- Multi-value initialization is total and supplies the shared loop invariant. -/
 @[step] theorem code.initial_state.multi_value_total
@@ -353,7 +347,7 @@ theorem code.validate_multi_value_body_with.wasm_total {V : Type} (visitor : cod
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       | Ok st =>
         simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, code.body_loop]
-        exact code.validate_multi_value_body_with_loop.total visitor hv data env ctx type_index st v
+        exact code.body_loop_loop.wasm2_total visitor hv data env ctx type_index st v
           hdata hr.1 hr.2.1 hr.2.2
   obtain ⟨r, hr, _⟩ := WP.spec_imp_exists ht
   exact ⟨r, hr⟩

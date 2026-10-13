@@ -22,7 +22,7 @@ theorem body.refines {V W : Type} (visitor : code.OpVisitor V)
     (h : body visitor data env ctx index v st = .ok cf) :
     ∃ cf', body replacement data env ctx index w st = .ok cf' ∧
       bodyObserve cf' = bodyObserve cf ∧ related (bodyVisitor cf) (bodyVisitor cf') := by
-  unfold body code.validate_multi_value_body_with_loop.body code.body_loop_loop.body at h ⊢
+  unfold body code.body_loop_loop.body at h ⊢
   simp only [alloc.vec.Vec.is_empty, bind_ok] at h ⊢
   split at h
   · rename_i he
@@ -65,7 +65,7 @@ open VisitorTrace Wasm2.Visitor
 
 /-- The actual Core 2.0 body loop preserves every ordinary result under exact
 callback refinement. The empty visitor supplies structural progress only. -/
-theorem code.validate_multi_value_body_with_loop.refines {V W : Type}
+theorem code.body_loop_loop.wasm2_refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
@@ -74,24 +74,18 @@ theorem code.validate_multi_value_body_with_loop.refines {V W : Type}
     (halign : st.blocks.val.length = st.core.ctrls.val.length)
     (hbound : st.blocks.val.length ≤ st.core.pos.val + 1)
     (res : core.result.Result Unit error.OpError) (v' : V)
-    (h : code.validate_multi_value_body_with_loop visitor data env.types env.imports env.globals
-      env.exports env.elements env.data_count env.declared_funcs env.start env.func_type_indices
-      env.func_types env.table_types env.mem_types env.global_types env.num_imported_funcs
-      env.num_imported_globals ctx index v st = .ok (res, v')) :
-    ∃ w', code.validate_multi_value_body_with_loop replacement data env.types env.imports env.globals
-      env.exports env.elements env.data_count env.declared_funcs env.start env.func_type_indices
-      env.func_types env.table_types env.mem_types env.global_types env.num_imported_funcs
-      env.num_imported_globals ctx index w st = .ok (res, w') ∧ related v' w' := by
+    (h : code.body_loop_loop visitor data env ctx index .Wasm2 v st = .ok (res, v')) :
+    ∃ w', code.body_loop_loop replacement data env ctx index .Wasm2 w st = .ok (res, w') ∧ related v' w' := by
   generalize hn : Usize.max - st.core.pos.val = n
   induction n using Nat.strong_induction_on generalizing st v w with
   | h n ih =>
-    unfold code.validate_multi_value_body_with_loop code.body_loop_loop at h ⊢
+    unfold code.body_loop_loop at h ⊢
     rw [loop] at h ⊢
     simp only [Std.uncurry] at h ⊢
     obtain ⟨cf, hb, ht⟩ := ResultFacts.bind_ok_inv _ _ _ h
     obtain ⟨cf', hw, ho, hr⟩ := body.refines visitor replacement related hrefines
       data env ctx index st v w hrelated cf hb
-    simp only [Wasm2.Visitor.body, code.validate_multi_value_body_with_loop.body] at hw
+    simp only [Wasm2.Visitor.body] at hw
     rw [hw]
     cases cf with
     | done pair =>
@@ -109,11 +103,10 @@ theorem code.validate_multi_value_body_with_loop.refines {V W : Type}
       obtain ⟨v1, s⟩ := pair
       obtain ⟨emptyCf, he, heo⟩ := body.transfer visitor code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
         FullVisitor.empty_accepts data env ctx ctx rfl index st v () _ hb trivial
-      have hp := code.validate_multi_value_body_with_loop.body_total
+      have hp := code.body_loop_loop.body.wasm2_total
         code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_total
         data env ctx index st () hdata hs halign hbound
-      simp only [Wasm2.Visitor.body, code.validate_multi_value_body_with_loop.body] at he
-      simp only [code.validate_multi_value_body_with_loop.body] at hp
+      simp only [Wasm2.Visitor.body] at he
       rw [he, WP.spec_ok] at hp
       cases emptyCf with
       | done p => simp [bodyObserve] at heo
@@ -131,8 +124,7 @@ theorem code.validate_multi_value_body_with_loop.refines {V W : Type}
           subst s'
           obtain ⟨w', hw', hr'⟩ := ih (Usize.max - s.core.pos.val) (by omega) s v1 w1 hr
             hinv.1 hinv.2.1 hinv.2.2 ht rfl
-          exact ⟨w', by simpa only [bind_ok, code.validate_multi_value_body_with_loop,
-            code.body_loop_loop, Std.uncurry] using hw', hr'⟩
+          exact ⟨w', by simpa only [bind_ok, code.body_loop_loop, Std.uncurry] using hw', hr'⟩
 
 /-- Core 2.0 callback refinement preserves every ordinary public body outcome.
 No valid-byte, well-typed-context, or total-callback premise is assumed. -/
@@ -163,7 +155,7 @@ theorem code.validate_multi_value_body_with.refines {V W : Type}
       simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, code.body_loop] at h ⊢
       have hp := code.initial_state.multi_value_total env ctx index
       rw [hr, WP.spec_ok] at hp
-      exact code.validate_multi_value_body_with_loop.refines visitor replacement related hrefines
+      exact code.body_loop_loop.wasm2_refines visitor replacement related hrefines
         data env ctx index st v w hrelated (by scalar_tac) hp.1 hp.2.1 hp.2.2 res v' h
 
 /-- Instrumenting Core 2.0 validation preserves its exact outcome and underlying

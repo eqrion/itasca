@@ -1,4 +1,4 @@
-import Itasca.Wasm2.LoopAdapters
+import Itasca.Support.BodyState
 
 open Aeneas Aeneas.Std Result ControlFlow
 
@@ -241,9 +241,9 @@ def code.validate_multi_value_body_loop
   (visitor : code.EmptyOpVisitor) :
   Result (core.result.Result Unit error.OpError)
   := do
-  let (r, _) ← code.validate_multi_value_body_with_loop
-    code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor data v v1 v2 v3 v4 data_count declared_funcs o v5 v6 v7 v8 v9 i i1
-    ⟨locals, v10⟩ type_index visitor st
+  let (r, _) ← code.body_loop_loop code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor data
+    ⟨v, v1, v2, v3, v4, data_count, declared_funcs, o, v5, v6, v7, v8, v9, i, i1⟩
+    ⟨locals, v10⟩ type_index .Wasm2 visitor st
   .ok r
 
 /-- Only the placement of the empty visitor changes between the semantic
