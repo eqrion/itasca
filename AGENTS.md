@@ -39,7 +39,9 @@ Use the documented rustdoc style and keep byte-coordinate systems explicit.
 
 Do not add axioms, `sorry`, `admit`, `native_decide`, unsafe proof shortcuts, or
 kernel bypasses. `Itasca.Audit` permits only `propext`, `Classical.choice`, and
-`Quot.sound`. Every new proof module must be reachable through its imports.
+`Quot.sound`. Every new proof module must be reachable through its imports;
+run `just audit-imports` after adding or moving files. Keep `Support/`, `Spec/`,
+`Binary/`, and `Handler/` free of imports from higher layers.
 Audit proof-bearing adapter definitions as well as exported theorems.
 
 Use `just check Itasca.ModuleName` for iteration and `just prove` for integration.

@@ -204,7 +204,12 @@ parameters; `MAX_FUNCTION_BYTES` includes the final `end` and excludes local
 declarations. Wasm 2.0 signatures have at most 1000 parameters and results.
 Do not tighten Wasm 1.0's parameter behavior as a side effect of another profile.
 
-Every new proof module must be reachable from `Itasca.Audit`. The audit checks
+Place new proofs by layer, as described in the
+[Lean guide](lean/README.md#proof-architecture): independent grammar in
+`Binary/`, per-handler lemmas in `Handler/`, and body proofs in `Wasm1/` or
+`Wasm2/`. Every new proof module must be reachable from `Itasca.Audit`; run
+`just audit-imports` after adding or moving files. `just prove` rejects a stale
+audit import list and upward imports from the grammar layers. The audit checks
 all local declarations and rejects axioms beyond the three documented logical
 foundations. New proof-bearing adapters receive the same scrutiny as exported
 theorems. Report changes to the trust boundary explicitly.
