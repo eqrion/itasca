@@ -80,13 +80,12 @@ theorem code.step_wasm2.ref_null {V : Type} (visitor : code.OpVisitor V)
   congr 1
   funext pair
   obtain ⟨reply, w⟩ := pair
-  cases reply <;> simp [code.visit, core.result.Result.Insts.CoreOpsTry.branch,
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  cases reply <;> simp [code.visit]
 
 theorem code.step_wasm2.ref_is_null {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step_wasm2 visitor st data env ctx 209#u8 v =
-      CoreVisitor.run (code.read_ref_is_null st) (fun v s a => visitor.on_ref_is_null v s) v := by
+      CoreVisitor.run (code.read_ref_is_null st) (fun v s _ => visitor.on_ref_is_null v s) v := by
   simp [code.step_wasm2, CoreVisitor.run]
   congr 1
   funext pair
@@ -96,8 +95,7 @@ theorem code.step_wasm2.ref_is_null {V : Type} (visitor : code.OpVisitor V)
   congr 1
   funext pair
   obtain ⟨reply, w⟩ := pair
-  cases reply <;> simp [code.visit, core.result.Result.Insts.CoreOpsTry.branch,
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  cases reply <;> simp [code.visit]
 
 theorem code.step_wasm2.ref_func {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
@@ -112,8 +110,7 @@ theorem code.step_wasm2.ref_func {V : Type} (visitor : code.OpVisitor V)
   congr 1
   funext pair
   obtain ⟨reply, w⟩ := pair
-  cases reply <;> simp [code.visit, core.result.Result.Insts.CoreOpsTry.branch,
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  cases reply <;> simp [code.visit]
 
 theorem code.step_wasm2.typed_select {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
@@ -128,8 +125,7 @@ theorem code.step_wasm2.typed_select {V : Type} (visitor : code.OpVisitor V)
   congr 1
   funext pair
   obtain ⟨reply, w⟩ := pair
-  cases reply <;> simp [code.visit, core.result.Result.Insts.CoreOpsTry.branch,
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  cases reply <;> simp [code.visit]
 
 theorem code.step_wasm2.table_get {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
@@ -144,8 +140,7 @@ theorem code.step_wasm2.table_get {V : Type} (visitor : code.OpVisitor V)
   congr 1
   funext pair
   obtain ⟨reply, w⟩ := pair
-  cases reply <;> simp [code.visit, core.result.Result.Insts.CoreOpsTry.branch,
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  cases reply <;> simp [code.visit]
 
 theorem code.step_wasm2.table_set {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
@@ -160,8 +155,7 @@ theorem code.step_wasm2.table_set {V : Type} (visitor : code.OpVisitor V)
   congr 1
   funext pair
   obtain ⟨reply, w⟩ := pair
-  cases reply <;> simp [code.visit, core.result.Result.Insts.CoreOpsTry.branch,
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  cases reply <;> simp [code.visit]
 
 /-- Every bulk subopcode is decoded once, before its selected metadata reader. -/
 theorem code.step_wasm2.bulk {V : Type} (visitor : code.OpVisitor V)

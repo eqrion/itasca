@@ -32,8 +32,7 @@ private theorem finish_body (st : code.OpIterState) (data : Slice U8) (pos : Usi
     congr 1
     funext pair
     obtain ⟨r, s⟩ := pair
-    cases r <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+    cases r <;> simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
 /-- The scanner reaches its operand reader only after checking all sixteen bytes. -/
 theorem shuffle_scan (st : code.OpIterState) (data : Slice U8)
@@ -112,7 +111,7 @@ theorem shuffle_complete (st : code.OpIterState) (data : Slice U8)
       · rw [finish_body st data pos i hlt, hfinish]
         simp
     · dsimp only
-      exact ⟨by decide, bytes, hb, by simpa [hl], hbound⟩
+      exact ⟨by decide, bytes, hb, by simp [hl], hbound⟩
   obtain ⟨result, he, rfl⟩ := WP.spec_imp_exists hrun
   exact he
 

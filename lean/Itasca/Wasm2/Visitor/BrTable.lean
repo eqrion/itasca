@@ -81,7 +81,7 @@ theorem tableBody_eq {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
     obtain ⟨depth, ts⟩ := pair
     simp only [Std.uncurry, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
     by_cases hi : i = count <;> cases arity <;>
-      simp [hi, Std.bind_assoc, code.visit,
+      simp [hi, code.visit,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
     all_goals
       repeat' first
@@ -89,18 +89,15 @@ theorem tableBody_eq {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
         | (congr 1; funext x; first
             | (rcases x with ⟨a, b⟩; cases a)
             | cases x
-           all_goals simp [Std.bind_assoc, code.visit,
-             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual])
-        | (split <;> simp_all [Std.bind_assoc, code.visit,
-             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual])
+           all_goals simp [Std.bind_assoc])
+        | (split <;> simp_all [Std.bind_assoc])
     all_goals
       congr 1
       funext ois
       congr 1
       funext pair
       obtain ⟨r, w⟩ := pair
-      cases r <;> simp [code.visit,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+      cases r <;> simp
 
 
 /-- State observation of one table iteration, excluding callback bookkeeping. -/
@@ -133,11 +130,11 @@ theorem tableRest.transfer {V W : Type} (visitor : code.OpVisitor V)
   rw [hr]
   cases r with
   | Err e =>
-    simp only [bind_ok, ok.injEq] at h
+    simp only [ok.injEq] at h
     subst cf
     simp [tableGood] at hg
   | Ok nextArity =>
-    simp only [bind_ok, Std.uncurry] at h ⊢
+    simp only [bind_ok] at h ⊢
     by_cases he : i = count
     · simp only [he, if_true] at h ⊢
       obtain ⟨ois, ho, h⟩ := ResultFacts.bind_ok_inv _ _ _ h
@@ -336,10 +333,9 @@ theorem code.branch_table_with.accepted_transfer {V W : Type}
     obtain ⟨⟨r, ois⟩, hr, h⟩ := ResultFacts.bind_ok_inv _ _ _ h
     rw [hr]
     cases r with
-    | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
+    | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
     | Ok u =>
-      simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, Std.uncurry] at h ⊢
+      simp only [bind_ok, Std.uncurry] at h ⊢
       exact code.branch_table_with_loop.accepted_transfer visitor replacement ha
         ⟨ois⟩ data env v w count none 0#u32 (by simp) final v' h
 

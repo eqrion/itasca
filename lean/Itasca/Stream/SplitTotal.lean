@@ -34,7 +34,8 @@ theorem stream.find_code_region_loop.spec (bytes : Slice U8) (pos : Usize) :
             have hprogress := hd.span.1
             have hbound := hd.span.2.2
             simp only [bind_ok]
-            step* <;> scalar_tac
+            step*
+            scalar_tac
       · step
         obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (stream.read_len.spec bytes i)
         rw [hr]

@@ -258,8 +258,7 @@ theorem module.decode_const_expr.spec (data : Slice U8) (pos : Usize)
         obtain ⟨r, hd, hdecode⟩ := WP.spec_imp_exists (module.decode_elem_type.spec data next .Wasm2)
         cases r with
         | Err e =>
-          simp [hd, core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
+          simp [hd, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
             ModuleConstants.Post]
         | Ok pair =>
           obtain ⟨ty, mid⟩ := pair
@@ -285,12 +284,11 @@ theorem module.decode_const_expr.spec (data : Slice U8) (pos : Usize)
         obtain ⟨r, hd, hdecode⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data next)
         cases r with
         | Err e =>
-          simp [hd, core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
+          simp [hd, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
             error.Error.Insts.CoreConvertFromOpError.from, ModuleConstants.Post]
         | Ok pair =>
           obtain ⟨idx, mid⟩ := pair
-          simp only [hd, bind_ok, core.result.Result.Insts.CoreOpsTry.branch]
+          simp only [hd, bind_ok]
           step
           split
           · simp [ModuleConstants.Post]
@@ -316,8 +314,7 @@ theorem module.decode_const_expr.spec (data : Slice U8) (pos : Usize)
         obtain ⟨r, hsub, hsubdecode⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data next)
         cases r with
         | Err e =>
-          simp [hsub, core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
+          simp [hsub, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
             error.Error.Insts.CoreConvertFromOpError.from, ModuleConstants.Post]
         | Ok pair =>
           obtain ⟨sub, first⟩ := pair
@@ -326,7 +323,7 @@ theorem module.decode_const_expr.spec (data : Slice U8) (pos : Usize)
             obtain ⟨r, hlow, hlowdecode⟩ := WP.spec_imp_exists (reader.read_f64_bits.spec data first)
             cases r with
             | Err e =>
-              simp [hsub, hlow, core.result.Result.Insts.CoreOpsTry.branch,
+              simp [hsub, hlow,
                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
                 error.Error.Insts.CoreConvertFromOpError.from, ModuleConstants.Post]
             | Ok pair =>
@@ -334,7 +331,7 @@ theorem module.decode_const_expr.spec (data : Slice U8) (pos : Usize)
               obtain ⟨r, hhigh, hhighdecode⟩ := WP.spec_imp_exists (reader.read_f64_bits.spec data second)
               cases r with
               | Err e =>
-                simp [hsub, hlow, hhigh, core.result.Result.Insts.CoreOpsTry.branch,
+                simp [hsub, hlow, hhigh,
                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
                   error.Error.Insts.CoreConvertFromOpError.from, ModuleConstants.Post]
               | Ok pair =>
@@ -361,7 +358,7 @@ theorem module.decode_const_expr.spec (data : Slice U8) (pos : Usize)
           · have hcodeval : sub.val ≠ 12 := by
               intro he
               exact hcode (UScalar.eq_of_val_eq he)
-            simp [hsub, hcodeval, core.result.Result.Insts.CoreOpsTry.branch, ModuleConstants.Post]
+            simp [hsub, hcodeval, ModuleConstants.Post]
     · simp [ModuleConstants.Post]
   · simp [reader.read_byte.eof data pos (by omega),
       core.result.Result.Insts.CoreOpsTry.branch,
@@ -402,7 +399,7 @@ private theorem module.decode_const_expr.allowed_only_spec (data : Slice U8) (po
       split <;> step*
       all_goals
         repeat' first
-          | simp_all [ModuleBinary.ConstAllowed, core.result.Result.Insts.CoreOpsTry.branch,
+          | simp_all [ModuleBinary.ConstAllowed,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
               error.Error.Insts.CoreConvertFromOpError.from]
           | step
@@ -411,9 +408,7 @@ private theorem module.decode_const_expr.allowed_only_spec (data : Slice U8) (po
         rename_i pair
         rcases pair with ⟨value, mid⟩
         repeat' first
-          | simp_all [ModuleBinary.ConstAllowed, core.result.Result.Insts.CoreOpsTry.branch,
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-              error.Error.Insts.CoreConvertFromOpError.from]
+          | simp_all
           | step
           | split
 

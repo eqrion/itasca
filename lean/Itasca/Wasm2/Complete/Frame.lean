@@ -33,10 +33,10 @@ theorem labelAt_congr {st s : code.BodyState}
     cases hs : s.core.ctrls.val[st.core.ctrls.val.length - 1 - depth]? <;>
       cases ht : st.core.ctrls.val[st.core.ctrls.val.length - 1 - depth]? <;>
       simp only [hs, ht, Option.map_none, Option.map_some, Option.some.injEq] at he
-    · simp [hs, ht]
+    · simp [ht]
     · contradiction
     · contradiction
-    · simp [hs, ht, he]
+    · simp [ht, he]
   · rfl
 
 namespace Completeness

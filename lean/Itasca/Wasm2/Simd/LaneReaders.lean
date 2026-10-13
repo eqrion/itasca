@@ -52,26 +52,23 @@ theorem lane_fixed (st : code.OpIterState) (data : Slice U8)
       congr 1
       funext pair
       obtain ⟨r, s⟩ := pair
-      cases r <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+      cases r <;> simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
     | true =>
-      simp only [Bool.true_eq, if_true, laneInputs, laneOutput]
+      simp only [if_true, laneInputs, laneOutput]
       rw [carryFixed.cons]
       congr 1
       funext pair
       obtain ⟨r, s⟩ := pair
       cases r with
-      | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+      | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       | Ok value =>
-        simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, Std.uncurry]
+        simp only [bind_ok, Std.uncurry]
         rw [conversion_fixed]
         unfold carryFixed
         congr 1
         funext pair
         obtain ⟨r, s⟩ := pair
-        cases r <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+        cases r <;> simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
 theorem LaneOperation.inputs_pop (op : LaneOperation) :
     inputTypes (laneInputs op.runtime.1 op.replace) = op.inputs := by cases op <;> rfl

@@ -28,7 +28,7 @@ theorem Pending.enter_after {data env locals index st} (p : Pending data env loc
     have := p.ctrls; have := p.inbounds; have := p.size; have := limits.MAX_FUNCTION_BYTES.room
     omega
   apply WP.spec_mono (code.enter.sound st data env form initial outer p.current.vals vals
-    (by simp [Control.base, ctrls, base]) p.opened.shape.core p.opened.shape.aligned hcap)
+    (by simp [Control.base, ctrls, base]) p.opened.shape.core hcap)
   intro r hr hok
   obtain ⟨bt, ins, outs, hdecoded, hin, hout, hip, hop, remaining, newBase,
     hlen, hbase, hpop, hctrls, hblocks, hvals⟩ := hr hok

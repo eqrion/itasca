@@ -138,7 +138,7 @@ theorem MemoryOperation.wellFormed (op : MemoryOperation) (arg : memarg) (lane :
   all_goals try exact ha
   all_goals try exact hl
   all_goals try (simp only [Forall, Option.toList_none, List.not_mem_nil, false_implies, implies_true])
-  all_goals try (simp only [Forall, Option.toList_some, List.mem_singleton]; intro value he; subst value)
+  all_goals try (simp only [Option.toList_some, List.mem_singleton]; intro value he; subst value)
   all_goals repeat' first | exact ha | exact hl | decide | constructor
   all_goals norm_num [proj_sz_0, vsize]
 
@@ -153,49 +153,49 @@ theorem MemoryOperation.typed (op : MemoryOperation) (C : context) (arg : memarg
   have hw := op.wellFormed arg lane ha h8
   cases op
   case load =>
-    exact Instr_ok.vload_val C  arg mt hm he (by decide) (by convert halign using 1 <;> norm_num [naturalAlign, size]) hC hmt hw
+    exact Instr_ok.vload_val C  arg mt hm he (by decide) (by convert halign using 1; norm_num [naturalAlign, size]) hC hmt hw
   case load8x8S =>
-    exact Instr_ok.vload_pack C 8 8 .S arg mt hm he (by convert halign using 1 <;> norm_num [naturalAlign, size]) hC hmt hw
+    exact Instr_ok.vload_pack C 8 8 .S arg mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) hC hmt hw
   case load8x8U =>
-    exact Instr_ok.vload_pack C 8 8 .U arg mt hm he (by convert halign using 1 <;> norm_num [naturalAlign, size]) hC hmt hw
+    exact Instr_ok.vload_pack C 8 8 .U arg mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) hC hmt hw
   case load16x4S =>
-    exact Instr_ok.vload_pack C 16 4 .S arg mt hm he (by convert halign using 1 <;> norm_num [naturalAlign, size]) hC hmt hw
+    exact Instr_ok.vload_pack C 16 4 .S arg mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) hC hmt hw
   case load16x4U =>
-    exact Instr_ok.vload_pack C 16 4 .U arg mt hm he (by convert halign using 1 <;> norm_num [naturalAlign, size]) hC hmt hw
+    exact Instr_ok.vload_pack C 16 4 .U arg mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) hC hmt hw
   case load32x2S =>
-    exact Instr_ok.vload_pack C 32 2 .S arg mt hm he (by convert halign using 1 <;> norm_num [naturalAlign, size]) hC hmt hw
+    exact Instr_ok.vload_pack C 32 2 .S arg mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) hC hmt hw
   case load32x2U =>
-    exact Instr_ok.vload_pack C 32 2 .U arg mt hm he (by convert halign using 1 <;> norm_num [naturalAlign, size]) hC hmt hw
+    exact Instr_ok.vload_pack C 32 2 .U arg mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) hC hmt hw
   case splat8 =>
-    exact Instr_ok.vload_splat C 8 arg mt hm he (by convert halign using 1 <;> norm_num [naturalAlign, size]) hC hmt hw
+    exact Instr_ok.vload_splat C 8 arg mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) hC hmt hw
   case splat16 =>
-    exact Instr_ok.vload_splat C 16 arg mt hm he (by convert halign using 1 <;> norm_num [naturalAlign, size]) hC hmt hw
+    exact Instr_ok.vload_splat C 16 arg mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) hC hmt hw
   case splat32 =>
-    exact Instr_ok.vload_splat C 32 arg mt hm he (by convert halign using 1 <;> norm_num [naturalAlign, size]) hC hmt hw
+    exact Instr_ok.vload_splat C 32 arg mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) hC hmt hw
   case splat64 =>
-    exact Instr_ok.vload_splat C 64 arg mt hm he (by convert halign using 1 <;> norm_num [naturalAlign, size]) hC hmt hw
+    exact Instr_ok.vload_splat C 64 arg mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) hC hmt hw
   case storeFull =>
-    exact Instr_ok.vstore C  arg mt hm he (by decide) (by convert halign using 1 <;> norm_num [naturalAlign, size]) hC hmt hw
+    exact Instr_ok.vstore C  arg mt hm he (by decide) (by convert halign using 1; norm_num [naturalAlign, size]) hC hmt hw
   case load8Lane =>
-    exact Instr_ok.vload_lane C 8 arg lane mt hm he (by convert halign using 1 <;> norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
+    exact Instr_ok.vload_lane C 8 arg lane mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
   case load16Lane =>
-    exact Instr_ok.vload_lane C 16 arg lane mt hm he (by convert halign using 1 <;> norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
+    exact Instr_ok.vload_lane C 16 arg lane mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
   case load32Lane =>
-    exact Instr_ok.vload_lane C 32 arg lane mt hm he (by convert halign using 1 <;> norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
+    exact Instr_ok.vload_lane C 32 arg lane mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
   case load64Lane =>
-    exact Instr_ok.vload_lane C 64 arg lane mt hm he (by convert halign using 1 <;> norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
+    exact Instr_ok.vload_lane C 64 arg lane mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
   case store8Lane =>
-    exact Instr_ok.vstore_lane C 8 arg lane mt hm he (by convert halign using 1 <;> norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
+    exact Instr_ok.vstore_lane C 8 arg lane mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
   case store16Lane =>
-    exact Instr_ok.vstore_lane C 16 arg lane mt hm he (by convert halign using 1 <;> norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
+    exact Instr_ok.vstore_lane C 16 arg lane mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
   case store32Lane =>
-    exact Instr_ok.vstore_lane C 32 arg lane mt hm he (by convert halign using 1 <;> norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
+    exact Instr_ok.vstore_lane C 32 arg lane mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
   case store64Lane =>
-    exact Instr_ok.vstore_lane C 64 arg lane mt hm he (by convert halign using 1 <;> norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
+    exact Instr_ok.vstore_lane C 64 arg lane mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
   case load32Zero =>
-    exact Instr_ok.vload_zero C 32 arg mt hm he (by convert halign using 1 <;> norm_num [naturalAlign, size]) hC hmt hw
+    exact Instr_ok.vload_zero C 32 arg mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) hC hmt hw
   case load64Zero =>
-    exact Instr_ok.vload_zero C 64 arg mt hm he (by convert halign using 1 <;> norm_num [naturalAlign, size]) hC hmt hw
+    exact Instr_ok.vload_zero C 64 arg mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) hC hmt hw
 
 theorem MemoryOperation.principal (op : MemoryOperation) (C : context) (arg : memarg)
     (lane : laneidx) (ins outs : List valtype)

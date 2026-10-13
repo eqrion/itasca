@@ -35,7 +35,6 @@ theorem Immediate.declared {opcode token bytes} (hi : Immediate opcode token byt
   | numeric opcode operation hmap =>
     unfold Numeric.opcodeMeaning at hmap
     split at hmap <;> simp only [Option.some.injEq, reduceCtorEq] at hmap
-    all_goals try contradiction
     all_goals subst operation
     all_goals simp [Token.Declared, DeclaredReferences.Instruction,
       DeclaredReferences.instructionIndices, Numeric.unary, Numeric.binary,
@@ -43,7 +42,6 @@ theorem Immediate.declared {opcode token bytes} (hi : Immediate opcode token byt
   | memory opcode operation arg hmap _ _ =>
     unfold MemoryMeaning.opcodeMeaning at hmap
     split at hmap <;> simp only [Option.some.injEq, reduceCtorEq] at hmap
-    all_goals try contradiction
     all_goals subst operation
     all_goals simp [Token.Declared, DeclaredReferences.Instruction,
       DeclaredReferences.instructionIndices, MemoryMeaning.fullLoad, MemoryMeaning.packedLoad,
@@ -71,7 +69,7 @@ theorem Emits.declared_iff {tokens ops} (h : Emits tokens ops) (refs : List func
     simp [Token.Declared, ih]
   | block bt _ _ ih hb => simp [Token.Declared, ih, hb]
   | loop bt _ _ ih hb => simp [Token.Declared, ih, hb]
-  | ifElse bt _ _ _ ih ht he => simp [Token.Declared, ih, ht, he, and_assoc]
+  | ifElse bt _ _ _ ih ht he => simp [Token.Declared, ih, ht, he]
   | ifEnd bt _ _ ih hb => simp [Token.Declared, ih, hb]
 
 /-- Independently encoded Wasm 1.0 bodies meet the declaration supplement for

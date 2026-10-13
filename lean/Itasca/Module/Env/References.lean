@@ -50,7 +50,7 @@ theorem module.declare_initializer.spec (env : module.Env) (init : types.ConstEx
   cases init <;> simp only [module.declare_initializer, ModuleReferences.initializer]
   all_goals try (simp [ModuleReferences.Added])
   step
-  simp [ModuleReferences.Added, *]
+  simp [*]
 
 /-- The runtime declaration lookup terminates and computes list membership. -/
 @[step]

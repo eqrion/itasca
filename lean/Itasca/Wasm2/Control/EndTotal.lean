@@ -110,14 +110,14 @@ theorem end_frame_normalized (st : code.BodyState) (env : module.Env) (isElse : 
     funext frame
     cases isElse <;> cases hk : frame.kind
     all_goals
-      simp [finishFrame, alloc.vec.Vec.pop, hk, signature.BlockType.params.spec, signature.BlockType.results.spec,
+      simp [finishFrame, alloc.vec.Vec.pop, signature.BlockType.params.spec, signature.BlockType.results.spec,
         core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
         Std.uncurry, Std.bind_assoc]
       repeat' first
         | contradiction
         | rfl
-        | simp_all [Std.uncurry, Std.bind_assoc, core.convert.FromSame.from]
+        | simp_all [Std.uncurry, Std.bind_assoc]
         | (congr 1; funext x)
         | split
 
@@ -125,7 +125,6 @@ theorem end_frame_normalized (st : code.BodyState) (env : module.Env) (isElse : 
 theorem finishFrame.total (st : code.BodyState) (env : module.Env) (isElse : Bool)
     (bt : signature.BlockType) (frame : code.Ctrl) (i n : Usize)
     (hs : Control.Shape st.core)
-    (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (hi : i.val < st.core.ctrls.val.length) :
     finishFrame st env isElse bt frame i n ⦃ r =>
       Control.Shape r.2.core ∧ r.2.blocks.val.length = r.2.core.ctrls.val.length ∧
@@ -152,7 +151,8 @@ theorem finishFrame.total (st : code.BodyState) (env : module.Env) (isElse : Boo
           rw [← List.getElem_map (f := fun c : code.Ctrl => c.value_stack_base.val)]
           exact List.set_getElem_self (by simpa using hi)
         step* by first | exact hsp | simp_all
-  · step* <;> simp_all
+  · step*
+    simp_all
 
 end Itasca.Wasm2
 
@@ -169,14 +169,14 @@ theorem code.end_frame.total (st : code.BodyState) (env : module.Env)
   by_cases hn : alloc.vec.Vec.len st.blocks = 0#usize
   ·
     simp only [hn, ↓reduceIte]
-    simp [hs, ha]
+    simp [hs]
   · simp only [hn, ↓reduceIte]
     step as ⟨i, hi⟩
     step as ⟨bt, hbt⟩
     step as ⟨frame, hf⟩
     have hindex : i.val < st.core.ctrls.val.length := by scalar_tac
     have finish := Wasm2.finishFrame.total st env isElse bt frame i
-      (alloc.vec.Vec.len st.blocks) hs ha hindex
+      (alloc.vec.Vec.len st.blocks) hs hindex
     cases isElse <;> cases hk : frame.kind <;>
       simp only [Bool.false_eq_true, ↓reduceIte]
     case false.Then =>
@@ -191,12 +191,5 @@ theorem code.end_frame.total (st : code.BodyState) (env : module.Env)
     all_goals first
       | exact finish
       | solve | simp_all
-      | skip
-    all_goals
-      simp only [Wasm2.finishFrame, signature.BlockType.results.spec,
-        signature.BlockType.params.spec, alloc.vec.Vec.index_mut_slice_index,
-        bind_ok, Bool.false_eq_true, ↓reduceIte] at finish ⊢
-      convert finish using 1
-      congr 1
 
 end Itasca

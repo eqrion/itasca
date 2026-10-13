@@ -127,11 +127,11 @@ theorem module.decode_import.spec (data : Slice U8) (pos : Usize) (env : module.
               (module.check_table_count.spec { env with table_types := v } profile)
             rw [hchecked]
             cases checked with
-            | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
+            | Err e => simp [
                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-            | Ok unit =>
-              cases unit
-              simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+            | Ok u =>
+              cases u
+              simp only [bind_ok]
               step
               let entry : module.Import := ⟨modname, nm, .Table value⟩
               refine ⟨entry, ?_, ?_, ?_⟩

@@ -57,7 +57,7 @@ namespace Itasca.Wasm2
 /-- NOP accepts arbitrary unread suffixes and records its opcode byte. -/
 theorem Pending.step_nop {data env locals index st}
     (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
-    (hvisitor : FullVisitor.Total visitor) (v : V) (hsize : st.core.vals.val.length < Usize.max)
+    (hvisitor : FullVisitor.Total visitor) (v : V)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_NOP) :
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_NOP v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
   apply WP.spec_mono (code.step_nop.total visitor st.core data env ⟨locals, p.ft.results⟩ v hvisitor.toCore)
@@ -73,7 +73,7 @@ theorem Pending.step_nop {data env locals index st}
 /-- UNREACHABLE trims the current frame and records the exact byte. -/
 theorem Pending.step_unreachable {data env locals index st}
     (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
-    (hvisitor : FullVisitor.Total visitor) (v : V) (hsize : st.core.vals.val.length < Usize.max)
+    (hvisitor : FullVisitor.Total visitor) (v : V)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_UNREACHABLE) :
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_UNREACHABLE v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
   refine WP.spec_mono (code.step_unreachable.of_read visitor st.core data env ⟨locals, p.ft.results⟩ v
@@ -95,7 +95,7 @@ theorem Pending.step_unreachable {data env locals index st}
 /-- DROP covers concrete and polymorphic operands, and may reject an empty stack. -/
 theorem Pending.step_drop {data env locals index st}
     (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
-    (hvisitor : FullVisitor.Total visitor) (v : V) (hsize : st.core.vals.val.length < Usize.max)
+    (hvisitor : FullVisitor.Total visitor) (v : V)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_DROP) :
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_DROP v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
   refine WP.spec_mono (code.step_drop.of_read visitor st.core data env ⟨locals, p.ft.results⟩ v
@@ -367,7 +367,7 @@ theorem Pending.step_local_get {data env locals index st} (p : Pending data env 
     (fun idx _ he => .localGet idx he) r hr idx hi
 
 theorem Pending.step_local_set {data env locals index st} (p : Pending data env locals index st)
-    {V : Type} (visitor : code.OpVisitor V) (v : V) (hsize : st.core.vals.val.length < Usize.max) (hvisitor : FullVisitor.Total visitor)
+    {V : Type} (visitor : code.OpVisitor V) (v : V) (hvisitor : FullVisitor.Total visitor)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x21#u8) :
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_LOCAL_SET v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
   obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, vals⟩ := id p.opened
@@ -422,7 +422,7 @@ theorem Pending.step_global_get {data env locals index st} (p : Pending data env
     (fun idx _ he => .globalGet idx he) r hr idx hi
 
 theorem Pending.step_global_set {data env locals index st} (p : Pending data env locals index st)
-    {V : Type} (visitor : code.OpVisitor V) (v : V) (hsize : st.core.vals.val.length < Usize.max) (hvisitor : FullVisitor.Total visitor)
+    {V : Type} (visitor : code.OpVisitor V) (v : V) (hvisitor : FullVisitor.Total visitor)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x24#u8) :
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_GLOBAL_SET v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
   obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, vals⟩ := id p.opened
@@ -558,9 +558,9 @@ theorem Pending.scalar {data env locals index st} (p : Pending data env locals i
   · obtain ⟨operation, hm⟩ := memory_meaning_exists opcode hmemory.1 hmemory.2
     exact p.step_memory visitor v hsize hvisitor opcode operation hbyte hm
   by_cases h_nop : opcode = code.OP_NOP
-  · rw [h_nop] at hbyte ⊢; exact p.step_nop visitor hvisitor v hsize hbyte
+  · rw [h_nop] at hbyte ⊢; exact p.step_nop visitor hvisitor v hbyte
   by_cases h_unreachable : opcode = code.OP_UNREACHABLE
-  · rw [h_unreachable] at hbyte ⊢; exact p.step_unreachable visitor hvisitor v hsize hbyte
+  · rw [h_unreachable] at hbyte ⊢; exact p.step_unreachable visitor hvisitor v hbyte
   by_cases h_i32_const : opcode = code.OP_I32_CONST
   · rw [h_i32_const] at hbyte ⊢; exact p.step_i32Const visitor hvisitor v hsize hbyte
   by_cases h_i64_const : opcode = code.OP_I64_CONST
@@ -570,19 +570,19 @@ theorem Pending.scalar {data env locals index st} (p : Pending data env locals i
   by_cases h_f64_const : opcode = code.OP_F64_CONST
   · rw [h_f64_const] at hbyte ⊢; exact p.step_f64Const visitor hvisitor v hsize hbyte
   by_cases h_drop : opcode = code.OP_DROP
-  · rw [h_drop] at hbyte ⊢; exact p.step_drop visitor hvisitor v hsize hbyte
+  · rw [h_drop] at hbyte ⊢; exact p.step_drop visitor hvisitor v hbyte
   by_cases h_select : opcode = code.OP_SELECT
   · rw [h_select] at hbyte ⊢; exact p.step_select visitor hvisitor v hsize hbyte
   by_cases h_local_get : opcode = code.OP_LOCAL_GET
   · rw [h_local_get] at hbyte ⊢; exact p.step_local_get visitor v hsize hvisitor (by simpa [global_simps] using hbyte)
   by_cases h_local_set : opcode = code.OP_LOCAL_SET
-  · rw [h_local_set] at hbyte ⊢; exact p.step_local_set visitor v hsize hvisitor (by simpa [global_simps] using hbyte)
+  · rw [h_local_set] at hbyte ⊢; exact p.step_local_set visitor v hvisitor (by simpa [global_simps] using hbyte)
   by_cases h_local_tee : opcode = code.OP_LOCAL_TEE
   · rw [h_local_tee] at hbyte ⊢; exact p.step_local_tee visitor v hsize hvisitor (by simpa [global_simps] using hbyte)
   by_cases h_global_get : opcode = code.OP_GLOBAL_GET
   · rw [h_global_get] at hbyte ⊢; exact p.step_global_get visitor v hsize hvisitor (by simpa [global_simps] using hbyte)
   by_cases h_global_set : opcode = code.OP_GLOBAL_SET
-  · rw [h_global_set] at hbyte ⊢; exact p.step_global_set visitor v hsize hvisitor (by simpa [global_simps] using hbyte)
+  · rw [h_global_set] at hbyte ⊢; exact p.step_global_set visitor v hvisitor (by simpa [global_simps] using hbyte)
   by_cases h_memory_size : opcode = code.OP_MEMORY_SIZE
   · rw [h_memory_size] at hbyte ⊢; exact p.step_memory_size visitor v hsize hvisitor (by simpa [global_simps] using hbyte)
   by_cases h_memory_grow : opcode = code.OP_MEMORY_GROW

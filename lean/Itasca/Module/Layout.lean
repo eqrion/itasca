@@ -134,8 +134,7 @@ open ModuleBinary ModuleElaboration
 
 /-- Generated function typing and the selected independent profile transport
 into the exact decoded environment; no entry-validation premise is used. -/
-theorem CodeAt.typed {profile data start finish raw decls env}
-    (h : CodeAt data start raw.codes finish profile)
+theorem CodeAt.typed {profile raw decls env}
     (hr : ModuleEnv.Ready raw 10 decls env)
     (ht : SectionsTyped raw) (hp : Profile raw profile)
     (hallowed : ModuleTypesAllowed profile raw) (hdata : DataCountValid raw)

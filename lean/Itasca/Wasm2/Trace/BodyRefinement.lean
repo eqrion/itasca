@@ -37,7 +37,7 @@ theorem body.refines {V W : Type} (visitor : code.OpVisitor V)
       subst cf
       exact ⟨.done (.Ok (), w), by simp [hp], rfl, hrelated⟩
   · rename_i he
-    simp only [he, if_false]
+    simp only [he]
     obtain ⟨r, hr, h⟩ := ResultFacts.bind_ok_inv _ _ _ h
     rw [hr]
     cases r with
@@ -53,7 +53,7 @@ theorem body.refines {V W : Type} (visitor : code.OpVisitor V)
       obtain ⟨w1, hw, hr1⟩ := code.step_profile.wasm2_refines visitor replacement related hrefines
         { core := {st.core with pos} } data env ctx index opcode v w hrelated r s v1 hs
       rw [hw]
-      cases r <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
+      cases r <;> simp [
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h ⊢
       all_goals subst cf; exact ⟨rfl, hr1⟩
 
@@ -81,7 +81,7 @@ theorem code.body_loop_loop.wasm2_refines {V W : Type}
   | h n ih =>
     unfold code.body_loop_loop at h ⊢
     rw [loop] at h ⊢
-    simp only [Std.uncurry] at h ⊢
+    simp only at h ⊢
     obtain ⟨cf, hb, ht⟩ := ResultFacts.bind_ok_inv _ _ _ h
     obtain ⟨cf', hw, ho, hr⟩ := body.refines visitor replacement related hrefines
       data env ctx index st v w hrelated cf hb

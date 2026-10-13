@@ -35,40 +35,39 @@ theorem step_transfer {V W : Type} (visitor : code.OpVisitor V)
       obtain ⟨⟨r, v'⟩, hv, h⟩ := ResultFacts.bind_ok_inv _ _ _ h
       cases r with
       | Err e =>
-        simp [code.visit, core.result.Result.Insts.CoreOpsTry.branch,
+        simp [code.visit,
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
-
       | Ok u =>
-        simp [code.visit, core.result.Result.Insts.CoreOpsTry.branch] at h
+        simp [code.visit] at h
         obtain ⟨rfl, rfl⟩ := h
-        first
+        solve
         | (obtain ⟨w', hw⟩ := ha.on_block w s.core a
            refine ⟨w', ?_⟩
-           simpa [hw, code.visit, core.result.Result.Insts.CoreOpsTry.branch])
+           simp [hw, code.visit])
         | (obtain ⟨w', hw⟩ := ha.on_loop w s.core a
            refine ⟨w', ?_⟩
-           simpa [hw, code.visit, core.result.Result.Insts.CoreOpsTry.branch])
+           simp [hw, code.visit])
         | (obtain ⟨w', hw⟩ := ha.on_if w s.core a
            refine ⟨w', ?_⟩
-           simpa [hw, code.visit, core.result.Result.Insts.CoreOpsTry.branch])
+           simp [hw, code.visit])
         | (obtain ⟨w', hw⟩ := ha.on_else w s.core a.2
            refine ⟨w', ?_⟩
-           simpa [hw, code.visit, core.result.Result.Insts.CoreOpsTry.branch])
+           simp [hw, code.visit])
         | (obtain ⟨w', hw⟩ := ha.on_end w s.core a.1 a.2
            refine ⟨w', ?_⟩
-           simpa [hw, code.visit, core.result.Result.Insts.CoreOpsTry.branch])
+           simp [hw, code.visit])
         | (obtain ⟨w', hw⟩ := ha.on_br w s.core a.1 a.2
            refine ⟨w', ?_⟩
-           simpa [hw, code.visit, core.result.Result.Insts.CoreOpsTry.branch])
+           simp [hw, code.visit])
         | (obtain ⟨w', hw⟩ := ha.on_br_if w s.core a.1 a.2
            refine ⟨w', ?_⟩
-           simpa [hw, code.visit, core.result.Result.Insts.CoreOpsTry.branch])
+           simp [hw, code.visit])
         | (obtain ⟨w', hw⟩ := ha.on_call w s.core a
            refine ⟨w', ?_⟩
-           simpa [hw, code.visit, core.result.Result.Insts.CoreOpsTry.branch])
+           simp [hw, code.visit])
         | (obtain ⟨w', hw⟩ := ha.on_call_indirect w s.core a.1 a.2
            refine ⟨w', ?_⟩
-           simpa [hw, code.visit, core.result.Result.Insts.CoreOpsTry.branch])
+           simp [hw, code.visit])
   case h_8 =>
     try simp_all only [↓reduceIte]
     obtain ⟨⟨r, s, v'⟩, hs, h⟩ := ResultFacts.bind_ok_inv _ _ _ h
@@ -99,14 +98,13 @@ theorem step_transfer {V W : Type} (visitor : code.OpVisitor V)
       obtain ⟨⟨r, v'⟩, hv, h⟩ := ResultFacts.bind_ok_inv _ _ _ h
       cases r with
       | Err e =>
-        simp [code.visit, core.result.Result.Insts.CoreOpsTry.branch,
+        simp [code.visit,
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
-
       | Ok u =>
-        simp [code.visit, core.result.Result.Insts.CoreOpsTry.branch] at h
+        simp [code.visit] at h
         obtain ⟨rfl, rfl⟩ := h
         obtain ⟨w', hw⟩ := ha.on_return w ois'
-        exact ⟨w', by simp [hw, code.visit, core.result.Result.Insts.CoreOpsTry.branch]⟩
+        exact ⟨w', by simp [hw, code.visit]⟩
   case h_12 =>
     rename_i _ h2 h3 h4 h5 h11 h12 h13 h14 h15 h16 h17
     have hscalar : opcode.val ∉ controlOpcodes := by
@@ -115,7 +113,7 @@ theorem step_transfer {V W : Type} (visitor : code.OpVisitor V)
       simp only [controlOpcodes, List.mem_cons, List.not_mem_nil, or_false, not_or]
       exact ⟨neq h2, neq h3, neq h4, neq h5, neq h11, neq h12,
         neq h13, neq h14, neq h15, neq h16, neq h17⟩
-    try simp_all only [↓reduceIte]
+    try simp_all only
     split at h
     · simp at h
     · rename_i hcap
@@ -125,7 +123,6 @@ theorem step_transfer {V W : Type} (visitor : code.OpVisitor V)
       | Err e =>
         simp [core.result.Result.Insts.CoreOpsTry.branch,
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
-
       | Ok u =>
         cases u
         simp [core.result.Result.Insts.CoreOpsTry.branch] at h

@@ -68,7 +68,7 @@ theorem Layout.valid_empty (profile : ValidationProfile := .Wasm1) :
     | Wasm1 => exact ⟨rfl, rfl⟩
     | Wasm2 => exact ⟨[], [], .nil, .absent, rfl⟩
   · exact .nil
-  · simp [sectionRank, global_simps, Layout.Future]
+  · simp [global_simps, Layout.Future]
   · simp [ModuleTypesAllowed, Declarations.module]
 
 theorem Layout.Valid.custom {profile last decls l bytes} (h : Layout.Valid last decls l profile)
@@ -116,7 +116,7 @@ theorem Effect.append_layout {profile} {data origin pos first next env result be
       · simp [sectionRank, global_simps, Layout.Future, hz2, hz3, hz4, hz5, hz6, hz7, hz8, hz9, hz10]
       · exact hallowed
     · convert hs.append hbytes using 1
-      simp [Layout.bytes, hz1, hz2, hz3, hz4, hz5, hz6, hz7, hz8, hz9, hz10, List.append_assoc]
+      simp [Layout.bytes, hz1, hz2, hz3, hz4, hz5, hz6, hz7, hz8, hz9, hz10]
   | imports hadd hb =>
     obtain ⟨bytes, he, hbytes⟩ := ModuleTail.header_payload hh hb
     change last < 2 at ho

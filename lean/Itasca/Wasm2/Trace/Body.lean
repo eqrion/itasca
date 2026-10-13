@@ -65,7 +65,7 @@ theorem code.body_loop_loop.wasm2_trace_of_contract {V : Type}
   | h n ih =>
     unfold code.body_loop_loop at h
     rw [loop] at h
-    simp only [Std.uncurry] at h
+    simp only at h
     obtain ⟨cf, hb, ht⟩ := ResultFacts.bind_ok_inv _ _ _ h
     have hb0 := hb
     unfold code.body_loop_loop.body at hb
@@ -101,15 +101,14 @@ theorem code.body_loop_loop.wasm2_trace_of_contract {V : Type}
         rw [hstart] at hchunk
         cases res with
         | Err e =>
-          simp [core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at htail
+          simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at htail
           subst cf
           simp at ht
           obtain ⟨rfl, rfl⟩ := ht
           exact ⟨first, hfirst, hchunk.rejected hi.bounds.pos⟩
         | Ok u =>
           cases u
-          simp [core.result.Result.Insts.CoreOpsTry.branch] at htail
+          simp at htail
           subst cf
           obtain ⟨emptyCf, hempty, hobs⟩ := Visitor.body.transfer visitor
             code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_accepts
@@ -129,7 +128,7 @@ theorem code.body_loop_loop.wasm2_trace_of_contract {V : Type}
                 : ControlFlow (Unit × code.BodyState) (core.result.Result Unit error.OpError × Unit))) = _
             rw [loopBody_eq, if_neg hc, hr]
             simp only [bind_ok, hs0]
-            cases res <;> simp [continueStep, Std.bind_assoc]
+            cases res <;> simp [continueStep]
           rw [hempty] at heval
           simp only [Result.ok.injEq] at heval
           subst emptyCf

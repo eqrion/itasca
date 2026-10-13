@@ -184,8 +184,7 @@ theorem code.push_frame.initial (index : U32) :
     code.push_frame
       { core := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _, 0#usize⟩ } .Body (.TypeIndex index) =
       .ok (Wasm2.initial index) := by
-  simp [code.push_frame, code.push_ctrl, Wasm2.initial,
-    alloc.vec.Vec.push, U32.max, U32.numBits]
+  simp [code.push_frame, Wasm2.initial, alloc.vec.Vec.push, U32.max, U32.numBits]
   rfl
 
 end Itasca

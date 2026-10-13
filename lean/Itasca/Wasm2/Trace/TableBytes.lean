@@ -95,7 +95,7 @@ theorem table_loop_records {V : Type} (visitor : code.OpVisitor V)
           all_goals obtain ⟨rfl, rfl, rfl⟩ := ht
           all_goals refine ⟨_, hlog, ?_⟩
           all_goals apply TableSuffix.complete (labels := []) (depths := []) (last := st.core.pos) (.nil _)
-          all_goals first | (simpa [← hn, he]) | (simpa [hp] using hd) | simp [AllAccepted]
+          all_goals solve | simp [← hn, he] | simpa [hp] using hd | simp [AllAccepted]
       · simp only [bne_iff_ne, if_pos he] at hb
         obtain ⟨⟨reply, w⟩, hh, hb⟩ := ResultFacts.bind_ok_inv _ _ _ hb
         have hlog := records v (.op s.core (.br_table_label depth)) reply w hh
@@ -181,12 +181,11 @@ theorem table_records {data env locals index st} (p : Pending data env locals in
     rw [hr] at run
     cases r with
     | Err e =>
-      simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at run
+      simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at run
       obtain ⟨rfl, rfl, rfl⟩ := run
       exact ⟨[], by simp, .silent e s (.empty _)⟩
     | Ok value =>
-      simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, Std.uncurry] at run
+      simp only [bind_ok, Std.uncurry] at run
       obtain ⟨observations, log, trace⟩ := table_loop_records visitor observe records
         ⟨s⟩ data env hs (by simp) count 0#u32 none (by simp) v result final v' run
       have hop : Wasm1.BytesAt data p.start [0x0E#u8] st.core.pos :=

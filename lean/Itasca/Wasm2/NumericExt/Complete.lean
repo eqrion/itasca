@@ -73,7 +73,7 @@ theorem Frame.saturating {st} (f : Frame st) (data : Slice U8) (env : module.Env
     have hd : Leb128.Decoded data st.core.pos subopcode next := ⟨bytes, hb.suffix, hb.length, hb.bound, he⟩
     have hsub : subopcode.val < 8 := by
       unfold NumericExtensions.saturatingMeaning at hmap
-      split at hmap <;> simp_all <;> omega
+      split at hmap <;> simp_all
     rw [if_neg hn, code.step_wasm2.saturating _ _ _ _ _ _ _ _ hd hsub,
       code.step_extended.prefixed]
     simp [prefixedStep, hread, hmap, CoreVisitor.run, hs, decoded, empty_saturating,
@@ -95,11 +95,11 @@ theorem base_immediate {opcode op bytes} (hi : Wasm1.Immediate opcode (.plain op
       omega
     | memory opcode operation arg hmap ha ho =>
       unfold MemoryMeaning.opcodeMeaning at hmap
-      split at hmap <;> simp_all <;> omega
+      split at hmap <;> simp_all
     | _ => decide
   constructor
   · unfold NumericExtensions.signMeaning
-    split <;> simp_all <;> omega
+    split <;> simp_all
   · intro he
     have := congrArg UScalar.val he
     simp only [code.OP_MISC_PREFIX] at this

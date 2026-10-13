@@ -109,20 +109,17 @@ theorem code.branch.eq_core (st : code.BodyState) (data : Slice U8)
       congr 1
       funext x
       obtain ⟨r, ois⟩ := x
-      cases r <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, Std.bind_assoc]
+      cases r <;> simp [Std.bind_assoc]
     all_goals
       congr 1
       funext x
       obtain ⟨r, ois⟩ := x
-      cases r <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, Std.bind_assoc]
+      cases r <;> simp [Std.bind_assoc]
     all_goals
       congr 1
       funext x
       obtain ⟨r, ois⟩ := x
-      cases r <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, Std.bind_assoc]
+      cases r <;> simp
 
 theorem code.call.eq_core (st : code.BodyState) (data : Slice U8)
     (env : module.Env) (indirect : Bool) :
@@ -149,15 +146,13 @@ theorem code.call.eq_core (st : code.BodyState) (data : Slice U8)
       congr 1
       funext i
       split
-      · simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+      · simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       · simp only [Std.bind_assoc]
         congr 1
         funext ft
         congr 1
         funext pair
         obtain ⟨r, out⟩ := pair
-        cases r <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+        cases r <;> simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
 end Itasca

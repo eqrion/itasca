@@ -54,21 +54,21 @@ attribute [local step] code.pop_with_type.total code.pop_stack_type.total
     code.take_table st data env ⦃ r => Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length = st.vals.val.length ⦄ := by
   unfold code.take_table
-  step* <;> simp_all
+  step*
 
 @[step] theorem code.take_element.total (st : code.OpIterState) (data : Slice U8)
     (env : module.Env) (hs : Control.Shape st) :
     code.take_element st data env ⦃ r => Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length = st.vals.val.length ⦄ := by
   unfold code.take_element
-  step* <;> simp_all
+  step*
 
 @[step] theorem code.take_data_index.total (st : code.OpIterState) (data : Slice U8)
     (env : module.Env) (hs : Control.Shape st) :
     code.take_data_index st data env ⦃ r => Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length = st.vals.val.length ⦄ := by
   unfold code.take_data_index
-  step* <;> simp_all
+  step*
 
 @[step] theorem code.read_bulk_memory.total (st : code.OpIterState) (data : Slice U8)
     (env : module.Env) (hs : Control.Shape st) :
@@ -76,42 +76,42 @@ attribute [local step] code.pop_with_type.total code.pop_stack_type.total
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length = st.vals.val.length ⦄ := by
   unfold code.read_bulk_memory
   simp only [alloc.vec.Vec.is_empty, bind_ok]
-  step* <;> simp_all
+  step*
 
 @[step] theorem code.read_bulk_operands.total (st : code.OpIterState) 
     (hs : Control.Shape st) :
     code.read_bulk_operands st  ⦃ r => Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length ≤ st.vals.val.length + 0 ⦄ := by
   unfold code.read_bulk_operands
-  step* <;> simp_all <;> omega
+  step*
 
 @[step] theorem code.read_ref_null.total (st : code.OpIterState) (data : Slice U8)
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_ref_null st data ⦃ r => Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length ≤ st.vals.val.length + 1 ⦄ := by
   unfold code.read_ref_null
-  step* <;> simp_all <;> omega
+  step*
 
 @[step] theorem code.read_ref_is_null.total (st : code.OpIterState) 
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_ref_is_null st  ⦃ r => Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length ≤ st.vals.val.length + 1 ⦄ := by
   unfold code.read_ref_is_null
-  step* <;> simp_all <;> omega
+  step*
 
 @[step] theorem code.read_ref_func.total (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_ref_func st data env ⦃ r => Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length ≤ st.vals.val.length + 1 ⦄ := by
   unfold code.read_ref_func
-  step* <;> simp_all <;> omega
+  step*
 
 @[step] theorem code.read_typed_select.total (st : code.OpIterState) (data : Slice U8)
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_typed_select st data ⦃ r => Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length ≤ st.vals.val.length + 1 ⦄ := by
   unfold code.read_typed_select
-  step* <;> simp_all <;> omega
+  step*
 
 @[step] theorem code.read_table_get.total (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
@@ -121,10 +121,6 @@ attribute [local step] code.pop_with_type.total code.pop_stack_type.total
   step*
   all_goals try (rcases val with ⟨index, ty⟩)
   all_goals step*
-  all_goals try (rcases val1 with ⟨index1, ty1⟩)
-  all_goals step*
-  all_goals simp_all
-  all_goals omega
 
 @[step] theorem code.read_table_set.total (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (hs : Control.Shape st) :
@@ -134,31 +130,27 @@ attribute [local step] code.pop_with_type.total code.pop_stack_type.total
   step*
   all_goals try (rcases val with ⟨index, ty⟩)
   all_goals step*
-  all_goals try (rcases val1 with ⟨index1, ty1⟩)
-  all_goals step*
-  all_goals simp_all
-  all_goals omega
 
 @[step] theorem code.read_memory_init.total (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (hs : Control.Shape st) :
     code.read_memory_init st data env ⦃ r => Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length ≤ st.vals.val.length + 0 ⦄ := by
   unfold code.read_memory_init
-  step* <;> simp_all <;> omega
+  step*
 
 @[step] theorem code.read_memory_copy.total (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (hs : Control.Shape st) :
     code.read_memory_copy st data env ⦃ r => Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length ≤ st.vals.val.length + 0 ⦄ := by
   unfold code.read_memory_copy
-  step* <;> simp_all <;> omega
+  step*
 
 @[step] theorem code.read_memory_fill.total (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (hs : Control.Shape st) :
     code.read_memory_fill st data env ⦃ r => Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length ≤ st.vals.val.length + 0 ⦄ := by
   unfold code.read_memory_fill
-  step* <;> simp_all <;> omega
+  step*
 
 @[step] theorem code.read_table_init.total (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (hs : Control.Shape st) :
@@ -170,8 +162,6 @@ attribute [local step] code.pop_with_type.total code.pop_stack_type.total
   all_goals step*
   all_goals try (rcases val1 with ⟨index1, ty1⟩)
   all_goals step*
-  all_goals simp_all
-  all_goals omega
 
 @[step] theorem code.read_table_copy.total (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (hs : Control.Shape st) :
@@ -183,8 +173,6 @@ attribute [local step] code.pop_with_type.total code.pop_stack_type.total
   all_goals step*
   all_goals try (rcases val1 with ⟨index1, ty1⟩)
   all_goals step*
-  all_goals simp_all
-  all_goals omega
 
 @[step] theorem code.read_table_grow.total (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
@@ -194,10 +182,6 @@ attribute [local step] code.pop_with_type.total code.pop_stack_type.total
   step*
   all_goals try (rcases val with ⟨index, ty⟩)
   all_goals step*
-  all_goals try (rcases val1 with ⟨index1, ty1⟩)
-  all_goals step*
-  all_goals simp_all
-  all_goals omega
 
 @[step] theorem code.read_table_size.total (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
@@ -207,10 +191,6 @@ attribute [local step] code.pop_with_type.total code.pop_stack_type.total
   step*
   all_goals try (rcases val with ⟨index, ty⟩)
   all_goals step*
-  all_goals try (rcases val1 with ⟨index1, ty1⟩)
-  all_goals step*
-  all_goals simp_all
-  all_goals omega
 
 @[step] theorem code.read_table_fill.total (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (hs : Control.Shape st) :
@@ -220,9 +200,5 @@ attribute [local step] code.pop_with_type.total code.pop_stack_type.total
   step*
   all_goals try (rcases val with ⟨index, ty⟩)
   all_goals step*
-  all_goals try (rcases val1 with ⟨index1, ty1⟩)
-  all_goals step*
-  all_goals simp_all
-  all_goals omega
 
 end Itasca

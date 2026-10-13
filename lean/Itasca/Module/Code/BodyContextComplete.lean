@@ -17,8 +17,8 @@ theorem typed_no_data {C : context} {ops : List instr} {ft : functype}
     (motive_1 := fun C op _ _ => C.DATAS = [] → instructionUsesData op = false)
   all_goals first
     | rfl
-    | (intro hd; simp_all [instructionUsesData, instructionsUseData, instructionsUseData_append])
-    | (simp_all [instructionUsesData, instructionsUseData, instructionsUseData_append])
+    | (intro hd; simp_all [instructionsUseData, instructionsUseData_append])
+    | (simp_all [instructionUsesData])
 
   case block => apply_assumption; assumption
   case loop => apply_assumption; assumption

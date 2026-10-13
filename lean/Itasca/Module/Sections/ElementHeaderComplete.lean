@@ -40,7 +40,6 @@ theorem module.decode_element_header.complete {data : Slice U8} {pos next : Usiz
       rw [hte]
       simp [ModuleConstants.referenceValueType, types.ElemType.value_type,
         core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-        types.ValueType.Insts.CoreCmpPartialEqValueType,
         types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
     | @activeIndices offset fb ob hf ho =>
       obtain ⟨hi, ht, hv⟩ := hv
@@ -66,7 +65,6 @@ theorem module.decode_element_header.complete {data : Slice U8} {pos next : Usiz
       rw [hte]
       simp [ModuleConstants.referenceValueType, types.ElemType.value_type,
         core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-        types.ValueType.Insts.CoreCmpPartialEqValueType,
         types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
     | @activeExpressions offset fb ob hf ho =>
       obtain ⟨hi, ht, hv⟩ := hv
@@ -92,7 +90,6 @@ theorem module.decode_element_header.complete {data : Slice U8} {pos next : Usiz
       rw [hte]
       simp [ModuleConstants.referenceValueType, types.ElemType.value_type,
         core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-        types.ValueType.Insts.CoreCmpPartialEqValueType,
         types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
     | @passiveIndices fb hf =>
       obtain ⟨middle, hflags, hkind⟩ := hs.split
@@ -133,7 +130,6 @@ theorem module.decode_element_header.complete {data : Slice U8} {pos next : Usiz
       rw [hte]
       simp [ModuleConstants.referenceValueType, types.ElemType.value_type,
         core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-        types.ValueType.Insts.CoreCmpPartialEqValueType,
         types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
     | @passiveExpressions elem fb hf =>
       obtain ⟨middle, hflags, helem⟩ := hs.split
@@ -177,7 +173,6 @@ theorem module.decode_element_header.complete {data : Slice U8} {pos next : Usiz
       rw [hte]
       cases elem <;> simp [ModuleConstants.referenceValueType, types.ElemType.value_type,
         core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-        types.ValueType.Insts.CoreCmpPartialEqValueType,
         types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
   obtain ⟨r, hr, rfl⟩ := WP.spec_imp_exists hx
   exact hr

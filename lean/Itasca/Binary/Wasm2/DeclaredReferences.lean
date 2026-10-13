@@ -37,7 +37,7 @@ theorem Emits.declared_iff {tokens ops} (h : Emits tokens ops) (refs : List func
     simp [Token.Declared, ih]
   | block bt _ _ ih hb => simp [Token.Declared, ih, hb]
   | loop bt _ _ ih hb => simp [Token.Declared, ih, hb]
-  | ifElse bt _ _ _ ih ht he => simp [Token.Declared, ih, ht, he, and_assoc]
+  | ifElse bt _ _ _ ih ht he => simp [Token.Declared, ih, ht, he]
   | ifEnd bt _ _ ih hb => simp [Token.Declared, ih, hb]
 
 theorem BodyTokens.declared_iff {tokens ops} (h : BodyTokens tokens ops) (refs : List funcidx) :

@@ -146,8 +146,9 @@ theorem code.branch_table_with.total {V : Type} (visitor : code.OpVisitor V)
         ⟨s⟩ data env v count none 0#u32 hs' (by simp_all) (by simp))
       intro result hout
       exact ⟨hout.1, hout.2.1, by simpa [hc] using hout.2.2.1, hpnext.trans (by simpa [hp] using hout.2.2.2)⟩
-    · step* <;> simp_all
-  · step* <;> simp_all
+    · step*
+      simp_all
+  · step*
 
 @[local step] private theorem block_hook_total {V : Type} (visitor : code.OpVisitor V)
     (hv : FullVisitor.Total visitor) (v : V) (st : code.OpIterState) (bt : signature.BlockType) :
@@ -242,7 +243,7 @@ theorem code.body_loop_loop.body.wasm2_total {V : Type}
           (.Ok (data.val[s.core.pos.val], next) : core.result.Result (U8 × Usize) error.OpError) =
           .ok (.Continue (data.val[s.core.pos.val], next)) := rfl
       rw [hbranch]
-      simp only [bind_ok, Std.uncurry, Std.bind_assoc]
+      simp only [bind_ok, Std.uncurry]
       have hspos : Control.Shape { s.core with pos := next } := ⟨hs.ordered, hs.bounded⟩
       have hcap : s.blocks.val.length < Usize.max := by
         have := limits.MAX_FUNCTION_BYTES.room
@@ -278,10 +279,7 @@ theorem code.body_loop_loop.body.wasm2_total {V : Type}
       all_goals try simp only [Std.bind_assoc, Std.uncurry]
       all_goals step*
       all_goals try (cases x)
-      all_goals try simp only [Std.bind_assoc, Std.uncurry]
-      all_goals step*
-      all_goals try (rcases val1 with ⟨a, b⟩)
-      all_goals try (rcases val with ⟨a, b⟩)
+      all_goals try simp only [Std.bind_assoc]
       all_goals step*
       all_goals simp_all
       all_goals try constructor
@@ -327,7 +325,7 @@ attribute [local step] code.body_loop_loop.wasm2_total
       { vals := alloc.vec.Vec.new _, ctrls := alloc.vec.Vec.new _, pos := 0#usize } :=
     ⟨by simp, by simp⟩
   unfold code.initial_state
-  step* <;> simp_all <;> scalar_tac
+  step* <;> simp_all; scalar_tac
 
 /-- Returning opcode hooks suffice for totality on arbitrary multi-value input;
 no byte validity, signature, or environment hypothesis is required. -/

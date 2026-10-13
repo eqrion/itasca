@@ -44,7 +44,7 @@ theorem full_memory_fixed (st : code.OpIterState) (data : Slice U8) (env : modul
     (align : U32) (store : Bool) :
     (if store then code.read_store st data env .V128 align else code.read_load st data env .V128 align) =
       fullMemoryReader st data env align store := by
-  cases store <;> simp only [Bool.false_eq_true, Bool.true_eq, if_true, if_false,
+  cases store <;> simp only [Bool.false_eq_true, if_true, if_false,
     code.read_store, code.read_load, fullMemoryReader, fullMemoryInputs, memoryOutput]
   all_goals congr 1
   all_goals funext pair
@@ -57,19 +57,17 @@ theorem full_memory_fixed (st : code.OpIterState) (data : Slice U8) (env : modul
       congr 1
       funext r
       cases r with
-      | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+      | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       | Ok u =>
-        simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, carryFixed, readFixed,
-          Std.bind_assoc, Std.uncurry, Bool.false_eq_true, Bool.true_eq, if_true, if_false]
+        simp only [bind_ok, carryFixed, readFixed, Std.bind_assoc, Std.uncurry]
         repeat' first
           | rfl
           | (congr 1
              funext pair
              obtain ⟨res, state⟩ := pair
-             cases res <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
+             cases res <;> simp [
                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-               readFixed, Std.bind_assoc])
+               Std.bind_assoc])
 
 def memoryLaneReader (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (align : U32) (store : Bool) (count : U8) :
@@ -103,27 +101,25 @@ theorem memory_lane_fixed (st : code.OpIterState) (data : Slice U8) (env : modul
     funext pair
     obtain ⟨r, s⟩ := pair
     cases r with
-    | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+    | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
     | Ok lane =>
-      simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, Std.uncurry]
+      simp only [bind_ok, Std.uncurry]
       congr 1
       funext r
       cases r with
-      | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+      | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       | Ok u =>
-        cases store <;> simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
+        cases store <;> simp only [bind_ok,
           carryFixed, readFixed, memoryOutput, Std.bind_assoc, Std.uncurry,
-          Bool.false_eq_true, Bool.true_eq, if_true, if_false]
+          Bool.false_eq_true, if_true, if_false]
         all_goals repeat' first
           | rfl
           | (congr 1
              funext pair
              obtain ⟨res, state⟩ := pair
-             cases res <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
+             cases res <;> simp [
                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-               readFixed, Std.bind_assoc])
+               Std.bind_assoc])
 
 theorem MemoryOperation.inputs_full (op : MemoryOperation) (h : op.laneCount = 0) :
     inputTypes (fullMemoryInputs op.store) = op.inputs := by cases op <;> first | rfl | contradiction
@@ -153,7 +149,6 @@ theorem MemoryOperation.conditions (op : MemoryOperation) (C : context)
     all_goals refine ⟨by assumption, ?_, ?_⟩
     all_goals norm_num [naturalAlign, laneCount, MemoryMeaning.memArg, proj_uN_0, size] at *
     all_goals norm_cast at *
-    all_goals assumption
   exact ⟨hp.1, (pow_le_pow_iff_right₀ (a := (2 : Rat)) (by norm_num)).mp hp.2.1, hp.2.2⟩
 
 theorem MemoryOperation.typed_runtime (op : MemoryOperation) (C : context)

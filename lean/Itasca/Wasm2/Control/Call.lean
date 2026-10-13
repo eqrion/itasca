@@ -24,8 +24,7 @@ theorem code.call.direct_prefix (st : code.BodyState) (data : Slice U8)
           (Control.polymorphic st.core) rest ⦄ := by
   obtain ⟨r, hr, hd⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data st.core.pos)
   cases r with
-  | Err e => simp [code.call.eq_core, Wasm2.callCore, hr, core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  | Err e => simp [code.call.eq_core, Wasm2.callCore, hr]
   | Ok pair =>
     obtain ⟨idx, next⟩ := pair
     by_cases hi : idx.val < env.func_types.val.length
@@ -37,8 +36,7 @@ theorem code.call.direct_prefix (st : code.BodyState) (data : Slice U8)
       obtain ⟨⟨res, s⟩, hs, hout⟩ := WP.spec_imp_exists
         (code.apply_func_type.realizes { st.core with pos := next } ft outer segment hvals hbase)
       cases res with
-      | Err e => simp [code.call.eq_core, Wasm2.callCore, hr, lift, hsmall, hft, htype, hs,
-          core.result.Result.Insts.CoreOpsTry.branch]
+      | Err e => simp [code.call.eq_core, Wasm2.callCore, hr, lift, hsmall, hft, hs]
       | Ok u =>
         obtain ⟨hc, hp, _, _, rest, hv, _, ht⟩ := hout rfl
         dsimp only at hc hp hv ht
@@ -50,11 +48,10 @@ theorem code.call.direct_prefix (st : code.BodyState) (data : Slice U8)
           (hC.call idx ft hi htype)
         rw [WP.spec_equiv_exists]
         refine ⟨(.Ok (), ⟨s⟩), ?_, fun _ => ?_⟩
-        · simp [code.call.eq_core, Wasm2.callCore, hr, lift, hsmall, hft, htype, hs,
-            core.result.Result.Insts.CoreOpsTry.branch]
+        · simp [code.call.eq_core, Wasm2.callCore, hr, lift, hsmall, hft, hs]
         · exact ⟨idx, by simpa [hp, Leb128.Post] using hd, hc, code.BodyState.blocks_eq_of_ctrls hc, _, hv, htyping⟩
     · have hlarge := Nat.le_of_not_gt hi
-      simp [code.call.eq_core, Wasm2.callCore, hr, lift, hlarge, core.result.Result.Insts.CoreOpsTry.branch]
+      simp [code.call.eq_core, Wasm2.callCore, hr, lift, hlarge]
 
 /-- Direct calls accept independently encoded, in-range function indices and
 compatible operands within the explicit signature and operand capacity limits. -/
@@ -86,8 +83,7 @@ theorem code.call.direct_complete (st : code.BodyState) (data : Slice U8)
   have hsmall := Nat.not_le_of_gt hi
   rw [WP.spec_equiv_exists]
   refine ⟨(.Ok (), ⟨s⟩), ?_, rfl, hc, code.BodyState.blocks_eq_of_ctrls hc, hpos, rest, hvs, hlen, hreal'⟩
-  simp [code.call.eq_core, Wasm2.callCore, hread, lift, hsmall, hft, ht, hs,
-    core.result.Result.Insts.CoreOpsTry.branch]
+  simp [code.call.eq_core, Wasm2.callCore, hread, lift, hsmall, hft, ht, hs]
 
 /-- Indirect calls decode both indices and require a function-reference table.
 The selector is consumed before function arguments. -/
@@ -160,7 +156,7 @@ theorem code.call.indirect_prefix (st : code.BodyState) (data : Slice U8)
                 simp [code.call, code.call_indirect_info, code.take_index, hr, hreadtable, lift,
                   htablesmall, hget, helem, types.ElemType.value_type,
                   core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-                  types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hsmall, hcond, hft, htype, hs,
+                  types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hsmall, hcond, hft, hs,
                   core.result.Result.Insts.CoreOpsTry.branch,
                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
               | Ok u =>
@@ -182,7 +178,7 @@ theorem code.call.indirect_prefix (st : code.BodyState) (data : Slice U8)
                 · simp [code.call, code.call_indirect_info, code.take_index, hr, hreadtable, lift,
                     htablesmall, hget, helem, types.ElemType.value_type,
                     core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-                    types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hsmall, hcond, hft, htype, hs,
+                    types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hsmall, hcond, hft, hs,
                     core.result.Result.Insts.CoreOpsTry.branch,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
                 · exact ⟨idx, table, middle, hd, by simpa [Leb128.Post, hp, hpc] using hdtable,

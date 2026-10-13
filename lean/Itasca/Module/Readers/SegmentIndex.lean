@@ -21,7 +21,7 @@ theorem module.decode_segment_index.profile_spec (data : Slice U8) (pos : Usize)
   | Wasm2 =>
       by_cases hzero : flags = 0#u32
       · subst flags
-        simp only [module.decode_segment_index, WP.spec_ok]
+        simp only [module.decode_segment_index]
         exact ⟨[], Or.inl ⟨rfl, rfl, rfl, rfl⟩, Wasm1.BytesAt.nil data pos hpos⟩
       · by_cases htwo : flags = 2#u32
         · subst flags
@@ -34,7 +34,7 @@ theorem module.decode_segment_index.profile_spec (data : Slice U8) (pos : Usize)
           | Ok pair =>
               obtain ⟨idx, next⟩ := pair
               simp only [module.decode_segment_index, hr, core.result.Result.Insts.CoreOpsTry.branch,
-                bind_ok, WP.spec_ok]
+                bind_ok]
               obtain ⟨bytes, he, hs⟩ := At.of_u32 hp
               exact ⟨bytes, Or.inr ⟨rfl, rfl, he⟩, hs⟩
         · have h0 : flags.val ≠ 0 := fun h => hzero (UScalar.eq_of_val_eq h)

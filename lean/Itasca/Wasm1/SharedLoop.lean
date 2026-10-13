@@ -28,14 +28,12 @@ theorem code.body_loop_loop.body_wasm1 {V : Type}
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
     | Ok pair =>
       rcases pair with ⟨op, pos⟩
-      simp only [Std.uncurry, core.result.Result.Insts.CoreOpsTry.branch, Aeneas.Std.bind_ok]
-      simp only [Std.uncurry, Aeneas.Std.bind_ok, core.result.Result.Insts.CoreOpsTry.branch,
-        Aeneas.Std.bind_assoc]
+      simp only [core.result.Result.Insts.CoreOpsTry.branch, Aeneas.Std.bind_ok]
+      simp only [Std.uncurry, Aeneas.Std.bind_assoc]
       congr 1
       funext out
       rcases out with ⟨res, next, w⟩
-      cases res <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+      cases res <;> simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
 /-- Exact refinement of the actual shared loop by the proof-only former loop. -/
 theorem code.body_loop_loop.wasm1_eq {V : Type}
@@ -48,7 +46,7 @@ theorem code.body_loop_loop.wasm1_eq {V : Type}
   apply LoopMap.conjugate
     (f := fun (s : V × code.OpIterState) => (s.1, (⟨s.2⟩ : code.BodyState)))
   rintro ⟨w, s⟩
-  simp only [Std.uncurry]
+  simp only
   rw [code.body_loop_loop.body_wasm1]
   congr 1
   funext cf
@@ -66,7 +64,7 @@ theorem code.validate_body_with.eq_model {V : Type}
   dsimp only
   split
   · rfl
-  · simp only [Std.uncurry, code.initial_state, Aeneas.Std.bind_assoc, Aeneas.Std.bind_ok,
+  · simp only [code.initial_state, Aeneas.Std.bind_assoc, Aeneas.Std.bind_ok,
       core.result.Result.Insts.CoreOpsTry.branch, code.body_loop]
     congr 1
     funext st

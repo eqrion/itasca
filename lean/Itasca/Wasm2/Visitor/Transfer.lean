@@ -49,7 +49,7 @@ theorem body.transfer {V W : Type} (visitor : code.OpVisitor V)
       subst cf
       exact ⟨.done (.Ok (), w), by simp [hp], rfl⟩
   · rename_i he
-    simp only [he, if_false]
+    simp only [he]
     obtain ⟨r, hr, h⟩ := ResultFacts.bind_ok_inv _ _ _ h
     rw [hr]
     cases r with
@@ -64,17 +64,16 @@ theorem body.transfer {V W : Type} (visitor : code.OpVisitor V)
       obtain ⟨⟨r, s, v'⟩, hs, h⟩ := ResultFacts.bind_ok_inv _ _ _ h
       cases r with
       | Err e =>
-        simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
+        simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
         subst cf
         simp [bodyGood] at hg
       | Ok u =>
         cases u
-        simp [core.result.Result.Insts.CoreOpsTry.branch] at h
+        simp at h
         subst cf
         obtain ⟨w', hw⟩ := step_transfer visitor replacement ha data env ctx ctx'
           hlocals index opcode { core := { st.core with pos } } s v w v' hs
-        exact ⟨.cont (w', s), by simp [hw, core.result.Result.Insts.CoreOpsTry.branch], rfl⟩
+        exact ⟨.cont (w', s), by simp [hw], rfl⟩
 
 end Itasca.Wasm2.Visitor
 
@@ -101,7 +100,7 @@ theorem code.body_loop_loop.wasm2_accepted_transfer {V W : Type}
   | h n ih =>
     unfold code.body_loop_loop at h ⊢
     rw [loop] at h ⊢
-    simp only [Std.uncurry] at h ⊢
+    simp only at h ⊢
     obtain ⟨cf, hb, ht⟩ := ResultFacts.bind_ok_inv _ _ _ h
     cases cf with
     | done pair =>

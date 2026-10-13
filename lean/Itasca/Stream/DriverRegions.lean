@@ -168,7 +168,7 @@ theorem prepare (data : Slice U8) (raw : ModuleBinary.Module) (profile : Validat
     have hv := hguards.2
     simpa [DataCountValid, he, ← hsegments] using hv
   have htail := module.validate_tail.complete tail (by simpa [tail, hsegments] using htailEnc) hvalid hdataCount
-  have htypes := hl.code.typed hready hs hp hguards.1 hguards.2 hdeclared
+  have htypes := ModuleLayout.CodeAt.typed hready hs hp hguards.1 hguards.2 hdeclared
   have hcount : raw.codes.length = env.func_type_indices.val.length := htypes.length_eq.symm
   have hcode : ∃ entries, StreamFraming.HeaderAt code env entries ∧
       At (Rep (Itasca.Profile.CodeEncodingWithinLimits profile)) code entries raw.codes (Slice.len code) := by

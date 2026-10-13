@@ -13,7 +13,6 @@ set_option maxHeartbeats 2000000 in
 decoded block signature, and stack processing preserves its ending cursor. -/
 theorem code.enter_info.bytes (st : code.BodyState) (data : Slice U8)
     (env : module.Env) (kind : code.LabelKind) (hs : Control.Shape st.core)
-    (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (hcap : st.blocks.val.length < Usize.max) :
     code.enter_info st data env kind ⦃ r => ∀ bt, r.1 = .Ok bt →
       Wasm2.BlockDecoded data st.core.pos bt r.2.core.pos ⦄ := by
@@ -80,10 +79,9 @@ theorem code.branch_info.bytes (st : code.BodyState) (data : Slice U8)
         (code.pop_results.total st1.core env types hs')
       rw [hr]
       cases r with
-      | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+      | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       | Ok u =>
-        simp only [bind_ok, Std.uncurry, core.result.Result.Insts.CoreOpsTry.branch]
+        simp only [bind_ok, Std.uncurry]
         obtain ⟨final, hf, _, _, hpos, _⟩ := WP.spec_imp_exists
           (code.mark_unreachable_total s hshape)
         change s.pos = st1.core.pos at hp
@@ -94,25 +92,23 @@ theorem code.branch_info.bytes (st : code.BodyState) (data : Slice U8)
         (code.pop_with_type.total st1.core .I32 hs')
       rw [hr]
       cases r with
-      | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+      | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       | Ok u =>
-        simp only [bind_ok, Std.uncurry, core.result.Result.Insts.CoreOpsTry.branch]
+        simp only [bind_ok, Std.uncurry]
         obtain ⟨⟨r, s'⟩, hr, hshape', hc', hp', _⟩ := WP.spec_imp_exists
           (code.pop_results.total s env types hshape)
         rw [hr]
         cases r with
-        | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+        | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
         | Ok u =>
-          simp only [bind_ok, Std.uncurry, core.result.Result.Insts.CoreOpsTry.branch]
+          simp only [bind_ok, Std.uncurry]
           obtain ⟨⟨r, s''⟩, hr, _, hc'', hp'', _⟩ := WP.spec_imp_exists
             (code.push_results.total s' env types hshape')
           rw [hr]
           change s.pos = st1.core.pos at hp
           change s'.pos = s.pos at hp'
           change s''.pos = s'.pos at hp''
-          cases r <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
+          cases r <;> simp [
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
             hp, hp', hp'', hd]
 

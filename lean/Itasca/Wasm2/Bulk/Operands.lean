@@ -63,14 +63,13 @@ theorem code.read_bulk_operands.fixed (st : code.OpIterState) :
        funext pair
        obtain ⟨res, state⟩ := pair
        cases res <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
-         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-         Wasm2.Simd.readFixed, Std.bind_assoc])
+         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual])
 
 theorem code.read_memory_fill.fixed (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
     code.read_memory_fill st data env = Wasm2.metadataOperands (code.read_bulk_memory st data env)
       (fun _ => [.I32, .I32, .I32]) (fun _ => none) id := by
   simp only [code.read_memory_fill, Wasm2.metadataOperands, 
-    code.read_bulk_operands.fixed, Std.bind_assoc]
+    code.read_bulk_operands.fixed]
   repeat' first
     | rfl
     | (congr 1
@@ -79,8 +78,6 @@ theorem code.read_memory_fill.fixed (st : code.OpIterState) (data : Slice U8) (e
        cases res <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
          Wasm2.Simd.readFixed, Std.bind_assoc, Std.uncurry])
-    | (rename_i a; cases (show U32 × types.ValueType from a))
-    | (simp only [types.ValueType.ne.eq, bind_ok]; split <;> simp_all)
 
 theorem code.read_memory_init.fixed (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
     code.read_memory_init st data env = Wasm2.metadataOperands (Wasm2.memoryInitMetadata st data env)
@@ -95,8 +92,6 @@ theorem code.read_memory_init.fixed (st : code.OpIterState) (data : Slice U8) (e
        cases res <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
          Wasm2.Simd.readFixed, Std.bind_assoc, Std.uncurry])
-    | (rename_i a; cases (show U32 × types.ValueType from a))
-    | (simp only [types.ValueType.ne.eq, bind_ok]; split <;> simp_all)
 
 theorem code.read_memory_copy.fixed (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
     code.read_memory_copy st data env = Wasm2.metadataOperands (Wasm2.memoryCopyMetadata st data env)
@@ -111,8 +106,6 @@ theorem code.read_memory_copy.fixed (st : code.OpIterState) (data : Slice U8) (e
        cases res <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
          Wasm2.Simd.readFixed, Std.bind_assoc, Std.uncurry])
-    | (rename_i a; cases (show U32 × types.ValueType from a))
-    | (simp only [types.ValueType.ne.eq, bind_ok]; split <;> simp_all)
 
 theorem code.read_table_init.fixed (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
     code.read_table_init st data env = Wasm2.metadataOperands (Wasm2.referencePairMetadata (code.take_element st data env) data env)

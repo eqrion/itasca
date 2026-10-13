@@ -45,7 +45,7 @@ theorem finishFrame.complete (st : code.BodyState) (env : module.Env) (isElse : 
     · step with code.push_results.spec { s with ctrls := sv } env (outputs bt) outs
         hout (by simpa [hsv'] using hcap) as ⟨r1, s1, hr1, hv1, hc1, hp1⟩
       have hnz : blocks ≠ [] := by intro he; subst blocks; simp_all
-      exact ⟨hr1, hp1.trans hsp, by simp [hc1, hsvctrl, hsc, hc, hblocks, hbval, hb, hv1, hsv', hnz]⟩
+      exact ⟨hr1, hp1.trans hsp, by simp [hc1, hsvctrl, hsc, hc, hblocks, hv1, hsv', hnz]⟩
   · simp only [↓reduceIte]
     step as ⟨c0, back0, hc0, hback0⟩
     step as ⟨c1, back1, hc1, hback1⟩ by simp_all [alloc.vec.Vec.set]
@@ -79,10 +79,10 @@ theorem code.end_frame.complete (st : code.BodyState) (env : module.Env) (isElse
       Wasm2.EndEffect st r.2 parents blocks frame isElse ins outs outer ⦄ := by
   rw [Wasm2.end_frame_eq st env isElse parents blocks frame bt hc hb ha]
   step as ⟨i, hi⟩
-  have hi' : i.val = parents.length := by simp [hc, hb, ha] at hi; omega
+  have hi' : i.val = parents.length := by simp [hb, ha] at hi; omega
   have hsfinish := Wasm2.finishFrame.complete st env isElse bt frame i
     (alloc.vec.Vec.len st.blocks) parents blocks ins outs outer segment hc hb ha hi'
-    (by simp [hc, hb, ha]) hv hbase hin hout ht hcap
+    (by simp [hb, ha]) hv hbase hin hout ht hcap
   cases isElse
   · simp only [Bool.false_eq_true, ↓reduceIte]
     split

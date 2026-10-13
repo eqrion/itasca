@@ -34,7 +34,7 @@ theorem sub_total {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState
     | some lane =>
       simp only [Option.map_some, bind_ok]
       rcases he : lane.runtime with ⟨ty, count, replace⟩
-      simp only [he]
+      simp only
       exact run_total _ _ v st (read_lane_total _ _ _ _ _ hs hsize)
         (fun s a => hv.on_simd_lane v s subopcode a)
     | none =>
@@ -44,12 +44,12 @@ theorem sub_total {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState
       | some mem =>
         simp only [Option.map_some, bind_ok]
         rcases he : mem.runtime with ⟨align, store, count⟩
-        simp only [he]
+        simp only
         split
         · exact run_total _ _ v st (memory_lane_total _ _ _ _ _ _ hs hsize)
             (fun s a => hv.on_simd_memory_lane v s subopcode a.1 a.2)
         · split
-          · exact run_total _ _ v st (store_total _ _ _ _ _ hs hsize)
+          · exact run_total _ _ v st (store_total _ _ _ _ _ hs)
               (fun s a => hv.on_simd_memory v s subopcode a)
           · exact run_total _ _ v st (load_total _ _ _ _ _ hs hsize)
               (fun s a => hv.on_simd_memory v s subopcode a)

@@ -68,7 +68,7 @@ theorem environment_loop_noop {V : Type} (visitor : module.ModuleVisitor V)
                 simpa [core.result.Result.Insts.CoreOpsTry.branch,
                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] using h
               | Ok rank =>
-                simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at h ⊢
+                simp only [bind_ok] at h ⊢
                 by_cases horder : rank.val ≤ lastId.val
                 · simpa [horder] using h
                 · simp only [horder, ↓reduceIte, Std.bind_assoc] at h ⊢

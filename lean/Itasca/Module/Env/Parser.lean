@@ -82,11 +82,11 @@ theorem module.validate_env_with_loop.profile_spec {V : Type} (visitor : module.
             · obtain ⟨rankResult, hrank, hrankPost⟩ := WP.spec_imp_exists (module.section_order.spec id)
               rw [hrank]
               cases rankResult with
-              | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
+              | Err e => simp [
                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, LoopPostWith]
               | Ok rank =>
                 obtain ⟨rfl, hidLow, hidHigh⟩ := hrankPost
-                simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+                simp only [bind_ok]
                 split
                 · simp [LoopPostWith]
                 · rename_i horder

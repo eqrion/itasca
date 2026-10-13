@@ -28,11 +28,11 @@ theorem tableRest.refines {V W : Type} (visitor : code.OpVisitor V)
   rw [hr]
   cases r with
   | Err e =>
-    simp only [bind_ok, ok.injEq] at h
+    simp only [ok.injEq] at h
     subst cf
     exact ⟨.done (.Err e, st, w), by simp, rfl, hrelated⟩
   | Ok nextArity =>
-    simp only [bind_ok, Std.uncurry] at h ⊢
+    simp only [bind_ok] at h ⊢
     by_cases he : i = count
     · simp only [he, if_true] at h ⊢
       obtain ⟨ois, ho, h⟩ := ResultFacts.bind_ok_inv _ _ _ h
@@ -171,12 +171,11 @@ theorem code.branch_table_with.refines {V W : Type}
     rw [hr]
     cases r with
     | Err e =>
-      simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h ⊢
+      simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h ⊢
       obtain ⟨rfl, rfl, rfl⟩ := h
       exact ⟨rfl, rfl, hrelated⟩
     | Ok u =>
-      simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, Std.uncurry] at h ⊢
+      simp only [bind_ok, Std.uncurry] at h ⊢
       exact code.branch_table_with_loop.refines visitor replacement related hrefines
         ⟨ois⟩ data env v w hrelated count none 0#u32 (by simp) res final v' h
 
@@ -240,7 +239,6 @@ theorem code.step_profile.wasm2_refines {V W : Type}
         simp only [invoke] at hw
         rw [hw]
         cases reply <;> simp [code.visit,
-          core.result.Result.Insts.CoreOpsTry.branch,
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h ⊢
         all_goals obtain ⟨rfl, rfl, rfl⟩ := h; exact ⟨rfl, rfl, hr1⟩
   case h_8 =>
@@ -272,11 +270,10 @@ theorem code.step_profile.wasm2_refines {V W : Type}
       change replacement.on_return w ois' = .ok (reply, w1) at hw
       rw [hw]
       cases reply <;> simp [code.visit,
-        core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h ⊢
       all_goals obtain ⟨rfl, rfl, rfl⟩ := h; exact ⟨rfl, rfl, hr1⟩
   case h_12 =>
-    try simp_all only [↓reduceIte]
+    try simp_all only
     split at h
     · rename_i hcap
       simp only [hcap, if_true]

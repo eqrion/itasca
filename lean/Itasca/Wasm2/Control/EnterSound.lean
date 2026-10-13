@@ -87,7 +87,7 @@ theorem enter_eq (st : code.BodyState) (data : Slice U8) (env : module.Env)
         | (congr 1; funext x; try dsimp only)
         | (split <;> try dsimp only)
 
-    all_goals first | contradiction | simp_all [Std.bind_assoc, bind_ok]
+    all_goals first | contradiction | simp_all [bind_ok]
 
 @[step]
 theorem checkBlock.spec (env : module.Env) (bt : signature.BlockType) :
@@ -127,8 +127,7 @@ theorem enterParams.sound (st : code.BodyState) (env : module.Env)
     (outer segment : List code.StackType)
     (hin : resolve env (inputs bt) = some ins)
     (hv : st.core.vals.val = outer ++ segment) (hb : (Control.base st.core).val = outer.length)
-    (hs : Control.Shape st.core) (ha : st.blocks.val.length = st.core.ctrls.val.length)
-    (hcap : st.blocks.val.length < Usize.max) :
+    (hs : Control.Shape st.core) (hcap : st.blocks.val.length < Usize.max) :
     enterParams st env form.kind bt ⦃ r => r.1 = .Ok () →
       r.2.core.pos = st.core.pos ∧ ∃ remaining base,
       remaining.length ≤ segment.length ∧ base.val = outer.length + remaining.length ∧
@@ -145,7 +144,7 @@ theorem enterParams.sound (st : code.BodyState) (env : module.Env)
   step
   split
   · have hok : r = .Ok () := by cases r <;> simp_all
-    step with code.push_frame.spec { st with core := s } form.kind bt (by simpa [hc] using hcap) (by simpa [hc] using hcap)
+    step with code.push_frame.spec { st with core := s } form.kind bt (by simpa [hc] using hcap)
       as ⟨s1, hc1, hv1, hp1, hb1⟩
     have hs1 : Control.Shape s1.core := shape_push hs' form.kind bt hc1 hv1
     step with code.push_results.total s1.core env (inputs bt) hs1
@@ -164,15 +163,14 @@ theorem enterArgs.sound (st : code.BodyState) (env : module.Env)
     (outer segment : List code.StackType) (initial : form.Initial)
     (hin : resolve env (inputs bt) = some ins)
     (hv : st.core.vals.val = outer ++ segment) (hb : (Control.base st.core).val = outer.length)
-    (hs : Control.Shape st.core) (ha : st.blocks.val.length = st.core.ctrls.val.length)
-    (hcap : st.blocks.val.length < Usize.max) :
+    (hs : Control.Shape st.core) (hcap : st.blocks.val.length < Usize.max) :
     enterArgs st env form.kind bt ⦃ r => r.1 = .Ok () →
       r.2.core.pos = st.core.pos ∧ EnterEffect st r.2 form bt ins outs outer segment ⦄ := by
   rcases initial with rfl | rfl | rfl
   · simpa [enterArgs, Frames.Form.kind, EnterEffect, Frames.Form.args] using
-      enterParams.sound st env .block bt ins outs outer segment hin hv hb hs ha hcap
+      enterParams.sound st env .block bt ins outs outer segment hin hv hb hs hcap
   · simpa [enterArgs, Frames.Form.kind, EnterEffect, Frames.Form.args] using
-      enterParams.sound st env .loop bt ins outs outer segment hin hv hb hs ha hcap
+      enterParams.sound st env .loop bt ins outs outer segment hin hv hb hs hcap
   · simp only [enterArgs, Frames.Form.kind]
     step with code.pop_with_type.realizes st.core outer segment .I32 hv hb
       as ⟨r, s, hc, hp, rest, hv', hl, ht⟩
@@ -181,7 +179,7 @@ theorem enterArgs.sound (st : code.BodyState) (env : module.Env)
     · have hs' : Control.Shape s := hs.replace_operands hc (by simp [hb, hv'])
       have hbs : (Control.base s).val = outer.length := by simpa [Control.base, hc] using hb
       apply WP.spec_mono (enterParams.sound { st with core := s } env .then_ bt ins outs outer rest
-        hin hv' hbs hs' (by simpa [hc] using ha) (by simpa [hc] using hcap))
+        hin hv' hbs hs' (by simpa [hc] using hcap))
       intro result hresult hok
       obtain ⟨hpos, remaining, base, hlen, hbase, hback, hctrl, hblocks, hvals⟩ := hresult hok
       refine ⟨hpos.trans hp, remaining, base, hlen.trans hl, hbase, ?_, ?_, by simpa [hc] using hblocks, hvals⟩
@@ -205,8 +203,7 @@ theorem code.enter.sound (st : code.BodyState) (data : Slice U8) (env : module.E
     (form : Wasm2.Frames.Form) (initial : form.Initial)
     (outer segment : List code.StackType)
     (hv : st.core.vals.val = outer ++ segment) (hb : (Control.base st.core).val = outer.length)
-    (hs : Control.Shape st.core) (ha : st.blocks.val.length = st.core.ctrls.val.length)
-    (hcap : st.blocks.val.length < Usize.max) :
+    (hs : Control.Shape st.core) (hcap : st.blocks.val.length < Usize.max) :
     code.enter st data env form.kind ⦃ r => r.1 = .Ok () → ∃ bt ins outs,
       Wasm2.BlockDecoded data st.core.pos bt r.2.core.pos ∧
       Wasm2.resolve env (Wasm2.inputs bt) = some ins ∧
@@ -228,7 +225,7 @@ theorem code.enter.sound (st : code.BodyState) (data : Slice U8) (env : module.E
       obtain ⟨ins, outs, hin, hout, hip, hop⟩ := hcheck (by cases u; rfl)
       simp only [bind_ok]
       apply WP.spec_mono (Wasm2.enterArgs.sound { st with core := { st.core with pos := next } }
-        env form bt ins outs outer segment initial hin hv hb ⟨hs.ordered, hs.bounded⟩ ha hcap)
+        env form bt ins outs outer segment initial hin hv hb ⟨hs.ordered, hs.bounded⟩ hcap)
       intro result hresult hok
       obtain ⟨hpos, heffect⟩ := hresult hok
       exact ⟨bt, ins, outs, hpos ▸ hdecoded, hin, hout, hip, hop, heffect⟩

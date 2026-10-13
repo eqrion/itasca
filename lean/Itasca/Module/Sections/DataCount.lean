@@ -26,7 +26,7 @@ theorem sectionRank_prefix {id : U8} (hlo : 1 ≤ (sectionRank id).val)
   · have : (12#u8).val ≤ 10 := by simpa only [sectionRank, h11] using hhi
     change 12 ≤ 10 at this
     omega
-  have he : sectionRank id = id := by simp [sectionRank, h12, h10, h11]
+  have he : sectionRank id = id := by simp [sectionRank]
   rw [he] at hlo hhi
   omega
 
@@ -34,7 +34,7 @@ theorem sectionRank_early {id : U8} (h : id.val < 10) : sectionRank id = id := b
   have h12 : id.val ≠ 12 := by omega
   have h10 : id.val ≠ 10 := by omega
   have h11 : id.val ≠ 11 := by omega
-  simp [sectionRank, h12, h10, h11]
+  simp [sectionRank]
 
 end Itasca.ModuleBinary
 
@@ -50,8 +50,8 @@ theorem module.section_order.spec (id : U8) :
   have h12 : (12#uscalar : U8).val = 12 := rfl
   unfold module.section_order
   repeat' first | split
-  all_goals simp_all [ModuleBinary.sectionRank, global_simps, h10, h11, h12]
-  all_goals first | omega | (split <;> simp_all <;> omega)
+  all_goals simp_all [ModuleBinary.sectionRank, global_simps]
+  all_goals first | omega | (split <;> simp_all; omega)
 
 theorem module.section_order.complete (id : U8) (hlo : 1 ≤ id.val) (hhi : id.val ≤ 12) :
     module.section_order id = .ok (.Ok (ModuleBinary.sectionRank id)) := by
@@ -81,7 +81,7 @@ theorem module.decode_data_count.spec (data : Slice U8) (pos : Usize) (env : mod
     | Ok pair =>
       obtain ⟨count, next⟩ := pair
       simp only [module.decode_data_count, hr, bind_ok,
-        core.result.Result.Insts.CoreOpsTry.branch, WP.spec_ok]
+        core.result.Result.Insts.CoreOpsTry.branch]
       obtain ⟨bytes, hs, hl, hb, he⟩ := hd
       exact ⟨count, ⟨bytes, ⟨count, rfl, he⟩, hs, hl, hb⟩, rfl, trivial⟩
 

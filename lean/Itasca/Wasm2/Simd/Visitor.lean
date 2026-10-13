@@ -41,8 +41,8 @@ private theorem sub_transfer {V W : Type} (visitor : code.OpVisitor V)
           exact CoreVisitor.run.accepted_lift _ _ _ v w final v' h
             (fun a => ha.on_simd_memory_lane w final subopcode a.1 a.2)
         · rename_i hc
-          simp only [hc, if_false]
-          cases store <;> simp only [Bool.false_eq_true, Bool.true_eq, if_true, if_false] at h ⊢
+          simp only [hc]
+          cases store <;> simp only [Bool.false_eq_true, if_true, if_false] at h ⊢
           all_goals exact CoreVisitor.run.accepted_lift _ _ _ v w final v' h (fun a => ha.on_simd_memory w final subopcode a)
       | none =>
         simp only [hm, Option.map_none, bind_ok] at h ⊢

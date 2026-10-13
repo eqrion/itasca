@@ -128,7 +128,7 @@ theorem extended_total {V : Type} (visitor : code.OpVisitor V)
           apply WP.spec_mono (conversion_run_total {st with pos := next} op.input op.output _ v
             ⟨hs.ordered, hs.bounded⟩ hsize (fun s _ => hv.visit_saturating v s subopcode))
           rintro r ⟨hh, hc, hp⟩
-          exact ⟨hh, by simpa [hc], by simpa [hp] using Nat.le_of_lt hspan.1⟩
+          exact ⟨hh, by simp [hc], by simpa [hp] using Nat.le_of_lt hspan.1⟩
     · rw [code.step_extended.base visitor st data env ctx opcode v hm hp]
       exact scalar_total visitor st data env ctx opcode v hs hsize hscalar hv
 

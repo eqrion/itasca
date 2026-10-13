@@ -17,7 +17,6 @@ below connect these state views to the actual extracted generic worker. -/
 def Wasm2.branchTableLoop.body
   (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
   (ois : _root_.Itasca.code.OpIterState)
-  (v : alloc.vec.Vec _root_.Itasca.signature.BlockType)
   (arity : Option Std.Usize) (i : Std.U32) :
   Result (ControlFlow (_root_.Itasca.code.OpIterState × (alloc.vec.Vec
     _root_.Itasca.signature.BlockType) × (Option Std.Usize) × Std.U32)
@@ -83,7 +82,7 @@ def Wasm2.branchTableLoop.body
 
 /-- The legacy state view is a projection of the actual visiting loop. -/
 def Wasm2.branchTableLoop
-  (ois : code.OpIterState) (blocks : alloc.vec.Vec signature.BlockType)
+  (ois : code.OpIterState)
   (data : Slice U8) (env : module.Env) (count : U32) (arity : Option Usize) (i : U32) :
   Result (core.result.Result Unit error.OpError × code.BodyState) := do
   let (r, s, _) ← code.branch_table_with_loop
@@ -106,7 +105,7 @@ def Wasm2.tableCore
     let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue _ =>
-      Wasm2.branchTableLoop ois st.blocks data env count none 0#u32
+      Wasm2.branchTableLoop ois data env count none 0#u32
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r2 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -138,11 +137,10 @@ namespace Wasm2
 set_option maxRecDepth 4096 in
 set_option maxHeartbeats 800000 in
 theorem tableBody_eq (data : Slice U8) (env : module.Env) (count : U32)
-    (ois : code.OpIterState) (blocks : alloc.vec.Vec signature.BlockType)
-    (arity : Option Usize) (i : U32) :
+    (ois : code.OpIterState) (arity : Option Usize) (i : U32) :
     code.branch_table_with_loop.body code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       data env count ois () arity i =
-      (do let cf ← Wasm2.branchTableLoop.body data env count ois blocks arity i
+      (do let cf ← Wasm2.branchTableLoop.body data env count ois arity i
           .ok (tableFlow cf)) := by
   simp only [code.branch_table_with_loop.body, Wasm2.branchTableLoop.body,
     code.read_multi_value_label, Std.bind_assoc]
@@ -157,20 +155,19 @@ theorem tableBody_eq (data : Slice U8) (env : module.Env) (count : U32)
     obtain ⟨depth, ts⟩ := pair
     simp only [uncurry, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
     by_cases h : i = count <;> cases arity <;>
-      simp [h, code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor,
-        code.OpVisitor.on_br_table_label.default, code.OpVisitor.on_br_table.default,
-        code.visit, core.result.Result.Insts.CoreOpsTry.branch,
+      simp [h, code.OpVisitor.on_br_table_label.default, code.OpVisitor.on_br_table.default,
+        code.visit,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
         Std.bind_assoc, tableFlow, tableCont, tableDone]
     all_goals
       congr 1
       funext r
-      cases r <;> simp [Std.bind_assoc, tableFlow, tableCont, tableDone]
-    all_goals try split <;> simp [Std.bind_assoc, tableFlow, tableCont, tableDone]
+      cases r <;> simp [Std.bind_assoc]
+    all_goals try split <;> simp [Std.bind_assoc]
     all_goals
       congr 1
       funext r
-      cases r <;> simp [Std.bind_assoc, tableFlow, tableCont, tableDone]
+      cases r <;> simp [Std.bind_assoc]
 
 end Wasm2
 
@@ -190,7 +187,6 @@ theorem code.branch_table.eq_core (st : code.BodyState) (data : Slice U8) (env :
     congr 1
     funext x
     obtain ⟨r, ois⟩ := x
-    cases r <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+    cases r <;> simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
 end Itasca

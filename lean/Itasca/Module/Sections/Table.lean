@@ -68,11 +68,10 @@ theorem module.decode_table_section_loop.spec (data : Slice U8) (env : module.En
           (module.check_table_count.spec { current with table_types := r } profile)
         rw [hresult]
         cases result with
-        | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-        | Ok unit =>
-          cases unit
-          simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+        | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+        | Ok u =>
+          cases u
+          simp only [bind_ok]
           step
           refine ⟨?_, ⟨added ++ [ft], ?_, ?_, ?_, ?_, ?_, ?_⟩, ?_⟩
           · scalar_tac

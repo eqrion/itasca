@@ -227,7 +227,7 @@ theorem Frame.branch_table {st} (f : Frame st) (data : Slice U8) (env : module.E
         exact ⟨view, ts, hl, hts, by simpa [proj_uN_0, hlookup] using hdefaultsub⟩
     obtain ⟨s, hrun, hc, hblocks, hp, hv⟩ := code.branch_table.complete st data env
       f.core.parents f.core.current f.core.outer f.core.operands (front ++ before) common depths default next
-      f.core.ctrls f.core.vals f.core.base (by simp [f.blocks, f.core.ctrls, f.aligned])
+      f.core.ctrls f.core.vals f.core.base
       (hb.br_table_decoded depths default hcount hentries hdefault) htargets
       (by simpa [f.core.poly_eq, List.append_assoc] using hr)
     refine ⟨s, by simpa [step] using hrun, hp,

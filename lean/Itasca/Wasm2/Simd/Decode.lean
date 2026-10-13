@@ -34,7 +34,7 @@ theorem take_lane_complete (st : code.OpIterState) (data : Slice U8) (count lane
     (next : Usize) (hb : Wasm1.BytesAt data st.pos [lane] next) (hl : lane.val < count.val) :
     code.take_simd_lane st data count = .ok (.Ok lane, {st with pos := next}) := by
   have hn : ¬ lane ≥ count := by scalar_tac
-  simp [code.take_simd_lane, hb.read_byte, hn, hl, core.result.Result.Insts.CoreOpsTry.branch]
+  simp [code.take_simd_lane, hb.read_byte, hl, core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Sixteen accepted bytes split into their exact low and high words. -/
 def BitsDecoded (data : Slice U8) (start : Usize) (low high : U64) (next : Usize) : Prop :=

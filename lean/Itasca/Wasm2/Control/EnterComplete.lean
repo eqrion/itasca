@@ -48,7 +48,6 @@ theorem enterParams.complete (st : code.BodyState) (env : module.Env)
     (outer segment : List code.StackType) (ts : List valtype)
     (hin : resolve env (inputs bt) = some ins)
     (hv : st.core.vals.val = outer ++ segment) (hb : (Control.base st.core).val = outer.length)
-    (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (hcap : st.blocks.val.length < Usize.max)
     (hvalsCap : st.core.vals.val.length + ins.length ≤ Usize.max)
     (ht : Sequence.Realizes (Control.polymorphic st.core) segment (ts ++ ins.map Translate.valueType)) :
@@ -59,7 +58,7 @@ theorem enterParams.complete (st : code.BodyState) (env : module.Env)
   step with code.pop_results.complete st.core env (inputs bt) ins outer segment ts hin hv hb ht
     as ⟨r, s, hr, hc, hp, remaining, hv', hl, ht'⟩
   simp only [hr, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-  step with code.push_frame.spec { st with core := s } form.kind bt (by simpa [hc] using hcap) (by simpa [hc] using hcap)
+  step with code.push_frame.spec { st with core := s } form.kind bt (by simpa [hc] using hcap)
     as ⟨s1, hc1, hv1, hp1, hb1⟩
   step with code.push_results.spec s1.core env (inputs bt) ins hin (by
     simp only [hv1, hv', hv, List.length_append] at *; omega)
@@ -74,7 +73,6 @@ theorem enterArgs.complete (st : code.BodyState) (env : module.Env)
     (outer segment : List code.StackType) (ts : List valtype) (initial : form.Initial)
     (hin : resolve env (inputs bt) = some ins)
     (hv : st.core.vals.val = outer ++ segment) (hb : (Control.base st.core).val = outer.length)
-    (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (hcap : st.blocks.val.length < Usize.max)
     (hvalsCap : st.core.vals.val.length + ins.length ≤ Usize.max)
     (ht : Sequence.Realizes (Control.polymorphic st.core) segment (ts ++ form.args ins)) :
@@ -82,9 +80,9 @@ theorem enterArgs.complete (st : code.BodyState) (env : module.Env)
       EnterForward st r.2 form bt ins outs outer segment ts ⦄ := by
   rcases initial with rfl | rfl | rfl
   · simpa [enterArgs, Frames.Form.kind, Frames.Form.args] using
-      enterParams.complete st env .block bt ins outs outer segment ts hin hv hb ha hcap hvalsCap (by simpa [Frames.Form.args] using ht)
+      enterParams.complete st env .block bt ins outs outer segment ts hin hv hb hcap hvalsCap (by simpa [Frames.Form.args] using ht)
   · simpa [enterArgs, Frames.Form.kind, Frames.Form.args] using
-      enterParams.complete st env .loop bt ins outs outer segment ts hin hv hb ha hcap hvalsCap (by simpa [Frames.Form.args] using ht)
+      enterParams.complete st env .loop bt ins outs outer segment ts hin hv hb hcap hvalsCap (by simpa [Frames.Form.args] using ht)
   · obtain ⟨v, s, rest, hr, hc, hp, hv', hl, hvtype, ht'⟩ :=
       code.pop_with_type.complete st.core outer segment (ts ++ ins.map Translate.valueType) .I32 hv hb
         (by simpa [Frames.Form.args, List.append_assoc, Translate.valueType] using ht)
@@ -92,7 +90,7 @@ theorem enterArgs.complete (st : code.BodyState) (env : module.Env)
       simp [enterArgs, hr, core.result.Result.Insts.CoreOpsTry.branch]
     rw [show Frames.Form.then_.kind = code.LabelKind.Then from rfl, heq]
     apply WP.spec_mono (enterParams.complete { st with core := s } env .then_ bt ins outs outer rest ts
-      hin hv' (by simpa [Control.base, hc] using hb) (by simpa [hc] using ha) (by simpa [hc] using hcap)
+      hin hv' (by simpa [Control.base, hc] using hb) (by simpa [hc] using hcap)
       (by simp only [hv, hv', List.length_append] at *; omega)
       (by simpa [Control.polymorphic, hc] using ht'))
     intro result hresult
@@ -115,7 +113,6 @@ theorem code.enter.complete (st : code.BodyState) (data : Slice U8) (env : modul
     (hout : Wasm2.resolve env (Wasm2.outputs bt) = some outs)
     (hip : ins.length ≤ 1000) (hop : outs.length ≤ 1000)
     (hv : st.core.vals.val = outer ++ segment) (hb : (Control.base st.core).val = outer.length)
-    (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (hcap : st.blocks.val.length < Usize.max)
     (hvalsCap : st.core.vals.val.length + ins.length ≤ Usize.max)
     (ht : Sequence.Realizes (Control.polymorphic st.core) segment (ts ++ form.args ins)) :
@@ -126,6 +123,6 @@ theorem code.enter.complete (st : code.BodyState) (data : Slice U8) (env : modul
   rw [Wasm2.checkBlock.complete env bt ins outs hin hout hip hop]
   simp only [bind_ok]
   exact Wasm2.enterArgs.complete { st with core := { st.core with pos := next } } env form bt
-    ins outs outer segment ts initial hin hv hb ha hcap hvalsCap ht
+    ins outs outer segment ts initial hin hv hb hcap hvalsCap ht
 
 end Itasca

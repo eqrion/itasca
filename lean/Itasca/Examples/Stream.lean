@@ -52,8 +52,7 @@ theorem forged_unreachable : ¬ StreamBatch.Reachable impossibleIssued forgedBat
     induction hp with
     | nil => rfl
     | snoc visitor previous index run ih =>
-      simp [impossibleIssued, emptyEnv, module.validate_code_entry,
-        module.validate_code_entry_with] at run
+      simp [impossibleIssued, emptyEnv, module.validate_code_entry_with] at run
   have hz := hzero h.validation.2.1
   change 1 = 0 at hz
   omega

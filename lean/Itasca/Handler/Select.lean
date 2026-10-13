@@ -52,7 +52,8 @@ theorem select_type_not_reference {t t' : valtype} {nt : numtype} {vt : vectype}
   | refl =>
     rcases ht with rfl | rfl
     · cases nt <;> simp [valtype_numtype]
-    · cases vt <;> simp [valtype_vectype]
+    · cases vt
+      simp [valtype_vectype]
 
 def selectedType : code.StackType → valtype
   | .Val t => Translate.valueType t

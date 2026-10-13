@@ -50,13 +50,14 @@ namespace Itasca
 @[step]
 theorem code.push_frame.spec (st : code.BodyState)
     (kind : code.LabelKind) (bt : signature.BlockType)
-    (hc : st.core.ctrls.val.length < Usize.max) (hb : st.blocks.val.length < Usize.max) :
+    (hc : st.core.ctrls.val.length < Usize.max) :
     code.push_frame st kind bt ⦃ s =>
       s.core.ctrls.val = st.core.ctrls.val ++ [Wasm2.frame st.core kind bt] ∧
       s.core.vals = st.core.vals ∧ s.core.pos = st.core.pos ∧
       s.blocks.val = st.blocks.val ++ [bt] ⦄ := by
   unfold code.push_frame
-  step* <;> simp_all [Wasm2.frame]
+  step*
+  simp_all [Wasm2.frame]
 
 /-- Label lookup uses loop inputs and all other frames' outputs, in reverse
 nesting order. Out-of-range labels produce an ordinary validation error. -/
@@ -78,8 +79,7 @@ theorem code.label.spec (st : code.BodyState) (depth : U32)
     step
     step
     split <;> simp only [signature.BlockType.params.spec, signature.BlockType.results.spec, bind_ok, WP.spec_ok]
-    all_goals simp_all [signature.BlockType.params.spec, signature.BlockType.results.spec,
-      Wasm2.labelAt, Wasm2.target]
+    all_goals simp_all [Wasm2.labelAt, Wasm2.target]
     all_goals have hi : depth.val < st.core.ctrls.val.length := by scalar_tac
     all_goals have hc : st.core.ctrls.val.length - 1 - depth.val < st.core.ctrls.val.length := by omega
     all_goals simp_all

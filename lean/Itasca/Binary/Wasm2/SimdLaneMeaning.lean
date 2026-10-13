@@ -112,8 +112,7 @@ def LaneOperation.outputs (op : LaneOperation) : List valtype :=
 
 theorem LaneOperation.wellFormed (op : LaneOperation) (lane : laneidx) (h : wf_uN 8 lane) :
     wf_instr (op.instruction lane) := by
-  cases op <;> simp only [instruction, shape, replace, extension, Bool.true_eq,
-    Bool.false_eq_true, ↓reduceIte]
+  cases op <;> simp only [instruction, shape, replace, extension, Bool.false_eq_true, ↓reduceIte]
   all_goals repeat' first | exact h | decide | constructor
 
 theorem LaneOperation.typed (op : LaneOperation) (C : context) (lane : laneidx)
@@ -169,7 +168,7 @@ theorem LaneOperation.principal (op : LaneOperation) (C : context) (lane : lanei
     (ins outs : List valtype)
     (ht : Instr_ok C (op.instruction lane) (.mk_functype (.mk_list ins) (.mk_list outs))) :
     ins = op.inputs ∧ outs = op.outputs := by
-  cases op <;> simp only [instruction, shape, replace, extension, Bool.true_eq,
+  cases op <;> simp only [instruction, shape, replace, extension,
     Bool.false_eq_true, ↓reduceIte] at ht <;> cases ht <;> exact ⟨rfl, rfl⟩
 
 /-- The declarative lane typing rule requires the same lane bound as the reader. -/
@@ -177,7 +176,7 @@ theorem LaneOperation.bound (op : LaneOperation) (C : context) (lane : laneidx)
     (ins outs : List valtype)
     (ht : Instr_ok C (op.instruction lane) (.mk_functype (.mk_list ins) (.mk_list outs))) :
     proj_uN_0 lane < op.count := by
-  cases op <;> simp only [instruction, shape, replace, extension, Bool.true_eq,
+  cases op <;> simp only [instruction, shape, replace, extension,
     Bool.false_eq_true, ↓reduceIte] at ht <;> cases ht
   all_goals cases_type fun_dim
   all_goals assumption

@@ -27,7 +27,7 @@ theorem saturating_table (opcode : U32) :
     change n < 8 at h
     interval_cases n <;> (with_unfolding_all rfl)
   · have hn : 8 ≤ opcode.val := by omega
-    simp [code.saturating_types, saturatingMeaning, scalar_eq, show opcode.val ≠ 0 by omega,
+    simp [code.saturating_types, saturatingMeaning, show opcode.val ≠ 0 by omega,
       show opcode.val ≠ 1 by omega, show opcode.val ≠ 2 by omega,
       show opcode.val ≠ 3 by omega, show opcode.val ≠ 4 by omega,
       show opcode.val ≠ 5 by omega, show opcode.val ≠ 6 by omega,
@@ -143,9 +143,9 @@ theorem code.step_extended.prefixed {V : Type} (visitor : code.OpVisitor V)
       Wasm2.NumericExtensions.saturating_table, Std.uncurry]
     try dsimp only
     cases hm : Wasm2.NumericExtensions.saturatingMeaning subopcode with
-    | none => simp [hm]
+    | none => simp
     | some op =>
-      simp only [hm, Option.map_some, bind_ok, Std.uncurry]
+      simp only [Option.map_some]
       try dsimp only
       unfold CoreVisitor.run
       congr 1

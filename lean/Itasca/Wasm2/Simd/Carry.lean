@@ -28,7 +28,7 @@ theorem carryFixed.segment {A : Type} (a : A) (st : code.OpIterState)
   | Err e => simpa [carryFixed, hr] using ⟨hc, hp, after, hv, hl⟩
   | Ok u =>
     cases u
-    simp only [carryFixed, hr, bind_ok, WP.spec_ok]
+    simp only [carryFixed, hr, bind_ok]
     exact ⟨hc, hp, after, hv, hl, fun _ h => by cases h; exact ⟨rfl, he rfl⟩⟩
 
 theorem carryFixed.complete {A : Type} (a : A) (st : code.OpIterState)

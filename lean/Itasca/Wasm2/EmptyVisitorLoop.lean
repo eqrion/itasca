@@ -248,11 +248,11 @@ theorem Wasm2.emptyVisitorLoop.body_eq (data : Slice U8) (env : module.Env)
       conv_lhs => arg 1; whnf
       conv_rhs => arg 1; whnf
       split
-      all_goals simp_all only [bind_ok, code.enter, code.end_frame,
+      all_goals simp_all only [code.enter, code.end_frame,
         code.branch, code.branch_table, code.call, Bool.false_eq_true, ↓reduceIte, Std.bind_assoc]
       all_goals first
         | (congr 1; funext pair; rcases pair with ⟨r, s⟩; cases r <;>
-            simp [code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor, code.OpVisitor.on_block.default,
+            simp [code.OpVisitor.on_block.default,
               code.OpVisitor.on_loop.default, code.OpVisitor.on_if.default,
               code.OpVisitor.on_else.default, code.OpVisitor.on_end.default,
               code.OpVisitor.on_br.default, code.OpVisitor.on_br_if.default,
@@ -261,10 +261,7 @@ theorem Wasm2.emptyVisitorLoop.body_eq (data : Slice U8) (env : module.Env)
               core.result.Result.Insts.CoreOpsTry.branch,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual])
         | skip
-      all_goals try (rename_i pair; rcases pair with ⟨a, b⟩; rfl)
-      all_goals try (rcases s with ⟨s, v⟩; cases v; simp [
-        core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual])
+      all_goals try (rcases s with ⟨s, v⟩; cases v; simp)
       split
       · simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       · simp only [Std.bind_assoc]
@@ -272,8 +269,7 @@ theorem Wasm2.emptyVisitorLoop.body_eq (data : Slice U8) (env : module.Env)
         funext pair
         obtain ⟨r, s, v⟩ := pair
         cases v
-        cases r <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+        cases r <;> simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
 def code.bodyCore
   (data : Slice U8) (env : module.Env)
@@ -320,7 +316,7 @@ def code.bodyCore
   unfold code.validate_multi_value_body code.validate_multi_value_body_with code.validate_body_with_profile code.initial_state code.bodyCore
   simp only [Std.bind_assoc]
   split
-  · simp [core.result.Result.Insts.CoreOpsTry.branch, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  · simp
   · simp only [Std.bind_assoc]
     congr 1
     funext i

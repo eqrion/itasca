@@ -57,7 +57,7 @@ theorem module.decode_value_type.complete (data : Slice U8) (pos : Usize)
   obtain ⟨bytes, rfl, hs⟩ := h
   have hr := hs.read_byte
   cases profile <;> cases ty <;>
-    simp_all [module.decode_value_type, hr, valueByte, ValueTypeAllowed,
+    simp_all [module.decode_value_type, valueByte, ValueTypeAllowed,
       core.result.Result.Insts.CoreOpsTry.branch]
 
 theorem module.decode_elem_type.complete (data : Slice U8) (pos : Usize)
@@ -67,7 +67,7 @@ theorem module.decode_elem_type.complete (data : Slice U8) (pos : Usize)
   obtain ⟨bytes, rfl, hs⟩ := h
   have hr := hs.read_byte
   cases profile <;> cases ty <;>
-    simp_all [module.decode_elem_type, hr, elemByte, ElemTypeAllowed,
+    simp_all [module.decode_elem_type, elemByte, ElemTypeAllowed,
       core.result.Result.Insts.CoreOpsTry.branch]
 
 end Itasca

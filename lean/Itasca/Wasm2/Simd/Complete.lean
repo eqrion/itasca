@@ -41,7 +41,7 @@ theorem Frame.simd_pure {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     simp [Simd.prefixStep, hread, Simd.subStep, Simd.pure_table, hmap,
       Simd.signature_fixed, CoreVisitor.run, hs, decoded, code.visit,
       core.result.Result.Insts.CoreOpsTry.branch,
-      code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor, code.OpVisitor.on_simd.default]
+      code.OpVisitor.on_simd.default]
   · simp only [hv, f.core.vals, List.length_append]
     omega
 
@@ -244,7 +244,7 @@ theorem Frame.simd_shuffle {st} (f : Frame st) (data : Slice U8) (env : module.E
     rw [if_neg hn, code.step_wasm2.simd, code.step_simd.eq_runs]
     simp only [Simd.prefixStep, hread, bind_ok]
     rw [Simd.subStep.shuffle]
-    simp [CoreVisitor.run, hscan, decoded, code.visit,
+    simp [CoreVisitor.run, hscan, code.visit,
       core.result.Result.Insts.CoreOpsTry.branch, code.OpVisitor.on_simd_shuffle.default]
   · simp only [hv, f.core.vals, List.length_append]
     omega

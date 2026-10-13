@@ -93,10 +93,10 @@ theorem module.validate_env_with_loop.accepted_transfer {V W : Type}
               rw [hord] at h ⊢
               cases ordered with
               | Err e =>
-                simp [core.result.Result.Insts.CoreOpsTry.branch,
+                simp [
                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
               | Ok rank =>
-                simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at h ⊢
+                simp only [bind_ok] at h ⊢
                 by_cases horder : rank.val ≤ lastId.val
                 · simp [horder] at h
                 · simp only [horder, ↓reduceIte] at h ⊢

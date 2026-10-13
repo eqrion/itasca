@@ -38,7 +38,7 @@ theorem code.read_block_type.spec (data : Slice U8) (pos : Usize) (bt : code.Blo
   rw [code.read_block_type, hr, hbyte]
   cases bt with
   | Empty => simp [Control.blockByte, core.result.Result.Insts.CoreOpsTry.branch, hnext]
-  | Value t => cases t <;> simp_all [Control.ScalarBlockType, Control.blockByte, core.result.Result.Insts.CoreOpsTry.branch, hnext]
+  | Value t => cases t <;> simp_all [Control.ScalarBlockType, Control.blockByte, core.result.Result.Insts.CoreOpsTry.branch]
 
 theorem code.read_block_type.eof (data : Slice U8) (pos : Usize) (h : data.length ≤ pos.val) :
     code.read_block_type data pos = .ok (.Err .UnexpectedEof) := by

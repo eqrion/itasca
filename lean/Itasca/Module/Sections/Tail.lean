@@ -133,7 +133,7 @@ theorem module.validate_tail_with.spec {V : Type} (visitor : module.ModuleVisito
       cases hcount : env.data_count with
       | none =>
         simp only [WP.spec_ok]
-        exact ⟨⟨bytes, hp.encoding, heq ▸ hs⟩, hvalid, by simp [hcount]⟩
+        exact ⟨⟨bytes, hp.encoding, heq ▸ hs⟩, hvalid, by simp⟩
       | some count =>
         step
         split

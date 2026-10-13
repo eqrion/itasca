@@ -200,8 +200,8 @@ theorem subStep.refines {V W : Type}
           exact CoreVisitor.run.refines _ visitor replacement related hrefines
             (fun s (a : code.MemArg × U8) => .op s (.simd_memory_lane opcode a.1 a.2)) v w hrelated res final v' h
         · rename_i hc
-          simp only [hc, if_false]
-          cases store <;> simp only [Bool.false_eq_true, Bool.true_eq, if_true, if_false] at h ⊢
+          simp only [hc]
+          cases store <;> simp only [Bool.false_eq_true, if_true, if_false] at h ⊢
           all_goals
             exact CoreVisitor.run.refines _ visitor replacement related hrefines
               (fun s a => .op s (.simd_memory opcode a)) v w hrelated res final v' h

@@ -47,12 +47,12 @@ theorem end_frame_eq (st : code.BodyState) (env : module.Env) (isElse : Bool)
       else finishFrame st env false bt frame i (alloc.vec.Vec.len st.blocks)) := by
   rw [end_frame_normalized]
   have hn : alloc.vec.Vec.len st.blocks ≠ 0#usize := by
-    intro he; have := congrArg UScalar.val he; simp [hc, hb] at this
+    intro he; have := congrArg UScalar.val he; simp [hb] at this
   simp only [hn, ↓reduceIte]
-  obtain ⟨i, hi, hiv⟩ := WP.spec_imp_exists (UScalar.sub_spec (x := alloc.vec.Vec.len st.blocks) (y := 1#usize) (by simp [hc, hb]))
+  obtain ⟨i, hi, hiv⟩ := WP.spec_imp_exists (UScalar.sub_spec (x := alloc.vec.Vec.len st.blocks) (y := 1#usize) (by simp [hb]))
   rw [hi]
   simp only [bind_ok]
-  have hi' : i.val = blocks.length := by simp [hc, hb, ha] at hiv; omega
+  have hi' : i.val = blocks.length := by simp [hb, ha] at hiv; omega
   have hindex : i.val < st.blocks.val.length := by simp [hb, hi']
   have hindex' : i.val < st.core.ctrls.val.length := by simp [hc, hi', ha]
   obtain ⟨bt', hbt', hbtv⟩ := WP.spec_imp_exists
@@ -65,7 +65,8 @@ theorem end_frame_eq (st : code.BodyState) (env : module.Env) (isElse : Bool)
   rw [hbt', bind_ok, hframe']
   simp only [ebt, ef, bind_ok]
   cases isElse <;> cases hk : frame.kind <;>
-    simp [finishFrame, signature.BlockType.params.spec, signature.BlockType.results.spec] <;> rfl
+    simp [finishFrame, signature.BlockType.params.spec, signature.BlockType.results.spec]
+  all_goals rfl
 
 /-- Successful closing consumes precisely a realization of the complete result vector. -/
 theorem finishFrame.sound (st : code.BodyState) (env : module.Env) (isElse : Bool)
@@ -118,7 +119,7 @@ theorem finishFrame.sound (st : code.BodyState) (env : module.Env) (isElse : Boo
           have het : ts = outs := by simpa [hout] using hts.symm
           have hnz : blocks ≠ [] := by intro he; subst blocks; simp_all
           exact ⟨hres, hpos.trans hsp, by
-            simp [hctrl, hsvctrl, hsc, hc, hblocks, hbval, hb, hvals, het, hsv', hnz]⟩
+            simp [hctrl, hsvctrl, hsc, hc, hblocks, hvals, het, hsv', hnz]⟩
       · simp only [↓reduceIte]
         step as ⟨c0, back0, hc0, hback0⟩
         step as ⟨c1, back1, hc1, hback1⟩ by simp_all [alloc.vec.Vec.set]
@@ -160,10 +161,10 @@ theorem code.end_frame.sound (st : code.BodyState) (env : module.Env) (isElse : 
       Wasm2.EndEffect st r.2 parents blocks frame isElse ins outs outer ⦄ := by
   rw [Wasm2.end_frame_eq st env isElse parents blocks frame bt hc hb ha]
   step as ⟨i, hi⟩
-  have hi' : i.val = parents.length := by simp [hc, hb, ha] at hi; omega
+  have hi' : i.val = parents.length := by simp [hb, ha] at hi; omega
   have hsfinish (b : Bool) := Wasm2.finishFrame.sound st env b bt frame i
     (alloc.vec.Vec.len st.blocks) parents blocks ins outs outer segment hc hb ha hi'
-    (by simp [hc, hb, ha]) hv hbase hin hout hs
+    (by simp [hb, ha]) hv hbase hin hout hs
   cases isElse
   · simp only [Bool.false_eq_true, ↓reduceIte]
     split

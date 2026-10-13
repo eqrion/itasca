@@ -16,7 +16,7 @@ theorem code.call_info.bytes (st : code.BodyState) (data : Slice U8)
   step with code.take_index.spec st.core data as ⟨r, s, hv, hc, hd⟩
   have hs' : Control.Shape s :=
     ⟨by simpa [hc] using hs.ordered, by simpa [hc, hv] using hs.bounded⟩
-  cases r <;> step* <;> simp_all
+  cases r <;> step*; simp_all
 
 /-- Indirect-call callbacks retain both independently decoded indices. -/
 theorem code.call_indirect_info.bytes (st : code.BodyState) (data : Slice U8)
@@ -37,16 +37,17 @@ theorem code.call_indirect_info.bytes (st : code.BodyState) (data : Slice U8)
     have hs'' : Control.Shape s' :=
       ⟨by simpa [hc'] using hs'.ordered, by simpa [hc', hv'] using hs'.bounded⟩
     cases r with
-    | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+    | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
     | Ok table =>
-      simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-      step* <;> simp_all
+      simp only [bind_ok]
+      step*
+      simp_all
       cases r2 with
       | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       | Ok value =>
         simp only [bind_ok]
-        step* <;> simp_all
+        step*
+        simp_all
         cases r3 with
         | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
         | Ok value =>
@@ -82,8 +83,7 @@ theorem step_block {data env locals index st} (p : Pending data env locals index
   have capacity : st.blocks.val.length < Usize.max := by
     have := p.ctrls; have := p.inbounds; have := p.size; have := limits.MAX_FUNCTION_BYTES.room
     omega
-  have spec := code.enter_info.bytes st data env .Block p.opened.shape.core
-    p.opened.shape.aligned capacity
+  have spec := code.enter_info.bytes st data env .Block p.opened.shape.core capacity
   rw [hr, WP.spec_ok] at spec
   exact ⟨.block bt, rfl, by simp [Action.opcode],
     At.of_block_type bt p.inbounds byte p.pos (fun _ h => .block h) (spec bt rfl)⟩
@@ -100,8 +100,7 @@ theorem step_loop {data env locals index st} (p : Pending data env locals index 
   have capacity : st.blocks.val.length < Usize.max := by
     have := p.ctrls; have := p.inbounds; have := p.size; have := limits.MAX_FUNCTION_BYTES.room
     omega
-  have spec := code.enter_info.bytes st data env .Loop p.opened.shape.core
-    p.opened.shape.aligned capacity
+  have spec := code.enter_info.bytes st data env .Loop p.opened.shape.core capacity
   rw [hr, WP.spec_ok] at spec
   exact ⟨.loop bt, rfl, by simp [Action.opcode],
     At.of_block_type bt p.inbounds byte p.pos (fun _ h => .loop h) (spec bt rfl)⟩
@@ -118,8 +117,7 @@ theorem step_if {data env locals index st} (p : Pending data env locals index st
   have capacity : st.blocks.val.length < Usize.max := by
     have := p.ctrls; have := p.inbounds; have := p.size; have := limits.MAX_FUNCTION_BYTES.room
     omega
-  have spec := code.enter_info.bytes st data env .Then p.opened.shape.core
-    p.opened.shape.aligned capacity
+  have spec := code.enter_info.bytes st data env .Then p.opened.shape.core capacity
   rw [hr, WP.spec_ok] at spec
   exact ⟨.if_ bt, rfl, by simp [Action.opcode],
     At.of_block_type bt p.inbounds byte p.pos (fun _ h => .if_ h) (spec bt rfl)⟩
@@ -239,20 +237,17 @@ theorem dispatch_return {V : Type} (visitor : code.OpVisitor V)
   funext pair
   obtain ⟨r, s⟩ := pair
   cases r with
-  | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  | Err e => simp
   | Ok u =>
     cases u
-    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, Std.bind_assoc, Std.uncurry]
+    simp only [bind_ok, Std.bind_assoc, Std.uncurry]
     congr 1
     funext state
-    simp only [bind_ok, Std.uncurry, invoke]
+    simp only [invoke]
     congr 1
     funext pair
     obtain ⟨reply, w⟩ := pair
-    cases reply <;> simp [hookResult, code.visit,
-      core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+    cases reply <;> simp [hookResult]
 
 /-- Return reads no immediate bytes; checking results and erasing the active
 stack segment preserve its post-opcode cursor. -/
@@ -278,7 +273,7 @@ theorem step_return {data env locals index st} (p : Pending data env locals inde
   intro v result final v' run
   rw [dispatch_return] at run
   apply bodyRun.trace data p.start _ visitor observe records (fun _ => .return_) ?_ v result final v' run
-  intro state unit hr
+  intro state _ hr
   have spec := return_position st env index p.opened.shape.core
   rw [hr, WP.spec_ok] at spec
   dsimp only at spec

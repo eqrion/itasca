@@ -50,7 +50,7 @@ theorem labels_push {env : module.Env} {C : context} {st s : code.BodyState}
     Labels env s (Control.labelContext (ts.map Translate.valueType) ++ C) := by
   intro depth
   cases depth with
-  | zero => simp [Control.labelContext_labels, labelTypes, labelAt, hc, hb, ha, ht]
+  | zero => simp [Control.labelContext_labels, labelTypes, labelAt, hc, hb, ht]
   | succ depth =>
     rw [Control.labelContext_labels]
     simp only [List.getElem?_cons_succ, hl depth]
@@ -145,7 +145,7 @@ theorem execute_enter {st : code.BodyState} (f : Frame st) (data : Slice U8)
   obtain ⟨⟨r, s⟩, hr, hok, hp, heffect⟩ := WP.spec_imp_exists
     (code.enter.complete { st with core := { st.core with pos := pos } } data env form initial
       bt next ins outs f.core.outer f.core.operands front hd hin hout hins houts f.core.vals
-      f.core.base_eq (by simp [f.blocks, f.core.ctrls, f.aligned]) hb.ctrl_capacity
+      f.core.base_eq hb.ctrl_capacity
       (by change st.core.vals.val.length + ins.length ≤ Usize.max; have := hb.val_capacity; omega) (by simpa [Control.polymorphic, f.core.ctrls] using ht))
   dsimp only at hok
   subst r

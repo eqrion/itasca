@@ -18,13 +18,13 @@ attribute [local step] code.pop_with_type.total code.pop_stack_type.total
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_conversion st input output ⦃ r => ReaderPost st r.2 ⦄ := by
   unfold code.read_conversion ReaderPost
-  step* <;> simp_all <;> omega
+  step*
 
 @[local step] private theorem binary_total (st : code.OpIterState) (input output : types.ValueType)
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_binary st input output ⦃ r => ReaderPost st r.2 ⦄ := by
   unfold code.read_binary ReaderPost
-  step* <;> simp_all <;> omega
+  step*
 
 @[local step] private theorem byte_total (data : Slice U8) (pos : Usize) :
     reader.read_byte data pos ⦃ _ => True ⦄ := by
@@ -94,27 +94,27 @@ attribute [local step] code.pop_with_type.total code.pop_stack_type.total
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_simd_memory_lane st data env alignment store count ⦃ r => ReaderPost st r.2 ⦄ := by
   unfold code.read_simd_memory_lane ReaderPost
-  step* <;> simp_all [ReaderPost] <;> omega
+  step*
 
 @[step] theorem load_total (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (ty : types.ValueType) (alignment : U32)
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_load st data env ty alignment ⦃ r => ReaderPost st r.2 ⦄ := by
   unfold code.read_load ReaderPost
-  step* <;> simp_all <;> omega
+  step*
 
 @[step] theorem store_total (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (ty : types.ValueType) (alignment : U32)
-    (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
+    (hs : Control.Shape st) :
     code.read_store st data env ty alignment ⦃ r => ReaderPost st r.2 ⦄ := by
   unfold code.read_store ReaderPost
-  step* <;> simp_all <;> omega
+  step*
 
 @[step] theorem constant_total (st : code.OpIterState) (data : Slice U8)
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_simd_const st data ⦃ r => ReaderPost st r.2 ⦄ := by
   unfold code.read_simd_const ReaderPost
-  step* <;> simp_all <;> omega
+  step*
 
 @[local step] private theorem shuffle_loop_total (st : code.OpIterState) (data : Slice U8)
     (pos : Usize) (i : I32) (hi : 0 ≤ i.val ∧ i.val ≤ 16)
@@ -126,8 +126,7 @@ attribute [local step] code.pop_with_type.total code.pop_stack_type.total
   · rintro ⟨pos, i⟩ ⟨hi, hn⟩
     unfold code.read_simd_shuffle_loop.body
     step* <;> simp_all [ReaderPost]
-    all_goals try (cases val; step* <;> simp_all [ReaderPost])
-    all_goals try exact ⟨hs.ordered, hs.bounded⟩
+    all_goals try (cases val; step* <;> simp_all)
     all_goals scalar_tac
   · exact hi
 

@@ -146,12 +146,11 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
           (module.decode_const_expr.spec data first env .I32 .Wasm1)
         rw [hconst]
         cases r with
-        | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+        | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
         | Ok pair =>
           obtain ⟨offset, next⟩ := pair
           obtain ⟨⟨ob, ho, hos⟩, hv⟩ := hc
-          simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+          simp only [bind_ok]
           step
           split
           · simp
@@ -159,8 +158,7 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
             simp only [types.ElemType.value_type, bind_ok]
             step
             cases ht : tt.elem <;>
-              simp [ht, types.ElemType.value_type, core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-                types.ValueType.Insts.CoreCmpPartialEqValueType,
+              simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
                 types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
             exact ⟨⟨fb ++ ob, .legacy hf ho, hfs.append hos⟩,
               hi, (by
@@ -192,13 +190,12 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
               (module.decode_const_expr.spec data first env .I32 .Wasm2)
             rw [hconst]
             cases r with
-            | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-            error.Error.Insts.CoreConvertFromOpError.from]
+            | Err e => simp [
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
             | Ok pair =>
               obtain ⟨offset, offsetNext⟩ := pair
               obtain ⟨⟨ob, ho, hos⟩, hv⟩ := hc
-              simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+              simp only [bind_ok]
               step
               split
               · simp
@@ -206,9 +203,7 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
                 simp only [types.ElemType.value_type, bind_ok]
                 step
                 cases ht : tt.elem <;>
-                  simp [types.ElemType.value_type, ModuleConstants.referenceValueType,
-                    core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-                    types.ValueType.Insts.CoreCmpPartialEqValueType,
+                  simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
                     types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
                 all_goals
                   exact ⟨⟨fb ++ ob, .activeIndices hf ho, hfs.append hos⟩,
@@ -219,7 +214,7 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
           change (reader.read_byte data _ >>= _) ⦃_⦄
           rw [hkind]
           cases r with
-          | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
+          | Err e => simp [
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
             error.Error.Insts.CoreConvertFromOpError.from]
           | Ok pair =>
@@ -227,20 +222,20 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
             by_cases hz : kind = 0#u8
             · subst kind
               have hks := At.byte hk
-              simp [core.result.Result.Insts.CoreOpsTry.branch]
+              simp
               exact ⟨⟨fb ++ [0#u8], .passiveIndices hf, hfs.append hks⟩, trivial⟩
             · have hn : kind.val ≠ 0 := fun h => hz (UScalar.eq_of_val_eq h)
-              simp [core.result.Result.Insts.CoreOpsTry.branch, hn]
+              simp [hn]
         · obtain ⟨r, hindex, hi⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data first)
           rw [hindex]
           cases r with
-          | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
+          | Err e => simp [
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
             error.Error.Insts.CoreConvertFromOpError.from]
           | Ok pair =>
             obtain ⟨index, indexNext⟩ := pair
             obtain ⟨ib, hindexEnc, his⟩ := At.of_u32 hi
-            simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+            simp only [bind_ok]
             step
             split
             · simp
@@ -248,18 +243,18 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
                 (module.decode_const_expr.spec data indexNext env .I32 .Wasm2)
               rw [hconst]
               cases r with
-              | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
+              | Err e => simp [
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
               error.Error.Insts.CoreConvertFromOpError.from]
               | Ok pair =>
                 obtain ⟨offset, offsetNext⟩ := pair
                 obtain ⟨⟨ob, ho, hos⟩, hv⟩ := hc
-                simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+                simp only [bind_ok]
                 obtain ⟨r, hkind, hk⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data offsetNext)
                 change (reader.read_byte data _ >>= _) ⦃_⦄
                 rw [hkind]
                 cases r with
-                | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
+                | Err e => simp [
                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
                   error.Error.Insts.CoreConvertFromOpError.from]
                 | Ok pair =>
@@ -267,7 +262,7 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
                   by_cases hz : kind = 0#u8
                   · subst kind
                     have hks := At.byte hk
-                    simp [core.result.Result.Insts.CoreOpsTry.branch]
+                    simp
                     step
                     split
                     · simp
@@ -275,24 +270,23 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
                       simp only [types.ElemType.value_type, bind_ok]
                       step
                       cases ht : tt.elem <;>
-                        simp [types.ElemType.value_type, ModuleConstants.referenceValueType,
-                          core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-                          types.ValueType.Insts.CoreCmpPartialEqValueType,
+                        simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
                           types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
                       all_goals
                         exact ⟨⟨fb ++ ib ++ ob ++ [0#u8], .explicitIndices hf hindexEnc ho, ((hfs.append his).append hos).append hks⟩,
                           hi, (by
                             have hentry : tt = env.table_types.val[index.val] := by
                               rw [tt_post]
-                              congr 1 <;> scalar_tac
+                              congr 1
+                              scalar_tac
                             simpa [hentry] using ht), hv⟩
                   · have hn : kind.val ≠ 0 := fun h => hz (UScalar.eq_of_val_eq h)
-                    simp [core.result.Result.Insts.CoreOpsTry.branch, hn]
+                    simp [hn]
         · obtain ⟨r, hkind, hk⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data first)
           change (reader.read_byte data _ >>= _) ⦃_⦄
           rw [hkind]
           cases r with
-          | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
+          | Err e => simp [
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
             error.Error.Insts.CoreConvertFromOpError.from]
           | Ok pair =>
@@ -300,10 +294,10 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
             by_cases hz : kind = 0#u8
             · subst kind
               have hks := At.byte hk
-              simp [core.result.Result.Insts.CoreOpsTry.branch]
+              simp
               exact ⟨⟨fb ++ [0#u8], .declarativeIndices hf, hfs.append hks⟩, trivial⟩
             · have hn : kind.val ≠ 0 := fun h => hz (UScalar.eq_of_val_eq h)
-              simp [core.result.Result.Insts.CoreOpsTry.branch, hn]
+              simp [hn]
         · step
           split
           · simp
@@ -311,13 +305,12 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
               (module.decode_const_expr.spec data first env .I32 .Wasm2)
             rw [hconst]
             cases r with
-            | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-            error.Error.Insts.CoreConvertFromOpError.from]
+            | Err e => simp [
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
             | Ok pair =>
               obtain ⟨offset, offsetNext⟩ := pair
               obtain ⟨⟨ob, ho, hos⟩, hv⟩ := hc
-              simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+              simp only [bind_ok]
               step
               split
               · simp
@@ -325,9 +318,7 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
                 simp only [types.ElemType.value_type, bind_ok]
                 step
                 cases ht : tt.elem <;>
-                  simp [types.ElemType.value_type, ModuleConstants.referenceValueType,
-                    core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-                    types.ValueType.Insts.CoreCmpPartialEqValueType,
+                  simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
                     types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
                 all_goals
                   exact ⟨⟨fb ++ ob, .activeExpressions hf ho, hfs.append hos⟩,
@@ -337,26 +328,25 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
         · obtain ⟨r, helemRead, he⟩ := WP.spec_imp_exists (module.decode_elem_type.spec data first .Wasm2)
           simp only [helemRead, bind_ok]
           cases r with
-          | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-            error.Error.Insts.CoreConvertFromOpError.from]
+          | Err e => simp [
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
           | Ok pair =>
             obtain ⟨elem, elemNext⟩ := pair
             obtain ⟨eb, ⟨he, ha⟩, hes⟩ := he
             have heq : eb = [elemByte elem] := he
             subst eb
-            simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+            simp only [bind_ok]
             exact ⟨⟨fb ++ [elemByte elem], .passiveExpressions hf, hfs.append hes⟩, trivial⟩
         · obtain ⟨r, hindex, hi⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data first)
           rw [hindex]
           cases r with
-          | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
+          | Err e => simp [
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
             error.Error.Insts.CoreConvertFromOpError.from]
           | Ok pair =>
             obtain ⟨index, indexNext⟩ := pair
             obtain ⟨ib, hindexEnc, his⟩ := At.of_u32 hi
-            simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+            simp only [bind_ok]
             step
             split
             · simp
@@ -364,13 +354,12 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
                 (module.decode_const_expr.spec data indexNext env .I32 .Wasm2)
               rw [hconst]
               cases r with
-              | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-              error.Error.Insts.CoreConvertFromOpError.from]
+              | Err e => simp [
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
               | Ok pair =>
                 obtain ⟨offset, offsetNext⟩ := pair
                 obtain ⟨⟨ob, ho, hos⟩, hv⟩ := hc
-                simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+                simp only [bind_ok]
                 let Target : WP.Post (core.result.Result (module.ElementMode × types.ElemType × Bool × Usize) error.Error) :=
                   fun result => match result with
                     | .Ok (mode, elem, expressions, next) =>
@@ -380,11 +369,10 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
                 change ((module.decode_elem_type data offsetNext .Wasm2 >>= _) :
                   Result (core.result.Result (module.ElementMode × types.ElemType × Bool × Usize) error.Error)) ⦃ Target ⦄
                 obtain ⟨r, helemRead, he⟩ := WP.spec_imp_exists (module.decode_elem_type.spec data offsetNext .Wasm2)
-                simp only [helemRead, bind_ok]
+                simp only [helemRead]
                 cases r with
-                | Err e => simp [Target, core.result.Result.Insts.CoreOpsTry.branch,
-                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-                  error.Error.Insts.CoreConvertFromOpError.from]
+                | Err e => simp [Target,
+                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
                 | Ok pair =>
                   obtain ⟨elem, elemNext⟩ := pair
                   obtain ⟨eb, ⟨he, ha⟩, hes⟩ := he
@@ -403,27 +391,26 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
                     cases elem <;> cases ht : tt.elem <;>
                       simp [Target, types.ElemType.value_type, ModuleConstants.referenceValueType,
                         core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-                        types.ValueType.Insts.CoreCmpPartialEqValueType,
                         types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
                     all_goals
                       exact ⟨⟨_, .explicitExpressions hf hindexEnc ho, ((hfs.append his).append hos).append hes⟩,
                         hi, (by
                           have hentry : tt = env.table_types.val[index.val] := by
                             rw [tt_post]
-                            congr 1 <;> scalar_tac
+                            congr 1
+                            scalar_tac
                           simpa [hentry] using ht), hv⟩
         · obtain ⟨r, helemRead, he⟩ := WP.spec_imp_exists (module.decode_elem_type.spec data first .Wasm2)
           simp only [helemRead, bind_ok]
           cases r with
-          | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-            error.Error.Insts.CoreConvertFromOpError.from]
+          | Err e => simp [
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
           | Ok pair =>
             obtain ⟨elem, elemNext⟩ := pair
             obtain ⟨eb, ⟨he, ha⟩, hes⟩ := he
             have heq : eb = [elemByte elem] := he
             subst eb
-            simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+            simp only [bind_ok]
             exact ⟨⟨fb ++ [elemByte elem], .declarativeExpressions hf, hfs.append hes⟩, trivial⟩
 
 end Itasca

@@ -255,7 +255,7 @@ theorem module.decode_value_types.profile_spec (data : Slice U8) (start : Usize)
       | Ok pair =>
           obtain ⟨count, pos⟩ := pair
           by_cases hbig : count.val > limit.val
-          · simp [module.decode_value_types, hr, core.result.Result.Insts.CoreOpsTry.branch, lift, U32.cast_Usize_val_eq, hbig]
+          · simp [module.decode_value_types, hr, core.result.Result.Insts.CoreOpsTry.branch, lift, hbig]
           · obtain ⟨r, hv, hp⟩ := WP.spec_imp_exists
               (module.decode_value_types_loop0.spec data pos count hd.span.2.2 profile)
             have hrun : module.decode_value_types data start (some (limit, err)) profile =
@@ -337,7 +337,9 @@ theorem module.decode_func_type.profile_spec (data : Slice U8) (start : Usize)
   | Wasm1 =>
       obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (module.decode_func_type.spec data start)
       rw [hr]
-      cases r <;> simpa [Profile.FuncType, Profile.FuncTypeWithinLimits] using hp
+      cases r with
+      | Ok _ => simpa [Profile.FuncType, Profile.FuncTypeWithinLimits] using hp
+      | Err _ => simp
   | Wasm2 =>
       obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data start)
       cases r with
@@ -390,7 +392,7 @@ theorem module.decode_global_type.allowed_spec (data : Slice U8) (start : Usize)
   cases r with
   | Err e =>
       simp [module.decode_global_type, ht, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, ParserPost]
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok pair =>
       obtain ⟨ty, pos⟩ := pair
       obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data pos)
@@ -398,19 +400,19 @@ theorem module.decode_global_type.allowed_spec (data : Slice U8) (start : Usize)
       | Err e =>
           simp [module.decode_global_type, ht, hr, core.result.Result.Insts.CoreOpsTry.branch,
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-            error.Error.Insts.CoreConvertFromOpError.from, ParserPost]
+            error.Error.Insts.CoreConvertFromOpError.from]
       | Ok pair =>
           obtain ⟨mutability, next⟩ := pair
           obtain ⟨bytes, ⟨he, ha⟩, hs⟩ := hd
           have heq : bytes = [valueByte ty] := he
           subst bytes
           by_cases hzero : mutability = 0#u8
-          · simp [module.decode_global_type, ht, hr, hzero, core.result.Result.Insts.CoreOpsTry.branch, ParserPost]
+          · simp [module.decode_global_type, ht, hr, hzero, core.result.Result.Insts.CoreOpsTry.branch]
             exact ⟨⟨_, rfl, by simpa [hzero, mutByte] using hs.append (At.byte hp)⟩, ha⟩
           · by_cases hone : mutability = 1#u8
-            · simp [module.decode_global_type, ht, hr, hone, core.result.Result.Insts.CoreOpsTry.branch, ParserPost]
+            · simp [module.decode_global_type, ht, hr, hone, core.result.Result.Insts.CoreOpsTry.branch]
               exact ⟨⟨_, rfl, by simpa [hone, mutByte] using hs.append (At.byte hp)⟩, ha⟩
-            · simp [module.decode_global_type, ht, hr, core.result.Result.Insts.CoreOpsTry.branch, ParserPost]
+            · simp [module.decode_global_type, ht, hr, core.result.Result.Insts.CoreOpsTry.branch]
               split <;> simp_all [U8.ofNat, UScalar.ofNat, UScalar.ofNatCore]
 
 

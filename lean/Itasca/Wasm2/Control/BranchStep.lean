@@ -123,7 +123,7 @@ theorem Pending.branch_table {data env locals index st} (p : Pending data env lo
     p.current.form p.current.ins p.current.outs
   have hl := p.opened.branchLabels rfl C outer spine
   apply WP.spec_mono (code.branch_table.prefix st data env (p.parents.map Frames.Saved.ctrl)
-    p.current.ctrl outer p.current.vals ctrls vals base p.opened.shape.core p.opened.shape.aligned
+    p.current.ctrl outer p.current.vals ctrls vals base p.opened.shape.core
     _ hC _ p.current.ops typed hl)
   intro r hr hok
   obtain ⟨depths, default, hd, hv, hb, hc, ht⟩ := hr hok

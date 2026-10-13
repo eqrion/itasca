@@ -45,9 +45,8 @@ theorem binary_fixed (st : code.OpIterState) (input output : types.ValueType) :
   · congr 1
     funext pair
     obtain ⟨res, s⟩ := pair
-    cases res <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  · simp [core.convert.FromSame.from]
+    cases res <;> simp
+  · simp
 
 /-- The extracted SIMD operand checker is the independently normalized fixed checker. -/
 theorem signature_fixed (st : code.OpIterState) (sig : Signature) :

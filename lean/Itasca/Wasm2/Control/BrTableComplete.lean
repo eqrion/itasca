@@ -30,7 +30,7 @@ theorem Wasm2.branchTableLoop.complete (st : code.BodyState) (data : Slice U8)
     (hd : BrTable.LabelsDecoded data st.core.pos depths next)
     (ht : Wasm2.TableTargets env st depths (some n))
     (harity : arity = none ∨ arity = some n) :
-    ∃ s, Wasm2.branchTableLoop st.core st.blocks data env count arity i = .ok (.Ok (), s) ∧
+    ∃ s, Wasm2.branchTableLoop st.core data env count arity i = .ok (.Ok (), s) ∧
       s.core.vals.val = st.core.vals.val.take c.value_stack_base.val ∧
       s.core.ctrls.val = cs ++ [{ c with polymorphic_base := true }] ∧
       s.blocks = st.blocks ∧ s.core.pos = next := by
@@ -61,11 +61,11 @@ theorem Wasm2.branchTableLoop.complete (st : code.BodyState) (data : Slice U8)
         | snoc => simp at he
       obtain ⟨s', hm, hv, _, hc, hp⟩ := WP.spec_imp_exists
         (code.mark_unreachable.spec s.core cs c hctrls hs')
-      refine ⟨{s with core := s'}, ?_, hv, hc, by simp [hc, hctrls, s], hp.trans hnxt.symm⟩
+      refine ⟨{s with core := s'}, ?_, hv, hc, by simp [hc, hctrls], hp.trans hnxt.symm⟩
       unfold Wasm2.branchTableLoop code.branch_table_with_loop
       rw [loop]
       dsimp only
-      rw [Wasm2.tableBody_eq data env count st.core st.blocks arity i, hbody]
+      rw [Wasm2.tableBody_eq data env count st.core arity i, hbody]
       simp [hic, hm]
     | cons d ds =>
       have hilt : i.val < count.val := by simp only [List.length_cons] at hlen; omega
@@ -82,7 +82,7 @@ theorem Wasm2.branchTableLoop.complete (st : code.BodyState) (data : Slice U8)
       unfold Wasm2.branchTableLoop code.branch_table_with_loop
       rw [loop]
       dsimp only
-      rw [Wasm2.tableBody_eq data env count st.core st.blocks arity i, hbody]
+      rw [Wasm2.tableBody_eq data env count st.core arity i, hbody]
       simpa [hine, hj, Wasm2.branchTableLoop, code.branch_table_with_loop, Std.bind_assoc] using hrec
 
 /-- The generated common-subtype branch-table premise suffices for each
@@ -93,7 +93,6 @@ theorem code.branch_table.complete (st : code.BodyState) (data : Slice U8)
     (depths : List U32) (default : U32) (next : Usize)
     (hctrls : st.core.ctrls.val = cs ++ [c]) (hv : st.core.vals.val = outer ++ segment)
     (hb : c.value_stack_base.val = outer.length)
-    (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (hd : BrTable.Decoded data st.core.pos depths default next)
     (htargets : ∀ d ∈ depths ++ [default], ∃ view ts,
       Wasm2.labelAt st d.val = some view ∧ Wasm2.resolve env view = some ts ∧
@@ -132,11 +131,10 @@ theorem code.branch_table.complete (st : code.BodyState) (data : Slice U8)
       simpa [popped, hvc, Control.base, hcc, hctrls, hb] using hmono
   obtain ⟨s, hloop, hvals, hctrls', hblocks, hpos⟩ := Wasm2.branchTableLoop.complete
     popped data env count 0#u32 none n cs c (depths ++ [default]) next
-    (by simpa [popped, hcc] using hctrls) hs' (by simpa [popped, hcc] using ha)
+    (by simpa [popped, hcc] using hctrls) hs' (by simp [popped, hcc])
     (by simp) (by simp [hlen])
     (by simpa [popped, hpc] using hlabels.snoc hdefault) htargets' (.inl rfl)
   have hblocks' : popped.blocks = st.blocks := code.BodyState.blocks_eq_of_ctrls hcc
-  simp only [hblocks'] at hloop
   refine ⟨s, ?_, hctrls', hblocks.trans hblocks', hpos, ?_⟩
   · simp [code.branch_table.eq_core, Wasm2.tableCore, hread, hcond, hloop, popped,
       core.result.Result.Insts.CoreOpsTry.branch]

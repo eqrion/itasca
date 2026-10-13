@@ -162,7 +162,7 @@ theorem Pending.simd_memory {data env locals index st}
     cases res with
     | Err e => simp [CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-    | Ok unit =>
+    | Ok _ =>
       rw [hstate, Simd.carryFixed.run]
       apply p.fixed v (Simd.fullMemoryInputs op.store) (Simd.memoryOutput op.store)
         (op.instruction (MemoryMeaning.memArg arg) (.mk_uN 0))
@@ -209,7 +209,7 @@ theorem Pending.simd_memory_lane {data env locals index st}
       cases res with
       | Err e => simp [CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-      | Ok unit =>
+      | Ok _ =>
         rw [hstate, Simd.carryFixed.run]
         apply p.fixed v [.V128, .I32] (Simd.memoryOutput op.store)
           (op.instruction (MemoryMeaning.memArg arg) (.mk_uN lane.val))
