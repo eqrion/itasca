@@ -8,24 +8,35 @@ import Itasca.Binary.FloatBits
 import Itasca.Spec.Instr
 import Itasca.Spec.ScalarConst
 
+/-!
+# Wasm 1.0 instruction binary grammar
+
+The handwritten binary grammar of Wasm 1.0 instructions. `Immediate` relates an opcode byte to a
+token and its immediate bytes, `TokenEncoding` adds the opcode, and `At` places a token in a byte
+slice. `Consumed` accumulates the tokens read so far and `BodyEncoding` is a complete body,
+including its final `end`. The `At.of_*` lemmas assemble tokens from decoded immediates. The
+grammar does not mention validation: opcode meaning comes from the tables in
+`Binary/Wasm1/NumericMeaning` and `Binary/Wasm1/MemoryMeaning`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm1
 
-/-- A byte interval with its exact length, bounds, and unconsumed suffix. -/
+/-- `bytes` is the slice of `data` from `start` to `next`, followed by the untouched suffix. -/
 structure BytesAt (data : Slice U8) (start : Usize) (bytes : List U8) (next : Usize) : Prop where
   suffix : data.val.drop start.val = bytes ++ data.val.drop next.val
   length : next.val = start.val + bytes.length
   bound : next.val ≤ data.length
 
-/-- A vector's entries, independently of the count that precedes it. -/
+/-- The concatenated unsigned LEB128 entries of an index vector, without the leading count. -/
 inductive IndicesEncoding : List U32 → List U8 → Prop where
   | nil : IndicesEncoding [] []
   | cons {idx indices first rest} : Leb128.Encoding first idx.val →
       IndicesEncoding indices rest → IndicesEncoding (idx :: indices) (first ++ rest)
 
-/-- Wasm 1.0 instruction bytes. Literal opcode values and the independent
-numeric map define the accepted syntax; no validator execution occurs here. -/
+/-- The immediate bytes that follow an opcode byte for a Wasm 1.0 token. Literal opcode values and
+the numeric and memory opcode tables define the accepted syntax. -/
 inductive Immediate : U8 → Token → List U8 → Prop where
   | unreachable : Immediate 0x00#u8 (.plain .UNREACHABLE) []
   | nop : Immediate 0x01#u8 (.plain .NOP) []
@@ -78,27 +89,30 @@ inductive Immediate : U8 → Token → List U8 → Prop where
       (meaning : Numeric.opcodeMeaning opcode = some operation) :
       Immediate opcode (.plain operation.instruction) []
 
+/-- A token as its opcode byte followed by its immediate bytes. -/
 def TokenEncoding (token : Token) (bytes : List U8) : Prop :=
   ∃ opcode immediate, bytes = opcode :: immediate ∧ Immediate opcode token immediate
 
-/-- A successful token occupies one exact interval; the suffix is unrestricted. -/
+/-- A token is encoded by the interval from `start` to `next`. The suffix is unrestricted. -/
 def At (data : Slice U8) (start : Usize) (token : Token) (next : Usize) : Prop :=
   ∃ bytes, TokenEncoding token bytes ∧ BytesAt data start bytes next
 
-/-- The bytes consumed so far are accumulated by successful steps. No premise
-about the remaining bytes or future decoding appears in this relation. -/
+/-- The tokens read from `start` to the cursor, accumulated one `At` step at a time. -/
 inductive Consumed (data : Slice U8) : Usize → List Token → Usize → Prop where
   | nil (pos : Usize) (bound : pos.val ≤ data.length) : Consumed data pos [] pos
   | snoc {start tokens pos token next} : Consumed data start tokens pos →
       At data pos token next → Consumed data start (tokens ++ [token]) next
 
-/-- Complete raw instruction-body encoding, including its final end byte. -/
+/-- A complete function body: the tokens read from offset 0 reach the end of `data`, and end with
+the final `end`. -/
 def BodyEncoding (data : Slice U8) (ops : List instr) : Prop :=
   ∃ tokens next, Consumed data 0#usize tokens next ∧ next.val = data.length ∧ BodyTokens tokens ops
 
+/-- The empty byte list occupies an empty interval at any cursor within the input. -/
 theorem BytesAt.nil (data : Slice U8) (pos : Usize) (h : pos.val ≤ data.length) :
     BytesAt data pos [] pos := ⟨by simp, by simp, h⟩
 
+/-- Adjacent byte intervals compose. -/
 theorem BytesAt.append {data start middle next first rest}
     (hfirst : BytesAt data start first middle) (hrest : BytesAt data middle rest next) :
     BytesAt data start (first ++ rest) next := by
@@ -109,6 +123,7 @@ theorem BytesAt.append {data start middle next first rest}
     have := hrest.length
     omega
 
+/-- A single byte within the input occupies a one-byte interval. -/
 theorem BytesAt.byte (data : Slice U8) (start next : Usize) (b : U8)
     (hstart : start.val < data.length) (hbyte : data.val[start.val] = b)
     (hnext : next.val = start.val + 1) : BytesAt data start [b] next := by
@@ -116,6 +131,7 @@ theorem BytesAt.byte (data : Slice U8) (start next : Usize) (b : U8)
   rw [List.drop_eq_getElem_cons hstart, hbyte, hnext]
   rfl
 
+/-- A token interval is nonempty and within the input. -/
 theorem At.span {data start token next} (h : At data start token next) :
     start.val < next.val ∧ next.val ≤ data.length := by
   obtain ⟨_, ⟨op, imm, rfl, _⟩, hs⟩ := h
@@ -123,7 +139,7 @@ theorem At.span {data start token next} (h : At data start token next) :
   simp only [List.length_cons] at this
   exact ⟨by omega, hs.bound⟩
 
-/-- Compose an opcode byte with a separately proved immediate byte span. -/
+/-- Composes an opcode byte with an immediate byte span. -/
 theorem At.of_immediate {data start pos next opcode token immediate}
     (hstart : start.val < data.length) (hbyte : data.val[start.val] = opcode)
     (hpos : pos.val = start.val + 1)
@@ -132,19 +148,21 @@ theorem At.of_immediate {data start pos next opcode token immediate}
   exact ⟨opcode :: immediate, ⟨opcode, immediate, rfl, himmediate⟩,
     by simpa using (BytesAt.byte data start pos opcode hstart hbyte hpos).append hspan⟩
 
-/-- The no-immediate case ends immediately after its opcode. -/
+/-- A token with no immediate bytes ends right after its opcode. -/
 theorem At.no_immediate {data start next opcode token}
     (hstart : start.val < data.length) (hbyte : data.val[start.val] = opcode)
     (hnext : next.val = start.val + 1) (himm : Immediate opcode token []) :
     At data start token next := by
   exact .of_immediate hstart hbyte hnext himm (.nil data next (by omega))
 
+/-- A consumed span is within the input. -/
 theorem Consumed.span {data start tokens next} (h : Consumed data start tokens next) :
     start.val ≤ next.val ∧ next.val ≤ data.length := by
   induction h with
   | nil hb => exact ⟨Nat.le_refl _, hb⟩
   | snoc _ ha ih => have := ha.span; omega
 
+/-- Consumed spans compose. -/
 theorem Consumed.append {data start middle next first rest}
     (hfirst : Consumed data start first middle) (hrest : Consumed data middle rest next) :
     Consumed data start (first ++ rest) next := by
@@ -156,6 +174,7 @@ end Itasca.Wasm1
 
 namespace Itasca.Wasm1
 
+/-- Index vector entries compose. -/
 theorem IndicesEncoding.append {first rest bs cs}
     (hfirst : IndicesEncoding first bs) (hrest : IndicesEncoding rest cs) :
     IndicesEncoding (first ++ rest) (bs ++ cs) := by
@@ -163,12 +182,13 @@ theorem IndicesEncoding.append {first rest bs cs}
   | nil => simpa using hrest
   | cons hb _ ih => simpa [List.append_assoc] using IndicesEncoding.cons hb ih
 
+/-- Appending one entry to an index vector. -/
 theorem IndicesEncoding.snoc {indices bytes idx last}
     (h : IndicesEncoding indices bytes) (hlast : Leb128.Encoding last idx.val) :
     IndicesEncoding (indices ++ [idx]) (bytes ++ last) := by
   simpa using h.append (.cons hlast .nil)
 
-/-- Unsigned decoding supplies an immediate independently of the current state. -/
+/-- A token whose immediate is a single unsigned LEB128 value, from a decoded `u32`. -/
 theorem At.of_u32 {data start pos next opcode token} (value : U32)
     (hstart : start.val < data.length) (hbyte : data.val[start.val] = opcode)
     (hpos : pos.val = start.val + 1)
@@ -177,6 +197,7 @@ theorem At.of_u32 {data start pos next opcode token} (value : U32)
   obtain ⟨bytes, hs, hl, hb, he⟩ := hdecoded
   exact .of_immediate hstart hbyte hpos (himm bytes he) ⟨hs, hl, hb⟩
 
+/-- An `i32.const` token from a decoded signed 32-bit LEB128. -/
 theorem At.of_s32 {data start pos next} (value : I32)
     (hstart : start.val < data.length) (hbyte : data.val[start.val] = 0x41#u8)
     (hpos : pos.val = start.val + 1)
@@ -185,6 +206,7 @@ theorem At.of_s32 {data start pos next} (value : I32)
   obtain ⟨bytes, hs, hl, hb, he⟩ := hdecoded
   exact .of_immediate hstart hbyte hpos (.i32Const value he) ⟨hs, hl, hb⟩
 
+/-- An `i64.const` token from a decoded signed 64-bit LEB128. -/
 theorem At.of_s64 {data start pos next} (value : I64)
     (hstart : start.val < data.length) (hbyte : data.val[start.val] = 0x42#u8)
     (hpos : pos.val = start.val + 1)
@@ -193,6 +215,7 @@ theorem At.of_s64 {data start pos next} (value : I64)
   obtain ⟨bytes, hs, hl, hb, he⟩ := hdecoded
   exact .of_immediate hstart hbyte hpos (.i64Const value he) ⟨hs, hl, hb⟩
 
+/-- An `f32.const` token from four decoded bytes. -/
 theorem At.of_f32 {data start pos next} (bits : U32)
     (hstart : start.val < data.length) (hbyte : data.val[start.val] = 0x43#u8)
     (hpos : pos.val = start.val + 1)
@@ -201,6 +224,7 @@ theorem At.of_f32 {data start pos next} (bits : U32)
   obtain ⟨bytes, hs, hl, hb, he⟩ := hdecoded
   exact .of_immediate hstart hbyte hpos (.f32Const bits he) ⟨hs, by rw [he.1]; exact hl, hb⟩
 
+/-- An `f64.const` token from eight decoded bytes. -/
 theorem At.of_f64 {data start pos next} (bits : U64)
     (hstart : start.val < data.length) (hbyte : data.val[start.val] = 0x44#u8)
     (hpos : pos.val = start.val + 1)
@@ -209,7 +233,7 @@ theorem At.of_f64 {data start pos next} (bits : U64)
   obtain ⟨bytes, hs, hl, hb, he⟩ := hdecoded
   exact .of_immediate hstart hbyte hpos (.f64Const bits he) ⟨hs, by rw [he.1]; exact hl, hb⟩
 
-/-- Compose a single-byte block type or reserved immediate. -/
+/-- A token whose immediate is a single byte, such as a block type or a reserved zero. -/
 theorem At.of_byte {data : Slice U8} {start pos next : Usize} {opcode token} (immediate : U8)
     (hstart : start.val < data.length) (hbyte : data.val[start.val] = opcode)
     (hpos : pos.val = start.val + 1) (himm : Immediate opcode token [immediate])
@@ -217,6 +241,7 @@ theorem At.of_byte {data : Slice U8} {start pos next : Usize} {opcode token} (im
     (hnext : next.val = pos.val + 1) : At data start token next := by
   exact .of_immediate hstart hbyte hpos himm (.byte data pos next immediate hbound hvalue hnext)
 
+/-- A `call_indirect` token from a decoded type index and the reserved zero byte. -/
 theorem At.of_index_zero {data start pos middle next} (idx : U32)
     (hstart : start.val < data.length) (hbyte : data.val[start.val] = 0x11#u8)
     (hpos : pos.val = start.val + 1) (hindex : Leb128.Decoded data pos idx middle)
@@ -228,6 +253,7 @@ theorem At.of_index_zero {data start pos middle next} (idx : U32)
     ((show BytesAt data pos bytes middle from ⟨hs, hl, hb⟩).append
       (.byte data middle next 0#u8 hbound hzero hnext))
 
+/-- A memory access token from a decoded alignment and offset. -/
 theorem At.of_memory {data start pos middle next opcode} (operation : MemoryMeaning.Operation)
     (arg : code.MemArg) (meaning : MemoryMeaning.opcodeMeaning opcode = some operation)
     (hstart : start.val < data.length) (hbyte : data.val[start.val] = opcode)
@@ -243,6 +269,7 @@ end Itasca.Wasm1
 
 namespace Itasca.Wasm1
 
+/-- A structured instruction header token from a decoded one-byte block type. -/
 theorem At.of_block_type {data start pos next opcode token} (bt : code.BlockType)
     (hstart : start.val < data.length) (hbyte : data.val[start.val] = opcode)
     (hpos : pos.val = start.val + 1)

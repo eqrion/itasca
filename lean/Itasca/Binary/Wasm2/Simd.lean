@@ -3,31 +3,46 @@ import Itasca.Binary.Wasm1.MemoryMeaning
 import Itasca.Binary.FloatBits
 import Itasca.Binary.PrefixUnique
 
+/-!
+# Wasm 2.0 SIMD instruction bytes
+
+`Simd.Immediate` relates a `0xfd` subopcode to its SpecTec instruction and immediate bytes. It
+covers pure, lane, memory and lane-memory instructions through the tables in
+`Binary/Wasm2/SimdPureMeaning`, `Binary/Wasm2/SimdLaneMeaning` and
+`Binary/Wasm2/SimdMemoryMeaning`, and the `v128.const` and `i8x16.shuffle` forms.
+`Immediate.wellFormed` shows each is well formed, and `Immediate.prefix_unique` shows that the
+bytes determine the instruction.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Simd
 
-/-- Vector constants retain all 128 immediate bits in little-endian order. -/
+/-- A `v128.const` of 128 immediate bits, given as two little-endian 64-bit halves. -/
 def vectorConstant (low high : U64) : instr :=
   .VCONST .V128 (.mk_uN (low.val + high.val * 2 ^ 64))
 
+/-- The first `count` little-endian bytes of a natural number. -/
 def unpackBytes (bits : Nat) (count : Nat) : List Nat :=
   match count with
   | 0 => []
   | n + 1 => bits % 256 :: unpackBytes (bits / 256) n
 
-/-- Shuffle callback words denote sixteen byte-sized lane indices, in byte order. -/
+/-- The sixteen lane indices of an `i8x16.shuffle`, from the bytes of its two 64-bit halves. -/
 def shuffleIndices (low high : U64) : List laneidx :=
   ((unpackBytes low.val 8) ++ (unpackBytes high.val 8)).map uN.mk_uN
 
+/-- An `i8x16.shuffle` with the lane indices of the two halves. -/
 def shuffle (low high : U64) : instr :=
   .VSHUFFLE (.mk_ishape (.X .I8 (.mk_dim 16))) (shuffleIndices low high)
 
+/-- `unpackBytes` returns `count` bytes. -/
 theorem unpackBytes_length (bits count : Nat) : (unpackBytes bits count).length = count := by
   induction count generalizing bits with
   | zero => rfl
   | succ n ih => simp [unpackBytes, ih]
 
+/-- Unpacked bytes are below 256. -/
 theorem unpackBytes_lt (bits count : Nat) : ∀ b ∈ unpackBytes bits count, b < 256 := by
   induction count generalizing bits with
   | zero => simp [unpackBytes]
@@ -38,6 +53,7 @@ theorem unpackBytes_lt (bits count : Nat) : ∀ b ∈ unpackBytes bits count, b 
     · exact Nat.mod_lt _ (by decide)
     · exact ih _ _ hb
 
+/-- A vector constant is well formed. -/
 theorem vectorConstant_wf (low high : U64) : wf_instr (vectorConstant low high) := by
   apply wf_instr.instr_case_20
   · decide
@@ -47,6 +63,7 @@ theorem vectorConstant_wf (low high : U64) : wf_instr (vectorConstant low high) 
     norm_num [size, valtype_vectype]
     omega
 
+/-- A shuffle is well formed. -/
 theorem shuffle_wf (low high : U64) : wf_instr (shuffle low high) := by
   apply wf_instr.instr_case_32
   · apply wf_ishape.ishape_case_0 .I8
@@ -65,8 +82,8 @@ theorem shuffle_wf (low high : U64) : wf_instr (shuffle low high) := by
       omega
   · exact ⟨rfl, by simp [shuffleIndices, unpackBytes_length]⟩
 
-/-- Independent SIMD immediates, including all valid u32 LEB encodings of
-memory arguments. The outer profile grammar supplies the prefix subopcode. -/
+/-- The immediate bytes that follow a SIMD subopcode, including all valid `u32` LEB128 encodings of
+memory arguments. The prefix and subopcode bytes belong to the enclosing grammar. -/
 inductive Immediate : U32 → instr → List U8 → Prop where
   | pure (opcode : U32) (op : Operation) : pureMeaning opcode.val = some op →
       Immediate opcode op.instruction []
@@ -92,6 +109,7 @@ inductive Immediate : U32 → instr → List U8 → Prop where
 private theorem memoryArg_wf (arg : code.MemArg) : wf_memarg (MemoryMeaning.memArg arg) := by
   constructor <;> constructor <;> scalar_tac
 
+/-- Every SIMD instruction spelled by `Immediate` is well formed. -/
 theorem Immediate.wellFormed {opcode instruction bytes} (h : Immediate opcode instruction bytes) :
     wf_instr instruction := by
   cases h with
@@ -126,7 +144,7 @@ private theorem lane_memory_disjoint {n lane mem} (hl : laneMeaning n = some lan
   rw [memory_lane_none hm] at hl
   contradiction
 
-/-- SIMD immediates determine one instruction and exact consumed prefix without typing premises. -/
+/-- SIMD immediates are prefix-unique. -/
 theorem Immediate.prefix_unique (subopcode : U32) : PrefixUnique (Immediate subopcode) := by
   intro t u bs cs rest tail ht hu heq
   cases ht <;> cases hu

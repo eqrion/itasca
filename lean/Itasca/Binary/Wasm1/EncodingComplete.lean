@@ -1,10 +1,19 @@
 import Itasca.Binary.Wasm1.BrTableLabels
 
+/-!
+# Reading Wasm 1.0 encodings
+
+Splitting lemmas for `BytesAt`, `Consumed` and `BrTable.LabelsDecoded`, and lemmas that turn a
+`BytesAt` span into a successful run of the extracted readers (`reader.read_u32_leb`,
+`code.read_op`, `code.take_index`, `code.read_memarg`, ...). `At.read_op` splits a token into the
+opcode that `code.read_op` returns and its immediate span.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm1
 
-/-- Split an encoded interval without assuming anything about its trailing bytes. -/
+/-- A byte interval splits at any boundary of its bytes. -/
 theorem BytesAt.split {data start next first rest}
     (h : BytesAt data start (first ++ rest) next) :
     ∃ middle, BytesAt data start first middle ∧ BytesAt data middle rest next := by
@@ -19,10 +28,12 @@ theorem BytesAt.split {data start next first rest}
   refine ⟨middle, ⟨?_, hm, by have := h.bound; omega⟩, ⟨ht, by omega, h.bound⟩⟩
   simpa [ht, List.append_assoc] using h.suffix
 
+/-- An empty byte list occupies no input. -/
 theorem BytesAt.empty {data start next} (h : BytesAt data start [] next) : next = start := by
   apply UScalar.eq_of_val_eq
   simpa using h.length
 
+/-- A one-byte interval is the byte at the cursor. -/
 theorem BytesAt.single {data start next byte} (h : BytesAt data start [byte] next) :
     ∃ hp : start.val < data.length, data.val[start.val] = byte ∧ next.val = start.val + 1 := by
   have hn : next.val = start.val + 1 := by simpa using h.length
@@ -31,6 +42,7 @@ theorem BytesAt.single {data start next byte} (h : BytesAt data start [byte] nex
   rw [List.drop_eq_getElem_cons hp] at hs
   exact ⟨hp, (List.cons.inj hs).1, hn⟩
 
+/-- `reader.read_byte` returns the byte of a one-byte interval. -/
 theorem BytesAt.read_byte {data start next byte} (h : BytesAt data start [byte] next) :
     reader.read_byte data start = .ok (.Ok (byte, next)) := by
   obtain ⟨hp, hb, hn⟩ := h.single
@@ -38,7 +50,7 @@ theorem BytesAt.read_byte {data start next byte} (h : BytesAt data start [byte] 
   have heq : p = next := UScalar.eq_of_val_eq (hp'.trans hn.symm)
   simpa [hb, heq] using hr
 
-/-- Expose the actual opcode and immediate witness while preserving all payload information. -/
+/-- A token interval is its opcode byte at the cursor followed by an immediate span. -/
 theorem At.immediate {data start token next} (h : At data start token next)
     (pos : Usize) (hpos : pos.val = start.val + 1) :
     ∃ opcode immediate, Immediate opcode token immediate ∧
@@ -54,6 +66,7 @@ theorem At.immediate {data start token next} (h : At data start token next)
   refine ⟨opcode, imm, hi, ⟨hp, (List.cons.inj heq).1⟩, ?_⟩
   exact ⟨by simpa [hpos] using (List.cons.inj heq).2, by omega, hb⟩
 
+/-- `code.read_op` reads the opcode of a token and leaves the cursor at its immediate. -/
 theorem At.read_op {data start token next} (h : At data start token next)
     (st : code.OpIterState) (hpos : st.pos = start) :
     ∃ opcode pos immediate,
@@ -68,47 +81,56 @@ theorem At.read_op {data start token next} (h : At data start token next)
   obtain ⟨opcode, imm, hi, ⟨_, hb⟩, hs⟩ := h.immediate pos hn'
   exact ⟨opcode, pos, imm, by simpa [hpos, hb] using hr, hn', hi, hs⟩
 
+/-- A span with a `Leb128.Encoding` is a `Leb128.Decoded` span. -/
 theorem BytesAt.u32_decoded {data start next bytes} (value : U32)
     (h : BytesAt data start bytes next) (he : Leb128.Encoding bytes value.val) :
     Leb128.Decoded data start value next := ⟨bytes, h.suffix, h.length, h.bound, he⟩
 
+/-- `reader.read_u32_leb` reads an unsigned LEB128 span. -/
 theorem BytesAt.read_u32 {data start next bytes} (value : U32)
     (h : BytesAt data start bytes next) (he : Leb128.Encoding bytes value.val) :
     reader.read_u32_leb data start = .ok (.Ok (value, next)) :=
   reader.read_u32_leb.complete data start value next (h.u32_decoded value he)
 
+/-- `reader.read_s32_leb` reads a signed 32-bit LEB128 span. -/
 theorem BytesAt.read_s32 {data start next bytes} (value : I32)
     (h : BytesAt data start bytes next) (he : SignedLeb32.Encoding bytes value.val) :
     reader.read_s32_leb data start = .ok (.Ok (value, next)) :=
   reader.read_s32_leb.complete data start value next ⟨bytes, h.suffix, h.length, h.bound, he⟩
 
+/-- `reader.read_s64_leb` reads a signed 64-bit LEB128 span. -/
 theorem BytesAt.read_s64 {data start next bytes} (value : I64)
     (h : BytesAt data start bytes next) (he : SignedLeb64.Encoding bytes value.val) :
     reader.read_s64_leb data start = .ok (.Ok (value, next)) :=
   reader.read_s64_leb.complete data start value next ⟨bytes, h.suffix, h.length, h.bound, he⟩
 
+/-- `reader.read_f32_bits` reads a four-byte span. -/
 theorem BytesAt.read_f32 {data start next bytes} (bits : U32)
     (h : BytesAt data start bytes next) (he : FloatBits.Encoding 4 bytes bits.val) :
     reader.read_f32_bits data start = .ok (.Ok (bits, next)) :=
   reader.read_f32_bits.complete data start bits next
     ⟨bytes, h.suffix, by simpa [he.1] using h.length, h.bound, he⟩
 
+/-- `reader.read_f64_bits` reads an eight-byte span. -/
 theorem BytesAt.read_f64 {data start next bytes} (bits : U64)
     (h : BytesAt data start bytes next) (he : FloatBits.Encoding 8 bytes bits.val) :
     reader.read_f64_bits data start = .ok (.Ok (bits, next)) :=
   reader.read_f64_bits.complete data start bits next
     ⟨bytes, h.suffix, by simpa [he.1] using h.length, h.bound, he⟩
 
+/-- `code.take_index` reads an index span. -/
 theorem BytesAt.take_index {data next bytes} (st : code.OpIterState) (idx : U32)
     (h : BytesAt data st.pos bytes next) (he : Leb128.Encoding bytes idx.val) :
     code.take_index st data = .ok (.Ok idx, { st with pos := next }) := by
   simp [code.take_index, h.read_u32 idx he, core.result.Result.Insts.CoreOpsTry.branch]
 
+/-- `code.read_reserved_zero` reads a `0x00` byte. -/
 theorem BytesAt.reserved_zero {data next} (st : code.OpIterState)
     (h : BytesAt data st.pos [0#u8] next) :
     code.read_reserved_zero st data = .ok (.Ok (), { st with pos := next }) := by
   simp [code.read_reserved_zero, h.read_byte, core.result.Result.Insts.CoreOpsTry.branch]
 
+/-- `code.read_memarg` reads an alignment span followed by an offset span. -/
 theorem BytesAt.read_memarg {data next alignment offset} (st : code.OpIterState)
     (arg : code.MemArg) (h : BytesAt data st.pos (alignment ++ offset) next)
     (ha : Leb128.Encoding alignment arg.align.val) (ho : Leb128.Encoding offset arg.offset.val) :
@@ -119,7 +141,7 @@ theorem BytesAt.read_memarg {data next alignment offset} (st : code.OpIterState)
   cases arg
   simp_all [code.read_memarg, core.result.Result.Insts.CoreOpsTry.branch]
 
-/-- Both parts of the indirect-call immediate decode, including the required table-zero byte. -/
+/-- The `call_indirect` immediate reads as a type index followed by the required zero byte. -/
 theorem BytesAt.index_zero {data start next bytes} (idx : U32)
     (h : BytesAt data start (bytes ++ [0#u8]) next) (he : Leb128.Encoding bytes idx.val) :
     ∃ middle, reader.read_u32_leb data start = .ok (.Ok (idx, middle)) ∧
@@ -132,6 +154,7 @@ end Itasca.Wasm1
 
 namespace Itasca.BrTable
 
+/-- Label runs compose. -/
 theorem LabelsDecoded.append {data start middle next first rest}
     (hfirst : LabelsDecoded data start first middle)
     (hrest : LabelsDecoded data middle rest next) :
@@ -183,7 +206,7 @@ private theorem labels_single {data start next depth}
       have hpos := labels_empty hp ht
       simpa [heq, hpos] using hl
 
-/-- Expose the first independent label encoding from the accumulated vector relation. -/
+/-- A nonempty label run is its first label followed by the rest. -/
 theorem LabelsDecoded.cons_iff {data start next depth depths} :
     LabelsDecoded data start (depth :: depths) next ↔
       ∃ middle, Leb128.Decoded data start depth middle ∧ LabelsDecoded data middle depths next := by
@@ -198,7 +221,7 @@ end Itasca.BrTable
 
 namespace Itasca.Wasm1
 
-/-- Reverse the independent vector encoding into consecutive unsigned-reader spans. -/
+/-- An `IndicesEncoding` over a byte span gives a run of decoded labels. -/
 theorem IndicesEncoding.decoded {indices bytes} (he : IndicesEncoding indices bytes)
     {data start next} (h : BytesAt data start bytes next) :
     BrTable.LabelsDecoded data start indices next := by
@@ -209,7 +232,8 @@ theorem IndicesEncoding.decoded {indices bytes} (he : IndicesEncoding indices by
       have hhead := BrTable.LabelsDecoded.snoc .nil (hfirst.u32_decoded _ hidx)
       simpa using hhead.append (ih hrest)
 
-/-- The count in the byte grammar is range checked by its own unsigned encoding. -/
+/-- The count, entries and default label of a `br_table` immediate give a `BrTable.Decoded`. The
+count's `u32` range follows from its own encoding. -/
 theorem BytesAt.br_table_decoded {data start next count entries final}
     (indices : List U32) (default : U32)
     (h : BytesAt data start (count ++ entries ++ final) next)
@@ -223,7 +247,7 @@ theorem BytesAt.br_table_decoded {data start next count entries final}
   exact ⟨n, first, last, hcount.u32_decoded n (by simpa [hn] using hc), hn.symm,
     he.decoded hentries, hfinal.u32_decoded default hf⟩
 
-/-- A consumed stream can be split at any specified token boundary. -/
+/-- A consumed span splits at any token boundary. -/
 theorem Consumed.split_eq {data start tokens next} (h : Consumed data start tokens next)
     (first rest : List Token) (heq : tokens = first ++ rest) :
     ∃ middle, Consumed data start first middle ∧ Consumed data middle rest next := by
@@ -249,17 +273,20 @@ theorem Consumed.split_eq {data start tokens next} (h : Consumed data start toke
           obtain ⟨middle, hf, hr⟩ := ih first rest hp
           exact ⟨middle, hf, .snoc hr hlast⟩
 
+/-- A consumed span of a concatenation splits into consecutive spans. -/
 theorem Consumed.split {data start next first rest}
     (h : Consumed data start (first ++ rest) next) :
     ∃ middle, Consumed data start first middle ∧ Consumed data middle rest next :=
   h.split_eq first rest rfl
 
+/-- An empty token list leaves the cursor in place. -/
 theorem Consumed.empty_eq {data start tokens next}
     (h : Consumed data start tokens next) (he : tokens = []) : next = start := by
   cases h with
   | nil => rfl
   | snoc => simp at he
 
+/-- A consumed span of one token is an `At`. -/
 theorem Consumed.single {data start next token}
     (h : Consumed data start [token] next) : At data start token next := by
   generalize he : [token] = tokens at h
@@ -273,6 +300,7 @@ theorem Consumed.single {data start next token}
       have hpos := hp.empty_eq ht
       simpa [heq, hpos] using hl
 
+/-- A nonempty consumed span is its first token followed by the rest. -/
 theorem Consumed.cons_iff {data start next token tokens} :
     Consumed data start (token :: tokens) next ↔
       ∃ middle, At data start token middle ∧ Consumed data middle tokens next := by
@@ -288,6 +316,7 @@ end Itasca.Wasm1
 
 namespace Itasca.Wasm1
 
+/-- A token interval starts with the opcode of a matching `Immediate`. -/
 theorem At.opcode {data start token next} (h : At data start token next) :
     ∃ opcode immediate, Immediate opcode token immediate ∧
       ∃ hp : start.val < data.length, data.val[start.val] = opcode := by
@@ -300,12 +329,14 @@ theorem At.opcode {data start token next} (h : At data start token next) :
   rw [List.drop_eq_getElem_cons hp] at heq
   exact ⟨opcode, imm, hi, hp, (List.cons.inj heq).1⟩
 
+/-- An `else` token occupies one byte. -/
 theorem At.else_cursor {data start next} (h : At data start .else_ next) :
     next.val = start.val + 1 := by
   obtain ⟨_, ⟨opcode, imm, rfl, hi⟩, hs⟩ := h
   cases hi
   simpa using hs.length
 
+/-- An `end` token occupies one byte. -/
 theorem At.end_cursor {data start next} (h : At data start .end_ next) :
     next.val = start.val + 1 := by
   obtain ⟨_, ⟨opcode, imm, rfl, hi⟩, hs⟩ := h

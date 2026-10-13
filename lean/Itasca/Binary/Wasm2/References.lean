@@ -2,17 +2,25 @@ import Itasca.Support.EnvTranslation
 import Itasca.Binary.Wasm2.BlockType
 import Itasca.Binary.Wasm1.Encoding
 
+/-!
+# Wasm 2.0 reference instruction bytes
+
+`ReferencesBinary.Immediate` relates the opcodes of `ref.null`, `ref.is_null`, `ref.func`,
+typed `select`, `table.get`, `table.set` and the Wasm 2.0 `call_indirect` to their SpecTec
+instructions and immediate bytes. `Immediate.wellFormed` shows that each satisfies `wf_instr`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.ReferencesBinary
 
-/-- Core 2.0 reference-type tags are literal bytes, not padded heap types. -/
+/-- The reference type tag is the literal byte `0x70` or `0x6f`. -/
 def referenceByte : types.ElemType → U8
   | .FuncRef => 0x70#u8
   | .ExternRef => 0x6f#u8
 
-/-- Independent encoding of reference, typed-select, table access, and indexed
-indirect-call immediates. Index encodings admit every valid unsigned LEB. -/
+/-- The immediates of reference, typed select, table access and indirect call instructions. Index
+encodings admit every valid unsigned LEB128. -/
 inductive Immediate : U8 → instr → List U8 → Prop where
   | refNull (rt : types.ElemType) :
       Immediate 0xd0#u8 (.REF_NULL (Translate.referenceType rt)) [referenceByte rt]
@@ -30,6 +38,7 @@ inductive Immediate : U8 → instr → List U8 → Prop where
       Immediate 0x11#u8 (.CALL_INDIRECT (.mk_uN tableIndex.val) (.mk_uN typeIndex.val))
         (typeBytes ++ tableBytes)
 
+/-- Every reference instruction spelled by `Immediate` is well formed. -/
 theorem Immediate.wellFormed {opcode op bytes} (h : Immediate opcode op bytes) : wf_instr op := by
   cases h with
   | refNull rt => exact .instr_case_40 _

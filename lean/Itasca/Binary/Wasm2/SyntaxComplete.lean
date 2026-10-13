@@ -1,8 +1,16 @@
 import Itasca.Binary.Wasm2.Syntax
 
+/-!
+# Instruction-by-instruction view of Wasm 2.0 syntax
+
+`Atom` gives the complete token spelling of one instruction, and `Spells` is the left-to-right
+form of `Emits`. `Emits.cons_iff` splits the next instruction and its tokens, including nested
+delimiters, off the remaining syntax.
+-/
+
 namespace Itasca.Wasm2
 
-/-- A single generated instruction and its complete flat token spelling. -/
+/-- The complete flat token spelling of a single instruction, including nested delimiters. -/
 inductive Atom : List Token → instr → Prop where
   | simple {token op} : Simple token op → Atom [token] op
   | block {tokens ops} (bt : signature.BlockType) : Emits tokens ops →
@@ -16,6 +24,7 @@ inductive Atom : List Token → instr → Prop where
   | ifEnd {tokens ops} (bt : signature.BlockType) : Emits tokens ops →
       Atom ([.if_ bt] ++ tokens ++ [.end_]) (.IFELSE (blockType bt) ops [])
 
+/-- An atom emits its instruction. -/
 theorem Atom.emits {tokens op} (h : Atom tokens op) : Emits tokens [op] := by
   cases h with
   | simple hs => simpa using Emits.simple .nil hs
@@ -27,7 +36,7 @@ theorem Atom.emits {tokens op} (h : Atom tokens op) : Emits tokens [op] := by
 theorem Atom.nonempty {tokens op} (h : Atom tokens op) : tokens ≠ [] := by
   cases h <;> simp
 
-/-- A left-to-right presentation of the same independent syntax relation. -/
+/-- A left-to-right presentation of `Emits` as a concatenation of atoms. -/
 inductive Spells : List Token → List instr → Prop where
   | nil : Spells [] []
   | cons {first rest op ops} : Atom first op → Spells rest ops →
@@ -39,11 +48,13 @@ theorem Spells.append {xs ys ops rest} (hx : Spells xs ops) (hy : Spells ys rest
   | nil => exact hy
   | cons h _ ih => simpa [List.append_assoc] using Spells.cons h ih
 
+/-- `Spells` implies `Emits`. -/
 theorem Spells.emits {tokens ops} (h : Spells tokens ops) : Emits tokens ops := by
   induction h with
   | nil => exact .nil
   | cons hop _ ih => simpa using hop.emits.append ih
 
+/-- `Emits` implies `Spells`. -/
 theorem Emits.spells {tokens ops} (h : Emits tokens ops) : Spells tokens ops := by
   induction h with
   | nil => exact .nil
@@ -67,8 +78,8 @@ theorem Emits.empty_iff {tokens} : Emits tokens [] ↔ tokens = [] := by
   · rintro rfl
     exact .nil
 
-/-- Split the next instruction off the unread syntax independently of the
-streaming validator. Its token span includes all nested delimiters. -/
+/-- Splits the first instruction and its tokens, including all nested delimiters, off the rest of
+the syntax. -/
 theorem Emits.cons_iff {tokens op ops} :
     Emits tokens (op :: ops) ↔
       ∃ first rest, tokens = first ++ rest ∧ Atom first op ∧ Emits rest ops := by
@@ -80,6 +91,7 @@ theorem Emits.cons_iff {tokens op ops} :
   · rintro ⟨first, rest, rfl, hop, ht⟩
     simpa using hop.emits.append ht
 
+/-- A token list emits one instruction exactly when it is that instruction's atom. -/
 theorem Emits.singleton_iff {tokens op} : Emits tokens [op] ↔ Atom tokens op := by
   rw [Emits.cons_iff]
   constructor

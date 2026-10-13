@@ -1,11 +1,20 @@
 import Itasca.Binary.ModuleUniqueSections
 import Itasca.Binary.ModuleUniqueSegments
 
+/-!
+# Uniqueness of module decoding
+
+`ModuleEncodingWith.unique` shows that two raw modules with the same encoding are equal, for
+either profile and any prefix-unique code entry grammar. Custom section placement and omitted
+empty sections introduce no ambiguity. `ModuleEncoding.unique` specializes it to `CodeEncoding`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleBinary
 
-/-- Absence and an explicit zero data count have distinct framed encodings. -/
+/-- The data count section determines its value: absence and an explicit zero count have
+distinct encodings. -/
 theorem DataCountSectionEncoding.unique {profile x y bytes}
     (hx : DataCountSectionEncoding profile x bytes)
     (hy : DataCountSectionEncoding profile y bytes) : x = y := by
@@ -23,8 +32,7 @@ theorem DataCountSectionEncoding.unique {profile x y bytes}
     subst yp
     exact SectionDecode.Field.unique start_prefix_unique.unique hx hy
 
-/-- The profile-specific data-count rule has the same deterministic section
-framing as other optional fields; Wasm 1.0 forces its absence. -/
+/-- The data count section frames like other optional fields. Wasm 1.0 forces its absence. -/
 theorem DataCountSectionEncoding.frames {profile value bytes}
     (h : DataCountSectionEncoding profile value bytes) :
     ∃ sections payloads, Rep SectionDecode.Encoding sections bytes ∧
@@ -39,7 +47,7 @@ theorem DataCountSectionEncoding.frames {profile value bytes}
 
 namespace SectionDecode
 
-/-- Standard fields recovered from the unique raw section framing. -/
+/-- The standard fields of a raw module as payloads of a raw section list. -/
 structure Fields (raw : Module) (sections : List (U8 × List U8))
     (profile : ValidationProfile := .Wasm1) (codeRel : Code → List U8 → Prop := CodeEncoding) : Prop where
   types : Field (VecEncoding FuncTypeEncoding) [] raw.types (payloads 1#u8 sections)
@@ -57,7 +65,7 @@ structure Fields (raw : Module) (sections : List (U8 × List U8))
 
 end SectionDecode
 
-/-- Erase payload interpretations to a common, uniquely framed section list. -/
+/-- A module encoding gives a raw section list that carries every standard field. -/
 theorem ModuleEncodingWith.sections {profile codeRel raw bytes}
     (h : ModuleEncodingWith codeRel raw bytes profile) :
     ∃ sections, Rep SectionDecode.Encoding sections (bytes.drop magicVersion.length) ∧
@@ -114,8 +122,7 @@ theorem ModuleEncodingWith.sections {profile codeRel raw bytes}
     · simpa [lookup 10#u8 (by decide)] using hf10
     · simpa [lookup 11#u8 (by decide)] using hf11
 
-/-- Raw modules have a unique decoding, independently of typing and implementation caps.
-Custom-section placement and omitted empty fields do not introduce ambiguity. -/
+/-- A byte string encodes at most one raw module, with no typing or implementation limit premise. -/
 theorem ModuleEncodingWith.unique {profile codeRel x y bytes}
     (hcode : PrefixUnique codeRel)
     (hx : ModuleEncodingWith codeRel x bytes profile)
@@ -138,12 +145,13 @@ theorem ModuleEncodingWith.unique {profile codeRel x y bytes}
   have h_data := SectionDecode.Field.unique (dataFor_prefix_unique profile).vec.unique hxf.data hyf.data
   cases x; cases y; simp_all
 
-/-- The original Wasm 1.0 grammar specializes profile-independent uniqueness. -/
+/-- `ModuleEncodingWith.sections` for `ModuleEncoding`. -/
 theorem ModuleEncoding.sections {raw bytes} (h : ModuleEncoding raw bytes) :
     ∃ sections, Rep SectionDecode.Encoding sections (bytes.drop magicVersion.length) ∧
       SectionDecode.Fields raw sections :=
   ModuleEncodingWith.sections h
 
+/-- A byte string encodes at most one raw module under `ModuleEncoding` (Wasm 1.0). -/
 theorem ModuleEncoding.unique {x y bytes}
     (hx : ModuleEncoding x bytes) (hy : ModuleEncoding y bytes) : x = y :=
   ModuleEncodingWith.unique code_prefix_unique hx hy

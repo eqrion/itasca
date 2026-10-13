@@ -2,6 +2,15 @@ import Itasca.Binary.PrefixUnique
 import Itasca.Binary.Wasm1.SyntaxUnique
 import Itasca.Binary.Wasm1.Encoding
 
+/-!
+# Prefix uniqueness of Wasm 1.0 tokens
+
+`Immediate.prefix_unique` and `token_prefix_unique` show that a Wasm 1.0 token and its encoding
+are determined by the leading bytes, and `tokens_unique` extends this to token sequences.
+`ModuleBinary.BodyEncoding.unique` shows that a raw body encodes at most one instruction tree,
+independent of typing and implementation limits.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm1
@@ -16,6 +25,7 @@ private theorem blockByte_injective : Function.Injective Control.blockByte := by
     | rename_i x y; cases x <;> cases y <;> simp_all [Control.blockByte]
     | rename_i x; cases x <;> simp_all [Control.blockByte]
 
+/-- An index vector is a sequence of `IndexEncoding`s. -/
 theorem IndicesEncoding.rep {indices bytes} (h : IndicesEncoding indices bytes) :
     Rep IndexEncoding indices bytes := by
   induction h with
@@ -30,6 +40,7 @@ private theorem memory_numeric_disjoint (opcode : U8) (m : MemoryMeaning.Operati
   split at hm <;> (first | contradiction | omega)
 
 set_option maxHeartbeats 1200000 in
+/-- The immediate bytes of a token are determined by its opcode and leading bytes. -/
 theorem Immediate.prefix_unique (opcode : U8) : PrefixUnique (Immediate opcode) := by
   intro t u bs cs rest tail ht hu heq
   cases ht <;> cases hu
@@ -100,12 +111,14 @@ theorem Immediate.prefix_unique (opcode : U8) : PrefixUnique (Immediate opcode) 
     obtain rfl := UScalar.eq_of_val_eq hv
     exact ⟨rfl, rfl, rfl⟩
 
+/-- Token encodings are prefix-unique. -/
 theorem token_prefix_unique : PrefixUnique TokenEncoding := by
   rintro x y a b rest tail ⟨op, ai, rfl, hx⟩ ⟨op', bi, rfl, hy⟩ he
   obtain ⟨rfl, htail⟩ := List.cons.inj he
   obtain ⟨rfl, rfl, rfl⟩ := Immediate.prefix_unique op hx hy htail
   exact ⟨rfl, rfl, rfl⟩
 
+/-- A byte string is the encoding of at most one token sequence. -/
 theorem tokens_unique : Unique (Rep TokenEncoding) :=
   token_prefix_unique.rep_unique (by rintro _ _ ⟨op, immediate, rfl, _⟩; simp)
 
@@ -113,8 +126,7 @@ end Itasca.Wasm1
 
 namespace Itasca.ModuleBinary
 
-/-- Raw body lists have unique trees even when they exceed implementation or
-host-size bounds. Neither encoding needs to be well typed. -/
+/-- A byte string encodes at most one function body, with no typing or size premise. -/
 theorem BodyEncoding.unique : Unique BodyEncoding := by
   rintro xs ys bytes ⟨xt, hx, hxs⟩ ⟨yt, hy, hys⟩
   obtain rfl := Wasm1.tokens_unique hx hy

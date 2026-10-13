@@ -1,15 +1,25 @@
 import Itasca.Binary.Wasm1.Encoding
 import Itasca.Spec.DeclaredReferences
 
+/-!
+# Declared references in Wasm 1.0 syntax
+
+Transfers the `C.refs` condition of `Spec/DeclaredReferences` to flat tokens: `Emits.declared_iff`
+relates `TokensDeclared` to `DeclaredReferences.Instructions`, and `BodyEncoding.declared` shows
+that every Wasm 1.0 body meets the condition for any reference set, because its grammar has no
+`ref.func`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm1
 
-/-- Only reference instructions carry declaration obligations in a flat stream. -/
+/-- Only plain instruction tokens carry declared-reference obligations. -/
 def Token.Declared (refs : List funcidx) : Token → Prop
   | .plain op => DeclaredReferences.Instruction refs op
   | _ => True
 
+/-- Every token of the list meets its declared-reference obligation. -/
 def TokensDeclared (refs : List funcidx) (tokens : List Token) : Prop :=
   ∀ token ∈ tokens, token.Declared refs
 
@@ -28,7 +38,7 @@ def TokensDeclared (refs : List funcidx) (tokens : List Token) : Prop :=
   simp [TokensDeclared, or_imp, forall_and]
 
 set_option maxHeartbeats 2000000 in
-/-- The original byte grammar contains no reference-producing function literal. -/
+/-- Every Wasm 1.0 instruction token meets its obligation, since the grammar has no `ref.func`. -/
 theorem Immediate.declared {opcode token bytes} (hi : Immediate opcode token bytes)
     (refs : List funcidx) : token.Declared refs := by
   cases hi with
@@ -49,17 +59,20 @@ theorem Immediate.declared {opcode token bytes} (hi : Immediate opcode token byt
   | _ => simp [Token.Declared, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices,
       Spec.i32Const, ScalarConst.i64, ScalarConst.f32, ScalarConst.f64]
 
+/-- A token read at a cursor meets its obligation. -/
 theorem At.declared {data start token next} (h : At data start token next) (refs : List funcidx) :
     token.Declared refs := by
   obtain ⟨_, ⟨_, _, _, hi⟩, _⟩ := h
   exact hi.declared refs
 
+/-- The tokens of a consumed span meet their obligations. -/
 theorem Consumed.declared {data start tokens next} (h : Consumed data start tokens next)
     (refs : List funcidx) : TokensDeclared refs tokens := by
   induction h with
   | nil => simp
   | snoc _ ha ih => exact (tokensDeclared_append _ _ _).mpr ⟨ih, (tokensDeclared_singleton _ _).mpr (ha.declared refs)⟩
 
+/-- Tokens meet their obligations exactly when the instructions they spell do. -/
 theorem Emits.declared_iff {tokens ops} (h : Emits tokens ops) (refs : List funcidx) :
     TokensDeclared refs tokens ↔ DeclaredReferences.Instructions refs ops := by
   induction h with
@@ -72,8 +85,7 @@ theorem Emits.declared_iff {tokens ops} (h : Emits tokens ops) (refs : List func
   | ifElse bt _ _ _ ih ht he => simp [Token.Declared, ih, ht, he]
   | ifEnd bt _ _ ih hb => simp [Token.Declared, ih, hb]
 
-/-- Independently encoded Wasm 1.0 bodies meet the declaration supplement for
-any declaration set; their binary grammar excludes all ref.func leaves. -/
+/-- A Wasm 1.0 body meets the declared-reference condition for any reference set. -/
 theorem BodyEncoding.declared {data ops} (h : BodyEncoding data ops) (refs : List funcidx) :
     DeclaredReferences.Instructions refs ops := by
   obtain ⟨tokens, next, hc, _, inner, rfl, he⟩ := h

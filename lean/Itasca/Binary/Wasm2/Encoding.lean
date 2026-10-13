@@ -6,18 +6,28 @@ import Itasca.Binary.Wasm2.Syntax
 import Itasca.Binary.Wasm2.BlockType
 import Itasca.Binary.Wasm1.Encoding
 
+/-!
+# Wasm 2.0 instruction binary grammar
+
+The handwritten binary grammar of Wasm 2.0 instructions. `Immediate` relates an opcode byte to a
+token and its immediate bytes, reusing the Wasm 1.0 plain instructions and adding sign extension,
+saturating truncation, reference, bulk memory, SIMD and structured control with `BlockEncoding`
+block types. `At`, `Consumed` and `BodyEncoding` place tokens, token runs and complete bodies in a
+byte slice, as in `Binary/Wasm1/Encoding`. The grammar does not mention validation.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
 
-/-- Literal block tags or a nonnegative signed s33 type index. This grammar
-does not resolve indices, impose implementation limits, or run a reader. -/
+/-- A block type as a literal tag byte or a nonnegative signed 33-bit type index. -/
 def BlockEncoding (bt : signature.BlockType) (bytes : List U8) : Prop :=
   match bt with
   | .Empty => bytes = [64#u8]
   | .Value t => bytes = [valueByte t]
   | .TypeIndex i => SignedLeb33.Encoding bytes i.val
 
+/-- `BlockDecoded` at a cursor is a `BlockEncoding` over an interval of the input. -/
 theorem blockDecoded_iff {data pos bt next} :
     BlockDecoded data pos bt next ↔
       ∃ bytes, BlockEncoding bt bytes ∧ Wasm1.BytesAt data pos bytes next := by
@@ -37,8 +47,8 @@ theorem blockDecoded_iff {data pos bt next} :
     exact ⟨fun ⟨bs, hs, hl, hb, he⟩ => ⟨bs, he, hs, hl, hb⟩,
       fun ⟨bs, he, hs, hl, hb⟩ => ⟨bs, hs, hl, hb, he⟩⟩
 
-/-- Shared leaf bytes plus multi-value structured control. Reusing only the
-`plain` case excludes the old grammar's single-byte block restriction. -/
+/-- The immediate bytes that follow an opcode byte for a Wasm 2.0 token. Plain Wasm 1.0 leaves are
+reused, but structured instructions take `BlockEncoding` block types. -/
 inductive Immediate : U8 → Token → List U8 → Prop where
   | plain {opcode op bytes} : Wasm1.Immediate opcode (.plain op) bytes →
       Immediate opcode (.plain op) bytes
@@ -60,24 +70,28 @@ inductive Immediate : U8 → Token → List U8 → Prop where
   | else_ : Immediate 0x05#u8 .else_ []
   | end_ : Immediate 0x0B#u8 .end_ []
 
+/-- A token as its opcode byte followed by its immediate bytes. -/
 def TokenEncoding (token : Token) (bytes : List U8) : Prop :=
   ∃ opcode immediate, bytes = opcode :: immediate ∧ Immediate opcode token immediate
 
+/-- A token is encoded by the interval from `start` to `next`. The suffix is unrestricted. -/
 def At (data : Slice U8) (start : Usize) (token : Token) (next : Usize) : Prop :=
   ∃ bytes, TokenEncoding token bytes ∧ Wasm1.BytesAt data start bytes next
 
-/-- Only the consumed prefix is constrained; unread bytes may be malformed. -/
+/-- The tokens read from `start` to the cursor, accumulated one `At` step at a time. Unread bytes
+are unconstrained. -/
 inductive Consumed (data : Slice U8) : Usize → List Token → Usize → Prop where
   | nil (pos : Usize) (bound : pos.val ≤ data.length) : Consumed data pos [] pos
   | snoc {start tokens pos token next} : Consumed data start tokens pos →
       At data pos token next → Consumed data start (tokens ++ [token]) next
 
-/-- Independent body encoding, with the function's final end and exact input
-consumption. Other Wasm 2.0 instruction proposals are not included. -/
+/-- A complete function body: the tokens read from offset 0 reach the end of `data`, and end with
+the final `end`. -/
 def BodyEncoding (data : Slice U8) (ops : List instr) : Prop :=
   ∃ tokens next, Consumed data 0#usize tokens next ∧
     next.val = data.length ∧ BodyTokens tokens ops
 
+/-- A token interval is nonempty and within the input. -/
 theorem At.span {data start token next} (h : At data start token next) :
     start.val < next.val ∧ next.val ≤ data.length := by
   obtain ⟨_, ⟨op, imm, rfl, _⟩, hs⟩ := h
@@ -85,6 +99,7 @@ theorem At.span {data start token next} (h : At data start token next) :
   simp only [List.length_cons] at this
   exact ⟨by omega, hs.bound⟩
 
+/-- Composes an opcode byte with an immediate byte span. -/
 theorem At.of_immediate {data start pos next opcode token immediate}
     (hstart : start.val < data.length) (hbyte : data.val[start.val] = opcode)
     (hpos : pos.val = start.val + 1)
@@ -93,6 +108,7 @@ theorem At.of_immediate {data start pos next opcode token immediate}
   exact ⟨opcode :: immediate, ⟨opcode, immediate, rfl, himmediate⟩,
     by simpa using (Wasm1.BytesAt.byte data start pos opcode hstart hbyte hpos).append hspan⟩
 
+/-- A structured instruction header token from a decoded block type. -/
 theorem At.of_block_type {data start pos next opcode token} (bt : signature.BlockType)
     (hstart : start.val < data.length) (hbyte : data.val[start.val] = opcode)
     (hpos : pos.val = start.val + 1)
@@ -101,17 +117,20 @@ theorem At.of_block_type {data start pos next opcode token} (bt : signature.Bloc
   obtain ⟨bytes, he, hs⟩ := blockDecoded_iff.mp hdecoded
   exact .of_immediate hstart hbyte hpos (himm bytes he) hs
 
+/-- A Wasm 1.0 plain token is a Wasm 2.0 token. -/
 theorem At.plain {data start op next} (h : Wasm1.At data start (.plain op) next) :
     At data start (.plain op) next := by
   obtain ⟨bs, ⟨opcode, imm, rfl, hi⟩, hs⟩ := h
   exact ⟨_, ⟨opcode, imm, rfl, .plain hi⟩, hs⟩
 
+/-- A consumed span is within the input. -/
 theorem Consumed.span {data start tokens next} (h : Consumed data start tokens next) :
     start.val ≤ next.val ∧ next.val ≤ data.length := by
   induction h with
   | nil hb => exact ⟨Nat.le_refl _, hb⟩
   | snoc _ ha ih => have := ha.span; omega
 
+/-- Consumed spans compose. -/
 theorem Consumed.append {data start middle next first rest}
     (hfirst : Consumed data start first middle) (hrest : Consumed data middle rest next) :
     Consumed data start (first ++ rest) next := by
@@ -119,6 +138,7 @@ theorem Consumed.append {data start middle next first rest}
   | nil _ => simpa using hfirst
   | snoc _ ha ih => simpa [List.append_assoc] using Consumed.snoc ih ha
 
+/-- The instructions of a body encoding are well formed. -/
 theorem BodyEncoding.wellFormed {data ops} (h : BodyEncoding data ops) :
     Forall wf_instr ops := by
   obtain ⟨_, _, _, _, _, _, he⟩ := h

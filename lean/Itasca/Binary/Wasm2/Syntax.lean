@@ -1,11 +1,20 @@
 import Itasca.Binary.Wasm1.Syntax
 
+/-!
+# Wasm 2.0 instruction syntax
+
+The Wasm 2.0 counterpart of `Binary/Wasm1/Syntax`: flat tokens (`Token`) whose block types are
+`signature.BlockType` values, the relation `Emits` between tokens and the structured SpecTec
+instructions they spell, and `BodyTokens` for a function body with its final `end`.
+`Emits.wellFormed` shows that the emitted instructions satisfy `wf_instr`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
 
-/-- The flat multi-value instruction stream. Block signatures retain their
-type-section indices; delimiters are explicit. -/
+/-- A flat Wasm 2.0 instruction stream element: a plain instruction, a structured instruction
+header or `else` or `end`. Block types may be type-section indices. -/
 inductive Token where
   | plain (op : instr)
   | block (bt : signature.BlockType)
@@ -13,18 +22,19 @@ inductive Token where
   | if_ (bt : signature.BlockType)
   | else_ | end_
 
-/-- Leaf syntax is separate from binary encoding. The independent binary
-relation reuses the scalar opcode and immediate forms of the base grammar. -/
+/-- A plain token spells a well-formed instruction. The binary relation `Immediate` restricts
+which plain tokens occur. -/
 inductive Simple : Token → instr → Prop where
   | plain (op : instr) : wf_instr op → Simple (.plain op) op
 
+/-- A plain token spells a well-formed instruction. -/
 theorem Simple.wellFormed {token : Token} {op : instr} (h : Simple token op) :
     wf_instr op := by
   cases h with
   | plain _ hwf => exact hwf
 
-/-- Flat tokens spell these generated SpecTec instructions. This local syntax
-relation permits both binary spellings of an if with an empty else branch. -/
+/-- A flat token list spells a list of SpecTec instructions. An `if` with an empty else branch has
+two spellings, with and without `else`. -/
 inductive Emits : List Token → List instr → Prop where
   | nil : Emits [] []
   | simple {tokens ops token op} : Emits tokens ops → Simple token op →
@@ -46,6 +56,7 @@ inductive Emits : List Token → List instr → Prop where
       Emits (tokens ++ [.if_ bt] ++ bodyTokens ++ [.end_])
         (ops ++ [.IFELSE (blockType bt) body []])
 
+/-- `Emits` is closed under concatenation. -/
 theorem Emits.append {xs ys : List Token} {is js : List instr}
     (hx : Emits xs is) (hy : Emits ys js) : Emits (xs ++ ys) (is ++ js) := by
   induction hy with
@@ -57,6 +68,7 @@ theorem Emits.append {xs ys : List Token} {is js : List instr}
       simpa [List.append_assoc] using Emits.ifElse bt ih ht he
   | ifEnd bt _ hb ih _ => simpa [List.append_assoc] using Emits.ifEnd bt ih hb
 
+/-- Emitted instructions are well formed. -/
 theorem Emits.wellFormed {tokens : List Token} {ops : List instr}
     (h : Emits tokens ops) : Forall wf_instr ops := by
   induction h with
@@ -71,7 +83,7 @@ theorem Emits.wellFormed {tokens : List Token} {ops : List instr}
   | ifEnd bt _ _ ih hb =>
       simpa [Forall, or_imp, forall_and] using And.intro ih (wf_instr.instr_case_6 _ _ [] (blockType_wf bt) hb (by simp [Forall]))
 
-/-- The function's final end is outside the generated instruction list. -/
+/-- A function body: tokens that spell the instructions, followed by the final `end`. -/
 def BodyTokens (tokens : List Token) (ops : List instr) : Prop :=
   ∃ inner, tokens = inner ++ [.end_] ∧ Emits inner ops
 

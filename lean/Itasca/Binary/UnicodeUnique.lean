@@ -1,11 +1,18 @@
 import Itasca.Binary.Unicode
 
+/-!
+# Uniqueness of decoded names
+
+Shows that `decodeChars` is injective on bytes accepted by `Utf8`, by re-encoding scalars
+canonically (`Utf8.roundtrip`). `Utf8.nameOfBytes_injective` transports the validator's
+duplicate-name check on raw bytes to equality of Unicode names.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleBinary
 
-/-- Canonical scalar encoding as natural byte values. The inverse proof below
-uses the strict byte grammar, not a uniqueness assumption about generated UTF-8. -/
+/-- The shortest UTF-8 encoding of a scalar, as natural numbers. -/
 def encodeChar : char → List Nat
   | .mk_char n =>
       if n < 128 then [n]
@@ -47,6 +54,7 @@ private theorem encode_four (a b c d : Nat)
   simp [encodeChar, hlo, hlo', hlo'']
   omega
 
+/-- Decoding a `Utf8Char` sequence and re-encoding the scalar recovers its bytes. -/
 theorem Utf8Char.roundtrip {bytes} (h : Utf8Char bytes) (rest : List U8) :
     (decodeChars (bytes ++ rest)).flatMap encodeChar =
       bytes.map UScalar.val ++ (decodeChars rest).flatMap encodeChar := by
@@ -68,13 +76,14 @@ theorem Utf8Char.roundtrip {bytes} (h : Utf8Char bytes) (rest : List U8) :
       simp [decodeChars, show ¬a.val < 128 by omega, show ¬a.val < 224 by omega,
         show ¬a.val < 240 by omega, he]
 
-/-- Canonical re-encoding recovers every original byte, including multibyte names. -/
+/-- Decoding accepted UTF-8 and re-encoding each scalar recovers the original bytes. -/
 theorem Utf8.roundtrip {bytes} (h : Utf8 bytes) :
     (decodeChars bytes).flatMap encodeChar = bytes.map UScalar.val := by
   induction h with
   | nil => rfl
   | cons hc _ ih => rw [hc.roundtrip, ih, List.map_append]
 
+/-- `decodeChars` is injective on accepted UTF-8. -/
 theorem Utf8.decodeChars_injective {first rest} (h : Utf8 first) (h' : Utf8 rest)
     (heq : decodeChars first = decodeChars rest) : first = rest := by
   have hbytes : first.map UScalar.val = rest.map UScalar.val := by
@@ -89,8 +98,7 @@ theorem Utf8.decodeChars_injective {first rest} (h : Utf8 first) (h' : Utf8 rest
           obtain ⟨ha, ht⟩ := List.cons.inj hbytes
           rw [UScalar.eq_of_val_eq ha, ih ht]
 
-/-- Raw-byte name equality and Unicode name equality coincide for names the
-binary grammar accepts. This transports the validator's duplicate-name check. -/
+/-- For names the binary grammar accepts, equal Unicode names have equal bytes. -/
 theorem Utf8.nameOfBytes_injective {first rest} (h : Utf8 first) (h' : Utf8 rest)
     (heq : nameOfBytes first = nameOfBytes rest) : first = rest := by
   exact h.decodeChars_injective h' («name».mk_name.inj heq)

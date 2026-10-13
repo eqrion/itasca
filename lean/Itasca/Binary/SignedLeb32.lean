@@ -1,5 +1,14 @@
 import Itasca.Binary.SignedLeb
 
+/-!
+# Signed 32-bit LEB128
+
+Instantiates `SignedLeb` for the extracted `reader.read_s32_leb`: `SignedLeb32.format` has
+range [-2^31, 2^31 - 1] and at most 5 bytes. The `reader.read_s32_leb` lemmas
+(`spec`, `total`, `sound`, `complete`, `rejected`, `success_span`) state that it is total,
+returns exactly the `SignedLeb32.Decoded` spans and rejects the `SignedLeb32.Rejected` inputs.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.SignedLeb32
@@ -13,32 +22,40 @@ abbrev Encoding := SignedLeb.Encoding format
 /-- The consumed encoding and untouched input suffix determine a successful read. -/
 abbrev Decoded := SignedLeb.Decoded format
 
+/-- Malformed or truncated input for the signed 32-bit reader. -/
 abbrev Rejected := SignedLeb.Rejected format
 
+/-- The result of the signed 32-bit reader. -/
 abbrev Post := SignedLeb.Post format
 
+/-- The shared `I128` loop specialized to this format. -/
 theorem spec128 (data : Slice U8) (start : Usize) :
     reader.read_sn_leb data start 4#u32 (-2147483648)#i128 2147483647#i128 ⦃ Post data start ⦄ :=
   SignedLeb.spec128 format data start
 
+/-- A successful decoding consumes between one and 5 bytes within the input. -/
 theorem Decoded.span (data : Slice U8) (start : Usize) (value : Int) (next : Usize)
     (h : Decoded data start value next) :
     start.val < next.val ∧ next.val ≤ start.val + 5 ∧ next.val ≤ data.length :=
   SignedLeb.Decoded.span format data start value next h
 
+/-- A decoded value lies within the signed 32-bit range. -/
 theorem Decoded.range (data : Slice U8) (start : Usize) (value : Int) (next : Usize)
     (h : Decoded data start value next) : -2147483648 ≤ value ∧ value ≤ 2147483647 :=
   SignedLeb.Decoded.range format data start value next h
 
+/-- Rejections are `UnexpectedEof` or `LebTooLong`. -/
 theorem Rejected.kind {data : Slice U8} {start : Usize} {e : error.OpError}
     (h : Rejected data start e) : e = .UnexpectedEof ∨ e = .LebTooLong :=
   SignedLeb.Rejected.kind format h
 
+/-- Two encodings that are prefixes of the same byte string are equal and have equal values. -/
 theorem Encoding.prefix_unique {xs ys : List U8} {x y : Int} {leftTail rightTail : List U8}
     (hx : Encoding xs x) (hy : Encoding ys y) (he : xs ++ leftTail = ys ++ rightTail) :
     xs = ys ∧ x = y :=
   SignedLeb.Encoding.prefix_unique format hx hy he
 
+/-- Byte descriptions determine both the value and the ending cursor. -/
 theorem Decoded.deterministic (data : Slice U8) (start : Usize)
     (v₁ v₂ : Int) (q₁ q₂ : Usize)
     (h₁ : Decoded data start v₁ q₁) (h₂ : Decoded data start v₂ q₂) :
@@ -73,11 +90,13 @@ theorem reader.read_s32_leb.spec (data : Slice U8) (start : Usize) :
     step with IScalar.cast_inBounds_spec .I32 v (by scalar_tac) as ⟨x, hx⟩
     simpa [SignedLeb.Post, hx] using hp
 
+/-- `reader.read_s32_leb` never panics. -/
 theorem reader.read_s32_leb.total (data : Slice U8) (start : Usize) :
     ∃ r, reader.read_s32_leb data start = .ok r := by
   obtain ⟨r, hr, _⟩ := WP.spec_imp_exists (reader.read_s32_leb.spec data start)
   exact ⟨r, hr⟩
 
+/-- A successful `reader.read_s32_leb` result is a `Decoded` span. -/
 theorem reader.read_s32_leb.sound (data : Slice U8) (start : Usize)
     (value : I32) (next : Usize)
     (h : reader.read_s32_leb data start = .ok (.Ok (value, next))) :
@@ -85,12 +104,14 @@ theorem reader.read_s32_leb.sound (data : Slice U8) (start : Usize)
   have hs := reader.read_s32_leb.spec data start
   simpa [h, SignedLeb.Post] using hs
 
+/-- A successful `reader.read_s32_leb` consumes between one and 5 bytes within the input. -/
 theorem reader.read_s32_leb.success_span (data : Slice U8) (start : Usize)
     (value : I32) (next : Usize)
     (h : reader.read_s32_leb data start = .ok (.Ok (value, next))) :
     start.val < next.val ∧ next.val ≤ start.val + 5 ∧ next.val ≤ data.length :=
   SignedLeb32.Decoded.span data start value.val next (reader.read_s32_leb.sound data start value next h)
 
+/-- A rejected `reader.read_s32_leb` result satisfies `Rejected`. -/
 theorem reader.read_s32_leb.rejected (data : Slice U8) (start : Usize)
     (e : error.OpError) (h : reader.read_s32_leb data start = .ok (.Err e)) :
     SignedLeb32.Rejected data start e := by

@@ -1,5 +1,13 @@
 import Itasca.Binary.PrefixUnique
 
+/-!
+# Prefix uniqueness of module components
+
+Proves `PrefixUnique` for the encodings of value, element, function, table, memory and global
+types, constant expressions, imports, exports, globals, locals, Wasm 1.0 element and data
+segments, and the start section.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleBinary
@@ -12,6 +20,7 @@ theorem elemByte_injective : Function.Injective elemByte := by
   intro a b h
   cases a <;> cases b <;> simp_all [elemByte]
 
+/-- Element type encodings are prefix-unique. -/
 theorem elemType_prefix_unique : PrefixUnique ElemTypeEncoding := by
   rintro x y a b rest tail rfl rfl he
   obtain ⟨hv, rfl⟩ := List.cons.inj he
@@ -22,12 +31,14 @@ theorem mutByte_injective : Function.Injective mutByte := by
   intro a b h
   cases a <;> cases b <;> simp_all [mutByte]
 
+/-- Value type encodings are prefix-unique. -/
 theorem valueType_prefix_unique : PrefixUnique ValueTypeEncoding := by
   rintro x y a b rest tail rfl rfl he
   obtain ⟨hv, rfl⟩ := List.cons.inj he
   obtain rfl := valueByte_injective hv
   exact ⟨rfl, rfl, rfl⟩
 
+/-- Function type encodings are prefix-unique. -/
 theorem funcType_prefix_unique : PrefixUnique FuncTypeEncoding := by
   intro x y a b rest tail hx hy he
   obtain ⟨xp, xr, hp, hr, rfl⟩ := hx
@@ -40,6 +51,7 @@ theorem funcType_prefix_unique : PrefixUnique FuncTypeEncoding := by
   have hxy : x = y := by cases x; cases y; simp_all
   exact ⟨hxy, rfl, rfl⟩
 
+/-- Limits encodings are prefix-unique. -/
 theorem limits_prefix_unique : PrefixUnique LimitsEncoding := by
   intro x y a b rest tail hx hy he
   cases hx <;> cases hy
@@ -54,6 +66,7 @@ theorem limits_prefix_unique : PrefixUnique LimitsEncoding := by
     obtain ⟨rfl, rfl, rfl⟩ := index_prefix_unique hm hn ht
     exact ⟨rfl, rfl, rfl⟩
 
+/-- Table type encodings are prefix-unique. -/
 theorem tableType_prefix_unique : PrefixUnique TableTypeEncoding := by
   intro x y a b rest tail hx hy he
   obtain ⟨a, hx, rfl⟩ := hx
@@ -64,12 +77,14 @@ theorem tableType_prefix_unique : PrefixUnique TableTypeEncoding := by
   have hxy : x = y := by cases x; cases y; simp_all
   exact ⟨hxy, by simp [helem], rfl⟩
 
+/-- Memory type encodings are prefix-unique. -/
 theorem memType_prefix_unique : PrefixUnique MemTypeEncoding := by
   intro x y a b rest tail hx hy he
   obtain ⟨hv, rfl, rfl⟩ := limits_prefix_unique hx hy he
   have hxy : x = y := by cases x; cases y; cases hv; rfl
   exact ⟨hxy, rfl, rfl⟩
 
+/-- Global type encodings are prefix-unique. -/
 theorem globalType_prefix_unique : PrefixUnique GlobalTypeEncoding := by
   rintro x y a b rest tail rfl rfl he
   obtain ⟨hv, hseq1⟩ := List.cons.inj he
@@ -79,6 +94,7 @@ theorem globalType_prefix_unique : PrefixUnique GlobalTypeEncoding := by
   have hxy : x = y := by cases x; cases y; simp_all
   exact ⟨hxy, by simp [hv, hm], rfl⟩
 
+/-- Constant expression encodings are prefix-unique. -/
 theorem const_prefix_unique : PrefixUnique ConstEncoding := by
   intro x y a b rest tail hx hy he
   cases hx <;> cases hy
@@ -124,6 +140,7 @@ theorem const_prefix_unique : PrefixUnique ConstEncoding := by
     obtain rfl := (List.cons.inj hseq3).2
     exact ⟨rfl, rfl, rfl⟩
 
+/-- Import descriptor encodings are prefix-unique. -/
 theorem importDesc_prefix_unique : PrefixUnique ImportDescEncoding := by
   intro x y a b rest tail hx hy he
   cases hx <;> cases hy
@@ -142,6 +159,7 @@ theorem importDesc_prefix_unique : PrefixUnique ImportDescEncoding := by
     obtain ⟨rfl, rfl, rfl⟩ := globalType_prefix_unique hx hy he.2
     exact ⟨rfl, rfl, rfl⟩
 
+/-- Export descriptor encodings are prefix-unique. -/
 theorem exportDesc_prefix_unique : PrefixUnique ExportDescEncoding := by
   intro x y a b rest tail hx hy he
   cases hx <;> cases hy
@@ -152,6 +170,7 @@ theorem exportDesc_prefix_unique : PrefixUnique ExportDescEncoding := by
     obtain ⟨rfl, rfl, rfl⟩ := index_prefix_unique hx hy he.2
     exact ⟨rfl, rfl, rfl⟩
 
+/-- Import encodings are prefix-unique. -/
 theorem import_prefix_unique : PrefixUnique ImportEncoding := by
   intro x y a b rest tail hx hy he
   obtain ⟨xm, xn, xd, hm, hn, hd, rfl⟩ := hx
@@ -162,6 +181,7 @@ theorem import_prefix_unique : PrefixUnique ImportEncoding := by
   have hv : x = y := by cases x; cases y; simp_all
   exact ⟨hv, rfl, rfl⟩
 
+/-- Export encodings are prefix-unique. -/
 theorem export_prefix_unique : PrefixUnique ExportEncoding := by
   intro x y a b rest tail hx hy he
   obtain ⟨xn, xd, hn, hd, rfl⟩ := hx
@@ -171,6 +191,7 @@ theorem export_prefix_unique : PrefixUnique ExportEncoding := by
   have hv : x = y := by cases x; cases y; simp_all
   exact ⟨hv, rfl, rfl⟩
 
+/-- Global encodings are prefix-unique. -/
 theorem global_prefix_unique : PrefixUnique GlobalEncoding := by
   intro x y a b rest tail hx hy he
   obtain ⟨xt, xe, ht, he', rfl⟩ := hx
@@ -180,6 +201,7 @@ theorem global_prefix_unique : PrefixUnique GlobalEncoding := by
   have hv : x = y := by cases x; cases y; simp_all
   exact ⟨hv, rfl, rfl⟩
 
+/-- Local declaration encodings are prefix-unique. -/
 theorem local_prefix_unique : PrefixUnique LocalEncoding := by
   intro x y a b rest tail hx hy he
   obtain ⟨a, ha, rfl⟩ := hx
@@ -190,6 +212,7 @@ theorem local_prefix_unique : PrefixUnique LocalEncoding := by
   have hv : x = y := Prod.ext hn ht
   exact ⟨hv, by simp [ht], rfl⟩
 
+/-- Wasm 1.0 element segment encodings are prefix-unique. -/
 theorem element_prefix_unique : PrefixUnique ElementEncoding := by
   intro x y a b rest tail hx hy he
   obtain ⟨xti, xof, xin, xt, xo, xi, rfl, ht, ho, hi, rfl⟩ := hx
@@ -199,6 +222,7 @@ theorem element_prefix_unique : PrefixUnique ElementEncoding := by
   obtain ⟨rfl, rfl, rfl⟩ := index_prefix_unique.vec hi hi' hseq2
   exact ⟨rfl, rfl, rfl⟩
 
+/-- Wasm 1.0 data segment encodings are prefix-unique. -/
 theorem data_prefix_unique : PrefixUnique DataEncoding := by
   intro x y a b rest tail hx hy he
   obtain ⟨xti, xof, xt, xo, xi, hxm, ht, ho, hi, rfl⟩ := hx
@@ -209,6 +233,7 @@ theorem data_prefix_unique : PrefixUnique DataEncoding := by
   have hv : x = y := by cases x; cases y; simp_all
   exact ⟨hv, rfl, rfl⟩
 
+/-- Start section payload encodings are prefix-unique. -/
 theorem start_prefix_unique : PrefixUnique StartEncoding := by
   rintro x y a b rest tail ⟨xi, rfl, hx⟩ ⟨yi, rfl, hy⟩ he
   obtain ⟨rfl, rfl, rfl⟩ := index_prefix_unique hx hy he

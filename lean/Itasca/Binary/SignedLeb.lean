@@ -1,11 +1,20 @@
 import Itasca.Binary.Leb128
 
+/-!
+# Signed LEB128, shared decoder
+
+Describes signed LEB128 byte strings parameterized by a `SignedLeb.Format` (maximum length and
+value range) and proves that the extracted `reader.read_sn_leb` loop, which computes in `I128`,
+is total and agrees with the description (`SignedLeb.spec128`). The 32-, 33- and 64-bit readers
+in `Binary/SignedLeb32`, `Binary/SignedLeb33` and `Binary/SignedLeb64` instantiate it.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.SignedLeb
 
-/-- Parameters of the shared I128 signed decoder. The largest supported
-continuation index keeps every intermediate arithmetic operation in I128. -/
+/-- Parameters of the shared `I128` signed decoder: the index of the last permitted byte and the
+inclusive value range. The bound `last ≤ 9` keeps every intermediate operation within `I128`. -/
 structure Format where
   last : U32
   lower : I128
@@ -67,19 +76,21 @@ private theorem payload_append (xs ys : List U8) :
   | nil => simp [Leb128.payload]
   | cons b xs ih => simp [Leb128.payload, ih, pow_succ]; ring
 
-/-- Signed LEB128 bytes with explicit length and value bounds, permitting nonminimal sign extension. -/
+/-- Signed LEB128 bytes within the format's length and value bounds, permitting non-minimal sign
+extension. -/
 def Encoding (bytes : List U8) (value : Int) : Prop :=
   ∃ before last, bytes = before ++ [last] ∧ before.length ≤ format.last.val ∧
     (∀ b ∈ before, 128 ≤ b.val) ∧ last.val < 128 ∧
     value = finalValue (Leb128.payload before) (128 ^ before.length) last ∧
     format.lower.val ≤ value ∧ value ≤ format.upper.val
 
-/-- The consumed encoding and untouched input suffix determine a successful read. -/
+/-- A successful read consumes an `Encoding` of the value and leaves the input suffix untouched. -/
 def Decoded (data : Slice U8) (start : Usize) (value : Int) (next : Usize) : Prop :=
   ∃ bytes, data.val.drop start.val = bytes ++ data.val.drop next.val ∧
     next.val = start.val + bytes.length ∧ next.val ≤ data.length ∧ Encoding format bytes value
 
-/-- Precise malformed-input descriptions for the signed reader. -/
+/-- Malformed or truncated input for the signed reader: end of input, an overlong encoding, or a
+value outside the format's range. -/
 inductive Rejected (format : Format) (data : Slice U8) (start : Usize) : error.OpError → Prop where
   | eof (before : List U8)
       (bytes : data.val.drop start.val = before) (length : before.length ≤ format.last.val)
@@ -97,6 +108,8 @@ inductive Rejected (format : Format) (data : Slice U8) (start : Usize) : error.O
         format.upper.val < finalValue (Leb128.payload before) (128 ^ before.length) last) :
       Rejected format data start .LebTooLong
 
+/-- The result of the signed readers: a `Decoded` span on success and a `Rejected` description on
+failure. -/
 def Post (data : Slice U8) (start : Usize) {ty : IScalarTy} :
     core.result.Result (IScalar ty × Usize) error.OpError → Prop
   | .Ok (value, next) => Decoded format data start value.val next
@@ -109,7 +122,7 @@ private def LoopInvariant (data : Slice U8) (start : Usize)
     data.val.drop start.val = before ++ data.val.drop s.2.2.1.val ∧
     s.1.val = Leb128.payload before ∧ (∀ b ∈ before, 128 ≤ b.val)
 
-/-- The parameterized I128 implementation loop is total and decodes exactly its bytes. -/
+/-- `reader.read_sn_leb` is total and its result satisfies `Post`. -/
 theorem spec128 (data : Slice U8) (start : Usize) :
     reader.read_sn_leb data start format.last format.lower format.upper ⦃ Post format data start ⦄ := by
   unfold reader.read_sn_leb reader.read_sn_leb_loop
@@ -175,6 +188,7 @@ theorem spec128 (data : Slice U8) (start : Usize) :
     exact ⟨⟨by simp, rfl, by decide, by decide⟩, by simp,
       [], by simp, by simp, rfl, by simp⟩
 
+/-- A successful decoding consumes between one and `format.last + 1` bytes within the input. -/
 theorem Decoded.span (data : Slice U8) (start : Usize) (value : Int) (next : Usize)
     (h : Decoded format data start value next) :
     start.val < next.val ∧ next.val ≤ start.val + (format.last.val + 1) ∧ next.val ≤ data.length := by
@@ -182,11 +196,13 @@ theorem Decoded.span (data : Slice U8) (start : Usize) (value : Int) (next : Usi
   simp only [List.length_append, List.length_singleton] at hq
   omega
 
+/-- A decoded value lies within the format's range. -/
 theorem Decoded.range (data : Slice U8) (start : Usize) (value : Int) (next : Usize)
     (h : Decoded format data start value next) : format.lower.val ≤ value ∧ value ≤ format.upper.val := by
   rcases h with ⟨_, _, _, _, _, _, _, _, _, _, _, hbounds⟩
   exact hbounds
 
+/-- Signed LEB128 rejections are `UnexpectedEof` or `LebTooLong`. -/
 theorem Rejected.kind {data : Slice U8} {start : Usize} {e : error.OpError}
     (h : Rejected format data start e) : e = .UnexpectedEof ∨ e = .LebTooLong := by
   cases h <;> simp
@@ -232,6 +248,7 @@ private theorem terminated_unique (xs ys : List U8) (a b : U8) (leftTail rightTa
   subst ys
   exact ⟨rfl, (List.cons.inj (List.append_cancel_left heq)).1⟩
 
+/-- Two encodings that are prefixes of the same byte string are equal and have equal values. -/
 theorem Encoding.prefix_unique {xs ys : List U8} {x y : Int} {leftTail rightTail : List U8}
     (hx : Encoding format xs x) (hy : Encoding format ys y) (heq : xs ++ leftTail = ys ++ rightTail) :
     xs = ys ∧ x = y := by
@@ -241,6 +258,7 @@ theorem Encoding.prefix_unique {xs ys : List U8} {x y : Int} {leftTail rightTail
   obtain ⟨rfl, rfl⟩ := terminated_unique xs' ys' a b leftTail rightTail hxmore hymore ha hb heq
   exact ⟨rfl, rfl⟩
 
+/-- A successful decoding and a rejection of the same input cannot both hold. -/
 theorem decoded_not_rejected (data : Slice U8) (start : Usize)
     (value : Int) (next : Usize) (e : error.OpError)
     (hd : Decoded format data start value next) (hr : Rejected format data start e) : False := by

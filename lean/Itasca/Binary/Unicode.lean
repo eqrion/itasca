@@ -1,17 +1,27 @@
 import Itasca.Binary.Module
 
+/-!
+# Unicode semantics of names
+
+Connects the byte-level `Utf8` grammar to the generated specification's `fun_utf8` relation.
+`decodeChars` decodes strict UTF-8, `Utf8.semantic` shows that accepted bytes denote the decoded
+string and `NameEncoding.wellFormed` shows that a binary name satisfies `wf_name`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleBinary
 
+/-- A byte as a generated-specification `byte`. -/
 def specByte (b : U8) : byte := .mk_byte b.val
 
+/-- Every byte is well formed. -/
 theorem specByte_wf (b : U8) : wf_byte (specByte b) := by
   apply wf_byte.byte_case_0
   scalar_tac
 
-/-- Deterministic Unicode decoding; malformed branches are irrelevant to the
-proved interface, which starts from the independent strict UTF-8 grammar. -/
+/-- Decodes UTF-8 bytes to Unicode scalars. It is only meaningful on bytes accepted by `Utf8`,
+whose grammar excludes malformed sequences. -/
 def decodeChars : List U8 → List char
   | [] => []
   | a :: rest =>
@@ -31,10 +41,11 @@ def decodeChars : List U8 → List char
                         .mk_char (262144 * (a.val - 240) + 4096 * (b.val - 128) +
                           64 * (c.val - 128) + (d.val - 128)) :: decodeChars rest
 
+/-- The generated-specification name denoted by UTF-8 name bytes. -/
 def nameOfBytes (bytes : List U8) : «name» := .mk_name (decodeChars bytes)
 
-/-- Each canonical byte sequence has its actual scalar value in the generated
-UTF-8 relation. This constructs Unicode scalars, rather than treating bytes as characters. -/
+/-- Each `Utf8Char` sequence decodes to one well-formed Unicode scalar related to its bytes by
+`fun_utf8`. -/
 theorem Utf8Char.semantic {bytes : List U8} (h : Utf8Char bytes) (rest : List U8) :
     ∃ ch, decodeChars (bytes ++ rest) = ch :: decodeChars rest ∧
       fun_utf8 [ch] (bytes.map specByte) ∧ wf_char ch := by
@@ -101,8 +112,8 @@ private theorem concat_flatten (chunks : List (List byte)) : concat_ byte chunks
   | nil => rfl
   | cons head tail ih => simp [concat_, ih]
 
-/-- Accepted UTF-8 bytes denote exactly the deterministically decoded Unicode
-string in the generated relation, and each resulting scalar is well formed. -/
+/-- Accepted UTF-8 bytes are related by `fun_utf8` to the string `decodeChars` computes, and each
+scalar is well formed. -/
 theorem Utf8.semantic {bytes : List U8} (h : Utf8 bytes) :
     fun_utf8 (decodeChars bytes) (bytes.map specByte) ∧ Forall wf_char (decodeChars bytes) := by
   obtain ⟨chunks, hl, hh, hb, hw⟩ := h.chunks
@@ -120,8 +131,8 @@ theorem Utf8.semantic {bytes : List U8} (h : Utf8 bytes) :
   rw [← hb]
   exact fun_utf8.fun_utf8_case_4 _ chunks chunks chunks hl hh hl hh hl hh hbytes hnested
 
-/-- A binary name has the actual Unicode name required by generated module
-syntax, including its UTF-8 byte-size bound. -/
+/-- A binary name denotes a well-formed generated-specification name, including its UTF-8 byte
+size bound. -/
 theorem NameEncoding.wellFormed {nm bytes} (h : NameEncoding nm bytes) :
     wf_name (nameOfBytes nm) := by
   obtain ⟨count, hcount, _⟩ := ByteVecEncoding.iff.mp h.1

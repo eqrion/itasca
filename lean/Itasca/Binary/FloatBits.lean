@@ -1,10 +1,18 @@
 import Itasca.Binary.Leb128
 
+/-!
+# Fixed-width float bit patterns
+
+Describes little-endian fixed-width byte spans (`FloatBits.Encoding`, `Decoded`, `Rejected`) and
+proves that the extracted `reader.read_f32_bits` and `reader.read_f64_bits` are total and agree
+with them (`spec`, `sound`, `complete`, `rejected`). The only rejection is truncated input.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.FloatBits
 
-/-- Raw IEEE encodings use every bit of each byte, in little-endian order. -/
+/-- Little-endian value of a byte list, using every bit of each byte. -/
 def payload : List U8 → Nat
   | [] => 0
   | b :: bs => b.val + 256 * payload bs
@@ -15,6 +23,7 @@ private theorem payload_append (xs ys : List U8) :
   | nil => simp [payload]
   | cons b xs ih => simp [payload, ih, pow_succ]; ring
 
+/-- The value of a byte list is below `256 ^ length`. -/
 theorem payload_lt (bs : List U8) : payload bs < 256 ^ bs.length := by
   induction bs with
   | nil => simp [payload]
@@ -23,11 +32,11 @@ theorem payload_lt (bs : List U8) : payload bs < 256 ^ bs.length := by
     simp only [payload, List.length_cons, pow_succ]
     omega
 
-/-- Exactly n bytes with the specified unsigned bit pattern. -/
+/-- Exactly `n` bytes whose little-endian value is the bit pattern. -/
 def Encoding (n : Nat) (bytes : List U8) (bits : Nat) : Prop :=
   bytes.length = n ∧ bits = payload bytes
 
-/-- Successful fixed-width reads preserve the unconsumed suffix. -/
+/-- A successful read consumes `n` bytes that form an `Encoding` and leaves the suffix untouched. -/
 def Decoded (n : Nat) (data : Slice U8) (start : Usize) (bits : Nat) (next : Usize) : Prop :=
   ∃ bytes, data.val.drop start.val = bytes ++ data.val.drop next.val ∧
     next.val = start.val + n ∧ next.val ≤ data.length ∧ Encoding n bytes bits
@@ -36,6 +45,7 @@ def Decoded (n : Nat) (data : Slice U8) (start : Usize) (bits : Nat) (next : Usi
 def Rejected (n : Nat) (data : Slice U8) (start : Usize) (e : error.OpError) : Prop :=
   e = .UnexpectedEof ∧ data.length < start.val + n
 
+/-- The result of the fixed-width readers: a `Decoded` span on success and `Rejected` on failure. -/
 def Post (n : Nat) (data : Slice U8) (start : Usize) {ty : UScalarTy} :
     core.result.Result (UScalar ty × Usize) error.OpError → Prop
   | .Ok (bits, next) => Decoded n data start bits.val next
@@ -77,7 +87,7 @@ private def LoopInvariant (n : U32) (data : Slice U8) (start : Usize)
   ∃ before : List U8, before.length = s.2.2.2.val ∧
     data.val.drop start.val = before ++ data.val.drop s.2.2.1.val ∧ s.1.val = payload before
 
-/-- The shared fixed-width loop is total for widths one through eight. -/
+/-- `reader.read_fn_bits` is total for widths one through eight and its result satisfies `Post`. -/
 theorem spec64 (n : U32) (hn : 0 < n.val ∧ n.val ≤ 8) (data : Slice U8) (start : Usize) :
     reader.read_fn_bits data start n ⦃ Post n.val data start ⦄ := by
   unfold reader.read_fn_bits reader.read_fn_bits_loop
@@ -118,11 +128,13 @@ theorem spec64 (n : U32) (hn : 0 < n.val ∧ n.val ≤ 8) (data : Slice U8) (sta
   · dsimp only [LoopInvariant, Invariant]
     exact ⟨⟨hn.1, hn.2, rfl, by decide⟩, by simp, [], by simp, by simp, rfl⟩
 
+/-- A successful read ends exactly `n` bytes after the start, within the input. -/
 theorem Decoded.span (n : Nat) (data : Slice U8) (start : Usize) (bits : Nat) (next : Usize)
     (h : Decoded n data start bits next) : next.val = start.val + n ∧ next.val ≤ data.length := by
   rcases h with ⟨_, _, hpos, hbound, _⟩
   exact ⟨hpos, hbound⟩
 
+/-- The decoded bit pattern fits in `n` bytes. -/
 theorem Decoded.range (n : Nat) (data : Slice U8) (start : Usize) (bits : Nat) (next : Usize)
     (h : Decoded n data start bits next) : bits < 256 ^ n := by
   rcases h with ⟨bs, _, _, _, hlen, rfl⟩
@@ -132,6 +144,7 @@ end Itasca.FloatBits
 
 namespace Itasca
 
+/-- `reader.read_f32_bits` is total and its result satisfies `FloatBits.Post 4`. -/
 @[step] theorem reader.read_f32_bits.spec (data : Slice U8) (start : Usize) :
     reader.read_f32_bits data start ⦃ FloatBits.Post 4 data start ⦄ := by
   obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (FloatBits.spec64 4#u32 (by decide) data start)
@@ -148,6 +161,7 @@ namespace Itasca
     step with UScalar.cast_inBounds_spec .U32 v (by scalar_tac)
     simpa [FloatBits.Post, *] using hp
 
+/-- `reader.read_f64_bits` is total and its result satisfies `FloatBits.Post 8`. -/
 @[step] theorem reader.read_f64_bits.spec (data : Slice U8) (start : Usize) :
     reader.read_f64_bits data start ⦃ FloatBits.Post 8 data start ⦄ :=
   FloatBits.spec64 8#u32 (by decide) data start
@@ -172,11 +186,13 @@ end Itasca.FloatBits
 
 namespace Itasca
 
+/-- `reader.read_f32_bits` never panics. -/
 theorem reader.read_f32_bits.total (data : Slice U8) (start : Usize) :
     ∃ r, reader.read_f32_bits data start = .ok r := by
   obtain ⟨r, hr, _⟩ := WP.spec_imp_exists (reader.read_f32_bits.spec data start)
   exact ⟨r, hr⟩
 
+/-- A successful `reader.read_f32_bits` result is a four-byte `Decoded` span. -/
 theorem reader.read_f32_bits.sound (data : Slice U8) (start : Usize)
     (bits : U32) (next : Usize)
     (h : reader.read_f32_bits data start = .ok (.Ok (bits, next))) :
@@ -184,12 +200,14 @@ theorem reader.read_f32_bits.sound (data : Slice U8) (start : Usize)
   have hs := reader.read_f32_bits.spec data start
   simpa [h, FloatBits.Post] using hs
 
+/-- A rejected `reader.read_f32_bits` result is `UnexpectedEof` on truncated input. -/
 theorem reader.read_f32_bits.rejected (data : Slice U8) (start : Usize)
     (e : error.OpError) (h : reader.read_f32_bits data start = .ok (.Err e)) :
     FloatBits.Rejected 4 data start e := by
   have hs := reader.read_f32_bits.spec data start
   simpa [h, FloatBits.Post] using hs
 
+/-- Every four-byte `Decoded` span is accepted by `reader.read_f32_bits`. -/
 theorem reader.read_f32_bits.complete (data : Slice U8) (start : Usize)
     (bits : U32) (next : Usize) (h : FloatBits.Decoded 4 data start bits.val next) :
     reader.read_f32_bits data start = .ok (.Ok (bits, next)) := by
@@ -205,11 +223,13 @@ theorem reader.read_f32_bits.complete (data : Slice U8) (start : Usize)
     have := hp.2
     omega
 
+/-- `reader.read_f64_bits` never panics. -/
 theorem reader.read_f64_bits.total (data : Slice U8) (start : Usize) :
     ∃ r, reader.read_f64_bits data start = .ok r := by
   obtain ⟨r, hr, _⟩ := WP.spec_imp_exists (reader.read_f64_bits.spec data start)
   exact ⟨r, hr⟩
 
+/-- A successful `reader.read_f64_bits` result is an eight-byte `Decoded` span. -/
 theorem reader.read_f64_bits.sound (data : Slice U8) (start : Usize)
     (bits : U64) (next : Usize)
     (h : reader.read_f64_bits data start = .ok (.Ok (bits, next))) :
@@ -217,12 +237,14 @@ theorem reader.read_f64_bits.sound (data : Slice U8) (start : Usize)
   have hs := reader.read_f64_bits.spec data start
   simpa [h, FloatBits.Post] using hs
 
+/-- A rejected `reader.read_f64_bits` result is `UnexpectedEof` on truncated input. -/
 theorem reader.read_f64_bits.rejected (data : Slice U8) (start : Usize)
     (e : error.OpError) (h : reader.read_f64_bits data start = .ok (.Err e)) :
     FloatBits.Rejected 8 data start e := by
   have hs := reader.read_f64_bits.spec data start
   simpa [h, FloatBits.Post] using hs
 
+/-- Every eight-byte `Decoded` span is accepted by `reader.read_f64_bits`. -/
 theorem reader.read_f64_bits.complete (data : Slice U8) (start : Usize)
     (bits : U64) (next : Usize) (h : FloatBits.Decoded 8 data start bits.val next) :
     reader.read_f64_bits data start = .ok (.Ok (bits, next)) := by

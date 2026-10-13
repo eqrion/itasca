@@ -1,17 +1,29 @@
 import Itasca.Binary.Wasm2.Simd
 
+/-!
+# Typing and declared references of SIMD constants
+
+Shows that `v128.const` and `i8x16.shuffle` have the expected `Instr_ok` typing
+(`vectorConstant_typed`, `shuffle_typed`), that a generated typing fixes their stack effect
+(`vectorConstant_principal`, `shuffle_principal`, `shuffle_bound`), and that they carry no
+`ref.func`. `shuffleIndices_encoding` relates the lane indices to the immediate bytes.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Simd
 
+/-- A vector constant has type `[] -> [v128]`. -/
 theorem vectorConstant_typed (C : context) (low high : U64) (hC : wf_context C) :
     Instr_ok C (vectorConstant low high) (.mk_functype (.mk_list []) (.mk_list [.V128])) :=
   .vconst C _ hC (vectorConstant_wf low high)
 
+/-- A generated typing of a vector constant has the stack effect `[] -> [v128]`. -/
 theorem vectorConstant_principal (C : context) (low high : U64) (ins outs : List valtype)
     (ht : Instr_ok C (vectorConstant low high) (.mk_functype (.mk_list ins) (.mk_list outs))) :
     ins = [] ∧ outs = [.V128] := by cases ht; exact ⟨rfl, rfl⟩
 
+/-- Unpacking the value of a byte list recovers the bytes. -/
 theorem unpackBytes_payload (bytes : List U8) :
     unpackBytes (FloatBits.payload bytes) bytes.length = bytes.map UScalar.val := by
   induction bytes with
@@ -23,6 +35,7 @@ theorem unpackBytes_payload (bytes : List U8) :
     have hd : (b.val + 256 * FloatBits.payload bs) / 256 = FloatBits.payload bs := by omega
     rw [hm, hd, ih]
 
+/-- The lane indices of a shuffle are the bytes of its two immediate halves. -/
 theorem shuffleIndices_encoding (low high : U64) (lower upper : List U8)
     (hl : FloatBits.Encoding 8 lower low.val) (hh : FloatBits.Encoding 8 upper high.val) :
     shuffleIndices low high = (lower ++ upper).map (fun b => uN.mk_uN b.val) := by
@@ -32,6 +45,7 @@ theorem shuffleIndices_encoding (low high : U64) (lower upper : List U8)
     rw [hh.2, ← hh.1, unpackBytes_payload]
   simp [shuffleIndices, hlo, hhi, List.map_append, List.map_map, Function.comp_def]
 
+/-- A shuffle with lane indices below 32 has type `[v128, v128] -> [v128]`. -/
 theorem shuffle_typed (C : context) (low high : U64) (hC : wf_context C)
     (hl : ∀ lane ∈ shuffleIndices low high, proj_uN_0 lane < 32) :
     Instr_ok C (shuffle low high)
@@ -39,10 +53,12 @@ theorem shuffle_typed (C : context) (low high : U64) (hC : wf_context C)
   exact .vshuffle C _ _ (.mk_dim 16) (by constructor; constructor; decide)
     hl hC (by constructor; decide) (shuffle_wf low high)
 
+/-- A generated typing of a shuffle has the stack effect `[v128, v128] -> [v128]`. -/
 theorem shuffle_principal (C : context) (low high : U64) (ins outs : List valtype)
     (ht : Instr_ok C (shuffle low high) (.mk_functype (.mk_list ins) (.mk_list outs))) :
     ins = [.V128, .V128] ∧ outs = [.V128] := by cases ht; exact ⟨rfl, rfl⟩
 
+/-- A generated typing of a shuffle bounds every lane index by 32. -/
 theorem shuffle_bound (C : context) (low high : U64) (ins outs : List valtype)
     (ht : Instr_ok C (shuffle low high) (.mk_functype (.mk_list ins) (.mk_list outs))) :
     ∀ lane ∈ shuffleIndices low high, proj_uN_0 lane < 32 := by
@@ -50,10 +66,12 @@ theorem shuffle_bound (C : context) (low high : U64) (ins outs : List valtype)
   cases_type fun_dim
   assumption
 
+/-- A vector constant has no declared-reference obligation. -/
 theorem vectorConstant_declared (refs : List funcidx) (low high : U64) :
     DeclaredReferences.Instruction refs (vectorConstant low high) := by
   simp [vectorConstant, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
 
+/-- A shuffle has no declared-reference obligation. -/
 theorem shuffle_declared (refs : List funcidx) (low high : U64) :
     DeclaredReferences.Instruction refs (shuffle low high) := by
   simp [shuffle, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]

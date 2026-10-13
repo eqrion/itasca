@@ -1,8 +1,19 @@
 import Itasca.Binary.Wasm2.SimdLaneMeaning
 
+/-!
+# Wasm 2.0 SIMD memory instructions
+
+`Simd.MemoryOperation` lists the vector loads, stores, splat loads, zero-extending loads and lane
+loads and stores, with their natural alignment, lane count and stack types.
+`MemoryOperation.typed` shows that `Instr_ok` types each when the memory exists and the alignment
+and lane are in bounds, `MemoryOperation.principal` recovers the stack effect, and `memoryMeaning`
+maps subopcodes 0 to 11 and 84 to 93 to operations. `lane_pure_none`, `memory_pure_none` and
+`memory_lane_none` show that the SIMD opcode tables do not overlap.
+-/
+
 namespace Itasca.Wasm2.Simd
 
-/-- Core 2.0 vector memory instructions and their independently specified effects. -/
+/-- The vector memory instructions of Wasm 2.0. -/
 inductive MemoryOperation where
   | load
   | load8x8S
@@ -28,6 +39,7 @@ inductive MemoryOperation where
   | load64Zero
   deriving DecidableEq
 
+/-- The natural alignment exponent of a memory operation. -/
 def MemoryOperation.naturalAlign : MemoryOperation → Nat
   | .load => 4
   | .load8x8S => 3
@@ -52,6 +64,7 @@ def MemoryOperation.naturalAlign : MemoryOperation → Nat
   | .load32Zero => 2
   | .load64Zero => 3
 
+/-- The lane count of a lane load or store, and 0 for the other operations. -/
 def MemoryOperation.laneCount : MemoryOperation → Nat
   | .load => 0
   | .load8x8S => 0
@@ -76,6 +89,7 @@ def MemoryOperation.laneCount : MemoryOperation → Nat
   | .load32Zero => 0
   | .load64Zero => 0
 
+/-- Whether the operation writes memory. -/
 def MemoryOperation.store : MemoryOperation → Bool
   | .load => false
   | .load8x8S => false
@@ -100,6 +114,8 @@ def MemoryOperation.store : MemoryOperation → Bool
   | .load32Zero => false
   | .load64Zero => false
 
+/-- The SpecTec instruction of a memory operation at a memory argument and lane index. The lane
+index is ignored by operations without lanes. -/
 def MemoryOperation.instruction (op : MemoryOperation) (arg : memarg) (lane : laneidx) : instr :=
   match op with
   | .load => .VLOAD .V128 none arg
@@ -125,12 +141,15 @@ def MemoryOperation.instruction (op : MemoryOperation) (arg : memarg) (lane : la
   | .load32Zero => .VLOAD .V128 (some (.ZERO (.mk_sz 32))) arg
   | .load64Zero => .VLOAD .V128 (some (.ZERO (.mk_sz 64))) arg
 
+/-- The operand types of a memory operation. -/
 def MemoryOperation.inputs (op : MemoryOperation) : List valtype :=
   if op.store || op.laneCount != 0 then [.I32, .V128] else [.I32]
 
+/-- The result types of a memory operation. -/
 def MemoryOperation.outputs (op : MemoryOperation) : List valtype :=
   if op.store then [] else [.V128]
 
+/-- A memory operation with a well-formed memory argument and byte lane index is well formed. -/
 theorem MemoryOperation.wellFormed (op : MemoryOperation) (arg : memarg) (lane : laneidx)
     (ha : wf_memarg arg) (hl : wf_uN 8 lane) : wf_instr (op.instruction arg lane) := by
   cases op <;> simp only [instruction]
@@ -142,7 +161,8 @@ theorem MemoryOperation.wellFormed (op : MemoryOperation) (arg : memarg) (lane :
   all_goals repeat' first | exact ha | exact hl | decide | constructor
   all_goals norm_num [proj_sz_0, vsize]
 
-/-- Alignment and lane premises are kept explicit at the specification boundary. -/
+/-- A memory operation has its stack effect under `Instr_ok`, given memory zero, an alignment within
+the natural alignment and an in-range lane for lane operations. -/
 theorem MemoryOperation.typed (op : MemoryOperation) (C : context) (arg : memarg) (lane : laneidx)
     (mt : memtype) (hm : 0 < C.MEMS.length) (he : C.MEMS[0]! = mt)
     (hC : wf_context C) (hmt : wf_memtype mt) (ha : wf_memarg arg) (h8 : wf_uN 8 lane)
@@ -197,18 +217,20 @@ theorem MemoryOperation.typed (op : MemoryOperation) (C : context) (arg : memarg
   case load64Zero =>
     exact Instr_ok.vload_zero C 64 arg mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) hC hmt hw
 
+/-- A generated typing of a memory operation has the operation's stack effect. -/
 theorem MemoryOperation.principal (op : MemoryOperation) (C : context) (arg : memarg)
     (lane : laneidx) (ins outs : List valtype)
     (ht : Instr_ok C (op.instruction arg lane) (.mk_functype (.mk_list ins) (.mk_list outs))) :
     ins = op.inputs ∧ outs = op.outputs := by
   cases op <;> simp only [instruction] at ht <;> cases ht <;> exact ⟨rfl, rfl⟩
 
-/-- `load64_zero` uses the published opcode 93, correcting the duplicate 92
-in the pinned SpecTec binary table without changing its declarative model. -/
+/-- A memory operation has no declared-reference obligation. -/
 theorem MemoryOperation.declared (op : MemoryOperation) (refs : List funcidx) (arg : memarg) (lane : laneidx) :
     DeclaredReferences.Instruction refs (op.instruction arg lane) := by
   cases op <;> simp [instruction, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
 
+/-- The memory operation assigned to a `0xfd` subopcode. `load64_zero` is opcode 93 as in the
+published specification. The pinned SpecTec binary table lists 92 twice. -/
 def memoryMeaning (opcode : Nat) : Option MemoryOperation :=
   match opcode with
   | 0 => some .load
@@ -235,16 +257,19 @@ def memoryMeaning (opcode : Nat) : Option MemoryOperation :=
   | 93 => some .load64Zero
   | _ => none
 
+/-- A subopcode with a lane meaning has no pure meaning. -/
 theorem lane_pure_none {opcode : Nat} {op : LaneOperation}
     (h : laneMeaning opcode = some op) : pureMeaning opcode = none := by
   unfold laneMeaning at h
   split at h <;> first | rfl | contradiction
 
+/-- A subopcode with a memory meaning has no pure meaning. -/
 theorem memory_pure_none {opcode : Nat} {op : MemoryOperation}
     (h : memoryMeaning opcode = some op) : pureMeaning opcode = none := by
   unfold memoryMeaning at h
   split at h <;> first | rfl | contradiction
 
+/-- A subopcode with a memory meaning has no lane meaning. -/
 theorem memory_lane_none {opcode : Nat} {op : MemoryOperation}
     (h : memoryMeaning opcode = some op) : laneMeaning opcode = none := by
   unfold memoryMeaning at h

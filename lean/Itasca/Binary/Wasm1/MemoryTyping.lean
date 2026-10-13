@@ -1,24 +1,36 @@
 import Itasca.Binary.Wasm1.MemoryMeaning
 import Itasca.Support.EnvTranslation
 
+/-!
+# Typing of Wasm 1.0 memory opcodes
+
+Shows that each row of `MemoryMeaning.opcodeMeaning` is typed by the generated `Instr_ok` rule
+once the memory exists and the alignment is within its natural bound (`opcodeMeaning_typed`,
+`EnvTranslation.Matches.memory_operation`), and conversely that a generated typing of a row
+recovers those preconditions (`opcodeMeaning_inverse`).
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.MemoryMeaning
 
+/-- The operand types of a load or store: the address, and the value for a store. -/
 def Operation.inputs (op : Operation) : List types.ValueType :=
   if op.store then [.I32, op.ty] else [.I32]
 
+/-- The result types of a load or store: the loaded value, or none for a store. -/
 def Operation.outputs (op : Operation) : List types.ValueType :=
   if op.store then [] else [op.ty]
 
+/-- The SpecTec memory argument of a Rust `MemArg` is well formed. -/
 theorem memArg_wf (arg : code.MemArg) : wf_memarg (memArg arg) :=
   .memarg_case_ _ _ (EnvTranslation.index_wf _) (EnvTranslation.index_wf _)
 
 theorem alignment_mono (a b : Nat) (h : a ≤ b) : (2 : Rat) ^ a ≤ 2 ^ b := by
   exact pow_le_pow_right₀ (by norm_num) h
 
-/-- The independent row's declared stack effect is an instance of the generated
-    memory rule, once the runtime memory and alignment checks have succeeded. -/
+/-- The row's stack effect is an instance of the generated memory rule, once memory zero exists and
+the alignment is within the natural alignment. -/
 def Operation.Typed (op : Operation) : Prop :=
   ∀ (arg : code.MemArg) (C : context) (mt : memtype),
     wf_context C → 0 < C.MEMS.length → C.MEMS[0]! = mt → wf_memtype mt →
@@ -94,6 +106,7 @@ theorem packedStore_typed (ty : types.ValueType) (it : Inn) (width : Nat) (align
   simpa [Operation.inputs, Operation.outputs, packedStore, hty, Translate.valueType] using
     Instr_ok.store_pack C it width (memArg arg) mt hm he hp hC hmt hwf
 
+/-- Every row of the memory opcode table is typed by the generated rule. -/
 theorem opcodeMeaning_typed (opcode : U8) (op : Operation)
     (h : opcodeMeaning opcode = some op) : op.Typed := by
   unfold opcodeMeaning at h
@@ -112,6 +125,8 @@ end Itasca.MemoryMeaning
 
 namespace Itasca.EnvTranslation
 
+/-- Under a matching environment, a memory row with an in-bound alignment is well formed and typed
+in the SpecTec context. -/
 theorem Matches.memory_operation {env ctx C} (h : Matches env ctx C)
     (opcode : U8) (op : MemoryMeaning.Operation) (hrow : MemoryMeaning.opcodeMeaning opcode = some op)
     (arg : code.MemArg) (hm : 0 < env.mem_types.val.length)
@@ -152,8 +167,8 @@ private theorem principal {C op ins outs}
   have hinn (i : Inn) : valtype_numtype (numtype_Inn i) = valtype_Inn i := by cases i <;> rfl
   cases h <;> simp_all [Principal, proj_sz_0]
 
-/-- Principal generated typing recovers every runtime memory precondition,
-including the exponent bound used by the Wasm 1.0 alignment check. -/
+/-- A generated typing of a memory row implies that memory zero exists, the alignment is within the
+natural alignment, and the stack types are the row's. -/
 theorem opcodeMeaning_inverse (opcode : U8) (operation : Operation)
     (hrow : opcodeMeaning opcode = some operation) (C : context) (arg : code.MemArg)
     (ins outs : List valtype)

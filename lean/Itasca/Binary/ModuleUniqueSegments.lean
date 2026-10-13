@@ -1,10 +1,18 @@
 import Itasca.Binary.ModuleUniquePrimitives
 
+/-!
+# Prefix uniqueness of segments
+
+Proves `PrefixUnique` for the Wasm 2.0 element and data segment encodings by splitting off the
+flag and treating each flag's payload grammar separately. `elementFor_prefix_unique` and
+`dataFor_prefix_unique` cover both profiles.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleBinary
 
-/-- Payloads after a segment flag have a fixed grammar for that flag. -/
+/-- The grammar of an element segment payload after its flag. -/
 private inductive ElementPayload : Nat → Element → List U8 → Prop where
   | activeIndices {offset initializers encodedOffset entries} :
       ConstEncoding offset encodedOffset → VecEncoding IndexEncoding initializers entries →
@@ -85,6 +93,7 @@ private theorem elementPayload_prefix_unique (flag : Nat) : PrefixUnique (Elemen
     obtain ⟨rfl, rfl, rfl⟩ := const_prefix_unique.vec hi hi' hs
     exact ⟨rfl, rfl, rfl⟩
 
+/-- Wasm 2.0 element segment encodings are prefix-unique. -/
 theorem wasm2Element_prefix_unique : PrefixUnique Wasm2ElementEncoding := by
   intro x y a b rest tail hx hy he
   obtain ⟨xf, xb, xp, hxf, hxp, rfl⟩ := element_parts hx
@@ -93,6 +102,7 @@ theorem wasm2Element_prefix_unique : PrefixUnique Wasm2ElementEncoding := by
   obtain ⟨rfl, rfl, rfl⟩ := elementPayload_prefix_unique _ hxp hyp hs
   exact ⟨rfl, rfl, rfl⟩
 
+/-- The grammar of a data segment payload after its flag. -/
 private inductive DataPayload : Nat → Data → List U8 → Prop where
   | implicit {offset init encodedOffset entries} :
       ConstEncoding offset encodedOffset → ByteVecEncoding init entries →
@@ -129,6 +139,7 @@ private theorem dataPayload_prefix_unique (flag : Nat) : PrefixUnique (DataPaylo
     obtain ⟨rfl, rfl, rfl⟩ := byte_prefix_unique.vec hi hi' hs'
     exact ⟨rfl, rfl, rfl⟩
 
+/-- Wasm 2.0 data segment encodings are prefix-unique. -/
 theorem wasm2Data_prefix_unique : PrefixUnique Wasm2DataEncoding := by
   intro x y a b rest tail hx hy he
   obtain ⟨xf, xb, xp, hxf, hxp, rfl⟩ := data_parts hx
@@ -137,11 +148,13 @@ theorem wasm2Data_prefix_unique : PrefixUnique Wasm2DataEncoding := by
   obtain ⟨rfl, rfl, rfl⟩ := dataPayload_prefix_unique _ hxp hyp hs
   exact ⟨rfl, rfl, rfl⟩
 
+/-- Element segment encodings of either profile are prefix-unique. -/
 theorem elementFor_prefix_unique (profile : ValidationProfile) : PrefixUnique (ElementEncodingFor profile) := by
   cases profile with
   | Wasm1 => exact element_prefix_unique
   | Wasm2 => exact wasm2Element_prefix_unique
 
+/-- Data segment encodings of either profile are prefix-unique. -/
 theorem dataFor_prefix_unique (profile : ValidationProfile) : PrefixUnique (DataEncodingFor profile) := by
   cases profile with
   | Wasm1 => exact data_prefix_unique

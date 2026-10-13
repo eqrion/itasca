@@ -1,15 +1,24 @@
 import Itasca.Binary.Wasm1.PrefixUnique
 import Itasca.Binary.Wasm1.EncodingComplete
 
+/-!
+# Uniqueness of Wasm 1.0 decoding at a cursor
+
+Shows that the byte relations of `Binary/Wasm1/Encoding` determine their result: `At.unique` for
+one token, `Consumed.unique` for a token sequence and `BodyEncoding.unique` for a complete body.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
+/-- A decoded unsigned LEB128 value and cursor are determined by the start. -/
 theorem Leb128.Decoded.unique {data start x y next last}
     (hx : Leb128.Decoded data start x next) (hy : Leb128.Decoded data start y last) :
     x = y ∧ next = last :=
   Leb128.Decoded.deterministic data start x y next last hx hy
 
+/-- A label run of known length is determined by the start. -/
 theorem BrTable.LabelsDecoded.unique {data start xs ys next last}
     (hx : BrTable.LabelsDecoded data start xs next)
     (hy : BrTable.LabelsDecoded data start ys last) (hlen : xs.length = ys.length) :
@@ -35,6 +44,7 @@ theorem BrTable.LabelsDecoded.unique {data start xs ys next last}
           obtain ⟨rfl, rfl⟩ := ih hxs hys (by simpa using hlen)
           exact ⟨rfl, rfl⟩
 
+/-- A decoded `br_table` immediate is determined by the start. -/
 theorem BrTable.Decoded.unique {data start xs ys x y next last}
     (hx : BrTable.Decoded data start xs x next) (hy : BrTable.Decoded data start ys y last) :
     xs = ys ∧ x = y ∧ next = last := by
@@ -48,6 +58,7 @@ end Itasca
 
 namespace Itasca.Wasm1
 
+/-- An immediate span with the same opcode determines its token and end cursor. -/
 theorem Immediate.unique {data start opcode t u bs cs next last}
     (ht : Immediate opcode t bs) (hu : Immediate opcode u cs)
     (hb : BytesAt data start bs next) (hc : BytesAt data start cs last) :
@@ -55,7 +66,7 @@ theorem Immediate.unique {data start opcode t u bs cs next last}
   obtain ⟨rfl, rfl, _⟩ := Immediate.prefix_unique opcode ht hu (hb.suffix.symm.trans hc.suffix)
   exact ⟨rfl, UScalar.eq_of_val_eq (hb.length.trans hc.length.symm)⟩
 
-/-- The independent binary relation determines both its token and end cursor. -/
+/-- The token read at a cursor and its end cursor are determined by `data` and `start`. -/
 theorem At.unique {data start t u next last}
     (ht : At data start t next) (hu : At data start u last) : t = u ∧ next = last := by
   obtain ⟨bs, ht, hb⟩ := ht
@@ -63,13 +74,14 @@ theorem At.unique {data start t u next last}
   obtain ⟨rfl, rfl, _⟩ := token_prefix_unique ht hu (hb.suffix.symm.trans hc.suffix)
   exact ⟨rfl, UScalar.eq_of_val_eq (hb.length.trans hc.length.symm)⟩
 
+/-- A consumed span that ends where it starts has no tokens. -/
 theorem Consumed.nil_of_equal_cursor {data start tokens next}
     (h : Consumed data start tokens next) (hp : start = next) : tokens = [] := by
   cases h with
   | nil => rfl
   | snoc hs ht => have := hs.span; have := ht.span; subst next; omega
 
-/-- Two complete parses of the same byte interval have the same flat tokens. -/
+/-- Two consumed spans over the same interval have the same tokens. -/
 theorem Consumed.unique {data start xs ys next}
     (hx : Consumed data start xs next) (hy : Consumed data start ys next) : xs = ys := by
   induction xs generalizing start ys with
@@ -90,7 +102,7 @@ theorem Consumed.unique {data start xs ys next}
           obtain ⟨rfl, rfl⟩ := hp.unique hq
           rw [ih hxs hys]
 
-/-- Complete body bytes determine one structured tree, regardless of typing. -/
+/-- A complete body encoding determines one instruction tree, regardless of typing. -/
 theorem BodyEncoding.unique {data xs ys}
     (hx : BodyEncoding data xs) (hy : BodyEncoding data ys) : xs = ys := by
   obtain ⟨xt, xp, hx, hxp, hxs⟩ := hx

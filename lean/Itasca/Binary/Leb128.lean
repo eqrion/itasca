@@ -1,5 +1,14 @@
 import Itasca.Binary.ReadByte
 
+/-!
+# Unsigned 32-bit LEB128
+
+Defines the byte-level description of unsigned 32-bit LEB128 (`Leb128.Encoding`,
+`Leb128.Decoded`, `Leb128.Rejected`) and proves that the extracted `reader.read_u32_leb` is total
+and agrees with it (`reader.read_u32_leb.spec`, `.sound`, `.complete`, `.reject_complete`).
+`Leb128.Encoding.prefix_unique` shows that an encoding is determined by its leading bytes.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
@@ -12,7 +21,7 @@ private theorem leb_first_byte (data : Slice U8) (pos : Usize)
   unfold reader.read_u32_leb_loop.body
   step*
 
-/-- A complete decoding proof for the single-byte U32 encodings used by the first control-flow path. -/
+/-- A single byte below 128 decodes to its own value and advances the cursor by one. -/
 theorem reader.read_u32_leb.single_byte (data : Slice U8) (pos : Usize)
     (h : pos.val < data.length) (hbyte : (data.val[pos.val]).val < 128) :
     ∃ value next, reader.read_u32_leb data pos = .ok (.Ok (value, next)) ∧
@@ -95,6 +104,8 @@ inductive Rejected (data : Slice U8) (start : Usize) : error.OpError → Prop wh
       (last_invalid : 16 ≤ last.val) :
       Rejected data start .LebTooLong
 
+/-- The result of `reader.read_u32_leb`: a `Decoded` span on success and a `Rejected` description
+on failure. -/
 def Post (data : Slice U8) (start : Usize) :
     core.result.Result (U32 × Usize) error.OpError → Prop
   | .Ok (value, next) => Decoded data start value next
@@ -197,6 +208,7 @@ private theorem continuation_prefix_le (xs ys : List U8) (a : U8) (leftTail bs :
       have hys : ∀ b ∈ ys, 128 ≤ b.val := by intros b hb; exact hy b (by simp [hb])
       simpa using ih ys hxs hys htail
 
+/-- Two encodings that are prefixes of the same byte string are equal and have equal values. -/
 theorem Encoding.prefix_unique {xs ys : List U8} {x y : Nat} {leftTail bs : List U8}
     (hx : Encoding xs x) (hy : Encoding ys y) (heq : xs ++ leftTail = ys ++ bs) :
     xs = ys ∧ x = y := by
@@ -253,6 +265,7 @@ theorem Decoded.deterministic (data : Slice U8) (start : Usize)
     rw [hbs] at hq₁
     exact hq₁.trans hq₂.symm
 
+/-- A successful decoding consumes between one and five bytes within the input. -/
 theorem Decoded.span (data : Slice U8) (start : Usize) (value : U32) (next : Usize)
     (h : Decoded data start value next) :
     start.val < next.val ∧ next.val ≤ start.val + 5 ∧ next.val ≤ data.length := by
@@ -269,11 +282,13 @@ namespace Itasca
 theorem reader.read_u32_leb.spec (data : Slice U8) (start : Usize) :
     reader.read_u32_leb data start ⦃ Leb128.Post data start ⦄ := Leb128.spec data start
 
+/-- `reader.read_u32_leb` never panics. -/
 theorem reader.read_u32_leb.total (data : Slice U8) (start : Usize) :
     ∃ r, reader.read_u32_leb data start = .ok r := by
   obtain ⟨r, hr, _⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data start)
   exact ⟨r, hr⟩
 
+/-- A successful `reader.read_u32_leb` result is a `Decoded` span. -/
 theorem reader.read_u32_leb.sound (data : Slice U8) (start : Usize)
     (value : U32) (next : Usize)
     (h : reader.read_u32_leb data start = .ok (.Ok (value, next))) :
@@ -293,12 +308,14 @@ theorem reader.read_u32_leb.complete (data : Slice U8) (start : Usize)
     exact hr
   | Err e => exact False.elim (Leb128.decoded_not_rejected data start value next e h hp)
 
+/-- A successful `reader.read_u32_leb` consumes between one and five bytes within the input. -/
 theorem reader.read_u32_leb.success_span (data : Slice U8) (start : Usize)
     (value : U32) (next : Usize)
     (h : reader.read_u32_leb data start = .ok (.Ok (value, next))) :
     start.val < next.val ∧ next.val ≤ start.val + 5 ∧ next.val ≤ data.length :=
   Leb128.Decoded.span data start value next (reader.read_u32_leb.sound data start value next h)
 
+/-- A rejected `reader.read_u32_leb` result satisfies `Leb128.Rejected`. -/
 theorem reader.read_u32_leb.rejected (data : Slice U8) (start : Usize)
     (e : error.OpError) (h : reader.read_u32_leb data start = .ok (.Err e)) :
     Leb128.Rejected data start e := by
@@ -329,6 +346,7 @@ theorem Encoding.value_lt {bytes : List U8} {value : Nat} (h : Encoding bytes va
   rcases hcases with h | h | h | h | h <;>
     simp only [h] at hp hfifth ⊢ <;> norm_num at hp hfifth ⊢ <;> omega
 
+/-- Unsigned LEB128 rejections are `UnexpectedEof` or `LebTooLong`. -/
 theorem Rejected.kind {data : Slice U8} {start : Usize} {e : error.OpError}
     (h : Rejected data start e) : e = .UnexpectedEof ∨ e = .LebTooLong := by
   cases h <;> simp
@@ -351,7 +369,7 @@ end Itasca.Leb128
 
 namespace Itasca
 
-/-- Error descriptions are sufficient as well as necessary for rejection. -/
+/-- Every `Leb128.Rejected` description is the result of `reader.read_u32_leb`. -/
 theorem reader.read_u32_leb.reject_complete (data : Slice U8) (start : Usize)
     (e : error.OpError) (h : Leb128.Rejected data start e) :
     reader.read_u32_leb data start = .ok (.Err e) := by

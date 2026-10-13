@@ -2,16 +2,26 @@ import Aeneas
 import «wasm2.0»
 import Itasca.Spec.DeclaredReferences
 
+/-!
+# Wasm 2.0 SIMD instructions without immediates
+
+`Simd.pureMeaning` is a literal table from the `0xfd` subopcodes of SIMD instructions that take no
+immediate to `Simd.Operation` rows. Each row (`pure14`, `pure15`, ...) holds the SpecTec
+instruction, its stack signature and proofs that it is well formed, typed by `Instr_ok` with that
+signature, free of `ref.func`, and that the generated typing is principal. `pure_signature` and
+`pure_bound` are the table-level consequences. The table is written independently of the extracted
+opcode dispatch.
+-/
+
 namespace Itasca.Wasm2.Simd
 
-/-! Independent Core 2.0 SIMD meanings. These tables are specification data;
-none of the instruction identities or typing rules depend on validator code. -/
-
+/-- The stack signature shapes of the SIMD instructions without immediates. -/
 inductive Signature where
   | unary | binary | ternary | test | shift
   | splatI32 | splatI64 | splatF32 | splatF64
   deriving DecidableEq
 
+/-- The operand types of a signature. -/
 def Signature.inputs : Signature → List valtype
   | .unary | .test => [.V128]
   | .binary => [.V128, .V128]
@@ -22,6 +32,7 @@ def Signature.inputs : Signature → List valtype
   | .splatF32 => [.F32]
   | .splatF64 => [.F64]
 
+/-- The result types of a signature. -/
 def Signature.outputs : Signature → List valtype
   | .test => [.I32]
   | _ => [.V128]
@@ -46,6 +57,9 @@ private theorem integer64_wf : wf_ishape (.mk_ishape (.X .I64 (.mk_dim 2))) := b
   · repeat' first | decide | constructor
   · rfl
 
+/-- A SIMD instruction without immediates with its signature, and proofs that it is well formed,
+typed with that signature, free of declared-reference obligations, and that the signature is the
+only one the generated rules give it. -/
 structure Operation where
   instruction : instr
   signature : Signature
@@ -2234,7 +2248,7 @@ def pure255 : Operation :=
     declared := fun _ => by simp [instruction, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices],
     principal := fun _ _ _ ht => by dsimp only [instruction] at ht; cases ht; exact ⟨rfl, rfl⟩ }
 
-/-- Exact assigned subopcode meanings for SIMD operations without immediates. -/
+/-- The SIMD instruction assigned to a `0xfd` subopcode, for instructions without immediates. -/
 def pureMeaning (subopcode : Nat) : Option Operation :=
   if subopcode ≥ 256 then none else match subopcode with
   | 14 => some pure14
@@ -2437,12 +2451,13 @@ def pureMeaning (subopcode : Nat) : Option Operation :=
   | 255 => some pure255
   | _ => none
 
-/-- Generated typing is principal on every instruction selected by the table. -/
+/-- A generated typing of a table instruction has the row's signature. -/
 theorem pure_signature {opcode op} (_hmap : pureMeaning opcode = some op)
     (C : context) (ins outs : List valtype)
     (ht : Instr_ok C op.instruction (.mk_functype (.mk_list ins) (.mk_list outs))) :
     ins = op.signature.inputs ∧ outs = op.signature.outputs := op.principal C ins outs ht
 
+/-- Pure SIMD subopcodes are below 256. -/
 theorem pure_bound {opcode op} (hmap : pureMeaning opcode = some op) : opcode < 256 := by
   unfold pureMeaning at hmap
   split at hmap

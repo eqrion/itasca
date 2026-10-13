@@ -1,5 +1,14 @@
 import Itasca.Support.LiteralDispatch
 
+/-!
+# Single-byte reads
+
+Specifications of the extracted `reader.read_byte` and of `code.read_op`, which reads one
+opcode byte. Both return the byte at the cursor and advance it by one, or return
+`UnexpectedEof` at the end of the input. These are the base case for the LEB128 and
+instruction-level reader lemmas.
+-/
+
 open Aeneas Aeneas.Std Aeneas.Std.WP
 
 namespace Itasca
@@ -14,7 +23,7 @@ theorem reader.read_byte.spec (data : Slice U8) (pos : Usize)
   step*
   exact ⟨i1, by rw [b_post], i1_post⟩
 
-/-- End-of-input is an ordinary validation error, not a modeled panic. -/
+/-- Reading at or past the end of the slice returns the `UnexpectedEof` validation error. -/
 theorem reader.read_byte.eof (data : Slice U8) (pos : Usize)
     (h : data.length ≤ pos.val) :
     reader.read_byte data pos = .ok (.Err .UnexpectedEof) := by

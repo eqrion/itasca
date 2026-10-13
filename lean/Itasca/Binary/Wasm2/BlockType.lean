@@ -1,9 +1,19 @@
 import Itasca.Binary.SignedLeb33
 
+/-!
+# Wasm 2.0 block types
+
+Block types as the extracted `signature.read_block_type` reads them. `Wasm2.BlockDecoded` is the
+byte-level grammar: the empty tag `0x40`, a value type tag, or a nonnegative signed 33-bit type
+index. `signature.read_block_type.spec` and `.complete` show that the reader accepts exactly
+these, and `BlockDecoded.unique` shows that the bytes determine the block type.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
 
+/-- The binary type byte of a value type. -/
 def valueByte : types.ValueType → U8
   | .I32 => 127#u8
   | .I64 => 126#u8
@@ -13,18 +23,19 @@ def valueByte : types.ValueType → U8
   | .FuncRef => 112#u8
   | .ExternRef => 111#u8
 
+/-- Distinct value types have distinct bytes. -/
 theorem valueByte_injective : Function.Injective valueByte := by
   intro a b h
   cases a <;> cases b <;> simp_all [valueByte]
 
-/-- Inline value tags are negative one-byte signed integers, so they cannot
-    be confused with a nonnegative type index. -/
+/-- Value type bytes are negative one-byte signed integers, so they cannot be confused with a
+nonnegative type index. -/
 theorem valueByte_negative (t : types.ValueType) :
     64 ≤ (valueByte t).val ∧ (valueByte t).val < 128 := by
   cases t <;> decide
 
-/-- Binary block grammar: singleton literal tags or nonnegative signed s33.
-    In particular, a padded negative s33 is not an inline result type. -/
+/-- A block type read at a cursor: a literal tag byte or a nonnegative signed 33-bit index. A padded
+negative index is not a value type. -/
 def BlockDecoded (data : Slice U8) (pos : Usize) (bt : signature.BlockType) (next : Usize) : Prop :=
   match bt with
   | .Empty => ∃ h : pos.val < data.length,
@@ -33,6 +44,7 @@ def BlockDecoded (data : Slice U8) (pos : Usize) (bt : signature.BlockType) (nex
       data.val[pos.val] = valueByte t ∧ next.val = pos.val + 1
   | .TypeIndex index => SignedLeb33.Decoded data pos (index.val : Int) next
 
+/-- A decoded block type is nonempty and within the input. -/
 theorem BlockDecoded.span {data : Slice U8} {pos next : Usize} {bt : signature.BlockType}
     (h : BlockDecoded data pos bt next) : pos.val < next.val ∧ next.val ≤ data.length := by
   cases bt with
@@ -68,7 +80,7 @@ end Itasca.Wasm2
 
 namespace Itasca
 
-/-- Exact decoding on success, and ordinary return on every malformed input. -/
+/-- `signature.read_block_type` decodes exactly `BlockDecoded` on success and never panics. -/
 @[step]
 theorem signature.read_block_type.spec (data : Slice U8) (pos : Usize) :
     signature.read_block_type data pos ⦃ r =>
@@ -98,8 +110,8 @@ theorem signature.read_block_type.spec (data : Slice U8) (pos : Usize) :
       core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-/-- Every independent multi-value block encoding is accepted, including
-    nonminimal nonnegative s33 indices. -/
+/-- Every `BlockDecoded` block type is accepted by `signature.read_block_type`, including
+non-minimal nonnegative indices. -/
 theorem signature.read_block_type.complete (data : Slice U8) (pos : Usize)
     (bt : signature.BlockType) (next : Usize)
     (h : Wasm2.BlockDecoded data pos bt next) :
@@ -134,8 +146,7 @@ end Itasca
 
 namespace Itasca.Wasm2
 
-/-- Independent block bytes determine both the signature and its end cursor,
-    including reference/vector tags and nonminimal positive type indices. -/
+/-- Block bytes determine both the block type and the end cursor. -/
 theorem BlockDecoded.unique {data pos first second next last}
     (hfirst : BlockDecoded data pos first next)
     (hsecond : BlockDecoded data pos second last) :

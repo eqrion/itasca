@@ -2,11 +2,19 @@ import Itasca.Binary.Wasm2.Encoding
 import Itasca.Binary.Wasm2.SyntaxComplete
 import Itasca.Binary.Wasm1.EncodingComplete
 
+/-!
+# Reading Wasm 2.0 encodings
+
+Splitting lemmas for the Wasm 2.0 `At` and `Consumed` relations, as in
+`Binary/Wasm1/EncodingComplete`. `At.read_op` splits a token into the opcode that
+`code.read_op` returns and its immediate span.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
 
-/-- Expose the actual opcode and immediate witness while preserving all payload information. -/
+/-- A token interval is its opcode byte at the cursor followed by an immediate span. -/
 theorem At.immediate {data start token next} (h : At data start token next)
     (pos : Usize) (hpos : pos.val = start.val + 1) :
     ∃ opcode immediate, Immediate opcode token immediate ∧
@@ -22,6 +30,7 @@ theorem At.immediate {data start token next} (h : At data start token next)
   refine ⟨opcode, imm, hi, ⟨hp, (List.cons.inj heq).1⟩, ?_⟩
   exact ⟨by simpa [hpos] using (List.cons.inj heq).2, by omega, hb⟩
 
+/-- `code.read_op` reads the opcode of a token and leaves the cursor at its immediate. -/
 theorem At.read_op {data start token next} (h : At data start token next)
     (st : code.OpIterState) (hpos : st.pos = start) :
     ∃ opcode pos immediate,
@@ -36,6 +45,7 @@ theorem At.read_op {data start token next} (h : At data start token next)
   obtain ⟨opcode, imm, hi, ⟨_, hb⟩, hs⟩ := h.immediate pos hn'
   exact ⟨opcode, pos, imm, by simpa [hpos, hb] using hr, hn', hi, hs⟩
 
+/-- A consumed span splits at any token boundary. -/
 theorem Consumed.split_eq {data start tokens next} (h : Consumed data start tokens next)
     (first rest : List Token) (heq : tokens = first ++ rest) :
     ∃ middle, Consumed data start first middle ∧ Consumed data middle rest next := by
@@ -61,17 +71,20 @@ theorem Consumed.split_eq {data start tokens next} (h : Consumed data start toke
           obtain ⟨middle, hf, hr⟩ := ih first rest hp
           exact ⟨middle, hf, .snoc hr hlast⟩
 
+/-- A consumed span of a concatenation splits into consecutive spans. -/
 theorem Consumed.split {data start next first rest}
     (h : Consumed data start (first ++ rest) next) :
     ∃ middle, Consumed data start first middle ∧ Consumed data middle rest next :=
   h.split_eq first rest rfl
 
+/-- An empty token list leaves the cursor in place. -/
 theorem Consumed.empty_eq {data start tokens next}
     (h : Consumed data start tokens next) (he : tokens = []) : next = start := by
   cases h with
   | nil => rfl
   | snoc => simp at he
 
+/-- A consumed span of one token is an `At`. -/
 theorem Consumed.single {data start next token}
     (h : Consumed data start [token] next) : At data start token next := by
   generalize he : [token] = tokens at h
@@ -85,6 +98,7 @@ theorem Consumed.single {data start next token}
       have hpos := hp.empty_eq ht
       simpa [heq, hpos] using hl
 
+/-- A nonempty consumed span is its first token followed by the rest. -/
 theorem Consumed.cons_iff {data start next token tokens} :
     Consumed data start (token :: tokens) next ↔
       ∃ middle, At data start token middle ∧ Consumed data middle tokens next := by

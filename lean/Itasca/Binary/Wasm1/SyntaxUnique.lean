@@ -1,21 +1,30 @@
 import Itasca.Binary.Wasm1.Syntax
 
+/-!
+# Uniqueness of Wasm 1.0 instruction syntax
+
+`Emits.unique` and `BodyTokens.unique` show that a token list spells at most one instruction
+list. The proof folds the tokens with a stack of open structured instructions
+(`SyntaxDecode.run`).
+-/
+
 namespace Itasca.Wasm1
 
 namespace SyntaxDecode
 
-/-- A deterministic fold over tokens witnesses functionality of the grammar.
-It does not inspect typing, validator execution, or implementation limits. -/
+/-- An open structured instruction awaiting its `end`, with the instructions emitted before it. -/
 inductive Frame where
   | block (bt : code.BlockType) (prior : List instr)
   | loop (bt : code.BlockType) (prior : List instr)
   | then_ (bt : code.BlockType) (prior : List instr)
   | else_ (bt : code.BlockType) (prior yes : List instr)
 
+/-- The instructions emitted at the current nesting level and the stack of open frames. -/
 structure State where
   ops : List instr
   parents : List Frame
 
+/-- Processes one token, failing on an `else` or `end` with no matching open frame. -/
 def step (s : State) : Token → Option State
   | .plain op => some { s with ops := s.ops ++ [op] }
   | .block bt => some ⟨[], .block bt s.ops :: s.parents⟩
@@ -35,6 +44,7 @@ def step (s : State) : Token → Option State
         some ⟨prior ++ [.IFELSE (Control.blockType bt) yes s.ops], parents⟩
     | [] => none
 
+/-- Processes a token list from a state. -/
 def run : List Token → State → Option State
   | [], s => some s
   | t :: ts, s => (step s t).bind (run ts)
@@ -49,6 +59,7 @@ theorem run_append (xs ys : List Token) (s : State) :
 
 end SyntaxDecode
 
+/-- `SyntaxDecode.run` on an emitting token list appends the emitted instructions. -/
 theorem Emits.decode {tokens ops} (h : Emits tokens ops) (s : SyntaxDecode.State) :
     SyntaxDecode.run tokens s = some { s with ops := s.ops ++ ops } := by
   induction h generalizing s with
@@ -61,11 +72,12 @@ theorem Emits.decode {tokens ops} (h : Emits tokens ops) (s : SyntaxDecode.State
   | ifElse bt _ _ _ ih ihy ihn =>
     simp [SyntaxDecode.run_append, ih, SyntaxDecode.run, SyntaxDecode.step, ihy, ihn, List.append_assoc]
 
-/-- Fixed flat tokens determine exactly one structured instruction tree. -/
+/-- A token list determines the structured instructions it spells. -/
 theorem Emits.unique {tokens xs ys} (hx : Emits tokens xs) (hy : Emits tokens ys) : xs = ys := by
   have h := (hx.decode ⟨[], []⟩).symm.trans (hy.decode ⟨[], []⟩)
   simpa using congrArg (fun s => s.map SyntaxDecode.State.ops) h
 
+/-- A body's tokens determine its instructions. -/
 theorem BodyTokens.unique {tokens xs ys}
     (hx : BodyTokens tokens xs) (hy : BodyTokens tokens ys) : xs = ys := by
   obtain ⟨left, hl, hx⟩ := hx

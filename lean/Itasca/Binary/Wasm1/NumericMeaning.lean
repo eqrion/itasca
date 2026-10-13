@@ -1,21 +1,32 @@
 import Itasca.Support.TypeTranslation
 import Mathlib.Tactic.IntervalCases
 
+/-!
+# Wasm 1.0 numeric opcodes
+
+`Numeric.opcodeMeaning` is a literal table of the scalar numeric opcodes `0x45` to `0xbf`. Each
+row is an `Numeric.Operation`: a SpecTec instruction with its operand and result types and a
+proof that it is well formed and that `Instr_ok` types it with that stack effect. The table is
+written independently of the extracted opcode dispatch.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Numeric
 
-/-- Embed a specification numeric type into the wider runtime value vocabulary. -/
+/-- A SpecTec number type as a Rust value type. -/
 def valueType : numtype → types.ValueType
   | .I32 => .I32
   | .I64 => .I64
   | .F32 => .F32
   | .F64 => .F64
 
+/-- Translating `valueType t` gives the SpecTec value type of `t`. -/
 @[simp] theorem numType_value (t : numtype) :
     Translate.valueType (valueType t) = valtype_numtype t := by cases t <;> rfl
 
-/-- A scalar instruction together with its one- or two-operand specification effect. -/
+/-- A scalar instruction with its operand and result types, and proofs that it is well formed and
+typed by the generated rules with that effect. -/
 structure Operation where
   instruction : instr
   input : types.ValueType
@@ -26,9 +37,11 @@ structure Operation where
     (.mk_functype (.mk_list ((if binary then [input, input] else [input]).map Translate.valueType))
       (.mk_list [Translate.valueType output]))
 
+/-- The operand types of an operation. -/
 def Operation.inputs (op : Operation) : List types.ValueType :=
   if op.binary then [op.input, op.input] else [op.input]
 
+/-- A unary operation row. -/
 def unary (t : numtype) (op : unop_) (hwf : wf_unop_ t op) : Operation where
   instruction := .UNOP t op
   input := valueType t
@@ -39,6 +52,7 @@ def unary (t : numtype) (op : unop_) (hwf : wf_unop_ t op) : Operation where
     have h := Instr_ok.unop C t op hC (.instr_case_14 _ _ hwf)
     cases t <;> simpa [valueType, Translate.valueType, valtype_numtype] using h
 
+/-- A binary operation row. -/
 def binary (t : numtype) (op : binop_) (hwf : wf_binop_ t op) : Operation where
   instruction := .BINOP t op
   input := valueType t
@@ -49,6 +63,7 @@ def binary (t : numtype) (op : binop_) (hwf : wf_binop_ t op) : Operation where
     have h := Instr_ok.binop C t op hC (.instr_case_15 _ _ hwf)
     cases t <;> simpa [valueType, Translate.valueType, valtype_numtype] using h
 
+/-- A test operation row, which returns `i32`. -/
 def test (t : numtype) (op : testop_) (hwf : wf_testop_ t op) : Operation where
   instruction := .TESTOP t op
   input := valueType t
@@ -59,6 +74,7 @@ def test (t : numtype) (op : testop_) (hwf : wf_testop_ t op) : Operation where
     have h := Instr_ok.testop C t op hC (.instr_case_16 _ _ hwf)
     cases t <;> simpa [valueType, Translate.valueType, valtype_numtype] using h
 
+/-- A comparison operation row, which returns `i32`. -/
 def relation (t : numtype) (op : relop_) (hwf : wf_relop_ t op) : Operation where
   instruction := .RELOP t op
   input := valueType t
@@ -69,6 +85,7 @@ def relation (t : numtype) (op : relop_) (hwf : wf_relop_ t op) : Operation wher
     have h := Instr_ok.relop C t op hC (.instr_case_17 _ _ hwf)
     cases t <;> simpa [valueType, Translate.valueType, valtype_numtype] using h
 
+/-- A conversion operation row from `source` to `target`. -/
 def conversion (source target : numtype) (op : cvtop__)
     (hwf : wf_cvtop__ source target op)
     (hne : target ≠ source) : Operation where
@@ -82,7 +99,7 @@ def conversion (source target : numtype) (op : cvtop__)
       (.instr_case_18 _ _ _ hwf hne)
     cases source <;> cases target <;> simpa [valueType, Translate.valueType, valtype_numtype] using h
 
-/-- The WebAssembly 1.0 scalar numeric opcode table, specified independently of the validator tables. -/
+/-- The Wasm 1.0 scalar numeric opcode table. -/
 def opcodeMeaning (opcode : U8) : Option Operation :=
   match opcode.val with
   | 0x45 => some (test .I32 (.mk_testop__0 .I32 .EQZ) (.testop__case_0 _ _ _ rfl))
@@ -210,16 +227,19 @@ def opcodeMeaning (opcode : U8) : Option Operation :=
   | 0xBF => some (conversion .I64 .F64 (.mk_cvtop___1 .I64 .F64 (.REINTERPRET)) (.cvtop___case_1 _ _ _ _ _ (.cvtop__Inn_1_Fnn_2_case_1 _ _ (by decide)) rfl rfl) (by decide))
   | _ => none
 
+/-- `op` is the numeric operation of the opcode. -/
 def NumericOp (opcode : U8) (op : Operation) : Prop := opcodeMeaning opcode = some op
 
 set_option maxRecDepth 4096 in
 set_option maxHeartbeats 1000000 in
+/-- Exactly the opcodes `0x45` to `0xbf` have a numeric meaning. -/
 theorem opcodeMeaning_isSome (opcode : U8) :
     (opcodeMeaning opcode).isSome = decide (0x45 ≤ opcode.val ∧ opcode.val ≤ 0xBF) := by
   rcases opcode with ⟨⟨n, hn⟩⟩
   change n < 256 at hn
   interval_cases n <;> rfl
 
+/-- Numeric opcodes lie between `0x45` and `0xbf`. -/
 theorem NumericOp.bounds {opcode : U8} {op : Operation} (h : NumericOp opcode op) :
     0x45 ≤ opcode.val ∧ opcode.val ≤ 0xBF := by
   have hs := opcodeMeaning_isSome opcode
