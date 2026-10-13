@@ -1,6 +1,6 @@
 import Itasca.Binary.PrefixUnique
 import Itasca.Binary.Wasm1.SyntaxUnique
-import Itasca.Handler.NumericDispatch
+import Itasca.Binary.Wasm1.Encoding
 
 open Aeneas Aeneas.Std
 

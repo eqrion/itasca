@@ -1,4 +1,4 @@
-import Itasca.Binary.Wasm1.EncodingComplete
+import Itasca.Binary.Wasm1.Encoding
 
 open Aeneas Aeneas.Std
 

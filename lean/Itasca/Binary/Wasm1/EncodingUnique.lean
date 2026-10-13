@@ -1,5 +1,5 @@
 import Itasca.Binary.Wasm1.PrefixUnique
-import Itasca.Handler.BrTableComplete
+import Itasca.Binary.Wasm1.EncodingComplete
 
 open Aeneas Aeneas.Std
 
@@ -7,10 +7,8 @@ namespace Itasca
 
 theorem Leb128.Decoded.unique {data start x y next last}
     (hx : Leb128.Decoded data start x next) (hy : Leb128.Decoded data start y last) :
-    x = y ∧ next = last := by
-  have h := (reader.read_u32_leb.complete data start x next hx).symm.trans
-    (reader.read_u32_leb.complete data start y last hy)
-  simpa using h
+    x = y ∧ next = last :=
+  Leb128.Decoded.deterministic data start x y next last hx hy
 
 theorem BrTable.LabelsDecoded.unique {data start xs ys next last}
     (hx : BrTable.LabelsDecoded data start xs next)

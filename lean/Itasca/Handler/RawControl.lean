@@ -1,19 +1,8 @@
 import Itasca.Handler.Block
 import Itasca.Handler.ControlFlow
-import Itasca.Wasm1.Loop
+import Itasca.Binary.Wasm1.EncodingComplete
 
 open Aeneas Aeneas.Std
-
-namespace Itasca.Control
-
-/-- An independently specified one-byte Wasm 1.0 block type. -/
-def BlockDecoded (data : Slice U8) (start : Usize) (bt : code.BlockType)
-    (next : Usize) : Prop :=
-  ∃ h : start.val < data.length,
-    data.val[start.val] = blockByte bt ∧ next.val = start.val + 1 ∧
-      next.val ≤ data.length ∧ ScalarBlockType bt
-
-end Itasca.Control
 
 namespace Itasca
 
@@ -104,34 +93,36 @@ theorem code.read_if.raw_spec (st : code.OpIterState) (data : Slice U8)
 
 end Itasca
 
-namespace Itasca.Body
+namespace Itasca.Wasm1
 
-/-- Initialization mirrors the extracted implementation even for an arbitrary
-caller-supplied result list. Soundness separately restricts Wasm 1.0 results. -/
-def initialBlockType (results : List types.ValueType) : code.BlockType :=
-  match results with
-  | [t] => .Value t
-  | _ => .Empty
+theorem BytesAt.read_block_type {data start next} (bt : code.BlockType)
+    (h : BytesAt data start [Control.blockByte bt] next)
+    (hbt : Control.ScalarBlockType bt) :
+    code.read_block_type data start = .ok (.Ok (bt, next)) := by
+  obtain ⟨hp, hb, hn⟩ := h.single
+  obtain ⟨_, hr, p, rfl, hp'⟩ := WP.spec_imp_exists (code.read_block_type.spec data start bt hp hb hbt)
+  have heq : p = next := UScalar.eq_of_val_eq (hp'.trans hn.symm)
+  simpa [heq] using hr
 
-theorem initialBlockType_results (bt : code.BlockType) :
-    initialBlockType (Control.results bt) = bt := by
-  cases bt <;> rfl
+theorem At.read_block {data start next} (bt : code.BlockType)
+    (h : At data start (.block bt) next) (pos : Usize) (hp : pos.val = start.val + 1) :
+    code.read_block_type data pos = .ok (.Ok (bt, next)) := by
+  obtain ⟨opcode, imm, hi, _, hs⟩ := h.immediate pos hp
+  cases hi
+  exact hs.read_block_type bt (by assumption)
 
-end Itasca.Body
+theorem At.read_loop {data start next} (bt : code.BlockType)
+    (h : At data start (.loop bt) next) (pos : Usize) (hp : pos.val = start.val + 1) :
+    code.read_block_type data pos = .ok (.Ok (bt, next)) := by
+  obtain ⟨opcode, imm, hi, _, hs⟩ := h.immediate pos hp
+  cases hi
+  exact hs.read_block_type bt (by assumption)
 
-namespace Itasca
+theorem At.read_if {data start next} (bt : code.BlockType)
+    (h : At data start (.if_ bt) next) (pos : Usize) (hp : pos.val = start.val + 1) :
+    code.read_block_type data pos = .ok (.Ok (bt, next)) := by
+  obtain ⟨opcode, imm, hi, _, hs⟩ := h.immediate pos hp
+  cases hi
+  exact hs.read_block_type bt (by assumption)
 
-theorem code.start_function.raw_spec (results : Slice types.ValueType) :
-    code.start_function results = .ok (Body.initial (Body.initialBlockType results.val)) := by
-  cases hv : results.val with
-  | nil => simpa [Body.initialBlockType, hv] using code.start_function.spec results .Empty hv
-  | cons t ts =>
-    cases ts with
-    | nil => simpa [Body.initialBlockType, hv] using code.start_function.spec results (.Value t) hv
-    | cons u us =>
-      have hlen : Slice.len results ≠ 1#usize := by scalar_tac
-      simp [code.start_function, hlen, code.push_ctrl, Body.initial,
-        Body.initialBlockType, alloc.vec.Vec.push, U32.max, U32.numBits]
-      rfl
-
-end Itasca
+end Itasca.Wasm1

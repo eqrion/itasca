@@ -1,6 +1,7 @@
 import Itasca.Visitor.EventDispatch
 import Itasca.Wasm1.Trace.Single
 import Itasca.Wasm1.Invariant
+import Itasca.Handler.ScalarConst
 
 open Aeneas Aeneas.Std
 

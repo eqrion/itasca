@@ -1,4 +1,4 @@
-import Itasca.Binary.Utf8
+import Itasca.Module.Readers.Utf8
 
 open Aeneas Aeneas.Std
 

@@ -1,4 +1,4 @@
-import Itasca.Wasm2.Simd.Tables
+import Itasca.Binary.Wasm2.Simd
 import Itasca.Binary.PrefixUnique
 
 open Aeneas Aeneas.Std

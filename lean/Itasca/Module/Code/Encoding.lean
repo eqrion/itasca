@@ -1,4 +1,5 @@
 import Itasca.Module.Code.Locals
+import Itasca.Binary.Wasm1.EncodingComplete
 
 open Aeneas Aeneas.Std
 

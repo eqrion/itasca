@@ -152,3 +152,35 @@ theorem code.validate_body.spec
   simpa [code.validate_body, hr] using hp
 
 end Itasca
+
+namespace Itasca.Body
+
+/-- Initialization mirrors the extracted implementation even for an arbitrary
+caller-supplied result list. Soundness separately restricts Wasm 1.0 results. -/
+def initialBlockType (results : List types.ValueType) : code.BlockType :=
+  match results with
+  | [t] => .Value t
+  | _ => .Empty
+
+theorem initialBlockType_results (bt : code.BlockType) :
+    initialBlockType (Control.results bt) = bt := by
+  cases bt <;> rfl
+
+end Itasca.Body
+
+namespace Itasca
+
+theorem code.start_function.raw_spec (results : Slice types.ValueType) :
+    code.start_function results = .ok (Body.initial (Body.initialBlockType results.val)) := by
+  cases hv : results.val with
+  | nil => simpa [Body.initialBlockType, hv] using code.start_function.spec results .Empty hv
+  | cons t ts =>
+    cases ts with
+    | nil => simpa [Body.initialBlockType, hv] using code.start_function.spec results (.Value t) hv
+    | cons u us =>
+      have hlen : Slice.len results ≠ 1#usize := by scalar_tac
+      simp [code.start_function, hlen, code.push_ctrl, Body.initial,
+        Body.initialBlockType, alloc.vec.Vec.push, U32.max, U32.numBits]
+      rfl
+
+end Itasca

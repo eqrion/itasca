@@ -1,4 +1,5 @@
 import Itasca.Handler.Branch
+import Itasca.Spec.TypingInversion
 
 open Aeneas Aeneas.Std
 
@@ -146,3 +147,58 @@ theorem code.read_unreachable.prefix (st : code.OpIterState) (C : context)
   · simpa [hvals, hbase] using hv
 
 end Itasca
+
+namespace Itasca.DeclarativeComplete
+
+theorem accepts_mono {t : code.StackType} {a b : valtype}
+    (h : Sequence.Accepts t a) (hs : Valtype_sub a b) : Sequence.Accepts t b := by
+  cases t with
+  | Bot => trivial
+  | Val t =>
+    cases hs with
+    | refl => exact h
+    | bot => cases t <;> simp [Sequence.Accepts, Translate.valueType] at h
+
+theorem accepts_list_mono {vals : List code.StackType} {a b : List valtype}
+    (h : List.Forall₂ Sequence.Accepts vals a) (hs : List.Forall₂ Valtype_sub a b) :
+    List.Forall₂ Sequence.Accepts vals b := by
+  induction h generalizing b with
+  | nil => cases hs; exact .nil
+  | cons h ht ih =>
+    cases hs with
+    | cons hs ht' => exact .cons (accepts_mono h hs) (ih ht')
+
+/-- Widening a declarative stack never invalidates its concrete/Bot realization. -/
+theorem realizes_mono {poly : Bool} {vals : List code.StackType} {a b : List valtype}
+    (h : Sequence.Realizes poly vals a)
+    (hs : Resulttype_sub (.mk_list a) (.mk_list b)) : Sequence.Realizes poly vals b := by
+  obtain ⟨front, suffix, hf, hv, rfl⟩ := h
+  have hs := result_sub_iff.mp hs
+  have hf' := List.forall₂_take front.length hs
+  have ht' := List.forall₂_drop front.length hs
+  simp only [List.take_left, List.drop_left] at hf' ht'
+  refine ⟨b.take front.length, b.drop front.length, ?_, ?_, (List.take_append_drop _ _).symm⟩
+  · intro hp
+    simp [hf hp]
+  · exact accepts_list_mono hv ht'
+
+/-- A realizable input stack for a typed nonempty residual program realizes
+the primitive head's framed input; its framed output types the residual tail.
+No execution or acceptance premise is involved. -/
+theorem head_realizes {C : context} {op : instr} {ops : List instr}
+    {poly : Bool} {vals : List code.StackType} {a b : List valtype}
+    (hr : Sequence.Realizes poly vals a)
+    (h : Instrs_ok C (op :: ops) (.mk_functype (.mk_list a) (.mk_list b))) :
+    ∃ front ins outs,
+      Instr_ok C op (.mk_functype (.mk_list ins) (.mk_list outs)) ∧
+      Sequence.Realizes poly vals (front ++ ins) ∧
+      Instrs_ok C ops (.mk_functype (.mk_list (front ++ outs)) (.mk_list b)) := by
+  obtain ⟨front, ins, outs, hop, hin, hrest⟩ := head_normal h
+  exact ⟨front, ins, outs, hop, realizes_mono hr hin, hrest⟩
+
+theorem empty_realizes {C : context} {poly : Bool} {vals : List code.StackType}
+    {a b : List valtype} (hr : Sequence.Realizes poly vals a)
+    (h : Instrs_ok C [] (.mk_functype (.mk_list a) (.mk_list b))) :
+    Sequence.Realizes poly vals b := realizes_mono hr (empty_sub h)
+
+end Itasca.DeclarativeComplete

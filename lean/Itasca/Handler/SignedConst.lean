@@ -5,21 +5,6 @@ import Itasca.Handler.Sequence
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Spec
-
-/-- An I32 constant's generated typing uses its unsigned bit pattern. -/
-theorem i32Const_typed (C : context) (hC : wf_context C) (value : I32) :
-    Instr_ok C (i32Const value) (.mk_functype (.mk_list []) (.mk_list [.I32])) :=
-  .const C .I32 _ hC (i32Const_wf value)
-
-theorem i32Const_framed (C : context) (hC : wf_context C) (value : I32) (ts : List valtype) :
-    Instrs_ok C [i32Const value] (.mk_functype (.mk_list ts) (.mk_list (ts ++ [.I32]))) := by
-  simpa using Instrs_ok.frame C [i32Const value] ts [] [.I32]
-    (.instr C _ [] [.I32] (i32Const_typed C hC value) hC (i32Const_wf value))
-    hC (by simpa [Forall] using i32Const_wf value)
-
-end Itasca.Spec
-
 namespace Itasca
 
 /-- A successfully decoded constant advances the cursor and appends one I32 operand. -/

@@ -1,41 +1,10 @@
 import Itasca.Handler.Control
 import Itasca.Binary.ReadByte
+import Itasca.Binary.Wasm1.BlockType
 
 open Aeneas Aeneas.Std
 
 namespace Itasca.Control
-
-/-- Single-byte block-type spellings. `ScalarBlockType` separately restricts
-which spellings belong to the Wasm 1.0 grammar and decoder. -/
-def blockByte : code.BlockType → U8
-  | .Empty => 64#u8
-  | .Value .I32 => 127#u8
-  | .Value .I64 => 126#u8
-  | .Value .F32 => 125#u8
-  | .Value .F64 => 124#u8
-  | .Value .V128 => 123#u8
-  | .Value .FuncRef => 112#u8
-  | .Value .ExternRef => 111#u8
-
-/-- The empty and four numeric result types admitted by Wasm 1.0 block headers. -/
-def ScalarBlockType : code.BlockType → Prop
-  | .Empty | .Value .I32 | .Value .I64 | .Value .F32 | .Value .F64 => True
-  | _ => False
-
-def labelContext (ts : List valtype) : context :=
-  ⟨[], [], [], [], [], [], [], [], [.mk_list ts], none⟩
-
-@[simp]
-theorem labelContext_labels (C : context) (ts : List valtype) :
-    (labelContext ts ++ C).LABELS = .mk_list ts :: C.LABELS := rfl
-
-theorem labelContext_wf (ts : List valtype) : wf_context (labelContext ts) := by
-  constructor <;> simp [Forall]
-
-theorem enter_context_wf (C : context) (hC : wf_context C) (ts : List valtype) :
-    wf_context (labelContext ts ++ C) := by
-  cases hC
-  constructor <;> assumption
 
 theorem block_typed (C : context) (hC : wf_context C) (bt : code.BlockType)
     (body : List instr) (hwf : Forall wf_instr body)

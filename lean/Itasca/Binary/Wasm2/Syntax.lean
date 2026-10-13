@@ -1,4 +1,3 @@
-import Itasca.Wasm2.Typing
 import Itasca.Binary.Wasm1.Syntax
 
 open Aeneas Aeneas.Std

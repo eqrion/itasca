@@ -1,5 +1,5 @@
 import Itasca.Wasm2.Signature
-import Itasca.Support.EnvTranslation
+import Itasca.Support.ControlTranslation
 
 open Aeneas Aeneas.Std
 
@@ -13,17 +13,6 @@ def outputs : signature.BlockType → signature.ResultType
   | .Empty => .Empty
   | .Value t => .One t
   | .TypeIndex i => .Type i .Results
-
-def blockType : signature.BlockType → blocktype
-  | .Empty => ._RESULT none
-  | .Value t => ._RESULT (some (Translate.valueType t))
-  | .TypeIndex i => ._IDX (.mk_uN i.val)
-
-theorem blockType_wf (bt : signature.BlockType) : wf_blocktype (blockType bt) := by
-  cases bt with
-  | Empty => exact .blocktype_case_0 _
-  | Value _ => exact .blocktype_case_0 _
-  | TypeIndex i => exact .blocktype_case_1 _ (EnvTranslation.index_wf i)
 
 /-- Resolving both views of an indexed block selects the same function type
     used by the generated Wasm 2.0 block typing rule. -/

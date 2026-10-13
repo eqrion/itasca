@@ -4,6 +4,7 @@ import Itasca.Binary.Wasm1.EncodingComplete
 import Itasca.Visitor.Erasure
 import Itasca.Visitor.TraceBytes
 import Itasca.Visitor.Recording
+import Itasca.Handler.BrTable
 
 open Aeneas Aeneas.Std
 

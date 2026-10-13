@@ -1,4 +1,4 @@
-import Itasca.Module.Readers.Names
+import Itasca.Binary.Module
 
 open Aeneas Aeneas.Std
 

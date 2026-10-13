@@ -1,4 +1,4 @@
-import Itasca.Handler.Block
+import Itasca.Support.TypeTranslation
 
 open Aeneas Aeneas.Std
 
@@ -80,10 +80,6 @@ structure Matches (env : module.Env) (ctx : code.Context) (C : _root_.context) :
 
 theorem Matches.root (env : module.Env) (ctx : code.Context) :
     Matches env ctx (context env ctx) := ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
-
-theorem Matches.enter {env ctx C} (h : Matches env ctx C) (ts : List valtype) :
-    Matches env ctx (Control.labelContext ts ++ C) := by
-  exact ⟨h.types, h.funcs, h.globals, h.tables, h.mems, h.elems, h.datas, h.locals, h.ret⟩
 
 theorem Matches.wf {env ctx C} (h : Matches env ctx C) : wf_context C := by
   cases C

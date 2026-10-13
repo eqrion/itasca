@@ -1,24 +1,10 @@
 import Itasca.Handler.BranchPrefix
 import Itasca.Visitor.Total
+import Itasca.Binary.Wasm1.BrTableLabels
 
 open Aeneas Aeneas.Std
 
 namespace Itasca.BrTable
-
-/-- Consecutive unsigned immediates, specified independently of the validator. -/
-inductive LabelsDecoded (data : Slice U8) (start : Usize) : List U32 → Usize → Prop where
-  | nil : LabelsDecoded data start [] start
-  | snoc {depths pos next depth} : LabelsDecoded data start depths pos →
-      Leb128.Decoded data pos depth next → LabelsDecoded data start (depths ++ [depth]) next
-
-theorem LabelsDecoded.span {data start depths next}
-    (h : LabelsDecoded data start depths next) (hb : start.val ≤ data.length) :
-    start.val ≤ next.val ∧ next.val ≤ data.length := by
-  induction h with
-  | nil => exact ⟨le_rfl, hb⟩
-  | snoc h hd ih =>
-    have hs := hd.span
-    omega
 
 /-- Every recorded label exists and has the common branch target type. -/
 def Targets (cs : List code.Ctrl) (depths : List U32) (expect : Option code.BlockType) : Prop :=
@@ -201,22 +187,6 @@ theorem instruction_typed (C : context) (hC : wf_context C)
     simpa only [proj_uN_0, ht] using hsub
   · exact hC
   · exact instruction_wf depths default
-
-/-- The table immediate contains a count, exactly that many labels, and a default. -/
-def Decoded (data : Slice U8) (start : Usize) (depths : List U32)
-    (default : U32) (next : Usize) : Prop :=
-  ∃ count first last, Leb128.Decoded data start count first ∧
-    depths.length = count.val ∧ LabelsDecoded data first depths last ∧
-    Leb128.Decoded data last default next
-
-theorem Decoded.span {data start depths default next}
-    (h : Decoded data start depths default next) :
-    start.val < next.val ∧ next.val ≤ data.length := by
-  obtain ⟨count, first, last, hc, _, hlabels, hd⟩ := h
-  have hc' := hc.span
-  have hl' := hlabels.span hc'.2.2
-  have hd' := hd.span
-  omega
 
 end Itasca.BrTable
 

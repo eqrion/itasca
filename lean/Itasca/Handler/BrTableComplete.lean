@@ -1,64 +1,7 @@
 import Itasca.Handler.ScalarComplete
+import Itasca.Handler.BrTable
 
 open Aeneas Aeneas.Std
-
-namespace Itasca.BrTable
-
-private theorem labels_split {data start depths next} (h : LabelsDecoded data start depths next)
-    (first rest : List U32) (heq : depths = first ++ rest) :
-    ∃ middle, LabelsDecoded data start first middle ∧ LabelsDecoded data middle rest next := by
-  induction h generalizing first rest with
-  | nil =>
-      have he : first = [] ∧ rest = [] := by simpa using heq.symm
-      rcases he with ⟨rfl, rfl⟩
-      exact ⟨start, .nil, .nil⟩
-  | @snoc depths pos next depth hprefix hlast ih =>
-      cases rest using List.reverseRecOn with
-      | nil =>
-          have hf : first = depths ++ [depth] := by simpa using heq.symm
-          subst first
-          exact ⟨next, .snoc hprefix hlast, .nil⟩
-      | append_singleton rest last =>
-          have heq' : depths ++ [depth] = (first ++ rest) ++ [last] := by
-            simpa [List.append_assoc] using heq
-          have ht : depth = last := by
-            have := congrArg List.getLast? heq'
-            simpa using this
-          subst last
-          obtain ⟨middle, hf, hr⟩ := ih first rest (List.append_cancel_right heq')
-          exact ⟨middle, hf, .snoc hr hlast⟩
-
-private theorem labels_empty {data start depths next}
-    (h : LabelsDecoded data start depths next) (he : depths = []) : next = start := by
-  cases h with
-  | nil => rfl
-  | snoc => simp at he
-
-private theorem labels_single {data start next depth}
-    (h : LabelsDecoded data start [depth] next) : Leb128.Decoded data start depth next := by
-  generalize he : [depth] = depths at h
-  cases h with
-  | nil => simp at he
-  | @snoc depths pos next last hp hl =>
-      have hlen := congrArg List.length he
-      simp only [List.length_cons, List.length_nil, List.length_append] at hlen
-      have ht : depths = [] := List.length_eq_zero_iff.mp (by omega)
-      have heq : last = depth := by simpa [ht] using he.symm
-      have hpos := labels_empty hp ht
-      simpa [heq, hpos] using hl
-
-/-- Expose the first independent label encoding from the accumulated vector relation. -/
-theorem LabelsDecoded.cons_iff {data start next depth depths} :
-    LabelsDecoded data start (depth :: depths) next ↔
-      ∃ middle, Leb128.Decoded data start depth middle ∧ LabelsDecoded data middle depths next := by
-  constructor
-  · intro h
-    obtain ⟨middle, hh, ht⟩ := labels_split h [depth] depths rfl
-    exact ⟨middle, labels_single hh, ht⟩
-  · rintro ⟨middle, hh, ht⟩
-    exact LabelsDecoded.append (.snoc .nil hh) ht
-
-end Itasca.BrTable
 
 namespace Itasca
 
@@ -85,7 +28,11 @@ theorem code.read_table_labels_loop.complete {V : Type} (visitor : code.OpVisito
       (result = none ∨ result = some bt) := by
   induction depths generalizing st i v expect with
   | nil =>
-      have hn : next = st.pos := BrTable.labels_empty hd rfl
+      have hn : next = st.pos := by
+        generalize he : ([] : List U32) = zs at hd
+        cases hd with
+        | nil => rfl
+        | snoc => simp at he
       have hi : i = count := UScalar.eq_of_val_eq (by simpa using hcount)
       refine ⟨expect, v, ?_, hexpect⟩
       unfold code.read_table_labels_loop

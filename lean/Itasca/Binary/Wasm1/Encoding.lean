@@ -1,8 +1,12 @@
 import Itasca.Binary.Wasm1.Syntax
 import Itasca.Binary.Wasm1.NumericMeaning
 import Itasca.Binary.Wasm1.MemoryMeaning
-import Itasca.Handler.ScalarConst
-import Itasca.Handler.RawControl
+import Itasca.Binary.Wasm1.BlockType
+import Itasca.Binary.SignedLeb32
+import Itasca.Binary.SignedLeb64
+import Itasca.Binary.FloatBits
+import Itasca.Spec.Instr
+import Itasca.Spec.ScalarConst
 
 open Aeneas Aeneas.Std
 

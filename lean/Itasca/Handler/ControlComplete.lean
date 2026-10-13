@@ -2,6 +2,7 @@ import Itasca.Handler.StackComplete
 import Itasca.Binary.Wasm1.EncodingComplete
 import Itasca.Handler.ControlFlow
 import Itasca.Handler.BranchPrefix
+import Itasca.Handler.RawControl
 
 open Aeneas Aeneas.Std
 

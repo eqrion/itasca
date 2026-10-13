@@ -235,4 +235,19 @@ def memoryMeaning (opcode : Nat) : Option MemoryOperation :=
   | 93 => some .load64Zero
   | _ => none
 
+theorem lane_pure_none {opcode : Nat} {op : LaneOperation}
+    (h : laneMeaning opcode = some op) : pureMeaning opcode = none := by
+  unfold laneMeaning at h
+  split at h <;> first | rfl | contradiction
+
+theorem memory_pure_none {opcode : Nat} {op : MemoryOperation}
+    (h : memoryMeaning opcode = some op) : pureMeaning opcode = none := by
+  unfold memoryMeaning at h
+  split at h <;> first | rfl | contradiction
+
+theorem memory_lane_none {opcode : Nat} {op : MemoryOperation}
+    (h : memoryMeaning opcode = some op) : laneMeaning opcode = none := by
+  unfold memoryMeaning at h
+  split at h <;> first | rfl | contradiction
+
 end Itasca.Wasm2.Simd

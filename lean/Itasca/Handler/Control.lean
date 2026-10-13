@@ -1,30 +1,8 @@
-import Itasca.Support.TypeTranslation
+import Itasca.Support.ControlTranslation
 
 open Aeneas Aeneas.Std
 
 namespace Itasca.Control
-
-/-- The shared visitor API retains the full encoded signature vocabulary. -/
-def signature : code.BlockType → Itasca.signature.BlockType
-  | .Empty => .Empty
-  | .Value t => .Value t
-
-/-- A Wasm 1.0 branch supplies an empty or singleton label result vector. -/
-def resultView : code.BlockType → Itasca.signature.ResultType
-  | .Empty => .Empty
-  | .Value t => .One t
-
-/-- Wasm 1.0 blocks have zero or one result and no input parameters. -/
-def results : code.BlockType → List types.ValueType
-  | .Empty => []
-  | .Value t => [t]
-
-def blockType : code.BlockType → blocktype
-  | .Empty => ._RESULT none
-  | .Value t => ._RESULT (some (Translate.valueType t))
-
-def resultTypes (bt : code.BlockType) : List valtype :=
-  (results bt).map Translate.valueType
 
 /-- A loop label takes its inputs, which are empty in Wasm 1.0. -/
 def targetBlockType (c : code.Ctrl) : code.BlockType :=
@@ -55,13 +33,6 @@ def polymorphic (st : code.OpIterState) : Bool :=
 structure Shape (st : code.OpIterState) : Prop where
   ordered : st.ctrls.val.Pairwise (fun c d => c.value_stack_base.val ≤ d.value_stack_base.val)
   bounded : ∀ c ∈ st.ctrls.val, c.value_stack_base.val ≤ st.vals.val.length
-
-theorem blockType_wf (bt : code.BlockType) : wf_blocktype (blockType bt) := by
-  cases bt <;> exact .blocktype_case_0 _
-
-theorem blockType_ok (C : context) (hC : wf_context C) (bt : code.BlockType) :
-    Blocktype_ok C (blockType bt) (.mk_functype (.mk_list []) (.mk_list (resultTypes bt))) := by
-  cases bt <;> exact .valtype C _ hC (.blocktype_case_0 _)
 
 theorem labels_push (cs : List code.Ctrl) (c : code.Ctrl) :
     labels (cs ++ [c]) = .mk_list ((targetTypes c).map Translate.valueType) :: labels cs := by

@@ -22,20 +22,6 @@ theorem tables (opcode : U8) :
   change n < 256 at hn
   interval_cases n <;> constructor <;> (with_unfolding_all rfl)
 
-set_option maxRecDepth 4096 in
-set_option maxHeartbeats 1000000 in
-theorem opcodeMeaning_isSome (opcode : U8) :
-    (opcodeMeaning opcode).isSome = decide (0x45 ≤ opcode.val ∧ opcode.val ≤ 0xBF) := by
-  rcases opcode with ⟨⟨n, hn⟩⟩
-  change n < 256 at hn
-  interval_cases n <;> rfl
-
-theorem NumericOp.bounds {opcode : U8} {op : Operation} (h : NumericOp opcode op) :
-    0x45 ≤ opcode.val ∧ opcode.val ≤ 0xBF := by
-  have hs := opcodeMeaning_isSome opcode
-  rw [h] at hs
-  simpa using hs.symm
-
 /-- The implementation helper selected by an independently specified scalar operation. -/
 def read (op : Operation) (st : code.OpIterState) :
     Result (core.result.Result Unit error.OpError × code.OpIterState) :=

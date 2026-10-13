@@ -1,4 +1,5 @@
 import Itasca.Support.TypeTranslation
+import Mathlib.Tactic.IntervalCases
 
 open Aeneas Aeneas.Std
 
@@ -210,5 +211,19 @@ def opcodeMeaning (opcode : U8) : Option Operation :=
   | _ => none
 
 def NumericOp (opcode : U8) (op : Operation) : Prop := opcodeMeaning opcode = some op
+
+set_option maxRecDepth 4096 in
+set_option maxHeartbeats 1000000 in
+theorem opcodeMeaning_isSome (opcode : U8) :
+    (opcodeMeaning opcode).isSome = decide (0x45 ≤ opcode.val ∧ opcode.val ≤ 0xBF) := by
+  rcases opcode with ⟨⟨n, hn⟩⟩
+  change n < 256 at hn
+  interval_cases n <;> rfl
+
+theorem NumericOp.bounds {opcode : U8} {op : Operation} (h : NumericOp opcode op) :
+    0x45 ≤ opcode.val ∧ opcode.val ≤ 0xBF := by
+  have hs := opcodeMeaning_isSome opcode
+  rw [h] at hs
+  simpa using hs.symm
 
 end Itasca.Numeric

@@ -2,6 +2,7 @@ import Itasca.Handler.StackComplete
 import Itasca.Binary.Wasm1.EncodingComplete
 import Itasca.Handler.NumericDispatch
 import Itasca.Handler.Select
+import Itasca.Handler.ScalarConst
 
 open Aeneas Aeneas.Std
 
