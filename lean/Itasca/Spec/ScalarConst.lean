@@ -1,16 +1,22 @@
 import Itasca.Support.TypeTranslation
 
-open Aeneas Aeneas.Std
+/-!
+# `i64`, `f32` and `f64` constants in SpecTec
 
-/-! SpecTec encodings of 64-bit integer and IEEE float constants, with their
-well-formedness and typing. -/
+Encodes extracted `i64` values and `f32`/`f64` bit patterns as SpecTec `*.const` instructions.
+`i64_wf`, `f32_wf`, `f64_wf` show well-formedness, and the `*_typed` and `*_framed` theorems give
+`Instr_ok` and `Instrs_ok` typing.
+-/
+
+open Aeneas Aeneas.Std
 
 namespace Itasca.ScalarConst
 
-/-- An I64 is represented in SpecTec by its unsigned 64-bit bit pattern. -/
+/-- The SpecTec `i64.const` instruction for `value`, using its unsigned 64-bit bit pattern. -/
 def i64 (value : I64) : instr :=
   .CONST .I64 (.mk_num__0 .I64 (.mk_uN (value.val % 18446744073709551616).toNat))
 
+/-- The encoded `i64.const` instruction is well-formed. -/
 theorem i64_wf (value : I64) : wf_instr (i64 value) := by
   apply wf_instr.instr_case_13
   apply wf_num_.num__case_0 _ .I64 _ (by decide) _ rfl
@@ -20,7 +26,8 @@ theorem i64_wf (value : I64) : wf_instr (i64 value) := by
   norm_num [size, valtype_Inn] at hmod hnonneg ⊢
   omega
 
-/-- IEEE fields are translated directly, preserving the sign of zero and NaN payloads. -/
+/-- The SpecTec float with the given IEEE field widths and bit pattern. Fields are translated
+directly, so the sign of zero and NaN payloads are kept. -/
 def floatValue (fractionBits exponentBits bits : Nat) : fN :=
   let fraction := bits % 2 ^ fractionBits
   let exponent := bits / 2 ^ fractionBits % 2 ^ exponentBits
@@ -31,7 +38,9 @@ def floatValue (fractionBits exponentBits bits : Nat) : fN :=
     else fNmag.NORM fraction ((exponent : Int) - (2 ^ (exponentBits - 1) - 1 : Nat))
   if bits < 2 ^ (fractionBits + exponentBits) then .POS magnitude else .NEG magnitude
 
+/-- The SpecTec `f32.const` instruction for the bit pattern `bits`. -/
 def f32 (bits : U32) : instr := .CONST .F32 (.mk_num__1 .F32 (floatValue 23 8 bits.val))
+/-- The SpecTec `f64.const` instruction for the bit pattern `bits`. -/
 def f64 (bits : U64) : instr := .CONST .F64 (.mk_num__1 .F64 (floatValue 52 11 bits.val))
 
 theorem floatValue_wf32 (bits : Nat) : wf_fN 32 (floatValue 23 8 bits) := by
@@ -59,6 +68,7 @@ theorem floatValue_wf32 (bits : Nat) : wf_fN 32 (floatValue 23 8 bits) := by
   · exact .fN_case_0 _ _ hmag
   · exact .fN_case_1 _ _ hmag
 
+/-- The encoded `f32.const` instruction is well-formed. -/
 theorem f32_wf (bits : U32) : wf_instr (f32 bits) := by
   apply wf_instr.instr_case_13
   exact wf_num_.num__case_1 _ .F32 _ (floatValue_wf32 bits.val) rfl
@@ -88,34 +98,41 @@ theorem floatValue_wf64 (bits : Nat) : wf_fN 64 (floatValue 52 11 bits) := by
   · exact .fN_case_0 _ _ hmag
   · exact .fN_case_1 _ _ hmag
 
+/-- The encoded `f64.const` instruction is well-formed. -/
 theorem f64_wf (bits : U64) : wf_instr (f64 bits) := by
   apply wf_instr.instr_case_13
   exact wf_num_.num__case_1 _ .F64 _ (floatValue_wf64 bits.val) rfl
 
+/-- The encoded `i64.const` instruction has type `[] -> [i64]` under `Instr_ok`. -/
 theorem i64_typed (C : context) (hC : wf_context C) (value : I64) :
     Instr_ok C (i64 value) (.mk_functype (.mk_list []) (.mk_list [.I64])) :=
   .const C .I64 _ hC (i64_wf value)
 
+/-- The encoded `i64.const` instruction is typed under `Instrs_ok` on top of any stack `ts`. -/
 theorem i64_framed (C : context) (hC : wf_context C) (value : I64) (ts : List valtype) :
     Instrs_ok C [i64 value] (.mk_functype (.mk_list ts) (.mk_list (ts ++ [.I64]))) := by
   simpa using Instrs_ok.frame C [i64 value] ts [] [.I64]
     (.instr C _ [] [.I64] (i64_typed C hC value) hC (i64_wf value))
     hC (by simpa [Forall] using i64_wf value)
 
+/-- The encoded `f32.const` instruction has type `[] -> [f32]` under `Instr_ok`. -/
 theorem f32_typed (C : context) (hC : wf_context C) (value : U32) :
     Instr_ok C (f32 value) (.mk_functype (.mk_list []) (.mk_list [.F32])) :=
   .const C .F32 _ hC (f32_wf value)
 
+/-- The encoded `f32.const` instruction is typed under `Instrs_ok` on top of any stack `ts`. -/
 theorem f32_framed (C : context) (hC : wf_context C) (value : U32) (ts : List valtype) :
     Instrs_ok C [f32 value] (.mk_functype (.mk_list ts) (.mk_list (ts ++ [.F32]))) := by
   simpa using Instrs_ok.frame C [f32 value] ts [] [.F32]
     (.instr C _ [] [.F32] (f32_typed C hC value) hC (f32_wf value))
     hC (by simpa [Forall] using f32_wf value)
 
+/-- The encoded `f64.const` instruction has type `[] -> [f64]` under `Instr_ok`. -/
 theorem f64_typed (C : context) (hC : wf_context C) (value : U64) :
     Instr_ok C (f64 value) (.mk_functype (.mk_list []) (.mk_list [.F64])) :=
   .const C .F64 _ hC (f64_wf value)
 
+/-- The encoded `f64.const` instruction is typed under `Instrs_ok` on top of any stack `ts`. -/
 theorem f64_framed (C : context) (hC : wf_context C) (value : U64) (ts : List valtype) :
     Instrs_ok C [f64 value] (.mk_functype (.mk_list ts) (.mk_list (ts ++ [.F64]))) := by
   simpa using Instrs_ok.frame C [f64 value] ts [] [.F64]

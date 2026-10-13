@@ -1,15 +1,17 @@
 import «wasm2.0»
 
+/-!
+# Declared function references
+
+The pinned SpecTec model omits the `C.refs` condition of `ref.func`. This file supplies it
+following Core 2.0 section 3.4.10: `declarations m` lists the function indices occurring in `m`
+with its functions and start declaration removed, and `Module m` requires every `ref.func` in a
+function body to be declared. Lists stand for sets, so order and duplicates do not matter.
+Collection includes `call` as well as `ref.func`, since `funcidx` covers all syntactic function
+index occurrences; the definitions do not assume the expressions are well typed.
+-/
+
 namespace Itasca.DeclaredReferences
-
-/-! The pinned SpecTec model omits `C.refs`. This independent supplement follows
-Core 2.0 §3.4.10: declarations are the function indices occurring in the module
-with its functions and start declaration removed. Lists represent sets through
-membership; their order and duplicate entries have no semantic significance.
-
-The collection includes `call` as well as `ref.func`, because `funcidx` denotes
-all syntactic function-index occurrences. A well-typed constant expression
-cannot contain `call`, but the definition does not assume typing. -/
 
 mutual
   /-- Function-index occurrences in an instruction tree. With `calls = false`,
@@ -106,12 +108,13 @@ theorem Instruction.mono {refs refs' op}
     (hsub : ∀ x ∈ refs, x ∈ refs') (h : Instruction refs op) : Instruction refs' op :=
   fun x hx => hsub x (h x hx)
 
+/-- Declared-reference conditions are monotone in `refs`. -/
 theorem Instructions.mono {refs refs' ops}
     (hsub : ∀ x ∈ refs, x ∈ refs') (h : Instructions refs ops) : Instructions refs' ops :=
   fun x hx => hsub x (h x hx)
 
-/-- A declaration-producing expression automatically meets its own reference
-requirements, independently of whether it is a valid constant expression. -/
+/-- An expression meets the reference requirements of its own function-index occurrences, whether
+or not it is a valid constant expression. -/
 theorem Instructions.of_allIndices (ops : List instr) :
     Instructions (instructionsIndices true ops) ops :=
   instructionsIndices_ref_subset ops
@@ -140,23 +143,23 @@ def elementModeIndices : elemmode → List funcidx
   | .ACTIVE _ offset => instructionsIndices true offset
   | .PASSIVE | .DECLARE => []
 
-/-- All initializer forms and modes contribute syntactic occurrences. -/
+/-- Function indices in an element segment's initializers and mode. -/
 def elementIndices : elem → List funcidx
   | .ELEM _ initializers mode =>
     initializers.flatMap (instructionsIndices true) ++ elementModeIndices mode
 
-/-- Function indices in a data offset, included even before checking its type. -/
+/-- Function indices in an active data segment's offset expression. -/
 def dataIndices : data → List funcidx
   | .DATA _ (.ACTIVE _ offset) => instructionsIndices true offset
   | .DATA _ .PASSIVE => []
 
-/-- Exported functions are declared references; other exports do not contribute. -/
+/-- The function index of an exported function; other exports contribute none. -/
 def exportIndices : «export» → List funcidx
   | .EXPORT _ (.FUNC x) => [x]
   | _ => []
 
-/-- Core 2.0's `funcidx(module with funcs = [] with start = none)`.
-Types, imports, tables, and memories contain no function indices in Core 2.0. -/
+/-- The declared references of a module: Core 2.0's `funcidx(module with funcs = [] with start =
+none)`. Types, imports, tables and memories contain no function indices in Core 2.0. -/
 def declarations : _root_.module → List funcidx
   | .MODULE _ _ _ globals _ _ elements datas _ exports =>
     globals.flatMap globalIndices ++ elements.flatMap elementIndices ++
@@ -166,10 +169,9 @@ def declarations : _root_.module → List funcidx
 def Function (refs : List funcidx) : func → Prop
   | .FUNC _ _ body => Instructions refs body
 
-/-- The missing reference-declaration condition, independent of validator calls.
-Occurrences outside function bodies already belong to `declarations`; only
-function bodies need an additional membership check. The start index is neither
-a declaration nor a use of `ref.func`. -/
+/-- The reference-declaration condition missing from the generated specification. Occurrences
+outside function bodies already belong to `declarations`, so only function bodies need a
+membership check. The start index is neither a declaration nor a use of `ref.func`. -/
 def Module (m : _root_.module) : Prop :=
   match m with
   | .MODULE _ _ funcs _ _ _ _ _ _ _ =>
@@ -209,13 +211,14 @@ theorem declared_export {ts is fs gs tables ms es ds start exports e x}
   simp only [declarations, List.mem_append, List.mem_flatMap]
   exact Or.inr ⟨e, he, hx⟩
 
-/-- Initializers require no extra declaration premise: their occurrences are
-already part of the independently constructed module declaration set. -/
+/-- A global initializer needs no extra declaration premise, since its occurrences are part of
+`declarations`. -/
 theorem global_body_declared {ts is fs gs tables ms es ds start exports gt body}
     (hg : global.GLOBAL gt body ∈ gs) :
     Instructions (declarations (.MODULE ts is fs gs tables ms es ds start exports)) body :=
   (Instructions.of_allIndices body).mono (fun _ hx => declared_global hg hx)
 
+/-- An element initializer needs no extra declaration premise. -/
 theorem element_initializer_declared
     {ts is fs gs tables ms es ds start exports rt initializers mode body}
     (he : elem.ELEM rt initializers mode ∈ es) (hb : body ∈ initializers) :
@@ -225,6 +228,7 @@ theorem element_initializer_declared
   apply declared_element he
   exact List.mem_append_left _ (List.mem_flatMap.mpr ⟨body, hb, hx⟩)
 
+/-- An active element offset needs no extra declaration premise. -/
 theorem element_offset_declared
     {ts is fs gs tables ms es ds start exports rt initializers tableIndex offset}
     (he : elem.ELEM rt initializers (.ACTIVE tableIndex offset) ∈ es) :
@@ -233,12 +237,14 @@ theorem element_offset_declared
   intro x hx
   exact declared_element he (List.mem_append_right _ hx)
 
+/-- An active data offset needs no extra declaration premise. -/
 theorem data_offset_declared
     {ts is fs gs tables ms es ds start exports bytes memoryIndex offset}
     (hd : data.DATA bytes (.ACTIVE memoryIndex offset) ∈ ds) :
     Instructions (declarations (.MODULE ts is fs gs tables ms es ds start exports)) offset :=
   (Instructions.of_allIndices offset).mono (fun _ hx => declared_data hd hx)
 
+/-- Under `Module`, every function body meets the declared-reference condition. -/
 theorem Module.body {ts is fs gs tables ms es ds start exports typeIndex locals body}
     (h : Module (.MODULE ts is fs gs tables ms es ds start exports))
     (hf : func.FUNC typeIndex locals body ∈ fs) :
