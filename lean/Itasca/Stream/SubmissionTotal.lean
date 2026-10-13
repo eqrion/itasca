@@ -1,6 +1,16 @@
 import Itasca.Stream.FramingTotal
 import Itasca.Stream.Scheduler
 
+/-!
+# Submission termination
+
+Termination of `stream.submit_code_batches` and its loop, which frame code batches, issue them to
+the scheduler through `submit_code_batch`, and retire a batch whenever the pending vector is full.
+`StreamSubmission.Invariant` bounds the cursors and the pending vector, and every iteration
+advances the function cursor. Termination needs the source and scheduler callbacks to return
+(`StreamSource.CallbacksTotal`, `StreamScheduler.CallbacksTotal`).
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamSubmission
@@ -14,12 +24,13 @@ def Invariant (codeLen num max : Usize) (pending : alloc.vec.Vec Usize)
   pos.val ≤ codeLen.val ∧ func.val ≤ num.val ∧ batchId.val ≤ func.val ∧
     pending.length ≤ batchId.val ∧ pending.length ≤ max.val
 
+/-- A returned pending vector stays within the configured maximum. Errors are unconstrained. -/
 def Post (max : Usize) : (core.result.Result (alloc.vec.Vec Usize) error.Error × V) → Prop
   | (.Ok remaining, _) => remaining.length ≤ max.val
   | (.Err _, _) => True
 
-/-- The actual loop continuation after its optional retirement. It is stated
-as the extracted subexpression so both generated branches use one proof. -/
+/-- The loop continuation after its optional retirement, written as the extracted subexpression
+so that both generated branches share one proof. -/
 private theorem resume {S V : Type} (source : stream.Source S) (visitor : stream.StreamingVisitor V)
     (state : S) (moduleId : U64) (env : module.Env) (codeLen : Usize) (config : stream.Config)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId num : Usize)
@@ -159,8 +170,8 @@ private theorem submit_body_total {S V : Type} (source : stream.Source S)
     · simp [StreamSubmission.Post]
     · simpa [StreamSubmission.Post] using hmax
 
-/-- Submission terminates because each accepted batch frames at least one
-function. Its pending vector stays within the configured maximum. -/
+/-- Submission terminates because each framed batch contains at least one function. The pending
+vector stays within the configured maximum. -/
 theorem stream.submit_code_batches_loop.spec {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
     (env : module.Env) (codeLen : Usize) (config : stream.Config) (v : V)
@@ -186,6 +197,8 @@ theorem stream.submit_code_batches_loop.spec {S V : Type} (source : stream.Sourc
     | cont next => rcases next with ⟨_, _, _, _, _⟩; exact hout
   · exact hinv
 
+/-- `stream.submit_code_batches` returns and keeps its pending vector within the configured
+maximum, when the source and scheduler callbacks return. -/
 @[step]
 theorem stream.submit_code_batches.spec {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)

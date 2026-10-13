@@ -1,11 +1,21 @@
 import Itasca.Stream.Source
 
+/-!
+# Code region splitter termination
+
+Termination and bounds of `stream.find_code_region`, which scans the section headers of a
+contiguous module and returns the offsets that split it into environment, code and tail regions.
+`stream.find_code_region.slices` shows that the three slices are safe and concatenate to the
+whole input, whether or not it is a valid module. The canonical split is characterized in
+`Stream/SplitComplete`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- The splitter is total before the module-size guard, including short and
-malformed buffers. Its output always describes three adjacent in-bounds regions. -/
+/-- The splitter loop returns on every buffer, including short and malformed ones. Its output
+describes three adjacent in-bounds regions. -/
 theorem stream.find_code_region_loop.spec (bytes : Slice U8) (pos : Usize) :
     stream.find_code_region_loop bytes (Slice.len bytes) pos ⦃ result =>
       result.1.val ≤ result.2.val ∧ result.2.val ≤ bytes.length ⦄ := by
@@ -53,6 +63,7 @@ theorem stream.find_code_region_loop.spec (bytes : Slice U8) (pos : Usize) :
           step* <;> scalar_tac
   · trivial
 
+/-- `stream.find_code_region` returns on every buffer with ordered in-bounds offsets. -/
 @[step]
 theorem stream.find_code_region.spec (bytes : Slice U8) :
     stream.find_code_region bytes ⦃ result =>
@@ -71,8 +82,8 @@ theorem stream.find_code_region.bounds (bytes : Slice U8) (first last : Usize)
   have hs := stream.find_code_region.spec bytes
   simpa [h] using hs
 
-/-- Actual slice operations at the split boundaries are safe and reconstruct
-all input bytes, regardless of whether the input is a valid module. -/
+/-- The slice operations at the split boundaries are safe and the resulting regions concatenate to
+the input, whether or not the input is a valid module. -/
 theorem stream.find_code_region.slices (bytes : Slice U8) (first last : Usize)
     (h : stream.find_code_region bytes = .ok (first, last)) :
     ∃ environment code tail : Slice U8,

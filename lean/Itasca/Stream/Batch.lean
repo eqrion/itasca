@@ -3,6 +3,19 @@ import Itasca.Profile.EntrySound
 import Itasca.Module.Code.EntryVisitor
 import Itasca.Module.Code.Section
 
+/-!
+# Worker batches
+
+Models the `stream.CodeBatch` workers that the driver issues. `StreamBatch.Issued` is the immutable
+state of an issued batch, and `StreamBatch.Reachable` holds for every worker obtainable from its
+seed through actual `stream.CodeBatch.next_entry` and `stream.CodeBatch.validate_func` executions.
+`StreamBatch.Reachable.validation` extracts a `StreamBatch.Prefix` of successful entry
+validations from any reachable worker, `StreamBatch.Reachable.finished` shows that a worker
+accepted by `stream.CodeBatch.finish` has validated every entry in order and consumed exactly its
+bytes, and `stream.CodeBatch.validate_func.cases` gives the complete case split of one validation
+call. Both profiles are covered through the `profile` parameter.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamBatch
@@ -65,6 +78,8 @@ end Itasca.StreamBatch
 
 namespace Itasca
 
+/-- `stream.CodeBatch.finish` succeeds exactly when no error is stored, every function was
+validated, and validation consumed the whole code view. -/
 @[simp] theorem stream.CodeBatch.finish.accepted_iff (batch : stream.CodeBatch) :
     stream.CodeBatch.finish batch = .ok (.Ok ()) ↔
       batch.error = none ∧ batch.num_validated = batch.num_funcs ∧
@@ -76,6 +91,7 @@ namespace Itasca
   · intro h; apply UScalar.eq_of_val_eq; simpa using h
   · intro h; simpa using congrArg UScalar.val h
 
+/-- `stream.CodeBatch.finish` returns an ordinary result on every batch. -/
 theorem stream.CodeBatch.finish.total (batch : stream.CodeBatch) :
     ∃ r, stream.CodeBatch.finish batch = .ok r := by
   unfold stream.CodeBatch.finish
@@ -198,8 +214,8 @@ end Itasca
 
 namespace Itasca.StreamBatch
 
-/-- Reachability fixes batch identity and retains an actual successful
-validation prefix, even after dispatch or a worker error. -/
+/-- A reachable worker has the issued identity and its validated bytes form a successful
+validation prefix, including after dispatch or a worker error. -/
 theorem Reachable.validation {issued : Issued} {batch : stream.CodeBatch}
     (h : Reachable issued batch) :
     Identity issued batch ∧ Prefix issued batch.num_validated.val batch.validated_end ∧

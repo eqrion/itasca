@@ -1,6 +1,17 @@
 import Itasca.Stream.EntryFrame
 import Itasca.Support.Result
 
+/-!
+# Code section header
+
+Soundness and termination for `stream.read_code_header`, which reads at most the first 11 bytes of
+the code region and checks the section ID, the section size and the function count against the
+environment. `StreamFraming.HeaderChecked` describes what the driver observed through the source,
+and `StreamFraming.HeaderAt` is the resulting fact about the coherent code region, with an absent
+region and a present zero-entry section as separate cases. Completeness is in
+`Stream/HeaderComplete`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
@@ -35,6 +46,8 @@ theorem min_val (a b : Usize) :
 
 end StreamFraming
 
+/-- `stream.read_code_header` either errors or returns the entry count of a checked header,
+provided the reached code read returns. -/
 theorem stream.read_code_header.spec {S : Type} (source : stream.Source S) (state : S)
     (codeLen : Usize) (env : module.Env)
     (hreturn : codeLen ≠ 0#usize → ∃ r, source.code state 0#usize
@@ -153,8 +166,8 @@ theorem stream.read_code_header.checked {S : Type} (source : stream.Source S) (s
 
 namespace StreamFraming
 
-/-- Absence and a present zero-entry section remain distinct. A present
-header spans the entire logical code region, including its count prefix. -/
+/-- The code region is either empty with no declared functions, or a code section whose size
+covers the whole region. A present zero-entry section is distinct from an absent one. -/
 def HeaderAt (data : Slice U8) (env : module.Env) (entries : Usize) : Prop :=
   (data.val = [] ∧ entries = 0#usize ∧ env.func_type_indices.val = []) ∨
     ∃ count, ModuleCode.Section data 0#usize env ⟨count, entries, Slice.len data⟩ ∧
@@ -188,6 +201,8 @@ theorem HeaderChecked.sound {S : Type} {source : stream.Source S} {state : S}
 
 end StreamFraming
 
+/-- Over a coherent source, a successful `stream.read_code_header` returns the entry count of a
+code section that spans the whole code region. -/
 theorem stream.read_code_header.sound {S : Type} (source : stream.Source S) (state : S)
     (codeLen : Usize) (env : module.Env) (entries : Usize) (data : Slice U8)
     (environment tail : List U8)

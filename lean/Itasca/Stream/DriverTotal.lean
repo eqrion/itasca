@@ -2,10 +2,21 @@ import Itasca.Stream.SubmissionTotal
 import Itasca.Module.Code.EntryOfEnv
 import Itasca.Module.Custom.Visitor
 
+/-!
+# Streaming driver termination
+
+`stream.validate_streaming.profile_total`: on arbitrary bytes, `stream.validate_streaming`
+returns success or an error whenever the source and scheduler callbacks return
+(`StreamSource.CallbacksTotal`, `StreamScheduler.CallbacksTotal`). Coherence, availability and
+worker provenance are not premises. `stream.validate_remaining.total_spec` covers the phases after
+the environment, and `stream.validate_streaming.wasm_total` is the Wasm 1.0 instance.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamFraming
 
+/-- A checked header declares no more entries than the code region has bytes. -/
 theorem HeaderChecked.entries_le {S : Type} {source : stream.Source S} {state : S}
     {codeLen : Usize} {env : module.Env} {entries : Usize}
     (h : HeaderChecked source state codeLen env entries) : entries.val ≤ codeLen.val := by
@@ -19,8 +30,8 @@ namespace Itasca
 
 variable {profile : ValidationProfile}
 
-/-- After a decoded environment, all remaining phases return ordinarily under
-returning source and visitor callbacks. Worker provenance is unnecessary. -/
+/-- After a decoded environment, all remaining phases return an ordinary result when the source
+and visitor callbacks return. Worker provenance is not needed. -/
 theorem stream.validate_remaining.total_spec {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
     (env : module.Env) (envLen : Usize) (v : V)
@@ -106,6 +117,7 @@ theorem stream.validate_remaining.total_spec {S V : Type} (source : stream.Sourc
                         rw [hdrain]
                         simp
 
+/-- `stream.validate_remaining` returns an ordinary result under returning callbacks. -/
 theorem stream.validate_remaining.total {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
     (env : module.Env) (envLen : Usize) (v : V)
@@ -116,9 +128,9 @@ theorem stream.validate_remaining.total {S V : Type} (source : stream.Source S)
     (stream.validate_remaining.total_spec source visitor moduleId state env envLen v hs hv henv)
   exact ⟨r, hr⟩
 
-/-- Actual generic streaming validation returns ordinary success or error on
-arbitrary bytes under returning callbacks. Successful batches are not assumed,
-and neither source coherence nor scheduler provenance is a termination premise. -/
+/-- `stream.validate_streaming` returns success or an error on arbitrary bytes when the source and
+scheduler callbacks return. Neither successful batches, source coherence nor scheduler provenance
+is a termination premise. -/
 theorem stream.validate_streaming.profile_total {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
     (v : V) (storage : module.Env)
@@ -163,7 +175,7 @@ theorem stream.validate_streaming.profile_total {S V : Type} (source : stream.So
   obtain ⟨r, hr, _⟩ := WP.spec_imp_exists hspec
   exact ⟨r, hr⟩
 
-/-- Compatibility specialization of profile-independent driver totality. -/
+/-- The Wasm 1.0 instance of `stream.validate_streaming.profile_total`. -/
 theorem stream.validate_streaming.wasm_total {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
     (v : V) (storage : module.Env)

@@ -2,14 +2,23 @@ import Itasca.Stream.Sync
 import Itasca.Stream.SchedulerComplete
 import Itasca.Stream.DriverRun
 
+/-!
+# Synchronous worker completeness
+
+`StreamSync.accepts` shows that the synchronous scheduler `stream.SyncVisitor` satisfies the
+accepting policy `StreamAcceptingScheduler.Accepts`, with batch size 25000 bytes and capacity one,
+so completeness for `validate_module` has no scheduler premise. `StreamSync.delivered_tail` shows
+that the tail stored by the final state is the tail the driver delivered.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamSync
 
 local notation "sync" => stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor
 
-/-- The concrete worker has a single slot. A nonempty logical queue identifies
-that exact slot as the result of the actual validation method on its seed. -/
+/-- The synchronous worker has a single slot. A nonempty logical queue identifies that slot as the
+result of `stream.CodeBatch.validate_all` on its seed. -/
 def Queued (_id : U64) (queue : List StreamBatch.Issued) (state : stream.SyncVisitor) : Prop :=
   match queue with
   | [] => state.completed = none
@@ -17,8 +26,8 @@ def Queued (_id : U64) (queue : List StreamBatch.Issued) (state : stream.SyncVis
       stream.CodeBatch.validate_all issued.seed = .ok batch
   | _ => False
 
-/-- The private synchronous worker discharges the accepting scheduler policy;
-capacity one prevents overwriting a queued batch. -/
+/-- The synchronous scheduler satisfies the accepting scheduler policy. Capacity one prevents a
+queued batch from being overwritten. -/
 theorem accepts {profile : ValidationProfile} : StreamAcceptingScheduler.Accepts sync
     { batch_bytes := 25000#usize, max_batches := 1#usize } Queued profile := by
   constructor
@@ -60,8 +69,8 @@ theorem accepts {profile : ValidationProfile} : StreamAcceptingScheduler.Accepts
     | nil => exact hqueue
     | cons _ rest => cases rest <;> exact hqueue
 
-/-- The actual tail delivery survives final draining, so the slice wrapper
-returns precisely the metadata witness used by the generic driver theorem. -/
+/-- The tail delivered to the scheduler survives the final drain, so the slice adapter returns the
+tail that the generic driver theorems describe. -/
 theorem delivered_tail {profile : ValidationProfile} {S : Type} {source : stream.Source S} {id : U64} {state : S}
     {env : module.Env} {environmentLength : Usize} {before after : stream.SyncVisitor}
     (run : StreamRun.Remaining source sync id state env environmentLength before after profile) :

@@ -4,12 +4,24 @@ import Itasca.Stream.Sync
 import Itasca.Stream.SplitTotal
 import Itasca.Stream.DriverSound
 
+/-!
+# Contiguous adapter soundness and termination
+
+`stream.validate_module_slice` splits a contiguous module with `stream.find_code_region` and runs
+`stream.validate_streaming` over a `stream.SliceSource` and the synchronous scheduler; the public
+`module.validate_module` is this function. `profile_total` shows it returns on arbitrary bytes and
+`profile_sound` shows that acceptance gives `ModuleSound.Validated`. Source and scheduler
+obligations are discharged by `stream.SliceSource.coherent` and `StreamSync.provenance`, so no
+embedding premise remains. `profile_spec` combines both. The `wasm_` theorems are the Wasm 1.0
+instances.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- The actual contiguous adapter terminates on arbitrary input bytes. Its
-concrete source and synchronous worker discharge every callback assumption. -/
+/-- `stream.validate_module_slice` returns on arbitrary input bytes. Its slice source and
+synchronous scheduler satisfy every callback premise. -/
 theorem stream.validate_module_slice.profile_total (bytes : Slice U8) (profile : ValidationProfile) :
     ∃ r, stream.validate_module_slice bytes profile = .ok r := by
   obtain ⟨⟨first, last⟩, hsplit, _⟩ := WP.spec_imp_exists (stream.find_code_region.spec bytes)
@@ -31,8 +43,8 @@ theorem stream.validate_module_slice.profile_total (bytes : Slice U8) (profile :
     | none => exact ⟨.Err .Host, rfl⟩
     | some tail => exact ⟨.Ok ⟨decoded, tail⟩, rfl⟩
 
-/-- The synchronous adapter returns precisely the environment and delivered
- tail of the actual accepted streaming run. -/
+/-- If `stream.validate_module_slice` accepts, the returned environment and tail are those of the
+accepted streaming run, and they validate the input bytes. -/
 theorem stream.validate_module_slice.profile_sound (bytes : Slice U8) (decoded : module.Module)
     (profile : ValidationProfile)
     (h : stream.validate_module_slice bytes profile = .ok (.Ok decoded)) :
@@ -69,8 +81,8 @@ theorem stream.validate_module_slice.profile_sound (bytes : Slice U8) (decoded :
       have htail : stored = run.remaining.tail := by simpa using hfinal
       simpa [htail] using hvalid
 
-/-- Arbitrary inputs return normally; every accepted result has the complete
-independent module certificate and exact returned metadata. -/
+/-- Arbitrary inputs return normally, and every accepted result is `ModuleSound.Validated`, which
+includes the independent module certificate and the returned metadata. -/
 theorem stream.validate_module_slice.profile_spec (bytes : Slice U8) (profile : ValidationProfile) :
     stream.validate_module_slice bytes profile ⦃ r => match r with
       | .Ok decoded => ModuleSound.Validated bytes decoded profile
@@ -82,16 +94,18 @@ theorem stream.validate_module_slice.profile_spec (bytes : Slice U8) (profile : 
   | Err _ => trivial
   | Ok decoded => exact stream.validate_module_slice.profile_sound bytes decoded profile hr
 
-/-- Compatibility specializations of the shared profile theorems. -/
+/-- The Wasm 1.0 instance of `stream.validate_module_slice.profile_total`. -/
 theorem stream.validate_module_slice.wasm_total (bytes : Slice U8) :
     ∃ r, stream.validate_module_slice bytes .Wasm1 = .ok r :=
   stream.validate_module_slice.profile_total bytes .Wasm1
 
+/-- The Wasm 1.0 instance of `stream.validate_module_slice.profile_sound`. -/
 theorem stream.validate_module_slice.wasm_sound (bytes : Slice U8) (decoded : module.Module)
     (h : stream.validate_module_slice bytes .Wasm1 = .ok (.Ok decoded)) :
     ModuleSound.Validated bytes decoded :=
   stream.validate_module_slice.profile_sound bytes decoded .Wasm1 h
 
+/-- The Wasm 1.0 instance of `stream.validate_module_slice.profile_spec`. -/
 theorem stream.validate_module_slice.wasm_spec (bytes : Slice U8) :
     stream.validate_module_slice bytes .Wasm1 ⦃ r => match r with
       | .Ok decoded => ModuleSound.Validated bytes decoded

@@ -1,6 +1,17 @@
 import Itasca.Support.Result
 import Itasca.Module.Readers.Basic
 
+/-!
+# Streaming sources
+
+Premises on a `stream.Source` implementation and the lemmas for the helpers that read from it.
+`StreamSource.Coherent` (successful reads agree with fixed environment, code and tail regions),
+`StreamSource.Available` (those reads succeed) and `StreamSource.CallbacksTotal` (the callbacks
+return, possibly with an error) are obligations on the embedding. `stream.SliceSource` satisfies all
+three. The file also covers `limits.add_offset`, `stream.read_len` and `stream.read_exact`, and
+the transport of encoded intervals between a bounded view and its parent region.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamSource
@@ -37,8 +48,8 @@ structure CallbacksTotal {S : Type} (source : stream.Source S) (state : S) : Pro
   code_returns : ∀ first last, ∃ r, source.code state first last = .ok r
   tail_returns : ∃ r, source.tail state = .ok r
 
-/-- Unsigned length decoding retains its U32 binary encoding after conversion
-into the host-size integer used by the streaming driver. -/
+/-- Postcondition of `stream.read_len`: a returned length is a `U32` LEB128 value decoded from
+`data` at `start`, converted to `Usize`. Errors are unconstrained. -/
 def LenPost (data : Slice U8) (start : Usize) :
     core.result.Result (Usize × Usize) error.Error → Prop
   | .Ok (len, next) => ∃ value : U32, len.val = value.val ∧
@@ -89,6 +100,7 @@ theorem stream.read_len.total (data : Slice U8) (start : Usize) :
   obtain ⟨r, hr, _⟩ := WP.spec_imp_exists (stream.read_len.spec data start)
   exact ⟨r, hr⟩
 
+/-- A successful `stream.read_len` is an actual LEB128 decoding of a `U32`. -/
 theorem stream.read_len.sound (data : Slice U8) (start len next : Usize)
     (h : stream.read_len data start = .ok (.Ok (len, next))) :
     ∃ value : U32, len.val = value.val ∧ Leb128.Decoded data start value next := by
@@ -101,6 +113,7 @@ theorem stream.read_len.success_span (data : Slice U8) (start len next : Usize)
   obtain ⟨value, _, hd⟩ := stream.read_len.sound data start len next h
   exact hd.span
 
+/-- Any LEB128 decoding of a `U32` at `start` is returned by `stream.read_len`. -/
 theorem stream.read_len.complete (data : Slice U8) (start next : Usize)
     (value : U32) (h : Leb128.Decoded data start value next) :
     ∃ len, stream.read_len data start = .ok (.Ok (len, next)) ∧ len.val = value.val := by
@@ -156,6 +169,8 @@ theorem stream.read_exact.accepted {S : Type} (source : stream.Source S) (state 
   have hs := stream.read_exact.spec source state first last horder hex
   simpa [h] using hs
 
+/-- Over a coherent source, a successful exact read returns the requested slice of the code
+region. -/
 theorem stream.read_exact.sound {S : Type} (source : stream.Source S) (state : S)
     (environment code tail : List U8) (hc : StreamSource.Coherent source state environment code tail)
     (first last : Usize) (bytes : Slice U8) (horder : first.val ≤ last.val)
@@ -165,6 +180,7 @@ theorem stream.read_exact.sound {S : Type} (source : stream.Source S) (state : S
   obtain ⟨hr, hn⟩ := stream.read_exact.accepted source state first last bytes horder h
   exact ⟨hc.code_eq first last bytes horder hbound hr, hn⟩
 
+/-- A successful code read of the right length is returned by `stream.read_exact`. -/
 theorem stream.read_exact.complete {S : Type} (source : stream.Source S) (state : S)
     (first last : Usize) (bytes : Slice U8) (horder : first.val ≤ last.val)
     (hread : source.code state first last = .ok (.Ok bytes))
@@ -187,6 +203,7 @@ theorem stream.SliceSource.code_spec (state : stream.SliceSource) (first last : 
   unfold stream.SliceSource.Insts.ItascaStreamSource.code
   step*
 
+/-- `stream.SliceSource` is coherent with its own environment, code and tail slices. -/
 theorem stream.SliceSource.coherent (state : stream.SliceSource) :
     StreamSource.Coherent stream.SliceSource.Insts.ItascaStreamSource state
       state.env.val state.code.val state.tail.val := by
@@ -212,6 +229,7 @@ theorem stream.SliceSource.coherent (state : stream.SliceSource) :
         stream.SliceSource.Insts.ItascaStreamSource.tail] using h
     exact congrArg Slice.val he.symm
 
+/-- `stream.SliceSource` makes every in-range read available. -/
 theorem stream.SliceSource.available (state : stream.SliceSource) :
     StreamSource.Available stream.SliceSource.Insts.ItascaStreamSource state
       state.env.val state.code.val state.tail.val := by
@@ -225,6 +243,7 @@ theorem stream.SliceSource.available (state : stream.SliceSource) :
     | Err e => simp only [Slice.length] at hp; omega
   · exact ⟨state.tail, rfl, rfl⟩
 
+/-- Every `stream.SliceSource` callback returns. -/
 theorem stream.SliceSource.callbacks_total (state : stream.SliceSource) :
     StreamSource.CallbacksTotal stream.SliceSource.Insts.ItascaStreamSource state := by
   constructor
@@ -253,8 +272,8 @@ theorem BytesAt.of_slice_view {data view : Slice U8} {first last : Usize}
     simp only [Slice.length] at hbound
     omega
 
-/-- Transport an independently encoded interval from a view into its parent
-region. Offset equalities avoid imposing an executable arithmetic operation. -/
+/-- An encoded interval in a view is an encoded interval in the parent region at offsets shifted
+by the view start. The offsets are given as equalities rather than executable additions. -/
 theorem BytesAt.transport {data view : Slice U8} {first last pos next pos' next' : Usize}
     {bytes : List U8} (hview : BytesAt data first view.val last)
     (hbytes : BytesAt view pos bytes next)
@@ -278,8 +297,8 @@ end Itasca.Wasm1
 
 namespace Itasca.Leb128
 
-/-- Length-prefix decoding transports across coherent bounded views, retaining
-nonminimal encodings and exact consumed bytes. -/
+/-- A LEB128 decoding inside a bounded view is a decoding of the parent region at shifted
+offsets. Nonminimal encodings and the consumed bytes are preserved. -/
 theorem Decoded.of_slice_view {data view : Slice U8} {first last pos next pos' next' : Usize}
     {value : U32} (horder : first.val ≤ last.val) (hbound : last.val ≤ data.length)
     (hview : view.val = data.val.slice first.val last.val)
@@ -296,8 +315,8 @@ end Itasca.Leb128
 
 namespace Itasca.Wasm1
 
-/-- Restrict an encoded interval to a coherent view that contains its end.
-Only the bytes of that view need to be available to the reader. -/
+/-- An encoded interval of the parent region that ends inside a view is an encoded interval of
+that view at offsets shifted by the view start. -/
 theorem BytesAt.restrict {data view : Slice U8} {first last pos next pos' next' : Usize}
     {bytes : List U8} (hview : BytesAt data first view.val last)
     (hbytes : BytesAt data pos' bytes next')
@@ -321,8 +340,8 @@ end Itasca.Wasm1
 
 namespace Itasca.Leb128
 
-/-- A complete LEB prefix inside a bounded view decodes using just that view;
-this is the reverse transport needed for streaming completeness. -/
+/-- A LEB128 decoding of the parent region that ends inside a bounded view is a decoding of that
+view alone. Completeness uses this direction. -/
 theorem Decoded.to_slice_view {data view : Slice U8} {first last pos next pos' next' : Usize}
     {value : U32} (horder : first.val ≤ last.val) (hbound : last.val ≤ data.length)
     (hview : view.val = data.val.slice first.val last.val)

@@ -1,12 +1,24 @@
 import Itasca.Stream.FramingComplete
 import Itasca.Stream.SchedulerComplete
 
+/-!
+# Submission completeness
+
+Completeness of `stream.submit_code_batches` over an available source and an accepting scheduler
+(`StreamAcceptingScheduler.Accepts`). `StreamSubmission.CompleteInvariant` pairs the remaining
+independently encoded and typed entries with the scheduler's queue and the pending vector.
+`stream.submit_code_batches.complete` shows that submission succeeds and leaves a valid queue
+whose batch IDs are exactly the pending IDs, ready for the final drain. Both profiles are covered
+through the `profile` parameter.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleCode
 
 variable {profile : ValidationProfile}
 
+/-- Typed entries of a concatenated list split into typed entries of each part. -/
 theorem EntriesTyped.split {env i first second}
     (h : EntriesTyped (profile := profile) env i (first ++ second)) :
     EntriesTyped (profile := profile) env i first ∧ EntriesTyped (profile := profile) env (i + first.length) second := by
@@ -26,8 +38,8 @@ variable {profile : ValidationProfile}
 
 open ModuleBinary StreamAcceptingScheduler
 
-/-- Outstanding accepted work is paired with the runtime pending vector. The
-remaining bytes and entries retain their independent encoding and typing. -/
+/-- The scheduler's queue of valid work matches the pending vector, and the remaining bytes and
+entries keep their independent encoding and typing. -/
 def CompleteInvariant {V : Type} (Queued : U64 → List StreamBatch.Issued → V → Prop)
     (code : Slice U8) (env : module.Env) (id : U64) (config : stream.Config)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId : Usize)
@@ -39,7 +51,8 @@ def CompleteInvariant {V : Type} (Queued : U64 → List StreamBatch.Issued → V
       ModuleCode.EntriesTyped (profile := profile) env func.val entries ∧
       At (Rep (Profile.CodeEncodingWithinLimits profile)) code pos entries (Slice.len code)
 
-/-- The driver can finish by retiring precisely this remaining valid queue. -/
+/-- A successful submission leaves a valid queue whose batch IDs are a permutation of the pending
+IDs, so the final drain can retire exactly this queue. Errors are excluded. -/
 def CompletePost {V : Type} (Queued : U64 → List StreamBatch.Issued → V → Prop)
     (id : U64) (config : stream.Config)
     (profile : ValidationProfile := .Wasm1) :
@@ -236,8 +249,8 @@ variable {profile : ValidationProfile}
 
 open ModuleBinary StreamAcceptingScheduler
 
-/-- Actual submission accepts independent typed entry bytes, maintaining the
-outstanding work queue as its function cursor advances. -/
+/-- The submission loop accepts independently encoded and typed entries, maintaining the queue of
+outstanding work as its function cursor advances. -/
 theorem stream.submit_code_batches_loop.complete_spec {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (Queued : U64 → List StreamBatch.Issued → V → Prop)
     (config : stream.Config) (ha : Accepts visitor config Queued profile)
@@ -273,9 +286,9 @@ theorem stream.submit_code_batches_loop.complete_spec {S V : Type} (source : str
       omega
   · exact hinv
 
-/-- From a typed code region and an accepting scheduler policy, the actual
-helper submits and retires batches successfully. The remaining valid queue is
-paired exactly with pending IDs for the final drain. -/
+/-- From an independently encoded and typed code region and an accepting scheduler policy,
+`stream.submit_code_batches` submits and retires batches successfully. The remaining valid queue
+matches the pending IDs for the final drain. -/
 theorem stream.submit_code_batches.complete {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (Queued : U64 → List StreamBatch.Issued → V → Prop)
     (config : stream.Config) (ha : Accepts visitor config Queued profile)

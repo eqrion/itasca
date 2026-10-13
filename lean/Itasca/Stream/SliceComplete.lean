@@ -2,15 +2,27 @@ import Itasca.Stream.SliceSound
 import Itasca.Stream.DriverComplete
 import Itasca.Stream.SyncComplete
 
+/-!
+# Contiguous adapter completeness
+
+`stream.validate_module_slice.profile_complete_with_metadata`: every independently encoded,
+elaborated and typed module within the selected profile and implementation limits is accepted by
+`stream.validate_module_slice`, and the returned environment and tail match the raw module and its
+public accessor types. The slice source (`stream.SliceSource.available`) and synchronous scheduler
+(`StreamSync.accepts`) discharge the source availability and accepting scheduler premises of the
+streaming driver. The `wasm_` theorems are the Wasm 1.0 instances.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
 open ModuleBinary ModuleElaboration
 
-/-- The contiguous adapter accepts every independently encoded, elaborated,
-typed module in the selected profile within the implementation limits. Its concrete source
-and worker discharge all embedding assumptions, including exact metadata. -/
+/-- `stream.validate_module_slice` accepts every independently encoded, elaborated, typed module
+in the selected profile within the implementation limits. Its slice source and synchronous
+scheduler discharge all embedding premises. The returned environment and tail match the raw
+module and its public accessor types. -/
 theorem stream.validate_module_slice.profile_complete_with_metadata
     (data : Slice U8) (raw : ModuleBinary.Module) (profile : ValidationProfile)
     (hb : ModuleEncodingWithinLimits raw data.val profile)
@@ -39,6 +51,7 @@ theorem stream.validate_module_slice.profile_complete_with_metadata
   dsimp only [regions] at hrun
   simp [hrun, hstored, core.result.Result.Insts.CoreOpsTry.branch]
 
+/-- `stream.validate_module_slice.profile_complete_with_metadata` without the accessor types. -/
 theorem stream.validate_module_slice.profile_complete
     (data : Slice U8) (raw : ModuleBinary.Module) (profile : ValidationProfile)
     (hb : ModuleEncodingWithinLimits raw data.val profile)
@@ -50,6 +63,7 @@ theorem stream.validate_module_slice.profile_complete
   obtain ⟨decoded, hr, hm, _⟩ := stream.validate_module_slice.profile_complete_with_metadata data raw profile hb hsignatures he ht hp
   exact ⟨decoded, hr, hm⟩
 
+/-- The Wasm 1.0 instance of `stream.validate_module_slice.profile_complete_with_metadata`. -/
 theorem stream.validate_module_slice.wasm_complete_with_metadata
     (data : Slice U8) (raw : ModuleBinary.Module)
     (hb : ModuleEncodingWithinLimits raw data.val)
@@ -60,6 +74,7 @@ theorem stream.validate_module_slice.wasm_complete_with_metadata
   stream.validate_module_slice.profile_complete_with_metadata data raw .Wasm1 hb
     (fun _ _ => trivial) he ht hp
 
+/-- The Wasm 1.0 instance of `stream.validate_module_slice.profile_complete`. -/
 theorem stream.validate_module_slice.wasm_complete
     (data : Slice U8) (raw : ModuleBinary.Module)
     (hb : ModuleEncodingWithinLimits raw data.val)

@@ -1,12 +1,22 @@
 import Itasca.Support.Result
 import Itasca.Stream.FramingTotal
 
+/-!
+# Single framing step
+
+Specification of one iteration, `stream.get_next_batch_loop.body`, of the batch framing loop.
+`StreamFraming.BatchStepPost` combines the arithmetic invariant with `StreamFraming.FrameStep`,
+which records the actual view read, the decoded entry size and the consecutive entry boundaries.
+`stream.get_next_batch_loop.body.accepted` derives the step facts from an ordinary return of the
+body, so no premise is placed on source calls that were not reached.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamFraming
 
-/-- A continuing framing step either stops before taking another entry, or
-retains the exact returned view, decoded length and consecutive boundaries. -/
+/-- A continuing framing step either does not take another entry, or
+records the exact returned view, decoded length and consecutive boundaries. -/
 def FrameStep {S : Type} (source : stream.Source S) (state : S) (codeLen q i : Usize) :
     ControlFlow (Usize × Usize × Usize × Bool)
       (core.result.Result (Usize × Usize) error.Error) → Prop
@@ -61,8 +71,8 @@ end Itasca.StreamFraming
 
 namespace Itasca
 
-/-- The exact extracted loop body preserves arithmetic and records each
-consumed declared extent, under a return premise only for its reached read. -/
+/-- The extracted loop body preserves the arithmetic invariant and records each consumed declared
+extent, under a return premise only for the code read it reaches. -/
 theorem stream.get_next_batch_loop.body.spec {S : Type} (source : stream.Source S) (state : S)
     (codeLen start first num threshold q i b : Usize) (stopped : Bool)
     (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)
@@ -212,6 +222,7 @@ theorem stream.get_next_batch_loop.body.spec {S : Type} (source : stream.Source 
     have hdone : i.val = num.val := by scalar_tac
     simpa [StreamFraming.BatchPost, StreamFraming.FrameStep] using
       ⟨hprogress (by omega), hq, (by omega : first.val < i.val), hi⟩
+
 /-- An ordinary return of the loop body reveals the reached source callback;
 no return assumption is imposed on any unexecuted source operation. -/
 theorem stream.get_next_batch_loop.body.accepted {S : Type}

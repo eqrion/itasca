@@ -1,12 +1,25 @@
 import Itasca.Support.Result
 import Itasca.Generated.Funs
 
+/-!
+# Accepted driver runs
+
+Unpacks an accepted run of the extracted driver into witnesses for each phase.
+`stream.validate_streaming.accepted` and `stream.validate_remaining.accepted` show that an
+`Ok` result of `stream.validate_streaming` and of its post-environment phases yields the
+`StreamRun.Accepted` and `StreamRun.Remaining` records: the environment read and decode, the code
+header, the configuration, the batch submission, the tail read and decode, and the final drain.
+The records describe executions of the extracted driver and make no claim about the source or
+scheduler.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamRun
 
-/-- Witnesses of the actual accepted phases, including the precise tail handoff.
-They describe executions of the extracted driver, not an alternate validator. -/
+/-- Witnesses of the phases of `stream.validate_remaining` after the environment is decoded,
+including the tail handoff. They describe executions of the extracted driver, not an alternate
+validator. -/
 structure Remaining {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (id : U64) (state : S)
     (env : module.Env) (environmentLength : Usize) (before after : V)
@@ -43,6 +56,8 @@ structure Remaining {S V : Type} (source : stream.Source S)
   ready_call : visitor.tail_ready decodedTail tail = .ok (.Ok (), ready)
   drain_call : stream.retire_all_code_batches visitor id ready pending = .ok (.Ok (), after, remaining)
 
+/-- Witnesses of an accepted `stream.validate_streaming`: the environment read, its size bound, the
+custom-section region callback, the environment decode, and the `Remaining` phases. -/
 structure Accepted {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (id : U64) (state : S)
     (before after : V) (env : module.Env)
@@ -61,6 +76,8 @@ structure Accepted {S V : Type} (source : stream.Source S)
 end Itasca.StreamRun
 
 namespace Itasca
+
+/-- An accepted `stream.validate_remaining` yields witnesses for each of its phases. -/
 theorem stream.validate_remaining.accepted {profile : ValidationProfile} {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (id : U64) (state : S)
     (env : module.Env) (envLen : Usize) (v v' : V)
@@ -132,8 +149,8 @@ theorem stream.validate_remaining.accepted {profile : ValidationProfile} {S V : 
                           hdecoded, hready, hdrain⟩⟩
 
 set_option maxHeartbeats 600000 in
-/-- An accepted generic driver exposes its exact decoded environment and
-actual tail-delivery witness; no visitor state is assumed to retain metadata. -/
+/-- An accepted generic driver exposes its decoded environment and the tail delivery it actually
+performed. No assumption is made that the visitor state keeps any metadata. -/
 theorem stream.validate_streaming.accepted {profile : ValidationProfile} {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (id : U64) (state : S)
     (v v' : V) (initial env : module.Env)

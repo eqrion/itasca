@@ -2,6 +2,16 @@ import Itasca.Stream.BatchTotal
 import Itasca.Profile.EntryComplete
 import Itasca.Module.Code.EntryComplete
 
+/-!
+# Worker completeness
+
+Completeness of `stream.CodeBatch.validate_func` and `stream.CodeBatch.validate_all`. Independently
+encoded and typed entries, together with an accepting visitor (`FullVisitor.Accepts`), make the
+actual worker loop succeed. `stream.CodeBatch.validate_all.complete_seed` runs an issued batch from
+its seed to a reachable state accepted by `stream.CodeBatch.finish`. The premises are about the
+module and the visitor, not about a worker that is assumed to succeed.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
@@ -90,8 +100,8 @@ theorem stream.CodeBatch.validate_all_loop.complete (batch : stream.CodeBatch)
       simpa [stream.CodeBatch.validate_all_loop.body, hlt, hadd, hstep,
         core.result.Result.is_ok, stream.CodeBatch.validate_all_loop] using hrec
 
-/-- Valid batch contents complete by running the real worker loop; the premise
-is independent entry encoding and typing, not an assumed successful worker. -/
+/-- Independently encoded and typed batch contents are accepted by running the extracted worker
+loop, which ends with every function validated and `error = none`. -/
 theorem stream.CodeBatch.validate_all.complete (batch : stream.CodeBatch)
     (entries : List Code) (finish : Usize)
     (herror : batch.error = none)
@@ -107,8 +117,8 @@ theorem stream.CodeBatch.validate_all.complete (batch : stream.CodeBatch)
   simp [stream.CodeBatch.validate_all,
     stream.CodeBatch.validate_all_loop.complete batch entries finish herror hcount htyped henv hlimits hbound hbytes hprofile]
 
-/-- A legitimately issued, independently valid batch runs to a reachable state
-whose actual finish check succeeds. This discharges an accepting worker policy. -/
+/-- A bounded issued batch whose contents are independently valid runs from its seed to a
+reachable state that `stream.CodeBatch.finish` accepts. -/
 theorem stream.CodeBatch.validate_all.complete_seed (issued : StreamBatch.Issued)
     (entries : List Code) (hissued : issued.Bounded)
     (hcount : entries.length = issued.num_funcs.val)

@@ -1,6 +1,16 @@
 import Itasca.Support.Result
 import Itasca.Stream.FramingStep
 
+/-!
+# Batch framing soundness
+
+Soundness of `stream.get_next_batch` over a coherent source. `StreamFraming.EntryFrames` is a
+chain of consecutive declared entry extents in the code region. `stream.get_next_batch.sound` gives
+the arithmetic bounds of an accepted batch and `stream.get_next_batch.frames` additionally shows
+that it frames exactly `next - first` consecutive entries. Neither needs callback totality or
+availability, since an accepted run reveals the source calls it reached.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamFraming
@@ -88,8 +98,8 @@ theorem stream.get_next_batch_loop.accepted_induction {S : Type}
       exact ih _ hlt q' i' b' stopped' hinv' hprogress'
         (hstep q i q' i' b' stopped' hp hframe) hrec rfl
 
-/-- Every accepted batch makes strict byte and function progress and stays
-inside the driver-established bounds, even if other source callbacks diverge. -/
+/-- Every accepted batch makes strict byte and function progress and stays inside the bounds
+established by the driver. No premise is placed on source calls that the run did not reach. -/
 theorem stream.get_next_batch.sound {S : Type} (source : stream.Source S) (state : S)
     (codeLen start first num threshold finish next : Usize)
     (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)

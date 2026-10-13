@@ -3,12 +3,22 @@ import Itasca.Module.Custom.Visitor
 import Itasca.Stream.SliceSound
 import Itasca.Stream.DriverRegions
 
+/-!
+# Contiguous adapter rejection
+
+Shows that errors of the default environment parser and of the code header reader reach the caller
+of `module.validate_module` unchanged. `StreamSliceRejection.environment_error` covers an
+environment rejection when the splitter places the whole input in the environment region, and
+`StreamSliceRejection.code_header_error` covers a code header rejection after the environment
+region was accepted. Both are for Wasm 1.0.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamSliceRejection
 
-/-- Identity custom hooks preserve the default environment parser's exact
-ordinary result, including its error constructor. -/
+/-- A custom-section hook that leaves the state unchanged and succeeds does not change the result
+of the environment loop, including its error constructor. -/
 theorem environment_loop_noop {V : Type} (visitor : module.ModuleVisitor V)
     (hnoop : ∀ (v : V) (chunk : types.CustomSection),
       visitor.on_custom_section v chunk = .ok (.Ok (), v))
@@ -90,6 +100,8 @@ theorem environment_loop_noop {V : Type} (visitor : module.ModuleVisitor V)
                     · have hne : consumed.val ≠ last.val := fun h => he (UScalar.eq_of_val_eq h)
                       simpa [hne] using ht
 
+/-- `module.validate_env_with` with a no-op custom-section hook returns the same result as
+`module.validate_env`. -/
 theorem environment_noop {V : Type} (visitor : module.ModuleVisitor V)
     (hnoop : ∀ (v : V) (chunk : types.CustomSection),
       visitor.on_custom_section v chunk = .ok (.Ok (), v))
@@ -117,8 +129,8 @@ theorem environment_noop {V : Type} (visitor : module.ModuleVisitor V)
     simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at ht ⊢
     exact environment_loop_noop visitor hnoop data v initial start 0#u8 result ht
 
-/-- A default environment-parser rejection is returned unchanged by the public
-validator when the actual splitter places the entire input in that region. -/
+/-- A rejection by the default environment parser is returned unchanged by
+`module.validate_module` when the splitter places the entire input in the environment region. -/
 theorem environment_error (data : Slice U8) (e : error.Error)
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (hsplit : stream.find_code_region data = .ok (Slice.len data, Slice.len data))
@@ -153,8 +165,8 @@ theorem environment_error (data : Slice U8) (e : error.Error)
   simp [hrun, core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-/-- An actual code-header rejection propagates through the concrete adapter
-after its default environment parser has accepted the complete first region. -/
+/-- A rejection by `stream.read_code_header` is returned unchanged by `module.validate_module`
+after the default environment parser has accepted the whole environment region. -/
 theorem code_header_error (data : Slice U8) (regions : stream.SliceSource)
     (env : module.Env) (e : error.Error)
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)

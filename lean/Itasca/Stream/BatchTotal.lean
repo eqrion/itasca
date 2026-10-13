@@ -1,14 +1,24 @@
 import Itasca.Stream.Batch
 import Itasca.Profile.EntryPipeline
 
+/-!
+# Worker termination
+
+Termination of `stream.CodeBatch.validate_next`, `stream.CodeBatch.validate_func` and the
+whole-batch loop `stream.CodeBatch.validate_all` on arbitrary bytes, given a total visitor
+(`FullVisitor.Total`). `stream.CodeBatch.validate_all.spec` also shows that the final state is
+reachable from the issued seed by actual batch operations. Both profiles are covered through the
+`profile` variable.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
 variable {profile : ValidationProfile}
 
-/-- Arbitrary indices and malformed entry bytes still produce ordinary results;
-the declaration interval supplies room for computing the expected index. -/
+/-- `stream.CodeBatch.validate_next` returns an ordinary result for arbitrary indices and
+malformed entry bytes. The declared function interval gives room to compute the expected index. -/
 theorem stream.CodeBatch.validate_next.total {V : Type} (visitor : code.OpVisitor V)
     (htotal : FullVisitor.Total visitor) (batch : stream.CodeBatch) (index : Usize) (v : V)
     (hbound : CodeEntry.Bounds batch.env)
@@ -29,8 +39,8 @@ theorem stream.CodeBatch.validate_next.total {V : Type} (visitor : code.OpVisito
     · exact module.validate_code_entry_with.profile_total visitor htotal batch.code
         batch.validated_end batch.env index v hbound profile
 
-/-- Validation records ordinary worker errors and cannot overflow its counter:
-successful entry validation occurs only strictly before the batch's end. -/
+/-- `stream.CodeBatch.validate_func` returns an ordinary result, stores worker errors, and cannot
+overflow its counter because a successful entry validation occurs only before the batch end. -/
 theorem stream.CodeBatch.validate_func.total {V : Type} (visitor : code.OpVisitor V)
     (htotal : FullVisitor.Total visitor) (batch : stream.CodeBatch) (index : Usize) (v : V)
     (hbound : CodeEntry.Bounds batch.env)
@@ -69,8 +79,9 @@ private theorem validate_func_count {V : Type} (visitor : code.OpVisitor V)
   · obtain ⟨_, _, _, _, hc, rfl, rfl⟩ := success
     exact hc
 
-/-- Every iteration uses the extracted validation method. An error decreases
-the stopping flag; a successful iteration decreases the remaining count. -/
+/-- Every iteration of the `validate_all` loop calls the extracted `validate_func`, so the state
+after each iteration is reachable. The loop terminates because an error clears the running flag
+and a successful iteration decreases the number of remaining functions. -/
 theorem stream.CodeBatch.validate_all_loop.spec (issued : StreamBatch.Issued)
     (batch : stream.CodeBatch) (running : Bool)
     (hissued : issued.Bounded) (hbound : CodeEntry.Bounds issued.env)
@@ -124,8 +135,8 @@ theorem stream.CodeBatch.validate_all_loop.spec (issued : StreamBatch.Issued)
     · exact ⟨current, hcurrent, rfl⟩
   · exact hreach
 
-/-- Complete worker execution terminates and remains reachable by actual
-batch operations, including on invalid bytes and sticky errors. -/
+/-- Running `stream.CodeBatch.validate_all` terminates in a reachable state, including on invalid
+bytes and stored errors. -/
 @[step]
 theorem stream.CodeBatch.validate_all.spec (issued : StreamBatch.Issued)
     (batch : stream.CodeBatch) (hissued : issued.Bounded)
@@ -136,6 +147,7 @@ theorem stream.CodeBatch.validate_all.spec (issued : StreamBatch.Issued)
     (stream.CodeBatch.validate_all_loop.spec issued batch true hissued hbound hreach hprofile)
   simpa [stream.CodeBatch.validate_all, hr] using hafter
 
+/-- `stream.CodeBatch.validate_all` returns a reachable batch. -/
 theorem stream.CodeBatch.validate_all.total (issued : StreamBatch.Issued)
     (batch : stream.CodeBatch) (hissued : issued.Bounded)
     (hbound : CodeEntry.Bounds issued.env) (hreach : StreamBatch.Reachable issued batch)

@@ -3,16 +3,27 @@ import Itasca.Stream.SubmissionSound
 import Itasca.Module.Code.EntryOfEnv
 import Itasca.Module.Soundness
 
+/-!
+# Streaming driver soundness
+
+`stream.validate_streaming.profile_sound`: if `stream.validate_streaming` accepts, then the
+concatenation of the source's environment, code and tail regions satisfies `ModuleSound.Validated`
+for the returned environment and tail, and is within the module size cap. The premises are source
+coherence (`StreamSource.Coherent`) and scheduler provenance (`StreamScheduler.Provenance`), both
+obligations on the embedding. Read errors and callback failures are allowed, and neither callback
+termination nor a canonical region split is needed. `stream.validate_streaming.wasm_sound` is the
+Wasm 1.0 instance.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
 variable {profile : ValidationProfile}
 
-/-- Acceptance of the actual streaming driver certifies the concatenated bytes,
-its returned environment, and the tail from its actual delivery call. Soundness
-requires coherent views and worker provenance, not callback termination or
-prevalidated bodies. -/
+/-- Acceptance of the streaming driver certifies the concatenated bytes, its returned
+environment, and the tail it actually received. Soundness requires coherent source views and
+worker provenance, and does not require callback termination or prevalidated bodies. -/
 theorem stream.validate_streaming.profile_sound {S V : Type}
     (source : stream.Source S) (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List StreamBatch.Issued → V → Prop)
@@ -116,7 +127,7 @@ theorem stream.validate_streaming.profile_sound {S V : Type}
     simp only [Slice.len_val, Slice.length] at he hc hm ⊢
     omega
 
-/-- Compatibility specialization of the shared module soundness theorem. -/
+/-- The Wasm 1.0 instance of `stream.validate_streaming.profile_sound`. -/
 theorem stream.validate_streaming.wasm_sound {S V : Type}
     (source : stream.Source S) (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List StreamBatch.Issued → V → Prop)

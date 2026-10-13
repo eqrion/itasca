@@ -1,6 +1,15 @@
 import Itasca.Module.Code.Framing
 import Itasca.Stream.Source
 
+/-!
+# Code entry frames
+
+`StreamFraming.EntryFrame` describes the `stream.CodeEntry` returned by `stream.frame_entry`: its
+declared byte extent (`ModuleCode.Extent`) shifted by the batch offset into absolute coordinates.
+`stream.frame_entry.sound` and `.complete` relate the function to this predicate. Completeness
+needs only that the shifted end stays within the module cap.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamFraming
@@ -57,6 +66,7 @@ theorem stream.frame_entry.total (data : Slice U8) (pos index offset : Usize) :
   obtain ⟨r, hr, _⟩ := WP.spec_imp_exists (stream.frame_entry.spec data pos index offset)
   exact ⟨r, hr⟩
 
+/-- A successful `stream.frame_entry` returns a frame of the declared extent. -/
 theorem stream.frame_entry.sound (data : Slice U8) (pos index offset : Usize)
     (entry : stream.CodeEntry)
     (h : stream.frame_entry data pos index offset = .ok (.Ok entry)) :

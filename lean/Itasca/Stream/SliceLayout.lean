@@ -1,6 +1,16 @@
 import Itasca.Stream.SliceComplete
 import Itasca.Module.Validation
 
+/-!
+# Layout facts for contiguous module examples
+
+Wasm 1.0 lemmas that turn an independently described module layout into acceptance by
+`module.validate_module`. `StreamSliceExamplesSupport.prepared_layout` builds a
+`StreamCompleteRegions.Certificate` from a layout, `accepted_certificate` and `accepted_layout`
+run the contiguous adapter from it, and `accepted_at_end` handles a module whose environment
+consumes the whole input. The module examples use these.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamSliceExamplesSupport
@@ -15,8 +25,8 @@ private theorem slice_spec (data : Slice U8) (first last : Usize)
   apply Wasm1.BytesAt.of_slice_view hfirst hlast
   assumption
 
-/-- Component-based regression certificates use the canonical independent
-layout, declaration requirements, typed entries, and valid data segments. -/
+/-- Builds a Wasm 1.0 region certificate from the canonical layout, the declaration requirements,
+the typed code entries and the valid data segments. -/
 theorem prepared_layout (data : Slice U8) (raw : ModuleBinary.Module)
     (decls : Declarations) (codePos tailPos : Usize)
     (hl : ModuleLayout.Layout data raw decls codePos tailPos)
@@ -105,8 +115,8 @@ theorem prepared_layout (data : Slice U8) (raw : ModuleBinary.Module)
     htail, hmatches, hmeta⟩
 
 
-/-- Execute the concrete adapter from its component certificate, preserving the
-exact supplied tail and the decoded environment. -/
+/-- `module.validate_module` accepts a region certificate and returns its environment and
+tail. -/
 theorem accepted_certificate (data : Slice U8) (raw : ModuleBinary.Module)
     (regions : stream.SliceSource) (env : module.Env) (tail : module.Tail)
     (hc : Certificate data raw regions env tail) :
@@ -126,8 +136,8 @@ theorem accepted_certificate (data : Slice U8) (raw : ModuleBinary.Module)
   cases regions
   simp [core.result.Result.Insts.CoreOpsTry.branch, hrun, hstored]
 
-/-- Existing public module examples run through the streaming implementation;
-component typing and encoding replace the removed code-section driver proof. -/
+/-- A module with a canonical layout, typed code entries and valid data segments is accepted by
+`module.validate_module`, which runs through the streaming implementation. -/
 theorem accepted_layout (data : Slice U8) (raw : ModuleBinary.Module)
     (decls : Declarations) (codePos tailPos : Usize)
     (hl : ModuleLayout.Layout data raw decls codePos tailPos)
@@ -145,8 +155,8 @@ theorem accepted_layout (data : Slice U8) (raw : ModuleBinary.Module)
 
 
 
-/-- An environment consuming the whole input with no defined functions takes
-the actual empty-code and empty-tail paths of the streaming wrapper. -/
+/-- An environment that consumes the whole input and defines no functions takes the empty-code and
+empty-tail paths of the streaming adapter, and the module is accepted. -/
 theorem accepted_at_end (data : Slice U8) (env : module.Env)
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (hfuncs : env.func_type_indices.val = [])

@@ -1,12 +1,24 @@
 import Itasca.Support.Result
 import Itasca.Stream.Source
 
+/-!
+# Batch retirement
+
+The loops that retire outstanding code batches: `stream.retire_code_batch` polls one worker through
+`StreamingVisitor.poll_code_batch`, checks its module identity, removes its batch ID from the
+pending vector by swap-and-pop, and requires `stream.CodeBatch.finish` to succeed.
+`stream.retire_code_batch.removes` describes the pending vector after a successful retirement, and
+`stream.retire_all_code_batches.spec` shows that draining terminates whenever polls return
+(`StreamRetirement.PollTotal`), whatever records the scheduler supplies.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamRetirement
 
-/-- Polling may reject or return arbitrary records. Termination of retirement
-requires no batch provenance, worker correctness, or successful finish. -/
+/-- Polling returns an ordinary result in every visitor state. It may report an error or return
+an arbitrary record. Termination of retirement needs no batch provenance, worker correctness or
+successful finish. -/
 def PollTotal {V : Type} (visitor : stream.StreamingVisitor V) : Prop :=
   ∀ state, ∃ r, visitor.poll_code_batch state = .ok r
 
@@ -21,6 +33,8 @@ end Itasca.StreamRetirement
 
 namespace Itasca
 
+/-- The pending-ID search loop returns the first position from `first` holding `needle`, or the
+end of the vector. -/
 @[step]
 theorem stream.retire_code_batch_loop.spec (pending : alloc.vec.Vec Usize)
     (needle first : Usize) (hfirst : first.val ≤ pending.length) :
@@ -116,8 +130,8 @@ end Itasca.StreamRetirement
 
 namespace Itasca.StreamRetirement
 
-/-- An ordinary successful retirement identifies the actual polled batch,
-its checked identity and finish result, and the exact pending-ID removal. -/
+/-- A successful retirement comes from an actual poll that returned a batch of the expected module
+whose `stream.CodeBatch.finish` succeeded, and the batch ID was removed from the pending vector. -/
 def Retired {V : Type} (visitor : stream.StreamingVisitor V) (moduleId : U64)
     (before : V) (pending : alloc.vec.Vec Usize) :
     (core.result.Result Unit error.Error × V × alloc.vec.Vec Usize) → Prop
@@ -140,6 +154,8 @@ end Itasca.StreamRetirement
 
 namespace Itasca
 
+/-- `stream.retire_code_batch` satisfies `StreamRetirement.Retired` when the reached poll
+returns. -/
 @[step]
 theorem stream.retire_code_batch.spec {V : Type} (visitor : stream.StreamingVisitor V)
     (moduleId : U64) (state : V) (pending : alloc.vec.Vec Usize)
@@ -212,9 +228,9 @@ theorem stream.retire_code_batch.accepted {V : Type} (visitor : stream.Streaming
   have hs := stream.retire_code_batch.spec visitor moduleId state pending hex
   simpa [h, StreamRetirement.Retired] using hs
 
-/-- The returned ID was pending, cannot be returned successfully again, and
-all other pending IDs remain. The driver removes before checking finish; this
-statement deliberately concerns successful returns only. -/
+/-- The polled batch ID was pending, is absent from the remaining IDs, and every other pending ID
+remains. The driver removes the ID before checking finish. This statement concerns successful
+retirements only. -/
 theorem stream.retire_code_batch.removes {V : Type} (visitor : stream.StreamingVisitor V)
     (moduleId : U64) (state state' : V) (pending remaining : alloc.vec.Vec Usize)
     (hn : pending.val.Nodup)
@@ -240,8 +256,8 @@ theorem stream.retire_code_batch.removes {V : Type} (visitor : stream.StreamingV
       have := hp.mem_iff.mpr hm
       simpa [hne] using this
 
-/-- Draining terminates under returning polls even when those polls supply
-foreign, unfinished, or fabricated records. Acceptance empties the pending vector. -/
+/-- Draining terminates under returning polls even when those polls supply foreign, unfinished or
+fabricated records. An accepted drain leaves the pending vector empty. -/
 @[step]
 theorem stream.retire_all_code_batches.spec {V : Type} (visitor : stream.StreamingVisitor V)
     (moduleId : U64) (state : V) (pending : alloc.vec.Vec Usize)

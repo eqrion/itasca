@@ -8,6 +8,18 @@ import Itasca.Module.Sections.DataMaterialize
 import Itasca.Module.Sections.TailComplete
 import Itasca.Module.Code.EntryOfEnv
 
+/-!
+# Region certificates for streaming completeness
+
+`StreamCompleteRegions.prepare` derives, from independent premises about a module (bounded
+encoding, signature limits, elaboration, `Module_ok` typing and profile restrictions), a
+`StreamCompleteRegions.Certificate` for the canonical split of its bytes produced by
+`stream.find_code_region`. The certificate gives the environment, code header and entries, tail,
+and public metadata of the same raw module. It does not assume parser success or prevalidated
+bodies. The file also transports independent encodings onto the split regions
+(`ModuleBinary.At.on_region`).
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleBinary
@@ -24,6 +36,7 @@ theorem At.on_region {α : Type} {R : α → List U8 → Prop}
   · simp
   · simpa using hregion.length
 
+/-- Entries encoded within the profile limits declare at most `limits.MAX_LOCALS` locals. -/
 theorem Rep.locals_within_limits {entries bytes profile}
     (h : Rep (Itasca.Profile.CodeEncodingWithinLimits profile) entries bytes) :
     ∀ entry ∈ entries, entry.declared.length ≤ limits.MAX_LOCALS.val := by
@@ -39,8 +52,8 @@ end Itasca.ModuleBinary
 
 namespace Itasca.ModuleCode
 
-/-- Generated typing in index order and independent local-limit witnesses
-supply the entry certificates used by streaming batches. -/
+/-- Generated typing of the code entries in index order and the local-count limit give the entry
+certificates that streaming batches use. -/
 theorem EntriesTyped.of_forall₂ {env entries i profile}
     (ht : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry profile) (env.func_type_indices.val.drop i) entries)
     (hb : ∀ entry ∈ entries, entry.declared.length ≤ limits.MAX_LOCALS.val) :
@@ -64,7 +77,8 @@ namespace Itasca.StreamCompleteRegions
 
 open ModuleBinary ModuleElaboration
 
-/-- The actual splitter and slice operations produce these three byte regions. -/
+/-- `stream.find_code_region` and the slice operations on `data` produce the environment, code and
+tail regions of `source`. -/
 def Split (data : Slice U8) (source : stream.SliceSource) : Prop :=
   ∃ codePos tailPos,
     stream.find_code_region data = .ok (codePos, tailPos) ∧
@@ -75,9 +89,9 @@ def Split (data : Slice U8) (source : stream.SliceSource) : Prop :=
     core.slice.index.Slice.index (core.slice.index.SliceIndexRangeUsizeSlice U8)
       data ⟨tailPos, Slice.len data⟩ = .ok source.tail
 
-/-- Region certificates are derived from independent encoding and typing.
-They expose the shared component parser results, while body checking remains
-a consequence of typed bounded encodings for the later streaming driver. -/
+/-- Region certificates are derived from independent encoding and typing. They give the results
+of the shared environment and tail validators and the encoded, typed code entries. Body checking
+is later obtained from the typed, bounded encodings by the streaming driver. -/
 structure Certificate (data : Slice U8) (raw : ModuleBinary.Module)
     (source : stream.SliceSource) (env : module.Env) (tail : module.Tail)
     (validationProfile : ValidationProfile := .Wasm1) : Prop where
@@ -105,8 +119,8 @@ private theorem slice_spec (data : Slice U8) (first last : Usize)
   apply Wasm1.BytesAt.of_slice_view hfirst hlast
   assumption
 
-/-- Component completeness for the canonical streaming regions. No legacy
-module/code driver execution or assumed parser/body success is required. -/
+/-- Component completeness for the canonical streaming regions of an independently encoded,
+elaborated, typed module. No assumption of parser or body success is made. -/
 theorem prepare (data : Slice U8) (raw : ModuleBinary.Module) (profile : ValidationProfile)
     (hb : ModuleEncodingWithinLimits raw data.val profile)
     (hsignatures : ModuleSignaturesWithinLimits raw profile)

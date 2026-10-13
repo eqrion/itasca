@@ -1,6 +1,18 @@
 import Itasca.Stream.BatchComplete
 import Itasca.Stream.Scheduler
 
+/-!
+# Accepting schedulers
+
+`StreamAcceptingScheduler.Accepts` is one scheduler policy under which completeness holds: every
+polled worker is the actual `stream.CodeBatch.validate_all` result of an issued seed, in any
+order, with positive batch configuration. It is an obligation on the embedding and does not
+describe every possible worker strategy. `StreamAcceptingScheduler.Valid` collects the independent
+byte, typing and size premises of an issued batch. `StreamAcceptingScheduler.retire_complete` and
+`StreamAcceptingScheduler.drain_complete` show that valid queued work retires and drains
+successfully.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamAcceptingScheduler
@@ -19,14 +31,16 @@ structure Valid (issued : StreamBatch.Issued)
     ModuleCode.EntriesTyped (profile := validationProfile) issued.env issued.first_func.val entries ∧
     ModuleBinary.Rep (Profile.CodeEncodingWithinLimits validationProfile) entries issued.code.val
 
+/-- Every batch in the queue belongs to module `id` and is `Valid`. -/
 def ValidQueue (id : U64) (queue : List StreamBatch.Issued)
     (validationProfile : ValidationProfile := .Wasm1) : Prop :=
   ∀ issued ∈ queue, issued.module_id = id ∧ Valid issued validationProfile
 
-/-- One accepting worker policy: each returned worker is the actual result of
-`validate_all` on an issued seed. The policy permits arbitrary return order and
-any positive batching configuration; successful finish is derived from `Valid`,
-not required of polling. It does not characterize every possible worker strategy. -/
+/-- One accepting worker policy: each returned worker is the actual result of `validate_all` on an
+issued seed. The policy permits arbitrary return order and any positive batching configuration.
+Successful finish is derived from `Valid` and is not required of polling. It does not characterize
+every possible worker strategy. The visitor state is tracked by `Queued`, which lists the issued
+batches not yet polled. -/
 structure Accepts {V : Type} (visitor : stream.StreamingVisitor V)
     (config : stream.Config) (Queued : U64 → List StreamBatch.Issued → V → Prop)
     (validationProfile : ValidationProfile := .Wasm1) : Prop where
@@ -52,6 +66,8 @@ structure Accepts {V : Type} (visitor : stream.StreamingVisitor V)
   tail_ready : ∀ id queue v tail, Queued id queue v →
     ∃ v', visitor.tail_ready v tail = .ok (.Ok (), v') ∧ Queued id queue v'
 
+/-- Running `validate_all` on the seed of a `Valid` batch gives a worker with the issued identity
+that `stream.CodeBatch.finish` accepts. -/
 theorem Valid.finished {issued : StreamBatch.Issued} (h : Valid issued validationProfile)
     {after : stream.CodeBatch} (hr : stream.CodeBatch.validate_all issued.seed = .ok after) :
     StreamBatch.Identity issued after ∧ stream.CodeBatch.finish after = .ok (.Ok ()) := by
@@ -66,8 +82,8 @@ end Itasca.StreamAcceptingScheduler
 
 namespace Itasca
 
-/-- A known pending, correctly identified, finished result is accepted by the
-actual search and swap/pop retirement implementation. -/
+/-- A polled batch of the right module, whose ID is pending and whose finish check succeeds, is
+retired successfully by `stream.retire_code_batch`. -/
 theorem stream.retire_code_batch.complete {V : Type} (visitor : stream.StreamingVisitor V)
     (id : U64) (v v' : V) (pending : alloc.vec.Vec Usize) (batch : stream.CodeBatch)
     (hpoll : visitor.poll_code_batch v = .ok (.Ok batch, v'))
@@ -109,8 +125,8 @@ namespace Itasca.StreamAcceptingScheduler
 
 variable {validationProfile : ValidationProfile}
 
-/-- Valid pending work retires in any scheduler-selected order. Successful
-finish follows from actual worker execution on independent typed encodings. -/
+/-- Valid pending work retires in any scheduler-selected order. Successful finish follows from the
+actual worker execution on independently typed encodings. -/
 theorem retire_complete {V : Type} (visitor : stream.StreamingVisitor V)
     (config : stream.Config) (Queued : U64 → List StreamBatch.Issued → V → Prop)
     (hp : Accepts visitor config Queued validationProfile) (id : U64)

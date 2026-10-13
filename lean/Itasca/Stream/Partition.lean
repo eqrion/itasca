@@ -1,6 +1,16 @@
 import Itasca.Stream.Scheduler
 import Itasca.Stream.Header
 
+/-!
+# Batch partitions
+
+`StreamScheduler.Partition` records that a list of issued batches covers consecutive intervals of
+the code region and consecutive defined-function indices, in submission order.
+`StreamScheduler.Partition.encoding` and `StreamScheduler.Partition.code` assemble the per-batch
+`StreamScheduler.Completed` certificates into one encoded and typed code section for the whole
+module.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamScheduler
@@ -19,6 +29,7 @@ inductive Partition (code : Slice U8) (env : module.Env) :
       Partition code env middle (func + issued.num_funcs.val) rest finish next →
       Partition code env pos func (issued :: rest) finish next
 
+/-- Appending the next issued batch extends a partition. -/
 theorem Partition.snoc {code env pos func history middle next issued finish}
     (h : Partition code env pos func history middle next)
     (henv : issued.env = env) (hoffset : issued.code_offset = middle)
@@ -29,8 +40,8 @@ theorem Partition.snoc {code env pos func history middle next issued finish}
   | nil => exact .cons henv hoffset hfunc hbytes (.nil _ _ hbytes.bound)
   | cons he ho hf hb _ ih => exact .cons he ho hf hb (ih hoffset hfunc hbytes)
 
-/-- Assemble independent entry certificates in issuance order. The completion
-premise is populated only by checked successful retirements. -/
+/-- Concatenates the entry certificates of completed batches in issuance order. The completion
+premise is discharged by successful retirements. -/
 theorem Partition.encoding {code env pos func history finish next}
     (h : Partition code env pos func history finish next)
     (hcompleted : ∀ issued ∈ history, Completed issued profile) :
@@ -49,8 +60,8 @@ theorem Partition.encoding {code env pos func history finish next}
     simp only [List.length_append]
     omega
 
-/-- A checked header plus the complete batch partition gives the padded code
-region and the exact function/type pairing needed by semantic module assembly. -/
+/-- A checked header and a partition of the whole code region give the padded code section
+encoding and the pairing of each declared function type with its typed code entry. -/
 theorem Partition.code {code env entries history}
     (hheader : StreamFraming.HeaderAt code env entries)
     (h : Partition code env entries 0 history (Slice.len code) env.func_type_indices.val.length)

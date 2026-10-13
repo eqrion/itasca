@@ -1,14 +1,25 @@
 import Itasca.Stream.Scheduler
 import Itasca.Stream.BatchComplete
 
+/-!
+# Synchronous worker
+
+The private synchronous scheduler `stream.SyncVisitor` that `validate_module` supplies to the
+driver. It has one `completed` slot: submission runs `stream.CodeBatch.validate_all` on the seed
+immediately and stores the result, and polling takes it. `StreamSync.provenance` and
+`StreamSync.callbacks_total` show that it meets the `StreamScheduler.Provenance` and
+`StreamScheduler.CallbacksTotal` contracts for every profile, so no embedding obligation remains
+for it. `StreamSync.retire_all_tail` shows that draining preserves the delivered tail.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamSync
 
 local notation "sync" => stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor
 
-/-- The stored worker must arise from every historical descriptor matching its
-identity. The invariant does not assume that the worker has finished. -/
+/-- The stored worker is reachable from every historical issued batch matching its identity. The
+invariant does not assume that the worker has finished. -/
 def Tracks (_id : U64) (history : List StreamBatch.Issued) (state : stream.SyncVisitor) : Prop :=
   ∀ batch, state.completed = some batch → ∀ issued ∈ history,
     issued.module_id = batch.module_id → issued.batch_id = batch.batch_id →
@@ -21,7 +32,7 @@ theorem tracks_cleared (id : U64) (history : List StreamBatch.Issued) (state : s
     (h : state.completed = none) : Tracks id history state := by
   simp [Tracks, h]
 
-/-- Polling consumes the unique completed slot and preserves the exact tail. -/
+/-- Polling takes the stored worker out of the completed slot and keeps the tail. -/
 theorem poll_some (state : stream.SyncVisitor) (batch : stream.CodeBatch)
     (h : state.completed = some batch) :
     (sync).poll_code_batch state = .ok (.Ok batch, { state with completed := none }) := by
@@ -73,8 +84,8 @@ theorem custom_region (state : stream.SyncVisitor) (region : stream.Region) :
 theorem code_end (state : stream.SyncVisitor) :
     (sync).code_end state = .ok (.Ok (), state) := rfl
 
-/-- Submission executes the real worker even for malformed bytes, storing its
-reachable result; its administrative success is not a claim that finish passes. -/
+/-- Submission runs the extracted worker even on malformed bytes and stores its reachable result.
+Submission succeeding does not mean that `stream.CodeBatch.finish` passes. -/
 theorem submit {profile : ValidationProfile} (state : stream.SyncVisitor) (issued : StreamBatch.Issued)
     (hissued : issued.Bounded) (hbound : CodeEntry.Bounds issued.env)
     (hprofile : issued.profile = profile) :
@@ -84,8 +95,8 @@ theorem submit {profile : ValidationProfile} (state : stream.SyncVisitor) (issue
   obtain ⟨batch, hr, hp⟩ := stream.CodeBatch.validate_all.total issued issued.seed hissued hbound .seed hprofile
   exact ⟨batch, by simp [stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.submit_code_batch, hr], hp⟩
 
-/-- The concrete source-free scheduler satisfies provenance across every
-callback, including custom regions and tail delivery. -/
+/-- The synchronous scheduler satisfies `StreamScheduler.Provenance` across every callback,
+including custom regions and tail delivery. -/
 theorem provenance {profile : ValidationProfile} : StreamScheduler.Provenance sync Tracks profile := by
   constructor
   · intro id history state chunk after hcall
@@ -128,8 +139,8 @@ theorem provenance {profile : ValidationProfile} : StreamScheduler.Provenance sy
     subst after
     exact hs
 
-/-- All callbacks return on legitimate issued seeds. Submission uses component
-termination; it needs neither valid bytes nor successful worker completion. -/
+/-- All callbacks of the synchronous scheduler return on seeds of bounded issued batches.
+Submission needs neither valid bytes nor successful worker completion. -/
 theorem callbacks_total {profile : ValidationProfile} : StreamScheduler.CallbacksTotal sync profile := by
   constructor
   · intro state chunk
@@ -147,9 +158,9 @@ theorem callbacks_total {profile : ValidationProfile} : StreamScheduler.Callback
   · intro state tail
     exact ⟨_, tail_ready state tail⟩
 
-/-- With its one slot empty, the synchronous scheduler validates independent
-batch contents, returns that same reachable worker, then restores the empty
-slot. It preserves the stored tail throughout both calls. -/
+/-- With its slot empty, the synchronous scheduler validates independently encoded and typed
+batch contents, returns that same reachable worker on polling, and leaves the slot empty again.
+The stored tail is preserved by both calls. -/
 theorem submit_poll_complete {profile : ValidationProfile} (state : stream.SyncVisitor) (issued : StreamBatch.Issued)
     (entries : List ModuleBinary.Code) (hempty : state.completed = none)
     (hissued : issued.Bounded) (hcount : entries.length = issued.num_funcs.val)
@@ -169,8 +180,8 @@ theorem submit_poll_complete {profile : ValidationProfile} (state : stream.SyncV
   · have he : { state with completed := none } = state := by cases state; simp_all
     simpa [he] using poll_some { state with completed := some batch } batch rfl
 
-/-- Successful retirement preserves the stored tail because its only visitor
-callback is polling, which clears only the completed slot. -/
+/-- Successful retirement preserves the stored tail, because its only visitor callback is polling,
+which clears only the completed slot. -/
 theorem retire_tail (id : U64) (state after : stream.SyncVisitor)
     (pending remaining : alloc.vec.Vec Usize)
     (h : stream.retire_code_batch sync id state pending = .ok (.Ok (), after, remaining)) :
@@ -216,7 +227,7 @@ private theorem retire_all_loop_tail (id : U64) (state after : stream.SyncVisito
             alloc.vec.Vec.is_empty, core.result.Result.Insts.CoreOpsTry.branch] using h
         exact (ih rest.length hlen current rest hrest rfl).trans htail
 
-/-- Final draining cannot erase the exact tail delivered before retirement. -/
+/-- Draining preserves the tail delivered before retirement. -/
 theorem retire_all_tail (id : U64) (state after : stream.SyncVisitor)
     (pending remaining : alloc.vec.Vec Usize)
     (h : stream.retire_all_code_batches sync id state pending = .ok (.Ok (), after, remaining)) :

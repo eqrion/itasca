@@ -1,12 +1,21 @@
 import Itasca.Stream.Header
 
+/-!
+# Code section header completeness
+
+`stream.read_code_header.complete`: an independently described code section header
+(`StreamFraming.HeaderAt`) over an available source is accepted. Only the bounded header view of at
+most 11 bytes is read.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- Independently framed code headers are accepted using their bounded view.
-Availability supplies at most eleven bytes; nonminimal LEB prefixes are retained.
-An absent region and a present zero-entry section are separate cases. -/
+/-- A code region with a valid header (`StreamFraming.HeaderAt`) is accepted by
+`stream.read_code_header` over an available source. Only a view of at most 11 bytes is read, and
+nonminimal LEB128 prefixes are accepted. An absent region and a present zero-entry section are
+separate cases. -/
 theorem stream.read_code_header.complete {S : Type} (source : stream.Source S) (state : S)
     (codeLen : Usize) (env : module.Env) (entries : Usize) (data : Slice U8)
     (environment tail : List U8)

@@ -3,13 +3,26 @@ import Itasca.Stream.SchedulerComplete
 import Itasca.Stream.DriverRun
 import Itasca.Stream.SubmissionComplete
 
+/-!
+# Streaming driver completeness
+
+`stream.validate_streaming.profile_complete`: an independently encoded, elaborated and typed
+module within the selected profile and limits is accepted by `stream.validate_streaming`, provided
+the source makes the canonical split of the input available (`StreamSource.CanonicalAvailable`)
+and the scheduler is accepting (`StreamAcceptingScheduler.Accepts`). The returned environment and
+delivered tail describe the same raw module, including public metadata
+(`Matches`, `AccessorTypes`). Both premises on the embedding are required: completeness fails if
+reads are unavailable or workers do not accept. `stream.validate_streaming.wasm_complete` is the
+Wasm 1.0 instance.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamRun
 
 variable {profile : ValidationProfile}
 
-/-- The recorded remaining-phase calls compose to the actual driver result. -/
+/-- The recorded remaining-phase calls compose to the driver result. -/
 theorem Remaining.run {S V : Type} {source : stream.Source S}
     {visitor : stream.StreamingVisitor V} {id state env environmentLength before after}
     (h : Remaining source visitor id state env environmentLength before after profile) :
@@ -20,7 +33,7 @@ theorem Remaining.run {S V : Type} {source : stream.Source S}
     h.end_call, h.tail_call, h.module_bound, h.region_call, h.decode_tail,
     h.ready_call, h.drain_call, core.result.Result.Insts.CoreOpsTry.branch]
 
-/-- An accepted phase trace executes independently of the caller's old storage. -/
+/-- An accepted phase trace executes independently of the initial `storage` argument. -/
 theorem Accepted.run {S V : Type} {source : stream.Source S}
     {visitor : stream.StreamingVisitor V} {id state before after env}
     (h : Accepted source visitor id state before after env profile) (storage : module.Env) :
@@ -54,12 +67,14 @@ end Itasca.StreamCompleteRegions
 
 namespace Itasca.StreamSource
 
-/-- Completeness availability for the actual canonical split of the independent
-input bytes. This says nothing about parser success or worker validation. -/
+/-- The source makes available the environment, code and tail regions of the canonical split of
+`data` that `stream.find_code_region` computes. This says nothing about parser success or worker
+validation. -/
 def CanonicalAvailable {S : Type} (source : stream.Source S) (state : S) (data : Slice U8) : Prop :=
   ∃ regions : stream.SliceSource, StreamCompleteRegions.Split data regions ∧
     Available source state regions.env.val regions.code.val regions.tail.val
 
+/-- Canonical availability transfers to any split of `data` produced by the splitter. -/
 theorem CanonicalAvailable.for_split {S : Type} {source : stream.Source S} {state data regions}
     (h : CanonicalAvailable source state data) (hsplit : StreamCompleteRegions.Split data regions) :
     Available source state regions.env.val regions.code.val regions.tail.val := by
@@ -131,8 +146,8 @@ variable {profile : ValidationProfile}
 
 open StreamAcceptingScheduler
 
-/-- Independent component certificates drive every remaining phase, including
-arbitrarily ordered retiring workers and the precise accepted tail delivery. -/
+/-- Independent region certificates drive every phase after the environment, including workers
+retired in any order and the delivery of the tail. -/
 theorem remaining_complete {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (config : stream.Config)
     (Queued : U64 → List StreamBatch.Issued → V → Prop)
@@ -166,8 +181,8 @@ theorem remaining_complete {S V : Type} (source : stream.Source S)
     hc ha before configured submitted entries codeEnd pending queue hlen hbound
     (by simpa using hend) hheaderRun hconfig hsubmit hqueued hvalid hids
 
-/-- The full generic driver accepts the prepared independent regions. The
-returned execution witness names the exact tail supplied to `tail_ready`. -/
+/-- `stream.validate_streaming` accepts the regions of a `Certificate`. The returned run names the
+tail supplied to `tail_ready`. -/
 theorem complete_certificate {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (config : stream.Config)
     (Queued : U64 → List StreamBatch.Issued → V → Prop)
@@ -212,10 +227,10 @@ variable {profile : ValidationProfile}
 
 open ModuleBinary ModuleElaboration
 
-/-- Independently encoded, elaborated, typed modules within the selected profile and limits
-are accepted by the actual generic streaming driver under canonical available
-reads and an accepting scheduler. The execution's exact delivered tail and
-returned environment describe the same raw module, including public metadata. -/
+/-- Independently encoded, elaborated, typed modules within the selected profile and limits are
+accepted by `stream.validate_streaming` under canonical available reads and an accepting
+scheduler. The returned environment and delivered tail describe the same raw module, including
+public metadata. -/
 theorem stream.validate_streaming.profile_complete {S V : Type}
     (source : stream.Source S) (visitor : stream.StreamingVisitor V)
     (config : stream.Config) (Queued : U64 → List StreamBatch.Issued → V → Prop)
@@ -237,7 +252,7 @@ theorem stream.validate_streaming.profile_complete {S V : Type}
   exact ⟨env, after, run, hrun, by simpa [htail] using hc.realization, hc.metadata, hvafter⟩
 
 
-/-- Compatibility specialization of the shared streaming completeness theorem. -/
+/-- The Wasm 1.0 instance of `stream.validate_streaming.profile_complete`. -/
 theorem stream.validate_streaming.wasm_complete {S V : Type}
     (source : stream.Source S) (visitor : stream.StreamingVisitor V)
     (config : stream.Config) (Queued : U64 → List StreamBatch.Issued → V → Prop)

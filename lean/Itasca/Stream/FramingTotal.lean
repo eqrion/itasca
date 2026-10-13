@@ -1,5 +1,15 @@
 import Itasca.Stream.Header
 
+/-!
+# Batch framing termination
+
+Termination of `stream.get_next_batch` and its loop `stream.get_next_batch_loop`, which frame code
+entries until the byte threshold is reached or the entries run out. `StreamFraming.BatchInvariant`
+holds along the loop and `StreamFraming.BatchPost` states what a successful framing returns: a
+nonempty range of entries ending within the code region. Termination needs the source callbacks to
+return (`StreamSource.CallbacksTotal`) and the code region to respect the module cap.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamFraming
@@ -13,6 +23,8 @@ def BatchInvariant (codeLen start first num threshold : Usize)
   (func = first → pos = start ∧ bytes = 0#usize ∧ done = false) ∧
   (done = false → func ≠ first → bytes.val < threshold.val)
 
+/-- A successful framing returns the end offset of a nonempty batch and the index after its last
+entry. Errors are unconstrained. -/
 def BatchPost (codeLen start first num : Usize) :
     core.result.Result (Usize × Usize) error.Error → Prop
   | .Ok (finish, next) => start.val < finish.val ∧ finish.val ≤ codeLen.val ∧
@@ -44,6 +56,8 @@ end Itasca.StreamFraming
 
 namespace Itasca
 
+/-- The framing loop returns, and its result satisfies `StreamFraming.BatchPost`, from any state
+satisfying `StreamFraming.BatchInvariant`. -/
 theorem stream.get_next_batch_loop.total_spec {S : Type} (source : stream.Source S) (state : S)
     (codeLen start first num threshold pos func bytes : Usize) (done : Bool)
     (htotal : StreamSource.CallbacksTotal source state)
@@ -182,6 +196,8 @@ theorem stream.get_next_batch_loop.total_spec {S : Type} (source : stream.Source
       simpa [StreamFraming.BatchPost] using ⟨hprogress (by omega), hq, (by omega : first.val < i.val), hi⟩
   · exact ⟨hinv, hprogress⟩
 
+/-- `stream.get_next_batch` returns and satisfies `StreamFraming.BatchPost` when the source
+callbacks return and the code region respects the module cap. -/
 theorem stream.get_next_batch.spec {S : Type} (source : stream.Source S) (state : S)
     (codeLen start first num threshold : Usize)
     (htotal : StreamSource.CallbacksTotal source state)

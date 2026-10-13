@@ -1,6 +1,17 @@
 import Itasca.Stream.FramingSound
 import Itasca.Module.Limits
 
+/-!
+# Batch framing completeness
+
+Completeness of `stream.get_next_batch` over an available source. Given independently encoded
+code entries within the profile limits, `stream.get_next_batch.complete` returns a successful batch
+that splits the entries into a nonempty encoded prefix and the remaining suffix.
+`stream.get_next_batch.complete_view` adds the exact read of the batch bytes that the worker
+receives. The file also shows that availability implies coherence
+(`StreamSource.Available.coherent`).
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamSource
@@ -128,9 +139,9 @@ theorem stream.get_next_batch_loop.body.complete_spec {S : Type}
 
 open ModuleBinary
 
-/-- Successful batching preserves the independently encoded list as an exact
-nonempty prefix and remaining suffix. Any stronger entry-encoding relation is
-retained, so the worker's body/local limits are not lost during framing. -/
+/-- Successful batching splits the independently encoded entry list into a nonempty prefix and
+the remaining suffix. The prefix and suffix satisfy the same entry relation `R` as the input, so
+a relation that carries body and local limits is preserved through framing. -/
 theorem stream.get_next_batch.complete_spec {S : Type}
     (source : stream.Source S) (state : S) (environment tail : List U8) (code : Slice U8)
     (ha : StreamSource.Available source state environment code.val tail)
@@ -232,8 +243,8 @@ theorem stream.get_next_batch.complete_spec {S : Type}
       omega
     · exact ⟨[], .nil, Wasm1.BytesAt.nil code start (by omega)⟩
 
-/-- Independent bounded entry encodings force an actual successful batch,
-retaining precisely the nonempty encoded prefix and its unconsumed suffix. -/
+/-- Independently encoded entries within the profile limits are batched successfully, returning
+the nonempty encoded prefix and the unconsumed suffix. -/
 theorem stream.get_next_batch.complete {S : Type}
     (source : stream.Source S) (state : S) (environment tail : List U8) (code : Slice U8)
     (ha : StreamSource.Available source state environment code.val tail)
@@ -277,8 +288,8 @@ theorem stream.read_exact.complete_rep {S A : Type}
   exact ⟨view, stream.read_exact.complete source state start finish view ho hread hvlen,
     hvspan, heq ▸ hrep⟩
 
-/-- Batching and its following exact read produce the worker's complete byte
-view, with bounded entry encodings and function counts preserved. -/
+/-- Batching and the following exact read produce the worker's byte view, which encodes the taken
+entries within the profile limits. The entry counts of the batch and the suffix are tracked. -/
 theorem stream.get_next_batch.complete_view {S : Type}
     (source : stream.Source S) (state : S) (environment tail : List U8) (code : Slice U8)
     (ha : StreamSource.Available source state environment code.val tail)

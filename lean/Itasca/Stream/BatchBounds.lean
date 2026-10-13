@@ -1,6 +1,15 @@
 import Itasca.Stream.Batch
 import Itasca.Stream.EntryFrame
 
+/-!
+# Worker cursor bounds
+
+Bounds on the dispatch and validation cursors of reachable workers, and the totality of the
+read-only `stream.CodeBatch` accessors and `stream.CodeBatch.next_entry`.
+`StreamBatch.Reachable.dispatched` bounds the dispatch cursor by framing, and
+`StreamBatch.Reachable.cursor_bounds` bounds both cursors independently of each other.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamBatch
@@ -52,8 +61,8 @@ end Itasca.StreamBatch
 
 namespace Itasca
 
-/-- Dispatch returns ordinarily for legitimately bounded function indices,
-including malformed bytes and an already exhausted dispatch cursor. -/
+/-- Dispatch returns an ordinary result when function indices fit in `Usize`, including on
+malformed bytes and when the dispatch cursor is already exhausted. -/
 theorem stream.CodeBatch.next_entry.total (batch : stream.CodeBatch)
     (hindex : batch.first_func.val + batch.num_funcs.val ≤ Usize.max) :
     ∃ r, stream.CodeBatch.next_entry batch = .ok r := by
@@ -94,6 +103,8 @@ theorem stream.CodeBatch.profile_preserved {issued : StreamBatch.Issued} {batch 
   obtain ⟨_, _, _, _, _, _, _, hp⟩ := h.validation.1
   simp [stream.CodeBatch.impl.profile, hp]
 
+/-- `stream.CodeBatch.is_last` returns an ordinary result on a reachable worker of a bounded
+issued batch. -/
 theorem stream.CodeBatch.is_last.total {issued : StreamBatch.Issued} {batch : stream.CodeBatch}
     (hb : issued.Bounded) (h : StreamBatch.Reachable issued batch) :
     ∃ r, stream.CodeBatch.is_last batch = .ok r := by

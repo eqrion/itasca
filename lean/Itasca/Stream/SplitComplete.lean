@@ -2,6 +2,16 @@ import Itasca.Stream.SplitTotal
 import Itasca.Module.Layout
 import Itasca.Module.Env.Chain
 
+/-!
+# Code region splitter completeness
+
+`stream.find_code_region.complete` shows that for an independently encoded module,
+`stream.find_code_region` returns the environment, code and tail boundaries of its normalized
+`ModuleLayout.Layout`. The canonical split is at the code section (ID 10), or at the first later
+section other than data count (ID 12), or at the end of the input. The helper lemmas show how the
+scanning loop skips custom sections and the preceding known sections.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
@@ -158,8 +168,8 @@ theorem split_skip_prefix {profile} {data : Slice U8} {decls next}
   subst middle
   exact split_skip_chain hc hchain
 
-/-- On an independently valid normalized layout, the concrete splitter chooses
-exactly the environment/code/tail boundaries used by component completeness. -/
+/-- On an independently valid normalized layout, the splitter returns the environment, code and
+tail boundaries used by component completeness. -/
 theorem stream.find_code_region.complete_layout {profile} {data : Slice U8} {raw decls codePos tailPos}
     (h : ModuleLayout.Layout data raw decls codePos tailPos profile) :
     stream.find_code_region data = .ok (codePos, tailPos) := by
@@ -189,8 +199,8 @@ theorem stream.find_code_region.complete_layout {profile} {data : Slice U8} {raw
         exact split_after_code data codePos first last id hh
           (by simp [hid]) (by simp [hid])
 
-/-- Independent module encoding supplies canonical splitter boundaries without
-assuming any successful parser run. -/
+/-- An independently encoded module has a normalized layout, and the splitter returns its
+boundaries. No successful parser run is assumed. -/
 theorem stream.find_code_region.complete {profile} (data : Slice U8) (raw : ModuleBinary.Module)
     (h : ModuleEncodingWithinLimits raw data.val profile) :
     ∃ decls codePos tailPos, ModuleLayout.Layout data raw decls codePos tailPos profile ∧

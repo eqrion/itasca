@@ -3,6 +3,18 @@ import Itasca.Stream.Partition
 import Itasca.Stream.Scheduler
 import Itasca.Stream.FramingSound
 
+/-!
+# Submission soundness
+
+Soundness of `stream.submit_code_batches` over a coherent source and a scheduler with
+`StreamScheduler.Provenance`. `StreamSubmission.SoundInvariant` holds along the submission loop:
+the issued batches partition the code region in order, batch IDs are numbered consecutively, the
+pending IDs are distinct and bounded, and every issued batch is pending or completed.
+`stream.submit_code_batches.sound` gives `StreamSubmission.SoundPost` for an accepted run.
+Completed certificates arise only from successful retirements in the loop, never from a premise
+on the scheduler. Unreached callbacks need not return.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamSubmission
@@ -11,8 +23,10 @@ variable {profile : ValidationProfile}
 
 open StreamScheduler
 
-/-- Successful submission prefixes retain exact issuance order, the bounded
-pending-ID set, and certificates only for work already successfully retired. -/
+/-- Invariant of a successful submission prefix: issued batches tile the code region in issuance
+order, batch IDs are numbered consecutively, the pending IDs are distinct and bounded by the
+capacity, and every issued batch is pending or has a completion certificate from a successful
+retirement. -/
 structure SoundInvariant (code : Slice U8) (env : module.Env) (start : Usize)
     (id : U64) (capacity : Usize) (history : List StreamBatch.Issued)
     (pending : alloc.vec.Vec Usize) (pos func nextId : Usize)
@@ -29,6 +43,7 @@ structure SoundInvariant (code : Slice U8) (env : module.Env) (start : Usize)
   accounted : ∀ issued ∈ history, issued.batch_id ∈ pending.val ∨ Completed issued profile
   profiles : ∀ issued ∈ history, issued.profile = profile
 
+/-- The next batch ID differs from every issued batch ID. -/
 theorem SoundInvariant.fresh {code env start id capacity history pending pos func nextId}
     (h : SoundInvariant (profile := profile) code env start id capacity history pending pos func nextId) :
     ∀ issued ∈ history, issued.batch_id ≠ nextId := by
@@ -47,6 +62,7 @@ theorem SoundInvariant.pending_fresh {code env start id capacity history pending
   obtain ⟨issued, hi, he⟩ := h.pending_history nextId hm
   exact h.fresh issued hi he
 
+/-- The invariant holds before any batch is issued. -/
 theorem SoundInvariant.initial {profile : ValidationProfile} (code : Slice U8) (env : module.Env) (start : Usize)
     (id : U64) (capacity : Usize) (hstart : start.val ≤ code.length) :
     SoundInvariant (profile := profile) code env start id capacity [] (alloc.vec.Vec.new _) start 0#usize 0#usize := by
@@ -63,8 +79,8 @@ theorem SoundInvariant.initial {profile : ValidationProfile} (code : Slice U8) (
   · simp
   · simp
 
-/-- Removing one pending identity creates a certificate only after successful
-retirement; all other outstanding and completed work remains accounted for. -/
+/-- Removing one pending ID yields a certificate only after a successful retirement. All other
+outstanding and completed work stays accounted for. -/
 theorem SoundInvariant.retire {code env start id capacity history pending pos func nextId}
     (h : SoundInvariant (profile := profile) code env start id capacity history pending pos func nextId)
     (remaining : alloc.vec.Vec Usize) (batchId : Usize)
@@ -91,8 +107,8 @@ theorem SoundInvariant.retire {code env start id capacity history pending pos fu
       · exact .inl hr
     · exact .inr hc
 
-/-- Adding the actual seed extends both independent byte/function tiling and
-the exact numbered issuance history. The new ID is outstanding, not completed. -/
+/-- Issuing the next seed extends the byte and function tiling and the numbered issuance history.
+The issued ID is pending and not yet completed. -/
 theorem SoundInvariant.issue {code env start id capacity history pending pos func nextId}
     (h : SoundInvariant (profile := profile) code env start id capacity history pending pos func nextId)
     (issued : StreamBatch.Issued) (nextPending : alloc.vec.Vec Usize)
@@ -153,8 +169,8 @@ theorem SoundInvariant.issue {code env start id capacity history pending pos fun
     · have he : old = issued := by simpa using hm
       exact he ▸ hprofile
 
-/-- Successful submission tiles the entire entry region and accounts for every
-issued identity by outstanding work or a derived retirement certificate. -/
+/-- Successful submission tiles the entire entry region and accounts for every issued ID as
+pending or completed, with the scheduler tracking the resulting history. -/
 def SoundPost {V : Type} (Tracks : U64 → List StreamBatch.Issued → V → Prop)
     (code : Slice U8) (env : module.Env) (start : Usize) (id : U64) (capacity : Usize)
     (profile : ValidationProfile := .Wasm1) :
@@ -378,8 +394,8 @@ namespace Itasca
 
 variable {profile : ValidationProfile}
 
-/-- Follow the actual accepting submission run. Each successful iteration
-extends history with its exact seed, optionally certifying one retired batch. -/
+/-- Following an accepted submission run, each successful iteration appends its seed to the
+history and may retire one batch, which then has a completion certificate. -/
 theorem stream.submit_code_batches_loop.sound {S V : Type}
     (source : stream.Source S) (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List StreamBatch.Issued → V → Prop)
@@ -428,10 +444,10 @@ theorem stream.submit_code_batches_loop.sound {S V : Type}
             .ok (.Ok finalPending, finalV) := hrest
       exact ih _ hlt v' pending' pos' func' batchId' history' hinv' hv' hrecursive rfl
 
-/-- Accepted submission supplies a complete ordered byte/function partition,
-exact issued identities, bounded distinct pending IDs, and certificates for
-already retired work. Source coherence and callback provenance are the only
-embedding assumptions; unexecuted callbacks need not return. -/
+/-- Accepted submission gives a complete ordered byte and function partition, the issued
+identities, bounded distinct pending IDs, and certificates for retired work. Source coherence and
+scheduler provenance are the only embedding premises. Callbacks that the run did not reach need
+not return. -/
 theorem stream.submit_code_batches.sound {S V : Type}
     (source : stream.Source S) (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List StreamBatch.Issued → V → Prop)

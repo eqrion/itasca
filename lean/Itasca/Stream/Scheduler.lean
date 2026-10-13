@@ -3,14 +3,26 @@ import Itasca.Stream.Retirement
 import Itasca.Module.Custom.Invariant
 import Itasca.Support.Result
 
+/-!
+# Scheduler contracts
+
+Premises on a `stream.StreamingVisitor` acting as the scheduler of code batches.
+`StreamScheduler.CallbacksTotal` says its callbacks return, which suffices for termination.
+`StreamScheduler.Provenance` says polled workers come from issued batches through actual batch
+operations, which suffices for soundness. Both are obligations on the embedding. `retire_sound`
+and `drain_sound` show that successful retirement and draining produce `StreamScheduler.Completed`
+certificates (exact byte coverage and typed entries) for every pending issued batch.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamScheduler
 
 variable {profile : ValidationProfile}
 
-/-- Returning callbacks are independent of the soundness provenance contract.
-Ordinary Rust errors and malformed returned worker records are allowed. -/
+/-- Every callback of the visitor returns an ordinary result. Submission is only required to
+return for seeds of bounded issued batches of the selected profile. Rust errors and malformed
+returned worker records are allowed. This is independent of the soundness provenance contract. -/
 structure CallbacksTotal {V : Type} (visitor : stream.StreamingVisitor V)
     (profile : ValidationProfile := .Wasm1) : Prop where
   custom : ModuleTail.HooksTotal visitor.moduleModuleVisitorInst
@@ -22,10 +34,10 @@ structure CallbacksTotal {V : Type} (visitor : stream.StreamingVisitor V)
   code_end : ∀ v, ∃ r, visitor.code_end v = .ok r
   tail_ready : ∀ v tail, ∃ r, visitor.tail_ready v tail = .ok r
 
-/-- A scheduler preserves issued history across every callback. Polling a
-matching historical identity supplies actual-operation reachability, not a
-claim of worker success. Unknown, foreign, unfinished and replayed batches are
-permitted; the driver remains responsible for pending IDs and finish checks. -/
+/-- A scheduler tracks the history of issued batches across every callback. A polled batch whose
+module and batch IDs match a historical issued batch is reachable from it through actual batch
+operations, which does not mean the worker succeeded. Unknown, foreign, unfinished and replayed
+batches are permitted. The driver checks pending IDs and finish. -/
 structure Provenance {V : Type} (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List StreamBatch.Issued → V → Prop)
     (profile : ValidationProfile := .Wasm1) : Prop where
@@ -50,8 +62,8 @@ structure Provenance {V : Type} (visitor : stream.StreamingVisitor V)
   tail_ready : ∀ id history v tail v', Tracks id history v →
     visitor.tail_ready v tail = .ok (.Ok (), v') → Tracks id history v'
 
-/-- A completed batch has exact byte coverage and ordered semantic entry
-certificates. This is derived at successful retirement, never a poll premise. -/
+/-- A completed batch has exact byte coverage and ordered entry certificates. This is derived at
+successful retirement and is never a premise on polls. -/
 def Completed (issued : StreamBatch.Issued) (profile : ValidationProfile := .Wasm1) : Prop :=
   ∃ entries, entries.length = issued.num_funcs.val ∧
     ModuleBinary.Rep (Profile.CodeEncoding profile) entries issued.code.val ∧
@@ -73,8 +85,8 @@ theorem Provenance.tail_preserves {V : Type} {visitor : stream.StreamingVisitor 
     Tracks id history v → Tracks id history v' :=
   module.validate_tail_with.accepted_invariant _ _ (hp.custom id history) data pos env v tail v' h
 
-/-- Successful retirement validates any historical descriptor matching the
-removed pending identity. No finished/replay-free condition is assumed of polls. -/
+/-- After a successful retirement, every historical issued batch matching the removed pending ID
+is completed, and provenance is preserved. Polls need not be replay-free. -/
 theorem retire_sound {V : Type} (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List StreamBatch.Issued → V → Prop) (hp : Provenance visitor Tracks profile)
     (id : U64) (history : List StreamBatch.Issued) (v v' : V)
@@ -101,8 +113,8 @@ namespace Itasca.StreamScheduler
 
 variable {profile : ValidationProfile}
 
-/-- Final draining derives certificates for every originally pending issued
-identity, while retaining provenance after every poll. -/
+/-- An accepted drain empties the pending vector and completes every historical issued batch
+whose ID was pending, while provenance is preserved across every poll. -/
 theorem drain_sound {V : Type} (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List StreamBatch.Issued → V → Prop) (hp : Provenance visitor Tracks profile)
     (id : U64) (history : List StreamBatch.Issued) (v v' : V)
