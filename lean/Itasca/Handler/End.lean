@@ -1,10 +1,20 @@
 import Itasca.Handler.Branch
 import Itasca.Handler.Stack
 
+/-!
+# End and else handlers
+
+Case-by-case specifications of the extracted `code.read_end` and `code.read_else`: empty frames,
+concrete results, unreachable frames and the rejected cases (`StackMismatch`). The `*_context`
+theorems add that `Control.Shape` is preserved and the label context drops the closed frame.
+`code.block_loop_empty_roundtrip` closes a nested empty `block` and `loop`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
+/-- Pushing no types leaves the state unchanged. -/
 theorem code.push_types.empty (st : code.OpIterState) (ts : Slice types.ValueType)
     (h : ts.val = []) : code.push_types st ts = .ok st := by
   have hn : Slice.len ts = 0#usize := by scalar_tac
@@ -12,6 +22,7 @@ theorem code.push_types.empty (st : code.OpIterState) (ts : Slice types.ValueTyp
   rw [loop]
   simp [code.push_types_loop.body, hn]
 
+/-- `code.read_end` with no control frame returns `StackMismatch`. -/
 theorem code.read_end.no_frame (st : code.OpIterState) (h : st.ctrls.val = []) :
     code.read_end st = .ok (.Err .StackMismatch, st) := by
   have hn : alloc.vec.Vec.len st.ctrls = 0#usize := by scalar_tac
@@ -45,7 +56,8 @@ private theorem read_end_finish (st : code.OpIterState) (cs : List code.Ctrl)
     step*
   all_goals simp_all [alloc.vec.Vec.deref]
 
-/-- Closing an empty frame consumes no operands, including an if with no else. -/
+/-- `code.read_end` on a frame with an empty block type and no operands above its base pops the
+frame and leaves the operands unchanged, including for an `if` with no `else`. -/
 @[step]
 theorem code.read_end.empty (st : code.OpIterState) (cs : List code.Ctrl) (c : code.Ctrl)
     (hctrls : st.ctrls.val = cs ++ [c]) (hbt : c.block_type = .Empty)
@@ -69,7 +81,8 @@ theorem code.read_end.empty (st : code.OpIterState) (cs : List code.Ctrl) (c : c
       core.result.Result.Insts.CoreOpsTry.branch, hbase, alloc.vec.Vec.pop,
       hpush, hctrls]
 
-/-- Matching concrete results survive `end`; only the innermost frame is removed. -/
+/-- `code.read_end` with matching concrete results on top of the operands leaves them in place and
+removes only the innermost frame. -/
 @[step]
 theorem code.read_end.concrete (st : code.OpIterState) (cs : List code.Ctrl)
     (c : code.Ctrl) (pre : List code.StackType)
@@ -98,7 +111,8 @@ theorem code.read_end.concrete (st : code.OpIterState) (cs : List code.Ctrl)
   simp only [WP.spec_ok]
   exact ⟨hok, hcs, alloc.vec.Vec.ext _ _ (by rw [hvs, hv, hrsv, ← hvals]), hps⟩
 
-/-- Unreachable results become concrete after the frame is removed. -/
+/-- `code.read_end` on a polymorphic frame with no operands pushes the block's results as concrete
+types after removing the frame. -/
 @[step]
 theorem code.read_end.polymorphic (st : code.OpIterState) (cs : List code.Ctrl)
     (c : code.Ctrl) (hctrls : st.ctrls.val = cs ++ [c])
@@ -118,7 +132,8 @@ theorem code.read_end.polymorphic (st : code.OpIterState) (cs : List code.Ctrl)
     (by intro hk; simp [hrsv, hthen hk, Control.results]) hpop hbase rfl rfl
     (by simpa [hrsv] using hsize)
 
-/-- `end` rejects extra operands even after an unreachable instruction. -/
+/-- `code.read_end` on an empty block type returns `StackMismatch` when operands remain above the
+frame base, even after an unreachable instruction. -/
 @[step]
 theorem code.read_end.empty_mismatch (st : code.OpIterState) (cs : List code.Ctrl)
     (c : code.Ctrl) (hctrls : st.ctrls.val = cs ++ [c])
@@ -137,7 +152,8 @@ theorem code.read_end.empty_mismatch (st : code.OpIterState) (cs : List code.Ctr
     simp [code.is_then, alloc.vec.Vec.is_empty, hpop,
       core.result.Result.Insts.CoreOpsTry.branch, hbase]
 
-/-- Wasm 1.0 forbids a result on an if that has no else arm. -/
+/-- `code.read_end` on a `Then` frame with a result returns `StackMismatch`, since Wasm 1.0 forbids
+a result on an `if` with no `else`. -/
 @[step]
 theorem code.read_end.then_result (st : code.OpIterState) (cs : List code.Ctrl)
     (c : code.Ctrl) (t : types.ValueType) (hctrls : st.ctrls.val = cs ++ [c])
@@ -153,7 +169,8 @@ theorem code.read_end.then_result (st : code.OpIterState) (cs : List code.Ctrl)
   step
   simp [code.is_then, hkind, alloc.vec.Vec.is_empty, results_post, hbt, Control.results]
 
-/-- Entering an empty else arm reuses its frame and resets unreachable polymorphism. -/
+/-- `code.read_else` on an empty `Then` frame turns it into an `Else` frame and resets its
+polymorphism. -/
 @[step]
 theorem code.read_else.empty (st : code.OpIterState) (cs : List code.Ctrl)
     (c : code.Ctrl) (hctrls : st.ctrls.val = cs ++ [c])
@@ -180,7 +197,7 @@ theorem code.read_else.empty (st : code.OpIterState) (cs : List code.Ctrl)
 
 namespace Control
 
-/-- Leaving a frame preserves structural bounds when enough operands remain. -/
+/-- Popping a frame preserves `Shape` when the operands cover the popped frame's base. -/
 theorem Shape.exit {st st' : code.OpIterState} (h : Shape st)
     (cs : List code.Ctrl) (c : code.Ctrl)
     (hctrls : st.ctrls.val = cs ++ [c]) (hctrls' : st'.ctrls.val = cs)
@@ -193,6 +210,7 @@ theorem Shape.exit {st st' : code.OpIterState} (h : Shape st)
     rw [hctrls'] at hd
     exact Nat.le_trans (hord.2.2 d hd c (by simp)) hbase
 
+/-- Popping a frame removes the innermost label. -/
 theorem labels_exit (st st' : code.OpIterState) (cs : List code.Ctrl) (c : code.Ctrl)
     (hctrls : st.ctrls.val = cs ++ [c]) (hctrls' : st'.ctrls.val = cs) :
     (labels st.ctrls.val).tail = labels st'.ctrls.val := by
@@ -200,6 +218,7 @@ theorem labels_exit (st st' : code.OpIterState) (cs : List code.Ctrl) (c : code.
 
 end Control
 
+/-- `code.read_end.empty` also preserves `Control.Shape` and drops the innermost label. -/
 theorem code.read_end.empty_context (st : code.OpIterState) (cs : List code.Ctrl)
     (c : code.Ctrl) (hshape : Control.Shape st) (hctrls : st.ctrls.val = cs ++ [c])
     (hbt : c.block_type = .Empty) (hbase : st.vals.val.length = c.value_stack_base.val) :
@@ -212,6 +231,7 @@ theorem code.read_end.empty_context (st : code.OpIterState) (cs : List code.Ctrl
     Control.Shape.exit hshape cs c hctrls hc (by rw [hv, hbase]),
     Control.labels_exit st st' cs c hctrls hc⟩
 
+/-- `code.read_end.concrete` also preserves `Control.Shape` and drops the innermost label. -/
 theorem code.read_end.concrete_context (st : code.OpIterState) (cs : List code.Ctrl)
     (c : code.Ctrl) (pre : List code.StackType) (hshape : Control.Shape st)
     (hctrls : st.ctrls.val = cs ++ [c])
@@ -229,6 +249,7 @@ theorem code.read_end.concrete_context (st : code.OpIterState) (cs : List code.C
   rw [hv, hvals, List.length_append, List.length_map, hbase]
   omega
 
+/-- `code.read_end.polymorphic` also preserves `Control.Shape` and drops the innermost label. -/
 theorem code.read_end.polymorphic_context (st : code.OpIterState) (cs : List code.Ctrl)
     (c : code.Ctrl) (hshape : Control.Shape st) (hctrls : st.ctrls.val = cs ++ [c])
     (hbase : st.vals.val.length = c.value_stack_base.val) (hpoly : c.polymorphic_base = true)
@@ -247,7 +268,8 @@ theorem code.read_end.polymorphic_context (st : code.OpIterState) (cs : List cod
   rw [hv, List.length_append, List.length_map, hbase]
   omega
 
-/-- Two decoded empty frames close in reverse order without changing either stack. -/
+/-- Reading an empty `block` then an empty `loop`, and ending both, restores the original stacks
+and advances the position by two bytes. -/
 theorem code.block_loop_empty_roundtrip (st : code.OpIterState) (data : Slice U8)
     (hshape : Control.Shape st) (hdata : st.pos.val + 1 < data.val.length)
     (hblock : data.val[st.pos.val]'(by omega) = 64#u8)

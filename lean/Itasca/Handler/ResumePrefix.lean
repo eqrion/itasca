@@ -1,5 +1,14 @@
 import Itasca.Handler.Sequence
 
+/-!
+# Suspended prefixes
+
+`Sequence.ResumePrefix` is the typed prefix of a parent frame suspended while a child block, loop
+or `if` is open. It remembers the arguments the child consumed, and `ResumePrefix.finish` resumes
+the parent once the child's instruction is typed. `realizes_append_concrete` characterizes
+realizations of a stack with concrete operands appended.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Sequence
@@ -12,7 +21,8 @@ private theorem accepts_concrete (rs : List types.ValueType) (ts : List valtype)
   | cons r rs ih =>
     cases ts <;> simp [Sequence.Accepts, ih]
 
-/-- Appended concrete operands have a unique suffix in every stack realization. -/
+/-- A realization of a stack with concrete operands appended is a realization of the stack
+followed by those operands' types. -/
 theorem realizes_append_concrete (poly : Bool) (vals : List code.StackType)
     (rs : List types.ValueType) (ts : List valtype) :
     Sequence.Realizes poly (vals ++ rs.map code.StackType.Val) ts ↔
@@ -29,19 +39,21 @@ theorem realizes_append_concrete (poly : Bool) (vals : List code.StackType)
     exact ⟨front, suffix ++ rs.map Translate.valueType, hf,
       List.rel_append hs ((accepts_concrete rs _).mpr rfl), List.append_assoc ..⟩
 
-/-- A suspended prefix retains the arguments consumed when its child was entered.
-For an if these are `[I32]`; blocks and loops have no input arguments in Wasm 1.0. -/
+/-- The typed prefix of a suspended parent frame. `inputs` are the arguments consumed when its child
+was entered: `[i32]` for an `if`, and none for blocks and loops in Wasm 1.0. -/
 structure ResumePrefix (C : context) (ops : List instr) (poly : Bool)
     (vals : List code.StackType) (inputs : List valtype) : Prop where
   wellFormed : Forall wf_instr ops
   typed : ∀ ts, Sequence.Realizes poly vals ts →
     Instrs_ok C ops (.mk_functype (.mk_list []) (.mk_list (ts ++ inputs)))
 
+/-- A typed prefix is a suspended prefix with no consumed arguments. -/
 theorem ResumePrefix.of_prefix {C : context} {ops : List instr} {poly : Bool}
     {vals : List code.StackType} (h : Sequence.TypedPrefix C ops poly vals) :
     ResumePrefix C ops poly vals [] := by
   exact ⟨h.wellFormed, by simpa using h.typed⟩
 
+/-- Popping `inputs` from a typed prefix's stack gives a suspended prefix that remembers them. -/
 theorem ResumePrefix.after_pop {C : context} {ops : List instr} {poly : Bool}
     {before after : List code.StackType} {inputs : List valtype}
     (h : Sequence.TypedPrefix C ops poly before)
@@ -50,7 +62,8 @@ theorem ResumePrefix.after_pop {C : context} {ops : List instr} {poly : Bool}
     ResumePrefix C ops poly after inputs :=
   ⟨h.wellFormed, fun ts ht => h.typed _ (hpop ts ht)⟩
 
-/-- Completing a child restores its result operands and resumes its parent prefix. -/
+/-- Completing a child instruction `op` with results `rs` pushes them and resumes the parent as a
+typed prefix. -/
 theorem ResumePrefix.finish {C : context} {ops : List instr} {poly : Bool}
     {vals : List code.StackType} {inputs : List valtype}
     (h : ResumePrefix C ops poly vals inputs) (hC : wf_context C)

@@ -1,10 +1,21 @@
 import Itasca.Handler.EnvLocals
 import Itasca.Binary.Wasm1.MemoryTyping
 
+/-!
+# Memory instruction prefixes
+
+Extends a `Sequence.TypedPrefix` across the extracted memory handlers: `code.read_load` and
+`code.read_store` for the loads and stores in `MemoryMeaning.opcodeMeaning`
+(`code.read_load.prefix`, `code.read_store.prefix`), and `code.read_memory_size` and
+`code.read_memory_grow` (`code.read_memory_size.prefix`, `code.read_memory_grow.prefix`).
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.EnvOps
 
+/-- The postcondition of a load or store reader: on success it records the byte provenance of the
+alignment and offset, and the typed prefix extended by `op arg`. -/
 def MemoryPost (data : Slice U8) (st : code.OpIterState)
     (outer segment : List code.StackType) (C : context) (ops : List instr)
     (op : code.MemArg → instr)
@@ -15,6 +26,8 @@ def MemoryPost (data : Slice U8) (st : code.OpIterState)
       ∃ rest, r.2.vals.val = outer ++ rest ∧ rest.length ≤ segment.length + 1 ∧
         Sequence.TypedPrefix C (ops ++ [op arg]) (Control.polymorphic st) rest
 
+/-- The postcondition of a `memory.size` or `memory.grow` reader: on success it records the
+reserved zero byte, and the typed prefix extended by `op`. -/
 def ReservedPost (data : Slice U8) (st : code.OpIterState)
     (outer segment : List code.StackType) (C : context) (ops : List instr)
     (op : instr) (r : core.result.Result Unit error.OpError × code.OpIterState) : Prop :=
@@ -27,6 +40,7 @@ end Itasca.EnvOps
 
 namespace Itasca
 
+/-- `code.read_load` extends the typed prefix by the load instruction `operation.op`. -/
 theorem code.read_load.prefix (st : code.OpIterState) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Control.base st).val = outer.length)
@@ -83,6 +97,7 @@ theorem code.read_load.prefix (st : code.OpIterState) (data : Slice U8)
                 · simpa [hpos', hpos] using hout
                 · simpa [hv', List.append_assoc] using hv''
 
+/-- `code.read_store` extends the typed prefix by the store instruction `operation.op`. -/
 theorem code.read_store.prefix (st : code.OpIterState) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Control.base st).val = outer.length)
@@ -147,6 +162,7 @@ theorem code.read_store.prefix (st : code.OpIterState) (data : Slice U8)
                     exact ⟨by simpa [hpos', hpos] using hout, hc''.trans (hc'.trans hc),
                       rest', hv'', by omega, by simpa using htyping⟩
 
+/-- `code.read_memory_size` extends the typed prefix by `memory.size`. -/
 theorem code.read_memory_size.prefix (st : code.OpIterState) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hsize : st.vals.val.length < Usize.max)
@@ -178,6 +194,7 @@ theorem code.read_memory_size.prefix (st : code.OpIterState) (data : Slice U8)
             · simpa [hpos] using hout
             · simpa [hv, hvals, List.append_assoc] using hv'
 
+/-- `code.read_memory_grow` extends the typed prefix by `memory.grow`. -/
 theorem code.read_memory_grow.prefix (st : code.OpIterState) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Control.base st).val = outer.length)

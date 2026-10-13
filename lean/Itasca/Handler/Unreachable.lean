@@ -1,16 +1,26 @@
 import Itasca.Handler.Control
 
+/-!
+# Unreachable code handling
+
+Specifications of `code.mark_unreachable_loop` and `code.mark_unreachable`, which truncate the
+operand stack to the innermost frame base and make that frame polymorphic. In such a frame
+`code.pop_stack_type` and `code.pop_with_type` return `Bot` at the base without consuming
+operands (`code.pop_with_type.polymorphic`).
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
+/-- `Vec.pop` returns the last element and removes it. -/
 @[step]
 theorem vec_pop_spec {T : Type} (allocator : Type) (v : alloc.vec.Vec T) :
     alloc.vec.Vec.pop allocator v ⦃ (r : Option T × alloc.vec.Vec T) =>
       r.1 = v.val.getLast? ∧ r.2.val = v.val.dropLast ⦄ := by
   simp [alloc.vec.Vec.pop]
 
-/-- The extracted loop terminates and removes exactly the operands above the frame base. -/
+/-- `code.mark_unreachable_loop` terminates and removes exactly the operands above `base`. -/
 @[step]
 theorem code.mark_unreachable_loop.spec (st : code.OpIterState) (base : Usize)
     (hbase : base.val ≤ st.vals.val.length) :
@@ -39,7 +49,8 @@ theorem code.mark_unreachable_loop.spec (st : code.OpIterState) (base : Usize)
         Nat.min_eq_left (by omega : base.val ≤ s.vals.val.length - 1)] using htake
   · exact ⟨hbase, rfl, rfl, rfl⟩
 
-/-- Only the innermost control frame becomes polymorphic. -/
+/-- `code.mark_unreachable` drops the operands above the innermost frame base and makes only that
+frame polymorphic. -/
 @[step]
 theorem code.mark_unreachable.spec (st : code.OpIterState) (cs : List code.Ctrl) (c : code.Ctrl)
     (hctrls : st.ctrls.val = cs ++ [c])
@@ -54,6 +65,8 @@ theorem code.mark_unreachable.spec (st : code.OpIterState) (cs : List code.Ctrl)
   step*
   simp_all
 
+/-- With no operands above the frame base, `code.pop_stack_type` returns `Bot` in a polymorphic
+frame and `EmptyStack` otherwise, leaving the state unchanged. -/
 theorem code.pop_stack_type.at_base (st : code.OpIterState)
     (hbase : alloc.vec.Vec.len st.vals = Control.base st) :
     code.pop_stack_type st = .ok
@@ -62,7 +75,8 @@ theorem code.pop_stack_type.at_base (st : code.OpIterState)
   obtain ⟨_, hp, rfl⟩ := WP.spec_imp_exists (code.cur_polymorphic.spec st)
   cases h : Control.polymorphic st <;> simp [code.pop_stack_type, hb, hbase, hp, h]
 
-/-- At an unreachable frame's base, any expected type can be popped without consuming a value. -/
+/-- At an unreachable frame's base, any expected type can be popped as `Bot` without consuming a
+value. -/
 theorem code.pop_with_type.polymorphic (st : code.OpIterState) (expected : types.ValueType)
     (hbase : alloc.vec.Vec.len st.vals = Control.base st)
     (hpoly : Control.polymorphic st = true) :
@@ -71,6 +85,7 @@ theorem code.pop_with_type.polymorphic (st : code.OpIterState) (expected : types
   simp only [hpoly, ↓reduceIte] at hp
   simp [code.pop_with_type, hp, core.result.Result.Insts.CoreOpsTry.branch]
 
+/-- After `code.mark_unreachable`, any expected type pops as `Bot`. -/
 theorem code.mark_unreachable_then_pop (st : code.OpIterState)
     (cs : List code.Ctrl) (c : code.Ctrl) (expected : types.ValueType)
     (hctrls : st.ctrls.val = cs ++ [c])

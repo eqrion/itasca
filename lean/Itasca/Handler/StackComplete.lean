@@ -1,13 +1,21 @@
 import Itasca.Handler.StackSemantics
 
+/-!
+# Stack operation completeness
+
+Completeness of the extracted pops: if the validator stack realizes a declarative stack with the
+expected types on top, then `code.pop_stack_type.complete`, `code.pop_with_type.complete` and
+`code.pop_types.complete` show that the pop succeeds and the remainder realizes the rest.
+-/
+
 open Aeneas Aeneas.Std
 
 set_option maxRecDepth 2048
 
 namespace Itasca.StackSemantics
 
-/-- Forward stack interpretation: a pop from a stack realizing a nonempty
-declarative stack consumes its last type and realizes the remaining prefix. -/
+/-- A pop from a stack that realizes a non-empty declarative stack accepts its last type, and the
+remainder realizes the rest. -/
 theorem Popped.complete {poly before t after} (h : Popped poly before t after)
     {ts : List valtype} {u : valtype}
     (hr : Sequence.Realizes poly before (ts ++ [u])) :
@@ -20,6 +28,7 @@ theorem Popped.complete {poly before t after} (h : Popped poly before t after)
     exact ⟨ht, hf⟩
   | implicit => exact ⟨trivial, Sequence.realizes_polymorphic_empty ts⟩
 
+/-- An empty reachable frame realizes no non-empty declarative stack. -/
 theorem realizes_nonempty {ts : List valtype} {u : valtype} :
     ¬ Sequence.Realizes false [] (ts ++ [u]) := by
   intro h
@@ -30,8 +39,8 @@ end Itasca.StackSemantics
 
 namespace Itasca
 
-/-- An independently compatible operand stack forces the actual untyped pop
-to succeed, including an implicit Bot at an unreachable frame base. -/
+/-- If the segment realizes a stack ending in `u`, `code.pop_stack_type` succeeds, with an implicit
+`Bot` at the base of a polymorphic frame, and the remainder realizes the rest. -/
 theorem code.pop_stack_type.complete (st : code.OpIterState)
     (outer segment : List code.StackType) (ts : List valtype) (u : valtype)
     (hvals : st.vals.val = outer ++ segment)
@@ -53,8 +62,8 @@ theorem code.pop_stack_type.complete (st : code.OpIterState)
     rw [hpoly, hnil] at ht
     exact (StackSemantics.realizes_nonempty ht).elim
 
-/-- A typed operand required by a declarative derivation cannot produce
-EmptyStack or TypeMismatch in the extracted pop. -/
+/-- If the segment realizes a stack ending in the translation of `u`, `code.pop_with_type`
+succeeds, and the remainder realizes the rest. -/
 theorem code.pop_with_type.complete (st : code.OpIterState)
     (outer segment : List code.StackType) (ts : List valtype) (u : types.ValueType)
     (hvals : st.vals.val = outer ++ segment)
@@ -78,8 +87,8 @@ theorem code.pop_with_type.complete (st : code.OpIterState)
       exact (StackSemantics.realizes_nonempty ht).elim
     · exact (hbad (hpop.complete ht).1).elim
 
-/-- Popping a whole declaratively required argument list also succeeds. The
-loop consumes it from right to left, preserving the remaining prefix. -/
+/-- If the segment realizes a stack ending in the translation of `expected`, `code.pop_types`
+succeeds, and the remainder realizes the rest. -/
 theorem code.pop_types.complete (st : code.OpIterState)
     (outer segment : List code.StackType) (ts : List valtype)
     (expected : Slice types.ValueType)

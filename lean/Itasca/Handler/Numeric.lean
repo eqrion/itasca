@@ -1,11 +1,20 @@
 import Itasca.Handler.Stack
 import Itasca.Support.LiteralDispatch
 
+/-!
+# Numeric operand handlers
+
+Specifications of the extracted `code.read_conversion` and `code.read_binary` on concrete and
+unreachable operands, and an end-to-end check of `i32.add`: `code.step_numeric.i32_add` and
+`code.step_i32_add_typed` show that `code.step` validates `i32.add` with the generated `Instr_ok`
+typing and calls the `on_i32_add` hook with the updated stack.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- Conversions, unary operations, and tests replace one concrete operand. -/
+/-- `code.read_conversion` on a concrete `input` operand replaces it with an `output` operand. -/
 @[step]
 theorem code.read_conversion.concrete (st : code.OpIterState)
     (pre : List code.StackType) (input output : types.ValueType)
@@ -20,7 +29,7 @@ theorem code.read_conversion.concrete (st : code.OpIterState)
   simp only [r_post, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
   step*
 
-/-- Binary operations and comparisons consume two operands and push their result type. -/
+/-- `code.read_binary` on two concrete `input` operands replaces them with one `output` operand. -/
 @[step]
 theorem code.read_binary.concrete (st : code.OpIterState)
     (pre : List code.StackType) (input output : types.ValueType)
@@ -44,7 +53,7 @@ theorem code.read_binary.concrete (st : code.OpIterState)
   simp only [r1_post, bind_ok]
   step*
 
-/-- A unary operation at an unreachable frame base still pushes its concrete result. -/
+/-- `code.read_conversion` at an unreachable frame base still pushes its concrete result. -/
 @[step]
 theorem code.read_conversion.polymorphic (st : code.OpIterState)
     (input output : types.ValueType)
@@ -58,7 +67,8 @@ theorem code.read_conversion.polymorphic (st : code.OpIterState)
     bind_ok, core.result.Result.Insts.CoreOpsTry.branch]
   step*
 
-/-- Both binary inputs may be supplied by the same unreachable frame base. -/
+/-- `code.read_binary` at an unreachable frame base takes both inputs from the base and pushes its
+concrete result. -/
 @[step]
 theorem code.read_binary.polymorphic (st : code.OpIterState)
     (input output : types.ValueType)
@@ -89,18 +99,22 @@ private theorem i32_add_visit {V : Type} (visitor : code.OpVisitor V)
 
 namespace Numeric
 
+/-- The SpecTec `i32.add` instruction. -/
 def i32Add : instr := .BINOP .I32 (.mk_binop__0 .I32 .ADD)
 
+/-- `i32.add` is well-formed. -/
 theorem i32Add_wf : wf_instr i32Add :=
   .instr_case_15 _ _ (.binop__case_0 _ _ _ rfl)
 
+/-- `i32.add` has type `[i32, i32] -> [i32]`. -/
 theorem i32Add_typed (C : context) (hC : wf_context C) :
     Instr_ok C i32Add (.mk_functype (.mk_list [.I32, .I32]) (.mk_list [.I32])) :=
   .binop C _ _ hC i32Add_wf
 
 end Numeric
 
-/-- Concrete i32.add validation calls the corresponding hook with the updated stack. -/
+/-- `code.step_numeric` on `i32.add` with two concrete `i32` operands replaces them with one and
+calls the `on_i32_add` hook with the updated stack. -/
 theorem code.step_numeric.i32_add {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (pre : List code.StackType) (v v' : V)
     (hvals : st.vals.val = pre ++ [.Val .I32, .Val .I32])
@@ -125,7 +139,8 @@ private theorem i32_add_dispatch {V : Type} (visitor : code.OpVisitor V)
       code.step_numeric visitor st code.OP_I32_ADD v := by
   simp [global_simps]
 
-/-- The full instruction dispatcher validates i32.add with SpecTec's numeric stack effect. -/
+/-- `code.step` validates `i32.add` with the stack effect and `Instr_ok` typing of the generated
+specification. -/
 theorem code.step_i32_add_typed {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (pre : List code.StackType) (v v' : V)

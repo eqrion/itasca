@@ -2,10 +2,20 @@ import Itasca.Handler.Control
 import Itasca.Binary.ReadByte
 import Itasca.Binary.Wasm1.BlockType
 
+/-!
+# Block and loop handlers
+
+Lemmas about `code.read_block_type`, `code.read_block` and `code.read_loop` for Wasm 1.0 scalar
+block types: byte-level specifications, and `code.read_block.context` and `code.read_loop.context`,
+which show the label context extends with the generated `Blocktype_ok`. `Control.block_typed` and
+`Control.loop_typed` give the generated `block` and `loop` rules.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Control
 
+/-- A well-formed block body typed under the extended label context gives a typed `block`. -/
 theorem block_typed (C : context) (hC : wf_context C) (bt : code.BlockType)
     (body : List instr) (hwf : Forall wf_instr body)
     (hbody : Instrs_ok (labelContext (resultTypes bt) ++ C) body
@@ -15,6 +25,7 @@ theorem block_typed (C : context) (hC : wf_context C) (bt : code.BlockType)
   exact .block C _ body [] _ (blockType_ok C hC bt) hbody hC
     (.instr_case_4 _ body (blockType_wf bt) hwf) (labelContext_wf _)
 
+/-- A well-formed loop body typed with an empty-label context gives a typed `loop`. -/
 theorem loop_typed (C : context) (hC : wf_context C) (bt : code.BlockType)
     (body : List instr) (hwf : Forall wf_instr body)
     (hbody : Instrs_ok (labelContext [] ++ C) body
@@ -28,6 +39,7 @@ end Itasca.Control
 
 namespace Itasca
 
+/-- `code.read_block_type` decodes the single byte of a scalar block type. -/
 @[step]
 theorem code.read_block_type.spec (data : Slice U8) (pos : Usize) (bt : code.BlockType)
     (h : pos.val < data.length) (hbyte : data.val[pos.val] = Control.blockByte bt)
@@ -40,12 +52,14 @@ theorem code.read_block_type.spec (data : Slice U8) (pos : Usize) (bt : code.Blo
   | Empty => simp [Control.blockByte, core.result.Result.Insts.CoreOpsTry.branch, hnext]
   | Value t => cases t <;> simp_all [Control.ScalarBlockType, Control.blockByte, core.result.Result.Insts.CoreOpsTry.branch]
 
+/-- `code.read_block_type` at the end of the data returns `UnexpectedEof`. -/
 theorem code.read_block_type.eof (data : Slice U8) (pos : Usize) (h : data.length ≤ pos.val) :
     code.read_block_type data pos = .ok (.Err .UnexpectedEof) := by
   simp [code.read_block_type, reader.read_byte.eof data pos h,
     core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
+/-- `code.read_block_type` on a byte that is no scalar block type returns `InvalidBlockType`. -/
 theorem code.read_block_type.invalid (data : Slice U8) (pos : Usize)
     (h : pos.val < data.length)
     (hbyte : ∀ bt, Control.ScalarBlockType bt → data.val[pos.val] ≠ Control.blockByte bt) :
@@ -60,6 +74,7 @@ theorem code.read_block_type.invalid (data : Slice U8) (pos : Usize)
   simp [code.read_block_type, hr, core.result.Result.Insts.CoreOpsTry.branch]
   split <;> simp_all [U8.ofNat, UScalar.ofNat, UScalar.ofNatCore]
 
+/-- `code.read_block` consumes the block type byte and pushes a `Block` frame. -/
 @[step]
 theorem code.read_block.spec (st : code.OpIterState) (data : Slice U8) (bt : code.BlockType)
     (h : st.pos.val < data.length) (hbyte : data.val[st.pos.val] = Control.blockByte bt)
@@ -74,6 +89,7 @@ theorem code.read_block.spec (st : code.OpIterState) (data : Slice U8) (bt : cod
   step*
   simp_all [Control.frame]
 
+/-- `code.read_loop` consumes the block type byte and pushes a `Loop` frame. -/
 @[step]
 theorem code.read_loop.spec (st : code.OpIterState) (data : Slice U8) (bt : code.BlockType)
     (h : st.pos.val < data.length) (hbyte : data.val[st.pos.val] = Control.blockByte bt)
@@ -88,7 +104,8 @@ theorem code.read_loop.spec (st : code.OpIterState) (data : Slice U8) (bt : code
   step*
   simp_all [Control.frame]
 
-/-- Decoding block entry preserves stack bounds and extends the declarative label context. -/
+/-- `code.read_block` preserves `Control.Shape`, extends the label context to match the new control
+stack, and gives the block type `Blocktype_ok`. -/
 theorem code.read_block.context (st : code.OpIterState) (data : Slice U8) (bt : code.BlockType)
     (C : context) (hC : wf_context C) (hlabels : C.LABELS = Control.labels st.ctrls.val)
     (hshape : Control.Shape st) (h : st.pos.val < data.length)
@@ -106,7 +123,9 @@ theorem code.read_block.context (st : code.OpIterState) (data : Slice U8) (bt : 
   simp [hctrls, Control.labels_push, Control.frame, Control.targetTypes,
     Control.targetBlockType, Control.resultTypes, hlabels]
 
-/-- Even a result-producing Wasm 1.0 loop has an empty branch target type. -/
+/-- `code.read_loop` preserves `Control.Shape`, extends the label context to match the new control
+stack, and gives the block type `Blocktype_ok`. Even a loop with a result has an empty branch
+target type. -/
 theorem code.read_loop.context (st : code.OpIterState) (data : Slice U8) (bt : code.BlockType)
     (C : context) (hC : wf_context C) (hlabels : C.LABELS = Control.labels st.ctrls.val)
     (hshape : Control.Shape st) (h : st.pos.val < data.length)

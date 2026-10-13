@@ -3,11 +3,20 @@ import Itasca.Binary.SignedLeb32
 import Itasca.Spec.Instr
 import Itasca.Handler.Sequence
 
+/-!
+# `i32.const` handler
+
+Lemmas about `code.read_i32_const` (decoding the signed LEB128 immediate and pushing an `i32`
+operand) and `code.step` on `i32.const`: `code.step_i32_const`, `.failed_read`, `.visitor_rejected`
+and `.total`. `Sequence.TypedPrefix.i32Const` extends a typed prefix by the constant.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- A successfully decoded constant advances the cursor and appends one I32 operand. -/
+/-- If the LEB128 read succeeds, `code.read_i32_const` advances the cursor and appends one `i32`
+operand. -/
 @[step]
 theorem code.read_i32_const.from_read (st : code.OpIterState) (data : Slice U8)
     (value : I32) (next : Usize)
@@ -19,14 +28,16 @@ theorem code.read_i32_const.from_read (st : code.OpIterState) (data : Slice U8)
   simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
   step*
 
-/-- A malformed constant leaves the entire validator state unchanged. -/
+/-- A malformed immediate makes `code.read_i32_const` fail and leave the validator state
+unchanged. -/
 theorem code.read_i32_const.failed_read (st : code.OpIterState) (data : Slice U8)
     (e : error.OpError) (hread : reader.read_s32_leb data st.pos = .ok (.Err e)) :
     code.read_i32_const st data = .ok (.Err e, st) := by
   simp [code.read_i32_const, hread, core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-/-- Total constant decoding under the single push's capacity bound. -/
+/-- `code.read_i32_const` terminates, with exact byte provenance for the decoded value or the
+rejection, when the push fits. -/
 @[step]
 theorem code.read_i32_const.spec (st : code.OpIterState) (data : Slice U8)
     (hsize : st.vals.val.length < Usize.max) :
@@ -49,7 +60,7 @@ theorem code.read_i32_const.spec (st : code.OpIterState) (data : Slice U8)
     simp only [WP.spec_ok, hok, hpos]
     exact ⟨hc, hp, hv⟩
 
-/-- Dispatch calls the I32 visitor with the signed value and the updated state. -/
+/-- `code.step` on `i32.const` calls the visitor with the signed value and the updated state. -/
 theorem code.step_i32_const {V : Type} (visitor : code.OpVisitor V)
     (st st' : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (value : I32) (v v' : V)
@@ -58,7 +69,7 @@ theorem code.step_i32_const {V : Type} (visitor : code.OpVisitor V)
     code.step visitor st data env ctx code.OP_I32_CONST v = .ok (.Ok (), st', v') := by
   simp [hread, hvisit, code.visit, core.result.Result.Insts.CoreOpsTry.branch]
 
-/-- An invalid immediate fails before invoking the visitor. -/
+/-- An invalid immediate makes `code.step` on `i32.const` fail before calling the visitor. -/
 theorem code.step_i32_const.failed_read {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (e : error.OpError) (v : V)
@@ -88,7 +99,8 @@ private theorem forall₂_snoc {vals : List code.StackType} {t : code.StackType}
       obtain ⟨before, u, rfl, hb, hu⟩ := ih hs
       exact ⟨_ :: before, u, rfl, .cons hx hb, hu⟩
 
-/-- A concrete appended value is the final type of every represented stack. -/
+/-- If a stack with a concrete operand appended is realized, the last type is that operand's type
+and the rest realizes the remainder. -/
 theorem Realizes.snoc_val {poly : Bool} {vals : List code.StackType} {ts : List valtype}
     (valueType : types.ValueType) (h : Realizes poly (vals ++ [.Val valueType]) ts) :
     ∃ before, ts = before ++ [Translate.valueType valueType] ∧ Realizes poly vals before := by
@@ -98,7 +110,7 @@ theorem Realizes.snoc_val {poly : Bool} {vals : List code.StackType} {ts : List 
   subst u
   exact ⟨front ++ before, (List.append_assoc ..).symm, front, before, hf, hb, rfl⟩
 
-/-- The exact constant stack effect preserves the per-frame declarative invariant. -/
+/-- Pushing an `i32` operand extends a typed prefix by `i32.const`. -/
 theorem TypedPrefix.i32Const {C : context} {ops : List instr} {poly : Bool}
     {vals : List code.StackType} (h : TypedPrefix C ops poly vals)
     (hC : wf_context C) (value : I32) :
@@ -112,7 +124,8 @@ end Itasca.Sequence
 
 namespace Itasca
 
-/-- A rejecting visitor keeps the decoded constant's stack/cursor effects and its own state. -/
+/-- A rejecting visitor gives a `Visitor` error and keeps the decoded constant's stack and cursor
+effects. -/
 theorem code.step_i32_const.visitor_rejected {V : Type} (visitor : code.OpVisitor V)
     (st st' : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (value : I32) (v v' : V) (e : error.VisitError)
@@ -122,7 +135,7 @@ theorem code.step_i32_const.visitor_rejected {V : Type} (visitor : code.OpVisito
   simp [hread, hvisit, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-/-- Constant dispatch is total whenever its push fits and the selected visitor hook returns. -/
+/-- `code.step` on `i32.const` terminates when the push fits and the visitor hook returns. -/
 theorem code.step_i32_const.total {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V)
     (hsize : st.vals.val.length < Usize.max)

@@ -2,15 +2,27 @@ import Itasca.Handler.BranchPrefix
 import Itasca.Visitor.Total
 import Itasca.Binary.Wasm1.BrTableLabels
 
+/-!
+# Branch table handlers
+
+Lemmas about the extracted `br_table` reader. `BrTable.Targets` says every decoded label exists
+and has a common target type. `code.read_table_labels.spec` shows label iteration terminates,
+`code.read_br_table.prefix` shows a successful `br_table` decodes its labels, has a common target
+type and extends a `Sequence.TypedPrefix` by the generated rule (`BrTable.instruction_typed`), and
+`code.step_br_table.of_read` lifts reader facts to `code.step`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.BrTable
 
-/-- Every recorded label exists and has the common branch target type. -/
+/-- Every recorded label exists and its target block type is `expect`. -/
 def Targets (cs : List code.Ctrl) (depths : List U32) (expect : Option code.BlockType) : Prop :=
   ∀ d ∈ depths, ∃ hd : d.val < cs.length,
     expect = some (Control.targetBlockType (cs[cs.length - 1 - d.val]'(by omega)))
 
+/-- `Targets` can be restated with the common type `bt` when the expected type is unset or
+already `bt`. -/
 theorem Targets.merge {cs depths expect bt}
     (h : Targets cs depths expect) (he : expect = none ∨ expect = some bt) :
     Targets cs depths (some bt) := by
@@ -21,6 +33,7 @@ theorem Targets.merge {cs depths expect bt}
   · simp [he] at ht
   · simpa [he] using ht
 
+/-- Adding a depth with target type `bt` preserves `Targets`. -/
 theorem Targets.snoc {cs depths expect bt} (h : Targets cs depths expect)
     (he : expect = none ∨ expect = some bt) (d : U32) (hd : d.val < cs.length)
     (hbt : bt = Control.targetBlockType (cs[cs.length - 1 - d.val]'(by omega))) :
@@ -36,6 +49,7 @@ end Itasca.BrTable
 
 namespace Itasca
 
+/-- The extracted block type equality returns `true` exactly for equal block types. -/
 theorem code.BlockType.eq_spec (a b : code.BlockType) :
     code.BlockType.Insts.CoreCmpPartialEqBlockType.eq a b ⦃ r => r = true ↔ a = b ⦄ := by
   cases a <;> cases b <;>
@@ -43,6 +57,8 @@ theorem code.BlockType.eq_spec (a b : code.BlockType) :
   rename_i a b
   cases a <;> cases b <;> simp [types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
 
+/-- `code.merge_target` accepts only when the new type equals the expected one, or none was
+expected. -/
 theorem code.merge_target.spec (expect : Option code.BlockType) (bt : code.BlockType) :
     code.merge_target expect bt ⦃ r =>
       ∀ b, r = .Ok b → b = bt ∧ (expect = none ∨ expect = some bt) ⦄ := by
@@ -60,12 +76,15 @@ end Itasca
 
 namespace Itasca.BrTable
 
+/-- The loop invariant for label iteration. -/
 private def LoopInv {V : Type} (data : Slice U8) (initial : code.OpIterState) (count : U32)
     (s : code.OpIterState × V × Option code.BlockType × U32) : Prop :=
   s.1.vals = initial.vals ∧ s.1.ctrls = initial.ctrls ∧ s.2.2.2.val ≤ count.val ∧
     ∃ depths, depths.length = s.2.2.2.val ∧
       LabelsDecoded data initial.pos depths s.1.pos ∧ Targets initial.ctrls.val depths s.2.2.1
 
+/-- The postcondition of label iteration: the state is unchanged, and success yields the decoded
+labels, whose targets have type `expect`. -/
 def LabelsPost {V : Type} (data : Slice U8) (initial : code.OpIterState) (count : U32)
     (r : core.result.Result (Option code.BlockType) error.OpError × code.OpIterState × V) : Prop :=
   r.2.1.vals = initial.vals ∧ r.2.1.ctrls = initial.ctrls ∧
@@ -76,8 +95,8 @@ end Itasca.BrTable
 
 namespace Itasca
 
-/-- Branch-table label iteration terminates even when its declared count exceeds
-the remaining input. Label hooks may reject; only their own termination is assumed. -/
+/-- `code.read_table_labels` terminates even when the declared count exceeds the remaining input.
+Label hooks may reject; only their termination is assumed. -/
 theorem code.read_table_labels.spec {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (count : U32) (v : V)
     (hvisitor : ∀ v s d, ∃ res v', visitor.on_br_table_label v s d = .ok (res, v')) :
@@ -143,9 +162,11 @@ end Itasca
 
 namespace Itasca.BrTable
 
+/-- The SpecTec `br_table` instruction with the given label depths and default. -/
 def instruction (depths : List U32) (default : U32) : instr :=
   .BR_TABLE (depths.map (fun d => .mk_uN d.val)) (.mk_uN default.val)
 
+/-- The `br_table` instruction is well-formed. -/
 theorem instruction_wf (depths : List U32) (default : U32) :
     wf_instr (instruction depths default) := by
   apply wf_instr.instr_case_9
@@ -154,6 +175,8 @@ theorem instruction_wf (depths : List U32) (default : U32) :
     exact Spec.label_wf d
   · exact Spec.label_wf default
 
+/-- `br_table` is typed when all its targets, including the default, have the common block type
+`bt`. -/
 theorem instruction_typed (C : context) (hC : wf_context C)
     (cs : List code.Ctrl) (hlabels : C.LABELS = Control.labels cs)
     (depths : List U32) (default : U32) (bt : code.BlockType)
@@ -192,8 +215,9 @@ end Itasca.BrTable
 
 namespace Itasca
 
-/-- Every successful branch table has the declared number of decoded labels,
-a common target type, and the SpecTec typing rule, even above a polymorphic base. -/
+/-- A successful `code.read_br_table` decodes the declared number of labels with a common target
+type and extends the typed prefix by the generated `br_table` rule, even above a polymorphic
+base. -/
 theorem code.read_br_table.prefix {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (v : V)
     (cs : List code.Ctrl) (c : code.Ctrl) (outer segment : List code.StackType)
@@ -308,6 +332,8 @@ end Itasca
 
 namespace Itasca
 
+/-- `code.step` on `br_table` runs `code.read_br_table` and then the visitor's `on_br_table`
+hook. -/
 theorem code.step_br_table.dispatch {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_BR_TABLE v = (do
@@ -321,6 +347,8 @@ theorem code.step_br_table.dispatch {V : Type} (visitor : code.OpVisitor V)
   cases res <;> simp
   congr 1
 
+/-- A property of every successful `code.read_br_table` result holds for `code.step` on `br_table`,
+given a visitor hook that terminates. -/
 theorem code.step_br_table.of_read {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V)
     (P : U32 × code.BlockType → code.OpIterState → Prop)

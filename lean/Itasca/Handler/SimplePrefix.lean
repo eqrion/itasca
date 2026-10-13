@@ -1,11 +1,22 @@
 import Itasca.Handler.StackSemantics
 import Itasca.Handler.Numeric
 
+/-!
+# Prefixes for simple instructions
+
+Extends a `Sequence.TypedPrefix` across the handlers of `i32.add`, `drop`, `nop` and
+`unreachable` (`code.step_i32_add.prefix`, `code.step_drop.prefix`, `code.step_nop.prefix`,
+`code.step_unreachable.prefix`). `StackSemantics.NumericEffect` and `NumericEffect.prefix` give the
+shared stack interpretation of a checked numeric operation, and `code.read_conversion.segment`
+and `code.read_binary.segment` describe the operand handlers on arbitrary frame segments.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.StackSemantics
 
-/-- The backward stack interpretation of a checked numeric operation. -/
+/-- The effect of a checked numeric operation: the result is pushed, and a stack realizing the
+remainder extends to one with the input types on top. -/
 def NumericEffect (poly : Bool) (before : List code.StackType)
     (inputs : List types.ValueType) (output : types.ValueType)
     (after : List code.StackType) : Prop :=
@@ -13,6 +24,7 @@ def NumericEffect (poly : Bool) (before : List code.StackType)
     ∀ ts, Sequence.Realizes poly rest ts →
       Sequence.Realizes poly before (ts ++ inputs.map Translate.valueType)
 
+/-- A `NumericEffect` extends a typed prefix by an instruction typed `inputs -> [output]`. -/
 theorem NumericEffect.prefix {poly before inputs output after}
     (h : NumericEffect poly before inputs output after)
     (C : context) (hC : wf_context C) (ops : List instr) (op : instr)
@@ -29,6 +41,7 @@ theorem NumericEffect.prefix {poly before inputs output after}
   refine ⟨front ++ inputs.map Translate.valueType, htransfer front hfront, ?_⟩
   exact .frame C [op] front _ _ (.instr C op _ _ hop hC hwf) hC (by simpa [Forall] using hwf)
 
+/-- A `Popped` step extends a typed prefix by `drop`. -/
 theorem Popped.prefix_drop {poly before t after} (h : Popped poly before t after)
     (C : context) (hC : wf_context C) (ops : List instr)
     (htyped : Sequence.TypedPrefix C ops poly before) :
@@ -46,7 +59,8 @@ end Itasca.StackSemantics
 
 namespace Itasca
 
-/-- Unary operations, tests, and conversions are total on arbitrary bounded frame segments. -/
+/-- `code.read_conversion` on an arbitrary frame segment has a `NumericEffect` outcome, or rejects
+with `EmptyStack` or `TypeMismatch`. -/
 theorem code.read_conversion.segment (st : code.OpIterState)
     (outer segment : List code.StackType) (input output : types.ValueType)
     (hvals : st.vals.val = outer ++ segment)
@@ -81,7 +95,8 @@ theorem code.read_conversion.segment (st : code.OpIterState)
     · simpa [List.append_assoc, hv] using hv'
     · simpa using hout.2
 
-/-- Binary operations and comparisons accept arbitrary mixtures of explicit and polymorphic operands. -/
+/-- `code.read_binary` on an arbitrary frame segment, with any mix of explicit and polymorphic
+operands, has a `NumericEffect` outcome, or rejects with `EmptyStack` or `TypeMismatch`. -/
 theorem code.read_binary.segment (st : code.OpIterState)
     (outer segment : List code.StackType) (input output : types.ValueType)
     (hvals : st.vals.val = outer ++ segment)
@@ -131,7 +146,8 @@ theorem code.read_binary.segment (st : code.OpIterState)
       · intro ts hs
         simpa [List.append_assoc] using hout.2 _ (hout'.2 ts hs)
 
-/-- The numeric hook may accept or reject; either outcome is total and retains the updated stack. -/
+/-- `code.step` on `i32.add` terminates, and acceptance extends the typed prefix by `i32.add`. The
+hook may reject. -/
 theorem code.step_i32_add.prefix {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (outer segment : List code.StackType) (v : V) (C : context) (hC : wf_context C)
@@ -171,7 +187,8 @@ theorem code.step_i32_add.prefix {V : Type} (visitor : code.OpVisitor V)
         core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-/-- DROP consumes an explicit operand or a polymorphic operand, and propagates visitor failures. -/
+/-- `code.step` on `drop` terminates and pops an explicit or polymorphic operand, and acceptance
+extends the typed prefix by `drop`. Visitor failures propagate. -/
 theorem code.step_drop.prefix {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (outer segment : List code.StackType) (v : V) (C : context) (hC : wf_context C)
@@ -210,7 +227,8 @@ theorem code.step_drop.prefix {V : Type} (visitor : code.OpVisitor V)
         core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-/-- NOP accepts or propagates its hook's rejection without changing validator state. -/
+/-- `code.step` on `nop` leaves the validator state unchanged, and acceptance extends the typed
+prefix by `nop`. A hook rejection propagates. -/
 theorem code.step_nop.prefix {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (segment : List code.StackType) (v : V) (C : context) (hC : wf_context C)
@@ -231,7 +249,8 @@ theorem code.step_nop.prefix {V : Type} (visitor : code.OpVisitor V)
     simp [hv, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-/-- UNREACHABLE clears just the current segment and changes just the current polymorphic flag. -/
+/-- `code.step` on `unreachable` clears the current segment and marks only the current frame
+polymorphic, and acceptance extends the typed prefix by `unreachable`. -/
 theorem code.step_unreachable.prefix {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (cs : List code.Ctrl) (c : code.Ctrl) (outer segment : List code.StackType)

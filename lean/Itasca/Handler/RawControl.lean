@@ -2,12 +2,21 @@ import Itasca.Handler.Block
 import Itasca.Handler.ControlFlow
 import Itasca.Binary.Wasm1.EncodingComplete
 
+/-!
+# Block-type decoding on raw bytes
+
+Total specifications of `code.read_block_type`, `code.read_block`, `code.read_loop` and
+`code.read_if` that relate their outcome to `Control.BlockDecoded` on arbitrary bytes. The
+`Wasm1.BytesAt.read_block_type` and `Wasm1.At.read_*` lemmas connect the binary grammar to
+`code.read_block_type`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- Block-type decoding terminates on every byte sequence, including EOF and
-the type-index encodings that are outside Wasm 1.0. -/
+/-- `code.read_block_type` terminates on every byte sequence, including end of data and the
+type-index encodings that Wasm 1.0 does not allow, and decodes or reports an error. -/
 theorem code.read_block_type.raw_spec (data : Slice U8) (pos : Usize) :
     code.read_block_type data pos ⦃ r =>
       match r with
@@ -25,6 +34,7 @@ theorem code.read_block_type.raw_spec (data : Slice U8) (pos : Usize) :
   · rw [code.read_block_type.eof data pos (by omega)]
     simp
 
+/-- `code.read_block` decodes the block type from the bytes and pushes a `Block` frame. -/
 theorem code.read_block.raw_spec (st : code.OpIterState) (data : Slice U8)
     (hsize : st.ctrls.val.length < Usize.max) :
     code.read_block st data ⦃ r =>
@@ -45,6 +55,7 @@ theorem code.read_block.raw_spec (st : code.OpIterState) (data : Slice U8)
       subst b
       exact ⟨⟨hp, hb, hp', by omega, hbt⟩, hv, hc⟩
 
+/-- `code.read_loop` decodes the block type from the bytes and pushes a `Loop` frame. -/
 theorem code.read_loop.raw_spec (st : code.OpIterState) (data : Slice U8)
     (hsize : st.ctrls.val.length < Usize.max) :
     code.read_loop st data ⦃ r =>
@@ -65,6 +76,8 @@ theorem code.read_loop.raw_spec (st : code.OpIterState) (data : Slice U8)
       subst b
       exact ⟨⟨hp, hb, hp', by omega, hbt⟩, hv, hc⟩
 
+/-- `code.read_if` decodes the block type from the bytes, pops the condition and pushes a `Then`
+frame. -/
 theorem code.read_if.raw_spec (st : code.OpIterState) (data : Slice U8)
     (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment)
@@ -95,6 +108,7 @@ end Itasca
 
 namespace Itasca.Wasm1
 
+/-- A block type's bytes make `code.read_block_type` decode it. -/
 theorem BytesAt.read_block_type {data start next} (bt : code.BlockType)
     (h : BytesAt data start [Control.blockByte bt] next)
     (hbt : Control.ScalarBlockType bt) :
@@ -104,6 +118,7 @@ theorem BytesAt.read_block_type {data start next} (bt : code.BlockType)
   have heq : p = next := UScalar.eq_of_val_eq (hp'.trans hn.symm)
   simpa [heq] using hr
 
+/-- After the `block` opcode, `code.read_block_type` decodes the block's type. -/
 theorem At.read_block {data start next} (bt : code.BlockType)
     (h : At data start (.block bt) next) (pos : Usize) (hp : pos.val = start.val + 1) :
     code.read_block_type data pos = .ok (.Ok (bt, next)) := by
@@ -111,6 +126,7 @@ theorem At.read_block {data start next} (bt : code.BlockType)
   cases hi
   exact hs.read_block_type bt (by assumption)
 
+/-- After the `loop` opcode, `code.read_block_type` decodes the loop's type. -/
 theorem At.read_loop {data start next} (bt : code.BlockType)
     (h : At data start (.loop bt) next) (pos : Usize) (hp : pos.val = start.val + 1) :
     code.read_block_type data pos = .ok (.Ok (bt, next)) := by
@@ -118,6 +134,7 @@ theorem At.read_loop {data start next} (bt : code.BlockType)
   cases hi
   exact hs.read_block_type bt (by assumption)
 
+/-- After the `if` opcode, `code.read_block_type` decodes the type. -/
 theorem At.read_if {data start next} (bt : code.BlockType)
     (h : At data start (.if_ bt) next) (pos : Usize) (hp : pos.val = start.val + 1) :
     code.read_block_type data pos = .ok (.Ok (bt, next)) := by

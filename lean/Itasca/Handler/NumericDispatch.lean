@@ -3,6 +3,16 @@ import Itasca.Visitor.Total
 import Itasca.Binary.Wasm1.NumericMeaning
 import Mathlib.Tactic.IntervalCases
 
+/-!
+# Numeric dispatch
+
+Connects the extracted scalar numeric dispatch to the Wasm 1.0 opcode meaning
+(`Numeric.opcodeMeaning`). `Numeric.tables` shows `code.convert_types` and `code.binary_types`
+agree with it, `Numeric.read.segment` and `read.total` describe the operand handler, and
+`code.step_numeric.prefix` and `code.step.numeric_prefix` extend a `Sequence.TypedPrefix` by the
+operation's instruction for every mapped opcode, with `code.step_numeric.total` for termination.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Numeric
@@ -12,7 +22,8 @@ private theorem scalar_eq {a b : U8} : a = b ↔ a.val = b.val :=
 
 set_option maxRecDepth 4096 in
 set_option maxHeartbeats 1000000 in
-/-- Both extracted effect tables agree with the independent specification map, including rejection. -/
+/-- `code.convert_types` and `code.binary_types` agree with `opcodeMeaning` on every byte,
+including rejection. -/
 theorem tables (opcode : U8) :
     code.convert_types opcode = .ok ((opcodeMeaning opcode).bind fun op =>
       if op.binary then none else some (op.input, op.output)) ∧
@@ -22,12 +33,15 @@ theorem tables (opcode : U8) :
   change n < 256 at hn
   interval_cases n <;> constructor <;> (with_unfolding_all rfl)
 
-/-- The implementation helper selected by an independently specified scalar operation. -/
+/-- The extracted operand handler for a scalar operation: `code.read_binary` for binary operations
+and `code.read_conversion` otherwise. -/
 def read (op : Operation) (st : code.OpIterState) :
     Result (core.result.Result Unit error.OpError × code.OpIterState) :=
   if op.binary then code.read_binary st op.input op.output
   else code.read_conversion st op.input op.output
 
+/-- `read` on the current frame's operand segment has a `StackSemantics.NumericEffect` outcome, or
+rejects with `EmptyStack` or `TypeMismatch`. -/
 theorem read.segment (op : Operation) (st : code.OpIterState)
     (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment)
@@ -55,7 +69,7 @@ theorem read.segment (op : Operation) (st : code.OpIterState)
     refine ⟨(res, out), by simpa [read, hb] using hr, hc, hp, after, hv, hlen, ?_⟩
     cases res <;> simpa [Operation.inputs, hb] using hout
 
-/-- Operand checking terminates without a typing hypothesis, under shape and capacity bounds. -/
+/-- `read` terminates and preserves `Control.Shape`, under shape and capacity bounds. -/
 theorem read.total (op : Operation) (st : code.OpIterState) (hshape : Control.Shape st)
     (hsize : st.vals.val.length < Usize.max) :
     read op st ⦃ r => Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧ r.2.pos = st.pos ∧
@@ -76,7 +90,8 @@ end Itasca.Numeric
 
 namespace Itasca
 
-/-- Every recognized scalar opcode runs its proven operand handler and the extracted numeric hook dispatcher. -/
+/-- `code.step_numeric` on a mapped scalar opcode runs `Numeric.read` and then the visitor's numeric
+hook. -/
 theorem code.step_numeric.dispatch {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (opcode : U8) (op : Numeric.Operation) (v : V)
     (hmap : Numeric.NumericOp opcode op) :
@@ -95,7 +110,8 @@ theorem code.step_numeric.dispatch {V : Type} (visitor : code.OpVisitor V)
     cases res <;> simp <;>
     congr 1
 
-/-- An opcode outside the scalar numeric map is rejected without invoking any visitor. -/
+/-- `code.step_numeric` rejects an opcode outside the scalar numeric map with
+`UnrecognizedOpcode`, without calling the visitor. -/
 theorem code.step_numeric.unrecognized {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (opcode : U8) (v : V)
     (hmap : Numeric.opcodeMeaning opcode = none) :
@@ -104,7 +120,8 @@ theorem code.step_numeric.unrecognized {V : Type} (visitor : code.OpVisitor V)
   simp [hmap] at hc hb
   simp [code.step_numeric, hc, hb]
 
-/-- Numeric dispatch is total on every mixed stack; accepted operations extend its declarative typing. -/
+/-- `code.step_numeric` terminates on every operand stack, and an accepted operation extends the
+typed prefix by its instruction. -/
 theorem code.step_numeric.prefix {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (opcode : U8) (op : Numeric.Operation)
     (outer segment : List code.StackType) (v : V) (C : context) (hC : wf_context C)
@@ -145,7 +162,7 @@ theorem code.step_numeric.prefix {V : Type} (visitor : code.OpVisitor V)
 
 set_option maxRecDepth 4096 in
 set_option maxHeartbeats 1000000 in
-/-- All scalar numeric bytes bypass the nonnumeric and memory dispatchers. -/
+/-- `code.step` sends every opcode from `0x45` up to `code.step_numeric`. -/
 theorem code.step.numeric_dispatch {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (opcode : U8) (v : V) (hlow : 0x45 ≤ opcode.val) :
@@ -155,7 +172,8 @@ theorem code.step.numeric_dispatch {V : Type} (visitor : code.OpVisitor V)
   change 0x45 ≤ n at hlow
   interval_cases n <;> with_unfolding_all rfl
 
-/-- The public dispatcher implements every mapped scalar instruction, preserving hook rejection as OpError. -/
+/-- `code.step` terminates on every mapped scalar opcode, and an accepted operation extends the
+typed prefix by its instruction. Hook rejections surface as `OpError`. -/
 theorem code.step.numeric_prefix {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (opcode : U8) (op : Numeric.Operation)
@@ -175,7 +193,8 @@ theorem code.step.numeric_prefix {V : Type} (visitor : code.OpVisitor V)
   exact code.step_numeric.prefix visitor st opcode op outer segment v C hC ops htyped
     hmap hvals hbase hsize hvisit
 
-/-- Every byte terminates in the numeric dispatcher, including unknown-byte and visitor rejections. -/
+/-- `code.step_numeric` terminates on every byte, including unknown opcodes and visitor
+rejections, and preserves `Control.Shape`. -/
 theorem code.step_numeric.total {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (opcode : U8) (v : V)
     (hshape : Control.Shape st) (hsize : st.vals.val.length < Usize.max)

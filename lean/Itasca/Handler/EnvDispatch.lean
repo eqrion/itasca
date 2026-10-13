@@ -3,6 +3,15 @@ import Itasca.Handler.EnvMemory
 import Itasca.Visitor.Basic
 import Itasca.Visitor.Total
 
+/-!
+# Environment instruction dispatch
+
+For each variable, call and memory instruction, `code.step` on its opcode equals running the
+corresponding reader and then the visitor's hook through `CoreVisitor.run`
+(`code.step_local_get.dispatch`, ..., `code.step_memory_grow.dispatch`).
+`code.step_memory.dispatch` does the same for loads and stores, selected by `MemoryMeaning`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
@@ -115,7 +124,8 @@ theorem code.step_memory_grow.dispatch {V : Type} (visitor : code.OpVisitor V)
   cases res <;> simp
   congr 1
 
-/-- The independent memory map agrees with the extracted two-stage dispatcher. -/
+/-- For an opcode with a row in `MemoryMeaning.opcodeMeaning`, `code.step` runs `code.read_store`
+or `code.read_load` and then `code.visit_memory`. -/
 theorem code.step_memory.dispatch {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V)
     (opcode : U8) (operation : MemoryMeaning.Operation)

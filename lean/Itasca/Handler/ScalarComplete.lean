@@ -4,11 +4,22 @@ import Itasca.Handler.NumericDispatch
 import Itasca.Handler.Select
 import Itasca.Handler.ScalarConst
 
+/-!
+# Scalar handler completeness
+
+Completeness of the extracted scalar handlers: on any operand segment whose realization has the
+required types on top, `code.read_conversion.complete`, `code.read_binary.complete`,
+`Numeric.read.complete`, `code.read_drop.complete` and `code.read_select.complete` succeed with the
+expected stack effect, and `code.read_i32_const.complete` and its `i64`, `f32` and `f64` variants
+succeed on a fully decoded immediate.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- A compatible operand forces unary/conversion validation to succeed. -/
+/-- If the segment realizes a stack ending in `input`, `code.read_conversion` succeeds and the
+result realizes the stack with `output` instead. -/
 theorem code.read_conversion.complete (st : code.OpIterState)
     (outer segment : List code.StackType) (ts : List valtype) (input output : types.ValueType)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Control.base st).val = outer.length)
@@ -31,7 +42,8 @@ theorem code.read_conversion.complete (st : code.OpIterState)
   · simp; omega
   · exact ht'.snoc (.Val output) (Translate.valueType output) rfl
 
-/-- Both operands may be explicit, bottom-valued, or implicit at a polymorphic base. -/
+/-- If the segment realizes a stack ending in two `input` types, `code.read_binary` succeeds, with
+explicit, `Bot` or implicit operands, and the result realizes the stack with `output`. -/
 theorem code.read_binary.complete (st : code.OpIterState)
     (outer segment : List code.StackType) (ts : List valtype) (input output : types.ValueType)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Control.base st).val = outer.length)
@@ -62,7 +74,8 @@ theorem code.read_binary.complete (st : code.OpIterState)
   · simpa [Control.polymorphic, hc1] using
       ht2.snoc (.Val output) (Translate.valueType output) rfl
 
-/-- Every independently mapped numeric effect is accepted on a compatible stack. -/
+/-- `Numeric.read` succeeds for any scalar operation on a segment that realizes a stack ending in
+the operation's input types. -/
 theorem Numeric.read.complete (op : Numeric.Operation) (st : code.OpIterState)
     (outer segment : List code.StackType) (ts : List valtype)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Control.base st).val = outer.length)
@@ -81,7 +94,8 @@ theorem Numeric.read.complete (op : Numeric.Operation) (st : code.OpIterState)
       simpa [Numeric.read, hb] using code.read_binary.complete st outer segment ts op.input op.output
         hvals hbase hsize (by simpa [Numeric.Operation.inputs, hb] using ht)
 
-/-- Drop accepts any available declared value, including a bottom operand. -/
+/-- If the segment realizes a stack ending in `u`, `code.read_drop` succeeds, including for a `Bot`
+operand. -/
 theorem code.read_drop.complete (st : code.OpIterState)
     (outer segment : List code.StackType) (ts : List valtype) (u : valtype)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Control.base st).val = outer.length)
@@ -92,7 +106,7 @@ theorem code.read_drop.complete (st : code.OpIterState)
       Sequence.Realizes (Control.polymorphic st) rest ts :=
   code.pop_stack_type.complete st outer segment ts u hvals hbase ht
 
-/-- A common interpretation of both operands forces their actual join to succeed. -/
+/-- If two operands both accept `u`, `code.join_stack_type` succeeds with a type accepting `u`. -/
 theorem code.join_stack_type.complete (a b : code.StackType) (u : valtype)
     (ha : Sequence.Accepts a u) (hb : Sequence.Accepts b u) :
     ∃ t, code.join_stack_type a b = .ok (.Ok t) ∧ Sequence.Accepts t u := by
@@ -107,7 +121,8 @@ theorem code.join_stack_type.complete (a b : code.StackType) (u : valtype)
           refine ⟨.Val a, ?_, ha⟩
           cases a <;> simp [code.join_stack_type, types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
 
-/-- Implicit select accepts common numeric/vector operands, including Bot. -/
+/-- If the segment realizes a stack ending in `u, u, i32` with `u` not a reference type,
+`code.read_select` succeeds, including with `Bot` operands. -/
 theorem code.read_select.complete (st : code.OpIterState)
     (outer segment : List code.StackType) (ts : List valtype) (u : valtype)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Control.base st).val = outer.length)
@@ -147,6 +162,7 @@ end Itasca
 
 namespace Itasca
 
+/-- Shared completeness argument for constant handlers that push one operand of type `ty`. -/
 private theorem constant_complete {A : Type}
     (read : Result (core.result.Result A error.OpError × code.OpIterState))
     (st : code.OpIterState) (value : A) (next : Usize) (ty : types.ValueType)
@@ -165,7 +181,8 @@ private theorem constant_complete {A : Type}
     by simpa [hvals, List.append_assoc] using hv, by simp,
     ht.snoc (.Val ty) (Translate.valueType ty) rfl⟩
 
-/-- The complete immediate is accepted and its scalar type extends the represented stack. -/
+/-- A fully decoded immediate makes `code.read_i32_const` succeed, and a `i32` operand extends the
+represented stack. -/
 theorem code.read_i32_const.complete (st : code.OpIterState) (data : Slice U8)
     (value : I32) (next : Usize) (outer segment : List code.StackType) (ts : List valtype)
     (hd : SignedLeb32.Decoded data st.pos value.val next)
@@ -179,7 +196,8 @@ theorem code.read_i32_const.complete (st : code.OpIterState) (data : Slice U8)
     (code.read_i32_const.from_read st data value next
       (reader.read_s32_leb.complete data st.pos value next hd) hsize) hvals ht
 
-/-- The complete immediate is accepted and its scalar type extends the represented stack. -/
+/-- A fully decoded immediate makes `code.read_i64_const` succeed, and a `i64` operand extends the
+represented stack. -/
 theorem code.read_i64_const.complete (st : code.OpIterState) (data : Slice U8)
     (value : I64) (next : Usize) (outer segment : List code.StackType) (ts : List valtype)
     (hd : SignedLeb64.Decoded data st.pos value.val next)
@@ -193,7 +211,8 @@ theorem code.read_i64_const.complete (st : code.OpIterState) (data : Slice U8)
     (code.read_i64_const.from_read st data value next
       (reader.read_s64_leb.complete data st.pos value next hd) hsize) hvals ht
 
-/-- The complete immediate is accepted and its scalar type extends the represented stack. -/
+/-- A fully decoded immediate makes `code.read_f32_const` succeed, and a `f32` operand extends the
+represented stack. -/
 theorem code.read_f32_const.complete (st : code.OpIterState) (data : Slice U8)
     (value : U32) (next : Usize) (outer segment : List code.StackType) (ts : List valtype)
     (hd : FloatBits.Decoded 4 data st.pos value.val next)
@@ -207,7 +226,8 @@ theorem code.read_f32_const.complete (st : code.OpIterState) (data : Slice U8)
     (code.read_f32_const.from_read st data value next
       (reader.read_f32_bits.complete data st.pos value next hd) hsize) hvals ht
 
-/-- The complete immediate is accepted and its scalar type extends the represented stack. -/
+/-- A fully decoded immediate makes `code.read_f64_const` succeed, and a `f64` operand extends the
+represented stack. -/
 theorem code.read_f64_const.complete (st : code.OpIterState) (data : Slice U8)
     (value : U64) (next : Usize) (outer segment : List code.StackType) (ts : List valtype)
     (hd : FloatBits.Decoded 8 data st.pos value.val next)

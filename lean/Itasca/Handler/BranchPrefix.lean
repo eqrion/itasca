@@ -2,10 +2,21 @@ import Itasca.Handler.StackSemantics
 import Itasca.Spec.Instr
 import Itasca.Handler.ResumePrefix
 
+/-!
+# Branch and return prefixes
+
+Extend a `Sequence.TypedPrefix` across the extracted `code.read_return`, `code.read_br` and
+`code.read_br_if` handlers (`code.read_return.prefix`, `code.read_br.prefix`,
+`code.read_br_if.prefix`), using the generated `return`, `br` and `br_if` rules
+(`TypedPrefix.return_`, `Control.branchIf_typed`).
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Sequence
 
+/-- Appending `return` gives a typed prefix on a polymorphic empty stack, when the stack realizes
+the function results. -/
 theorem TypedPrefix.return_ {C : context} {ops : List instr} {poly : Bool}
     {vals : List code.StackType} (h : TypedPrefix C ops poly vals) (hC : wf_context C)
     (results front : List valtype) (hreturn : C.RETURN = some (.mk_list results))
@@ -21,6 +32,7 @@ end Itasca.Sequence
 
 namespace Itasca.Control
 
+/-- `br_if depth` is typed at the label `depth` of a control stack. -/
 theorem branchIf_typed (C : context) (hC : wf_context C)
     (cs : List code.Ctrl) (hlabels : C.LABELS = labels cs)
     (depth : U32) (hdepth : depth.val < cs.length) :
@@ -36,6 +48,7 @@ theorem branchIf_typed (C : context) (hC : wf_context C)
   · exact hC
   · exact .instr_case_8 _ (Spec.label_wf depth)
 
+/-- A frame's target types have at most one element. -/
 theorem targetTypes_length (c : code.Ctrl) : (targetTypes c).length ≤ 1 := by
   unfold targetTypes
   cases targetBlockType c <;> simp [results]
@@ -44,8 +57,8 @@ end Itasca.Control
 
 namespace Itasca
 
-/-- Return is total for arbitrary mixed operands and makes only the current
-frame polymorphic. The function result context is retained across nested frames. -/
+/-- `code.read_return` terminates for any operands and makes only the current frame polymorphic.
+On success the typed prefix extends by `return`, using the function result context. -/
 theorem code.read_return.prefix (st : code.OpIterState) (ctx : code.Context)
     (cs : List code.Ctrl) (c : code.Ctrl) (outer segment : List code.StackType)
     (hctrls : st.ctrls.val = cs ++ [c]) (hvals : st.vals.val = outer ++ segment)
@@ -79,8 +92,8 @@ theorem code.read_return.prefix (st : code.OpIterState) (ctx : code.Context)
       · simp [code.read_return, hr, core.result.Result.Insts.CoreOpsTry.branch, hm]
       · simpa [hv, hbase] using hv'
 
-/-- An arbitrary-depth branch decodes its label, checks its arguments, and
-establishes the generated branch rule before discarding the current segment. -/
+/-- `code.read_br` decodes the label, checks the branch arguments, discards the current segment,
+and extends the typed prefix by the generated `br` rule. -/
 theorem code.read_br.prefix (st : code.OpIterState) (data : Slice U8)
     (cs : List code.Ctrl) (c : code.Ctrl) (outer segment : List code.StackType)
     (hctrls : st.ctrls.val = cs ++ [c]) (hvals : st.vals.val = outer ++ segment)
@@ -133,8 +146,8 @@ theorem code.read_br.prefix (st : code.OpIterState) (data : Slice U8)
             · simpa [hp'', hp'] using hdecoded
             · simpa [hv', hbase] using hv''
 
-/-- A conditional branch restores the checked branch operands on its fallthrough
-path, including values supplied by a polymorphic base. -/
+/-- `code.read_br_if` restores the checked branch operands on its fallthrough path, including values
+supplied by a polymorphic base, and extends the typed prefix by `br_if`. -/
 theorem code.read_br_if.prefix (st : code.OpIterState) (data : Slice U8)
     (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment)

@@ -1,9 +1,18 @@
 import Itasca.Handler.EnvLocals
 
+/-!
+# Call prefixes
+
+Extends a `Sequence.TypedPrefix` across `code.read_call` and `code.read_call_indirect`, using the
+generated `call` and `call_indirect` rules through `EnvTranslation.Matches.call` and
+`Matches.call_indirect`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
+/-- `code.read_call` extends the typed prefix by `call` of the function's signature. -/
 theorem code.read_call.prefix (st : code.OpIterState) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Control.base st).val = outer.length)
@@ -68,8 +77,9 @@ theorem code.read_call.prefix (st : code.OpIterState) (data : Slice U8)
       · have hlarge := Nat.le_of_not_gt hi
         simp [code.read_call, hr, lift, hlarge, core.result.Result.Insts.CoreOpsTry.branch, EnvOps.IndexPost]
 
-/-- Indirect calls decode the type index followed by the MVP table byte, check
-    table zero, and consume the selector before the function arguments. -/
+/-- `code.read_call_indirect` decodes the type index and the reserved table byte `0`, checks table
+zero, consumes the `i32` selector before the arguments, and extends the typed prefix by
+`call_indirect`. -/
 theorem code.read_call_indirect.prefix (st : code.OpIterState) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Control.base st).val = outer.length)

@@ -2,12 +2,22 @@ import Itasca.Handler.EnvReaders
 import Itasca.Handler.StackSemantics
 import Itasca.Handler.ResumePrefix
 
+/-!
+# Local and global variable prefixes
+
+Extends a `Sequence.TypedPrefix` across `code.read_local_get`, `code.read_local_set`,
+`code.read_local_tee`, `code.read_global_get` and `code.read_global_set`. Each gives an
+`EnvOps.IndexPost`: exact byte provenance for the index, and a typed prefix extended by the
+instruction, using the `Matches.local_*` and `Matches.global_*` lemmas.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.EnvOps
 
-/-- Successful indexed instructions expose both byte provenance and the typed
-    operand segment. The surrounding WP also proves totality on rejection. -/
+/-- The postcondition of an indexed instruction reader: on success it records the byte provenance
+of the index and the typed prefix extended by `op idx`. The surrounding weakest precondition
+also gives termination on rejection. -/
 def IndexPost (data : Slice U8) (st : code.OpIterState)
     (outer segment : List code.StackType) (C : context) (ops : List instr)
     (op : U32 → instr)
@@ -21,6 +31,7 @@ end Itasca.EnvOps
 
 namespace Itasca
 
+/-- `code.read_local_get` extends the typed prefix by `local.get`. -/
 theorem code.read_local_get.prefix (st : code.OpIterState) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hsize : st.vals.val.length < Usize.max)
@@ -50,6 +61,7 @@ theorem code.read_local_get.prefix (st : code.OpIterState) (data : Slice U8)
         exact ⟨by simpa [hpos] using hd, hc'.trans hc, segment ++ [.Val t],
           by simpa [hv, hvals, List.append_assoc] using hv', by simp, by simpa using htyping⟩
 
+/-- `code.read_local_set` extends the typed prefix by `local.set`. -/
 theorem code.read_local_set.prefix (st : code.OpIterState) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Control.base st).val = outer.length)
@@ -89,6 +101,7 @@ theorem code.read_local_set.prefix (st : code.OpIterState) (data : Slice U8)
             exact ⟨by simpa [hpos] using hd, hc'.trans hc, rest, hv', by omega,
               by simpa using htyping⟩
 
+/-- `code.read_local_tee` extends the typed prefix by `local.tee`. -/
 theorem code.read_local_tee.prefix (st : code.OpIterState) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Control.base st).val = outer.length)
@@ -135,6 +148,7 @@ theorem code.read_local_tee.prefix (st : code.OpIterState) (data : Slice U8)
               by simpa [hv', List.append_assoc] using hv'', by simpa using Nat.add_le_add_right hlen 1,
               by simpa using htyping⟩
 
+/-- `code.read_global_get` extends the typed prefix by `global.get`. -/
 theorem code.read_global_get.prefix (st : code.OpIterState) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hsize : st.vals.val.length < Usize.max)
@@ -164,6 +178,7 @@ theorem code.read_global_get.prefix (st : code.OpIterState) (data : Slice U8)
         exact ⟨by simpa [hpos] using hd, hc'.trans hc, segment ++ [.Val t.valtype],
           by simpa [hv, hvals, List.append_assoc] using hv', by simp, by simpa using htyping⟩
 
+/-- `code.read_global_set` extends the typed prefix by `global.set`. -/
 theorem code.read_global_set.prefix (st : code.OpIterState) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Control.base st).val = outer.length)

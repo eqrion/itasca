@@ -1,10 +1,22 @@
 import Itasca.Handler.End
 import Itasca.Handler.StackSemantics
 
+/-!
+# End, else and if handlers
+
+Outcome predicates `EndResult` and `ElseResult` for the extracted `code.read_end` and
+`code.read_else`, and their realization theorems `code.read_end.realizes` and
+`code.read_else.realizes`, which relate the operand segment to the frame's result types.
+`code.read_if.from_block_type` gives the effect of `code.read_if` on the stack, including the
+popped `i32` condition.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
+/-- The outcome of `code.read_end` on frame `c`: the frame is popped, its results replace the
+segment, and the segment realizes the result types. -/
 def EndResult (st : code.OpIterState) (cs : List code.Ctrl) (c : code.Ctrl)
     (outer segment : List code.StackType)
     (r : core.result.Result (code.LabelKind × code.BlockType) error.OpError × code.OpIterState) : Prop :=
@@ -62,7 +74,8 @@ private theorem read_end_not_then (st : code.OpIterState) (cs : List code.Ctrl)
       all_goals simp_all [EndResult, alloc.vec.Vec.deref]
     · simp [hpop, core.result.Result.Insts.CoreOpsTry.branch, hlen, EndResult, hpp]
 
-/-- Totality and successful-exit typing for every operand shape, including mixed Bot values. -/
+/-- `code.read_end` terminates for every operand shape, including mixed `Bot` values, with an
+`EndResult`. -/
 @[step]
 theorem code.read_end.realizes (st : code.OpIterState) (cs : List code.Ctrl)
     (c : code.Ctrl) (outer segment : List code.StackType)
@@ -93,6 +106,8 @@ theorem code.read_end.realizes (st : code.OpIterState) (cs : List code.Ctrl)
       simp [hr, EndResult]
   · exact read_end_not_then st cs c outer segment hctrls hvals hbase hk hsize
 
+/-- The outcome of `code.read_else` on a `Then` frame: it becomes an `Else` frame with the outer
+operands, and the segment realizes the result types. -/
 def ElseResult (st : code.OpIterState) (cs : List code.Ctrl) (c : code.Ctrl)
     (outer segment : List code.StackType)
     (r : core.result.Result code.BlockType error.OpError × code.OpIterState) : Prop :=
@@ -104,7 +119,8 @@ def ElseResult (st : code.OpIterState) (cs : List code.Ctrl) (c : code.Ctrl)
         r.2.vals.val = outer ∧
         Sequence.Realizes c.polymorphic_base segment (Control.resultTypes c.block_type)
 
-/-- Every successful else delimiter closes the then arm and resets the frame for its else arm. -/
+/-- `code.read_else` terminates with an `ElseResult`: it closes the then arm and resets the frame
+for the else arm. -/
 @[step]
 theorem code.read_else.realizes (st : code.OpIterState) (cs : List code.Ctrl)
     (c : code.Ctrl) (outer segment : List code.StackType)
@@ -149,8 +165,8 @@ theorem code.read_else.realizes (st : code.OpIterState) (cs : List code.Ctrl)
       cases hk' : c.kind <;> simp_all [code.is_then]
     simp [ht, ElseResult]
 
-/-- The if reader may reject an operand, but a successful pop retains the consumed i32
-in the backwards typing relation used to suspend its parent frame. -/
+/-- `code.read_if` may reject, but on success it pops an `i32` condition, pushes a `Then` frame, and
+realizations of the remaining parent operands extend with `i32`. -/
 @[step]
 theorem code.read_if.from_block_type (st : code.OpIterState) (data : Slice U8)
     (bt : code.BlockType) (next : Usize) (outer segment : List code.StackType)

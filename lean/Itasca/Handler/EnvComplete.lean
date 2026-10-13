@@ -3,12 +3,23 @@ import Itasca.Handler.EnvMemory
 import Itasca.Handler.StackComplete
 import Itasca.Binary.Wasm1.EncodingComplete
 
+/-!
+# Environment handler completeness
+
+Completeness of the extracted variable, call and memory handlers: when the index is in range,
+the immediate decodes and the operand segment realizes the required types, the handler succeeds
+with the postcondition `EnvComplete.Post`. Covers the lookup helpers (`code.local_type.complete`,
+...), `code.read_local_*`, `code.read_global_*`, `code.read_call`, `code.read_call_indirect`,
+`code.read_memory_size`, `code.read_memory_grow`, `code.read_load` and `code.read_store`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.EnvComplete
 
-/-- Forward execution preserves the concrete outer stack and realizes the
-specified output stack, including unreachable operands represented by Bot. -/
+/-- The outcome of a completeness theorem: the handler returns `value`, advances to `next`, keeps
+the outer operands, and the remaining operands realize `before` followed by `outputs`, including
+unreachable operands represented by `Bot`. -/
 def Post {α : Type} (st : code.OpIterState) (outer segment : List code.StackType)
     (before : List valtype) (outputs : List types.ValueType) (next : Usize) (value : α)
     (r : core.result.Result α error.OpError × code.OpIterState) : Prop :=
@@ -20,6 +31,7 @@ end Itasca.EnvComplete
 
 namespace Itasca
 
+/-- `code.local_type` succeeds for an in-range local. -/
 theorem code.local_type.complete (ctx : code.Context) (idx : U32) (t : types.ValueType)
     (hi : idx.val < ctx.locals.val.length) (ht : ctx.locals.val[idx.val] = t) :
     code.local_type ctx idx = .ok (.Ok t) := by
@@ -28,6 +40,7 @@ theorem code.local_type.complete (ctx : code.Context) (idx : U32) (t : types.Val
   | Ok t' => have heq : t' = t := hp.2.symm.trans ht; simpa [heq] using hr
   | Err e => have := hp.2; omega
 
+/-- `code.global_type` succeeds for an in-range global. -/
 theorem code.global_type.complete (env : module.Env) (idx : U32) (gt : types.GlobalType)
     (hi : idx.val < env.global_types.val.length) (ht : env.global_types.val[idx.val] = gt) :
     code.global_type env idx = .ok (.Ok gt) := by
@@ -36,6 +49,7 @@ theorem code.global_type.complete (env : module.Env) (idx : U32) (gt : types.Glo
   | Ok gt' => have heq : gt' = gt := hp.2.symm.trans ht; simpa [heq] using hr
   | Err e => have := hp.2; omega
 
+/-- `code.take_local` succeeds when the LEB128 read returns an in-range local index. -/
 theorem code.take_local.complete (st : code.OpIterState) (data : Slice U8) (ctx : code.Context)
     (idx : U32) (next : Usize) (t : types.ValueType)
     (hd : reader.read_u32_leb data st.pos = .ok (.Ok (idx, next)))
@@ -44,6 +58,7 @@ theorem code.take_local.complete (st : code.OpIterState) (data : Slice U8) (ctx 
   simp [code.take_local, hd, code.local_type.complete ctx idx t hi ht,
     core.result.Result.Insts.CoreOpsTry.branch]
 
+/-- `code.take_global` succeeds when the LEB128 read returns an in-range global index. -/
 theorem code.take_global.complete (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (idx : U32) (next : Usize) (gt : types.GlobalType)
     (hd : reader.read_u32_leb data st.pos = .ok (.Ok (idx, next)))
@@ -52,6 +67,7 @@ theorem code.take_global.complete (st : code.OpIterState) (data : Slice U8) (env
   simp [code.take_global, hd, code.global_type.complete env idx gt hi ht,
     core.result.Result.Insts.CoreOpsTry.branch]
 
+/-- `code.require_memory` succeeds when the environment has a memory. -/
 theorem code.require_memory.complete (env : module.Env) (h : 0 < env.mem_types.val.length) :
     code.require_memory env = .ok (.Ok ()) := by
   obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (code.require_memory.spec env)
@@ -59,6 +75,7 @@ theorem code.require_memory.complete (env : module.Env) (h : 0 < env.mem_types.v
   | Ok u => cases u; exact hr
   | Err e => simp [hp.2] at h
 
+/-- `code.require_single_result` succeeds for at most one result. -/
 theorem code.require_single_result.complete (ts : Slice types.ValueType) (h : ts.val.length ≤ 1) :
     code.require_single_result ts = .ok (.Ok ()) := by
   obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (code.require_single_result.spec ts)
@@ -66,6 +83,7 @@ theorem code.require_single_result.complete (ts : Slice types.ValueType) (h : ts
   | Ok u => cases u; exact hr
   | Err e => have := hp.2; omega
 
+/-- `code.check_memory_and_alignment` succeeds with a memory and an alignment at most `natural`. -/
 theorem code.check_memory_and_alignment.complete (env : module.Env) (arg : code.MemArg)
     (natural : U32) (hm : 0 < env.mem_types.val.length) (ha : arg.align.val ≤ natural.val) :
     code.check_memory_and_alignment env arg natural = .ok (.Ok ()) := by
@@ -73,6 +91,7 @@ theorem code.check_memory_and_alignment.complete (env : module.Env) (arg : code.
   simp [code.check_memory_and_alignment, code.require_memory.complete env hm, hle,
     core.result.Result.Insts.CoreOpsTry.branch]
 
+/-- `code.read_local_get` succeeds for an in-range local, pushing its type. -/
 theorem code.read_local_get.complete (st : code.OpIterState) (data : Slice U8) (ctx : code.Context)
     (idx : U32) (next : Usize) (t : types.ValueType)
     (hd : reader.read_u32_leb data st.pos = .ok (.Ok (idx, next)))
@@ -90,6 +109,8 @@ theorem code.read_local_get.complete (st : code.OpIterState) (data : Slice U8) (
   · simpa [hv, List.append_assoc] using hvs
   · exact (Sequence.realizes_append_concrete _ segment [t] _).mpr ⟨before, hr, rfl⟩
 
+/-- `code.read_local_set` succeeds for an in-range local when the segment realizes a stack ending
+in its type. -/
 theorem code.read_local_set.complete (st : code.OpIterState) (data : Slice U8) (ctx : code.Context)
     (idx : U32) (next : Usize) (t : types.ValueType)
     (hd : reader.read_u32_leb data st.pos = .ok (.Ok (idx, next)))
@@ -105,6 +126,8 @@ theorem code.read_local_set.complete (st : code.OpIterState) (data : Slice U8) (
   refine ⟨(.Ok idx, s), ?_, rfl, hcs, hps, rest, hvs, by simpa using hlen, by simpa [Control.polymorphic] using hrest⟩
   simp [code.read_local_set, htake, hpop, core.result.Result.Insts.CoreOpsTry.branch]
 
+/-- `code.read_local_tee` succeeds for an in-range local when the segment realizes a stack ending
+in its type, and pushes the type back. -/
 theorem code.read_local_tee.complete (st : code.OpIterState) (data : Slice U8) (ctx : code.Context)
     (idx : U32) (next : Usize) (t : types.ValueType)
     (hd : reader.read_u32_leb data st.pos = .ok (.Ok (idx, next)))
@@ -127,6 +150,7 @@ theorem code.read_local_tee.complete (st : code.OpIterState) (data : Slice U8) (
   · simpa [hvs, List.append_assoc] using hv'
   · exact (Sequence.realizes_append_concrete _ rest [t] _).mpr ⟨before, hrest, rfl⟩
 
+/-- `code.read_global_get` succeeds for an in-range global, pushing its type. -/
 theorem code.read_global_get.complete (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (idx : U32) (next : Usize) (gt : types.GlobalType)
     (hd : reader.read_u32_leb data st.pos = .ok (.Ok (idx, next)))
@@ -144,6 +168,8 @@ theorem code.read_global_get.complete (st : code.OpIterState) (data : Slice U8) 
   · simpa [hv, List.append_assoc] using hvs
   · exact (Sequence.realizes_append_concrete _ segment [gt.valtype] _).mpr ⟨before, hr, rfl⟩
 
+/-- `code.read_global_set` succeeds for an in-range mutable global when the segment realizes a
+stack ending in its type. -/
 theorem code.read_global_set.complete (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (idx : U32) (next : Usize) (gt : types.GlobalType)
     (hd : reader.read_u32_leb data st.pos = .ok (.Ok (idx, next)))
@@ -166,7 +192,8 @@ open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- Direct calls use the stored function signature cache, exactly as the public validator does. -/
+/-- `code.read_call` succeeds for an in-range function with at most one result when the segment
+realizes a stack ending in its parameters. It uses the environment's function signature cache. -/
 theorem code.read_call.complete (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (idx : U32) (next : Usize) (ft : types.FuncType)
     (hd : reader.read_u32_leb data st.pos = .ok (.Ok (idx, next)))
@@ -208,7 +235,9 @@ theorem code.read_call.complete (st : code.OpIterState) (data : Slice U8) (env :
   · simpa using Nat.add_le_add_right hlen ft.results.val.length
   · exact (Sequence.realizes_append_concrete _ rest ft.results.val _).mpr ⟨before, hrest, rfl⟩
 
-/-- Indirect calls consume the selector before the arguments and use env.types. -/
+/-- `code.read_call_indirect` succeeds for an in-range type with at most one result, a `funcref`
+table zero and a zero table byte, when the segment realizes a stack ending in the parameters and
+an `i32` selector. It uses `env.types`. -/
 theorem code.read_call_indirect.complete (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (idx : U32) (middle next : Usize) (ft : types.FuncType)
     (hd : reader.read_u32_leb data st.pos = .ok (.Ok (idx, middle)))
@@ -273,6 +302,7 @@ open Aeneas Aeneas.Std
 
 namespace Itasca
 
+/-- `code.read_memory_size` succeeds with a memory and a zero reserved byte, pushing an `i32`. -/
 theorem code.read_memory_size.complete (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (next : Usize) (hz : reader.read_byte data st.pos = .ok (.Ok (0#u8, next)))
     (hm : 0 < env.mem_types.val.length)
@@ -291,6 +321,8 @@ theorem code.read_memory_size.complete (st : code.OpIterState) (data : Slice U8)
   · simpa [hv, List.append_assoc] using hvs
   · exact (Sequence.realizes_append_concrete _ segment [.I32] _).mpr ⟨before, hr, rfl⟩
 
+/-- `code.read_memory_grow` succeeds with a memory and a zero reserved byte when the segment
+realizes a stack ending in `i32`, and pushes an `i32`. -/
 theorem code.read_memory_grow.complete (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (next : Usize) (hz : reader.read_byte data st.pos = .ok (.Ok (0#u8, next)))
     (hm : 0 < env.mem_types.val.length)
@@ -314,6 +346,8 @@ theorem code.read_memory_grow.complete (st : code.OpIterState) (data : Slice U8)
   · simpa [hvs, List.append_assoc] using hv'
   · exact (Sequence.realizes_append_concrete _ rest [.I32] _).mpr ⟨before, hrest, rfl⟩
 
+/-- `code.read_load` succeeds with a memory and a valid alignment when the segment realizes a stack
+ending in the `i32` address, and pushes the loaded type. -/
 theorem code.read_load.complete (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (next : Usize) (arg : code.MemArg) (t : types.ValueType) (natural : U32)
     (hd : code.read_memarg st data = .ok (.Ok arg, {st with pos := next}))
@@ -336,6 +370,8 @@ theorem code.read_load.complete (st : code.OpIterState) (data : Slice U8) (env :
   · simpa [hvs, List.append_assoc] using hv'
   · exact (Sequence.realizes_append_concrete _ rest [t] _).mpr ⟨before, hrest, rfl⟩
 
+/-- `code.read_store` succeeds with a memory and a valid alignment when the segment realizes a
+stack ending in the address and stored value. -/
 theorem code.read_store.complete (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (next : Usize) (arg : code.MemArg) (t : types.ValueType) (natural : U32)
     (hd : code.read_memarg st data = .ok (.Ok arg, {st with pos := next}))

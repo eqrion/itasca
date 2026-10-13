@@ -1,10 +1,22 @@
 import Itasca.Handler.Stack
 import Itasca.Handler.Sequence
 
+/-!
+# Stack operation semantics
+
+Describes the observable outcome of the extracted pops on a frame's operand segment
+(`StackSemantics.Popped`, `PopResult`, `TypedPopResult`). `code.pop_stack_type.segment`,
+`code.pop_with_type.segment`, `code.pop_with_type.realizes` and `code.pop_types.realizes` state
+the outcome for the current frame and relate it to `Sequence.Realizes`, and the `.total` theorems
+show that the pops terminate and keep `Control.Shape` for every outcome.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Sequence
 
+/-- Inverts `Realizes.snoc`: a realization of a stack with a pushed operand splits into a
+realization of the rest and the type of the operand. -/
 theorem Realizes.snoc_inv {poly : Bool} {vals : List code.StackType}
     {t : code.StackType} {ts : List valtype} (h : Realizes poly (vals ++ [t]) ts) :
     ∃ front u, ts = front ++ [u] ∧ Realizes poly vals front ∧ Accepts t u := by
@@ -24,6 +36,7 @@ end Itasca.Sequence
 
 namespace Itasca.Control
 
+/-- Every control frame's value stack base is at most the current frame base. -/
 theorem Shape.frame_base_le {st : code.OpIterState} (h : Shape st)
     (c : code.Ctrl) (hc : c ∈ st.ctrls.val) :
     c.value_stack_base.val ≤ (base st).val := by
@@ -38,7 +51,7 @@ theorem Shape.frame_base_le {st : code.OpIterState} (h : Shape st)
     · have heq : c = last := by simpa using hc
       simp [heq]
 
-/-- Changing operands preserves structural bounds whenever the current frame base remains present. -/
+/-- Replacing the operands preserves `Shape` when the current frame base is still within them. -/
 theorem Shape.replace_operands {st st' : code.OpIterState} (h : Shape st)
     (hctrls : st'.ctrls = st.ctrls)
     (hbase : (base st).val ≤ st'.vals.val.length) : Shape st' := by
@@ -51,7 +64,8 @@ end Itasca.Control
 
 namespace Itasca.StackSemantics
 
-/-- A successful pop either removes an explicit operand or uses the unreachable base. -/
+/-- A successful pop either removes an explicit operand or, in a polymorphic frame with no
+operands, yields `Bot`. -/
 inductive Popped : Bool → List code.StackType → code.StackType → List code.StackType → Prop
   | explicit (poly : Bool) (rest : List code.StackType) (t : code.StackType) :
       Popped poly (rest ++ [t]) t rest
@@ -69,7 +83,8 @@ theorem Popped.realizes {poly before t after} (h : Popped poly before t after)
   | explicit => exact hs.snoc _ _ ht
   | implicit => exact Sequence.realizes_polymorphic_empty _
 
-/-- Complete observable outcome of the untyped pop, including underflow. -/
+/-- The outcome of the untyped pop: a `Popped` step on success, and `EmptyStack` only for an empty
+reachable frame. -/
 def PopResult (poly : Bool) (before : List code.StackType)
     (r : core.result.Result code.StackType error.OpError) (after : List code.StackType) : Prop :=
   match r with
@@ -82,7 +97,8 @@ theorem PopResult.length {poly before r after} (h : PopResult poly before r afte
   | Ok t => exact Popped.length h
   | Err e => rcases h with ⟨_, _, rfl, rfl⟩; simp
 
-/-- The typed pop rejects only an empty reachable frame or an incompatible explicit operand. -/
+/-- The outcome of the typed pop: it rejects only an empty reachable frame (`EmptyStack`) or an
+incompatible operand (`TypeMismatch`). -/
 def TypedPopResult (poly : Bool) (before : List code.StackType) (expected : types.ValueType)
     (r : core.result.Result code.StackType error.OpError) (after : List code.StackType) : Prop :=
   match r with
@@ -101,6 +117,8 @@ theorem TypedPopResult.length {poly before expected r after}
     · simp
     · exact hp.length
 
+/-- A successful typed pop turns a realization of the remaining stack into one of the original
+stack with the expected type pushed. -/
 theorem TypedPopResult.realizes {poly before expected t after}
     (h : TypedPopResult poly before expected (.Ok t) after)
     (ts : List valtype) (hs : Sequence.Realizes poly after ts) :
@@ -111,7 +129,8 @@ end Itasca.StackSemantics
 
 namespace Itasca
 
-/-- The pop is total on every well-bounded frame, including mixed concrete and Bot operands. -/
+/-- `code.pop_stack_type` on the current frame's operand segment has a `PopResult` outcome, for any
+mix of concrete and `Bot` operands. -/
 @[step]
 theorem code.pop_stack_type.segment (st : code.OpIterState)
     (outer segment : List code.StackType)
@@ -140,6 +159,7 @@ theorem code.pop_stack_type.segment (st : code.OpIterState)
     exact ⟨hc, hp, rest, hv', by simpa [hok, hsnoc, StackSemantics.PopResult] using
       StackSemantics.Popped.explicit (Control.polymorphic st) rest t⟩
 
+/-- `code.pop_with_type` on the current frame's operand segment has a `TypedPopResult` outcome. -/
 @[step]
 theorem code.pop_with_type.segment (st : code.OpIterState)
     (outer segment : List code.StackType) (expected : types.ValueType)
@@ -178,7 +198,9 @@ theorem code.pop_with_type.segment (st : code.OpIterState)
             Translate.valueType_eq, heq]
         · exact fun h => heq h.symm
 
-/-- The success contract needed by the per-frame declarative continuation invariant. -/
+/-- `code.pop_with_type` shrinks the segment, and on success its operand is accepted and
+realizations of the remainder extend to the original segment. Errors are `EmptyStack` or
+`TypeMismatch`. -/
 theorem code.pop_with_type.realizes (st : code.OpIterState)
     (outer segment : List code.StackType) (expected : types.ValueType)
     (hvals : st.vals.val = outer ++ segment)
@@ -203,7 +225,9 @@ theorem code.pop_with_type.realizes (st : code.OpIterState)
     · exact .inl h.1
     · exact .inr h.1
 
-/-- Popping any expected sequence is total and preserves the backward typing interpretation. -/
+/-- `code.pop_types` shrinks the segment, and on success realizations of the remainder extend to
+the original segment with the expected types appended. Errors are `EmptyStack` or
+`TypeMismatch`. -/
 theorem code.pop_types.realizes (st : code.OpIterState)
     (outer segment : List code.StackType) (expected : Slice types.ValueType)
     (hvals : st.vals.val = outer ++ segment)
@@ -269,7 +293,8 @@ theorem code.pop_types.realizes (st : code.OpIterState)
     intro ts hs
     simpa using hs
 
-/-- The extraction models capacity exhaustion explicitly, rather than as a validator rejection. -/
+/-- A full operand stack makes `code.push_val` fail with `maximumSizeExceeded`, the extraction's
+model of capacity exhaustion. -/
 theorem code.push_val.capacity (st : code.OpIterState) (t : code.StackType)
     (hfull : st.vals.val.length = Usize.max) :
     code.push_val st t = .fail .maximumSizeExceeded := by
@@ -277,7 +302,8 @@ theorem code.push_val.capacity (st : code.OpIterState) (t : code.StackType)
   have h2 : ¬ st.vals.val.length + 1 ≤ U32.max := by scalar_tac
   simp [code.push_val, alloc.vec.Vec.push, h1, h2]
 
-/-- No-panic and termination for the untyped pop under the structural invariant. -/
+/-- `code.pop_stack_type` terminates and preserves `Control.Shape`, and fails only with
+`EmptyStack`. -/
 theorem code.pop_stack_type.total (st : code.OpIterState) (hshape : Control.Shape st) :
     code.pop_stack_type st ⦃ r =>
       Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧ r.2.pos = st.pos ∧
@@ -300,7 +326,8 @@ theorem code.pop_stack_type.total (st : code.OpIterState) (hshape : Control.Shap
     | Ok t => simp at he
     | Err e' => cases he; exact hout.1
 
-/-- Typed pops remain total even when the operand is Bot or disagrees with the expected type. -/
+/-- `code.pop_with_type` terminates and preserves `Control.Shape`, including for `Bot` and
+mismatched operands. -/
 theorem code.pop_with_type.total (st : code.OpIterState) (expected : types.ValueType)
     (hshape : Control.Shape st) :
     code.pop_with_type st expected ⦃ r =>
@@ -323,7 +350,7 @@ theorem code.pop_with_type.total (st : code.OpIterState) (expected : types.Value
     | Ok t => simp at he
     | Err e' => cases he; exact hout
 
-/-- Typed sequence pops terminate and preserve frame bounds on both acceptance and rejection. -/
+/-- `code.pop_types` terminates and preserves `Control.Shape` on acceptance and rejection. -/
 theorem code.pop_types.total (st : code.OpIterState) (expected : Slice types.ValueType)
     (hshape : Control.Shape st) :
     code.pop_types st expected ⦃ r =>

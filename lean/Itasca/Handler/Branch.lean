@@ -2,10 +2,21 @@ import Itasca.Handler.Block
 import Itasca.Binary.Leb128
 import Itasca.Handler.Unreachable
 
+/-!
+# Branch handlers
+
+Lemmas about `code.read_label` (decoding a label with its LEB128 provenance and
+`UnknownLabel` rejection), `code.read_br` and `code.step_br`. `Control.branch_typed` is the
+generated `br` rule at a control stack's label. `code.step_loop_backedge_typed` decodes a
+backedge `br 0`, updates the validator and visitor, and derives its SpecTec typing; the general
+`br` prefix lemma is `code.read_br.prefix` in `Handler/BranchPrefix`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Control
 
+/-- `br depth` is typed at the label `depth` of a control stack, on any input prefix and output. -/
 theorem branch_typed (C : context) (hC : wf_context C)
     (cs : List code.Ctrl) (hlabels : C.LABELS = labels cs)
     (depth : U32) (hdepth : depth.val < cs.length) (before after : List valtype) :
@@ -29,7 +40,8 @@ end Itasca.Control
 
 namespace Itasca
 
-/-- Label lookup after successful LEB decoding; the decoder proof is a separate premise. -/
+/-- `code.read_label` returns the frame `depth` places from the top, given that the LEB128 read
+returned `depth`. -/
 @[step]
 theorem code.read_label.from_leb (st : code.OpIterState) (data : Slice U8)
     (depth : U32) (next : Usize)
@@ -42,6 +54,7 @@ theorem code.read_label.from_leb (st : code.OpIterState) (data : Slice U8)
   simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
   step*
 
+/-- `code.read_label` returns `UnknownLabel` when the LEB128 read returned an out-of-range depth. -/
 @[step]
 theorem code.read_label.unknown_from_leb (st : code.OpIterState) (data : Slice U8)
     (depth : U32) (next : Usize)
@@ -52,8 +65,8 @@ theorem code.read_label.unknown_from_leb (st : code.OpIterState) (data : Slice U
   simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
   step*
 
-/-- Label decoding is total, with exact byte provenance on success and on an unknown label.
-Malformed LEB input preserves the original cursor; an unknown label consumes its immediate. -/
+/-- `code.read_label` terminates with exact byte provenance on success and on an unknown label.
+Malformed LEB input leaves the cursor unchanged, and an unknown label consumes its immediate. -/
 @[step]
 theorem code.read_label.spec (st : code.OpIterState) (data : Slice U8) :
     code.read_label st data ⦃ r =>
@@ -86,6 +99,7 @@ theorem code.read_label.spec (st : code.OpIterState) (data : Slice U8) :
       simp only [WP.spec_ok]
       exact ⟨trivial, trivial, Or.inr ⟨trivial, depth, hp, hge⟩⟩
 
+/-- Popping no types succeeds and leaves the state unchanged. -/
 theorem code.pop_types.empty (st : code.OpIterState) (ts : Slice types.ValueType)
     (h : ts.val = []) : code.pop_types st ts = .ok (.Ok (), st) := by
   have hn : Slice.len ts = 0#usize := by scalar_tac
@@ -93,7 +107,8 @@ theorem code.pop_types.empty (st : code.OpIterState) (ts : Slice types.ValueType
   rw [hn, loop]
   simp [code.pop_types_loop.body]
 
-/-- A loop backedge requires no branch arguments, even when the loop declares a result. -/
+/-- A backedge `br 0` to a loop needs no branch arguments, even when the loop declares a result.
+`code.read_br` truncates the operands, marks the frame polymorphic, and leaves it popping `Bot`. -/
 theorem code.read_br.loop_backedge (st : code.OpIterState) (data : Slice U8)
     (cs : List code.Ctrl) (c : code.Ctrl)
     (hctrls : st.ctrls.val = cs ++ [c]) (hloop : c.kind = .Loop)
@@ -129,6 +144,7 @@ theorem code.read_br.loop_backedge (st : code.OpIterState) (data : Slice U8)
       scalar_tac
     · simp [Control.polymorphic, hcs]
 
+/-- `code.step` on `br` runs `code.read_br` and then the visitor's `on_br` hook. -/
 theorem code.step_br {V : Type} (visitor : code.OpVisitor V)
     (st st' : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (depth : U32) (bt : code.BlockType) (v v' : V)
@@ -138,7 +154,8 @@ theorem code.step_br {V : Type} (visitor : code.OpVisitor V)
   simp [hread, hvisit, code.visit,
     core.result.Result.Insts.CoreOpsTry.branch]
 
-/-- Decode a loop backedge, update the validator and visitor, and derive its SpecTec typing. -/
+/-- `code.step` on a backedge `br 0` to the innermost loop updates the validator and visitor, and
+the branch has the generated `br` typing. -/
 theorem code.step_loop_backedge_typed {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (cs : List code.Ctrl) (c : code.Ctrl) (v v' : V)

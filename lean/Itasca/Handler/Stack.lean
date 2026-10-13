@@ -1,9 +1,19 @@
 import Itasca.Handler.Unreachable
 
+/-!
+# Operand stack primitives
+
+Specifications of the extracted stack helpers used by every instruction handler: `code.push_val`,
+`code.pop_stack_type`, `code.pop_with_type`, `code.pop_types` and `code.push_types`. They describe
+the effect on `st.vals` at concrete operands, and in polymorphic frames, where popping never
+consumes operands or fails.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
+/-- `code.push_val` appends one operand. -/
 @[step]
 theorem code.push_val.spec (st : code.OpIterState) (t : code.StackType)
     (hsize : st.vals.val.length < Usize.max) :
@@ -12,7 +22,7 @@ theorem code.push_val.spec (st : code.OpIterState) (t : code.StackType)
   unfold code.push_val
   step*
 
-/-- A pop above the current frame consumes exactly the last operand. -/
+/-- A pop with the last operand above the current frame base returns that operand and removes it. -/
 @[step]
 theorem code.pop_stack_type.above_base (st : code.OpIterState)
     (pre : List code.StackType) (t : code.StackType)
@@ -26,7 +36,7 @@ theorem code.pop_stack_type.above_base (st : code.OpIterState)
   simp only [code.pop_stack_type, hb, bind_ok, hne, ↓reduceIte]
   simp [alloc.vec.Vec.pop, hvals]
 
-/-- Concrete operands must match their expected type. -/
+/-- `code.pop_with_type` on a concrete operand of the expected type returns it and removes it. -/
 @[step]
 theorem code.pop_with_type.concrete (st : code.OpIterState)
     (pre : List code.StackType) (expected : types.ValueType)
@@ -41,6 +51,7 @@ theorem code.pop_with_type.concrete (st : code.OpIterState)
   simp [code.pop_with_type, hr, hok, core.result.Result.Insts.CoreOpsTry.branch,
     Translate.valueType_eq, hv, hc, hp]
 
+/-- `code.pop_with_type` on a `Bot` operand returns `Bot` and removes it. -/
 @[step]
 theorem code.pop_with_type.bot (st : code.OpIterState)
     (pre : List code.StackType) (expected : types.ValueType)
@@ -54,7 +65,8 @@ theorem code.pop_with_type.bot (st : code.OpIterState)
   dsimp only at hok hv hc hp
   simp [code.pop_with_type, hr, hok, core.result.Result.Insts.CoreOpsTry.branch, hv, hc, hp]
 
-/-- A mismatched concrete operand is consumed before the validator reports the error. -/
+/-- `code.pop_with_type` on a concrete operand of another type removes it and reports
+`TypeMismatch`. -/
 theorem code.pop_with_type.mismatch (st : code.OpIterState)
     (pre : List code.StackType) (actual expected : types.ValueType)
     (hvals : st.vals.val = pre ++ [.Val actual])
@@ -70,7 +82,7 @@ theorem code.pop_with_type.mismatch (st : code.OpIterState)
   simp [code.pop_with_type, hr, hok, core.result.Result.Insts.CoreOpsTry.branch,
     Translate.valueType_eq, hne', hv, hc, hp]
 
-/-- Popping an expected concrete suffix cannot cross the current frame base. -/
+/-- `code.pop_types_loop` pops a concrete suffix of the stack above the current frame base. -/
 @[step]
 theorem code.pop_types_loop.concrete (st : code.OpIterState)
     (ts : Slice types.ValueType) (i : Usize) (pre : List code.StackType)
@@ -120,6 +132,7 @@ theorem code.pop_types_loop.concrete (st : code.OpIterState)
       · scalar_tac
   · exact ⟨hi, hvals, hbase, rfl, rfl⟩
 
+/-- `code.pop_types` pops a concrete suffix of the stack above the current frame base. -/
 @[step]
 theorem code.pop_types.concrete (st : code.OpIterState)
     (ts : Slice types.ValueType) (pre : List code.StackType)
@@ -133,7 +146,8 @@ theorem code.pop_types.concrete (st : code.OpIterState)
   · simpa using hvals
   · exact hbase
 
-/-- A polymorphic frame base accepts every expected sequence without consuming operands. -/
+/-- In a polymorphic frame with no operands, `code.pop_types_loop` accepts any expected types and
+leaves the state unchanged. -/
 theorem code.pop_types_loop.polymorphic (st : code.OpIterState)
     (ts : Slice types.ValueType) (i : Usize) (hi : i.val ≤ ts.val.length)
     (hbase : alloc.vec.Vec.len st.vals = Control.base st)
@@ -163,6 +177,8 @@ theorem code.pop_types_loop.polymorphic (st : code.OpIterState)
   obtain ⟨_, h, rfl⟩ := WP.spec_imp_exists hs
   exact h
 
+/-- In a polymorphic frame with no operands, `code.pop_types` accepts any expected types and leaves
+the state unchanged. -/
 theorem code.pop_types.polymorphic (st : code.OpIterState)
     (ts : Slice types.ValueType)
     (hbase : alloc.vec.Vec.len st.vals = Control.base st)
@@ -170,7 +186,7 @@ theorem code.pop_types.polymorphic (st : code.OpIterState)
     code.pop_types st ts = .ok (.Ok (), st) := by
   exact code.pop_types_loop.polymorphic st ts (Slice.len ts) (by simp) hbase hpoly
 
-/-- The push loop appends its remaining types in source order. -/
+/-- `code.push_types_loop` appends the remaining types in order. -/
 @[step]
 theorem code.push_types_loop.spec (st : code.OpIterState)
     (ts : Slice types.ValueType) (i : Usize)
@@ -208,6 +224,7 @@ theorem code.push_types_loop.spec (st : code.OpIterState)
       rw [List.drop_eq_getElem_cons hlt, List.map_cons]
   · exact ⟨Nat.le_refl _, hi, rfl, hsize, rfl, rfl⟩
 
+/-- `code.push_types` appends all the types in order. -/
 @[step]
 theorem code.push_types.spec (st : code.OpIterState) (ts : Slice types.ValueType)
     (hsize : st.vals.val.length + ts.val.length ≤ Usize.max) :

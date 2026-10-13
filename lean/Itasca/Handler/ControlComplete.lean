@@ -4,10 +4,20 @@ import Itasca.Handler.ControlFlow
 import Itasca.Handler.BranchPrefix
 import Itasca.Handler.RawControl
 
+/-!
+# Control handler completeness
+
+Completeness of the extracted control readers. Given bytes, labels and operand stacks that meet
+the declarative requirements, `code.read_block`, `code.read_loop`, `code.read_if`,
+`code.read_end`, `code.read_else`, `code.read_return`, `code.read_br` and `code.read_br_if`
+accept with the expected effect on the operand and control stacks.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
+/-- A stack realizing no types has no operands. -/
 theorem Sequence.Realizes.empty_values {poly : Bool} {vals : List code.StackType}
     (h : Realizes poly vals []) : vals = [] := by
   obtain ⟨front, suffix, _, hp, he⟩ := h
@@ -16,7 +26,7 @@ theorem Sequence.Realizes.empty_values {poly : Bool} {vals : List code.StackType
   cases hp
   rfl
 
-/-- An independently encoded block header forces successful frame entry. -/
+/-- A block header encoded in the bytes makes `code.read_block` succeed and push a `Block` frame. -/
 theorem code.read_block.complete (st : code.OpIterState) (data : Slice U8)
     (bt : code.BlockType) (next : Usize)
     (hbytes : Wasm1.BytesAt data st.pos [Control.blockByte bt] next)
@@ -30,6 +40,7 @@ theorem code.read_block.complete (st : code.OpIterState) (data : Slice U8)
   exact ⟨(.Ok bt, s), by simp [code.read_block, hbytes.read_block_type bt hbt, hp,
     core.result.Result.Insts.CoreOpsTry.branch], rfl, hn, hv, hc⟩
 
+/-- A loop header encoded in the bytes makes `code.read_loop` succeed and push a `Loop` frame. -/
 theorem code.read_loop.complete (st : code.OpIterState) (data : Slice U8)
     (bt : code.BlockType) (next : Usize)
     (hbytes : Wasm1.BytesAt data st.pos [Control.blockByte bt] next)
@@ -43,8 +54,8 @@ theorem code.read_loop.complete (st : code.OpIterState) (data : Slice U8)
   exact ⟨(.Ok bt, s), by simp [code.read_loop, hbytes.read_block_type bt hbt, hp,
     core.result.Result.Insts.CoreOpsTry.branch], rfl, hn, hv, hc⟩
 
-/-- A realizable i32 condition makes `if` succeed, retaining the realizable
-parent operand prefix beneath the new frame's fresh operand base. -/
+/-- A realizable `i32` condition makes `code.read_if` succeed. The parent operands below the new
+frame's base still realize the rest of the stack. -/
 theorem code.read_if.complete (st : code.OpIterState) (data : Slice U8)
     (bt : code.BlockType) (next : Usize) (outer segment : List code.StackType)
     (ts : List valtype)
@@ -87,8 +98,8 @@ private theorem pop_results_complete (st : code.OpIterState)
   have hn := ht'.empty_values
   exact ⟨s, hr, hc, hp, by simpa [hn] using hv⟩
 
-/-- Declaratively matching frame results suffice for closing a frame, even
-when its operands contain explicit or implicit Bot values. -/
+/-- If the segment realizes the frame's result types, `code.read_end` succeeds, even when the
+operands contain explicit or implicit `Bot` values. -/
 theorem code.read_end.complete (st : code.OpIterState) (cs : List code.Ctrl)
     (c : code.Ctrl) (outer segment : List code.StackType)
     (hctrls : st.ctrls.val = cs ++ [c]) (hvals : st.vals.val = outer ++ segment)
@@ -119,7 +130,8 @@ theorem code.read_end.complete (st : code.OpIterState) (cs : List code.Ctrl)
   all_goals step*
   all_goals simp_all [alloc.vec.Vec.deref, Control.results]
 
-/-- A typed then-arm closes successfully and starts an empty, reachable else-arm. -/
+/-- If the segment realizes the `Then` frame's result types, `code.read_else` succeeds and starts
+an empty, reachable `Else` frame. -/
 theorem code.read_else.complete (st : code.OpIterState) (cs : List code.Ctrl)
     (c : code.Ctrl) (outer segment : List code.StackType)
     (hctrls : st.ctrls.val = cs ++ [c]) (hvals : st.vals.val = outer ++ segment)
@@ -144,6 +156,8 @@ theorem code.read_else.complete (st : code.OpIterState) (cs : List code.Ctrl)
   step*
   all_goals simp_all [alloc.vec.Vec.set]
 
+/-- If the segment realizes the function results, `code.read_return` succeeds, drops the segment
+and marks the frame polymorphic. -/
 theorem code.read_return.complete (st : code.OpIterState) (ctx : code.Context)
     (cs : List code.Ctrl) (c : code.Ctrl) (outer segment : List code.StackType)
     (front : List valtype)
@@ -166,8 +180,8 @@ theorem code.read_return.complete (st : code.OpIterState) (ctx : code.Context)
   · simp [code.read_return, hr, hm, core.result.Result.Insts.CoreOpsTry.branch]
   · simpa [hv, hbase] using hv'
 
-/-- An encoded in-range branch with realizable target operands succeeds and
-discards the current frame's operands. Loop targets use their empty signature. -/
+/-- An encoded in-range branch whose target operands are realizable makes `code.read_br` succeed and
+discard the current segment. Loop targets use their empty signature. -/
 theorem code.read_br.complete (st : code.OpIterState) (data : Slice U8)
     (depth : U32) (next : Usize) (target : code.Ctrl)
     (cs : List code.Ctrl) (c : code.Ctrl) (outer segment : List code.StackType)
@@ -199,8 +213,8 @@ theorem code.read_br.complete (st : code.OpIterState) (data : Slice U8)
   · simp [code.read_br, hlabel, hrs, hr, hm, core.result.Result.Insts.CoreOpsTry.branch, code.branch_target_bt.eq]
   · simpa [hv, hbase] using hv'
 
-/-- Conditional branching consumes its condition and restores the checked
-target operands, retaining a realization of the declarative fallthrough stack. -/
+/-- `code.read_br_if` consumes its condition and restores the checked target operands, and the
+remainder realizes the fallthrough stack. -/
 theorem code.read_br_if.complete (st : code.OpIterState) (data : Slice U8)
     (depth : U32) (next : Usize) (target : code.Ctrl)
     (outer segment : List code.StackType) (front : List valtype)

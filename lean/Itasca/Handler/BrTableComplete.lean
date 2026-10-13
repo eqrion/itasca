@@ -1,11 +1,19 @@
 import Itasca.Handler.ScalarComplete
 import Itasca.Handler.BrTable
 
+/-!
+# Branch table completeness
+
+If the `br_table` bytes decode to labels with one common target type and the operand stack
+realizes the required types, `code.read_br_table.complete` shows the extracted reader accepts.
+`code.merge_target.complete` and `code.read_table_labels.complete` cover the label iteration.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- An absent or matching prior target cannot make the actual target merge fail. -/
+/-- `code.merge_target` accepts when no target is expected or the expected one matches. -/
 theorem code.merge_target.complete (expect : Option code.BlockType) (bt : code.BlockType)
     (he : expect = none ∨ expect = some bt) : code.merge_target expect bt = .ok (.Ok bt) := by
   rcases he with rfl | rfl
@@ -14,7 +22,7 @@ theorem code.merge_target.complete (expect : Option code.BlockType) (bt : code.B
     have htrue : equal = true := heq.mpr rfl
     simp [code.merge_target, hr, htrue]
 
-/-- Valid labels with one common signature force every label iteration to accept. -/
+/-- Label iteration accepts when the labels decode and share one target type. -/
 theorem code.read_table_labels_loop.complete {V : Type} (visitor : code.OpVisitor V)
     (hvisit : ∀ v s d, ∃ w, visitor.on_br_table_label v s d = .ok (.Ok (), w))
     (st : code.OpIterState) (data : Slice U8) (count i : U32) (v : V)
@@ -74,7 +82,8 @@ theorem code.read_table_labels_loop.complete {V : Type} (visitor : code.OpVisito
         core.result.Result.Insts.CoreOpsTry.branch, code.visit, hvis, hvalue,
         code.merge_target.complete expect bt hexpect, hj] using hrec
 
-/-- The public vector reader starts with no prior target and counter zero. -/
+/-- `code.read_table_labels`, which starts with no expected target and counter zero, accepts when
+the labels decode and share one target type. -/
 theorem code.read_table_labels.complete {V : Type} (visitor : code.OpVisitor V)
     (hvisit : ∀ v s d, ∃ w, visitor.on_br_table_label v s d = .ok (.Ok (), w))
     (st : code.OpIterState) (data : Slice U8) (count : U32) (v : V)
@@ -91,7 +100,8 @@ end Itasca
 
 namespace Itasca
 
-/-- Complete branch-table validation from independent byte, label, and operand requirements. -/
+/-- `code.read_br_table` accepts when the bytes decode to labels with a common target type and the
+operand stack realizes the required types. -/
 theorem code.read_br_table.complete {V : Type} (visitor : code.OpVisitor V)
     (hvisit : ∀ v s d, ∃ w, visitor.on_br_table_label v s d = .ok (.Ok (), w))
     (st : code.OpIterState) (data : Slice U8) (v : V)

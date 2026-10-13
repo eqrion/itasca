@@ -1,43 +1,61 @@
 import Itasca.Support.ControlTranslation
 
+/-!
+# Control frames
+
+Defines the Wasm 1.0 control-frame vocabulary over the extracted `code.OpIterState`:
+`Control.labels` (the SpecTec label list), `frame`, `base`, `polymorphic`, and the structural
+invariant `Control.Shape`. Also states specifications for the small helpers `code.push_ctrl`,
+`code.cur_base`, `code.cur_polymorphic`, `code.block_results` and `code.branch_target_types`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Control
 
-/-- A loop label takes its inputs, which are empty in Wasm 1.0. -/
+/-- The block type a branch to the frame `c` supplies. A loop label takes its inputs, which are
+empty in Wasm 1.0. -/
 def targetBlockType (c : code.Ctrl) : code.BlockType :=
   match c.kind with
   | .Loop => .Empty
   | _ => c.block_type
 
+/-- The result types a branch to the frame `c` supplies. -/
 def targetTypes (c : code.Ctrl) : List types.ValueType := results (targetBlockType c)
 
-/-- Rust appends frames; the specification puts the innermost label first. -/
+/-- The SpecTec label list of a control stack. Rust appends frames, while SpecTec puts the innermost
+label first. -/
 def labels (cs : List code.Ctrl) : List resulttype :=
   cs.reverse.map (fun c => .mk_list ((targetTypes c).map Translate.valueType))
 
+/-- The control frame that entering a block of kind `kind` and type `bt` pushes at state `st`. -/
 def frame (st : code.OpIterState) (kind : code.LabelKind) (bt : code.BlockType) : code.Ctrl :=
   ⟨kind, bt, signature bt, alloc.vec.Vec.len st.vals, false⟩
 
+/-- The operand stack base of the innermost frame, or `0` with no frames. -/
 def base (st : code.OpIterState) : Usize :=
   match st.ctrls.val.getLast? with
   | none => 0#usize
   | some c => c.value_stack_base
 
+/-- Whether the innermost frame is unreachable; `false` with no frames. -/
 def polymorphic (st : code.OpIterState) : Bool :=
   match st.ctrls.val.getLast? with
   | none => false
   | some c => c.polymorphic_base
 
-/-- Structural stack bounds, separate from the eventual instruction-typing invariant. -/
+/-- The structural invariant of the control stack: frame stack bases are ordered and within the
+operand stack. -/
 structure Shape (st : code.OpIterState) : Prop where
   ordered : st.ctrls.val.Pairwise (fun c d => c.value_stack_base.val ≤ d.value_stack_base.val)
   bounded : ∀ c ∈ st.ctrls.val, c.value_stack_base.val ≤ st.vals.val.length
 
+/-- Pushing a frame adds its target types as the innermost label. -/
 theorem labels_push (cs : List code.Ctrl) (c : code.Ctrl) :
     labels (cs ++ [c]) = .mk_list ((targetTypes c).map Translate.valueType) :: labels cs := by
   simp [labels]
 
+/-- The current frame base is within the operand stack. -/
 theorem Shape.base_le {st : code.OpIterState} (h : Shape st) :
     (base st).val ≤ st.vals.val.length := by
   unfold base
@@ -46,6 +64,7 @@ theorem Shape.base_le {st : code.OpIterState} (h : Shape st) :
   · rename_i c hc
     exact h.bounded c (List.mem_of_getLast? hc)
 
+/-- Pushing a frame at the current operand height preserves `Shape`. -/
 theorem Shape.push {st st' : code.OpIterState} (h : Shape st)
     (kind : code.LabelKind) (bt : code.BlockType)
     (hctrls : st'.ctrls.val = st.ctrls.val ++ [frame st kind bt])
@@ -60,11 +79,15 @@ theorem Shape.push {st st' : code.OpIterState} (h : Shape st)
     · have heq : c = frame st kind bt := by simpa using hc
       simp [heq, frame, hvals]
 
+/-- Label `depth` is the target types of the frame `depth` places from the top of the control
+stack. -/
 theorem labels_lookup (cs : List code.Ctrl) (depth : Nat) (h : depth < cs.length) :
     (labels cs)[depth]'(by simpa [labels] using h) =
       .mk_list ((targetTypes (cs[cs.length - 1 - depth]'(by omega))).map Translate.valueType) := by
   simp [labels, List.getElem_reverse]
 
+/-- Truncating the operands to the innermost frame base and marking it polymorphic preserves
+`Shape`. -/
 theorem Shape.unreachable {st st' : code.OpIterState} (h : Shape st)
     (cs : List code.Ctrl) (c : code.Ctrl)
     (hctrls : st.ctrls.val = cs ++ [c])
