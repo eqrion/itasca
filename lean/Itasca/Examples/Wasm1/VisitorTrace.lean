@@ -1,7 +1,6 @@
 import Itasca.Wasm1.Visitor.Refinement
 import Itasca.Wasm1.Visitor.Lift
 import Itasca.Visitor.EventDispatch
-import Itasca.Visitor.ControlEventDispatch
 import Itasca.Handler.ControlComplete
 import Itasca.Examples.Wasm1.Scalars
 import Itasca.Examples.Wasm1.Body

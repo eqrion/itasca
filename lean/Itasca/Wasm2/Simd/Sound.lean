@@ -3,9 +3,9 @@ import Itasca.Wasm2.Invariant
 import Itasca.Wasm2.Simd.Visitor
 import Itasca.Wasm2.Simd.LaneReaders
 import Itasca.Wasm2.Simd.Decode
-import Itasca.Wasm2.Simd.Cases
+import Itasca.Wasm2.Simd.Dispatch
 import Itasca.Binary.Wasm2.SimdBitsMeaning
-import Itasca.Wasm2.Simd.MemoryTyping
+import Itasca.Wasm2.Simd.MemoryReaders
 
 open Aeneas Aeneas.Std
 

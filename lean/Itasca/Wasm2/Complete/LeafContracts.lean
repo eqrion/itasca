@@ -2,8 +2,8 @@ import Itasca.Wasm2.Bulk.Complete
 import Itasca.Wasm2.Simd.Complete
 import Itasca.Wasm2.Complete.Leaf
 import Itasca.Wasm2.Control.Return
-import Itasca.Wasm2.Control.BrTableStep
-import Itasca.Support.EnvLookup
+import Itasca.Wasm2.Control.BranchStep
+import Itasca.Support.EnvTranslation
 import Itasca.Wasm2.References.Complete
 
 open Aeneas Aeneas.Std

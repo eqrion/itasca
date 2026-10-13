@@ -1,6 +1,6 @@
-import Itasca.Wasm2.Bulk.Readers
+import Itasca.Wasm2.Bulk.Operands
 import Itasca.Binary.Wasm1.EncodingComplete
-import Itasca.Support.EnvLookup
+import Itasca.Support.EnvTranslation
 
 open Aeneas Aeneas.Std
 

@@ -1,6 +1,6 @@
 import Itasca.Support.Result
-import Itasca.Visitor.ControlEventDispatch
-import Itasca.Wasm1.Trace.Single
+import Itasca.Visitor.EventDispatch
+import Itasca.Wasm1.Trace.Leaves
 import Itasca.Visitor.BrTableTrace
 import Itasca.Wasm1.StepControl
 import Itasca.Wasm1.StepBranch

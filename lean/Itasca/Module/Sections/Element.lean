@@ -1,4 +1,4 @@
-import Itasca.Module.Sections.ElementEntry
+import Itasca.Module.Sections.ElementHeader
 import Itasca.Module.Elab.SegmentSyntax
 import Itasca.Module.Sections.Imports
 import Itasca.Module.Sections.Global

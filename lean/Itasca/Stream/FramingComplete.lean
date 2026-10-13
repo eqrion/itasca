@@ -1,5 +1,5 @@
 import Itasca.Stream.FramingSound
-import Itasca.Module.Code.Limits
+import Itasca.Module.Limits
 
 open Aeneas Aeneas.Std
 

@@ -1,5 +1,4 @@
-import Itasca.Wasm1.Complete.Leaf
-import Itasca.Wasm1.Complete.Basic
+import Itasca.Wasm1.Complete.Program
 import Itasca.Wasm1.Complete.Scalar
 import Itasca.Wasm1.Complete.BrTable
 import Itasca.Wasm1.Complete.Control

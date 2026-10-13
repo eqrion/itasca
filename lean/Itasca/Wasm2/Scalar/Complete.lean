@@ -1,5 +1,4 @@
 import Itasca.Wasm2.Step.ScalarContext
-import Itasca.Wasm1.Complete.Basic
 import Itasca.Wasm1.Complete.Scalar
 import Itasca.Wasm1.Complete.Env
 

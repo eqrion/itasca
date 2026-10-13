@@ -1,6 +1,7 @@
 import Itasca.Support.Result
 import Itasca.Module.Custom.TraceDefs
 import Itasca.Module.Custom.Visitor
+import Itasca.Module.Custom.Invariant
 
 open Aeneas Aeneas.Std
 
@@ -226,3 +227,21 @@ theorem module.validate_tail_with.accepted_trace {V : Type}
     pos false result v' hpos h
 
 end Itasca
+
+open Aeneas Aeneas.Std
+
+namespace Itasca.ModuleTrace
+
+/-- A concrete accepting recorder for all custom-section arguments. -/
+def customRecorder : module.ModuleVisitor (List Event) where
+  on_custom_section events chunk := .ok (.Ok (), events ++ [.custom chunk])
+
+theorem customRecorder_records : RecordsCustom customRecorder id := by
+  intro v chunk v' h
+  simpa [customRecorder, Eq.comm] using h
+
+theorem customRecorder_accepts : ModuleTail.HooksAccept customRecorder := by
+  intro events chunk
+  exact ⟨events ++ [.custom chunk], rfl⟩
+
+end Itasca.ModuleTrace

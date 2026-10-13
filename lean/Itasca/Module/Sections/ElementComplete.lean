@@ -1,4 +1,4 @@
-import Itasca.Module.Sections.ElementEntryComplete
+import Itasca.Module.Sections.ElementHeaderComplete
 import Itasca.Module.Sections.Element
 import Itasca.Module.Readers.BasicComplete
 import Itasca.Module.Const.ParserComplete

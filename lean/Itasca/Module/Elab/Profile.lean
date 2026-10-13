@@ -1,5 +1,5 @@
 import Itasca.Module.Elab.Declared
-import Itasca.Wasm1.ProfileTransport
+import Itasca.Wasm1.ProfileSyntax
 import Mathlib.Data.List.Nodup
 
 open Aeneas Aeneas.Std

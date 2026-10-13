@@ -1,6 +1,6 @@
 import Itasca.Stream.BatchTotal
 import Itasca.Module.Code.EntryComplete
-import Itasca.Module.Custom.Observation
+import Itasca.Module.Custom.Invariant
 import Itasca.Module.Sections.TailComplete
 import Itasca.Examples.Module.Basic
 import Itasca.Examples.Wasm1.Instructions

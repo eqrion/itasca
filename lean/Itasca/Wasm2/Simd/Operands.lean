@@ -1,5 +1,5 @@
 import Itasca.Wasm2.FixedOperands
-import Itasca.Wasm2.Simd.Runtime
+import Itasca.Wasm2.Simd.Tables
 
 open Aeneas Aeneas.Std
 

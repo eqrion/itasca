@@ -1,7 +1,7 @@
 import Itasca.Wasm2.Simd.Shuffle
 import Itasca.Handler.EnvComplete
-import Itasca.Wasm2.Simd.MemoryTyping
-import Itasca.Wasm2.Simd.Cases
+import Itasca.Wasm2.Simd.MemoryReaders
+import Itasca.Wasm2.Simd.Dispatch
 import Itasca.Wasm2.Simd.Decode
 import Itasca.Binary.Wasm2.SimdBitsMeaning
 import Itasca.Wasm2.Simd.Visitor

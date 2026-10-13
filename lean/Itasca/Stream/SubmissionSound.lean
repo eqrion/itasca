@@ -1,6 +1,6 @@
 import Itasca.Support.Result
 import Itasca.Stream.Partition
-import Itasca.Stream.Drain
+import Itasca.Stream.Scheduler
 import Itasca.Stream.FramingSound
 
 open Aeneas Aeneas.Std

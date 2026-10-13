@@ -1,7 +1,7 @@
 import Itasca.Module.Env.NameFacts
 import Itasca.Binary.UnicodeUnique
 import Itasca.Module.Code.Context
-import Itasca.Module.Elab.DataTyping
+import Itasca.Module.Elab.SegmentTyping
 
 open Aeneas Aeneas.Std
 

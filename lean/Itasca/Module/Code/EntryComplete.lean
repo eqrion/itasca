@@ -1,6 +1,6 @@
 import Itasca.Module.Code.FuncTyping
 import Itasca.Module.Code.LocalsComplete
-import Itasca.Module.Code.Limits
+import Itasca.Module.Limits
 import Itasca.Module.Code.Entry
 import Itasca.Wasm1.Visitor.Lift
 import Itasca.Profile.EntryComplete

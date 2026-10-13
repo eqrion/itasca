@@ -2,7 +2,6 @@ import Itasca.Support.Result
 import Itasca.Visitor.Dispatch
 import Itasca.Visitor.BrTableRefinement
 import Itasca.Visitor.EventDispatch
-import Itasca.Visitor.ControlEventDispatch
 
 open Aeneas Aeneas.Std
 

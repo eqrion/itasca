@@ -1,4 +1,4 @@
-import Itasca.Wasm2.Bulk.Readers
+import Itasca.Wasm2.Bulk.Operands
 import Itasca.Wasm2.References.Step
 
 open Aeneas Aeneas.Std

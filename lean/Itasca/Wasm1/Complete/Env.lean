@@ -1,9 +1,8 @@
 import Itasca.Wasm1.Complete.Frame
-import Itasca.Handler.EnvCompleteCalls
-import Itasca.Handler.EnvCompleteMemory
-import Itasca.Support.EnvLookup
+import Itasca.Handler.EnvComplete
+import Itasca.Support.EnvTranslation
 import Itasca.Handler.EnvDispatch
-import Itasca.Binary.Wasm1.MemoryInversion
+import Itasca.Binary.Wasm1.MemoryTyping
 import Itasca.Visitor.StepErasure
 
 open Aeneas Aeneas.Std

@@ -1,5 +1,5 @@
 import Itasca.Wasm2.Trace.BytesDispatch
-import Itasca.Wasm2.Trace.ReturnBytes
+import Itasca.Wasm2.Trace.ControlRecords
 import Itasca.Wasm2.Trace.Body
 import Itasca.Wasm2.Trace.TableBytes
 

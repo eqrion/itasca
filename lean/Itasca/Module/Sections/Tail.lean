@@ -1,4 +1,4 @@
-import Itasca.Module.Elab.DataTyping
+import Itasca.Module.Elab.SegmentTyping
 import Itasca.Module.Sections.Data
 import Itasca.Module.Readers.Names
 

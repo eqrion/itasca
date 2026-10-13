@@ -1,4 +1,4 @@
-import Itasca.Wasm1.ProfileLeaves
+import Itasca.Wasm1.Profile
 import Itasca.Wasm1.Invariant
 import Itasca.Handler.ScalarConst
 import Itasca.Handler.NumericDispatch

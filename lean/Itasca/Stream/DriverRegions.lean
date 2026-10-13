@@ -2,8 +2,8 @@ import Itasca.Stream.SplitComplete
 import Itasca.Stream.HeaderComplete
 import Itasca.Module.Env.Complete
 import Itasca.Module.Elab.Requirements
-import Itasca.Module.Env.ReadyMetadata
-import Itasca.Module.Code.Typed
+import Itasca.Module.Env.ReadyContexts
+import Itasca.Module.Layout
 import Itasca.Module.Sections.DataMaterialize
 import Itasca.Module.Sections.TailComplete
 import Itasca.Module.Code.EntryOfEnv

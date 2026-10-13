@@ -1,5 +1,4 @@
 import Itasca.Module.Custom.Trace
-import Itasca.Module.Custom.Recorders
 import Itasca.Examples.Module.Unicode
 
 open Aeneas Aeneas.Std

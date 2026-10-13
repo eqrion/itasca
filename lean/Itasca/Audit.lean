@@ -15,7 +15,6 @@ import Itasca.Examples.Wasm2.DeclaredReferences
 import Itasca.Examples.Wasm2.Module
 import Itasca.Generated.FunsExternal
 import Itasca.Module.Code.EntryTrace
-import Itasca.Module.Custom.Ranges
 import Itasca.Profile.BinaryUnique
 import Itasca.Spec.Checks
 import Itasca.Stream.BatchBounds

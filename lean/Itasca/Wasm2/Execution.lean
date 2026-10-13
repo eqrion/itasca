@@ -1,6 +1,7 @@
 import Itasca.Wasm2.LoopDispatch
 import Itasca.Wasm2.Control.FuncType
 import Itasca.Binary.Wasm2.EncodingComplete
+import Itasca.Wasm2.Step.Context
 
 open Aeneas Aeneas.Std Result
 
@@ -97,5 +98,22 @@ theorem Execution.public {data env locals index ft final}
         code.push_frame.initial]
       change run data env ⟨locals, alloc.vec.Vec.new _⟩ index (initial index) ⦃ r => r = .Ok () ⦄
       simp [hloop]
+
+end Itasca.Wasm2
+
+open Aeneas Aeneas.Std
+
+namespace Itasca.Wasm2
+
+/-- Return typing is supplied by the selected signature descriptor, so the
+semantic result context can be erased to the runtime's scalar context. -/
+theorem Execution.change_context {data env ctx index st final}
+    (h : Execution data env ctx index st final) (ctx' : code.Context)
+    (hlocals : ctx.locals = ctx'.locals) : Execution data env ctx' index st final := by
+  induction h with
+  | nil st => exact .nil st
+  | cons st next last opcode pos hc hr hs _ ih =>
+    exact .cons st next last opcode pos hc hr
+      ((step_context _ data env ctx ctx' index opcode hlocals).symm.trans hs) ih
 
 end Itasca.Wasm2

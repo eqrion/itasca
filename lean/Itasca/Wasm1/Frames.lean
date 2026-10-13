@@ -1,4 +1,4 @@
-import Itasca.Wasm1.ProfileTransport
+import Itasca.Wasm1.ProfileSyntax
 import Itasca.Handler.ResumePrefix
 import Itasca.Binary.Wasm1.Syntax
 

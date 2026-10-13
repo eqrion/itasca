@@ -2,7 +2,7 @@ import Itasca.Wasm2.Control.FuncType
 import Itasca.Wasm2.HandlerAdapters
 import Itasca.Wasm2.Prefix
 import Itasca.Handler.EnvCalls
-import Itasca.Handler.EnvCompleteCalls
+import Itasca.Handler.EnvComplete
 
 open Aeneas Aeneas.Std
 

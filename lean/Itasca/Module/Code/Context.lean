@@ -1,6 +1,6 @@
 import Itasca.Module.Code.BodyContext
 import Itasca.Binary.Module
-import Itasca.Module.Code.DataUse
+import Itasca.Module.Code.BodyContextComplete
 import Itasca.Profile.Instructions
 import Itasca.Spec.DeclaredReferences
 
