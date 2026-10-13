@@ -1,9 +1,12 @@
 import Itasca.Module.Custom.Trace
 import Itasca.Examples.Module.Unicode
+import Itasca.Examples.Module.Support
 
 open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.ModuleCustomTrace
+
+open ModuleSupport (leb)
 
 open ModuleTrace ModuleBinary
 
@@ -15,9 +18,6 @@ def unicodeChunk : types.CustomSection := ⟨4#usize, 15#usize, 15#usize⟩
 
 def unicodeEvents : List Event := [.custom unicodeChunk]
 
-private theorem leb (b : U8) (h : b.val < 128 := by decide) : Leb128.Encoding [b] b.val :=
-  ⟨[], b, rfl, by simp, by simp, h, by simp, by simp [Leb128.payload, Nat.mod_eq_of_lt h]⟩
-
 private theorem unicode_length : Slice.len unicodeInput = 15#usize := UScalar.eq_of_val_eq rfl
 
 private theorem unicode_environment : module.validate_env_with customRecorder unicodeInput .Wasm1 [] =
@@ -25,20 +25,20 @@ private theorem unicode_environment : module.validate_env_with customRecorder un
   let nm := alloc.vec.Vec.from [0xF4#u8, 0x8F#u8, 0xBF#u8, 0xBF#u8] (by simp; scalar_tac)
   have hheader := module.read_header.complete unicodeInput 8#usize (by
     constructor <;> simp [unicodeInput, Examples.ModuleUnicode.fourByteCustom,
-      Examples.ModuleUnicode.bytes, alloc.vec.Vec.deref, magicVersion])
+      Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion])
   have hsection : SectionHeader unicodeInput 8#usize 0#u8 10#usize 15#usize := by
     refine ⟨9#usize, 5#u32, ⟨[0#u8], rfl, ?_⟩, ?_, rfl, by decide⟩
     · constructor <;> simp [unicodeInput, Examples.ModuleUnicode.fourByteCustom,
-        Examples.ModuleUnicode.bytes, alloc.vec.Vec.deref, magicVersion]
+        Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]
     · refine ⟨[5#u8], ?_, rfl, ?_, leb 5#u8⟩ <;>
         simp [unicodeInput, Examples.ModuleUnicode.fourByteCustom,
-          Examples.ModuleUnicode.bytes, alloc.vec.Vec.deref, magicVersion]
+          Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]
   have hread := module.read_section_header.complete unicodeInput 8#usize 0#u8 10#usize 15#usize hsection
   have hnamebytes : At ByteVecEncoding unicodeInput 10#usize nm.val 15#usize := by
     refine ⟨[4#u8,0xF4#u8,0x8F#u8,0xBF#u8,0xBF#u8],
       ByteVecEncoding.iff.mpr ⟨[4#u8], leb 4#u8, rfl⟩, ?_⟩
     constructor <;> simp [unicodeInput, Examples.ModuleUnicode.fourByteCustom,
-      Examples.ModuleUnicode.bytes, alloc.vec.Vec.deref, magicVersion]
+      Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]
   have hname := module.decode_name.from_utf8 unicodeInput 10#usize nm 15#usize hnamebytes
     (.Ok ()) Examples.ModuleUnicode.last_scalar_accepted
   have hn : alloc.vec.Vec.len nm = 4#usize := UScalar.eq_of_val_eq rfl

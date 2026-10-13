@@ -3,13 +3,13 @@ import Itasca.Binary.Wasm1.Encoding
 import Itasca.Handler.BrTable
 import Itasca.Support.EnvTranslation
 import Itasca.Wasm1.Completeness
+import Itasca.Examples.Wasm1.Support
 
 open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.Wasm1Completeness
 
-def bytes (xs : List U8) (h : xs.length ≤ Usize.max := by scalar_tac) : Slice U8 :=
-  alloc.vec.Vec.deref (alloc.vec.Vec.from xs h)
+open Wasm1Support
 
 def i32Context : code.Context :=
   ⟨alloc.vec.Vec.new _, alloc.vec.Vec.from [.I32] (by scalar_tac)⟩

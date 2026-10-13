@@ -2,28 +2,15 @@ import Itasca.Examples.Module.Basic
 import Itasca.Module.Completeness
 import Itasca.Handler.ScalarConst
 import Itasca.Binary.ModuleUnique
+import Itasca.Examples.Module.Support
 
 open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.Wasm2Module
 
+open ModuleSupport (leb one padded omitted)
+
 open ModuleBinary ModuleElaboration
-
-private theorem leb (b : U8) (h : b.val < 128 := by decide) : Leb128.Encoding [b] b.val :=
-  ⟨[], b, rfl, by simp, by simp, h, by simp, by simp [Leb128.payload, Nat.mod_eq_of_lt h]⟩
-
-private theorem one {α : Type} {R : α → List U8 → Prop} {x bs}
-    (h : R x bs) : VecEncoding R [x] (1#u8 :: bs) :=
-  ⟨[1#u8], bs, leb 1#u8, by simpa using Rep.cons h Rep.nil, rfl⟩
-
-private theorem padded {α : Type} {R : α → List U8 → Prop} (id size : U8)
-    (absent : α) {x bs} (h : R x bs) (hlen : bs.length = size.val)
-    (hsize : size.val < 128 := by decide) :
-    PaddedEncoding id R absent x (id :: size :: bs) :=
-  ⟨[], _, .nil, .present ⟨[size], bs, hlen ▸ leb size hsize, h, rfl⟩, rfl⟩
-
-private theorem omitted {α : Type} (id : U8) (R : α → List U8 → Prop) (absent : α) :
-    PaddedEncoding id R absent absent [] := ⟨[], [], .nil, .absent, rfl⟩
 
 def functionType : types.FuncType :=
   ⟨alloc.vec.Vec.new _, alloc.vec.Vec.from [.I32, .I64] (by scalar_tac)⟩
@@ -38,7 +25,7 @@ def env : module.Env :=
 
 def raw : ModuleBinary.Module := fromEnv env [] [] [entry] []
 
-def input : Slice U8 := Examples.ModuleBasic.bytes
+def input : Slice U8 := Examples.ModuleSupport.bytes
   (magicVersion ++ [1#u8, 6#u8, 1#u8, 0x60#u8, 0#u8, 2#u8, 0x7F#u8, 0x7E#u8,
     3#u8, 2#u8, 1#u8, 0#u8,
     10#u8, 8#u8, 1#u8, 6#u8, 0#u8, 0x41#u8, 0#u8, 0x42#u8, 0#u8, 0x0B#u8])
@@ -118,7 +105,7 @@ private theorem body_encoding : Itasca.Profile.BodyBytes .Wasm2 entry.body
 body size; no parser execution or canonical re-encoding is assumed. -/
 theorem encoded (profile : ValidationProfile) : ModuleEncodingWithinLimits raw input.val profile := by
   constructor
-  · simp [input, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref, magicVersion, limits.MAX_MODULE_BYTES]
+  · simp [input, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion, limits.MAX_MODULE_BYTES]
   · refine ⟨[1#u8,6#u8,1#u8,0x60#u8,0#u8,2#u8,0x7F#u8,0x7E#u8], [],
       [3#u8,2#u8,1#u8,0#u8], [], [], [], [], [], [], [],
       [10#u8,8#u8,1#u8,6#u8,0#u8,0x41#u8,0#u8,0x42#u8,0#u8,0x0B#u8], [], [],

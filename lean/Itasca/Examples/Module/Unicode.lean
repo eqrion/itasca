@@ -2,13 +2,13 @@ import Itasca.Module.Env.Semantics
 import Itasca.Module.Validation
 import Itasca.Examples.Module.Basic
 import Itasca.Module.Readers.NamesComplete
+import Itasca.Examples.Module.Support
 
 open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.ModuleUnicode
 
-def bytes (xs : List U8) (h : xs.length ≤ Usize.max := by scalar_tac) : Slice U8 :=
-  alloc.vec.Vec.deref (alloc.vec.Vec.from xs h)
+open ModuleSupport (bytes)
 
 /-- U+10FFFF is the largest Unicode scalar and exercises the corrected
 four-byte upper bound in the generated specification. -/

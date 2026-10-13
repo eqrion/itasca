@@ -1,28 +1,15 @@
 import Itasca.Examples.Module.Basic
 import Itasca.Module.Completeness
 import Itasca.Stream.SliceLayout
+import Itasca.Examples.Module.Support
 
 open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.ModuleFunctions
 
+open ModuleSupport (leb one padded omitted)
+
 open ModuleBinary ModuleEnv
-
-private theorem leb (b : U8) (h : b.val < 128 := by decide) : Leb128.Encoding [b] b.val :=
-  ⟨[], b, rfl, by simp, by simp, h, by simp, by simp [Leb128.payload, Nat.mod_eq_of_lt h]⟩
-
-private theorem one {α : Type} {R : α → List U8 → Prop} {x bs}
-    (h : R x bs) : VecEncoding R [x] (1#u8 :: bs) :=
-  ⟨[1#u8], bs, leb 1#u8, by simpa using Rep.cons h Rep.nil, rfl⟩
-
-private theorem padded {α : Type} {R : α → List U8 → Prop} (id size : U8)
-    (absent : α) {x bs} (h : R x bs) (hlen : bs.length = size.val)
-    (hsize : size.val < 128 := by decide) :
-    PaddedEncoding id R absent x (id :: size :: bs) :=
-  ⟨[], _, .nil, .present ⟨[size], bs, hlen ▸ leb size hsize, h, rfl⟩, rfl⟩
-
-private theorem omitted {α : Type} (id : U8) (R : α → List U8 → Prop) (absent : α) :
-    PaddedEncoding id R absent absent [] := ⟨[], [], .nil, .absent, rfl⟩
 
 def functionType : types.FuncType := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _⟩
 def imported : ModuleBinary.Import := ⟨[0x6D#u8], [0x66#u8], .Func 0#u32⟩
@@ -39,7 +26,7 @@ def layout : Layout :=
     exports := [7#u8,5#u8,1#u8,1#u8,0x72#u8,0#u8,1#u8]
     start := [8#u8,1#u8,1#u8] }
 def codeBytes : List U8 := [10#u8,8#u8,1#u8,6#u8,1#u8,1#u8,0x7F#u8,0x10#u8,0#u8,0x0B#u8]
-def input : Slice U8 := Examples.ModuleBasic.bytes (magicVersion ++ layout.bytes ++ codeBytes)
+def input : Slice U8 := Examples.ModuleSupport.bytes (magicVersion ++ layout.bytes ++ codeBytes)
   (by simp [magicVersion, layout, Layout.bytes, codeBytes]; scalar_tac)
 
 private theorem ascii (b : U8) (hb : b.val ≤ 127) : NameEncoding [b] [1#u8,b] :=
@@ -147,13 +134,13 @@ theorem entry_typed {decls env} (hr : Ready raw 10 decls env) : CodeEntry.Typed 
 
 theorem prefix_encoding : At PrefixEncoding input 0#usize declarations 37#usize := by
   refine ⟨magicVersion ++ layout.bytes, layout_valid.encoding, ?_⟩
-  constructor <;> simp [input, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref,
+  constructor <;> simp [input, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref,
     magicVersion, layout, Layout.bytes, codeBytes]
 
 theorem code_at : At (SectionEncoding 10#u8 (VecEncoding CodeEncodingWithinLimits))
     input 37#usize [entry] 47#usize := by
   refine ⟨codeBytes, code_encoding, ?_⟩
-  constructor <;> simp [input, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref,
+  constructor <;> simp [input, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref,
     magicVersion, layout, Layout.bytes, codeBytes]
 
 /-- The parsed prefix has one imported and one defined function, and stops
@@ -170,14 +157,14 @@ theorem functions_accepted : ∃ decoded, module.validate_module input .Wasm1 = 
   let tail : module.Tail := ⟨alloc.vec.Vec.new _⟩
   have ht : At ModuleTail.Encoding input 47#usize raw.data (Slice.len input) := by
     refine ⟨[], ⟨[], [], ⟨[], [], .nil, .absent, rfl⟩, .nil, rfl⟩, ?_⟩
-    constructor <;> simp [input, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref,
+    constructor <;> simp [input, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref,
       magicVersion, layout, Layout.bytes, codeBytes]
   obtain ⟨first, hh, _⟩ := code_at.section_split
   have hl : ModuleLayout.Layout input raw declarations 37#usize 47#usize :=
     ⟨rfl, prefix_encoding, .inl code_at, ht, .inr ⟨10#u8, first, 47#usize, hh, by decide⟩⟩
   obtain ⟨env, ha⟩ := StreamSliceExamplesSupport.accepted_layout input raw declarations
     37#usize 47#usize hl (by
-      simp [input, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref,
+      simp [input, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref,
         magicVersion, layout, Layout.bytes, codeBytes, limits.MAX_MODULE_BYTES])
     requirements tail rfl (by
       intro decls env hr

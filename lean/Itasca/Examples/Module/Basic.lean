@@ -1,14 +1,13 @@
 import Itasca.Module.Validation
 import Itasca.Stream.SliceLayout
 import Itasca.Stream.SliceRejection
+import Itasca.Examples.Module.Support
 
 open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.ModuleBasic
 
-/-- Concrete fixtures use ordinary bounded vectors, with no external evaluator. -/
-def bytes (xs : List U8) (h : xs.length ≤ Usize.max := by scalar_tac) : Slice U8 :=
-  alloc.vec.Vec.deref (alloc.vec.Vec.from xs h)
+open ModuleSupport (bytes)
 
 def emptyEnv : module.Env where
   types := alloc.vec.Vec.new _

@@ -1,27 +1,14 @@
 import Itasca.Examples.Module.Basic
 import Itasca.Module.Completeness
+import Itasca.Examples.Module.Support
 
 open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.ModuleImportedGlobal
 
+open ModuleSupport (leb one padded omitted)
+
 open ModuleBinary ModuleEnv
-
-private theorem leb (b : U8) (h : b.val < 128 := by decide) : Leb128.Encoding [b] b.val :=
-  ⟨[], b, rfl, by simp, by simp, h, by simp, by simp [Leb128.payload, Nat.mod_eq_of_lt h]⟩
-
-private theorem one {α : Type} {R : α → List U8 → Prop} {x bs}
-    (h : R x bs) : VecEncoding R [x] (1#u8 :: bs) :=
-  ⟨[1#u8], bs, leb 1#u8, by simpa using Rep.cons h Rep.nil, rfl⟩
-
-private theorem padded {α : Type} {R : α → List U8 → Prop} (id size : U8)
-    (absent : α) {x bs} (h : R x bs) (hlen : bs.length = size.val)
-    (hsize : size.val < 128 := by decide) :
-    PaddedEncoding id R absent x (id :: size :: bs) :=
-  ⟨[], _, .nil, .present ⟨[size], bs, hlen ▸ leb size hsize, h, rfl⟩, rfl⟩
-
-private theorem omitted {α : Type} (id : U8) (R : α → List U8 → Prop) (absent : α) :
-    PaddedEncoding id R absent absent [] := ⟨[], [], .nil, .absent, rfl⟩
 
 def globalType : types.GlobalType := ⟨.Const, .I32⟩
 def imported : ModuleBinary.Import := ⟨[0x6D#u8], [0xF0#u8,0x9F#u8,0x98#u8,0x80#u8], .Global globalType⟩
@@ -31,7 +18,7 @@ def raw : ModuleBinary.Module := declarations.module [] []
 def layout : Layout :=
   { imports := [2#u8,11#u8,1#u8,1#u8,0x6D#u8,4#u8,0xF0#u8,0x9F#u8,0x98#u8,0x80#u8,3#u8,0x7F#u8,0#u8]
     globals := [6#u8,6#u8,1#u8,0x7F#u8,0#u8,0x23#u8,0#u8,0x0B#u8] }
-def input : Slice U8 := Examples.ModuleBasic.bytes (magicVersion ++ layout.bytes)
+def input : Slice U8 := Examples.ModuleSupport.bytes (magicVersion ++ layout.bytes)
   (by simp [magicVersion, layout, Layout.bytes]; scalar_tac)
 
 private theorem layout_valid : Layout.Valid 9 declarations layout := by
@@ -105,12 +92,12 @@ I32 global is available to a defined global's `global.get` initializer. -/
 theorem imported_initializer_accepted : ∃ decoded, module.validate_module input .Wasm1 = .ok (.Ok decoded) := by
   have hp : At PrefixEncoding input 0#usize declarations (Slice.len input) := by
     refine ⟨magicVersion ++ layout.bytes, layout_valid.encoding, ?_⟩
-    constructor <;> simp [input, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref,
+    constructor <;> simp [input, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref,
       magicVersion, layout, Layout.bytes]
   obtain ⟨env, decls, he, hr⟩ := module.validate_env.complete input raw declarations (Slice.len input)
     hp rfl (.inl rfl) requirements
   exact ⟨⟨env, ⟨alloc.vec.Vec.new _⟩⟩, Examples.ModuleBasic.accepted_at_end input env
-    (by simp [input, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref,
+    (by simp [input, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref,
       magicVersion, layout, Layout.bytes, limits.MAX_MODULE_BYTES])
     (hr.functions_eq (by decide)) he⟩
 
@@ -120,7 +107,7 @@ theorem imported_initializer_validated : ∃ decoded, module.validate_module inp
   obtain ⟨decoded, ha⟩ := imported_initializer_accepted
   exact ⟨decoded, ha, module.validate_module.wasm_sound _ _ ha⟩
 
-def definedGlobalInput : Slice U8 := Examples.ModuleBasic.bytes (magicVersion ++
+def definedGlobalInput : Slice U8 := Examples.ModuleSupport.bytes (magicVersion ++
   [6#u8,11#u8,2#u8,0x7F#u8,0#u8,0x41#u8,0#u8,0x0B#u8,
     0x7F#u8,0#u8,0x23#u8,0#u8,0x0B#u8])
   (by simp [magicVersion]; scalar_tac)
@@ -132,23 +119,23 @@ theorem defined_global_initializer_rejected : module.validate_module definedGlob
   let data := definedGlobalInput
   let initial := Examples.ModuleBasic.emptyEnv
   have hheader := module.read_header.complete data 8#usize (by
-    constructor <;> simp [data, definedGlobalInput, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref, magicVersion])
+    constructor <;> simp [data, definedGlobalInput, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion])
   have hh : SectionHeader data 8#usize 6#u8 10#usize 21#usize := by
     refine ⟨9#usize, 11#u32, ⟨[6#u8], rfl, ?_⟩, ?_, rfl, by decide⟩
-    · constructor <;> simp [data, definedGlobalInput, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref, magicVersion]
+    · constructor <;> simp [data, definedGlobalInput, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]
     · refine ⟨[11#u8], ?_, rfl, by decide, leb 11#u8⟩
-      simp [data, definedGlobalInput, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref, magicVersion]
+      simp [data, definedGlobalInput, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]
   have hcount := (show At IndexEncoding data 10#usize 2#u32 11#usize from
-    ⟨[2#u8], leb 2#u8, by constructor <;> simp [data, definedGlobalInput, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_index
+    ⟨[2#u8], leb 2#u8, by constructor <;> simp [data, definedGlobalInput, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_index
   have hg1 := module.decode_global_type.complete data 11#usize globalType 13#usize
-    ⟨[0x7F#u8,0#u8], rfl, by constructor <;> simp [data, definedGlobalInput, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref, magicVersion]⟩
+    ⟨[0x7F#u8,0#u8], rfl, by constructor <;> simp [data, definedGlobalInput, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]⟩
     .Wasm1 trivial
   have hz : ConstEncoding (.I32 0#i32) [0x41#u8,0#u8,0x0B#u8] :=
     .i32 _ ⟨[], 0#u8, rfl, by simp, by simp, by decide, rfl, by decide, by decide⟩
   have he1 := module.decode_const_expr.complete
     (env := initial) (ty := .I32)
     (show At ConstEncoding data 13#usize (.I32 0#i32) 16#usize from
-      ⟨_, hz, by constructor <;> simp [data, definedGlobalInput, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref, magicVersion]⟩) (.i32 _) .Wasm1 trivial
+      ⟨_, hz, by constructor <;> simp [data, definedGlobalInput, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]⟩) (.i32 _) .Wasm1 trivial
   obtain ⟨types, htypes, htval⟩ := WP.spec_imp_exists
     (alloc.vec.Vec.push_spec initial.global_types globalType (by simp [initial, Examples.ModuleBasic.emptyEnv]; scalar_tac))
   obtain ⟨globals, hglobals, hgval⟩ := WP.spec_imp_exists
@@ -160,12 +147,12 @@ theorem defined_global_initializer_rejected : module.validate_module definedGlob
     have hcast : UScalar.cast .Usize 0#u32 = 0#usize := by scalar_tac
     simp [module.const_global, hcast, lift, hgt, updated, initial, Examples.ModuleBasic.emptyEnv]
   have hg2 := module.decode_global_type.complete data 16#usize globalType 18#usize
-    ⟨[0x7F#u8,0#u8], rfl, by constructor <;> simp [data, definedGlobalInput, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref, magicVersion]⟩
+    ⟨[0x7F#u8,0#u8], rfl, by constructor <;> simp [data, definedGlobalInput, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]⟩
     .Wasm1 trivial
   have hop := (show At ByteEncoding data 18#usize 0x23#u8 19#usize from
-    ⟨[0x23#u8], rfl, by constructor <;> simp [data, definedGlobalInput, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_byte
+    ⟨[0x23#u8], rfl, by constructor <;> simp [data, definedGlobalInput, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_byte
   have hidx := (show At IndexEncoding data 19#usize 0#u32 20#usize from
-    ⟨[0#u8], leb 0#u8, by constructor <;> simp [data, definedGlobalInput, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_index
+    ⟨[0#u8], leb 0#u8, by constructor <;> simp [data, definedGlobalInput, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_index
   have he2 : module.decode_const_expr data 18#usize updated .I32 .Wasm1 = .ok (.Err .MutableGlobalInConstExpr) := by
     simp [module.decode_const_expr, hop, hidx, hglobal, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -205,7 +192,7 @@ theorem defined_global_initializer_rejected : module.validate_module definedGlob
     have hlen : Slice.len data = 21#usize := UScalar.eq_of_val_eq rfl
     simpa [hlen] using split_loop_eof data
   apply Examples.ModuleBasic.environment_error data _
-    (by simp [data, definedGlobalInput, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref, magicVersion, limits.MAX_MODULE_BYTES]) hsplit
+    (by simp [data, definedGlobalInput, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion, limits.MAX_MODULE_BYTES]) hsplit
   simp [module.validate_env, module.validate_env_with, module.Env.new, hheader,
     core.result.Result.Insts.CoreOpsTry.branch, initial, Examples.ModuleBasic.emptyEnv,
     parseLoop] at hloop ⊢

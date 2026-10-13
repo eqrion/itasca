@@ -1,11 +1,14 @@
 import Itasca.Wasm1.Trace.Control
 import Itasca.Visitor.EventDispatch
+import Itasca.Examples.Wasm1.Support
 
 open Aeneas Aeneas.Std
 
 attribute [local simp] Itasca.Control.signature Itasca.Control.resultView
 
 namespace Itasca.Examples.Wasm1BrTableTrace
+
+open Wasm1Support (loop_step_with loop_error_with read_at)
 
 open VisitorTrace
 
@@ -38,40 +41,6 @@ private theorem public_of_loop {V : Type} (visitor : code.OpVisitor V) (data : S
   have hi : Wasm1.Loop.initial .Empty = bodyState false 0#usize := rfl
   simp [code.validate_body_with.eq_model, code.validate_body_with_model, hguard,
     code.start_function.spec (alloc.vec.Vec.deref emptyContext.results) .Empty rfl, hi, hloop]
-
-private theorem loop_step {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
-    (env : module.Env) (ctx : code.Context) (v w : V)
-    (st decoded next : code.OpIterState) (opcode : U8) (hc : st.ctrls.val ≠ [])
-    (hr : code.read_op st data = .ok (.Ok opcode, decoded))
-    (hs : code.step visitor decoded data env ctx opcode v = .ok (.Ok (), next, w)) :
-    code.validate_body_with_loop visitor data env ctx.locals ctx.results v st =
-      code.validate_body_with_loop visitor data env ctx.locals ctx.results w next := by
-  have hempty : st.ctrls.val.isEmpty = false := by simpa using hc
-  unfold code.validate_body_with_loop
-  conv_lhs => rw [loop]
-  simp [code.validate_body_with_loop.body, code.control_stack_empty, alloc.vec.Vec.is_empty,
-    hempty, hr, hs, core.result.Result.Insts.CoreOpsTry.branch]
-
-private theorem loop_error {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
-    (env : module.Env) (ctx : code.Context) (v w : V)
-    (st decoded next : code.OpIterState) (opcode : U8) (error : error.OpError) (hc : st.ctrls.val ≠ [])
-    (hr : code.read_op st data = .ok (.Ok opcode, decoded))
-    (hs : code.step visitor decoded data env ctx opcode v = .ok (.Err error, next, w)) :
-    code.validate_body_with_loop visitor data env ctx.locals ctx.results v st = .ok (.Err error, w) := by
-  have hempty : st.ctrls.val.isEmpty = false := by simpa using hc
-  unfold code.validate_body_with_loop
-  rw [loop]
-  simp [code.validate_body_with_loop.body, code.control_stack_empty, alloc.vec.Vec.is_empty,
-    hempty, hr, hs, core.result.Result.Insts.CoreOpsTry.branch,
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-
-private theorem read_at (data : Slice U8) (st : code.OpIterState) (next : Usize) (opcode : U8)
-    (hp : st.pos.val < data.length) (hn : next.val = st.pos.val + 1)
-    (hb : data.val[st.pos.val] = opcode) :
-    code.read_op st data = .ok (.Ok opcode, {st with pos := next}) := by
-  obtain ⟨q, hr, hq⟩ := code.read_op_success st data hp
-  have heq : q = next := UScalar.eq_of_val_eq (hq.trans hn.symm)
-  simpa [heq, hb] using hr
 
 private theorem leb_at (data : Slice U8) (pos next : Usize) (value : U32)
     (hp : pos.val < data.length) (hn : next.val = pos.val + 1)
@@ -153,10 +122,10 @@ private theorem partial_body (data : Slice U8) (env : module.Env) (e : error.OpE
     simp [ht, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   apply public_of_loop recorder data env (.Err e) partialLog [] hsize
-  rw [loop_step recorder data env emptyContext [] firstLog (bodyState false 0#usize)
+  rw [loop_step_with recorder data env emptyContext [] firstLog (bodyState false 0#usize)
     (bodyState false 1#usize) (bodyState true 1#usize) code.OP_UNREACHABLE (by simp [bodyState])
     (read_at data _ 1#usize code.OP_UNREACHABLE h0 rfl (by simpa [global_simps, bodyState] using hb0)) hs0]
-  exact loop_error recorder data env emptyContext firstLog partialLog (bodyState true 1#usize)
+  exact loop_error_with recorder data env emptyContext firstLog partialLog (bodyState true 1#usize)
     (bodyState true 2#usize) last code.OP_BR_TABLE e (by simp [bodyState])
     (read_at data _ 2#usize code.OP_BR_TABLE h1 rfl (by simpa [global_simps, bodyState] using hb1)) hs1
 
@@ -221,10 +190,10 @@ private theorem table_error_body (visitor : code.OpVisitor (List Observation))
       code.visit, core.result.Result.Insts.CoreOpsTry.branch]
   apply public_of_loop visitor tableBytes env (.Err e) log []
     (by simp [tableBytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
-  rw [loop_step visitor tableBytes env emptyContext [] firstLog (bodyState false 0#usize)
+  rw [loop_step_with visitor tableBytes env emptyContext [] firstLog (bodyState false 0#usize)
     (bodyState false 1#usize) (bodyState true 1#usize) code.OP_UNREACHABLE (by simp [bodyState])
     (read_at tableBytes _ 1#usize code.OP_UNREACHABLE (by decide) rfl (by simp [tableBytes, bodyState, alloc.vec.Vec.deref, global_simps])) hs0]
-  exact loop_error visitor tableBytes env emptyContext firstLog log (bodyState true 1#usize)
+  exact loop_error_with visitor tableBytes env emptyContext firstLog log (bodyState true 1#usize)
     (bodyState true 2#usize) last code.OP_BR_TABLE e (by simp [bodyState])
     (read_at tableBytes _ 2#usize code.OP_BR_TABLE (by decide) rfl (by simp [tableBytes, bodyState, alloc.vec.Vec.deref, global_simps])) hstep
 
@@ -327,13 +296,13 @@ theorem default_has_no_callback (env : module.Env) :
       acceptedLog, core.result.Result.Insts.CoreOpsTry.branch]
   apply public_of_loop recorder tableBytes env (.Ok ()) acceptedLog []
     (by simp [tableBytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
-  rw [loop_step recorder tableBytes env emptyContext [] firstLog (bodyState false 0#usize)
+  rw [loop_step_with recorder tableBytes env emptyContext [] firstLog (bodyState false 0#usize)
     (bodyState false 1#usize) (bodyState true 1#usize) code.OP_UNREACHABLE (by simp [bodyState])
     (read_at tableBytes _ 1#usize code.OP_UNREACHABLE (by decide) rfl (by simp [tableBytes, bodyState, alloc.vec.Vec.deref, global_simps])) hs0]
-  rw [loop_step recorder tableBytes env emptyContext firstLog tableLog (bodyState true 1#usize)
+  rw [loop_step_with recorder tableBytes env emptyContext firstLog tableLog (bodyState true 1#usize)
     (bodyState true 2#usize) (bodyState true 5#usize) code.OP_BR_TABLE (by simp [bodyState])
     (read_at tableBytes _ 2#usize code.OP_BR_TABLE (by decide) rfl (by simp [tableBytes, bodyState, alloc.vec.Vec.deref, global_simps])) hstable]
-  rw [loop_step recorder tableBytes env emptyContext tableLog acceptedLog (bodyState true 5#usize)
+  rw [loop_step_with recorder tableBytes env emptyContext tableLog acceptedLog (bodyState true 5#usize)
     (bodyState true 6#usize) closedState code.OP_END (by simp [bodyState])
     (read_at tableBytes _ 6#usize code.OP_END (by decide) rfl (by simp [tableBytes, bodyState, alloc.vec.Vec.deref, global_simps])) hsEnd]
   unfold code.validate_body_with_loop
@@ -439,15 +408,15 @@ theorem mismatching_observed_label (env : module.Env) :
       openLog, before, nestedLog, code.visit, core.result.Result.Insts.CoreOpsTry.branch]
   apply public_of_loop recorder mismatchBytes env (.Err .TypeMismatch) mismatchLog []
     (by simp [mismatchBytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
-  rw [loop_step recorder mismatchBytes env emptyContext [] openLog (bodyState false 0#usize)
+  rw [loop_step_with recorder mismatchBytes env emptyContext [] openLog (bodyState false 0#usize)
     (bodyState false 1#usize) (nestedState .Block false 2#usize) code.OP_BLOCK (by simp [bodyState])
     (read_at mismatchBytes _ 1#usize code.OP_BLOCK (by decide) rfl
       (by simp [mismatchBytes, alloc.vec.Vec.deref, bodyState, global_simps])) hsOpen]
-  rw [loop_step recorder mismatchBytes env emptyContext openLog before (nestedState .Block false 2#usize)
+  rw [loop_step_with recorder mismatchBytes env emptyContext openLog before (nestedState .Block false 2#usize)
     (nestedState .Block false 3#usize) (nestedState .Block true 3#usize) code.OP_UNREACHABLE
     (by simp [nestedState]) (read_at mismatchBytes _ 3#usize code.OP_UNREACHABLE (by decide) rfl
       (by simp [mismatchBytes, alloc.vec.Vec.deref, nestedState, global_simps])) hsUnreachable]
-  exact loop_error recorder mismatchBytes env emptyContext before mismatchLog (nestedState .Block true 3#usize)
+  exact loop_error_with recorder mismatchBytes env emptyContext before mismatchLog (nestedState .Block true 3#usize)
     (nestedState .Block true 4#usize) (nestedState .Block true 7#usize) code.OP_BR_TABLE .TypeMismatch
     (by simp [nestedState]) (read_at mismatchBytes _ 4#usize code.OP_BR_TABLE (by decide) rfl
       (by simp [mismatchBytes, alloc.vec.Vec.deref, nestedState, global_simps])) hsTable
@@ -508,15 +477,15 @@ theorem loop_branch_label_type (env : module.Env) :
       openLog, before, nestedLog, code.visit, core.result.Result.Insts.CoreOpsTry.branch]
   apply public_of_loop recorder loopBytes env (.Err .UnexpectedEof) loopLog []
     (by simp [loopBytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
-  rw [loop_step recorder loopBytes env emptyContext [] openLog (bodyState false 0#usize)
+  rw [loop_step_with recorder loopBytes env emptyContext [] openLog (bodyState false 0#usize)
     (bodyState false 1#usize) (nestedState .Loop false 2#usize) code.OP_LOOP (by simp [bodyState])
     (read_at loopBytes _ 1#usize code.OP_LOOP (by decide) rfl
       (by simp [loopBytes, alloc.vec.Vec.deref, bodyState, global_simps])) hsOpen]
-  rw [loop_step recorder loopBytes env emptyContext openLog before (nestedState .Loop false 2#usize)
+  rw [loop_step_with recorder loopBytes env emptyContext openLog before (nestedState .Loop false 2#usize)
     (nestedState .Loop false 3#usize) (nestedState .Loop true 3#usize) code.OP_UNREACHABLE
     (by simp [nestedState]) (read_at loopBytes _ 3#usize code.OP_UNREACHABLE (by decide) rfl
       (by simp [loopBytes, alloc.vec.Vec.deref, nestedState, global_simps])) hsUnreachable]
-  rw [loop_step recorder loopBytes env emptyContext before loopLog (nestedState .Loop true 3#usize)
+  rw [loop_step_with recorder loopBytes env emptyContext before loopLog (nestedState .Loop true 3#usize)
     (nestedState .Loop true 4#usize) (nestedState .Loop true 5#usize) code.OP_BR
     (by simp [nestedState]) (read_at loopBytes _ 4#usize code.OP_BR (by decide) rfl
       (by simp [loopBytes, alloc.vec.Vec.deref, nestedState, global_simps])) hsBr]

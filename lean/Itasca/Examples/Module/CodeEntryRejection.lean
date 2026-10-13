@@ -4,20 +4,20 @@ import Itasca.Module.Custom.Invariant
 import Itasca.Module.Sections.TailComplete
 import Itasca.Examples.Module.Basic
 import Itasca.Examples.Wasm1.Instructions
+import Itasca.Examples.Module.Support
 
 open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.ModuleCodeEntryRejection
 
+open ModuleSupport (leb)
+
 open ModuleBinary
 
 private theorem one_room : 1 ≤ Usize.max := by scalar_tac
 
-private theorem leb (b : U8) (h : b.val < 128 := by decide) : Leb128.Encoding [b] b.val :=
-  ⟨[], b, rfl, by simp, by simp, h, by simp, by simp [Leb128.payload, Nat.mod_eq_of_lt h]⟩
-
 /-- A framed entry whose body contains an unknown opcode. -/
-def badBytes : Slice U8 := Examples.ModuleBasic.bytes [2#u8,0#u8,0xFF#u8]
+def badBytes : Slice U8 := Examples.ModuleSupport.bytes [2#u8,0#u8,0xFF#u8]
 
 def badEnv : module.Env :=
   { Examples.ModuleBasic.emptyEnv with
@@ -27,24 +27,24 @@ def badEnv : module.Env :=
 
 private theorem bad_size : Leb128.Decoded badBytes 0#usize 2#u32 1#usize :=
   (show Wasm1.BytesAt badBytes 0#usize [2#u8] 1#usize by
-    constructor <;> simp [badBytes, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref]).u32_decoded _ (leb 2#u8)
+    constructor <;> simp [badBytes, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref]).u32_decoded _ (leb 2#u8)
 
 private theorem bad_locals : module.decode_locals badBytes 1#usize .Wasm1 =
     .ok (.Ok (alloc.vec.Vec.new _, 2#usize)) := by
   obtain ⟨locals, hl, hv⟩ := module.decode_locals.complete badBytes 1#usize .Wasm1 [] 2#usize
     ⟨[0#u8], ⟨[0#u8], [], leb 0#u8, .nil, rfl⟩, by
-      constructor <;> simp [badBytes, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref]⟩
+      constructor <;> simp [badBytes, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref]⟩
     (by simp)
     (by simp [ModuleLocals.declared, limits.MAX_LOCALS])
   have he : locals = alloc.vec.Vec.new _ := alloc.vec.Vec.ext _ _ (by simpa [ModuleLocals.declared] using hv)
   simpa [he] using hl
 
 private theorem bad_body_with : code.validate_body_with code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
-    (Examples.Wasm1Instructions.bytes [0xFF#u8]) badEnv Examples.Wasm1Instructions.emptyContext () =
+    (Examples.Wasm1Support.bytes [0xFF#u8]) badEnv Examples.Wasm1Instructions.emptyContext () =
       .ok (.Err .UnrecognizedOpcode, ()) := by
   obtain ⟨⟨r, v⟩, hr⟩ := code.validate_body_with.wasm_total
     code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_total
-    (Examples.Wasm1Instructions.bytes [0xFF#u8]) badEnv Examples.Wasm1Instructions.emptyContext ()
+    (Examples.Wasm1Support.bytes [0xFF#u8]) badEnv Examples.Wasm1Instructions.emptyContext ()
   have he : r = .Err .UnrecognizedOpcode := by
     simpa [code.validate_body, hr] using Examples.Wasm1Instructions.unknown_opcode_rejected badEnv
   simpa [he] using hr
@@ -87,10 +87,10 @@ theorem bad_body_entry_rejected : module.validate_code_entry badBytes 0#usize ba
       alloc.vec.Vec.ext _ _ (by simpa [Examples.Wasm1Instructions.voidFunction, alloc.vec.Vec.deref] using v2_post)
     subst v2
     simp [code.OpVisitor.on_function_start.default]
-    step as ⟨body, body_post, body_post1⟩ by simp [badBytes, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref]
-    have hb : body = Examples.Wasm1Instructions.bytes [0xFF#u8] one_room := by
+    step as ⟨body, body_post, body_post1⟩ by simp [badBytes, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref]
+    have hb : body = Examples.Wasm1Support.bytes [0xFF#u8] one_room := by
       apply Slice.ext
-      simpa [badBytes, Examples.ModuleBasic.bytes, Examples.Wasm1Instructions.bytes, alloc.vec.Vec.deref] using body_post
+      simpa [badBytes, Examples.ModuleSupport.bytes, Examples.Wasm1Support.bytes, alloc.vec.Vec.deref] using body_post
     rw [hb]
     have hh := bad_body_with
     simp only [Examples.Wasm1Instructions.emptyContext] at hh
@@ -139,7 +139,7 @@ theorem bad_batch_finish_rejected : ∃ after,
   obtain ⟨after, hr, he⟩ := bad_batch_validation_rejected
   exact ⟨after, hr, by simp [stream.CodeBatch.finish, he]⟩
 
-def tailBuffer : Slice U8 := Examples.ModuleBasic.bytes [0#u8,1#u8,0#u8]
+def tailBuffer : Slice U8 := Examples.ModuleSupport.bytes [0#u8,1#u8,0#u8]
 def emptyTail : module.Tail := ⟨alloc.vec.Vec.new _⟩
 
 private theorem good_tail (env : module.Env) (hcount : env.data_count = none) :
@@ -152,7 +152,7 @@ private theorem good_tail (env : module.Env) (hcount : env.data_count = none) :
         · exact ⟨ByteVecEncoding.iff.mpr ⟨[0#u8], leb 0#u8, rfl⟩, .nil⟩
         · exact ⟨[1#u8], [0#u8], leb 1#u8, rfl, rfl⟩
       simpa using CustomsEncoding.cons hc CustomsEncoding.nil
-    · constructor <;> simp [tailBuffer, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref]
+    · constructor <;> simp [tailBuffer, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref]
   · simp [emptyTail]
   · simp [hcount]
 

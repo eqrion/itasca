@@ -1,14 +1,13 @@
 import Itasca.Stream.FramingComplete
 import Itasca.Stream.Sync
 import Itasca.Stream.SplitTotal
+import Itasca.Examples.Module.Support
 
 open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.Stream
 
-/-- Concrete fixtures are bounded vectors checked by the kernel. -/
-def bytes (xs : List U8) (h : xs.length ≤ Usize.max := by scalar_tac) : Slice U8 :=
-  alloc.vec.Vec.deref (alloc.vec.Vec.from xs h)
+open ModuleSupport (bytes)
 
 def emptyEnv : module.Env where
   types := alloc.vec.Vec.new _
