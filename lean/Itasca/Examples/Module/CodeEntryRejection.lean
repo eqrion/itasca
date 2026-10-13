@@ -6,6 +6,17 @@ import Itasca.Examples.Module.Basic
 import Itasca.Examples.Wasm1.Instructions
 import Itasca.Examples.Module.Support
 
+/-!
+# A rejected code entry and the batch obligation
+
+A code entry `02 00 ff` has a well-formed size and local declarations but an unknown opcode in its
+body. `bad_body_entry_rejected` shows `module.validate_code_entry` reports `UnrecognizedOpcode`.
+`bad_batch_validation_rejected` and `bad_batch_finish_rejected` show the streaming worker
+`stream.CodeBatch.validate_func` records that error so `stream.CodeBatch.finish` rejects the batch,
+and `tail_custom_preserves_work` shows a trailing custom section leaves the outstanding batch list
+intact.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.ModuleCodeEntryRejection
@@ -16,9 +27,11 @@ open ModuleBinary
 
 private theorem one_room : 1 ≤ Usize.max := by scalar_tac
 
-/-- A framed entry whose body contains an unknown opcode. -/
+/-- A code entry of size 2 with no local declarations and the body byte `0xff`, an unknown
+opcode. -/
 def badBytes : Slice U8 := Examples.ModuleSupport.bytes [2#u8,0#u8,0xFF#u8]
 
+/-- An environment with one function of type `[] -> []`. -/
 def badEnv : module.Env :=
   { Examples.ModuleBasic.emptyEnv with
     types := alloc.vec.Vec.from [Examples.Wasm1Instructions.voidFunction] (by simp; scalar_tac)
@@ -49,7 +62,7 @@ private theorem bad_body_with : code.validate_body_with code.EmptyOpVisitor.Inst
     simpa [code.validate_body, hr] using Examples.Wasm1Instructions.unknown_opcode_rejected badEnv
   simpa [he] using hr
 
-/-- The entry validator rejects the unknown opcode inside the framed body. -/
+/-- `module.validate_code_entry` on `badBytes` returns `Body UnrecognizedOpcode`. -/
 theorem bad_body_entry_rejected : module.validate_code_entry badBytes 0#usize badEnv 0#usize .Wasm1 =
     .ok (.Err (.Body .UnrecognizedOpcode)) := by
   have hread := reader.read_u32_leb.complete badBytes 0#usize 2#u32 1#usize bad_size
@@ -98,7 +111,8 @@ theorem bad_body_entry_rejected : module.validate_code_entry badBytes 0#usize ba
   obtain ⟨r, hr, rfl⟩ := WP.spec_imp_exists hs
   exact hr
 
-/-- The batch starts with the driver's exact zeroed validation cursors. -/
+/-- An issued batch for module 0, batch 0, covering function 0 at code offset 0 of `badBytes`
+under Wasm 1.0. -/
 def badIssued : StreamBatch.Issued := ⟨0#u64, 0#usize, badEnv, badBytes, 0#usize, 0#usize, 1#usize, .Wasm1⟩
 
 private theorem bad_bounds : CodeEntry.Bounds badEnv := by
@@ -108,8 +122,8 @@ private theorem bad_bounds : CodeEntry.Bounds badEnv := by
   simp [Examples.Wasm1Instructions.voidFunction, limits.MAX_LOCALS]
   scalar_tac
 
-/-- Framing alone creates no successful batch certificate: the actual worker
-rejects this otherwise well-framed entry. -/
+/-- The batch worker `stream.CodeBatch.validate_func` rejects the well-framed entry with
+`Body UnrecognizedOpcode` and stores the error in the batch. -/
 theorem bad_batch_validation_rejected : ∃ after,
     stream.CodeBatch.validate_func code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       badIssued.seed 0#usize () = .ok (.Err (.Body .UnrecognizedOpcode), after, ()) ∧
@@ -130,8 +144,8 @@ theorem bad_batch_validation_rejected : ∃ after,
   simp [stream.CodeBatch.validate_func, stream.CodeBatch.validate_next,
     badIssued, StreamBatch.Issued.seed, hr, hz, core.option.Option.is_none]
 
-/-- The failed worker cannot retire successfully: its exact body error remains
-visible to the batch finish check. -/
+/-- After the worker fails, `stream.CodeBatch.finish` on the resulting batch returns the same
+error. -/
 theorem bad_batch_finish_rejected : ∃ after,
     stream.CodeBatch.validate_func code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       badIssued.seed 0#usize () = .ok (.Err (.Body .UnrecognizedOpcode), after, ()) ∧
@@ -139,7 +153,9 @@ theorem bad_batch_finish_rejected : ∃ after,
   obtain ⟨after, hr, he⟩ := bad_batch_validation_rejected
   exact ⟨after, hr, by simp [stream.CodeBatch.finish, he]⟩
 
+/-- A trailing custom section with an empty name and no payload: `00 01 00`. -/
 def tailBuffer : Slice U8 := Examples.ModuleSupport.bytes [0#u8,1#u8,0#u8]
+/-- A tail with no data segments. -/
 def emptyTail : module.Tail := ⟨alloc.vec.Vec.new _⟩
 
 private theorem good_tail (env : module.Env) (hcount : env.data_count = none) :
@@ -156,7 +172,8 @@ private theorem good_tail (env : module.Env) (hcount : env.data_count = none) :
   · simp [emptyTail]
   · simp [hcount]
 
-/-- A custom-section observer can share the work list and leave it intact. -/
+/-- A visitor whose custom-section callback leaves its state, here a list of issued batches,
+unchanged. -/
 def observeCustoms : module.ModuleVisitor (List StreamBatch.Issued) where
   on_custom_section v _ := .ok (.Ok (), v)
 
@@ -168,7 +185,8 @@ private theorem observe_customs_preserve : ModuleTail.Preserves observeCustoms i
   intro v chunk v' h
   simpa [observeCustoms, Eq.comm] using h
 
-/-- The final custom section cannot erase the outstanding batch obligation. -/
+/-- Validating the trailing custom section with `observeCustoms` accepts and returns the
+outstanding batch list `[badIssued]` unchanged. -/
 theorem tail_custom_preserves_work (env : module.Env) (hcount : env.data_count = none) :
     module.validate_tail_with observeCustoms tailBuffer 0#usize env .Wasm1 [badIssued] =
       .ok (.Ok emptyTail, [badIssued]) := by

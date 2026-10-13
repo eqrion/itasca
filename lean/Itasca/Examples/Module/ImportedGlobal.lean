@@ -2,6 +2,16 @@ import Itasca.Examples.Module.Basic
 import Itasca.Module.Completeness
 import Itasca.Examples.Module.Support
 
+/-!
+# Imported and defined globals in constant expressions
+
+Under Wasm 1.0 a global initializer may read only an imported immutable global.
+`imported_initializer_accepted` accepts a module that imports an immutable `i32` global under a
+four-byte UTF-8 name (U+1F600) and initializes a defined global with `global.get 0`.
+`defined_global_initializer_rejected` rejects a module whose second global reads the first defined
+global.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.ModuleImportedGlobal
@@ -10,14 +20,21 @@ open ModuleSupport (leb one padded omitted)
 
 open ModuleBinary ModuleEnv
 
+/-- An immutable `i32` global type. -/
 def globalType : types.GlobalType := ⟨.Const, .I32⟩
+/-- An import of global `m.<U+1F600>` of type `globalType`. -/
 def imported : ModuleBinary.Import := ⟨[0x6D#u8], [0xF0#u8,0x9F#u8,0x98#u8,0x80#u8], .Global globalType⟩
+/-- A defined global of type `globalType` initialized by `global.get 0`. -/
 def global : module.Global := ⟨globalType, .GlobalGet 0#u32⟩
+/-- The import and global declarations of the module. -/
 def declarations : Declarations := { imports := [imported], globals := [global] }
+/-- The decoded module: `declarations` with no functions or data. -/
 def raw : ModuleBinary.Module := declarations.module [] []
+/-- The bytes of the import and global sections. -/
 def layout : Layout :=
   { imports := [2#u8,11#u8,1#u8,1#u8,0x6D#u8,4#u8,0xF0#u8,0x9F#u8,0x98#u8,0x80#u8,3#u8,0x7F#u8,0#u8]
     globals := [6#u8,6#u8,1#u8,0x7F#u8,0#u8,0x23#u8,0#u8,0x0B#u8] }
+/-- The full module bytes: header and `layout`. -/
 def input : Slice U8 := Examples.ModuleSupport.bytes (magicVersion ++ layout.bytes)
   (by simp [magicVersion, layout, Layout.bytes]; scalar_tac)
 
@@ -87,8 +104,9 @@ private theorem requirements : Requirements raw := by
   · simp [SectionValid, raw, declarations, Declarations.module]
   · trivial
 
-/-- A four-byte emoji import name remains Unicode, and the imported immutable
-I32 global is available to a defined global's `global.get` initializer. -/
+/-- `module.validate_module` accepts `input` under Wasm 1.0. The import name is a four-byte UTF-8
+sequence, and the imported immutable `i32` global is available to the `global.get` initializer of
+the defined global. -/
 theorem imported_initializer_accepted : ∃ decoded, module.validate_module input .Wasm1 = .ok (.Ok decoded) := by
   have hp : At PrefixEncoding input 0#usize declarations (Slice.len input) := by
     refine ⟨magicVersion ++ layout.bytes, layout_valid.encoding, ?_⟩
@@ -101,19 +119,22 @@ theorem imported_initializer_accepted : ∃ decoded, module.validate_module inpu
       magicVersion, layout, Layout.bytes, limits.MAX_MODULE_BYTES])
     (hr.functions_eq (by decide)) he⟩
 
-/-- The exact emoji/import/initializer bytes receive the full module certificate. -/
+/-- The accepted module has a `ModuleSound.Validated` certificate for the bytes of `input`. -/
 theorem imported_initializer_validated : ∃ decoded, module.validate_module input .Wasm1 = .ok (.Ok decoded) ∧
     ModuleSound.Validated input decoded := by
   obtain ⟨decoded, ha⟩ := imported_initializer_accepted
   exact ⟨decoded, ha, module.validate_module.wasm_sound _ _ ha⟩
 
+/-- A module with no imports and two immutable `i32` globals: the first is `i32.const 0` and the
+second is `global.get 0`. -/
 def definedGlobalInput : Slice U8 := Examples.ModuleSupport.bytes (magicVersion ++
   [6#u8,11#u8,2#u8,0x7F#u8,0#u8,0x41#u8,0#u8,0x0B#u8,
     0x7F#u8,0#u8,0x23#u8,0#u8,0x0B#u8])
   (by simp [magicVersion]; scalar_tac)
 
-/-- An earlier defined immutable global is still unavailable in a Wasm 1.0
-constant expression; only imported immutable globals may be referenced. -/
+/-- `module.validate_module` rejects `definedGlobalInput` under Wasm 1.0 with
+`MutableGlobalInConstExpr`: a defined global, even an immutable one, is not available in a
+constant expression. -/
 theorem defined_global_initializer_rejected : module.validate_module definedGlobalInput .Wasm1 =
     .ok (.Err .MutableGlobalInConstExpr) := by
   let data := definedGlobalInput

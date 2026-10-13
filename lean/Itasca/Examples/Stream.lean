@@ -3,12 +3,23 @@ import Itasca.Stream.Sync
 import Itasca.Stream.SplitTotal
 import Itasca.Examples.Module.Support
 
+/-!
+# Adversarial streaming cases
+
+Kernel-checked examples for the streaming API (`stream.CodeBatch`, `stream.Source`,
+`stream.retire_code_batch`, `stream.validate_module_slice`). They show why the guarantees
+need the issued-batch provenance (`StreamBatch.Reachable`) and source coherence
+(`StreamSource.Coherent`) premises: a forged finished batch, an incoherent source, and replayed or
+foreign batch completions. They also show that splitting a truncated buffer stays in bounds.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.Stream
 
 open ModuleSupport (bytes)
 
+/-- A module environment with no types, imports, functions, tables, memories or globals. -/
 def emptyEnv : module.Env where
   types := alloc.vec.Vec.new _
   imports := alloc.vec.Vec.new _
@@ -26,9 +37,10 @@ def emptyEnv : module.Env where
   num_imported_funcs := 0#usize
   num_imported_globals := 0#usize
 
+/-- The empty byte slice. -/
 def emptyBytes : Slice U8 := bytes []
 
-/-- This descriptor has no valid function to validate. -/
+/-- An issued-batch descriptor over the empty environment, which has no function to validate. -/
 def impossibleIssued : StreamBatch.Issued :=
   ⟨0#u64, 0#usize, emptyEnv, emptyBytes, 0#usize, 0#usize, 1#usize, .Wasm1⟩
 
@@ -36,7 +48,8 @@ def impossibleIssued : StreamBatch.Issued :=
 def forgedBatch : stream.CodeBatch :=
   { impossibleIssued.seed with num_validated := 1#usize }
 
-/-- Checking finish alone cannot establish provenance in the extracted model. -/
+/-- `stream.CodeBatch.finish` accepts the forged record, so the finish check alone does not
+establish provenance in the extracted model. -/
 theorem forged_finish : stream.CodeBatch.finish forgedBatch = .ok (.Ok ()) := by
   rw [stream.CodeBatch.finish.accepted_iff]
   simp [forgedBatch, impossibleIssued, StreamBatch.Issued.seed, emptyBytes, bytes,
@@ -57,8 +70,8 @@ theorem forged_unreachable : ¬ StreamBatch.Reachable impossibleIssued forgedBat
   change 1 = 0 at hz
   omega
 
-/-- Each requested range gets the right number of bytes, but the overlapping
-views disagree at offset one. -/
+/-- A source whose environment is empty and whose code region has length 3. Reads of `[0, 2)` and
+`[1, 3)` each return two bytes, but the overlapping views disagree at offset 1. -/
 def incoherentSource : stream.Source Unit where
   environment := fun _ => .ok (.Ok emptyBytes)
   code_len := fun _ => .ok 3#usize
@@ -66,6 +79,7 @@ def incoherentSource : stream.Source Unit where
     else bytes [1#u8, 0#u8]))
   tail := fun _ => .ok (.Ok emptyBytes)
 
+/-- Reading code bytes `[0, 2)` from `incoherentSource` returns `[0x00, 0x00]`. -/
 theorem incoherent_first_read : stream.read_exact incoherentSource () 0#usize 2#usize =
     .ok (.Ok (bytes [0#u8, 0#u8])) := by
   apply stream.read_exact.complete
@@ -73,6 +87,7 @@ theorem incoherent_first_read : stream.read_exact incoherentSource () 0#usize 2#
   · simp [incoherentSource]
   · rfl
 
+/-- Reading code bytes `[1, 3)` from `incoherentSource` returns `[0x01, 0x00]`. -/
 theorem incoherent_second_read : stream.read_exact incoherentSource () 1#usize 3#usize =
     .ok (.Ok (bytes [1#u8, 0#u8])) := by
   apply stream.read_exact.complete
@@ -80,7 +95,8 @@ theorem incoherent_second_read : stream.read_exact incoherentSource () 1#usize 3
   · simp [incoherentSource]
   · rfl
 
-/-- Exact lengths cannot substitute for one fixed logical code region. -/
+/-- No code region makes `incoherentSource` coherent: correct read lengths do not substitute for
+one fixed logical code region. -/
 theorem incoherent_no_region (environment code tail : List U8) :
     ¬ StreamSource.Coherent incoherentSource () environment code tail := by
   intro h
@@ -111,14 +127,15 @@ theorem incoherent_no_region (environment code tail : List U8) :
 
 local notation "sync" => stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor
 
-/-- Polling consumes the one stored completion; a second poll is rejected. -/
+/-- The synchronous visitor's `poll_code_batch` returns its one stored completion and clears it;
+polling again yields a `Host` error. -/
 theorem sync_poll_once :
     (sync).poll_code_batch ⟨some forgedBatch, none⟩ =
       .ok (.Ok forgedBatch, ⟨none, none⟩) ∧
     (sync).poll_code_batch ⟨none, none⟩ = .ok (.Err .Host, ⟨none, none⟩) := by
   exact ⟨StreamSync.poll_some _ _ rfl, StreamSync.poll_none _ rfl⟩
 
-/-- A finished record whose ID is no longer pending cannot be retired again. -/
+/-- Retiring a finished record whose ID is not in the pending list returns a `Host` error. -/
 theorem replay_rejected :
     stream.retire_code_batch sync 0#u64 ⟨some forgedBatch, none⟩ (alloc.vec.Vec.new Usize) =
       .ok (.Err .Host, ⟨none, none⟩, alloc.vec.Vec.new Usize) := by
@@ -130,7 +147,8 @@ theorem replay_rejected :
   simp [
     core.result.Result.Insts.CoreOpsTry.branch, forgedBatch, impossibleIssued, StreamBatch.Issued.seed, hs]
 
-/-- A valid finish cannot override the invocation identity check. -/
+/-- A finished record issued for invocation 0 is rejected with a `Host` error when it is retired
+under invocation 1, even though its pending list is non-empty. -/
 theorem foreign_rejected :
     stream.retire_code_batch sync 1#u64 ⟨some forgedBatch, none⟩ (alloc.vec.Vec.from [0#usize] (by scalar_tac)) =
       .ok (.Err .Host, ⟨none, none⟩, alloc.vec.Vec.from [0#usize] (by scalar_tac)) := by
@@ -139,14 +157,14 @@ theorem foreign_rejected :
   simp [
     core.result.Result.Insts.CoreOpsTry.branch, forgedBatch, impossibleIssued, StreamBatch.Issued.seed]
 
-/-- Splitting a truncated buffer stays within the buffer before validation. -/
+/-- `stream.find_code_region` on an empty buffer returns the empty region `(0, 0)`. -/
 theorem empty_split : stream.find_code_region emptyBytes = .ok (0#usize, 0#usize) := by
   rw [stream.find_code_region, stream.find_code_region_loop, loop]
   simp [stream.find_code_region_loop.body, emptyBytes, bytes, alloc.vec.Vec.deref]
   rfl
 
-/-- Safe splitting of a short buffer does not make it a valid module: the
-actual contiguous adapter still rejects the missing header. -/
+/-- `stream.validate_module_slice` on an empty buffer reports `UnexpectedEof` from the missing
+module header. -/
 theorem empty_slice_rejected : stream.validate_module_slice emptyBytes .Wasm1 =
     .ok (.Err (.Read .UnexpectedEof)) := by
   have hslice : core.slice.index.Slice.index (core.slice.index.SliceIndexRangeUsizeSlice U8)

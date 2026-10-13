@@ -3,12 +3,23 @@ import Itasca.Stream.SliceLayout
 import Itasca.Stream.SliceRejection
 import Itasca.Examples.Module.Support
 
+/-!
+# Header-only modules and header errors
+
+The smallest whole modules. The eight-byte header `00 61 73 6d 01 00 00 00` alone is accepted by
+`module.validate_module` and yields the empty environment (`empty_accepted`, `empty_validated`).
+Empty input, a bad magic word and a bad version are rejected with the matching error. The generic
+lemmas `accepted_at_end`, `environment_error` and `header_error` reduce the public entry point to
+`module.validate_env` for the other module examples.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.ModuleBasic
 
 open ModuleSupport (bytes)
 
+/-- A module environment with no types, imports, functions, tables, memories or globals. -/
 def emptyEnv : module.Env where
   types := alloc.vec.Vec.new _
   imports := alloc.vec.Vec.new _
@@ -26,8 +37,10 @@ def emptyEnv : module.Env where
   num_imported_funcs := 0#usize
   num_imported_globals := 0#usize
 
+/-- The decoded module for the header alone: `emptyEnv` and no function bodies. -/
 def emptyModule : module.Module := ⟨emptyEnv, ⟨alloc.vec.Vec.new _⟩⟩
 
+/-- The eight header bytes `00 61 73 6d 01 00 00 00`. -/
 def emptyBytes : Slice U8 := bytes ModuleBinary.magicVersion (by
   simp [ModuleBinary.magicVersion]; scalar_tac)
 
@@ -54,6 +67,7 @@ theorem header (data : Slice U8) (rest : List U8)
   simp [module.read_header, h0, h1, h2, h3, h4, h5, h6, h7,
     core.result.Result.Insts.CoreOpsTry.branch]
 
+/-- `module.validate_env` on the header alone returns `emptyEnv` and consumed length 8. -/
 theorem empty_env : module.validate_env emptyBytes .Wasm1 = .ok (.Ok (emptyEnv, 8#usize)) := by
   have hh := header emptyBytes [] (by simp [emptyBytes, bytes, alloc.vec.Vec.deref])
   simp [module.validate_env, module.validate_env_with, module.Env.new, hh,
@@ -63,20 +77,20 @@ theorem empty_env : module.validate_env emptyBytes .Wasm1 = .ok (.Ok (emptyEnv, 
   simp [module.validate_env_with_loop.body, emptyBytes, bytes,
     alloc.vec.Vec.deref, ModuleBinary.magicVersion]
 
-/-- A header-only module is accepted by the actual public validator. -/
+/-- `module.validate_module` accepts the header-only module under Wasm 1.0. -/
 theorem empty_accepted : module.validate_module emptyBytes .Wasm1 = .ok (.Ok emptyModule) := by
   apply StreamSliceExamplesSupport.accepted_at_end emptyBytes emptyEnv
     (by simp [emptyBytes, bytes, ModuleBinary.magicVersion, alloc.vec.Vec.deref, limits.MAX_MODULE_BYTES]) rfl
   have hlen : Slice.len emptyBytes = 8#usize := UScalar.eq_of_val_eq rfl
   simpa [hlen] using empty_env
 
-/-- Acceptance provides a certificate for these exact bytes, including external
-metadata and the explicit Wasm 1.0 restrictions. -/
+/-- The accepted header-only module has a `ModuleSound.Validated` certificate for these bytes,
+which covers the external metadata and the Wasm 1.0 restrictions. -/
 theorem empty_validated : ModuleSound.Validated emptyBytes emptyModule :=
   module.validate_module.wasm_sound _ _ empty_accepted
 
-/-- With no declared functions and no remaining bytes, the synchronous
-streaming driver returns the exact decoded environment and empty tail. -/
+/-- A module of acceptable size with no declared functions, whose environment consumes all the
+bytes, is accepted with that environment and an empty tail. -/
 theorem accepted_at_end (data : Slice U8) (env : module.Env)
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (hfuncs : env.func_type_indices.val = [])
@@ -84,6 +98,8 @@ theorem accepted_at_end (data : Slice U8) (env : module.Env)
     module.validate_module data .Wasm1 = .ok (.Ok ⟨env, ⟨alloc.vec.Vec.new _⟩⟩) :=
   StreamSliceExamplesSupport.accepted_at_end data env hsize hfuncs henv
 
+/-- An error from `module.validate_env` is the result of `module.validate_module` when the code
+region split is empty. -/
 theorem environment_error (data : Slice U8) (e : error.Error)
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (hsplit : stream.find_code_region data = .ok (Slice.len data, Slice.len data))
@@ -91,6 +107,7 @@ theorem environment_error (data : Slice U8) (e : error.Error)
     module.validate_module data .Wasm1 = .ok (.Err e) :=
   StreamSliceRejection.environment_error data e hsize hsplit herror
 
+/-- A header error on input of at most 8 bytes is the result of `module.validate_module`. -/
 theorem header_error (data : Slice U8) (e : error.Error)
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (hshort : data.length ≤ 8)
@@ -105,7 +122,7 @@ theorem header_error (data : Slice U8) (e : error.Error)
     core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-/-- Empty input is an ordinary EOF error at the public module entry point. -/
+/-- Empty input is rejected with `UnexpectedEof`. -/
 theorem missing_header_rejected : module.validate_module (bytes []) .Wasm1 =
     .ok (.Err (.Read .UnexpectedEof)) := by
   apply header_error _ _ (by simp [bytes, alloc.vec.Vec.deref, limits.MAX_MODULE_BYTES]) (by decide)
@@ -114,7 +131,7 @@ theorem missing_header_rejected : module.validate_module (bytes []) .Wasm1 =
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
     error.Error.Insts.CoreConvertFromOpError.from]
 
-/-- A header with a non-Wasm magic word is rejected before version decoding. -/
+/-- A first byte of `01` instead of `00` in the magic word is rejected with `InvalidMagic`. -/
 theorem invalid_magic_rejected : module.validate_module (bytes [1#u8, 0x61#u8, 0x73#u8, 0x6D#u8]) .Wasm1 =
     .ok (.Err .InvalidMagic) := by
   let data := bytes [1#u8, 0x61#u8, 0x73#u8, 0x6D#u8]
@@ -125,7 +142,7 @@ theorem invalid_magic_rejected : module.validate_module (bytes [1#u8, 0x61#u8, 0
   apply header_error data _ (by simp [data, bytes, alloc.vec.Vec.deref, limits.MAX_MODULE_BYTES]) (by decide)
   simp [module.read_header, h0, h1, h2, h3, core.result.Result.Insts.CoreOpsTry.branch]
 
-/-- Nonzero version padding cannot be mistaken for an accepted 1.0 header. -/
+/-- The version `01 00 00 01` is rejected under Wasm 1.0 with `InvalidVersion`. -/
 theorem invalid_version_rejected : module.validate_module
     (bytes [0#u8, 0x61#u8, 0x73#u8, 0x6D#u8, 1#u8, 0#u8, 0#u8, 1#u8]) .Wasm1 =
     .ok (.Err .InvalidVersion) := by

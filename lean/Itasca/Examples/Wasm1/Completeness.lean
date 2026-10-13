@@ -5,22 +5,38 @@ import Itasca.Support.EnvTranslation
 import Itasca.Wasm1.Completeness
 import Itasca.Examples.Wasm1.Support
 
+/-!
+# Wasm 1.0 body completeness
+
+Instances of `code.validate_body.wasm_complete`: the validator accepts any Wasm 1.0 body that has
+a byte-level encoding derivation, generated `Instrs_ok` typing and the Wasm 1.0 profile
+restrictions (`Wasm1.Body`). Each example builds `Wasm1.Body` from those three independent pieces
+for a nested `block`/`if`/`else`, a `br_table` after `unreachable`, and a `memory.size; call`
+sequence, then concludes that `code.validate_body` accepts the bytes.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.Wasm1Completeness
 
 open Wasm1Support
 
+/-- A context with no locals and one `i32` result. -/
 def i32Context : code.Context :=
   ⟨alloc.vec.Vec.new _, alloc.vec.Vec.from [.I32] (by scalar_tac)⟩
 
+/-- The body bytes `02 7f 41 01 04 7f 41 07 05 41 09 0b 0b 0b`:
+`block (result i32); i32.const 1; if (result i32) i32.const 7; else i32.const 9; end; end; end`. -/
 def nestedBytes : Slice U8 := bytes
   [0x02#u8, 0x7F#u8, 0x41#u8, 1#u8, 0x04#u8, 0x7F#u8,
    0x41#u8, 7#u8, 0x05#u8, 0x41#u8, 9#u8, 0x0B#u8, 0x0B#u8, 0x0B#u8]
 
+/-- The `if (result i32)` with arms `i32.const 7` and `i32.const 9`. -/
 def choice : instr := .IFELSE (Control.blockType (.Value .I32))
   [Spec.i32Const 7#i32] [Spec.i32Const 9#i32]
+/-- The body of the outer block: `i32.const 1; choice`. -/
 def nestedInner : List instr := [Spec.i32Const 1#i32, choice]
+/-- The instruction tree for `nestedBytes`. -/
 def nestedOps : List instr := [.BLOCK (Control.blockType (.Value .I32)) nestedInner]
 
 private theorem constant_encoded (b : U8) (v : I32)
@@ -99,7 +115,8 @@ private theorem nested_encoded : Wasm1.BodyEncoding nestedBytes nestedOps := by
     rfl, ?_⟩
   exact ⟨_, rfl, ho⟩
 
-/-- This premise is constructed solely from byte grammar, generated typing, and the independent profile. -/
+/-- `nestedBytes` satisfies `Wasm1.Body` for any environment, built from the byte grammar, the
+generated typing rules and the Wasm 1.0 profile, without running the validator. -/
 theorem nested_body (env : module.Env) : Wasm1.Body nestedBytes env i32Context (.Value .I32) := by
   refine ⟨nestedOps, nested_encoded, nested_typed env, ?_⟩
   apply Wasm1.Instructions.cons
@@ -111,10 +128,15 @@ theorem nested_body (env : module.Env) : Wasm1.Body nestedBytes env i32Context (
       · exact .nil _
   · exact .nil _
 
+/-- The body bytes `02 7f 00 0e 01 00 01 0b 0b`:
+`block (result i32); unreachable; br_table [0] 1; end; end`. -/
 def tableBytes : Slice U8 := bytes
   [0x02#u8, 0x7F#u8, 0x00#u8, 0x0E#u8, 1#u8, 0#u8, 1#u8, 0x0B#u8, 0x0B#u8]
+/-- A `br_table` with targets `[0]` and default `1`. -/
 def table : instr := BrTable.instruction [0#u32] 1#u32
+/-- The body of the block: `unreachable; table`. -/
 def tableInner : List instr := [.UNREACHABLE, table]
+/-- The instruction tree for `tableBytes`. -/
 def tableOps : List instr := [.BLOCK (Control.blockType (.Value .I32)) tableInner]
 
 private theorem table_wf : wf_instr table := BrTable.instruction_wf _ _
@@ -168,7 +190,8 @@ private theorem table_encoded : Wasm1.BodyEncoding tableBytes tableOps := by
   exact ⟨_, 9#usize, ((((Wasm1.Consumed.nil 0#usize (by decide)).snoc h0).snoc h2).snoc h3).snoc h7 |>.snoc h8,
     rfl, ⟨_, rfl, ho⟩⟩
 
-/-- A bottom-typed payload branches to distinct labels with the same nonempty signature. -/
+/-- `tableBytes` satisfies `Wasm1.Body` for any environment: after `unreachable`, the `br_table`
+takes bottom-typed operands and branches to two distinct labels that both carry one `i32`. -/
 theorem table_body (env : module.Env) : Wasm1.Body tableBytes env i32Context (.Value .I32) := by
   refine ⟨tableOps, table_encoded, table_body_typed env, ?_⟩
   apply Wasm1.Instructions.cons
@@ -183,11 +206,15 @@ theorem table_body (env : module.Env) : Wasm1.Body tableBytes env i32Context (.V
       · exact .nil _
   · exact .nil _
 
+/-- The body bytes `3f 00 10 00 0b`: `memory.size; call 0; end`. -/
 def callMemoryBytes : Slice U8 := bytes [0x3F#u8, 0#u8, 0x10#u8, 0#u8, 0x0B#u8]
+/-- The instruction list for `callMemoryBytes`. -/
 def callMemoryOps : List instr := [.MEMORY_SIZE, .CALL (.mk_uN 0)]
+/-- The function type `[i32] -> [i32]`. -/
 def scalarFunction : types.FuncType :=
   ⟨alloc.vec.Vec.from [.I32] (by scalar_tac), alloc.vec.Vec.from [.I32] (by scalar_tac)⟩
 
+/-- An environment with one function of type `scalarFunction` and one memory of minimum size 1. -/
 def exampleEnv : module.Env where
   types := alloc.vec.Vec.from [scalarFunction] (by scalar_tac)
   imports := alloc.vec.Vec.new _
@@ -205,6 +232,7 @@ def exampleEnv : module.Env where
   num_imported_funcs := 0#usize
   num_imported_globals := 0#usize
 
+/-- `exampleEnv` satisfies the `Wasm1.Environment` premise of completeness. -/
 theorem example_environment : Wasm1.Environment exampleEnv := by
   constructor <;> simp [exampleEnv, scalarFunction]
 
@@ -236,26 +264,29 @@ private theorem call_memory_encoded : Wasm1.BodyEncoding callMemoryBytes callMem
   exact ⟨_, 5#usize, ((Wasm1.Consumed.nil 0#usize (by decide)).snoc h0).snoc h2 |>.snoc h4,
     rfl, ⟨_, rfl, ho⟩⟩
 
-/-- Memory size supplies the argument of a directly called scalar signature. -/
+/-- `callMemoryBytes` satisfies `Wasm1.Body` in `exampleEnv`: `memory.size` supplies the `i32`
+argument of the direct call. -/
 theorem call_memory_body : Wasm1.Body callMemoryBytes exampleEnv i32Context (.Value .I32) := by
   refine ⟨callMemoryOps, call_memory_encoded, call_memory_typed, ?_⟩
   exact .cons (.leaf _ _ (by trivial)) (.cons (.leaf _ _ (by trivial)) (.nil _))
 
-/-- Public acceptance follows from independent nested control-flow premises. -/
+/-- `code.validate_body` accepts `nestedBytes` in any environment satisfying `Wasm1.Environment`. -/
 theorem nested_accepted (env : module.Env) (henv : Wasm1.Environment env) :
     code.validate_body nestedBytes env i32Context = .ok (.Ok ()) :=
   code.validate_body.wasm_complete nestedBytes env i32Context (.Value .I32) henv rfl
     (by simp [nestedBytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
     (nested_body env)
 
-/-- Completeness includes unreachable branch-table arguments and nonempty results. -/
+/-- `code.validate_body` accepts `tableBytes` in any environment satisfying `Wasm1.Environment`,
+so completeness covers `br_table` with unreachable operands and a nonempty result. -/
 theorem table_accepted (env : module.Env) (henv : Wasm1.Environment env) :
     code.validate_body tableBytes env i32Context = .ok (.Ok ()) :=
   code.validate_body.wasm_complete tableBytes env i32Context (.Value .I32) henv rfl
     (by simp [tableBytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
     (table_body env)
 
-/-- A concrete call/memory environment meets all public completeness premises. -/
+/-- `code.validate_body` accepts `callMemoryBytes` in `exampleEnv`, which meets every premise of
+completeness. -/
 theorem call_memory_accepted :
     code.validate_body callMemoryBytes exampleEnv i32Context = .ok (.Ok ()) :=
   code.validate_body.wasm_complete callMemoryBytes exampleEnv i32Context (.Value .I32)

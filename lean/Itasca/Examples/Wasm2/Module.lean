@@ -4,6 +4,16 @@ import Itasca.Handler.ScalarConst
 import Itasca.Binary.ModuleUnique
 import Itasca.Examples.Module.Support
 
+/-!
+# A two-result module under both profiles
+
+A module with one function of type `[] -> [i32, i64]` whose body is `i32.const 0; i64.const 0`.
+`accepted` and `validated` show that `module.validate_module` accepts its bytes under Wasm 2.0 via
+the shared completeness and soundness theorems, and `wasm1_rejected` shows the same bytes are
+rejected under Wasm 1.0 because of the second result. `typed` builds `Module_ok` directly from
+declarative pieces, without running the validator.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.Wasm2Module
@@ -12,19 +22,24 @@ open ModuleSupport (leb one padded omitted)
 
 open ModuleBinary ModuleElaboration
 
+/-- The function type `[] -> [i32, i64]`. -/
 def functionType : types.FuncType :=
   ⟨alloc.vec.Vec.new _, alloc.vec.Vec.from [.I32, .I64] (by scalar_tac)⟩
 
+/-- The code entry with no locals and body `i32.const 0; i64.const 0`. -/
 def entry : Code := ⟨[], [Spec.i32Const 0#i32, ScalarConst.i64 0#i64]⟩
 
+/-- The environment holding `functionType` and one function of that type. -/
 def env : module.Env :=
   { Examples.ModuleBasic.emptyEnv with
     types := alloc.vec.Vec.from [functionType] (by scalar_tac)
     func_type_indices := alloc.vec.Vec.from [0#u32] (by scalar_tac)
     func_types := alloc.vec.Vec.from [functionType] (by scalar_tac) }
 
+/-- The decoded module that `env` and `entry` elaborate to. -/
 def raw : ModuleBinary.Module := fromEnv env [] [] [entry] []
 
+/-- The module bytes: header, type section, function section and code section. -/
 def input : Slice U8 := Examples.ModuleSupport.bytes
   (magicVersion ++ [1#u8, 6#u8, 1#u8, 0x60#u8, 0#u8, 2#u8, 0x7F#u8, 0x7E#u8,
     3#u8, 2#u8, 1#u8, 0#u8,
@@ -58,8 +73,8 @@ private theorem codes_typed : List.Forall₂
     (fun idx code => CodeEntry.Typed env idx code .Wasm2) env.func_type_indices.val [entry] :=
   .cons entry_typed .nil
 
-/-- Generated typing is assembled from independently supplied declarative
-body typing and exact environment caches, without a successful validator call. -/
+/-- The generated `Module_ok` holds for `raw`, assembled from declarative body typing and
+environment caches without a successful validator call. -/
 theorem typed : Module_ok (moduleOf raw) := by
   exact ModuleElaboration.typed cache environment_valid
     (by simp [env, Examples.ModuleBasic.emptyEnv]) (by simp [env, Examples.ModuleBasic.emptyEnv])
@@ -101,8 +116,8 @@ private theorem body_encoding : Itasca.Profile.BodyBytes .Wasm2 entry.body
   · exact ⟨_, rfl, .simple (.simple .nil (.plain _ (Spec.i32Const_wf _)))
       (.plain _ (ScalarConst.i64_wf _))⟩
 
-/-- The binary premise records the complete module and its actual encoded
-body size; no parser execution or canonical re-encoding is assumed. -/
+/-- `input` encodes `raw` within the module and function size limits, stated directly on the byte
+lists for either profile. No parser execution or canonical re-encoding is assumed. -/
 theorem encoded (profile : ValidationProfile) : ModuleEncodingWithinLimits raw input.val profile := by
   constructor
   · simp [input, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion, limits.MAX_MODULE_BYTES]
@@ -131,8 +146,8 @@ theorem encoded (profile : ValidationProfile) : ModuleEncodingWithinLimits raw i
     · simp [DataCountValid, raw, fromEnv, env, Examples.ModuleBasic.emptyEnv, entry,
         instructionsUseData, instructionUsesData, Spec.i32Const, ScalarConst.i64]
 
-/-- A real two-result function is accepted by the public module API as a
-consequence of the shared completeness theorem. -/
+/-- `module.validate_module` accepts `input` under Wasm 2.0, and the decoded metadata matches
+`raw`, by the shared completeness theorem. -/
 theorem accepted : ∃ decoded, module.validate_module input .Wasm2 = .ok (.Ok decoded) ∧
     Matches decoded.env decoded.tail raw ∧ AccessorTypes decoded.env raw := by
   exact module.validate_module.profile_complete_with_metadata input raw .Wasm2 (encoded .Wasm2)
@@ -141,15 +156,13 @@ theorem accepted : ∃ decoded, module.validate_module input .Wasm2 = .ok (.Ok d
     (ModuleElaboration.elaborates cache codes_typed) typed
     (ModuleElaboration.profile cache environment_valid codes_typed)
 
-/-- The same accepted bytes also instantiate the shared module soundness theorem. -/
+/-- The accepted bytes also satisfy the shared module soundness theorem under Wasm 2.0. -/
 theorem validated : ∃ decoded, module.validate_module input .Wasm2 = .ok (.Ok decoded) ∧
     ModuleSound.Validated input decoded .Wasm2 := by
   obtain ⟨decoded, ha, _, _⟩ := accepted
   exact ⟨decoded, ha, module.validate_module.profile_sound input decoded .Wasm2 ha⟩
 
-
-/-- The identical binary is rejected by Wasm 1.0 because its independently
-encoded function signature has two results. -/
+/-- The same bytes are rejected under Wasm 1.0 because the function signature has two results. -/
 theorem wasm1_rejected : ∃ err, module.validate_module input .Wasm1 = .ok (.Err err) := by
   obtain ⟨result, hr⟩ := module.validate_module.wasm_total input
   cases result with

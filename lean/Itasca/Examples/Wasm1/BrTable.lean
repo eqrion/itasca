@@ -1,6 +1,15 @@
 import Itasca.Wasm1.Soundness
 import Itasca.Examples.Wasm1.Support
 
+/-!
+# A Wasm 1.0 `br_table` body
+
+The body `unreachable; br_table [0] 0; end` run through `code.validate_body`. After `unreachable`
+the operand stack is polymorphic, so the `i32` index of `br_table` can be popped from it. The
+example executes the label loop of `code.read_br_table` for a nonempty target vector.
+`br_table_body_accepted` shows acceptance and `br_table_body_validated` the soundness certificate.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.Wasm1BrTable
@@ -8,8 +17,11 @@ namespace Itasca.Examples.Wasm1BrTable
 open Wasm1Support
 
 
+/-- A context with no locals and no results. -/
 def emptyContext : code.Context := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _⟩
 
+/-- The body bytes `00 0e 01 00 00 0b`: `unreachable`, `br_table` with one target `0` and default
+`0`, then `end`. -/
 def brTableBytes : Slice U8 := alloc.vec.Vec.deref
   (alloc.vec.Vec.from [0#u8, 0x0E#u8, 1#u8, 0#u8, 0#u8, 0x0B#u8] (by scalar_tac))
 
@@ -49,7 +61,7 @@ private theorem labels_one (st next : code.OpIterState) (target : code.Ctrl)
     code.visit, htarget, hmerge, hi, core.result.Result.Insts.CoreOpsTry.branch,
     code.read_table_labels_loop, code.read_table_labels_loop.body] using hdone
 
-/-- The public validator executes a nonempty branch-table label loop on a polymorphic stack. -/
+/-- `code.validate_body` accepts `brTableBytes` with no results. -/
 theorem br_table_body_accepted (env : module.Env) :
     code.validate_body brTableBytes env emptyContext = .ok (.Ok ()) := by
   let initial := Wasm1.Loop.initial .Empty
@@ -129,6 +141,7 @@ theorem br_table_body_accepted (env : module.Env) :
     (step_end brTableBytes env emptyContext last finished .Body .Empty hend)]
   exact loop_done brTableBytes env emptyContext finished hfc hfp
 
+/-- The accepted `brTableBytes` body has a `Wasm1.Validated` certificate. -/
 theorem br_table_body_validated (env : module.Env) :
     Wasm1.Validated brTableBytes env emptyContext .Empty :=
   code.validate_body.wasm_sound brTableBytes env emptyContext .Empty rfl (br_table_body_accepted env)

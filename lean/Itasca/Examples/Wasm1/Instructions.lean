@@ -2,6 +2,16 @@ import Itasca.Wasm1.Soundness
 import Itasca.Handler.EnvDispatch
 import Itasca.Examples.Wasm1.Support
 
+/-!
+# Wasm 1.0 instruction examples
+
+Short bodies for single instructions run through `code.validate_body`: `local.get`, `memory.size`
+with its reserved byte, `select` and `drop` after `unreachable`, a direct `call`, `global.set` on
+an immutable global, an unknown opcode and trailing bytes. Each shows an environment lookup, an
+immediate check or the polymorphic stack rule that the extracted code performs, with the exact
+accepted result or error.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.Wasm1Instructions
@@ -9,10 +19,13 @@ namespace Itasca.Examples.Wasm1Instructions
 open Wasm1Support
 
 
+/-- A context with no locals and no results. -/
 def emptyContext : code.Context := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _⟩
 
+/-- A context with no locals and one `i32` result. -/
 def i32Context : code.Context := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.from [.I32] (by scalar_tac)⟩
 
+/-- A context with one `i32` local and one `i32` result. -/
 def localContext : code.Context :=
   ⟨alloc.vec.Vec.from [.I32] (by scalar_tac), alloc.vec.Vec.from [.I32] (by scalar_tac)⟩
 
@@ -56,8 +69,8 @@ private theorem zero_byte (data : Slice U8) (st : code.OpIterState) (next : Usiz
   have hpnext : p = next := UScalar.eq_of_val_eq (hnext.trans hn.symm)
   simp [code.read_reserved_zero, hr, hpnext, hz, core.result.Result.Insts.CoreOpsTry.branch]
 
-/-- Local index zero is resolved against Context.locals, and its value satisfies
-    the function's declared result at the public entry point. -/
+/-- `code.validate_body` accepts `local.get 0; end` (`20 00 0b`) in `localContext`: local 0 is
+looked up in the context and its `i32` type matches the result. -/
 theorem local_get_accepted (env : module.Env) :
     code.validate_body (bytes [0x20#u8, 0#u8, 0x0B#u8]) env localContext = .ok (.Ok ()) := by
   let data := bytes [0x20#u8, 0#u8, 0x0B#u8]
@@ -86,11 +99,13 @@ theorem local_get_accepted (env : module.Env) :
     (by simp [hp, data, bytes, alloc.vec.Vec.deref]) hc _ hstep
   simpa [first, Wasm1.Loop.initial, Control.results] using hv
 
+/-- The accepted `local.get` body has a `Wasm1.Validated` certificate. -/
 theorem local_get_validated (env : module.Env) :
     Wasm1.Validated (bytes [0x20#u8, 0#u8, 0x0B#u8]) env localContext (.Value .I32) :=
   code.validate_body.wasm_sound _ env localContext (.Value .I32) rfl (local_get_accepted env)
 
-/-- Memory size uses memory zero and consumes the required reserved zero byte. -/
+/-- `code.validate_body` accepts `memory.size; end` (`3f 00 0b`) with an `i32` result when the
+environment has a memory, consuming the reserved zero byte. -/
 theorem memory_size_accepted (env : module.Env) (hmem : env.mem_types.val ≠ []) :
     code.validate_body (bytes [0x3F#u8, 0#u8, 0x0B#u8]) env i32Context = .ok (.Ok ()) := by
   let data := bytes [0x3F#u8, 0#u8, 0x0B#u8]
@@ -112,11 +127,12 @@ theorem memory_size_accepted (env : module.Env) (hmem : env.mem_types.val ≠ []
     (by simp [hp, data, bytes, alloc.vec.Vec.deref]) hc _ hstep
   simpa [first, Wasm1.Loop.initial, Control.results] using hv
 
+/-- The accepted `memory.size` body has a `Wasm1.Validated` certificate. -/
 theorem memory_size_validated (env : module.Env) (hmem : env.mem_types.val ≠ []) :
     Wasm1.Validated (bytes [0x3F#u8, 0#u8, 0x0B#u8]) env i32Context (.Value .I32) :=
   code.validate_body.wasm_sound _ env i32Context (.Value .I32) rfl (memory_size_accepted env hmem)
 
-/-- A nonzero reserved memory byte is rejected before any environment lookup. -/
+/-- `3f 01 0b` is rejected with `ReservedByteNotZero`, before any memory lookup. -/
 theorem reserved_byte_rejected (env : module.Env) :
     code.validate_body (bytes [0x3F#u8, 1#u8, 0x0B#u8]) env i32Context =
       .ok (.Err .ReservedByteNotZero) := by
@@ -155,8 +171,8 @@ private theorem finish_empty (data : Slice U8) (env : module.Env)
     (step_end data env emptyContext last finished .Body .Empty hr)]
   exact loop_done data env emptyContext finished hfc hfp
 
-/-- SELECT accepts implicit bottom operands at a polymorphic base; its explicit
-    bottom result can then be consumed by DROP before the function closes. -/
+/-- `unreachable; select; drop; end` (`00 1b 1a 0b`) is accepted: `select` takes its operands from
+the polymorphic base of the stack, and `drop` consumes its bottom-typed result. -/
 theorem polymorphic_select_accepted (env : module.Env) :
     code.validate_body (bytes [0#u8, 0x1B#u8, 0x1A#u8, 0x0B#u8]) env emptyContext = .ok (.Ok ()) := by
   let data := bytes [0#u8, 0x1B#u8, 0x1A#u8, 0x0B#u8]
@@ -210,11 +226,12 @@ theorem polymorphic_select_accepted (env : module.Env) :
     (by simp [hp3, third, data, bytes, alloc.vec.Vec.deref, code.OP_END])
     (by simp [hp3, third, data, bytes, alloc.vec.Vec.deref])
 
+/-- The accepted `select` body has a `Wasm1.Validated` certificate. -/
 theorem polymorphic_select_validated (env : module.Env) :
     Wasm1.Validated (bytes [0#u8, 0x1B#u8, 0x1A#u8, 0x0B#u8]) env emptyContext .Empty :=
   code.validate_body.wasm_sound _ env emptyContext .Empty rfl (polymorphic_select_accepted env)
 
-/-- The public API rejects an unknown opcode as an ordinary validation error. -/
+/-- The body `ff` is rejected with `UnrecognizedOpcode`. -/
 theorem unknown_opcode_rejected (env : module.Env) :
     code.validate_body (bytes [0xFF#u8]) env emptyContext = .ok (.Err .UnrecognizedOpcode) := by
   let data := bytes [0xFF#u8]
@@ -228,10 +245,11 @@ theorem unknown_opcode_rejected (env : module.Env) :
     .UnrecognizedOpcode (by simp [Wasm1.Loop.initial])
     (read_at data (Wasm1.Loop.initial .Empty) 1#usize 0xFF#u8 (by decide) rfl rfl) hstep
 
+/-- The function type `[] -> []`. -/
 def voidFunction : types.FuncType := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _⟩
 
-/-- Direct calls use the resolved function cache. This witness intentionally
-    requires no relationship between that cache and the module's type-index list. -/
+/-- `call 0; end` (`10 00 0b`) is accepted when the resolved function cache `func_types` holds
+`[] -> []`. The theorem assumes nothing about the module's type-index list. -/
 theorem cached_call_accepted (env : module.Env) (hfun : env.func_types.val = [voidFunction]) :
     code.validate_body (bytes [0x10#u8, 0#u8, 0x0B#u8]) env emptyContext = .ok (.Ok ()) := by
   let data := bytes [0x10#u8, 0#u8, 0x0B#u8]
@@ -266,11 +284,13 @@ theorem cached_call_accepted (env : module.Env) (hfun : env.func_types.val = [vo
     (by simp [hp, decoded, data, bytes, alloc.vec.Vec.deref]) hc _ hstep
   simpa [decoded, first, Wasm1.Loop.initial, Control.results, voidFunction, alloc.vec.Vec.deref] using hv
 
+/-- The accepted `call` body has a `Wasm1.Validated` certificate. -/
 theorem cached_call_validated (env : module.Env) (hfun : env.func_types.val = [voidFunction]) :
     Wasm1.Validated (bytes [0x10#u8, 0#u8, 0x0B#u8]) env emptyContext .Empty :=
   code.validate_body.wasm_sound _ env emptyContext .Empty rfl (cached_call_accepted env hfun)
 
-/-- An immutable global rejects before attempting to pop a value. -/
+/-- `global.set 0; end` (`24 00 0b`) on an immutable `i32` global is rejected with
+`ImmutableGlobal`, before any operand is popped. -/
 theorem immutable_global_rejected (env : module.Env)
     (hglobal : env.global_types.val = [⟨.Const, .I32⟩]) :
     code.validate_body (bytes [0x24#u8, 0#u8, 0x0B#u8]) env emptyContext = .ok (.Err .ImmutableGlobal) := by
@@ -299,6 +319,7 @@ theorem immutable_global_rejected (env : module.Env)
     (read_at data (Wasm1.Loop.initial .Empty) 1#usize code.OP_GLOBAL_SET (by simp [data, bytes, alloc.vec.Vec.deref, Wasm1.Loop.initial]) rfl
       (by simp [data, bytes, alloc.vec.Vec.deref, Wasm1.Loop.initial, code.OP_GLOBAL_SET])) hstep
 
+/-- The body `0b 01` is rejected with `TrailingBytes`. -/
 theorem trailing_bytes_rejected (env : module.Env) :
     code.validate_body (bytes [0x0B#u8, 1#u8]) env emptyContext = .ok (.Err .TrailingBytes) := by
   let data := bytes [0x0B#u8, 1#u8]

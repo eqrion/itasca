@@ -2,6 +2,16 @@ import Itasca.Wasm1.Soundness
 import Itasca.Handler.ScalarConst
 import Itasca.Examples.Wasm1.Support
 
+/-!
+# Wasm 1.0 numeric constants
+
+Bodies consisting of one `i64.const`, `f32.const` or `f64.const` followed by `end`, accepted by
+`code.validate_body` and given `Wasm1.Validated` certificates, together with the translation of
+their immediates to SpecTec floating-point values (`f32_negative_zero`, `f64_nan_payload`). Two
+malformed immediates, a truncated `f64` and an over-long signed LEB128, are rejected with
+`UnexpectedEof` and `LebTooLong`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.Wasm1Scalars
@@ -9,13 +19,20 @@ namespace Itasca.Examples.Wasm1Scalars
 open Wasm1Support
 
 
+/-- A context with no locals and the single result type `ty`. -/
 def resultContext (ty : types.ValueType) : code.Context :=
   ⟨alloc.vec.Vec.new _, alloc.vec.Vec.from [ty] (by scalar_tac)⟩
 
+/-- The body bytes `42 ff 7f 0b`: `i64.const -1` in a two-byte encoding, then `end`. -/
 def i64Bytes : Slice U8 := bytes [0x42#u8, 0xFF#u8, 0x7F#u8, 0x0B#u8]
+/-- The body bytes `43 00 00 00 80 0b`: `f32.const` with bits `0x80000000` (negative zero), then
+`end`. -/
 def f32Bytes : Slice U8 := bytes [0x43#u8, 0#u8, 0#u8, 0#u8, 0x80#u8, 0x0B#u8]
+/-- The body bytes `44 01 00 00 00 00 00 f8 ff 0b`: `f64.const` with bits `0xfff8000000000001` (a
+negative NaN with a payload), then `end`. -/
 def f64Bytes : Slice U8 := bytes [0x44#u8, 1#u8, 0#u8, 0#u8, 0#u8, 0#u8, 0#u8, 0xF8#u8, 0xFF#u8, 0x0B#u8]
 
+/-- `code.validate_body` accepts `i64Bytes` with one `i64` result. -/
 theorem i64_body_accepted (env : module.Env) :
     code.validate_body i64Bytes env (resultContext .I64) = .ok (.Ok ()) := by
   let initial := Wasm1.Loop.initial (.Value .I64)
@@ -56,11 +73,13 @@ theorem i64_body_accepted (env : module.Env) :
     (step_end i64Bytes env (resultContext .I64) last finished .Body (.Value .I64) hend)]
   exact loop_done i64Bytes env (resultContext .I64) finished hfc hfp
 
+/-- The accepted `i64Bytes` body has a `Wasm1.Validated` certificate. -/
 theorem i64_body_validated (env : module.Env) :
     Wasm1.Validated i64Bytes env (resultContext .I64) (.Value .I64) :=
   code.validate_body.wasm_sound i64Bytes env (resultContext .I64) (.Value .I64) rfl
     (i64_body_accepted env)
 
+/-- `code.validate_body` accepts `f32Bytes` with one `f32` result. -/
 theorem f32_body_accepted (env : module.Env) :
     code.validate_body f32Bytes env (resultContext .F32) = .ok (.Ok ()) := by
   let initial := Wasm1.Loop.initial (.Value .F32)
@@ -100,11 +119,13 @@ theorem f32_body_accepted (env : module.Env) :
     (step_end f32Bytes env (resultContext .F32) last finished .Body (.Value .F32) hend)]
   exact loop_done f32Bytes env (resultContext .F32) finished hfc hfp
 
+/-- The accepted `f32Bytes` body has a `Wasm1.Validated` certificate. -/
 theorem f32_body_validated (env : module.Env) :
     Wasm1.Validated f32Bytes env (resultContext .F32) (.Value .F32) :=
   code.validate_body.wasm_sound f32Bytes env (resultContext .F32) (.Value .F32) rfl
     (f32_body_accepted env)
 
+/-- `code.validate_body` accepts `f64Bytes` with one `f64` result. -/
 theorem f64_body_accepted (env : module.Env) :
     code.validate_body f64Bytes env (resultContext .F64) = .ok (.Ok ()) := by
   let initial := Wasm1.Loop.initial (.Value .F64)
@@ -144,21 +165,25 @@ theorem f64_body_accepted (env : module.Env) :
     (step_end f64Bytes env (resultContext .F64) last finished .Body (.Value .F64) hend)]
   exact loop_done f64Bytes env (resultContext .F64) finished hfc hfp
 
+/-- The accepted `f64Bytes` body has a `Wasm1.Validated` certificate. -/
 theorem f64_body_validated (env : module.Env) :
     Wasm1.Validated f64Bytes env (resultContext .F64) (.Value .F64) :=
   code.validate_body.wasm_sound f64Bytes env (resultContext .F64) (.Value .F64) rfl
     (f64_body_accepted env)
 
-/-- Translation retains IEEE negative zero, rather than identifying it with positive zero. -/
+/-- The bits `0x80000000` translate to IEEE negative zero, which is distinct from positive zero. -/
 theorem f32_negative_zero : ScalarConst.floatValue 23 8 (0x80000000#u32).val = .NEG (.SUBNORM 0) := by
   decide
 
-/-- Both the sign and the nonzero NaN payload survive translation. -/
+/-- The bits `0xfff8000000000001` translate to a NaN that keeps its sign and nonzero payload. -/
 theorem f64_nan_payload : ScalarConst.floatValue 52 11 (0xFFF8000000000001#u64).val =
     .NEG (.NAN 0x8000000000001) := by
   decide
 
+/-- The body bytes `44` followed by seven zero bytes: an `f64.const` immediate one byte short. -/
 def truncatedF64Bytes : Slice U8 := bytes [0x44#u8, 0#u8, 0#u8, 0#u8, 0#u8, 0#u8, 0#u8, 0#u8]
+/-- The body bytes `42` followed by ten `80` bytes: an `i64.const` whose LEB128 immediate never
+terminates within ten bytes. -/
 def overlongI64Bytes : Slice U8 := bytes [0x42#u8, 0x80#u8, 0x80#u8, 0x80#u8, 0x80#u8, 0x80#u8,
   0x80#u8, 0x80#u8, 0x80#u8, 0x80#u8, 0x80#u8]
 
@@ -196,7 +221,7 @@ private theorem overlong_i64_reader : reader.read_s64_leb overlongI64Bytes 1#usi
     subst last
     norm_num at hlast
 
-/-- Truncation is rejected by the actual public body API. -/
+/-- `code.validate_body` rejects `truncatedF64Bytes` with `UnexpectedEof`. -/
 theorem truncated_f64_body_rejected (env : module.Env) :
     code.validate_body truncatedF64Bytes env (resultContext .F64) = .ok (.Err .UnexpectedEof) := by
   let first := { Wasm1.Loop.initial (.Value .F64) with pos := 1#usize }
@@ -212,7 +237,8 @@ theorem truncated_f64_body_rejected (env : module.Env) :
     (read_at truncatedF64Bytes (Wasm1.Loop.initial (.Value .F64)) 1#usize code.OP_F64_CONST (by decide) rfl
       (by simp [truncatedF64Bytes, bytes, Wasm1.Loop.initial, code.OP_F64_CONST, alloc.vec.Vec.deref])) hstep
 
-/-- An unterminated ten-byte signed LEB is rejected before any missing final end matters. -/
+/-- `code.validate_body` rejects `overlongI64Bytes` with `LebTooLong`, before the missing `end`
+matters. -/
 theorem overlong_i64_body_rejected (env : module.Env) :
     code.validate_body overlongI64Bytes env (resultContext .I64) = .ok (.Err .LebTooLong) := by
   let first := { Wasm1.Loop.initial (.Value .I64) with pos := 1#usize }

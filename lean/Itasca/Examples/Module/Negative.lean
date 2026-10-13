@@ -5,6 +5,16 @@ import Itasca.Module.Env.Replay
 import Itasca.Stream.SplitComplete
 import Itasca.Examples.Module.Support
 
+/-!
+# Rejected modules
+
+Wasm 1.0 modules that `module.validate_module` rejects, each with the exact error: a duplicate
+export name written in four-byte UTF-8, an unknown start function or type index, a bad function
+type form byte, truncated counts and section payloads, a repeated section, and a section whose
+declared size exceeds its contents. Each case is a short byte string, so the examples show that
+errors found while decoding sections reach the public entry point unchanged.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.ModuleNegative
@@ -33,8 +43,8 @@ private theorem env_from_loop (data : Slice U8)
   simp [module.validate_env, module.validate_env_with, module.Env.new,
     hh, core.result.Result.Insts.CoreOpsTry.branch, hloop]
 
-/-- Two exports use the four-byte spelling of U+10FFFF and refer to the same
-valid memory. The duplicate name, rather than UTF-8 or index validity, fails. -/
+/-- A module with one memory and two exports of it, both named by the four bytes of U+10FFFF.
+The names are valid UTF-8 and the indices are valid, so only the duplicate name is an error. -/
 def duplicateUnicodeExports : Slice U8 := Examples.ModuleSupport.bytes
   (magicVersion ++ [5#u8,3#u8,1#u8,0#u8,0#u8,
     7#u8,15#u8,2#u8,4#u8,0xF4#u8,0x8F#u8,0xBF#u8,0xBF#u8,2#u8,0#u8,
@@ -94,6 +104,7 @@ private theorem duplicate_exports_decode (env : module.Env)
   exact ⟨updated, by simp [module.decode_export_section, hcount, hloop,
     core.result.Result.Insts.CoreOpsTry.branch, data]⟩
 
+/-- `duplicateUnicodeExports` is rejected with `DuplicateExportName`. -/
 theorem duplicate_unicode_exports_rejected : module.validate_module duplicateUnicodeExports .Wasm1 =
     .ok (.Err .DuplicateExportName) := by
   let data := duplicateUnicodeExports
@@ -180,12 +191,16 @@ private theorem first_section_error (data : Slice U8)
     hread, core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
+/-- A module with one section with the given id and declared size, followed by one payload
+byte. -/
 def shortSection (id size payload : U8) : Slice U8 :=
   Examples.ModuleSupport.bytes (magicVersion ++ [id,size,payload]) (by simp [magicVersion]; scalar_tac)
 
+/-- A module with one section with the given id and size 0. -/
 def emptySection (id : U8) : Slice U8 :=
   Examples.ModuleSupport.bytes (magicVersion ++ [id,0#u8]) (by simp [magicVersion]; scalar_tac)
 
+/-- A type section with one type whose form byte is `0x00` instead of `0x60`. -/
 def invalidType : Slice U8 :=
   Examples.ModuleSupport.bytes (magicVersion ++ [1#u8,2#u8,1#u8,0#u8]) (by simp [magicVersion]; scalar_tac)
 
@@ -195,6 +210,8 @@ private theorem empty_section_header (id : U8) :
   all_goals first | rfl | (apply Wasm1.BytesAt.mk <;> simp [emptySection,
     Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion])
 
+/-- A start section naming function 0 in a module with no functions is rejected with
+`UnknownFunc 0`. -/
 theorem invalid_start_index_rejected : module.validate_module (shortSection 8#u8 1#u8 0#u8) .Wasm1 =
     .ok (.Err (.UnknownFunc 0#u32)) := by
   let data := shortSection 8#u8 1#u8 0#u8
@@ -214,6 +231,7 @@ theorem invalid_start_index_rejected : module.validate_module (shortSection 8#u8
   · simp [data, shortSection, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion,
       limits.MAX_MODULE_BYTES]
 
+/-- `invalidType` is rejected with `InvalidType 0`, carrying the bad form byte. -/
 theorem invalid_function_type_rejected : module.validate_module invalidType .Wasm1 =
     .ok (.Err (.InvalidType 0#u8)) := by
   let data := invalidType
@@ -243,6 +261,8 @@ theorem invalid_function_type_rejected : module.validate_module invalidType .Was
   · simp [data, invalidType, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion,
       limits.MAX_MODULE_BYTES]
 
+/-- A type section of size 0 has no room for its count, so the module is rejected with
+`Read UnexpectedEof`. -/
 theorem truncated_type_count_rejected : module.validate_module (emptySection 1#u8) .Wasm1 =
     .ok (.Err (.Read .UnexpectedEof)) := by
   let data := emptySection 1#u8
@@ -261,6 +281,7 @@ theorem truncated_type_count_rejected : module.validate_module (emptySection 1#u
   · simp [data, emptySection, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion,
       limits.MAX_MODULE_BYTES]
 
+/-- A type section declaring size 2 with one payload byte is rejected with `UnexpectedEof`. -/
 theorem truncated_section_payload_rejected : module.validate_module (shortSection 1#u8 2#u8 0#u8) .Wasm1 =
     .ok (.Err .UnexpectedEof) := by
   let data := shortSection 1#u8 2#u8 0#u8
@@ -326,10 +347,12 @@ theorem truncated_section_payload_rejected : module.validate_module (shortSectio
   simp [module.validate_env_with_loop.body, hmore, hh, core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
+/-- Two consecutive type sections, each holding an empty vector. -/
 def repeatedTypeSection : Slice U8 :=
   Examples.ModuleSupport.bytes (magicVersion ++ [1#u8,1#u8,0#u8,1#u8,1#u8,0#u8])
     (by simp [magicVersion]; scalar_tac)
 
+/-- A repeated type section is rejected with `SectionOutOfOrder`. -/
 theorem repeated_type_section_rejected : module.validate_module repeatedTypeSection .Wasm1 =
     .ok (.Err .SectionOutOfOrder) := by
   let data := repeatedTypeSection
@@ -377,7 +400,8 @@ theorem repeated_type_section_rejected : module.validate_module repeatedTypeSect
   simp [module.validate_env_with_loop.body, module.section_order, sectionRank, hmore, hheader, global_simps,
     core.result.Result.Insts.CoreOpsTry.branch]
 
-/-- Code framing reports its streaming EOF variant for a missing count. -/
+/-- A code section of size 0 has no room for its count, so the module is rejected with
+`UnexpectedEof`, reported by the code framing of the streaming driver. -/
 theorem truncated_code_count_rejected : module.validate_module (emptySection 10#u8) .Wasm1 =
     .ok (.Err .UnexpectedEof) := by
   let data := emptySection 10#u8
@@ -436,10 +460,12 @@ theorem truncated_code_count_rejected : module.validate_module (emptySection 10#
   obtain ⟨_, hr, rfl⟩ := WP.spec_imp_exists hs
   exact hr
 
+/-- A function section declaring one function of type 0 in a module with no types. -/
 def invalidTypeIndex : Slice U8 :=
   Examples.ModuleSupport.bytes (magicVersion ++ [3#u8,2#u8,1#u8,0#u8])
     (by simp [magicVersion]; scalar_tac)
 
+/-- `invalidTypeIndex` is rejected with `UnknownType 0`. -/
 theorem invalid_type_index_rejected : module.validate_module invalidTypeIndex .Wasm1 =
     .ok (.Err (.UnknownType 0#u32)) := by
   let data := invalidTypeIndex
@@ -469,12 +495,14 @@ theorem invalid_type_index_rejected : module.validate_module invalidTypeIndex .W
   · simp [data, invalidTypeIndex, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion,
       limits.MAX_MODULE_BYTES]
 
+/-- A type section of declared size 2 holding only the empty vector count `00`. -/
 def longEmptyTypeSection : Slice U8 :=
   Examples.ModuleSupport.bytes (magicVersion ++ [1#u8,2#u8,0#u8,0#u8])
     (by simp [magicVersion]; scalar_tac)
 
-/-- The declared payload is available, but the empty type vector consumes one
-byte less than the section size. The extra byte cannot be silently skipped. -/
+/-- The declared payload is available, but the empty type vector consumes one byte less than the
+section size, so the module is rejected with `SectionSizeMismatch` rather than skipping the
+extra byte. -/
 theorem section_size_mismatch_rejected : module.validate_module longEmptyTypeSection .Wasm1 =
     .ok (.Err .SectionSizeMismatch) := by
   let data := longEmptyTypeSection

@@ -3,6 +3,15 @@ import Itasca.Module.Completeness
 import Itasca.Stream.SliceLayout
 import Itasca.Examples.Module.Support
 
+/-!
+# A module with tables, memories, globals, exports and segments
+
+A 51-byte Wasm 1.0 module with one table, one memory, one immutable `i32` global, an export of
+that global, an active element segment and an active data segment, and no functions.
+`sections_accepted` shows that `module.validate_module` accepts it using the section-layout
+completeness theorems, and `sections_validated` adds the soundness certificate.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.ModuleSections
@@ -11,19 +20,28 @@ open ModuleSupport (leb one padded omitted)
 
 open ModuleBinary ModuleEnv
 
+/-- A `funcref` table with minimum size 0 and no maximum. -/
 def tableType : types.TableType := ⟨⟨0#u32, none⟩, .FuncRef⟩
+/-- A memory with minimum size 0 pages and no maximum. -/
 def memoryType : types.MemType := ⟨⟨0#u32, none⟩⟩
+/-- An immutable `i32` global initialized to `i32.const 0`. -/
 def global : module.Global := ⟨⟨.Const, .I32⟩, .I32 0#i32⟩
+/-- An export named `g` of global 0. -/
 def globalExport : ModuleBinary.Export := ⟨[0x67#u8], .Global 0#u32⟩
+/-- An active element segment for table 0 at offset `i32.const 0`, with no entries. -/
 def element : ModuleBinary.Element := ⟨.FuncRef, .Active 0#u32 (.I32 0#i32), []⟩
+/-- An active data segment for memory 0 at offset `i32.const 0`, holding the byte `0x2a`. -/
 def segment : module.Data := ⟨.Active 0#u32 (.I32 0#i32), alloc.vec.Vec.from [42#u8] (by simp; scalar_tac)⟩
 
+/-- The table, memory, global, export and element declarations of the module. -/
 def declarations : Declarations :=
   { tables := [tableType], memories := [memoryType], globals := [global],
     exports := [globalExport], elements := [element] }
 
+/-- The decoded module: `declarations` and the data segment. -/
 def raw : ModuleBinary.Module := declarations.module [] [ModuleData.raw segment]
 
+/-- The bytes of the table, memory, global, export and element sections. -/
 def layout : Layout :=
   { tables := [4#u8,4#u8,1#u8,0x70#u8,0#u8,0#u8]
     memories := [5#u8,3#u8,1#u8,0#u8,0#u8]
@@ -31,7 +49,9 @@ def layout : Layout :=
     exports := [7#u8,5#u8,1#u8,1#u8,0x67#u8,3#u8,0#u8]
     elements := [9#u8,6#u8,1#u8,0#u8,0x41#u8,0#u8,0x0B#u8,0#u8] }
 
+/-- The bytes of the data section. -/
 def dataBytes : List U8 := [11#u8,7#u8,1#u8,0#u8,0x41#u8,0#u8,0x0B#u8,1#u8,42#u8]
+/-- The full module bytes: header, `layout` and `dataBytes`. -/
 def input : Slice U8 := Examples.ModuleSupport.bytes (magicVersion ++ layout.bytes ++ dataBytes)
   (by simp [magicVersion, layout, Layout.bytes, dataBytes]; scalar_tac)
 
@@ -114,8 +134,8 @@ private theorem data_encoding : SectionEncoding 11#u8 (VecEncoding DataEncoding)
   exact one ⟨0#u32, .I32 0#i32, [0#u8], [0x41#u8,0#u8,0x0B#u8], [1#u8,42#u8],
     rfl, leb 0#u8, zero_const, ByteVecEncoding.iff.mpr ⟨[1#u8], leb 1#u8, rfl⟩, rfl⟩
 
-/-- A real 51-byte module exercises ordered sections, immutable initialization,
-a named global export, and both kinds of active segment. -/
+/-- `module.validate_module` accepts the 51-byte module `input` under Wasm 1.0, with sections in
+order, a constant global initializer, a named global export, and both kinds of active segment. -/
 theorem sections_accepted : ∃ decoded, module.validate_module input .Wasm1 = .ok (.Ok decoded) := by
   have hp : At PrefixEncoding input 0#usize declarations 42#usize := by
     refine ⟨magicVersion ++ layout.bytes, layout_valid.encoding, ?_⟩
@@ -155,8 +175,8 @@ theorem sections_accepted : ∃ decoded, module.validate_module input .Wasm1 = .
       omega)
   exact ⟨⟨env, tail⟩, ha⟩
 
-/-- The certificate refers to the exact fixture bytes and includes generated
-module typing, the Wasm 1.0 profile, and ordered external metadata. -/
+/-- The accepted module has a `ModuleSound.Validated` certificate for the bytes of `input`, which
+covers generated module typing, the Wasm 1.0 profile and ordered external metadata. -/
 theorem sections_validated : ∃ decoded, module.validate_module input .Wasm1 = .ok (.Ok decoded) ∧
     ModuleSound.Validated input decoded := by
   obtain ⟨decoded, ha⟩ := sections_accepted

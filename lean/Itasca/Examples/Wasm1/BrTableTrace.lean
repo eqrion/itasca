@@ -2,6 +2,17 @@ import Itasca.Wasm1.Trace.Control
 import Itasca.Visitor.EventDispatch
 import Itasca.Examples.Wasm1.Support
 
+/-!
+# `br_table` callback traces
+
+Exact visitor traces for Wasm 1.0 bodies containing `br_table`, observed through
+`code.validate_body_with` with the recording visitor `recorder`. The examples show which callbacks
+fire for the label vector, the default label and the closing table event, and that a rejection at
+any point leaves the preceding callbacks in the log and makes no later callback. Cases cover an
+out-of-range label, a truncated label, a rejecting callback, unequal target types, and a `loop`
+branch whose label type is empty.
+-/
+
 open Aeneas Aeneas.Std
 
 attribute [local simp] Itasca.Control.signature Itasca.Control.resultView
@@ -12,8 +23,11 @@ open Wasm1Support (loop_step_with loop_error_with read_at)
 
 open VisitorTrace
 
+/-- A context with no locals and no results. -/
 def emptyContext : code.Context := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _⟩
 
+/-- The iterator state with only the function body frame open, at position `pos`, with the
+operand stack marked polymorphic when `poly` is set. -/
 def bodyState (poly : Bool) (pos : Usize) : code.OpIterState :=
   ⟨alloc.vec.Vec.new _, alloc.vec.Vec.from [⟨.Body, .Empty, Control.signature (.Empty), 0#usize, poly⟩] (by scalar_tac), pos⟩
 
@@ -89,7 +103,9 @@ private theorem add_zero : (0#u32 + 1#u32 : Result U32) = .ok 1#u32 := by
   have he : i = 1#u32 := by scalar_tac
   simpa [he] using hi
 
+/-- The log after `unreachable` in a function body. -/
 def firstLog : List Observation := [⟨.op (bodyState true 1#usize) .unreachable, .Ok ()⟩]
+/-- `firstLog` plus the callback for the first `br_table` label `0`. -/
 def partialLog : List Observation := firstLog ++ [⟨.op (bodyState true 4#usize) (.br_table_label 0#u32), .Ok ()⟩]
 
 private theorem partial_body (data : Slice U8) (env : module.Env) (e : error.OpError)
@@ -129,11 +145,13 @@ private theorem partial_body (data : Slice U8) (env : module.Env) (e : error.OpE
     (bodyState true 2#usize) last code.OP_BR_TABLE e (by simp [bodyState])
     (read_at data _ 2#usize code.OP_BR_TABLE h1 rfl (by simpa [global_simps, bodyState] using hb1)) hs1
 
+/-- The body bytes `00 0e 02 00 01 00 0b`: `unreachable`, then `br_table` with two labels `0` and
+`1`. Label `1` has no enclosing frame. -/
 def unknownBytes : Slice U8 := alloc.vec.Vec.deref
   (alloc.vec.Vec.from [0#u8, 0x0E#u8, 2#u8, 0#u8, 1#u8, 0#u8, 0x0B#u8] (by scalar_tac))
 
-/-- The second depth is out of range. It consumes its immediate but creates
-no callback, leaving the preceding accepted label visible in the public log. -/
+/-- Label depth 1 is out of range, so the body is rejected with `UnknownLabel`. The log keeps the
+callback for the preceding label and has none for the bad one. -/
 theorem unknown_later_label (env : module.Env) :
     code.validate_body_with recorder unknownBytes env emptyContext [] =
       .ok (.Err .UnknownLabel, partialLog) := by
@@ -147,11 +165,13 @@ theorem unknown_later_label (env : module.Env) :
     (leb_at unknownBytes 3#usize 4#usize 0#u32 (by decide) rfl rfl (by decide))
   exact hb
 
+/-- The body bytes `00 0e 02 00 80`: `unreachable`, then `br_table` with two labels, the second
+an unterminated LEB128. -/
 def malformedBytes : Slice U8 := alloc.vec.Vec.deref
   (alloc.vec.Vec.from [0#u8, 0x0E#u8, 2#u8, 0#u8, 0x80#u8] (by scalar_tac))
 
-/-- An unterminated later depth preserves the earlier callback prefix and
-makes no callback for the malformed immediate. -/
+/-- The unterminated second label is rejected with `UnexpectedEof`. The log keeps the preceding
+callbacks and has none for the malformed immediate. -/
 theorem malformed_later_label (env : module.Env) :
     code.validate_body_with recorder malformedBytes env emptyContext [] =
       .ok (.Err .UnexpectedEof, partialLog) := by
@@ -167,13 +187,17 @@ theorem malformed_later_label (env : module.Env) :
     (leb_at malformedBytes 2#usize 3#usize 2#u32 (by decide) rfl rfl (by decide))
     (leb_at malformedBytes 3#usize 4#usize 0#u32 (by decide) rfl rfl (by decide)) hb
 
+/-- The body bytes `00 0e 01 00 00 0b`: `unreachable; br_table [0] 0; end`. -/
 def tableBytes : Slice U8 := alloc.vec.Vec.deref
   (alloc.vec.Vec.from [0#u8, 0x0E#u8, 1#u8, 0#u8, 0#u8, 0x0B#u8] (by scalar_tac))
 
+/-- The log when the callback for label `0` rejects with `OutOfMemory`. -/
 def rejectedLabelLog : List Observation := firstLog ++
   [⟨.op (bodyState true 4#usize) (.br_table_label 0#u32), .Err .OutOfMemory⟩]
+/-- `partialLog` plus the closing `br_table` callback. -/
 def tableLog : List Observation := partialLog ++
   [⟨.op (bodyState true 5#usize) (.br_table 0#u32 .Empty), .Ok ()⟩]
+/-- The log when the closing `br_table` callback rejects with `OutOfMemory`. -/
 def rejectedTableLog : List Observation := partialLog ++
   [⟨.op (bodyState true 5#usize) (.br_table 0#u32 .Empty), .Err .OutOfMemory⟩]
 
@@ -197,8 +221,8 @@ private theorem table_error_body (visitor : code.OpVisitor (List Observation))
     (bodyState true 2#usize) last code.OP_BR_TABLE e (by simp [bodyState])
     (read_at tableBytes _ 2#usize code.OP_BR_TABLE (by decide) rfl (by simp [tableBytes, bodyState, alloc.vec.Vec.deref, global_simps])) hstep
 
-/-- A rejecting vector callback is included, and preempts reading the default
-or emitting the closing table callback. -/
+/-- When the label-vector callback rejects, its event is in the log, and the default label is
+not read and no closing callback is emitted. -/
 theorem rejected_label (env : module.Env) :
     code.validate_body_with (rejectAt 1 .OutOfMemory) tableBytes env emptyContext [] =
       .ok (.Err (.Visitor .OutOfMemory), rejectedLabelLog) := by
@@ -251,8 +275,8 @@ private theorem read_one_table {V : Type} (visitor : code.OpVisitor V) (v w : V)
     code.BlockType.Insts.CoreCmpPartialEqBlockType.eq, hpop, code.block_results, hargs,
     mark_body, core.result.Result.Insts.CoreOpsTry.branch]
 
-/-- The closing callback is observed after the unobserved default and after
-unreachability is established, even when that callback rejects. -/
+/-- The closing `br_table` callback runs after the default label is read, which has no callback
+of its own, and after the stack is marked unreachable, even when that callback rejects. -/
 theorem rejected_closing_callback (env : module.Env) :
     code.validate_body_with (rejectAt 2 .OutOfMemory) tableBytes env emptyContext [] =
       .ok (.Err (.Visitor .OutOfMemory), rejectedTableLog) := by
@@ -264,11 +288,13 @@ theorem rejected_closing_callback (env : module.Env) :
     code.visit, firstLog, partialLog, rejectedTableLog, core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
+/-- The iterator state after the final `end`, with no open frames, at position 6. -/
 def closedState : code.OpIterState := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _, 6#usize⟩
+/-- `tableLog` plus the callback for the final `end`. -/
 def acceptedLog : List Observation := tableLog ++ [⟨.op closedState (.end_ .Body .Empty), .Ok ()⟩]
 
-/-- A successful table has one vector hook, one closing hook, and no hook for
-its default. The final end snapshot has an empty control stack. -/
+/-- An accepted `br_table` produces one callback for the label vector, one closing callback, and
+none for its default label. The final `end` event has an empty control stack. -/
 theorem default_has_no_callback (env : module.Env) :
     code.validate_body_with recorder tableBytes env emptyContext [] = .ok (.Ok (), acceptedLog) := by
   have ht := read_one_table recorder firstLog partialLog rfl
@@ -310,8 +336,12 @@ theorem default_has_no_callback (env : module.Env) :
   simp [code.validate_body_with_loop.body, code.control_stack_empty, alloc.vec.Vec.is_empty,
     closedState, show Slice.len tableBytes = 6#usize from rfl]
 
+/-- A frame of the given kind with an `i64` result type, which is polymorphic when `poly` is
+set. -/
 def nestedFrame (kind : code.LabelKind) (poly : Bool) : code.Ctrl :=
   ⟨kind, .Value .I64, Control.signature (.Value .I64), 0#usize, poly⟩
+/-- The iterator state with the function frame and `nestedFrame kind poly` open, at position
+`pos`. -/
 def nestedState (kind : code.LabelKind) (poly : Bool) (pos : Usize) : code.OpIterState :=
   ⟨alloc.vec.Vec.new _, alloc.vec.Vec.from [⟨.Body, .Empty, Control.signature (.Empty), 0#usize, false⟩, nestedFrame kind poly]
     (by scalar_tac), pos⟩
@@ -325,17 +355,22 @@ private theorem mark_nested (kind : code.LabelKind) (poly : Bool) (pos : Usize) 
     (by simpa [nestedState, nestedFrame] using hc) hp
   simpa [hs] using hr
 
+/-- The body bytes `02 7e 00 0e 02 00 01 00`: a `block` with an `i64` result, `unreachable`, then
+`br_table` with labels `0` and `1` and default `0`. Label 0 expects `i64` and label 1 expects
+nothing. -/
 def mismatchBytes : Slice U8 := alloc.vec.Vec.deref
   (alloc.vec.Vec.from [0x02#u8, 0x7E#u8, 0#u8, 0x0E#u8, 2#u8, 0#u8, 1#u8, 0#u8] (by scalar_tac))
+/-- The log for entering a block of the given kind and then `unreachable`. -/
 def nestedLog (kind : code.LabelKind) (action : Action) : List Observation :=
   [⟨.op (nestedState kind false 2#usize) action, .Ok ()⟩,
    ⟨.op (nestedState kind true 3#usize) .unreachable, .Ok ()⟩]
+/-- `nestedLog` for `block` plus the callbacks for labels `0` and `1`. -/
 def mismatchLog : List Observation := nestedLog .Block (.block (.Value .I64)) ++
   [⟨.op (nestedState .Block true 6#usize) (.br_table_label 0#u32), .Ok ()⟩,
    ⟨.op (nestedState .Block true 7#usize) (.br_table_label 1#u32), .Ok ()⟩]
 
-/-- Both valid-depth callbacks are observed before their unequal target
-signatures cause rejection. The unconsumed default produces no event. -/
+/-- Both label callbacks are observed before the unequal target signatures cause rejection with
+`TypeMismatch`. The default label is never read, so it has no event. -/
 theorem mismatching_observed_label (env : module.Env) :
     code.validate_body_with recorder mismatchBytes env emptyContext [] =
       .ok (.Err .TypeMismatch, mismatchLog) := by
@@ -421,14 +456,17 @@ theorem mismatching_observed_label (env : module.Env) :
     (by simp [nestedState]) (read_at mismatchBytes _ 4#usize code.OP_BR_TABLE (by decide) rfl
       (by simp [mismatchBytes, alloc.vec.Vec.deref, nestedState, global_simps])) hsTable
 
+/-- The body bytes `03 7e 00 0c 00`: a `loop` with an `i64` result, `unreachable`, `br 0`, and no
+`end`. -/
 def loopBytes : Slice U8 := alloc.vec.Vec.deref
   (alloc.vec.Vec.from [0x03#u8, 0x7E#u8, 0#u8, 0x0C#u8, 0#u8] (by scalar_tac))
+/-- `nestedLog` for `loop` plus the callback for `br 0`. -/
 def loopLog : List Observation := nestedLog .Loop (.loop (.Value .I64)) ++
   [⟨.op (nestedState .Loop true 5#usize) (.br 0#u32 .Empty), .Ok ()⟩]
 
-/-- A result-bearing loop's ordinary branch callback reports its empty label
-signature. The eventual missing
-end rejects the public body after this exact three-callback prefix. -/
+/-- The `br 0` callback inside a loop with an `i64` result reports an empty label signature, since
+a branch to a loop takes its parameters. The missing `end` then rejects the body with
+`UnexpectedEof` after exactly these three callbacks. -/
 theorem loop_branch_label_type (env : module.Env) :
     code.validate_body_with recorder loopBytes env emptyContext [] = .ok (.Err .UnexpectedEof, loopLog) ∧
       Control.targetBlockType (nestedFrame .Loop true) = .Empty := by

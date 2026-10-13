@@ -4,16 +4,25 @@ import Itasca.Examples.Module.Basic
 import Itasca.Module.Readers.NamesComplete
 import Itasca.Examples.Module.Support
 
+/-!
+# UTF-8 in custom-section names
+
+Checks the four-byte UTF-8 boundary of `module.validate_utf8` and `module.utf8_sequence_len`.
+U+10FFFF (`f4 8f bf bf`) is accepted, while a surrogate (`ed a0 80`) and the first value above
+U+10FFFF (`f4 90 80 80`) are rejected with `InvalidUtf8`. The same bytes as a custom-section
+name are accepted or rejected by `module.validate_module` accordingly.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.ModuleUnicode
 
 open ModuleSupport (bytes)
 
-/-- U+10FFFF is the largest Unicode scalar and exercises the corrected
-four-byte upper bound in the generated specification. -/
+/-- The UTF-8 bytes `f4 8f bf bf` of U+10FFFF, the largest Unicode scalar. -/
 def lastScalar : Slice U8 := bytes [0xF4#u8, 0x8F#u8, 0xBF#u8, 0xBF#u8]
 
+/-- `module.utf8_sequence_len` reads `lastScalar` as one four-byte sequence. -/
 theorem last_scalar_sequence : module.utf8_sequence_len lastScalar 0#usize = .ok (.Ok 4#usize) := by
   have hs : module.utf8_sequence_len lastScalar 0#usize ⦃ r => r = .Ok 4#usize ⦄ := by
     have hmax : 4 ≤ Usize.max := by scalar_tac
@@ -29,9 +38,12 @@ theorem last_scalar_sequence : module.utf8_sequence_len lastScalar 0#usize = .ok
   exact hr
 
 
+/-- The bytes `ed a0 80`, which encode the surrogate U+D800. -/
 def surrogate : Slice U8 := bytes [0xED#u8, 0xA0#u8, 0x80#u8]
+/-- The bytes `f4 90 80 80`, which encode U+110000, above the largest scalar. -/
 def beyondUnicode : Slice U8 := bytes [0xF4#u8, 0x90#u8, 0x80#u8, 0x80#u8]
 
+/-- `module.utf8_sequence_len` rejects `surrogate` with `InvalidUtf8`. -/
 theorem surrogate_sequence_rejected : module.utf8_sequence_len surrogate 0#usize =
     .ok (.Err .InvalidUtf8) := by
   have hs : module.utf8_sequence_len surrogate 0#usize ⦃ r => r = .Err .InvalidUtf8 ⦄ := by
@@ -47,6 +59,7 @@ theorem surrogate_sequence_rejected : module.utf8_sequence_len surrogate 0#usize
   obtain ⟨r, hr, rfl⟩ := WP.spec_imp_exists hs
   exact hr
 
+/-- `module.utf8_sequence_len` rejects `beyondUnicode` with `InvalidUtf8`. -/
 theorem beyond_unicode_sequence_rejected : module.utf8_sequence_len beyondUnicode 0#usize =
     .ok (.Err .InvalidUtf8) := by
   have hs : module.utf8_sequence_len beyondUnicode 0#usize ⦃ r => r = .Err .InvalidUtf8 ⦄ := by
@@ -72,12 +85,15 @@ private theorem utf8_reject (data : Slice U8) (h : 0 < data.length)
     core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
+/-- `module.validate_utf8` rejects `surrogate`. -/
 theorem surrogate_rejected : module.validate_utf8 surrogate = .ok (.Err .InvalidUtf8) :=
   utf8_reject surrogate (by decide) surrogate_sequence_rejected
 
+/-- `module.validate_utf8` rejects `beyondUnicode`. -/
 theorem beyond_unicode_rejected : module.validate_utf8 beyondUnicode = .ok (.Err .InvalidUtf8) :=
   utf8_reject beyondUnicode (by decide) beyond_unicode_sequence_rejected
 
+/-- `module.validate_utf8` accepts `lastScalar`. -/
 theorem last_scalar_accepted : module.validate_utf8 lastScalar = .ok (.Ok ()) := by
   have hnext : (0#usize + 4#usize : Result Usize) = .ok 4#usize := by
     have hs : (0#usize + 4#usize) ⦃ r => r = 4#usize ⦄ := by step*
@@ -91,10 +107,13 @@ theorem last_scalar_accepted : module.validate_utf8 lastScalar = .ok (.Ok ()) :=
   rw [loop]
   simp [lastScalar, bytes, alloc.vec.Vec.deref]
 
+/-- `lastScalar` decodes to the one-character name U+10FFFF. -/
 theorem last_scalar_name : ModuleBinary.nameOfBytes lastScalar.val =
     «name».mk_name [.mk_char 0x10FFFF] := by rfl
 
 
+/-- A 15-byte module whose only section is a custom section named by the four bytes `a b c d`,
+with an empty payload. -/
 def fourByteCustom (a b c d : U8) : Slice U8 :=
   bytes (ModuleBinary.magicVersion ++ [0#u8, 5#u8, 4#u8, a, b, c, d])
     (by simp [ModuleBinary.magicVersion]; scalar_tac)
@@ -102,8 +121,8 @@ def fourByteCustom (a b c d : U8) : Slice U8 :=
 private theorem small_leb (b : U8) (h : b.val < 128) : Leb128.Encoding [b] b.val := by
   exact ⟨[], b, rfl, by simp, by simp, h, by simp, by simp [Leb128.payload, Nat.mod_eq_of_lt h]⟩
 
-/-- The public module API preserves the exact UTF-8 reply of a four-byte custom
-section name; successful callbacks leave the otherwise empty module unchanged. -/
+/-- `module.validate_module` on `fourByteCustom a b c d` returns the empty module when
+`module.validate_utf8` accepts the name, and returns its error otherwise. -/
 private theorem four_byte_custom_reply (a b c d : U8) (reply : core.result.Result Unit error.Error)
     (hutf8 : module.validate_utf8 (bytes [a,b,c,d]) = .ok reply) :
     module.validate_module (fourByteCustom a b c d) .Wasm1 = .ok (match reply with
@@ -156,15 +175,18 @@ private theorem four_byte_custom_reply (a b c d : U8) (reply : core.result.Resul
   | Ok u =>
       exact Examples.ModuleBasic.accepted_at_end data Examples.ModuleBasic.emptyEnv hsize rfl (by simpa [hlen] using henv)
 
+/-- A custom section named U+10FFFF is accepted. -/
 theorem last_scalar_module_accepted :
     module.validate_module (fourByteCustom 0xF4#u8 0x8F#u8 0xBF#u8 0xBF#u8) .Wasm1 =
       .ok (.Ok Examples.ModuleBasic.emptyModule) :=
   four_byte_custom_reply _ _ _ _ (.Ok ()) last_scalar_accepted
 
+/-- The accepted module with a custom section named U+10FFFF has a soundness certificate. -/
 theorem last_scalar_module_validated :
     ModuleSound.Validated (fourByteCustom 0xF4#u8 0x8F#u8 0xBF#u8 0xBF#u8) Examples.ModuleBasic.emptyModule :=
   module.validate_module.wasm_sound _ _ last_scalar_module_accepted
 
+/-- A custom section named by `f4 90 80 80` is rejected with `InvalidUtf8`. -/
 theorem beyond_unicode_module_rejected :
     module.validate_module (fourByteCustom 0xF4#u8 0x90#u8 0x80#u8 0x80#u8) .Wasm1 =
       .ok (.Err .InvalidUtf8) :=

@@ -2,6 +2,15 @@ import Itasca.Module.Custom.Trace
 import Itasca.Examples.Module.Unicode
 import Itasca.Examples.Module.Support
 
+/-!
+# Custom-section callback trace
+
+Runs `module.validate_env_with` with the recording visitor `customRecorder` on a module whose
+only section is a custom section named U+10FFFF. `unicode_recorded` computes the exact callback
+trace, and `unicode_trace_validated` shows that the trace is an `EnvTrace` of the input bytes and
+that the same module is accepted with a soundness certificate.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.ModuleCustomTrace
@@ -10,12 +19,15 @@ open ModuleSupport (leb)
 
 open ModuleTrace ModuleBinary
 
-/-- The valid four-byte UTF-8 name occupies bytes 11 through 14. Its custom
-payload is empty and the environment callback records its exact range. -/
+/-- A 15-byte module whose only section is a custom section with the four-byte UTF-8 name U+10FFFF
+(bytes 11 to 14) and an empty payload. -/
 def unicodeInput := Examples.ModuleUnicode.fourByteCustom 0xF4#u8 0x8F#u8 0xBF#u8 0xBF#u8
 
+/-- The custom-section callback argument for `unicodeInput`: name length 4, empty payload at
+offset 15. -/
 def unicodeChunk : types.CustomSection := ⟨4#usize, 15#usize, 15#usize⟩
 
+/-- The trace with the single custom-section event. -/
 def unicodeEvents : List Event := [.custom unicodeChunk]
 
 private theorem unicode_length : Slice.len unicodeInput = 15#usize := UScalar.eq_of_val_eq rfl
@@ -54,12 +66,13 @@ private theorem unicode_environment : module.validate_env_with customRecorder un
   rw [loop]
   simp
 
-/-- Exact component callback execution for a custom section named U+10FFFF. -/
+/-- `module.validate_env_with` with `customRecorder` on `unicodeInput` returns the empty
+environment, consumed length 15 and the trace `unicodeEvents`. -/
 theorem unicode_recorded : module.validate_env_with customRecorder unicodeInput .Wasm1 [] =
     .ok (.Ok (Examples.ModuleBasic.emptyEnv, 15#usize), unicodeEvents) := unicode_environment
 
-/-- The custom callback has independent section/name provenance, and the same
-fixture is accepted by the synchronous streaming module validator. -/
+/-- The recorded trace is an `EnvTrace` of `unicodeInput`, tying the callback to its section and
+name bytes, and `unicodeInput` is accepted by `module.validate_module`. -/
 theorem unicode_trace_validated : EnvTrace unicodeInput 15#usize unicodeEvents ∧
     ModuleSound.Validated unicodeInput Examples.ModuleBasic.emptyModule := by
   obtain ⟨events, he, ht⟩ := module.validate_env_with.accepted_trace

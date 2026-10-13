@@ -2,24 +2,41 @@ import Itasca.Wasm1.Soundness
 import Itasca.Wasm1.Profile
 import Itasca.Examples.Wasm1.Support
 
+/-!
+# The Wasm 1.0 profile boundary
+
+A body that the generated Wasm 2.0 typing rules accept but Wasm 1.0 forbids: a `br_table` after
+`unreachable` whose targets have different types (`i64` and `i32`), which the Wasm 2.0 rule
+allows by giving the operands the bottom type. `validated_but_rejected` shows the body has a
+`Wasm1.Validated` certificate while `code.validate_body` rejects it with `TypeMismatch`, so the
+soundness statement has no converse without the Wasm 1.0 profile premise. `ops_not_wasm1` shows
+the profile restriction that excludes it.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.Wasm1ProfileBoundary
 
 open Wasm1Support (public_of_loop loop_step loop_error read_at)
 
-/-- MVP-shaped bytes whose branch table uses Wasm 2.0's common-bottom rule. -/
+/-- The body bytes `02 7e 00 0e 01 00 01 0b 1a 00 0b`:
+`block (result i64); unreachable; br_table [0] 1; end; drop; unreachable; end`. Label 0 expects
+`i64` and label 1 expects `i32`. -/
 def bytes : Slice U8 := alloc.vec.Vec.deref (alloc.vec.Vec.from
   [0x02#u8, 0x7E#u8, 0x00#u8, 0x0E#u8, 0x01#u8, 0x00#u8,
    0x01#u8, 0x0B#u8, 0x1A#u8, 0x00#u8, 0x0B#u8] (by scalar_tac))
 
+/-- A context with no locals and one `i32` result. -/
 def ctx : code.Context :=
   ⟨alloc.vec.Vec.new _, alloc.vec.Vec.from [.I32] (by scalar_tac)⟩
 
+/-- A `br_table` with targets `[0]` and default `1`. -/
 def table : instr := BrTable.instruction [0#u32] 1#u32
 
+/-- The body of the block: `unreachable; table`. -/
 def inner : List instr := [.UNREACHABLE, table]
 
+/-- The instruction list for `bytes`. -/
 def ops : List instr := [.BLOCK (Control.blockType (.Value .I64)) inner, .DROP, .UNREACHABLE]
 
 private theorem table_wf : wf_instr table := BrTable.instruction_wf _ _
@@ -33,7 +50,8 @@ private theorem inner_wf : Forall wf_instr inner := by
 private theorem bottom_sub (t : valtype) : Resulttype_sub (.mk_list [.BOT]) (.mk_list [t]) := by
   exact .mk_Resulttype_sub _ _ rfl (by simpa [Forall₂] using Valtype_sub.bot t)
 
-/-- The generated Wasm 2.0 rule permits a bottom payload for unlike labels. -/
+/-- The generated `br_table` rule types `table` with a bottom operand for labels of unlike types
+`[i64]` and `[i32]`. -/
 theorem table_typed (C : context) (hC : wf_context C)
     (hlabels : C.LABELS = [.mk_list [.I64], .mk_list [.I32]]) :
     Instr_ok C table (.mk_functype (.mk_list [.BOT, .I32]) (.mk_list [.I64])) := by
@@ -45,7 +63,7 @@ theorem table_typed (C : context) (hC : wf_context C)
   · exact hC
   · exact table_wf
 
-/-- Declarative typing alone therefore includes this body. -/
+/-- The generated typing rules accept the body `ops`. -/
 theorem typed (env : module.Env) : Wasm1.FunctionTyped env ctx (.Value .I32) ops := by
   let C := Wasm1.Frames.enter (EnvTranslation.context env ctx) .body (.Value .I32)
   let D := Control.labelContext [.I64] ++ C
@@ -74,7 +92,7 @@ theorem typed (env : module.Env) : Wasm1.FunctionTyped env ctx (.Value .I32) ops
 private theorem single_encoding (b : U8) (h : b.val < 128) : Leb128.Encoding [b] b.val := by
   exact ⟨[], b, rfl, by simp, by simp, h, by simp, by simp [Leb128.payload, Nat.mod_eq_of_lt h]⟩
 
-/-- The counterexample has a complete independent Wasm 1.0 binary spelling. -/
+/-- `bytes` is a well-formed Wasm 1.0 encoding of `ops`. -/
 theorem encoded : Wasm1.BodyEncoding bytes ops := by
   have h0 : Wasm1.At bytes 0#usize (.block (.Value .I64)) 2#usize :=
     ⟨[0x02#u8, 0x7E#u8], ⟨0x02#u8, [0x7E#u8], rfl, .block (.Value .I64) trivial⟩,
@@ -104,6 +122,7 @@ theorem encoded : Wasm1.BodyEncoding bytes ops := by
     rfl, ?_⟩
   exact ⟨_, rfl, ho⟩
 
+/-- `bytes` has a `Wasm1.Validated` certificate: an encoding and generated typing. -/
 theorem validated (env : module.Env) : Wasm1.Validated bytes env ctx (.Value .I32) :=
   ⟨ops, encoded, typed env⟩
 
@@ -149,7 +168,8 @@ private theorem labels_one (st next : code.OpIterState) (target : code.Ctrl) (bt
     code.read_table_labels_loop, code.read_table_labels_loop.body] using hdone
 
 
-/-- The actual public Wasm 1.0 validator rejects before consuming a table payload. -/
+/-- `code.validate_body` rejects `bytes` under Wasm 1.0 with `TypeMismatch`, before it consumes
+the `br_table` operands. -/
 theorem rejected (env : module.Env) :
     code.validate_body bytes env ctx = .ok (.Err .TypeMismatch) := by
   let initial := Wasm1.Loop.initial (.Value .I32)
@@ -231,13 +251,15 @@ theorem rejected (env : module.Env) :
       (by simp [hmp, unreachable, bytes, alloc.vec.Vec.deref]) (by simp [hmp, unreachable])
       (by simp [hmp, unreachable, bytes, alloc.vec.Vec.deref, code.OP_BR_TABLE])) hstepTable
 
-/-- Thus the earlier soundness postcondition has no unrestricted converse. -/
+/-- `bytes` has a `Wasm1.Validated` certificate and is rejected by `code.validate_body`, so
+`Wasm1.Validated` alone does not imply acceptance. -/
 theorem validated_but_rejected (env : module.Env) :
     Wasm1.Validated bytes env ctx (.Value .I32) ∧
       code.validate_body bytes env ctx = .ok (.Err .TypeMismatch) :=
   ⟨validated env, rejected env⟩
 
-/-- The extra Wasm 1.0 branch-table restriction excludes the offending table. -/
+/-- The Wasm 1.0 `br_table` restriction (all targets have the same type) fails for `table` when
+the labels are `[i64]` and `[i32]`. -/
 theorem table_not_wasm1 (C : context)
     (hlabels : C.LABELS = [.mk_list [.I64], .mk_list [.I32]]) :
     ¬ Wasm1.Instruction C table := by
@@ -246,7 +268,7 @@ theorem table_not_wasm1 (C : context)
   have heq := hs (.mk_uN 0) (by simp)
   simp [hlabels, proj_uN_0] at heq
 
-/-- The whole decoded instruction tree fails the recursive Wasm 1.0 profile. -/
+/-- The instruction tree `ops` fails the recursive Wasm 1.0 profile `Wasm1.Instructions`. -/
 theorem ops_not_wasm1 (env : module.Env) :
     ¬ Wasm1.Instructions
       (Wasm1.Frames.enter (EnvTranslation.context env ctx) .body (.Value .I32)) ops := by

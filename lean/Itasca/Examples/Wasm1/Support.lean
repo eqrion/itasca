@@ -1,9 +1,17 @@
 import Itasca.Wasm1.Loop
 import Itasca.Handler.End
 
-open Aeneas Aeneas.Std
+/-!
+# Shared helpers for Wasm 1.0 body examples
 
-/-! Shared loop-unfolding lemmas for the Wasm 1.0 body examples. -/
+Lemmas that unfold `code.validate_body_with_loop` one step at a time, for both a general visitor
+(`loop_step_with`, `loop_done_with`, `loop_error_with`, `loop_trailing_with`) and the empty
+visitor (`loop_step`, `loop_done`, `loop_error`, `loop_trailing`). `public_of_loop` connects a
+loop run from the initial frame to the public `code.validate_body`. `read_at` and `step_end`
+discharge opcode reads and `end` steps.
+-/
+
+open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.Wasm1Support
 

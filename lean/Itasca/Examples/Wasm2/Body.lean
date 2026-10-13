@@ -2,6 +2,18 @@ import Itasca.Wasm2.Invariant
 import Itasca.Wasm2.Completeness
 import Itasca.Wasm2.Complete.Frame
 
+/-!
+# Wasm 2.0 function bodies
+
+Block types given by a type index, a missing `else` arm, `loop` branches, and `br_table` with
+differently typed targets, all with multiple parameters or results. `Examples.Wasm2Grammar` checks
+the block-type grammar and the identity `if` rule. `Examples.Wasm2Body` gives four function bodies,
+each with a byte string, a declarative typing derivation (`block_typed`, `if_typed`, `loop_typed`,
+`table_typed`) and an encoding derivation. `block_accepted` and its siblings combine them with
+`code.validate_multi_value_body.wasm_complete_of_typing` to show the extracted validator accepts
+the bytes, and `block_validated` and its siblings derive soundness certificates from the same runs.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.Wasm2Grammar
@@ -19,10 +31,12 @@ theorem padded_negative_not_inline (t : types.ValueType) :
     ¬ BlockEncoding (.Value t) [255#u8, 127#u8] := by
   simp [BlockEncoding]
 
+/-- The body `block (type 0x80 0x00) end end`, with type index 0 in a padded two-byte encoding. -/
 def bytes : Slice U8 := alloc.vec.Vec.deref (alloc.vec.Vec.from
   [0x02#u8, 0x80#u8, 0x00#u8, 0x0B#u8, 0x0B#u8] (by scalar_tac))
 
-/-- Syntax decoding remains independent of whether type index zero exists. -/
+/-- `bytes` decodes to a `block` with type index 0, whether or not type 0 exists in any
+environment. -/
 theorem indexed_body : BodyEncoding bytes [.BLOCK (blockType (.TypeIndex 0#u32)) []] := by
   have hb : At bytes 0#usize (.block (.TypeIndex 0#u32)) 3#usize :=
     ⟨_, ⟨0x02#u8, [0x80#u8, 0x00#u8], rfl, .block padded_index⟩, rfl, rfl, by decide⟩
@@ -33,8 +47,8 @@ theorem indexed_body : BodyEncoding bytes [.BLOCK (blockType (.TypeIndex 0#u32))
   exact ⟨_, 5#usize, (((Consumed.nil 0#usize (by decide)).snoc hb).snoc he).snoc hf,
     rfl, _, rfl, Emits.block _ .nil .nil⟩
 
-/-- An if without an explicit else may preserve multiple parameters/results.
-This exercises the identity-arm rule that the Wasm 1.0 frame invariant lacks. -/
+/-- An `if` without an `else` arm has type `[i32, i64, i32] -> [i32, i64]` when its block type is
+the identity on `[i32, i64]`. Wasm 1.0 frames have no counterpart for this rule. -/
 theorem identity_if (env : module.Env) (C : context) (hC : wf_context C)
     (htypes : C.TYPES = env.types.val.map EnvTranslation.funcType) (index : U32)
     (hin : resolve env (inputs (.TypeIndex index)) = some [.I32, .I64])
@@ -56,20 +70,29 @@ namespace Itasca.Examples.Wasm2Body
 
 open Wasm2
 
+/-- A byte slice built from a list. -/
 def bytes (xs : List U8) (h : xs.length ≤ Usize.max := by scalar_tac) : Slice U8 :=
   alloc.vec.Vec.deref (alloc.vec.Vec.from xs h)
 
+/-- The empty local list. -/
 def locals : alloc.vec.Vec types.ValueType := alloc.vec.Vec.new _
+/-- The function type `[] -> [i32, i64]`. -/
 def pairResult : types.FuncType :=
   ⟨alloc.vec.Vec.new _, alloc.vec.Vec.from [.I32, .I64] (by scalar_tac)⟩
+/-- The function type `[i32, i64] -> [i32, i64]`. -/
 def pairIdentity : types.FuncType :=
   ⟨alloc.vec.Vec.from [.I32, .I64] (by scalar_tac), alloc.vec.Vec.from [.I32, .I64] (by scalar_tac)⟩
+/-- The function type `[i32, i64] -> []`. -/
 def pairLoop : types.FuncType :=
   ⟨alloc.vec.Vec.from [.I32, .I64] (by scalar_tac), alloc.vec.Vec.new _⟩
+/-- The function type `[] -> []`. -/
 def emptyResult : types.FuncType := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _⟩
+/-- The function type `[] -> [f32, f64]`. -/
 def floatResult : types.FuncType :=
   ⟨alloc.vec.Vec.new _, alloc.vec.Vec.from [.F32, .F64] (by scalar_tac)⟩
 
+/-- An environment whose type section is `pairResult`, `pairIdentity`, `pairLoop`, `emptyResult`
+and `floatResult` (indices 0 to 4), with no functions or other entities. -/
 def env : module.Env where
   types := alloc.vec.Vec.from [pairResult, pairIdentity, pairLoop, emptyResult, floatResult] (by scalar_tac)
   imports := alloc.vec.Vec.new _
@@ -87,6 +110,7 @@ def env : module.Env where
   num_imported_funcs := 0#usize
   num_imported_globals := 0#usize
 
+/-- `env` is within the implementation limits. -/
 theorem environment_limits : EnvironmentWithinLimits env := by
   constructor
   · intro ft hf
@@ -113,6 +137,7 @@ private theorem zero64 : SignedLeb64.Encoding [0#u8] (0#i64).val := by
   refine ⟨[], 0#u8, rfl, by decide, by simp, by decide, ?_, by decide, by decide⟩
   norm_num [SignedLeb.finalValue, Leb128.payload]
 
+/-- The instructions `i32.const 0; i64.const 0`. -/
 def pairOps : List instr := [Spec.i32Const 0#i32, ScalarConst.i64 0#i64]
 
 private theorem pair_wf : Forall wf_instr pairOps := by
@@ -134,14 +159,18 @@ private def rootContext (ft : types.FuncType) : context :=
 private theorem root_wf (ft : types.FuncType) : wf_context (rootContext ft) :=
   Control.enter_context_wf _ (EnvTranslation.context_wf env ⟨locals, ft.results⟩) _
 
+/-- A `block` of type index 1 with an empty body. -/
 def identityBlock : instr := .BLOCK (blockType (.TypeIndex 1#u32)) []
+/-- `pairOps` followed by `identityBlock`. -/
 def blockOps : List instr := pairOps ++ [identityBlock]
+/-- The body bytes `i32.const 0; i64.const 0; block (type 1) end; end`. -/
 def blockBytes : Slice U8 := bytes [0x41#u8, 0#u8, 0x42#u8, 0#u8, 0x02#u8, 1#u8, 0x0B#u8, 0x0B#u8]
 
 private theorem block_wf : wf_instr identityBlock :=
   .instr_case_4 _ _ (blockType_wf _) (by simp [Forall])
 
-/-- Indexed blocks consume and return both ordered parameters. -/
+/-- A `block` with type index 1 consumes and returns `[i32, i64]` in order, so `blockOps` has type
+`[] -> [i32, i64]`. -/
 theorem block_typed : FunctionTyped env locals pairResult blockOps := by
   let C := rootContext pairResult
   have hC := root_wf pairResult
@@ -152,12 +181,16 @@ theorem block_typed : FunctionTyped env locals pairResult blockOps := by
   exact .seq C pairOps [identityBlock] [] [.I32, .I64] [.I32, .I64] (pair_typed C hC)
     (.instr C _ _ _ hi hC block_wf) hC pair_wf (by simpa [Forall] using block_wf)
 
+/-- An `if` of type index 1 with empty arms and no `else`. -/
 def identityIf : instr := .IFELSE (blockType (.TypeIndex 1#u32)) [] []
+/-- `pairOps; i32.const 0; identityIf`. -/
 def ifOps : List instr := pairOps ++ [Spec.i32Const 0#i32, identityIf]
+/-- The body bytes `i32.const 0; i64.const 0; i32.const 0; if (type 1) end; end`. -/
 def ifBytes : Slice U8 := bytes
   [0x41#u8, 0#u8, 0x42#u8, 0#u8, 0x41#u8, 0#u8, 0x04#u8, 1#u8, 0x0B#u8, 0x0B#u8]
 
-/-- A missing else arm preserves both parameters because its signature is identity. -/
+/-- The missing `else` arm passes both parameters through because the block type is the identity,
+so `ifOps` has type `[] -> [i32, i64]`. -/
 theorem if_typed : FunctionTyped env locals pairResult ifOps := by
   let C := rootContext pairResult
   have hC := root_wf pairResult
@@ -174,12 +207,16 @@ theorem if_typed : FunctionTyped env locals pairResult ifOps := by
     Instrs_ok.seq C (pairOps ++ [Spec.i32Const 0#i32]) [identityIf] [] [.I32, .I64] [.I32, .I64, .I32]
       hprefix (.instr C _ _ _ hi hC hwf) hC hp.wellFormed (by simpa [Forall] using hwf)
 
+/-- A `loop` of type index 2 whose body is `br 0`. -/
 def loopInstr : instr := .LOOP (blockType (.TypeIndex 2#u32)) [.BR (.mk_uN 0)]
+/-- `pairOps` followed by `loopInstr`. -/
 def loopOps : List instr := pairOps ++ [loopInstr]
+/-- The body bytes `i32.const 0; i64.const 0; loop (type 2) br 0 end; end`. -/
 def loopBytes : Slice U8 := bytes
   [0x41#u8, 0#u8, 0x42#u8, 0#u8, 0x03#u8, 2#u8, 0x0C#u8, 0#u8, 0x0B#u8, 0x0B#u8]
 
-/-- A loop branch uses its two input types even though the loop has no results. -/
+/-- A `br 0` inside a `loop` takes the loop's two parameter types `[i32, i64]`, although the loop
+has no results, so `loopOps` has type `[] -> []`. -/
 theorem loop_typed : FunctionTyped env locals emptyResult loopOps := by
   let C := rootContext emptyResult
   let D := Control.labelContext [.I32, .I64] ++ C
@@ -200,6 +237,7 @@ theorem loop_typed : FunctionTyped env locals emptyResult loopOps := by
 private theorem pair_emits : Emits [.plain (Spec.i32Const 0#i32), .plain (ScalarConst.i64 0#i64)] pairOps :=
   .simple (.simple .nil (.plain _ (Spec.i32Const_wf 0#i32))) (.plain _ (ScalarConst.i64_wf 0#i64))
 
+/-- `blockBytes` decodes to `blockOps`. -/
 theorem block_encoded : BodyEncoding blockBytes blockOps := by
   have h0 : At blockBytes 0#usize (.plain (Spec.i32Const 0#i32)) 2#usize :=
     ⟨_, ⟨0x41#u8, [0#u8], rfl, .plain (.i32Const 0#i32 zero32)⟩, rfl, rfl, by decide⟩
@@ -213,6 +251,7 @@ theorem block_encoded : BodyEncoding blockBytes blockOps := by
     ⟨_, ⟨0x0B#u8, [], rfl, .end_⟩, rfl, rfl, by decide⟩
   exact ⟨_, 8#usize, ((((((Consumed.nil 0#usize (by decide)).snoc h0).snoc h2).snoc h4).snoc h6).snoc h7), rfl, _, rfl, Emits.block (.TypeIndex 1#u32) pair_emits .nil⟩
 
+/-- `ifBytes` decodes to `ifOps`. -/
 theorem if_encoded : BodyEncoding ifBytes ifOps := by
   have h0 : At ifBytes 0#usize (.plain (Spec.i32Const 0#i32)) 2#usize :=
     ⟨_, ⟨0x41#u8, [0#u8], rfl, .plain (.i32Const 0#i32 zero32)⟩, rfl, rfl, by decide⟩
@@ -228,6 +267,7 @@ theorem if_encoded : BodyEncoding ifBytes ifOps := by
     ⟨_, ⟨0x0B#u8, [], rfl, .end_⟩, rfl, rfl, by decide⟩
   exact ⟨_, 10#usize, (((((((Consumed.nil 0#usize (by decide)).snoc h0).snoc h2).snoc h4).snoc h6).snoc h8).snoc h9), rfl, _, rfl, Emits.ifEnd (.TypeIndex 1#u32) (Emits.simple pair_emits (.plain _ (Spec.i32Const_wf 0#i32))) .nil⟩
 
+/-- `loopBytes` decodes to `loopOps`. -/
 theorem loop_encoded : BodyEncoding loopBytes loopOps := by
   have h0 : At loopBytes 0#usize (.plain (Spec.i32Const 0#i32)) 2#usize :=
     ⟨_, ⟨0x41#u8, [0#u8], rfl, .plain (.i32Const 0#i32 zero32)⟩, rfl, rfl, by decide⟩
@@ -244,10 +284,15 @@ theorem loop_encoded : BodyEncoding loopBytes loopOps := by
   exact ⟨_, 10#usize, (((((((Consumed.nil 0#usize (by decide)).snoc h0).snoc h2).snoc h4).snoc h6).snoc h8).snoc h9), rfl, _, rfl, Emits.loop (.TypeIndex 2#u32) pair_emits (Emits.simple .nil (.plain _ (.instr_case_7 _ (EnvTranslation.index_wf 0#u32))))⟩
 
 
+/-- A `br_table` with targets `[0]` and default `1`. -/
 def heterogeneousTable : instr := BrTable.instruction [0#u32] 1#u32
+/-- The body `unreachable; br_table [0] 1` of the block. -/
 def tableInner : List instr := [.UNREACHABLE, heterogeneousTable]
+/-- A `block` of type index 4 (`[] -> [f32, f64]`) around `tableInner`. -/
 def tableBlock : instr := .BLOCK (blockType (.TypeIndex 4#u32)) tableInner
+/-- `tableBlock; unreachable`. -/
 def tableOps : List instr := [tableBlock, .UNREACHABLE]
+/-- The body bytes `block (type 4) unreachable; br_table [0] 1; end; unreachable; end`. -/
 def tableBytes : Slice U8 := bytes
   [0x02#u8, 4#u8, 0#u8, 0x0E#u8, 1#u8, 0#u8, 1#u8, 0x0B#u8, 0#u8, 0x0B#u8]
 
@@ -255,8 +300,9 @@ private theorem table_wf : wf_instr heterogeneousTable := BrTable.instruction_wf
 private theorem table_inner_wf : Forall wf_instr tableInner := by
   simpa [tableInner, Forall] using And.intro wf_instr.instr_case_1 table_wf
 
-/-- Two bottom operands are a common subtype of differently typed, equally
-sized table targets. This is permitted by the generated Wasm 2.0 rule. -/
+/-- A `br_table` whose targets have types `[f32, f64]` and `[i32, i64]` is typed after
+`unreachable`: two bottom operands are a subtype of both, which the generated Wasm 2.0 rule
+permits. -/
 theorem table_typed : FunctionTyped env locals pairResult tableOps := by
   let C := rootContext pairResult
   let D := Control.labelContext [.F32, .F64] ++ C
@@ -290,6 +336,7 @@ theorem table_typed : FunctionTyped env locals pairResult tableOps := by
     (.instr C _ _ _ (.unreachable C _ _ hC .instr_case_1) hC .instr_case_1)
     hC (by simpa [Forall] using hwf) (by simp [Forall, wf_instr.instr_case_1])
 
+/-- `tableBytes` decodes to `tableOps`. -/
 theorem table_encoded : BodyEncoding tableBytes tableOps := by
   have h0 : At tableBytes 0#usize (.block (.TypeIndex 4#u32)) 2#usize :=
     ⟨_, ⟨0x02#u8, [4#u8], rfl, .block (index_encoding 4#u8 4#u32 (by decide) rfl)⟩, rfl, rfl, by decide⟩
@@ -310,38 +357,44 @@ theorem table_encoded : BodyEncoding tableBytes tableOps := by
   exact ⟨_, 10#usize, ((((((Consumed.nil 0#usize (by decide)).snoc h0).snoc h2).snoc h3).snoc h7).snoc h8).snoc h9,
     rfl, _, rfl, ho⟩
 
-/-- Public acceptance comes from independent syntax and generated typing,
-without evaluating or assuming any handler succeeds. -/
+/-- `code.validate_multi_value_body` accepts `blockBytes` as a function of type 0. The theorem
+combines the decoding and typing derivations, without evaluating any handler. -/
 theorem block_accepted : code.validate_multi_value_body blockBytes env locals 0#u32 = .ok (.Ok ()) :=
   code.validate_multi_value_body.wasm_complete_of_typing blockBytes env locals 0#u32 pairResult blockOps
     environment_limits (by simp [blockBytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
     rfl block_encoded block_typed (by simp [blockOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, pairOps, identityBlock, Spec.i32Const, ScalarConst.i64])
 
+/-- `code.validate_multi_value_body` accepts `ifBytes` as a function of type 0. -/
 theorem if_accepted : code.validate_multi_value_body ifBytes env locals 0#u32 = .ok (.Ok ()) :=
   code.validate_multi_value_body.wasm_complete_of_typing ifBytes env locals 0#u32 pairResult ifOps
     environment_limits (by simp [ifBytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
     rfl if_encoded if_typed (by simp [ifOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, pairOps, identityIf, Spec.i32Const, ScalarConst.i64])
 
+/-- `code.validate_multi_value_body` accepts `loopBytes` as a function of type 3. -/
 theorem loop_accepted : code.validate_multi_value_body loopBytes env locals 3#u32 = .ok (.Ok ()) :=
   code.validate_multi_value_body.wasm_complete_of_typing loopBytes env locals 3#u32 emptyResult loopOps
     environment_limits (by simp [loopBytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
     rfl loop_encoded loop_typed (by simp [loopOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, pairOps, loopInstr, Spec.i32Const, ScalarConst.i64])
 
+/-- `code.validate_multi_value_body` accepts `tableBytes` as a function of type 0. -/
 theorem table_accepted : code.validate_multi_value_body tableBytes env locals 0#u32 = .ok (.Ok ()) :=
   code.validate_multi_value_body.wasm_complete_of_typing tableBytes env locals 0#u32 pairResult tableOps
     environment_limits (by simp [tableBytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
     rfl table_encoded table_typed (by simp [tableOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, tableBlock, tableInner, heterogeneousTable, BrTable.instruction])
 
-/-- The same actual accepted runs produce independent soundness certificates. -/
+/-- The accepted run on `blockBytes` yields a `Validated` soundness certificate. -/
 theorem block_validated : Validated blockBytes env locals 0#u32 :=
   code.validate_multi_value_body.wasm_sound blockBytes env locals 0#u32 block_accepted
 
+/-- The accepted run on `ifBytes` yields a `Validated` soundness certificate. -/
 theorem if_validated : Validated ifBytes env locals 0#u32 :=
   code.validate_multi_value_body.wasm_sound ifBytes env locals 0#u32 if_accepted
 
+/-- The accepted run on `loopBytes` yields a `Validated` soundness certificate. -/
 theorem loop_validated : Validated loopBytes env locals 3#u32 :=
   code.validate_multi_value_body.wasm_sound loopBytes env locals 3#u32 loop_accepted
 
+/-- The accepted run on `tableBytes` yields a `Validated` soundness certificate. -/
 theorem table_validated : Validated tableBytes env locals 0#u32 :=
   code.validate_multi_value_body.wasm_sound tableBytes env locals 0#u32 table_accepted
 

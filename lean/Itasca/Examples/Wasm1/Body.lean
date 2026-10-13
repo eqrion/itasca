@@ -4,20 +4,33 @@ import Itasca.Handler.SimplePrefix
 import Itasca.Handler.SignedConst
 import Itasca.Examples.Wasm1.Support
 
+/-!
+# Basic Wasm 1.0 function bodies
+
+The smallest bodies run through `code.validate_body` by unfolding the validation loop one opcode
+at a time: `end`, `nop; end`, `i32.const 42; end` with an `i32` result, a `drop` with no operand,
+and an `end` followed by a stray byte. They show the public driver accepting, and rejecting with
+`EmptyStack` and `TrailingBytes`, from the extracted code alone.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.Wasm1Body
 
 open Wasm1Support
 
+/-- A context with no locals and no results. -/
 def emptyContext : code.Context := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _⟩
 
+/-- The body bytes `0b` (`end`). -/
 def endBytes : Slice U8 :=
   alloc.vec.Vec.deref (alloc.vec.Vec.from [11#u8] (by scalar_tac))
 
+/-- The body bytes `01 0b` (`nop; end`). -/
 def nopBytes : Slice U8 :=
   alloc.vec.Vec.deref (alloc.vec.Vec.from [1#u8, 11#u8] (by scalar_tac))
 
+/-- The body bytes `0b 01` (`end; nop`). -/
 def trailingBytes : Slice U8 :=
   alloc.vec.Vec.deref (alloc.vec.Vec.from [11#u8, 1#u8] (by scalar_tac))
 
@@ -28,7 +41,7 @@ private theorem step_nop (data : Slice U8) (env : module.Env) (ctx : code.Contex
   simp [global_simps, code.OpVisitor.on_nop.default, code.visit,
     core.result.Result.Insts.CoreOpsTry.branch]
 
-/-- The public extracted validator really accepts the empty instruction sequence plus its end. -/
+/-- `code.validate_body` accepts the body `end` with no results. -/
 theorem empty_body_accepted (env : module.Env) :
     code.validate_body endBytes env emptyContext = .ok (.Ok ()) := by
   let st := { Wasm1.Loop.initial .Empty with pos := 1#usize }
@@ -44,7 +57,7 @@ theorem empty_body_accepted (env : module.Env) :
   apply loop_done endBytes env emptyContext finished hc
   exact hp
 
-/-- A nonempty instruction sequence reaches the same public acceptance path. -/
+/-- `code.validate_body` accepts the body `nop; end` with no results. -/
 theorem nop_body_accepted (env : module.Env) :
     code.validate_body nopBytes env emptyContext = .ok (.Ok ()) := by
   let first := { Wasm1.Loop.initial .Empty with pos := 1#usize }
@@ -66,7 +79,7 @@ theorem nop_body_accepted (env : module.Env) :
     (step_end nopBytes env emptyContext last finished .Body .Empty hend)]
   exact loop_done nopBytes env emptyContext finished hc hp
 
-/-- Bytes after the function's closing end are rejected by the public driver. -/
+/-- `code.validate_body` rejects the body `end; nop` with `TrailingBytes`. -/
 theorem trailing_body_rejected (env : module.Env) :
     code.validate_body trailingBytes env emptyContext = .ok (.Err .TrailingBytes) := by
   let st := { Wasm1.Loop.initial .Empty with pos := 1#usize }
@@ -83,13 +96,16 @@ theorem trailing_body_rejected (env : module.Env) :
   apply loop_trailing trailingBytes env emptyContext finished hc
   simp [hp, st, trailingBytes, alloc.vec.Vec.deref]
 
+/-- A context with no locals and one `i32` result. -/
 def i32Context : code.Context :=
   ⟨alloc.vec.Vec.new _, alloc.vec.Vec.from [.I32] (by scalar_tac)⟩
 
+/-- The body bytes `41 2a 0b` (`i32.const 42; end`). -/
 def constBytes : Slice U8 :=
   alloc.vec.Vec.deref (alloc.vec.Vec.from [65#u8, 42#u8, 11#u8] (by scalar_tac))
 
-/-- This example exercises signed immediate decoding, result checking, and the public driver. -/
+/-- `code.validate_body` accepts `i32.const 42; end` with one `i32` result, which exercises signed
+immediate decoding and the final result check. -/
 theorem i32_const_body_accepted (env : module.Env) :
     code.validate_body constBytes env i32Context = .ok (.Ok ()) := by
   let initial := Wasm1.Loop.initial (.Value .I32)
@@ -130,10 +146,12 @@ theorem i32_const_body_accepted (env : module.Env) :
     (step_end constBytes env i32Context last finished .Body (.Value .I32) hend)]
   exact loop_done constBytes env i32Context finished hfc hfp
 
+/-- The body bytes `1a 0b` (`drop; end`). -/
 def dropBytes : Slice U8 :=
   alloc.vec.Vec.deref (alloc.vec.Vec.from [26#u8, 11#u8] (by scalar_tac))
 
-/-- A lexically valid core body can still reject: reachable DROP has no operand. -/
+/-- `code.validate_body` rejects `drop; end` with `EmptyStack`: the opcodes are well formed, but
+the reachable `drop` has no operand. -/
 theorem drop_body_rejected (env : module.Env) :
     code.validate_body dropBytes env emptyContext = .ok (.Err .EmptyStack) := by
   let first := { Wasm1.Loop.initial .Empty with pos := 1#usize }

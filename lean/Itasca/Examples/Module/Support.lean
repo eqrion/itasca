@@ -1,8 +1,14 @@
 import Itasca.Binary.Module
 
-open Aeneas Aeneas.Std
+/-!
+# Shared helpers for module examples
 
-/-! Shared byte-building helpers for the module examples. -/
+Helpers for writing whole-module byte fixtures: `bytes` builds a slice literal, and `leb`, `one`,
+`padded` and `omitted` build the `ModuleBinary` encoding derivations for one-byte LEB128 values,
+one-element vectors, present sections and omitted sections.
+-/
+
+open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.ModuleSupport
 

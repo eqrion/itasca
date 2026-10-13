@@ -6,6 +6,16 @@ import Itasca.Examples.Wasm1.Scalars
 import Itasca.Examples.Wasm1.Body
 import Itasca.Examples.Wasm1.Support
 
+/-!
+# Callback traces of Wasm 1.0 bodies
+
+Exact visitor traces for bodies run through `code.validate_body_with` with the recording visitor
+`recorder`. They show that numeric immediates reach the callbacks with every bit intact, that the
+closing `end` is reported before trailing bytes are rejected, that a rejecting callback stops the
+body at once, and the order of events for nested `block`, `if` and `else`. The `br_table` traces
+are in `Examples/Wasm1/BrTableTrace`.
+-/
+
 open Aeneas Aeneas.Std
 
 attribute [local simp] Itasca.Control.signature Itasca.Control.resultView
@@ -29,7 +39,8 @@ private theorem step_end (data : Slice U8) (env : module.Env) (ctx : code.Contex
     code.visit, core.result.Result.Insts.CoreOpsTry.branch]
 
 open Examples.Wasm1Scalars in
-/-- The callback retains f32's negative-zero sign bit through the actual public body. -/
+/-- The `f32.const` callback for `f32Bytes` receives the bits `0x80000000`, so the sign of negative
+zero is kept, and the `end` callback follows. -/
 theorem f32_signed_zero_trace (env : module.Env) :
     ∃ pushed finished, code.validate_body_with recorder f32Bytes env (resultContext .F32) [] =
       .ok (.Ok (), [observation pushed (.f32_const 0x80000000#u32),
@@ -73,7 +84,8 @@ theorem f32_signed_zero_trace (env : module.Env) :
   exact loop_done_with recorder f32Bytes env (resultContext .F32) _ finished hfc hfp
 
 open Examples.Wasm1Scalars in
-/-- All 64 raw bits, including NaN sign and payload, reach the f64 callback unchanged. -/
+/-- The `f64.const` callback for `f64Bytes` receives all 64 bits `0xfff8000000000001`, including the
+NaN sign and payload, and the `end` callback follows. -/
 theorem f64_nan_payload_trace (env : module.Env) :
     ∃ pushed finished, code.validate_body_with recorder f64Bytes env (resultContext .F64) [] =
       .ok (.Ok (), [observation pushed (.f64_const 0xFFF8000000000001#u64),
@@ -117,7 +129,8 @@ theorem f64_nan_payload_trace (env : module.Env) :
   exact loop_done_with recorder f64Bytes env (resultContext .F64) _ finished hfc hfp
 
 open Examples.Wasm1Body in
-/-- The closing body end is observed before the driver rejects trailing bytes. -/
+/-- On `end; nop` the callback for the closing `end` is logged, and then the body is rejected with
+`TrailingBytes`. -/
 theorem trailing_bytes_after_end_trace (env : module.Env) :
     ∃ finished, code.validate_body_with recorder trailingBytes env emptyContext [] =
       .ok (.Err .TrailingBytes, [observation finished (.end_ .Body .Empty)]) := by
@@ -137,7 +150,8 @@ theorem trailing_bytes_after_end_trace (env : module.Env) :
   simp [hp, st, trailingBytes, alloc.vec.Vec.deref]
 
 open Examples.Wasm1Body in
-/-- Rejecting the first NOP callback stops before the otherwise valid final end. -/
+/-- On `nop; end` with a visitor that rejects its first event, the body fails with `OutOfMemory`
+after the `nop` callback, before the final `end` is read. -/
 theorem rejecting_first_hook_stops (env : module.Env) :
     code.validate_body_with (rejectAt 0 .OutOfMemory) nopBytes env emptyContext [] =
       .ok (.Err (.Visitor .OutOfMemory),
@@ -240,10 +254,13 @@ private theorem read_one (st out : code.OpIterState) (data : Slice U8) (next : U
 
 
 
+/-- The body bytes `02 40 41 01 04 40 01 0b 0b 0b`: `block; i32.const 1; if; nop; end; end; end`,
+an `if` with no `else`. -/
 def bareIfBytes : Slice U8 := bytes
   [2#u8, 64#u8, 65#u8, 1#u8, 4#u8, 64#u8, 1#u8, 11#u8, 11#u8, 11#u8]
 
-/-- Exact public callback order for nested block and a bare if with no synthetic else callback. -/
+/-- The callback order for `bareIfBytes`: `block`, `i32.const`, `if`, `nop`, then three `end`
+events. No `else` callback is made for the missing arm. -/
 theorem nested_bare_if_trace (env : module.Env) :
     ∃ s2 s4 s6 s7 s8 s9 s10,
       code.validate_body_with recorder bareIfBytes env Examples.Wasm1Body.emptyContext [] =
@@ -322,10 +339,13 @@ theorem nested_bare_if_trace (env : module.Env) :
     (by simp [he10, recorder, ofHandler, observation, code.visit, core.result.Result.Insts.CoreOpsTry.branch])]
   exact loop_done_with recorder bareIfBytes env Examples.Wasm1Body.emptyContext _ s10 rfl rfl
 
+/-- The body bytes `02 40 41 01 04 40 01 05 01 0b 0b 0b`:
+`block; i32.const 1; if; nop; else; nop; end; end; end`. -/
 def elseIfBytes : Slice U8 := bytes
   [2#u8, 64#u8, 65#u8, 1#u8, 4#u8, 64#u8, 1#u8, 5#u8, 1#u8, 11#u8, 11#u8, 11#u8]
 
-/-- Exact public callback order for nested block and an explicit else. -/
+/-- The callback order for `elseIfBytes`: `block`, `i32.const`, `if`, `nop`, `else`, `nop`, then
+three `end` events, the first closing the `else` arm. -/
 theorem nested_else_if_trace (env : module.Env) :
     ∃ s2 s4 s6 s7 s8 s9 s10 s11 s12,
       code.validate_body_with recorder elseIfBytes env Examples.Wasm1Body.emptyContext [] =
