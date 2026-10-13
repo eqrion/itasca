@@ -63,6 +63,7 @@ struct Case {
     text: String,
     argument: i32,
     expected: i32,
+    provider: Option<String>,
 }
 
 fn cases() -> Vec<Case> {
@@ -74,6 +75,7 @@ fn cases() -> Vec<Case> {
             text: text.into(),
             argument,
             expected,
+            provider: None,
         });
     };
     add(
@@ -189,6 +191,81 @@ fn cases() -> Vec<Case> {
         10000,
         10032,
     );
+    add(
+        "unary_conversion",
+        ValidationProfile::Wasm2,
+        r#"(module (func (export "run") (param $n i32) (result i32) (local $sum i32)
+        loop $loop
+          local.get $sum local.get $n i64.extend_i32_u i64.clz i32.wrap_i64
+          f64.convert_i32_u f64.neg f64.abs i32.trunc_f64_u i32.add local.set $sum
+          local.get $n i32.const 1 i32.sub local.tee $n br_if $loop
+        end local.get $sum))"#,
+        10000,
+        (1u64..=10000).map(|n| n.leading_zeros() as i32).sum(),
+    );
+    add(
+        "memory_widths",
+        ValidationProfile::Wasm1,
+        r#"(module (memory 1)
+        (func (export "run") (param $n i32) (result i32) (local $sum i32)
+        loop $loop
+          i32.const 1 local.get $n i32.store8
+          i32.const 3 local.get $n i32.store16
+          i32.const 7 local.get $n i32.store
+          i32.const 13 local.get $n i64.extend_i32_u i64.store
+          local.get $sum i32.const 1 i32.load8_u i32.add
+          i32.const 3 i32.load16_u i32.add i32.const 7 i32.load i32.add
+          i32.const 13 i64.load i32.wrap_i64 i32.add local.set $sum
+          local.get $n i32.const 1 i32.sub local.tee $n br_if $loop
+        end local.get $sum))"#,
+        10000,
+        (1..=10000).map(|n| (n & 255) + 3 * n).sum(),
+    );
+    add(
+        "recursive_calls",
+        ValidationProfile::Wasm1,
+        r#"(module (func $recur (export "run") (param $n i32) (result i32)
+          local.get $n i32.eqz if (result i32) i32.const 0 else
+            local.get $n local.get $n i32.const 1 i32.sub call $recur i32.add
+          end))"#,
+        128,
+        8256,
+    );
+    let mixed = format!(
+        r#"(module (memory 1) (func (export "run") (param i32) (result i32)
+        local.get 0 {}))"#,
+        "i32.const 1 i32.add i64.extend_i32_u i64.const 3 i64.xor i32.wrap_i64 \
+         f64.convert_i32_u f64.const 0.5 f64.add i32.trunc_f64_u \
+         local.tee 0 i32.const 7 local.get 0 i32.store i32.const 7 i32.load i32.xor \
+         local.get 0 i32.add "
+            .repeat(1024)
+    );
+    let mut expected = 10000;
+    for _ in 0..1024 {
+        expected = (expected + 1) ^ 3;
+    }
+    add(
+        "large_mixed_body",
+        ValidationProfile::Wasm1,
+        &mixed,
+        10000,
+        expected,
+    );
+    cases.push(Case {
+        name: "cross_instance",
+        profile: ValidationProfile::Wasm1,
+        text: direct.replace(
+            "(func $inc (type $unary) local.get 0 i32.const 1 i32.add)",
+            "(import \"provider\" \"inc\" (func $inc (type $unary)))",
+        ),
+        argument: 10000,
+        expected: 50_015_000,
+        provider: Some(
+            r#"(module (global i32 (i32.const 1))
+            (func (export "inc") (param i32) (result i32) local.get 0 global.get 0 i32.add))"#
+                .into(),
+        ),
+    });
     cases
 }
 
@@ -214,9 +291,24 @@ fn oracle_engine(profile: ValidationProfile) -> wasmi::Engine {
     wasmi::Engine::new(&config)
 }
 
-fn our_instance(code: &Rc<ExecutableModule>) -> (Store, FuncAddr) {
+fn our_instance(
+    code: &Rc<ExecutableModule>,
+    provider: Option<&Rc<ExecutableModule>>,
+) -> (Store, FuncAddr) {
     let mut store = Store::new();
-    let mut pending = store.instantiate(Rc::clone(code), &[]).unwrap();
+    let mut imports = Vec::new();
+    if let Some(provider) = provider {
+        let mut pending = store.instantiate(Rc::clone(provider), &[]).unwrap();
+        pending.add_fuel(FUEL).unwrap();
+        assert!(matches!(pending.run(&mut store), Outcome::Returned(_)));
+        imports.push(
+            store
+                .export(pending.instance().unwrap(), b"inc")
+                .unwrap()
+                .unwrap(),
+        );
+    }
+    let mut pending = store.instantiate(Rc::clone(code), &imports).unwrap();
     pending.add_fuel(FUEL).unwrap();
     assert!(matches!(pending.run(&mut store), Outcome::Returned(_)));
     let Some(Extern::Func(function)) = store.export(pending.instance().unwrap(), b"run").unwrap()
@@ -244,13 +336,40 @@ fn our_call(
     *result as i32
 }
 
+fn our_restarted_call(
+    store: &mut Store,
+    execution: &mut Execution,
+    function: FuncAddr,
+    argument: i32,
+) -> i32 {
+    execution
+        .restart(store, function, &[Value::I32(argument as u32)])
+        .unwrap();
+    execution.add_fuel(FUEL).unwrap();
+    let Outcome::Returned(values) = execution.run(store) else {
+        panic!("benchmark did not return")
+    };
+    let [Value::I32(result)] = values.as_slice() else {
+        panic!("unexpected result type")
+    };
+    *result as i32
+}
+
 fn oracle_instance(
     engine: &wasmi::Engine,
     code: &wasmi::Module,
+    provider: Option<&wasmi::Module>,
 ) -> (wasmi::Store<()>, wasmi::Func) {
     let mut store = wasmi::Store::new(engine, ());
     store.set_fuel(FUEL).unwrap();
-    let instance = wasmi::Instance::new(&mut store, code, &[]).unwrap();
+    let mut imports = Vec::new();
+    if let Some(provider) = provider {
+        let instance = wasmi::Instance::new(&mut store, provider, &[]).unwrap();
+        imports.push(wasmi::Extern::Func(
+            instance.get_func(&store, "inc").unwrap(),
+        ));
+    }
+    let instance = wasmi::Instance::new(&mut store, code, &imports).unwrap();
     let function = instance.get_func(&store, "run").unwrap();
     (store, function)
 }
@@ -375,7 +494,8 @@ fn main() {
         "Times: median [min,max] microseconds/operation. Ratio = itasca / Wasmi; lower is better."
     );
     println!("Compile includes validation/rewrite/drop and a fresh Wasmi engine; instantiate includes fresh store/export lookup/drop;");
-    println!("execute includes dynamic invocation/fuel/result handling on reused instances. WAT encoding excluded.");
+    println!("execute includes dynamic invocation/fuel/result handling on reused instances; restart retains itasca frame/local storage. WAT encoding excluded.");
+    println!("For cross_instance, compile/footprint cover the consumer; instantiate includes its already-compiled provider.");
     println!(
         "{:<18} {:<11} {:>32} {:>32} {:>8}",
         "workload", "stage", "itasca us", "Wasmi us", "ratio"
@@ -389,8 +509,22 @@ fn main() {
         let code = Rc::new(compile(&bytes, case.profile).unwrap());
         let engine = oracle_engine(case.profile);
         let oracle_code = wasmi::Module::new(&engine, &bytes).unwrap();
-        let (mut store, function) = our_instance(&code);
-        let (mut oracle_store, oracle_function) = oracle_instance(&engine, &oracle_code);
+        let provider_bytes = case.provider.as_ref().map(|text| {
+            let buffer = wast::parser::ParseBuffer::new(text).unwrap();
+            wast::parser::parse::<wast::Wat>(&buffer)
+                .unwrap()
+                .encode()
+                .unwrap()
+        });
+        let provider = provider_bytes
+            .as_ref()
+            .map(|bytes| Rc::new(compile(bytes, case.profile).unwrap()));
+        let oracle_provider = provider_bytes
+            .as_ref()
+            .map(|bytes| wasmi::Module::new(&engine, bytes).unwrap());
+        let (mut store, function) = our_instance(&code, provider.as_ref());
+        let (mut oracle_store, oracle_function) =
+            oracle_instance(&engine, &oracle_code, oracle_provider.as_ref());
         let mut fuel = 0;
         for _ in 0..5 {
             let result = our_call(&mut store, function, case.argument, |execution| {
@@ -424,10 +558,14 @@ fn main() {
             case,
             "instantiate",
             || {
-                black_box(our_instance(&code));
+                black_box(our_instance(&code, provider.as_ref()));
             },
             || {
-                black_box(oracle_instance(&engine, &oracle_code));
+                black_box(oracle_instance(
+                    &engine,
+                    &oracle_code,
+                    oracle_provider.as_ref(),
+                ));
             },
         );
         measure_pair(
@@ -450,6 +588,35 @@ fn main() {
                 ));
             },
         );
+        let mut reused =
+            Execution::new(&store, function, &[Value::I32(case.argument as u32)]).unwrap();
+        reused.add_fuel(FUEL).unwrap();
+        assert!(matches!(reused.run(&mut store), Outcome::Returned(_)));
+        measure_pair(
+            &mut options,
+            case,
+            "restart",
+            || {
+                black_box(our_restarted_call(
+                    &mut store,
+                    &mut reused,
+                    function,
+                    black_box(case.argument),
+                ));
+            },
+            || {
+                black_box(oracle_call(
+                    &mut oracle_store,
+                    oracle_function,
+                    black_box(case.argument),
+                ));
+            },
+        );
+        assert_eq!(
+            our_restarted_call(&mut store, &mut reused, function, case.argument),
+            case.expected
+        );
+        assert_eq!(FUEL - reused.fuel(), fuel);
         // Check again after all sampling; known-result comparisons stay outside the clocks.
         assert_eq!(
             our_call(&mut store, function, case.argument, |_| {}),

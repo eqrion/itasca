@@ -6,7 +6,8 @@ use alloc::vec::Vec;
 struct Frame {
     instance: usize,
     function: usize,
-    address: FuncAddr,
+    // Fixed at call entry from the target's immutable signature.
+    results: usize,
     pc: usize,
     local_base: usize,
     operand_base: usize,
@@ -14,7 +15,12 @@ struct Frame {
 struct PendingHost {
     results: Vec<ValueType>,
 }
-/// A single-use invocation with explicit frames, value storage, and retained fuel.
+enum FrameExit {
+    Suspended,
+    Return,
+    Call { opcode: u16, a: u32, b: u32 },
+}
+/// An invocation with explicit frames, reusable local storage, and retained fuel.
 ///
 /// Each instruction costs one unit. Bulk work additionally costs one unit per
 /// 64 bytes/elements (rounded up); memory growth uses its requested byte count.
@@ -82,6 +88,45 @@ impl Execution {
             finished: false,
             failure: None,
         })
+    }
+    /// Starts another invocation after this execution has returned or failed.
+    ///
+    /// The function and arguments must belong to the same store. Active, suspended,
+    /// and host-pending invocations cannot be restarted. Checks and reservation
+    /// precede reset, so errors leave the previous invocation available for inspection.
+    /// Success clears the prior fuel, source position, and failure while retaining
+    /// frame and local capacity. Returned value vectors remain owned by the caller.
+    pub fn restart(
+        &mut self,
+        store: &Store,
+        function: FuncAddr,
+        arguments: &[Value],
+    ) -> Result<(), RuntimeError> {
+        store.check(self.store)?;
+        if !self.finished {
+            return Err(RuntimeError::InvalidState);
+        }
+        let ty = store.func_type(function)?;
+        check_values(store, arguments, &ty.params)?;
+        if arguments.len() > store.limits.max_values {
+            return Err(RuntimeError::Resource(ResourceLimit::Values));
+        }
+        let additional = arguments.len().saturating_sub(self.stack.len());
+        reserve(&mut self.stack, additional)?;
+        self.stack.clear();
+        let mut i = 0;
+        while i < arguments.len() {
+            self.stack.push(arguments[i]);
+            i += 1;
+        }
+        self.locals.clear();
+        self.frames.clear();
+        self.fuel = 0;
+        self.initial = Some(function);
+        self.host = None;
+        self.finished = false;
+        self.failure = None;
+        Ok(())
     }
     /// Adds to the retained budget; arithmetic overflow is a resource error.
     pub fn add_fuel(&mut self, fuel: u64) -> Result<(), RuntimeError> {
@@ -167,6 +212,7 @@ impl Execution {
             true
         }
     }
+    #[inline]
     fn call_cost(&self, store: &Store, a: FuncAddr) -> Result<u64, RuntimeError> {
         let n = match store.funcs[a.index].code {
             FunctionCode::Host(_) => {
@@ -253,7 +299,7 @@ impl Execution {
                 self.frames.push(Frame {
                     instance,
                     function,
-                    address: a,
+                    results: ty.results.len(),
                     pc: 0,
                     local_base,
                     operand_base: base,
@@ -263,44 +309,106 @@ impl Execution {
         }
     }
     fn run_inner(&mut self, store: &mut Store) -> Result<Outcome, RuntimeError> {
-        loop {
-            if let Some(a) = self.initial {
-                let cost = self.call_cost(store, a)?;
-                if !self.charge(cost) {
-                    return Ok(Outcome::Suspended);
-                }
-                self.initial = None;
-                if let Some(request) = self.call(store, a)? {
-                    return Ok(Outcome::NeedsHostCall(request));
-                }
+        if let Some(a) = self.initial {
+            let cost = self.call_cost(store, a)?;
+            if !self.charge(cost) {
+                return Ok(Outcome::Suspended);
             }
+            self.initial = None;
+            if let Some(request) = self.call(store, a)? {
+                return Ok(Outcome::NeedsHostCall(request));
+            }
+        }
+        loop {
             if self.frames.is_empty() {
                 self.finished = true;
                 return Ok(Outcome::Returned(core::mem::take(&mut self.stack)));
             }
-            let frame = self.frames.last().ok_or(RuntimeError::InvalidState)?;
-            let instance = frame.instance;
-            let function = frame.function;
-            let pc = frame.pc;
+            if let Some(outcome) = self.run_frame(store)? {
+                return Ok(outcome);
+            }
+        }
+    }
+    // The caller supplies a nonempty frame stack. Calls and returns leave this
+    // loop immediately, so its frame index and code identity remain fixed.
+    fn run_frame(&mut self, store: &mut Store) -> Result<Option<Outcome>, RuntimeError> {
+        let frame_index = self.frames.len() - 1;
+        let frame = &self.frames[frame_index];
+        let instance = frame.instance;
+        let function = frame.function;
+        let local_base = frame.local_base;
+        let mut pc = frame.pc;
+        let mut fuel = self.fuel;
+        let exit = self.run_frame_loop(store, instance, function, local_base, &mut pc, &mut fuel);
+        // All exits, including traps, publish the next PC and retained fuel.
+        // Calls and returns run only after restoring the ordinary frame state.
+        self.frames[frame_index].pc = pc;
+        self.fuel = fuel;
+        match exit? {
+            FrameExit::Suspended => Ok(Some(Outcome::Suspended)),
+            FrameExit::Return => {
+                self.return_frame()?;
+                Ok(None)
+            }
+            FrameExit::Call { opcode, a, b } => {
+                self.call_instruction(store, instance, opcode, a, b)
+            }
+        }
+    }
+    fn run_frame_loop(
+        &mut self,
+        store: &mut Store,
+        instance: usize,
+        function: usize,
+        local_base: usize,
+        pc: &mut usize,
+        fuel: &mut u64,
+    ) -> Result<FrameExit, RuntimeError> {
+        loop {
             let instruction = *store.instances[instance].module.functions[function]
                 .instructions
-                .get(pc)
+                .get(*pc)
                 .ok_or(RuntimeError::InvalidState)?;
-            let cost = self.cost(store, instance, instruction)?;
-            if !self.charge(cost) {
-                return Ok(Outcome::Suspended);
+            if let Instruction::Op {
+                opcode: opcode @ (0x10 | 0x11),
+                a,
+                b,
+                ..
+            } = instruction
+            {
+                return Ok(FrameExit::Call { opcode, a, b });
             }
-            self.frames.last_mut().ok_or(RuntimeError::InvalidState)?.pc += 1;
+            let cost = self.cost(instruction)?;
+            if *fuel < cost {
+                return Ok(FrameExit::Suspended);
+            }
+            *fuel -= cost;
+            *pc += 1;
             match instruction {
-                Instruction::Jump(b) => self.branch(b)?,
+                Instruction::LocalGet(index) => {
+                    self.stack.push(self.locals[local_base + index as usize]);
+                }
+                Instruction::LocalSet(index) => {
+                    self.locals[local_base + index as usize] = pop(&mut self.stack)?;
+                }
+                Instruction::LocalTee(index) => {
+                    self.locals[local_base + index as usize] =
+                        *self.stack.last().ok_or(RuntimeError::InvalidState)?;
+                }
+                Instruction::I32Const(bits) => self.stack.push(Value::I32(bits)),
+                Instruction::I64Const(bits) => self.stack.push(Value::I64(bits)),
+                Instruction::F32Const(bits) => self.stack.push(Value::F32(bits)),
+                Instruction::F64Const(bits) => self.stack.push(Value::F64(bits)),
+                Instruction::Scalar(opcode) => numeric::scalar(opcode, &mut self.stack)?,
+                Instruction::Jump(b) => *pc = self.branch(b)?,
                 Instruction::JumpIf(b) => {
                     if pop(&mut self.stack)?.i32()? != 0 {
-                        self.branch(b)?;
+                        *pc = self.branch(b)?;
                     }
                 }
                 Instruction::JumpIfZero(target) => {
                     if pop(&mut self.stack)?.i32()? == 0 {
-                        self.frames.last_mut().ok_or(RuntimeError::InvalidState)?.pc = target;
+                        *pc = target;
                     }
                 }
                 Instruction::JumpTable { start, len } => {
@@ -308,26 +416,45 @@ impl Execution {
                     let selected = if index < len - 1 { index } else { len - 1 };
                     let b = store.instances[instance].module.functions[function].branches
                         [start + selected];
-                    self.branch(b)?;
+                    *pc = self.branch(b)?;
                 }
-                Instruction::Return => self.return_frame(store)?,
-                Instruction::Op { opcode, a, b, bits } => match opcode {
-                    0x10 => {
-                        let target = store.instances[instance].funcs[a as usize];
-                        if let Some(request) = self.call(store, target)? {
-                            return Ok(Outcome::NeedsHostCall(request));
-                        }
-                    }
-                    0x11 => {
-                        let target = self.indirect(store, instance, a, b)?;
-                        pop(&mut self.stack)?;
-                        if let Some(request) = self.call(store, target)? {
-                            return Ok(Outcome::NeedsHostCall(request));
-                        }
-                    }
-                    _ => self.op(store, instance, opcode, a, b, bits)?,
-                },
+                Instruction::Return => return Ok(FrameExit::Return),
+                Instruction::Op { opcode, a, b, bits } => {
+                    self.op(store, instance, opcode, a, b, bits)?;
+                }
             }
+        }
+    }
+    fn call_instruction(
+        &mut self,
+        store: &Store,
+        instance: usize,
+        opcode: u16,
+        a: u32,
+        b: u32,
+    ) -> Result<Option<Outcome>, RuntimeError> {
+        let target = if opcode == 0x10 {
+            Ok(store.instances[instance].funcs[a as usize])
+        } else {
+            self.indirect(store, instance, a, b)
+        };
+        let cost = match target {
+            Ok(address) => self.call_cost(store, address)?,
+            Err(_) => 1,
+        };
+        if !self.charge(cost) {
+            return Ok(Some(Outcome::Suspended));
+        }
+        self.frames.last_mut().ok_or(RuntimeError::InvalidState)?.pc += 1;
+        // Resolve once per attempted instruction. Insufficient fuel discards
+        // the lookup, and lookup errors only trap after charging the instruction.
+        let target = target?;
+        if opcode == 0x11 {
+            pop(&mut self.stack)?;
+        }
+        match self.call(store, target)? {
+            Some(request) => Ok(Some(Outcome::NeedsHostCall(request))),
+            None => Ok(None),
         }
     }
     fn indirect(
@@ -353,24 +480,8 @@ impl Execution {
         }
         Ok(a)
     }
-    fn cost(
-        &self,
-        store: &Store,
-        inst: usize,
-        instruction: Instruction,
-    ) -> Result<u64, RuntimeError> {
+    fn cost(&self, instruction: Instruction) -> Result<u64, RuntimeError> {
         let n = match instruction {
-            Instruction::Op {
-                opcode: 0x10, a, ..
-            } => return self.call_cost(store, store.instances[inst].funcs[a as usize]),
-            Instruction::Op {
-                opcode: 0x11, a, b, ..
-            } => {
-                return match self.indirect(store, inst, a, b) {
-                    Ok(target) => self.call_cost(store, target),
-                    Err(_) => Ok(1),
-                }
-            }
             Instruction::Op { opcode: 0x40, .. } => {
                 self.stack.last().ok_or(RuntimeError::InvalidState)?.i32()? as u64 * 65536
             }
@@ -378,13 +489,13 @@ impl Execution {
                 opcode: 0x108 | 0x10a | 0x10b | 0x10c | 0x10e | 0x10f | 0x111,
                 ..
             } => self.stack.last().ok_or(RuntimeError::InvalidState)?.i32()? as u64,
-            _ => 0,
+            _ => return Ok(1),
         };
         1u64.checked_add(n / 64 + u64::from(n % 64 != 0))
             .ok_or(RuntimeError::Resource(ResourceLimit::CostOverflow))
     }
-    fn branch(&mut self, b: Branch) -> Result<(), RuntimeError> {
-        let frame = self.frames.last_mut().ok_or(RuntimeError::InvalidState)?;
+    fn branch(&mut self, b: Branch) -> Result<usize, RuntimeError> {
+        let frame = self.frames.last().ok_or(RuntimeError::InvalidState)?;
         let target = frame
             .operand_base
             .checked_add(b.height)
@@ -397,16 +508,15 @@ impl Execution {
         if target > source {
             return Err(RuntimeError::InvalidState);
         }
-        self.stack.copy_within(source.., target);
+        if b.keep != 0 && target != source {
+            self.stack.copy_within(source.., target);
+        }
         self.stack.truncate(target + b.keep);
-        frame.pc = b.target;
-        Ok(())
+        Ok(b.target)
     }
-    fn return_frame(&mut self, store: &Store) -> Result<(), RuntimeError> {
+    fn return_frame(&mut self) -> Result<(), RuntimeError> {
         let f = self.frames.pop().ok_or(RuntimeError::InvalidState)?;
-        let keep = store.types[store.funcs[f.address.index].signature]
-            .results
-            .len();
+        let keep = f.results;
         let source = self
             .stack
             .len()
@@ -415,7 +525,9 @@ impl Execution {
         if f.operand_base > source {
             return Err(RuntimeError::InvalidState);
         }
-        self.stack.copy_within(source.., f.operand_base);
+        if keep != 0 && f.operand_base != source {
+            self.stack.copy_within(source.., f.operand_base);
+        }
         self.stack.truncate(f.operand_base + keep);
         self.locals.truncate(f.local_base);
         Ok(())
@@ -440,21 +552,6 @@ impl Execution {
                 let rhs = pop(&mut self.stack)?;
                 let lhs = pop(&mut self.stack)?;
                 self.stack.push(if c != 0 { lhs } else { rhs });
-            }
-            0x20..=0x22 => {
-                let base = self
-                    .frames
-                    .last()
-                    .ok_or(RuntimeError::InvalidState)?
-                    .local_base;
-                match opcode {
-                    0x20 => self.stack.push(self.locals[base + a as usize]),
-                    0x21 => self.locals[base + a as usize] = pop(&mut self.stack)?,
-                    _ => {
-                        self.locals[base + a as usize] =
-                            *self.stack.last().ok_or(RuntimeError::InvalidState)?
-                    }
-                }
             }
             0x23 => self
                 .stack
@@ -498,11 +595,6 @@ impl Execution {
                 let result = store.grow_memory(index, delta);
                 self.stack.push(Value::I32(result));
             }
-            0x41 => self.stack.push(Value::I32(bits as u32)),
-            0x42 => self.stack.push(Value::I64(bits as u64)),
-            0x43 => self.stack.push(Value::F32(bits as u32)),
-            0x44 => self.stack.push(Value::F64(bits as u64)),
-            0x45..=0xc4 | 0x100..=0x107 => numeric::scalar(opcode, &mut self.stack)?,
             0xd0 => self.stack.push(if a == 0 {
                 Value::FuncRef(None)
             } else {

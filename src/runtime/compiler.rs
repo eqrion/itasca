@@ -226,6 +226,14 @@ pub(super) struct Branch {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum Instruction {
+    LocalGet(u32),
+    LocalSet(u32),
+    LocalTee(u32),
+    I32Const(u32),
+    I64Const(u64),
+    F32Const(u32),
+    F64Const(u64),
+    Scalar(u16),
     Op {
         opcode: u16,
         a: u32,
@@ -588,7 +596,18 @@ impl<'a> FunctionCompiler<'a> {
         self.next_source = st.pos;
     }
     fn op(&mut self, st: &OpIterState, opcode: u16, a: u32, b: u32, bits: u128) -> VisitResult {
-        self.emit(Instruction::Op { opcode, a, b, bits })?;
+        let instruction = match opcode {
+            0x20 => Instruction::LocalGet(a),
+            0x21 => Instruction::LocalSet(a),
+            0x22 => Instruction::LocalTee(a),
+            0x41 => Instruction::I32Const(bits as u32),
+            0x42 => Instruction::I64Const(bits as u64),
+            0x43 => Instruction::F32Const(bits as u32),
+            0x44 => Instruction::F64Const(bits as u64),
+            0x45..=0xc4 | 0x100..=0x107 => Instruction::Scalar(opcode),
+            _ => Instruction::Op { opcode, a, b, bits },
+        };
+        self.emit(instruction)?;
         self.observe(st);
         Ok(())
     }
@@ -1195,18 +1214,10 @@ mod tests {
             v128.load8_lane offset=17 align=1 9 drop))",
         );
         let f = &module.functions[0];
-        assert!(f.instructions.contains(&Instruction::Op {
-            opcode: 0x43,
-            a: 0,
-            b: 0,
-            bits: 0xffc12345
-        }));
-        assert!(f.instructions.contains(&Instruction::Op {
-            opcode: 0x44,
-            a: 0,
-            b: 0,
-            bits: 0x8000000000000000
-        }));
+        assert!(f.instructions.contains(&Instruction::F32Const(0xffc12345)));
+        assert!(f
+            .instructions
+            .contains(&Instruction::F64Const(0x8000000000000000)));
         assert!(f.instructions.contains(&Instruction::Op {
             opcode: 0x20c,
             a: 0,

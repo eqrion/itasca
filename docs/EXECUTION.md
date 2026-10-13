@@ -95,6 +95,15 @@ mutable memory borrow across the host boundary. `run_with_host` supplies a
 synchronous loop using the `Host` trait and preserves the execution if fuel runs
 out. Host deadlines and cancellation remain embedding responsibilities.
 
+After completion or a terminating execution error, `Execution::restart` accepts
+another function and argument slice from the same store. It reuses frame and
+local capacity, resets fuel to zero, and clears previous failure/source state.
+Active, suspended, and host-pending executions reject restart. Argument/type,
+store-ownership, and resource checks precede reset; a rejected restart preserves
+the completed execution for inspection. Returned vectors remain owned by the
+caller, so restarting does not recycle their allocation. Separate `Execution`
+values still provide independent storage for nested calls.
+
 Default store limits are 1,000,000 runtime objects (including interned signatures), 10,000 retained instances,
 1,000,000 instance metadata/initial-element items, 256 MiB total linear memory,
 1,000,000 parameter/result entries in canonical signatures,
@@ -154,7 +163,7 @@ proofs above remain part of the validator audit.
 
 ## Performance baseline
 
-Run the nine-workload comparison with the pinned Wasmi 2.0.0 interpreter:
+Run the fourteen-workload comparison with the pinned Wasmi 2.0.0 interpreter:
 
 ```sh
 cargo run --release --example runtime_bench -- --csv /tmp/itasca-runtime.csv
@@ -171,7 +180,7 @@ iteration count, elapsed nanoseconds, and time per operation.
 
 Both engines use fuel metering. Wasmi compiles eagerly, and both use the case's
 Wasm 1.0 or Core 2.0 feature profile. Their fuel units are different and are never
-compared. The three measurements have explicit lifetimes:
+compared. The measurements have explicit lifetimes:
 
 - **Compile:** complete-module validation and translation, including destruction.
   Wasmi engine setup and destruction are included on every iteration because its
@@ -184,8 +193,13 @@ compared. The three measurements have explicit lifetimes:
   and cleanup on a reused instance. This includes itasca's new `Execution`
   allocation and Wasmi's use of pooled execution storage. Export lookup and
   compilation are excluded; fuel-count reporting is outside the timing.
+- **Restart:** the same dynamic invocation with an explicit `Execution::restart`
+  on a completed execution. Frame/local buffers are warmed before timing and
+  retained between calls; returned operand vectors still have their usual owned
+  lifetime. Wasmi uses the same pooled call path as in execute. No start function
+  or host callback is present in these fixtures.
 
-The recorded run used Rust 1.88.0 (LLVM 20.1.5), `aarch64-apple-darwin`, Darwin
+The original nine-workload run below used Rust 1.88.0 (LLVM 20.1.5), `aarch64-apple-darwin`, Darwin
 24.5.0, the default Cargo release profile, and no `RUSTFLAGS` or release-profile
 environment overrides. No builds or test campaigns ran concurrently. These
 are local microbenchmarks with a hot working set, not application throughput
@@ -245,3 +259,184 @@ bookkeeping, and engine storage; they are not heap/RSS measurements.
 Native SIMD, packed bytecode, and superinstructions are not enabled in itasca.
 Future changes should preserve trap/host-effect order and fuel semantics and be
 measured against this baseline. Runtime proof work remains deferred.
+
+### Frame-loop optimization
+
+The interpreter now retains the active frame's index and code identity in an
+inner loop. Every call and return exits that loop before the next instruction,
+and initial invocation is handled once per run. Call target resolution supplies
+both the fuel charge and the executed target. An insufficient budget discards
+the lookup, including errors, so resumption observes current table contents.
+Scalar dispatch is inlined, fixed-cost instructions return their one-unit cost
+directly, and branches/returns skip empty or identity stack copies.
+
+These changes preserve bytecode, fuel charges, source offsets, and effect order.
+The future proof obligations are local: the active frame remains fixed between
+calls/returns, no store mutation separates lookup from invocation, and empty or
+identity copies preserve the stack. Inlining does not change Rust semantics.
+The [extraction boundary](EXECUTION_NUMERICS.md) still applies.
+
+A fresh comparison used the same machine, toolchain, release settings, runner,
+and nine-sample/50 ms protocol as above. The optimized executable ran immediately
+before a saved baseline executable, with no builds or tests competing for CPU.
+Execution medians in microseconds per invocation were:
+
+| Workload | Before | After | Time reduction |
+| --- | ---: | ---: | ---: |
+| `call_boundary` | 0.141 | 0.140 | 0.6% |
+| `integer_loop` | 641.439 | 499.476 | 22.1% |
+| `direct_calls` | 1176.810 | 921.418 | 21.7% |
+| `indirect_calls` | 1306.904 | 1011.911 | 22.6% |
+| `float_loop` | 688.153 | 503.970 | 26.8% |
+| `memory_sum_64k` | 1659.853 | 1311.877 | 21.0% |
+| `bulk_copy_8m` | 142.571 | 141.068 | 1.1% |
+| `simd_loop` | 790.383 | 649.752 | 17.8% |
+| `many_functions` | 0.729 | 0.583 | 20.1% |
+
+The instruction-heavy cases improve by 18–27%; the small differences in call
+boundary and bulk-copy time are within measurement variation. Bytecode footprints
+and fuel counts match exactly in all nine workloads. The [raw output](benchmarks/runtime-optimization-arm64-macos.txt)
+records ranges, compilation, instantiation, and Wasmi measurements; the
+[CSV](benchmarks/runtime-optimization-arm64-macos.csv) contains all 972 samples,
+with a `version` column distinguishing the runs. These remain hot-working-set
+microbenchmarks, not application throughput estimates.
+
+### Stack, dispatch, and frame-state experiments
+
+Three further changes were measured independently against the frame-loop version
+above, then combined:
+
+1. **Stack:** nontrapping integer binary arithmetic and comparisons pop the right
+   operand and replace the left in place. This removes the second pop and the
+   result push, including its capacity check. Underflow and type errors retain
+   their original operand-consumption behavior; trapping arithmetic is unchanged.
+2. **Dispatch:** locals, scalar constants, and scalar numeric instructions have
+   dedicated bytecode variants. The compiler emits one instruction per callback
+   as before, and these variants directly reach their handlers with a fixed
+   one-unit charge. Generic instructions keep their existing cost calculation.
+3. **Cached state:** the inner loop uses a local PC, fuel counter, and local base.
+   Its wrapper publishes PC and fuel on every ordinary exit, including runtime
+   errors. Calls and returns execute after publication. Branches return their
+   target PC, and loop handlers neither change the frame stack nor read the
+   temporarily stale frame PC or execution fuel.
+
+All three are retained. Each keeps the same per-instruction suspension boundary
+and source position; no instruction fusion or batched charging is involved.
+Their future correspondence arguments are a stack-update equality, a direct
+instruction-constructor mapping, and a relation between the cached and stored
+PC/fuel. The [extraction probes](EXECUTION_NUMERICS.md) check the new code patterns
+without changing the runtime's unverified status.
+
+The following execution medians are microseconds per invocation. Each variant
+used nine samples and a 50 ms calibration target, on the same toolchain and
+machine as above. All five executables were built first, and the runs occurred
+sequentially without concurrent builds or tests. The baseline here already
+includes the preceding optimization pass.
+
+| Workload | Baseline | Stack only | Dispatch only | Cached state only | All three | Combined time reduction |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `call_boundary` | 0.141 | 0.139 | 0.141 | 0.138 | 0.138 | 2.0% |
+| `integer_loop` | 497.898 | 457.193 | 455.743 | 457.795 | 361.241 | 27.4% |
+| `direct_calls` | 926.223 | 853.567 | 864.357 | 883.221 | 729.894 | 21.2% |
+| `indirect_calls` | 1026.950 | 960.505 | 967.671 | 981.859 | 814.130 | 20.7% |
+| `float_loop` | 514.906 | 492.834 | 439.505 | 480.859 | 371.020 | 27.9% |
+| `memory_sum_64k` | 1324.474 | 1190.685 | 1187.178 | 1210.782 | 912.690 | 31.1% |
+| `bulk_copy_8m` | 137.240 | 138.815 | 138.484 | 142.242 | 139.370 | -1.6% |
+| `simd_loop` | 648.474 | 662.226 | 619.983 | 634.620 | 538.759 | 16.9% |
+| `many_functions` | 0.586 | 0.529 | 0.517 | 0.570 | 0.387 | 33.9% |
+
+The combination reduces instruction-heavy execution time by 17–34% beyond the
+previous pass. The isolated stack change slightly regresses the SIMD fixture,
+but the combination improves it. Small call-boundary and bulk-copy differences
+remain within measurement variation. All variants preserve fuel counts,
+instruction counts, and bytecode footprints; instructions remain 32 bytes on
+this target. [Raw output](benchmarks/runtime-experiments-arm64-macos.txt) records
+ranges and the compilation/instantiation measurements, and the
+[CSV](benchmarks/runtime-experiments-arm64-macos.csv) contains all 2,430 samples.
+
+### Return, numeric, memory, and invocation experiments
+
+The next pass tested four candidates independently, then narrowed the combination:
+
+- **Cached result arity:** a frame records its result count when the call starts.
+  Return no longer follows its function address through the function and type
+  tables. The frame shrinks from 56 to 48 bytes on this target. The invariant is
+  equality with the target's immutable signature; call setup already reads it.
+- **More in-place scalar updates:** floating binary arithmetic and comparisons
+  now replace the left operand after popping the right, using the same numeric
+  helpers and preserving error consumption. An additional unary/conversion
+  rewrite was rejected: its five-sample pilot slowed `unary_conversion` from
+  768 to 834 µs. Keeping only the floating binary change improved that pilot's
+  follow-up float loop without the conversion regression.
+- **Fixed-width memory helpers:** explicit 1/2/4/8-byte paths were tested with
+  complete bounds checks before writes and unchanged little-endian semantics.
+  They are not retained. The first form regressed even non-memory loops;
+  outlining `memory_op` removed that broad slowdown, but the memory-width case
+  still took 1575 µs against 1502 µs for the baseline. Outlining the original
+  byte loop took 1607 µs. These results show sensitivity to generated code as
+  well as the byte-access implementation; unrolling alone was not a useful win.
+- **Invocation reuse:** `Execution::restart` retains local and frame allocations
+  explicitly. It only resets a finished execution, after validating the new
+  function/arguments and reserving space. Its future invariant is equivalence
+  to `Execution::new` apart from vector capacity. It introduces no shared pool
+  or changes to host-continuation ownership. Returning still transfers the
+  operand vector, whose allocation is not retained by restart.
+
+The runner now includes five more workloads. `unary_conversion` performs integer
+bit counting and float conversions/rounding in a 10,000-iteration loop.
+`memory_widths` stores and loads 1/2/4/8-byte values at unaligned addresses.
+`recursive_calls` descends 128 calls. `large_mixed_body` has 1,024 repeated groups
+of integer, float, conversion, and memory operations: 19,458 bytecode instructions
+occupy 622,656 bytes. `cross_instance` repeats calls into another instance whose
+helper reads its defining global. Its compile timing and reported footprint cover
+only the consumer; instantiation includes the already-compiled provider. Both
+engines check known results before/after sampling, and all variants retain
+identical instruction counts, payload bounds, and itasca fuel charges.
+
+The retained combination is result-arity caching, floating binary stack updates,
+and the optional restart API. The larger mixed body and deeper call tests broaden
+the evidence, but these are still microbenchmarks, not application throughput.
+
+Full comparisons used nine samples and a 50 ms target, with saved executables run
+sequentially (combined, float-only, returns-only, restart-only, baseline) and no
+concurrent builds or tests. The baseline already includes the preceding two
+passes. The following medians are microseconds per invocation. “Restart only”
+uses the old instruction handlers with the new reuse API; “Combined fresh” uses
+`Execution::new`, and “Combined restart” uses `Execution::restart`.
+
+| Workload | Baseline | Returns only | Float only | Restart only | Combined fresh | Combined restart |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `call_boundary` | 0.139 | 0.134 | 0.136 | 0.053 | 0.139 | 0.052 |
+| `integer_loop` | 354.751 | 356.712 | 355.310 | 356.005 | 358.359 | 356.185 |
+| `direct_calls` | 718.511 | 699.166 | 718.758 | 714.541 | 693.331 | 688.372 |
+| `indirect_calls` | 800.548 | 785.349 | 803.230 | 793.895 | 775.997 | 774.668 |
+| `float_loop` | 366.085 | 365.170 | 350.665 | 364.590 | 359.001 | 351.601 |
+| `memory_sum_64k` | 897.148 | 894.553 | 895.170 | 899.120 | 909.473 | 899.195 |
+| `bulk_copy_8m` | 136.984 | 135.153 | 135.730 | 135.440 | 146.595 | 135.837 |
+| `simd_loop` | 533.577 | 530.896 | 533.306 | 532.835 | 534.303 | 534.254 |
+| `many_functions` | 0.388 | 0.379 | 0.387 | 0.302 | 0.390 | 0.294 |
+| `unary_conversion` | 751.388 | 756.045 | 742.396 | 745.117 | 743.864 | 737.288 |
+| `memory_widths` | 1484.294 | 1515.036 | 1466.793 | 1455.011 | 1462.141 | 1458.007 |
+| `recursive_calls` | 9.020 | 8.850 | 9.015 | 7.718 | 8.840 | 7.548 |
+| `large_mixed_body` | 87.829 | 90.968 | 83.432 | 86.035 | 83.169 | 82.720 |
+| `cross_instance` | 743.382 | 713.420 | 736.397 | 731.346 | 714.109 | 707.984 |
+
+The isolated return change improves direct/indirect calls by about 2–3% and
+cross-instance calls by 4%. Floating binary updates improve the float loop by 4%
+and the large mixed body by 5%. Combined fresh invocations improve call-heavy
+cases by 2–4% and the mixed body by 5%; other instruction-heavy cases are mostly
+within 1–2%. Explicit restart reduces the tiny identity-call time by 63%, the
+short many-function invocation by 24%, and the recursive invocation by 16%
+relative to the baseline's fresh executions. These reuse gains include avoided
+frame/local allocation and destruction, not just interpreter dispatch.
+
+The full run's fresh bulk-copy measurement is 7% slower, with wide timing ranges
+and simultaneous variation in the Wasmi control. Its restart measurement is
+unchanged. Two focused repeat pairs, in opposite run orders after verification
+finished, measured fresh baseline/combined times of 136.013/136.313 µs and
+135.450/136.094 µs: within 0.5%. The 7% difference did not reproduce.
+
+[Raw output](benchmarks/runtime-followup-arm64-macos.txt) includes all variants,
+measurement order, source hashes, and timing ranges. The
+[CSV](benchmarks/runtime-followup-arm64-macos.csv) preserves the pilot, follow-up,
+full-run, and focused bulk-copy samples (9,576 total), with separate round/variant columns.

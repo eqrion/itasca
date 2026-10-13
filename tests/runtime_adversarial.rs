@@ -131,6 +131,61 @@ fn suspended_indirect_call_resolves_current_table_and_recomputes_cost() {
 }
 
 #[test]
+fn indirect_lookup_errors_wait_for_fuel_and_are_retried_after_suspension() {
+    let code = module(
+        r#"(module
+        (type $t (func (result i32)))
+        (table (export "table") 1 funcref)
+        (func (export "good") (type $t) i32.const 17)
+        (func (export "bad") (result i64) i64.const 29)
+        (func (export "run") (param i32) (result i32)
+          local.get 0 call_indirect (type $t)))"#,
+    );
+    let offsets = code.function_source_offsets(2).unwrap();
+    let mut store = Store::new();
+    let instance = finish(&mut store, Rc::clone(&code));
+    let run = function(&store, instance, b"run");
+    let good = function(&store, instance, b"good");
+    let bad = function(&store, instance, b"bad");
+    let Extern::Table(table) = store.export(instance, b"table").unwrap().unwrap() else {
+        panic!("expected table")
+    };
+    for (index, entry, trap) in [
+        (0, None, Trap::UninitializedElement),
+        (0, Some(bad), Trap::IndirectCallTypeMismatch),
+        (1, Some(good), Trap::TableOutOfBounds),
+    ] {
+        for repair in [false, true] {
+            store.set_table(table, 0, Value::FuncRef(entry)).unwrap();
+            let mut execution = Execution::new(&store, run, &[Value::I32(index)]).unwrap();
+            // The initial call costs two, and local.get costs one.
+            execution.add_fuel(3).unwrap();
+            for _ in 0..2 {
+                assert!(matches!(execution.run(&mut store), Outcome::Suspended));
+                assert_eq!(execution.fuel(), 0);
+                assert_eq!(execution.source_offset(&store).unwrap(), Some(offsets[1]));
+            }
+            if repair && index == 0 {
+                store
+                    .set_table(table, 0, Value::FuncRef(Some(good)))
+                    .unwrap();
+                execution.add_fuel(4).unwrap();
+                match execution.run(&mut store) {
+                    Outcome::Returned(values) => assert_eq!(values, [Value::I32(17)]),
+                    other => panic!("unexpected result: {other:?}"),
+                }
+            } else {
+                execution.add_fuel(1).unwrap();
+                assert!(matches!(execution.run(&mut store),
+                    Outcome::Failed(RuntimeError::Trap(actual)) if actual == trap));
+                assert_eq!(execution.source_offset(&store).unwrap(), Some(offsets[2]));
+            }
+            assert_eq!(execution.fuel(), 0);
+        }
+    }
+}
+
+#[test]
 fn provisional_failures_restore_aggregate_memory_and_table_budgets() {
     let mut store = Store::with_limits(StoreLimits {
         max_objects: 4,

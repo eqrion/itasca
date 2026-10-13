@@ -325,3 +325,120 @@ fn trap_does_not_undo_prior_memory_effects() {
     };
     assert_eq!(store.memory(m).unwrap()[0], 55);
 }
+
+#[test]
+fn restart_reuses_completed_executions_and_preserves_failed_checks() {
+    let mut store = Store::new();
+    let i = instance(
+        &mut store,
+        r#"(module
+      (func (export "fresh") (param i32) (result i32 i32) (local i32)
+        local.get 1 local.get 0 local.set 1 local.get 1)
+      (func (export "trap") (param i32) (result i32)
+        local.get 0 i32.const 0 i32.div_u))"#,
+        &[],
+    );
+    let fresh = func(&store, i, "fresh");
+    let trap = func(&store, i, "trap");
+    let mut e = Execution::new(&store, fresh, &[Value::I32(7)]).unwrap();
+    assert_eq!(
+        e.restart(&store, fresh, &[Value::I32(9)]),
+        Err(RuntimeError::InvalidState)
+    );
+    assert!(matches!(e.run(&mut store), Outcome::Suspended));
+    assert_eq!(
+        e.restart(&store, fresh, &[Value::I32(9)]),
+        Err(RuntimeError::InvalidState)
+    );
+    e.add_fuel(100).unwrap();
+    let Outcome::Returned(first) = e.run(&mut store) else {
+        panic!()
+    };
+    assert_eq!(first, [Value::I32(0), Value::I32(7)]);
+    let fuel = e.fuel();
+    assert_eq!(
+        e.restart(&store, fresh, &[Value::I64(1)]),
+        Err(RuntimeError::TypeMismatch)
+    );
+    assert_eq!(e.fuel(), fuel);
+    let other = Store::new();
+    assert_eq!(
+        e.restart(&other, fresh, &[Value::I32(9)]),
+        Err(RuntimeError::WrongStore)
+    );
+    e.restart(&store, trap, &[Value::I32(9)]).unwrap();
+    assert_eq!(e.fuel(), 0);
+    assert_eq!(e.source_offset(&store).unwrap(), None);
+    e.add_fuel(100).unwrap();
+    assert!(matches!(
+        e.run(&mut store),
+        Outcome::Failed(RuntimeError::Trap(Trap::IntegerDivideByZero))
+    ));
+    let offset = e.source_offset(&store).unwrap();
+    let fuel = e.fuel();
+    assert!(offset.is_some());
+    assert_eq!(
+        e.restart(&store, fresh, &[]),
+        Err(RuntimeError::TypeMismatch)
+    );
+    assert_eq!(e.source_offset(&store).unwrap(), offset);
+    assert_eq!(e.fuel(), fuel);
+    // Restart after a trap clears the still-live frames, operands and locals.
+    e.restart(&store, fresh, &[Value::I32(11)]).unwrap();
+    e.add_fuel(100).unwrap();
+    let Outcome::Returned(second) = e.run(&mut store) else {
+        panic!()
+    };
+    assert_eq!(second, [Value::I32(0), Value::I32(11)]);
+    assert_eq!(first, [Value::I32(0), Value::I32(7)]);
+}
+
+#[test]
+fn restart_rejects_pending_host_and_rechecks_reference_ownership() {
+    let mut store = Store::new();
+    let host = store
+        .define_host(
+            FuncType {
+                params: vec![ValueType::ExternRef],
+                results: vec![ValueType::ExternRef],
+            },
+            7,
+        )
+        .unwrap();
+    let mut e = Execution::new(&store, host, &[Value::ExternRef(None)]).unwrap();
+    e.add_fuel(100).unwrap();
+    assert!(matches!(e.run(&mut store), Outcome::NeedsHostCall(_)));
+    assert_eq!(
+        e.restart(&store, host, &[Value::ExternRef(None)]),
+        Err(RuntimeError::InvalidState)
+    );
+    e.resume_host(&store, Err(RuntimeError::HostFailure))
+        .unwrap();
+    assert_eq!(
+        e.restart(&store, host, &[Value::ExternRef(None)]),
+        Err(RuntimeError::InvalidState)
+    );
+    assert!(matches!(
+        e.run(&mut store),
+        Outcome::Failed(RuntimeError::HostFailure)
+    ));
+    let mut other = Store::new();
+    let foreign = other.define_extern(1).unwrap();
+    assert_eq!(
+        e.restart(&store, host, &[Value::ExternRef(Some(foreign))]),
+        Err(RuntimeError::WrongStore)
+    );
+    let own = store.define_extern(2).unwrap();
+    e.restart(&store, host, &[Value::ExternRef(Some(own))])
+        .unwrap();
+    e.add_fuel(100).unwrap();
+    let Outcome::NeedsHostCall(request) = e.run(&mut store) else {
+        panic!()
+    };
+    assert_eq!(request.arguments, [Value::ExternRef(Some(own))]);
+    e.resume_host(&store, Ok(&request.arguments)).unwrap();
+    let Outcome::Returned(values) = e.run(&mut store) else {
+        panic!()
+    };
+    assert_eq!(values, [Value::ExternRef(Some(own))]);
+}

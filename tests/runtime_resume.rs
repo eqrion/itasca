@@ -133,3 +133,100 @@ fn arbitrary_fuel_partitions_preserve_all_observations_and_charges() {
         }
     }
 }
+
+#[test]
+fn single_step_source_offsets_follow_nested_calls_and_returns() {
+    let text = r#"(module
+      (type $t (func (result i32)))
+      (table 1 funcref)
+      (elem (i32.const 0) $leaf)
+      (func $leaf (type $t) i32.const 3)
+      (func $middle (type $t) call $leaf i32.const 4 i32.add)
+      (func (export "run") (type $t)
+        call $middle i32.const 0 call_indirect (type $t) i32.add))"#;
+    let buffer = wast::parser::ParseBuffer::new(text).unwrap();
+    let bytes = wast::parser::parse::<wast::Wat>(&buffer)
+        .unwrap()
+        .encode()
+        .unwrap();
+    let code = Rc::new(compile(&bytes, ValidationProfile::Wasm2).unwrap());
+    let leaf = code.function_source_offsets(0).unwrap();
+    let middle = code.function_source_offsets(1).unwrap();
+    let run = code.function_source_offsets(2).unwrap();
+    let expected = [
+        run[0], middle[0], leaf[0], leaf[1], middle[1], middle[2], middle[3], run[1], run[2],
+        leaf[0], leaf[1], run[3], run[4],
+    ];
+    let mut store = Store::new();
+    let mut pending = store.instantiate(Rc::clone(&code), &[]).unwrap();
+    assert!(matches!(pending.run(&mut store), Outcome::Returned(_)));
+    let Extern::Func(function) = store
+        .export(pending.instance().unwrap(), b"run")
+        .unwrap()
+        .unwrap()
+    else {
+        panic!("expected function")
+    };
+    let mut execution = Execution::new(&store, function, &[]).unwrap();
+    for offset in expected {
+        execution.add_fuel(1).unwrap();
+        assert!(matches!(execution.run(&mut store), Outcome::Suspended));
+        assert_eq!(execution.fuel(), 0);
+        assert_eq!(execution.source_offset(&store).unwrap(), Some(offset));
+    }
+    execution.add_fuel(1).unwrap();
+    match execution.run(&mut store) {
+        Outcome::Returned(values) => assert_eq!(values, [Value::I32(10)]),
+        other => panic!("unexpected result: {other:?}"),
+    }
+    assert_eq!(execution.fuel(), 0);
+    assert_eq!(execution.source_offset(&store).unwrap(), None);
+}
+
+#[test]
+fn traps_publish_cached_pc_and_fuel() {
+    for (body, trap, charged, next) in [
+        (
+            "i32.const 7 i32.const 0 i32.div_u drop",
+            Trap::IntegerDivideByZero,
+            4,
+            3,
+        ),
+        ("i32.const -1 i32.load drop", Trap::MemoryOutOfBounds, 3, 2),
+        ("i32.const 1 drop unreachable nop", Trap::Unreachable, 4, 3),
+    ] {
+        let text = format!("(module (memory 1) (func (export \"run\") {body}))");
+        let buffer = wast::parser::ParseBuffer::new(&text).unwrap();
+        let bytes = wast::parser::parse::<wast::Wat>(&buffer)
+            .unwrap()
+            .encode()
+            .unwrap();
+        let code = Rc::new(compile(&bytes, ValidationProfile::Wasm2).unwrap());
+        let next_offset = code.function_source_offsets(0).unwrap()[next];
+        let mut store = Store::new();
+        let mut pending = store.instantiate(code, &[]).unwrap();
+        assert!(matches!(pending.run(&mut store), Outcome::Returned(_)));
+        let Extern::Func(function) = store
+            .export(pending.instance().unwrap(), b"run")
+            .unwrap()
+            .unwrap()
+        else {
+            panic!("expected function")
+        };
+        for partitioned in [false, true] {
+            let mut execution = Execution::new(&store, function, &[]).unwrap();
+            if partitioned {
+                execution.add_fuel(charged - 1).unwrap();
+                assert!(matches!(execution.run(&mut store), Outcome::Suspended));
+                assert_eq!(execution.fuel(), 0);
+                execution.add_fuel(101 - charged).unwrap();
+            } else {
+                execution.add_fuel(100).unwrap();
+            }
+            assert!(matches!(execution.run(&mut store),
+                Outcome::Failed(RuntimeError::Trap(actual)) if actual == trap));
+            assert_eq!(execution.fuel(), 100 - charged);
+            assert_eq!(execution.source_offset(&store).unwrap(), Some(next_offset));
+        }
+    }
+}

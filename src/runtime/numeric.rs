@@ -212,31 +212,132 @@ fn trunc_int(x: f64, width: u32, signed: bool, saturating: bool) -> Result<u64, 
     Ok(if signed { (t as i64) as u64 } else { t as u64 })
 }
 
+// Nontrapping integer binary operators replace the left operand after popping
+// the right. Type/underflow errors still consume exactly the original operands.
+#[inline(always)]
+fn binary_i32(opcode: u16, stack: &mut Vec<Value>) -> Result<(), RuntimeError> {
+    let y = i32_pop(stack)?;
+    let index = stack
+        .len()
+        .checked_sub(1)
+        .ok_or(RuntimeError::InvalidState)?;
+    let x = match stack[index] {
+        Value::I32(x) => x,
+        _ => {
+            pop(stack)?;
+            return Err(RuntimeError::TypeMismatch);
+        }
+    };
+    let result = match opcode {
+        0x46..=0x4f => compare_int(opcode - 0x46, x as u64, y as u64, 32) as u32,
+        0x6a => x.wrapping_add(y),
+        0x6b => x.wrapping_sub(y),
+        0x6c => x.wrapping_mul(y),
+        0x71 => x & y,
+        0x72 => x | y,
+        0x73 => x ^ y,
+        0x74 => x.wrapping_shl(y),
+        0x75 => (x as i32).wrapping_shr(y) as u32,
+        0x76 => x.wrapping_shr(y),
+        0x77 => x.rotate_left(y),
+        _ => x.rotate_right(y),
+    };
+    stack[index] = Value::I32(result);
+    Ok(())
+}
+
+#[inline(always)]
+fn binary_i64(opcode: u16, stack: &mut Vec<Value>) -> Result<(), RuntimeError> {
+    let y = i64_pop(stack)?;
+    let index = stack
+        .len()
+        .checked_sub(1)
+        .ok_or(RuntimeError::InvalidState)?;
+    let x = match stack[index] {
+        Value::I64(x) => x,
+        _ => {
+            pop(stack)?;
+            return Err(RuntimeError::TypeMismatch);
+        }
+    };
+    let result = match opcode {
+        0x51..=0x5a => Value::I32(compare_int(opcode - 0x51, x, y, 64) as u32),
+        _ => Value::I64(match opcode {
+            0x7c => x.wrapping_add(y),
+            0x7d => x.wrapping_sub(y),
+            0x7e => x.wrapping_mul(y),
+            0x83 => x & y,
+            0x84 => x | y,
+            0x85 => x ^ y,
+            0x86 => x.wrapping_shl(y as u32),
+            0x87 => (x as i64).wrapping_shr(y as u32) as u64,
+            0x88 => x.wrapping_shr(y as u32),
+            0x89 => x.rotate_left(y as u32),
+            _ => x.rotate_right(y as u32),
+        }),
+    };
+    stack[index] = result;
+    Ok(())
+}
+
+#[inline(always)]
+fn binary_f32(opcode: u16, stack: &mut Vec<Value>) -> Result<(), RuntimeError> {
+    let y = f32_pop(stack)?;
+    let index = stack
+        .len()
+        .checked_sub(1)
+        .ok_or(RuntimeError::InvalidState)?;
+    let x = match stack[index] {
+        Value::F32(x) => x,
+        _ => {
+            pop(stack)?;
+            return Err(RuntimeError::TypeMismatch);
+        }
+    };
+    let result = if opcode <= 0x60 {
+        let x = f32::from_bits(x);
+        let y = f32::from_bits(y);
+        Value::I32(compare_float(opcode - 0x5b, x as f64, y as f64) as u32)
+    } else {
+        Value::F32(binary32(opcode - 0x92, x, y))
+    };
+    stack[index] = result;
+    Ok(())
+}
+#[inline(always)]
+fn binary_f64(opcode: u16, stack: &mut Vec<Value>) -> Result<(), RuntimeError> {
+    let y = f64_pop(stack)?;
+    let index = stack
+        .len()
+        .checked_sub(1)
+        .ok_or(RuntimeError::InvalidState)?;
+    let x = match stack[index] {
+        Value::F64(x) => x,
+        _ => {
+            pop(stack)?;
+            return Err(RuntimeError::TypeMismatch);
+        }
+    };
+    let result = if opcode <= 0x66 {
+        let x = f64::from_bits(x);
+        let y = f64::from_bits(y);
+        Value::I32(compare_float(opcode - 0x61, x, y) as u32)
+    } else {
+        Value::F64(binary64(opcode - 0xa0, x, y))
+    };
+    stack[index] = result;
+    Ok(())
+}
 /// Executes one scalar numeric opcode; 0x100..0x107 encode FC trunc_sat 0..7.
+#[inline(always)]
 pub(super) fn scalar(opcode: u16, stack: &mut Vec<Value>) -> Result<(), RuntimeError> {
     let result = match opcode {
         0x45 => Value::I32((i32_pop(stack)? == 0) as u32),
-        0x46..=0x4f => {
-            let y = i32_pop(stack)?;
-            let x = i32_pop(stack)?;
-            Value::I32(compare_int(opcode - 0x46, x as u64, y as u64, 32) as u32)
-        }
+        0x46..=0x4f | 0x6a..=0x6c | 0x71..=0x78 => return binary_i32(opcode, stack),
         0x50 => Value::I32((i64_pop(stack)? == 0) as u32),
-        0x51..=0x5a => {
-            let y = i64_pop(stack)?;
-            let x = i64_pop(stack)?;
-            Value::I32(compare_int(opcode - 0x51, x, y, 64) as u32)
-        }
-        0x5b..=0x60 => {
-            let y = f32::from_bits(f32_pop(stack)?);
-            let x = f32::from_bits(f32_pop(stack)?);
-            Value::I32(compare_float(opcode - 0x5b, x as f64, y as f64) as u32)
-        }
-        0x61..=0x66 => {
-            let y = f64::from_bits(f64_pop(stack)?);
-            let x = f64::from_bits(f64_pop(stack)?);
-            Value::I32(compare_float(opcode - 0x61, x, y) as u32)
-        }
+        0x51..=0x5a | 0x7c..=0x7e | 0x83..=0x8a => return binary_i64(opcode, stack),
+        0x5b..=0x60 | 0x92..=0x98 => return binary_f32(opcode, stack),
+        0x61..=0x66 | 0xa0..=0xa6 => return binary_f64(opcode, stack),
         0x67..=0x69 => {
             let x = i32_pop(stack)?;
             Value::I32(match opcode {
@@ -245,7 +346,7 @@ pub(super) fn scalar(opcode: u16, stack: &mut Vec<Value>) -> Result<(), RuntimeE
                 _ => x.count_ones(),
             })
         }
-        0x6a..=0x78 => {
+        0x6d..=0x70 => {
             let y = i32_pop(stack)?;
             let x = i32_pop(stack)?;
             if (0x6d..=0x70).contains(&opcode) && y == 0 {
@@ -255,21 +356,10 @@ pub(super) fn scalar(opcode: u16, stack: &mut Vec<Value>) -> Result<(), RuntimeE
                 return Err(RuntimeError::Trap(Trap::IntegerOverflow));
             }
             Value::I32(match opcode {
-                0x6a => x.wrapping_add(y),
-                0x6b => x.wrapping_sub(y),
-                0x6c => x.wrapping_mul(y),
                 0x6d => ((x as i32) / (y as i32)) as u32,
                 0x6e => x / y,
                 0x6f => (x as i32).wrapping_rem(y as i32) as u32,
-                0x70 => x % y,
-                0x71 => x & y,
-                0x72 => x | y,
-                0x73 => x ^ y,
-                0x74 => x.wrapping_shl(y),
-                0x75 => (x as i32).wrapping_shr(y) as u32,
-                0x76 => x.wrapping_shr(y),
-                0x77 => x.rotate_left(y),
-                _ => x.rotate_right(y),
+                _ => x % y,
             })
         }
         0x79..=0x7b => {
@@ -280,7 +370,7 @@ pub(super) fn scalar(opcode: u16, stack: &mut Vec<Value>) -> Result<(), RuntimeE
                 _ => x.count_ones(),
             } as u64)
         }
-        0x7c..=0x8a => {
+        0x7f..=0x82 => {
             let y = i64_pop(stack)?;
             let x = i64_pop(stack)?;
             if (0x7f..=0x82).contains(&opcode) && y == 0 {
@@ -290,35 +380,14 @@ pub(super) fn scalar(opcode: u16, stack: &mut Vec<Value>) -> Result<(), RuntimeE
                 return Err(RuntimeError::Trap(Trap::IntegerOverflow));
             }
             Value::I64(match opcode {
-                0x7c => x.wrapping_add(y),
-                0x7d => x.wrapping_sub(y),
-                0x7e => x.wrapping_mul(y),
                 0x7f => ((x as i64) / (y as i64)) as u64,
                 0x80 => x / y,
                 0x81 => (x as i64).wrapping_rem(y as i64) as u64,
-                0x82 => x % y,
-                0x83 => x & y,
-                0x84 => x | y,
-                0x85 => x ^ y,
-                0x86 => x.wrapping_shl(y as u32),
-                0x87 => (x as i64).wrapping_shr(y as u32) as u64,
-                0x88 => x.wrapping_shr(y as u32),
-                0x89 => x.rotate_left(y as u32),
-                _ => x.rotate_right(y as u32),
+                _ => x % y,
             })
         }
         0x8b..=0x91 => Value::F32(unary32(opcode - 0x8b, f32_pop(stack)?)),
-        0x92..=0x98 => {
-            let y = f32_pop(stack)?;
-            let x = f32_pop(stack)?;
-            Value::F32(binary32(opcode - 0x92, x, y))
-        }
         0x99..=0x9f => Value::F64(unary64(opcode - 0x99, f64_pop(stack)?)),
-        0xa0..=0xa6 => {
-            let y = f64_pop(stack)?;
-            let x = f64_pop(stack)?;
-            Value::F64(binary64(opcode - 0xa0, x, y))
-        }
         0xa7 => Value::I32(i64_pop(stack)? as u32),
         0xa8..=0xab | 0xae..=0xb1 | 0x100..=0x107 => {
             let (op, width, sat) = if opcode >= 0x100 {
@@ -371,6 +440,55 @@ pub(super) fn scalar(opcode: u16, stack: &mut Vec<Value>) -> Result<(), RuntimeE
 mod tests {
     use super::*;
     use alloc::vec;
+    #[test]
+    fn in_place_binary_errors_preserve_operand_consumption() {
+        let mut opcodes = Vec::new();
+        opcodes.extend(0x46..=0x4f);
+        opcodes.extend(0x6a..=0x6c);
+        opcodes.extend(0x71..=0x78);
+        opcodes.extend(0x51..=0x5a);
+        opcodes.extend(0x7c..=0x7e);
+        opcodes.extend(0x83..=0x8a);
+        opcodes.extend(0x5b..=0x66);
+        opcodes.extend(0x92..=0x98);
+        opcodes.extend(0xa0..=0xa6);
+        for opcode in opcodes {
+            let operand = if matches!(opcode, 0x46..=0x4f | 0x6a..=0x6c | 0x71..=0x78) {
+                Value::I32(7)
+            } else if matches!(opcode, 0x5b..=0x60 | 0x92..=0x98) {
+                Value::F32(7.0f32.to_bits())
+            } else if matches!(opcode, 0x61..=0x66 | 0xa0..=0xa6) {
+                Value::F64(7.0f64.to_bits())
+            } else {
+                Value::I64(7)
+            };
+            let wrong = Value::FuncRef(None);
+            let prefix = Value::V128(0x1234);
+            for (input, expected, error) in [
+                (vec![], vec![], RuntimeError::InvalidState),
+                (vec![operand], vec![], RuntimeError::InvalidState),
+                (vec![wrong], vec![], RuntimeError::TypeMismatch),
+                (
+                    vec![prefix, wrong, operand],
+                    vec![prefix],
+                    RuntimeError::TypeMismatch,
+                ),
+                (
+                    vec![prefix, operand, wrong],
+                    vec![prefix, operand],
+                    RuntimeError::TypeMismatch,
+                ),
+            ] {
+                let mut stack = input;
+                assert_eq!(scalar(opcode, &mut stack), Err(error), "opcode {opcode:x}");
+                assert_eq!(stack, expected, "opcode {opcode:x}");
+            }
+            let mut stack = vec![prefix, operand, operand];
+            scalar(opcode, &mut stack).unwrap();
+            assert_eq!(stack.len(), 2);
+            assert_eq!(stack[0], prefix);
+        }
+    }
     #[test]
     fn truncation_checks_truncated_value_and_exclusive_upper_bound() {
         assert_eq!(

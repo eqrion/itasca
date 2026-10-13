@@ -80,6 +80,39 @@ Native floating arithmetic and casts additionally need backend support or an
 alternative modeled implementation. This decision does not block execution in
 the independently tested Rust runtime.
 
+The frame-loop optimization was also checked with a reduced probe of cached
+frame indices, loop exits on calls/returns, and call-result reuse after charging.
+That probe emitted Lean definitions and compiled without external axioms or
+placeholders. Non-call instruction handlers and existing library dependencies
+were represented by concrete stand-ins; it is not extraction of the interpreter.
+Probing the full dispatch shape in both the original and optimized loops finds
+the same pinned Aeneas borrow-join failure at the `br_table` index selection.
+`Slice.last_mut` and `Vec.truncate` also require external models. Those gaps join
+the numeric, allocation, and ownership work required for future runtime
+extraction; no probe artifacts or new assumptions enter the validator audit.
+
+The subsequent stack/dispatch/state-cache experiments also have pinned probes.
+The exact new integer binary helpers and instruction-constructor mapping extract
+and compile using the existing concrete `Vec.pop` model. A reduced probe retains
+the new frame wrapper, cached PC/fuel loop, and local/constant dispatch, with
+concrete stand-ins for other handlers and runtime dependencies. It compiles
+using the same `Vec.pop` model and a scratch list-based model of the existing
+`Slice.last` dependency. The checked helper declarations have no transitive
+axioms beyond the standard Lean logical foundations. These are compatibility
+checks, not runtime correspondence proofs; all probe files remain outside the
+project's proof sources and audit imports.
+
+The return/float/restart pass adds no new native numeric primitives. Its reduced
+floating stack probe preserves the new operand-update and error-control paths,
+using concrete integer stand-ins for the existing native floating helpers. The
+new restart body also extracts with reduced concrete store, argument-checking,
+and reservation dependencies. Both generated modules compile, and the checked
+helper declarations depend only on the three standard logical axioms. Restart
+uses `Vec.clear`, for which the probe supplies a concrete empty-vector model;
+capacity and allocation failure remain outside that model. These probes check
+control/borrowing compatibility, not floating semantics, the full runtime, or
+restart correctness. They add no project imports, models, or assumptions.
+
 The emitted bitwise, wrapping/rotation, `u128` lane, and frame-state modules were
 also compiled successfully with `lake env lean` in the project's existing Lean
 environment. This checks those small generated models; it is not a runtime
