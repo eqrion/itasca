@@ -23,6 +23,15 @@ import Itasca.Wasm2.Trace.Correspondence
 import Lean.Elab.Command
 import Lean.Util.CollectAxioms
 
+/-!
+# Axiom audit
+
+Checks that every declaration from an `Itasca` module depends only on `propext`,
+`Classical.choice` and `Quot.sound`, and fails the build otherwise. The import list is
+generated: it names the sink modules of the import graph, so that every handwritten module is
+reachable from this file. Set `ITASCA_AUDIT_VERBOSE=1` to print the axioms of each declaration.
+-/
+
 -- Select by source module, not namespace or declaration kind. This includes
 -- private proofs, definitions with proof fields, and external models declared
 -- in Aeneas namespaces. Upstream declarations are checked through dependencies.
