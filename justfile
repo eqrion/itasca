@@ -32,6 +32,10 @@ profile module:
 trust:
     @make trust
 
+# Point Itasca.Audit at the current sink modules after adding or moving files.
+audit-imports:
+    @make -C lean audit-imports
+
 spec-check:
     @make spec-check
 

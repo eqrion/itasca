@@ -13,7 +13,6 @@ import Itasca.Examples.Wasm1.VisitorTrace
 import Itasca.Examples.Wasm2.Body
 import Itasca.Examples.Wasm2.DeclaredReferences
 import Itasca.Examples.Wasm2.Module
-import Itasca.Generated.FunsExternal
 import Itasca.Module.Code.EntryTrace
 import Itasca.Profile.BinaryUnique
 import Itasca.Spec.Checks

@@ -18,7 +18,7 @@ CHARON_FLAGS := --preset=aeneas --sysroot=default --rustc-arg=--cfg=charon \
 	--exclude='{impl core::marker::Copy for _}'
 
 .PHONY: tools patch-aeneas patch-spectec aeneas-build extract extract-check llbc \
- prove trust audit-coverage clean checkpoint spec-build spec-generate spec-update \
+ prove trust audit-coverage audit-imports clean checkpoint spec-build spec-generate spec-update \
  spec-compare spec-check regressions
 
 # Source patches are repeatable and fail if the checkout has incompatible edits.
@@ -55,6 +55,10 @@ extract-check: aeneas-build llbc
 
 audit-coverage:
 	python3 scripts/check_audit.py
+
+# Point Itasca.Audit at the current sink modules after adding or moving files.
+audit-imports:
+	python3 scripts/check_audit.py --write
 
 prove: audit-coverage
 	lake build
