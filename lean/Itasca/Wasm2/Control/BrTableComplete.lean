@@ -21,7 +21,7 @@ theorem code.check_suffix.complete_of_base (st : code.OpIterState) (env : module
 
 /-- The actual label loop accepts an independent vector whose targets all fit
 the original suffix and have the same arity. No successful-reader premise occurs. -/
-theorem code.branch_table_loop.complete (st : code.BodyState) (data : Slice U8)
+theorem Wasm2.branchTableLoop.complete (st : code.BodyState) (data : Slice U8)
     (env : module.Env) (count i : U32) (arity : Option Usize) (n : Usize)
     (cs : List code.Ctrl) (c : code.Ctrl) (depths : List U32) (next : Usize)
     (hctrls : st.core.ctrls.val = cs ++ [c]) (hs : c.value_stack_base.val ≤ st.core.vals.val.length)
@@ -30,7 +30,7 @@ theorem code.branch_table_loop.complete (st : code.BodyState) (data : Slice U8)
     (hd : BrTable.LabelsDecoded data st.core.pos depths next)
     (ht : Wasm2.TableTargets env st depths (some n))
     (harity : arity = none ∨ arity = some n) :
-    ∃ s, code.branch_table_loop st.core st.blocks data env count arity i = .ok (.Ok (), s) ∧
+    ∃ s, Wasm2.branchTableLoop st.core st.blocks data env count arity i = .ok (.Ok (), s) ∧
       s.core.vals.val = st.core.vals.val.take c.value_stack_base.val ∧
       s.core.ctrls.val = cs ++ [{ c with polymorphic_base := true }] ∧
       s.blocks = st.blocks ∧ s.core.pos = next := by
@@ -49,7 +49,7 @@ theorem code.branch_table_loop.complete (st : code.BodyState) (data : Slice U8)
     have hs' : c.value_stack_base.val ≤ s.core.vals.val.length := hs
     have hcheck := code.check_suffix.complete_of_base s.core env view ts
       (by simpa [Control.base, s, hctrls] using hs') hts hsuffix
-    have hbody := code.branch_table_loop.body_checked st s data env count i arity view n
+    have hbody := Wasm2.branchTableLoop.body_checked st s data env count i arity view n
       hread hlenread hcheck harity
     cases depths with
     | nil =>
@@ -62,7 +62,7 @@ theorem code.branch_table_loop.complete (st : code.BodyState) (data : Slice U8)
       obtain ⟨s', hm, hv, _, hc, hp⟩ := WP.spec_imp_exists
         (code.mark_unreachable.spec s.core cs c hctrls hs')
       refine ⟨{s with core := s'}, ?_, hv, hc, by simp [hc, hctrls, s], hp.trans hnxt.symm⟩
-      unfold code.branch_table_loop code.branch_table_with_loop
+      unfold Wasm2.branchTableLoop code.branch_table_with_loop
       rw [loop]
       dsimp only
       rw [Wasm2.tableBody_eq data env count st.core st.blocks arity i, hbody]
@@ -79,11 +79,11 @@ theorem code.branch_table_loop.complete (st : code.BodyState) (data : Slice U8)
         (by scalar_tac) (by simp only [List.length_cons] at hlen ⊢; scalar_tac)
         hrest htargets (.inr rfl)
       refine ⟨out, ?_, hv, hc, hb, hp⟩
-      unfold code.branch_table_loop code.branch_table_with_loop
+      unfold Wasm2.branchTableLoop code.branch_table_with_loop
       rw [loop]
       dsimp only
       rw [Wasm2.tableBody_eq data env count st.core st.blocks arity i, hbody]
-      simpa [hine, hj, code.branch_table_loop, code.branch_table_with_loop, Std.bind_assoc] using hrec
+      simpa [hine, hj, Wasm2.branchTableLoop, code.branch_table_with_loop, Std.bind_assoc] using hrec
 
 /-- The generated common-subtype branch-table premise suffices for each
 concrete target check, while the selector is consumed just once. -/
@@ -130,7 +130,7 @@ theorem code.branch_table.complete (st : code.BodyState) (data : Slice U8)
       have hmono := DeclarativeComplete.realizes_mono hreal'
         (DeclarativeComplete.result_sub_append (DeclarativeComplete.result_sub_refl front) hsub)
       simpa [popped, hvc, Control.base, hcc, hctrls, hb] using hmono
-  obtain ⟨s, hloop, hvals, hctrls', hblocks, hpos⟩ := code.branch_table_loop.complete
+  obtain ⟨s, hloop, hvals, hctrls', hblocks, hpos⟩ := Wasm2.branchTableLoop.complete
     popped data env count 0#u32 none n cs c (depths ++ [default]) next
     (by simpa [popped, hcc] using hctrls) hs' (by simpa [popped, hcc] using ha)
     (by simp) (by simp [hlen])

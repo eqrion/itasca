@@ -118,7 +118,7 @@ theorem Pending.step_drop {data env locals index st}
       .no_immediate p.inbounds (by simpa [global_simps] using hbyte)
         (by simpa [hp] using p.pos) .drop
     apply p.append_scalar_simple s .DROP p.current.ctrl.polymorphic_base rest .instr_case_2 encoded
-      (fun C hC h => hout.multi_prefix_drop C hC p.current.ops h) _ _
+      (fun C hC h => hout.wasm2_prefix_drop C hC p.current.ops h) _ _
       (by have := hout.length; omega)
     · simpa [hc] using hctrls
     · simpa [hstack, hbase] using hv
@@ -256,7 +256,7 @@ theorem Pending.step_numeric_mapped {data env locals index st}
   have hbase : (Control.base st.core).val = outer.length := by simp [Control.base, ctrls, base]
   have hpoly : Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
-  apply WP.spec_mono (code.step.numeric_multi_prefix visitor st.core data env ⟨locals, p.ft.results⟩ opcode op outer
+  apply WP.spec_mono (code.step.numeric_wasm2_prefix visitor st.core data env ⟨locals, p.ft.results⟩ opcode op outer
     p.current.vals v _ hC p.current.ops (by simpa [hpoly] using typed) hmap stack hbase
     hsize hvisitor)
   rintro ⟨res, s, v'⟩ ⟨hc, hp, after, hv, hlen, hout⟩ hok
@@ -293,7 +293,7 @@ theorem Pending.step_select {data env locals index st}
   have hbase : (Control.base st.core).val = outer.length := by simp [Control.base, ctrls, base]
   have hpoly : Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
-  apply WP.spec_mono (code.step_select.multi_prefix visitor st.core data env ⟨locals, p.ft.results⟩ outer
+  apply WP.spec_mono (code.step_select.wasm2_prefix visitor st.core data env ⟨locals, p.ft.results⟩ outer
     p.current.vals v _ hC p.current.ops (by simpa [hpoly] using typed) stack hbase
     hsize hvisitor)
   rintro ⟨res, s, v'⟩ ⟨hc, hp, after, hv, hlen, hout⟩ hok
@@ -359,7 +359,7 @@ theorem Pending.step_local_get {data env locals index st} (p : Pending data env 
     (spine.matches (EnvTranslation.Matches.root env ⟨locals, p.ft.results⟩)).enter _
   rw [code.step_local_get.dispatch]
   apply run_after p _ _ v _ (hvisitor.on_local_get v)
-  refine WP.spec_mono (code.read_local_get.multi_prefix st.core data env ⟨locals, p.ft.results⟩ outer p.current.vals vals
+  refine WP.spec_mono (code.read_local_get.wasm2_prefix st.core data env ⟨locals, p.ft.results⟩ outer p.current.vals vals
     hsize _ hC p.current.ops (by simpa [hpoly] using typed)) ?_
   intro r hr idx hi
   exact p.index_post_after C outer spine header base ctrls vals 0x20#u8 _ hbyte
@@ -377,7 +377,7 @@ theorem Pending.step_local_set {data env locals index st} (p : Pending data env 
     (spine.matches (EnvTranslation.Matches.root env ⟨locals, p.ft.results⟩)).enter _
   rw [code.step_local_set.dispatch]
   apply run_after p _ _ v _ (hvisitor.on_local_set v)
-  refine WP.spec_mono (code.read_local_set.multi_prefix st.core data env ⟨locals, p.ft.results⟩ outer p.current.vals vals
+  refine WP.spec_mono (code.read_local_set.wasm2_prefix st.core data env ⟨locals, p.ft.results⟩ outer p.current.vals vals
     (by simpa [Control.base, ctrls] using base) _ hC p.current.ops (by simpa [hpoly] using typed)) ?_
   intro r hr idx hi
   exact p.index_post_after C outer spine header base ctrls vals 0x21#u8 _ hbyte
@@ -395,7 +395,7 @@ theorem Pending.step_local_tee {data env locals index st} (p : Pending data env 
     (spine.matches (EnvTranslation.Matches.root env ⟨locals, p.ft.results⟩)).enter _
   rw [code.step_local_tee.dispatch]
   apply run_after p _ _ v _ (hvisitor.on_local_tee v)
-  refine WP.spec_mono (code.read_local_tee.multi_prefix st.core data env ⟨locals, p.ft.results⟩ outer p.current.vals vals
+  refine WP.spec_mono (code.read_local_tee.wasm2_prefix st.core data env ⟨locals, p.ft.results⟩ outer p.current.vals vals
     (by simpa [Control.base, ctrls] using base)
     hsize _ hC p.current.ops (by simpa [hpoly] using typed)) ?_
   intro r hr idx hi
@@ -414,7 +414,7 @@ theorem Pending.step_global_get {data env locals index st} (p : Pending data env
     (spine.matches (EnvTranslation.Matches.root env ⟨locals, p.ft.results⟩)).enter _
   rw [code.step_global_get.dispatch]
   apply run_after p _ _ v _ (hvisitor.on_global_get v)
-  refine WP.spec_mono (code.read_global_get.multi_prefix st.core data env ⟨locals, p.ft.results⟩ outer p.current.vals vals
+  refine WP.spec_mono (code.read_global_get.wasm2_prefix st.core data env ⟨locals, p.ft.results⟩ outer p.current.vals vals
     hsize _ hC p.current.ops (by simpa [hpoly] using typed)) ?_
   intro r hr idx hi
   exact p.index_post_after C outer spine header base ctrls vals 0x23#u8 _ hbyte
@@ -432,7 +432,7 @@ theorem Pending.step_global_set {data env locals index st} (p : Pending data env
     (spine.matches (EnvTranslation.Matches.root env ⟨locals, p.ft.results⟩)).enter _
   rw [code.step_global_set.dispatch]
   apply run_after p _ _ v _ (hvisitor.on_global_set v)
-  refine WP.spec_mono (code.read_global_set.multi_prefix st.core data env ⟨locals, p.ft.results⟩ outer p.current.vals vals
+  refine WP.spec_mono (code.read_global_set.wasm2_prefix st.core data env ⟨locals, p.ft.results⟩ outer p.current.vals vals
     (by simpa [Control.base, ctrls] using base) _ hC p.current.ops (by simpa [hpoly] using typed)) ?_
   intro r hr idx hi
   exact p.index_post_after C outer spine header base ctrls vals 0x24#u8 _ hbyte
@@ -472,7 +472,7 @@ theorem Pending.step_memory_size {data env locals index st} (p : Pending data en
     (spine.matches (EnvTranslation.Matches.root env ⟨locals, p.ft.results⟩)).enter _
   rw [code.step_memory_size.dispatch]
   apply run_after p _ _ v _ (fun s _ => hvisitor.on_memory_size v s)
-  refine WP.spec_mono (code.read_memory_size.multi_prefix st.core data env ⟨locals, p.ft.results⟩ outer p.current.vals vals
+  refine WP.spec_mono (code.read_memory_size.wasm2_prefix st.core data env ⟨locals, p.ft.results⟩ outer p.current.vals vals
     hsize _ hC p.current.ops (by simpa [hpoly] using typed)) ?_
   intro r hr u hi
   cases u
@@ -490,7 +490,7 @@ theorem Pending.step_memory_grow {data env locals index st} (p : Pending data en
     (spine.matches (EnvTranslation.Matches.root env ⟨locals, p.ft.results⟩)).enter _
   rw [code.step_memory_grow.dispatch]
   apply run_after p _ _ v _ (fun s _ => hvisitor.on_memory_grow v s)
-  refine WP.spec_mono (code.read_memory_grow.multi_prefix st.core data env ⟨locals, p.ft.results⟩ outer p.current.vals vals
+  refine WP.spec_mono (code.read_memory_grow.wasm2_prefix st.core data env ⟨locals, p.ft.results⟩ outer p.current.vals vals
     (by simpa [Control.base, ctrls] using base) hsize
     _ hC p.current.ops (by simpa [hpoly] using typed)) ?_
   intro r hr u hi
@@ -517,12 +517,12 @@ theorem Pending.step_memory {data env locals index st} (p : Pending data env loc
     cases hs : operation.store with
     | false =>
         simp only [Bool.false_eq_true, ↓reduceIte]
-        exact code.read_load.multi_prefix st.core data env ⟨locals, p.ft.results⟩ outer p.current.vals vals hb
+        exact code.read_load.wasm2_prefix st.core data env ⟨locals, p.ft.results⟩ outer p.current.vals vals hb
           hsize _ hC p.current.ops (by simpa [hpoly] using typed)
           opcode operation hrow hs
     | true =>
         simp only [↓reduceIte]
-        exact code.read_store.multi_prefix st.core data env ⟨locals, p.ft.results⟩ outer p.current.vals vals hb
+        exact code.read_store.wasm2_prefix st.core data env ⟨locals, p.ft.results⟩ outer p.current.vals vals hb
           _ hC p.current.ops (by simpa [hpoly] using typed) opcode operation hrow hs
   rw [code.step_memory.dispatch visitor st.core data env ⟨locals, p.ft.results⟩ v opcode operation hrow]
   apply run_after p _ _ v _ (fun s arg => hvisitor.visit_memory v s opcode arg)

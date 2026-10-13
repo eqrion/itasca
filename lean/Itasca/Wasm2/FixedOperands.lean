@@ -37,7 +37,7 @@ def FixedEffect (poly : Bool) (before : List code.StackType)
     ts = front ++ outputTypes output ∧
     Sequence.Realizes poly before (front ++ inputTypes inputs)
 
-theorem FixedEffect.multi_prefix {poly before inputs output after}
+theorem FixedEffect.wasm2_prefix {poly before inputs output after}
     (h : FixedEffect poly before inputs output after)
     (C : context) (hC : wf_context C) (initial : List valtype) (ops : List instr) (op : instr)
     (hp : TypedPrefix C initial ops poly before) (hw : wf_instr op)

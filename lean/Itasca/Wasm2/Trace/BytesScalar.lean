@@ -179,7 +179,7 @@ theorem step_local_get {data env locals index st} (p : Pending data env locals i
   have hC : EnvTranslation.Matches env ctx
       (Frames.enter C p.current.form p.current.ins p.current.outs) :=
     (spine.matches (EnvTranslation.Matches.root env ctx)).enter _
-  have hs := code.read_local_get.multi_prefix st.core data env ctx outer p.current.vals vals
+  have hs := code.read_local_get.wasm2_prefix st.core data env ctx outer p.current.vals vals
     (by have := capacity; omega)
     _ hC p.current.ops (by simpa [hpoly] using typed)
   rw [hr, WP.spec_ok] at hs
@@ -204,7 +204,7 @@ theorem step_local_set {data env locals index st} (p : Pending data env locals i
   have hC : EnvTranslation.Matches env ctx
       (Frames.enter C p.current.form p.current.ins p.current.outs) :=
     (spine.matches (EnvTranslation.Matches.root env ctx)).enter _
-  have hs := code.read_local_set.multi_prefix st.core data env ctx outer p.current.vals vals
+  have hs := code.read_local_set.wasm2_prefix st.core data env ctx outer p.current.vals vals
     (by simp [Control.base, ctrls, base])
     _ hC p.current.ops (by simpa [hpoly] using typed)
   rw [hr, WP.spec_ok] at hs
@@ -229,7 +229,7 @@ theorem step_local_tee {data env locals index st} (p : Pending data env locals i
   have hC : EnvTranslation.Matches env ctx
       (Frames.enter C p.current.form p.current.ins p.current.outs) :=
     (spine.matches (EnvTranslation.Matches.root env ctx)).enter _
-  have hs := code.read_local_tee.multi_prefix st.core data env ctx outer p.current.vals vals
+  have hs := code.read_local_tee.wasm2_prefix st.core data env ctx outer p.current.vals vals
     (by simp [Control.base, ctrls, base])
     (by have := capacity; omega)
     _ hC p.current.ops (by simpa [hpoly] using typed)
@@ -255,7 +255,7 @@ theorem step_global_get {data env locals index st} (p : Pending data env locals 
   have hC : EnvTranslation.Matches env ctx
       (Frames.enter C p.current.form p.current.ins p.current.outs) :=
     (spine.matches (EnvTranslation.Matches.root env ctx)).enter _
-  have hs := code.read_global_get.multi_prefix st.core data env ctx outer p.current.vals vals
+  have hs := code.read_global_get.wasm2_prefix st.core data env ctx outer p.current.vals vals
     (by have := capacity; omega)
     _ hC p.current.ops (by simpa [hpoly] using typed)
   rw [hr, WP.spec_ok] at hs
@@ -280,7 +280,7 @@ theorem step_global_set {data env locals index st} (p : Pending data env locals 
   have hC : EnvTranslation.Matches env ctx
       (Frames.enter C p.current.form p.current.ins p.current.outs) :=
     (spine.matches (EnvTranslation.Matches.root env ctx)).enter _
-  have hs := code.read_global_set.multi_prefix st.core data env ctx outer p.current.vals vals
+  have hs := code.read_global_set.wasm2_prefix st.core data env ctx outer p.current.vals vals
     (by simp [Control.base, ctrls, base])
     _ hC p.current.ops (by simpa [hpoly] using typed)
   rw [hr, WP.spec_ok] at hs
@@ -306,7 +306,7 @@ theorem step_memory_size {data env locals index st} (p : Pending data env locals
   have hC : EnvTranslation.Matches env ctx
       (Frames.enter C p.current.form p.current.ins p.current.outs) :=
     (spine.matches (EnvTranslation.Matches.root env ctx)).enter _
-  have hs := code.read_memory_size.multi_prefix st.core data env ctx outer p.current.vals vals
+  have hs := code.read_memory_size.wasm2_prefix st.core data env ctx outer p.current.vals vals
     (by have := capacity; omega)
     _ hC p.current.ops (by simpa [hpoly] using typed)
   rw [hr, WP.spec_ok] at hs
@@ -331,7 +331,7 @@ theorem step_memory_grow {data env locals index st} (p : Pending data env locals
   have hC : EnvTranslation.Matches env ctx
       (Frames.enter C p.current.form p.current.ins p.current.outs) :=
     (spine.matches (EnvTranslation.Matches.root env ctx)).enter _
-  have hs := code.read_memory_grow.multi_prefix st.core data env ctx outer p.current.vals vals
+  have hs := code.read_memory_grow.wasm2_prefix st.core data env ctx outer p.current.vals vals
     (by simp [Control.base, ctrls, base])
     (by have := capacity; omega)
     _ hC p.current.ops (by simpa [hpoly] using typed)
@@ -393,12 +393,12 @@ theorem step_memory {data env locals index st} (p : Pending data env locals inde
     cases hstore : operation.store with
     | false =>
       simpa only [hstore, Bool.false_eq_true, ↓reduceIte] using
-        code.read_load.multi_prefix st.core data env ctx outer p.current.vals vals
+        code.read_load.wasm2_prefix st.core data env ctx outer p.current.vals vals
           (by simp [Control.base, ctrls, base]) (by have := capacity; omega)
           _ hC p.current.ops (by simpa [hpoly] using typed) opcode operation hrow hstore
     | true =>
       simpa only [hstore, ↓reduceIte] using
-        code.read_store.multi_prefix st.core data env ctx outer p.current.vals vals
+        code.read_store.wasm2_prefix st.core data env ctx outer p.current.vals vals
           (by simp [Control.base, ctrls, base])
           _ hC p.current.ops (by simpa [hpoly] using typed) opcode operation hrow hstore
   rw [hr, WP.spec_ok] at hs

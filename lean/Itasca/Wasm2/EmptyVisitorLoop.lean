@@ -7,28 +7,16 @@ namespace Itasca
 /-! Checked projections of the actual visiting body loop. The normalized body
 keeps semantic proofs independent of the empty visitor's bookkeeping. -/
 
-def code.validate_multi_value_body_loop.body
-  (data : Slice U8) (v : alloc.vec.Vec types.FuncType)
-  (v1 : alloc.vec.Vec module.Import)
-  (v2 : alloc.vec.Vec module.Global)
-  (v3 : alloc.vec.Vec module.Export)
-  (v4 : alloc.vec.Vec module.Element) (data_count : Option U32)
-  (declared_funcs : alloc.vec.Vec U32) (o : Option U32)
-  (v5 : alloc.vec.Vec U32)
-  (v6 : alloc.vec.Vec types.FuncType)
-  (v7 : alloc.vec.Vec types.TableType)
-  (v8 : alloc.vec.Vec types.MemType)
-  (v9 : alloc.vec.Vec types.GlobalType) (i : Usize)
-  (i1 : Usize) (type_index : U32)
+def Wasm2.emptyVisitorLoop.body
+  (data : Slice U8) (env : module.Env) (type_index : U32)
   (locals : alloc.vec.Vec types.ValueType)
-  (v10 : alloc.vec.Vec types.ValueType)
+  (results : alloc.vec.Vec types.ValueType)
   (st : code.BodyState)
   (visitor : code.EmptyOpVisitor) :
   Result (ControlFlow (code.BodyState ×
     code.EmptyOpVisitor) (core.result.Result Unit
     error.OpError))
   := do
-  let env : module.Env := ⟨v, v1, v2, v3, v4, data_count, declared_funcs, o, v5, v6, v7, v8, v9, i, i1⟩
   let b ← alloc.vec.Vec.is_empty Global st.blocks
   if b
   then
@@ -205,7 +193,7 @@ def code.validate_multi_value_body_loop.body
           let (r1, ois, visitor1) ←
             code.step_wasm2 code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
               { st.core with pos := «end» } data
-              env { locals, results := v10 } op visitor
+              env { locals, results } op visitor
           let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
           match cf1 with
           | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -222,42 +210,27 @@ def code.validate_multi_value_body_loop.body
           Unit (core.convert.FromSame error.OpError) residual
       ok (done r1)
 
-def code.validate_multi_value_body_loop
-  (data : Slice U8) (v : alloc.vec.Vec types.FuncType)
-  (v1 : alloc.vec.Vec module.Import)
-  (v2 : alloc.vec.Vec module.Global)
-  (v3 : alloc.vec.Vec module.Export)
-  (v4 : alloc.vec.Vec module.Element) (data_count : Option U32)
-  (declared_funcs : alloc.vec.Vec U32) (o : Option U32)
-  (v5 : alloc.vec.Vec U32)
-  (v6 : alloc.vec.Vec types.FuncType)
-  (v7 : alloc.vec.Vec types.TableType)
-  (v8 : alloc.vec.Vec types.MemType)
-  (v9 : alloc.vec.Vec types.GlobalType) (i : Usize)
-  (i1 : Usize) (type_index : U32)
+def Wasm2.emptyVisitorLoop
+  (data : Slice U8) (env : module.Env) (type_index : U32)
   (st : code.BodyState)
   (locals : alloc.vec.Vec types.ValueType)
-  (v10 : alloc.vec.Vec types.ValueType)
+  (results : alloc.vec.Vec types.ValueType)
   (visitor : code.EmptyOpVisitor) :
   Result (core.result.Result Unit error.OpError)
   := do
-  let (r, _) ← code.body_loop_loop code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor data
-    ⟨v, v1, v2, v3, v4, data_count, declared_funcs, o, v5, v6, v7, v8, v9, i, i1⟩
-    ⟨locals, v10⟩ type_index .Wasm2 visitor st
+  let (r, _) ← code.body_loop_loop code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor data env
+    ⟨locals, results⟩ type_index .Wasm2 visitor st
   .ok r
 
 /-- Only the placement of the empty visitor changes between the semantic
 adapter and the extracted visiting loop. -/
-theorem code.validate_multi_value_body_loop.body_eq (data : Slice U8) (env : module.Env)
+theorem Wasm2.emptyVisitorLoop.body_eq (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (st : code.BodyState) :
     code.body_loop_loop.body code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       data env ctx index .Wasm2 () st = (do
-      let r ← code.validate_multi_value_body_loop.body data env.types env.imports env.globals
-        env.exports env.elements env.data_count env.declared_funcs env.start env.func_type_indices env.func_types env.table_types
-        env.mem_types env.global_types env.num_imported_funcs env.num_imported_globals
-        index ctx.locals ctx.results st ()
+      let r ← Wasm2.emptyVisitorLoop.body data env index ctx.locals ctx.results st ()
       .ok (match r with | .cont (s, _) => .cont ((), s) | .done result => .done (result, ()))) := by
-  unfold code.body_loop_loop.body code.step_profile code.validate_multi_value_body_loop.body
+  unfold code.body_loop_loop.body code.step_profile Wasm2.emptyVisitorLoop.body
   simp only [code.BodyState.blocks_is_empty, Std.bind_assoc]
   congr 1
   funext b
@@ -334,10 +307,7 @@ def code.bodyCore
                   pos := 0#usize
                 }
             } code.LabelKind.Body (signature.BlockType.TypeIndex type_index)
-        code.validate_multi_value_body_loop data env.types env.imports env.globals
-          env.exports env.elements env.data_count env.declared_funcs env.start env.func_type_indices
-          env.func_types env.table_types env.mem_types env.global_types
-          env.num_imported_funcs env.num_imported_globals type_index st locals
+        Wasm2.emptyVisitorLoop data env type_index st locals
           (alloc.vec.Vec.new types.ValueType) ()
       | core.ops.control_flow.ControlFlow.Break residual =>
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual

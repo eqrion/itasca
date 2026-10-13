@@ -14,7 +14,7 @@ theorem ResultFacts.map_spec {A B : Type} (m : Result A) (f : A → B) (P : B �
 /- Proof-only no-op projections of the shared visiting table loop. The equations
 below connect these state views to the actual extracted generic worker. -/
 
-def code.branch_table_loop.body
+def Wasm2.branchTableLoop.body
   (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (count : Std.U32)
   (ois : _root_.Itasca.code.OpIterState)
   (v : alloc.vec.Vec _root_.Itasca.signature.BlockType)
@@ -82,7 +82,7 @@ def code.branch_table_loop.body
     ok (done (r1, st))
 
 /-- The legacy state view is a projection of the actual visiting loop. -/
-def code.branch_table_loop
+def Wasm2.branchTableLoop
   (ois : code.OpIterState) (blocks : alloc.vec.Vec signature.BlockType)
   (data : Slice U8) (env : module.Env) (count : U32) (arity : Option Usize) (i : U32) :
   Result (core.result.Result Unit error.OpError × code.BodyState) := do
@@ -106,7 +106,7 @@ def Wasm2.tableCore
     let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue _ =>
-      code.branch_table_loop ois st.blocks data env count none 0#u32
+      Wasm2.branchTableLoop ois st.blocks data env count none 0#u32
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r2 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -142,9 +142,9 @@ theorem tableBody_eq (data : Slice U8) (env : module.Env) (count : U32)
     (arity : Option Usize) (i : U32) :
     code.branch_table_with_loop.body code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       data env count ois () arity i =
-      (do let cf ← code.branch_table_loop.body data env count ois blocks arity i
+      (do let cf ← Wasm2.branchTableLoop.body data env count ois blocks arity i
           .ok (tableFlow cf)) := by
-  simp only [code.branch_table_with_loop.body, code.branch_table_loop.body,
+  simp only [code.branch_table_with_loop.body, Wasm2.branchTableLoop.body,
     code.read_multi_value_label, Std.bind_assoc]
   congr 1
   funext x
@@ -178,7 +178,7 @@ end Wasm2
 theorem code.branch_table.eq_core (st : code.BodyState) (data : Slice U8) (env : module.Env) :
     code.branch_table st data env = Wasm2.tableCore st data env := by
   simp only [code.branch_table, code.branch_table_with, Wasm2.tableCore,
-    code.branch_table_loop, Std.bind_assoc]
+    Wasm2.branchTableLoop, Std.bind_assoc]
   congr 1
   funext r
   cases r with

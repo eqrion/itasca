@@ -153,7 +153,7 @@ theorem code.validate_multi_value_body_with.refines {V W : Type}
       exact ⟨rfl, hrelated⟩
     | Ok st =>
       simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, code.body_loop] at h ⊢
-      have hp := code.initial_state.multi_value_total env ctx index
+      have hp := code.initial_state.wasm2_total env ctx index
       rw [hr, WP.spec_ok] at hp
       exact code.body_loop_loop.wasm2_refines visitor replacement related hrefines
         data env ctx index st v w hrelated (by scalar_tac) hp.1 hp.2.1 hp.2.2 res v' h

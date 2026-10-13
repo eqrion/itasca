@@ -123,7 +123,7 @@ theorem code.body_loop_loop.wasm2_trace_of_contract {V : Type}
                 | .cont (s, _) => .cont ((), s)
                 | .done r => .done (r, ())) := by
             change code.body_loop_loop.body _ _ _ _ _ _ _ _ = _
-            rw [code.validate_multi_value_body_loop.body_eq]
+            rw [Wasm2.emptyVisitorLoop.body_eq]
             change (loopBody data env ctx index st >>= fun r => .ok
               (match r with | .cont (s, _) => .cont ((), s) | .done r => .done (r, ())
                 : ControlFlow (Unit × code.BodyState) (core.result.Result Unit error.OpError × Unit))) = _
@@ -159,7 +159,7 @@ theorem code.body_loop_loop.wasm2_trace_of_contract {V : Type}
 
 /-- Successful Core 2.0 initialization selects the actual type entry and the
 same root frame used by the independent syntax invariant. -/
-theorem code.initial_state.multi_value_start (env : module.Env) (ctx : code.Context)
+theorem code.initial_state.wasm2_start (env : module.Env) (ctx : code.Context)
     (index : U32) :
     code.initial_state env ctx index .Wasm2 ⦃ r => match r with
       | .Err _ => True
@@ -207,7 +207,7 @@ theorem code.validate_multi_value_body_with.trace_of_contract {V : Type}
       exact ⟨[], by simp, .empty (by simp) (by simp)⟩
     | Ok st =>
       simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, code.body_loop] at h
-      have hp := code.initial_state.multi_value_start env ctx index
+      have hp := code.initial_state.wasm2_start env ctx index
       rw [hr, WP.spec_ok] at hp
       obtain ⟨rfl, ft, hi⟩ := hp
       exact code.body_loop_loop.wasm2_trace_of_contract visitor observe

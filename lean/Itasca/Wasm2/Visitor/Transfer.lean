@@ -163,7 +163,7 @@ theorem code.validate_multi_value_body_with.accepted_transfer {V W : Type}
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
     | Ok st =>
       simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, code.body_loop] at h ⊢
-      have hp := code.initial_state.multi_value_total env ctx index
+      have hp := code.initial_state.wasm2_total env ctx index
       rw [hr, WP.spec_ok] at hp
       exact code.body_loop_loop.wasm2_accepted_transfer visitor replacement ha
         data env ctx ctx' hlocals index st v w v' (by scalar_tac) hp.1 hp.2.1 hp.2.2 h

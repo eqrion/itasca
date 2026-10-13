@@ -49,7 +49,7 @@ theorem Pending.metadata_read {data env locals index st} (p : Pending data env l
       cases u
       rw [WP.spec_equiv_exists]
       refine ⟨(.Ok (metadata a), out), by simp [metadataOperands, hr, hrun], fun _ => ?_⟩
-      have htyped := (heffect rfl).multi_prefix _ hC.wf _ p.current.ops (operation a)
+      have htyped := (heffect rfl).wasm2_prefix _ hC.wf _ p.current.ops (operation a)
         (by simpa [hpoly, Frames.enter] using typed) (hw a) (ht a ⟨decoded, hr⟩ _ hC)
       apply p.append_result C outer spine header base {st with core := out} (operation a)
         p.current.ctrl.polymorphic_base after (hw a) (by simpa [hp] using hed a rfl)
@@ -322,7 +322,7 @@ theorem Pending.ref_is_null {data env locals index st} (p : Pending data env loc
   dsimp only at hc hp hv heffect
   cases u
   obtain ⟨rt, he⟩ := heffect hok
-  have htyped := he.multi_prefix _ hC.wf _ p.current.ops .REF_IS_NULL
+  have htyped := he.wasm2_prefix _ hC.wf _ p.current.ops .REF_IS_NULL
     (by simpa [hpoly, Frames.enter] using typed) .instr_case_42
     (by simpa [Simd.inputTypes, Simd.outputTypes, reference_value_translation,
       show Translate.valueType .I32 = valtype.I32 from rfl] using

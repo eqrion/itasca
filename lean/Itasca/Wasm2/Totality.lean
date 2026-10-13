@@ -6,23 +6,20 @@ namespace Itasca
 
 /-- The no-op loop specializes the totality proof for arbitrary returning
 visitors; it has no separate termination induction. -/
-theorem code.validate_multi_value_body_loop.total (data : Slice U8) (env : module.Env)
+theorem Wasm2.emptyVisitorLoop.total (data : Slice U8) (env : module.Env)
     (locals results : alloc.vec.Vec types.ValueType) (type_index : U32)
     (st : code.BodyState) (visitor : code.EmptyOpVisitor)
     (hdata : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
     (hs : Control.Shape st.core)
     (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (hb : st.blocks.val.length ≤ st.core.pos.val + 1) :
-    code.validate_multi_value_body_loop data env.types env.imports env.globals env.exports
-      env.elements env.data_count env.declared_funcs env.start env.func_type_indices env.func_types env.table_types
-      env.mem_types env.global_types env.num_imported_funcs env.num_imported_globals
-      type_index st locals results visitor ⦃ _ => True ⦄ := by
+    Wasm2.emptyVisitorLoop data env type_index st locals results visitor ⦃ _ => True ⦄ := by
   cases visitor
   obtain ⟨⟨r, v⟩, hr, _⟩ := WP.spec_imp_exists
     (code.body_loop_loop.wasm2_total
       code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_total
       data env ⟨locals, results⟩ type_index st () hdata hs ha hb)
-  simp [code.validate_multi_value_body_loop, hr]
+  simp [Wasm2.emptyVisitorLoop, hr]
 
 /-- Every input to the public multi-value body validator returns an ordinary
 success or validation error, without modeled panic or divergence. No validity

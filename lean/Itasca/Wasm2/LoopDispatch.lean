@@ -42,15 +42,11 @@ def step (st : code.BodyState) (data : Slice U8) (env : module.Env)
 
 abbrev run (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (index : U32) (st : code.BodyState) :=
-  code.validate_multi_value_body_loop data env.types env.imports env.globals env.exports
-    env.elements env.data_count env.declared_funcs env.start env.func_type_indices env.func_types env.table_types env.mem_types
-    env.global_types env.num_imported_funcs env.num_imported_globals index st ctx.locals ctx.results ()
+  Wasm2.emptyVisitorLoop data env index st ctx.locals ctx.results ()
 
 abbrev loopBody (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (index : U32) (st : code.BodyState) :=
-  code.validate_multi_value_body_loop.body data env.types env.imports env.globals env.exports
-    env.elements env.data_count env.declared_funcs env.start env.func_type_indices env.func_types env.table_types env.mem_types
-    env.global_types env.num_imported_funcs env.num_imported_globals index ctx.locals ctx.results st ()
+  Wasm2.emptyVisitorLoop.body data env index ctx.locals ctx.results st ()
 
 def continueStep (r : core.result.Result Unit error.OpError × code.BodyState) :
     ControlFlow (code.BodyState × code.EmptyOpVisitor) (core.result.Result Unit error.OpError) :=
@@ -70,7 +66,7 @@ theorem loopBody_eq (data : Slice U8) (env : module.Env) (ctx : code.Context)
         | .Ok (opcode, pos) =>
           let r ← step { st with core := { st.core with pos := pos } } data env ctx index opcode
           .ok (continueStep r)) := by
-  unfold loopBody code.validate_multi_value_body_loop.body
+  unfold loopBody Wasm2.emptyVisitorLoop.body
   simp only [alloc.vec.Vec.is_empty, bind_ok, List.isEmpty_iff]
   split
   · by_cases hp : st.core.pos = Slice.len data

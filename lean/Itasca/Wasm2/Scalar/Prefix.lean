@@ -72,7 +72,7 @@ end Itasca.Wasm2
 
 namespace Itasca.StackSemantics
 
-theorem NumericEffect.multi_prefix {initial : List valtype} {poly before inputs output after}
+theorem NumericEffect.wasm2_prefix {initial : List valtype} {poly before inputs output after}
     (h : NumericEffect poly before inputs output after)
     (C : context) (hC : wf_context C) (ops : List instr) (op : instr)
     (htyped : Wasm2.TypedPrefix C initial ops poly before) (hwf : wf_instr op)
@@ -88,7 +88,7 @@ theorem NumericEffect.multi_prefix {initial : List valtype} {poly before inputs 
   refine ⟨front ++ inputs.map Translate.valueType, htransfer front hfront, ?_⟩
   exact .frame C [op] front _ _ (.instr C op _ _ hop hC hwf) hC (by simpa [Forall] using hwf)
 
-theorem Popped.multi_prefix_drop {initial : List valtype} {poly before t after} (h : Popped poly before t after)
+theorem Popped.wasm2_prefix_drop {initial : List valtype} {poly before t after} (h : Popped poly before t after)
     (C : context) (hC : wf_context C) (ops : List instr)
     (htyped : Wasm2.TypedPrefix C initial ops poly before) :
     Wasm2.TypedPrefix C initial (ops ++ [.DROP]) poly after := by
@@ -101,7 +101,7 @@ theorem Popped.multi_prefix_drop {initial : List valtype} {poly before t after} 
     (.instr C .DROP [u] [] (.drop C u hC .instr_case_2) hC .instr_case_2)
     hC (by simp [Forall]; exact .instr_case_2)
 
-theorem SelectEffect.multi_prefix {initial : List valtype} {poly before t after} (h : SelectEffect poly before t after)
+theorem SelectEffect.wasm2_prefix {initial : List valtype} {poly before t after} (h : SelectEffect poly before t after)
     (C : context) (hC : wf_context C) (ops : List instr)
     (htyped : Wasm2.TypedPrefix C initial ops poly before) :
     Wasm2.TypedPrefix C initial (ops ++ [.SELECT none]) poly after := by
@@ -121,7 +121,7 @@ end Itasca.StackSemantics
 
 namespace Itasca
 
-theorem code.step_numeric.multi_prefix {inputs : List valtype} {V : Type} (visitor : code.OpVisitor V)
+theorem code.step_numeric.wasm2_prefix {inputs : List valtype} {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (opcode : U8) (op : Numeric.Operation)
     (outer segment : List code.StackType) (v : V) (C : context) (hC : wf_context C)
     (ops : List instr) (htyped : Wasm2.TypedPrefix C inputs ops (Control.polymorphic st) segment)
@@ -146,7 +146,7 @@ theorem code.step_numeric.multi_prefix {inputs : List valtype} {V : Type} (visit
     simp [CoreVisitor.run, hr, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok u =>
-    have hprefix := hout.multi_prefix C hC ops op.instruction htyped op.wellFormed (op.typed C hC)
+    have hprefix := hout.wasm2_prefix C hC ops op.instruction htyped op.wellFormed (op.typed C hC)
     obtain ⟨vis, v', hvst⟩ := hvisit.visit_numeric v s opcode
     cases vis with
     | Ok u =>
@@ -159,7 +159,7 @@ theorem code.step_numeric.multi_prefix {inputs : List valtype} {V : Type} (visit
       simp [CoreVisitor.run, hr, hvst, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-theorem code.step.numeric_multi_prefix {inputs : List valtype} {V : Type} (visitor : code.OpVisitor V)
+theorem code.step.numeric_wasm2_prefix {inputs : List valtype} {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (opcode : U8) (op : Numeric.Operation)
     (outer segment : List code.StackType) (v : V) (C : context) (hC : wf_context C)
@@ -175,10 +175,10 @@ theorem code.step.numeric_multi_prefix {inputs : List valtype} {V : Type} (visit
         (r.1 = .Ok () → Wasm2.TypedPrefix C inputs (ops ++ [op.instruction])
           (Control.polymorphic st) after) ⦄ := by
   rw [code.step.numeric_dispatch visitor st data env ctx opcode v hmap.bounds.1]
-  exact code.step_numeric.multi_prefix visitor st opcode op outer segment v C hC ops htyped
+  exact code.step_numeric.wasm2_prefix visitor st opcode op outer segment v C hC ops htyped
     hmap hvals hbase hsize hvisit
 
-theorem code.step_select.multi_prefix {inputs : List valtype} {V : Type} (visitor : code.OpVisitor V)
+theorem code.step_select.wasm2_prefix {inputs : List valtype} {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (outer segment : List code.StackType) (v : V) (C : context) (hC : wf_context C)
     (ops : List instr) (htyped : Wasm2.TypedPrefix C inputs ops (Control.polymorphic st) segment)
@@ -202,7 +202,7 @@ theorem code.step_select.multi_prefix {inputs : List valtype} {V : Type} (visito
     simp [CoreVisitor.run, hr, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok t =>
-    have hprefix := hout.multi_prefix C hC ops htyped
+    have hprefix := hout.wasm2_prefix C hC ops htyped
     obtain ⟨vis, v', hvst⟩ := hvisit.on_select v s t
     cases vis with
     | Ok u =>

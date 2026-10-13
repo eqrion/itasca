@@ -59,7 +59,7 @@ theorem run.spec (data : Slice U8) (env : module.Env)
     (hi : State data env locals index st) :
     run data env ctx index st ⦃ r => r = .Ok () → Validated data env locals index ⦄ := by
   obtain ⟨r, hr, _⟩ := WP.spec_imp_exists
-    (code.validate_multi_value_body_loop.total data env ctx.locals ctx.results index st ()
+    (Wasm2.emptyVisitorLoop.total data env ctx.locals ctx.results index st ()
       hi.bounds.size hi.shape.core hi.shape.aligned hi.bounds.ctrls)
   change run data env ctx index st = .ok r at hr
   rw [hr]

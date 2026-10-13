@@ -314,8 +314,8 @@ theorem code.body_loop_loop.wasm2_total {V : Type} (visitor : code.OpVisitor V)
 
 attribute [local step] code.body_loop_loop.wasm2_total
 
-/-- Multi-value initialization is total and supplies the shared loop invariant. -/
-@[step] theorem code.initial_state.multi_value_total
+/-- Wasm 2.0 initialization is total and supplies the shared loop invariant. -/
+@[step] theorem code.initial_state.wasm2_total
     (env : module.Env) (ctx : code.Context) (index : U32) :
     code.initial_state env ctx index .Wasm2 ⦃ r =>
       match r with
@@ -341,7 +341,7 @@ theorem code.validate_multi_value_body_with.wasm_total {V : Type} (visitor : cod
     split
     · simp
     · have hdata : data.length ≤ limits.MAX_FUNCTION_BYTES.val := by scalar_tac
-      step with code.initial_state.multi_value_total env ctx type_index as ⟨r, hr⟩
+      step with code.initial_state.wasm2_total env ctx type_index as ⟨r, hr⟩
       cases r with
       | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]

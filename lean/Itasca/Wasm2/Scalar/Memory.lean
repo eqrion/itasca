@@ -26,7 +26,7 @@ end Itasca.Wasm2.Scalar
 
 namespace Itasca
 
-theorem code.read_load.multi_prefix {inputs : List valtype} (st : code.OpIterState) (data : Slice U8)
+theorem code.read_load.wasm2_prefix {inputs : List valtype} (st : code.OpIterState) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Control.base st).val = outer.length)
     (hsize : st.vals.val.length < Usize.max)
@@ -82,7 +82,7 @@ theorem code.read_load.multi_prefix {inputs : List valtype} (st : code.OpIterSta
                 · simpa [hpos', hpos] using hout
                 · simpa [hv', List.append_assoc] using hv''
 
-theorem code.read_store.multi_prefix {inputs : List valtype} (st : code.OpIterState) (data : Slice U8)
+theorem code.read_store.wasm2_prefix {inputs : List valtype} (st : code.OpIterState) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Control.base st).val = outer.length)
     (C : context) (hC : EnvTranslation.Matches env ctx C) (ops : List instr)
@@ -146,7 +146,7 @@ theorem code.read_store.multi_prefix {inputs : List valtype} (st : code.OpIterSt
                     exact ⟨by simpa [hpos', hpos] using hout, hc''.trans (hc'.trans hc),
                       rest', hv'', by omega, by simpa using htyping⟩
 
-theorem code.read_memory_size.multi_prefix {inputs : List valtype} (st : code.OpIterState) (data : Slice U8)
+theorem code.read_memory_size.wasm2_prefix {inputs : List valtype} (st : code.OpIterState) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hsize : st.vals.val.length < Usize.max)
     (C : context) (hC : EnvTranslation.Matches env ctx C) (ops : List instr)
@@ -177,7 +177,7 @@ theorem code.read_memory_size.multi_prefix {inputs : List valtype} (st : code.Op
             · simpa [hpos] using hout
             · simpa [hv, hvals, List.append_assoc] using hv'
 
-theorem code.read_memory_grow.multi_prefix {inputs : List valtype} (st : code.OpIterState) (data : Slice U8)
+theorem code.read_memory_grow.wasm2_prefix {inputs : List valtype} (st : code.OpIterState) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Control.base st).val = outer.length)
     (hsize : st.vals.val.length < Usize.max)

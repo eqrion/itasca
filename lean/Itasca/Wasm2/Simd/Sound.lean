@@ -51,7 +51,7 @@ theorem Pending.fixed {data env locals index st}
     cases u
     dsimp only at hu
     subst res
-    have htyped := (hout rfl).multi_prefix _ hC _ p.current.ops op
+    have htyped := (hout rfl).wasm2_prefix _ hC _ p.current.ops op
       (by simpa [hpoly] using typed) hw (ht _ hC hmatches)
     apply p.append_result C outer spine header base {st with core := s} op
       p.current.ctrl.polymorphic_base after hw
@@ -249,7 +249,7 @@ theorem Pending.simd_shuffle {data env locals index st}
     rintro ⟨low, high⟩ hok
     obtain ⟨hc, after, hvals, hbits, hbound, heffect⟩ := hpost low high hok
     dsimp only at hc hvals hbits hbound heffect
-    have htyped := heffect.multi_prefix _ hC _ p.current.ops (Simd.shuffle low high)
+    have htyped := heffect.wasm2_prefix _ hC _ p.current.ops (Simd.shuffle low high)
       (by simpa [hpoly] using typed) (Simd.shuffle_wf low high)
       (Simd.shuffle_typed _ low high hC hbound)
     apply p.append_result C outer spine header base {st with core := s} (Simd.shuffle low high)

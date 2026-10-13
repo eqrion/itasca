@@ -110,11 +110,11 @@ theorem code.enter.total (st : code.BodyState) (data : Slice U8)
 
 /-- The table loop includes its default target without incrementing the
 possibly maximal encoded count. Every iteration checks the original suffix. -/
-theorem code.branch_table_loop.total (st : code.BodyState) (data : Slice U8)
+theorem Wasm2.branchTableLoop.total (st : code.BodyState) (data : Slice U8)
     (env : module.Env) (count : U32) (arity : Option Usize) (i : U32)
     (hs : Control.Shape st.core)
     (ha : st.blocks.val.length = st.core.ctrls.val.length) (hi : i.val ≤ count.val) :
-    code.branch_table_loop st.core st.blocks data env count arity i ⦃ r =>
+    Wasm2.branchTableLoop st.core st.blocks data env count arity i ⦃ r =>
       Control.Shape r.2.core ∧ r.2.blocks.val.length = r.2.core.ctrls.val.length ∧
       r.2.blocks = st.blocks ∧ st.core.pos.val ≤ r.2.core.pos.val ⦄ := by
   have hlo : code.branch_table_with_loop code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
@@ -131,7 +131,7 @@ theorem code.branch_table_loop.total (st : code.BodyState) (data : Slice U8)
       dsimp only
       rw [Wasm2.tableBody_eq data env count stateCore (code.BodyState.mk stateCore).blocks arity j]
       apply ResultFacts.map_spec
-      unfold code.branch_table_loop.body
+      unfold Wasm2.branchTableLoop.body
       obtain ⟨⟨r, s⟩, hr, hv, hc, hb, hp, hread⟩ := WP.spec_imp_exists
         (code.read_multi_value_label.spec ⟨stateCore⟩ data ha')
       rw [hr]
@@ -146,7 +146,7 @@ theorem code.branch_table_loop.total (st : code.BodyState) (data : Slice U8)
       all_goals simp_all [Wasm2.tableFlow, Wasm2.tableCont, Wasm2.tableDone]
       all_goals scalar_tac
     · exact ⟨hs, ha, rfl, hi, le_refl _⟩
-  unfold code.branch_table_loop
+  unfold Wasm2.branchTableLoop
   obtain ⟨⟨res, final, visitor⟩, hr, hp⟩ := WP.spec_imp_exists hlo
   simpa [hr] using hp
 
@@ -172,7 +172,7 @@ theorem code.branch_table.total (st : code.BodyState) (data : Slice U8)
     step with code.pop_with_type.total _ .I32 hspos as ⟨r, s, hs', hc, hp, hv, he⟩
     step
     split
-    · apply WP.spec_mono (code.branch_table_loop.total ⟨s⟩ data env count none
+    · apply WP.spec_mono (Wasm2.branchTableLoop.total ⟨s⟩ data env count none
         0#u32 hs' (by simp_all) (by simp))
       intro result hout
       exact ⟨hout.1, hout.2.1, by simpa [hc] using hout.2.2.1, hpnext.trans (by simpa [hp] using hout.2.2.2)⟩

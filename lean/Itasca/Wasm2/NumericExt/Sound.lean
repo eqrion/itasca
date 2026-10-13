@@ -37,7 +37,7 @@ theorem Pending.extended_numeric {data env locals index st}
     intro u hu
     dsimp only at hu
     subst res
-    have htyped := hout.multi_prefix _ hC p.current.ops operation.instruction
+    have htyped := hout.wasm2_prefix _ hC p.current.ops operation.instruction
       (by simpa [hpoly] using typed) operation.wellFormed (operation.typed _ hC)
     apply p.append_result C outer spine header base {st with core := s} operation.instruction
       p.current.ctrl.polymorphic_base after operation.wellFormed
