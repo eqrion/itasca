@@ -1,6 +1,6 @@
 import Itasca.Support.Result
-import Itasca.Body.BrTable
-import Itasca.Visitor.VisitorErasure
+import Itasca.Handler.BrTable
+import Itasca.Visitor.Erasure
 
 open Aeneas Aeneas.Std
 

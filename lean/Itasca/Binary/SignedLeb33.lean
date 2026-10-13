@@ -1,4 +1,4 @@
-import Itasca.Binary.SignedLebGeneric
+import Itasca.Binary.SignedLeb
 
 open Aeneas Aeneas.Std
 

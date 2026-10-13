@@ -1,9 +1,9 @@
 import Itasca.Support.Result
-import Itasca.Visitor.VisitorEvents
-import Itasca.Binary.WasmBinaryComplete
-import Itasca.Visitor.VisitorErasure
-import Itasca.Visitor.VisitorTraceBytes
-import Itasca.Visitor.VisitorRecording
+import Itasca.Visitor.Events
+import Itasca.Binary.Wasm1.EncodingComplete
+import Itasca.Visitor.Erasure
+import Itasca.Visitor.TraceBytes
+import Itasca.Visitor.Recording
 
 open Aeneas Aeneas.Std
 

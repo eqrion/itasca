@@ -1,7 +1,7 @@
 import Itasca.Profile.CodeEntry
 import Itasca.Profile.BodyExecution
-import Itasca.Module.ModuleEntryWitness
-import Itasca.MultiValue.VisitorTotal
+import Itasca.Module.Code.EntryWitness
+import Itasca.Wasm2.Visitor.Total
 
 open Aeneas Aeneas.Std
 

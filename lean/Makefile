@@ -68,7 +68,7 @@ clean:
 
 # Check the spec and concrete external models independently of the Rust model.
 checkpoint:
-	lake build Itasca.SpecChecks Itasca.Generated.FunsExternal
+	lake build Itasca.Spec.Checks Itasca.Generated.FunsExternal
 
 spec-build: patch-spectec
 	$(MAKE) -C $(SPECTEC_DIR) src/backend-interpreter/reference-interpreter
@@ -88,7 +88,7 @@ spec-compare: spec-generate
 	cmp .build/wasm2.0.lean SpecTec/wasm2.0.lean
 
 spec-check: spec-compare
-	lake build SpecTecGenerated Itasca.SpecChecks
+	lake build SpecTecGenerated Itasca.Spec.Checks
 
 # Use upstream's test runner and compile its regenerated outputs in our Lake env.
 regressions: aeneas-build

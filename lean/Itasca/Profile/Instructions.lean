@@ -1,4 +1,4 @@
-import Itasca.Body.Wasm1ProfileTransport
+import Itasca.Wasm1.ProfileTransport
 
 open Aeneas Aeneas.Std
 

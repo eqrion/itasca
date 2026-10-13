@@ -1,8 +1,8 @@
 import Itasca.Profile.BodySpec
-import Itasca.Binary.WasmDeclaredReferences
-import Itasca.Body.Wasm1Soundness
-import Itasca.Body.WasmComplete
-import Itasca.MultiValue.Complete
+import Itasca.Binary.Wasm1.DeclaredReferences
+import Itasca.Wasm1.ProfileSoundness
+import Itasca.Wasm1.Completeness
+import Itasca.Wasm2.Completeness
 
 open Aeneas Aeneas.Std
 

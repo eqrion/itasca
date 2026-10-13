@@ -1,4 +1,4 @@
-import Itasca.Body.ScalarMatch
+import Itasca.Support.LiteralDispatch
 
 open Aeneas Aeneas.Std Aeneas.Std.WP
 

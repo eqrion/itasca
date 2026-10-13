@@ -1,6 +1,6 @@
 import Itasca.Profile.EntryPipeline
 import Itasca.Profile.BodyVisitor
-import Itasca.Module.ModuleLocalsComplete
+import Itasca.Module.Code.LocalsComplete
 
 open Aeneas Aeneas.Std
 

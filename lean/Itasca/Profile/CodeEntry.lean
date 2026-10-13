@@ -1,7 +1,7 @@
 import Itasca.Profile.BodySpec
-import Itasca.MultiValue.BinaryComplete
-import Itasca.Module.ModuleCodeContext
-import Itasca.Module.ModuleCodeBinary
+import Itasca.Binary.Wasm2.EncodingComplete
+import Itasca.Module.Code.Context
+import Itasca.Module.Code.Encoding
 
 open Aeneas Aeneas.Std
 

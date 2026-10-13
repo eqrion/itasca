@@ -1,6 +1,6 @@
 import Itasca.Profile.Types
 import Itasca.Profile.Instructions
-import Itasca.MultiValue.Body
+import Itasca.Wasm2.BodySpec
 
 open Aeneas Aeneas.Std
 

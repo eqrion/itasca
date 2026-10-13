@@ -1,7 +1,7 @@
 import Itasca.Profile.Body
 import Itasca.Profile.BodyExecution
-import Itasca.MultiValue.Visitor
-import Itasca.Visitor.VisitorBodyComplete
+import Itasca.Wasm2.Visitor.Body
+import Itasca.Wasm1.Visitor.Lift
 
 open Aeneas Aeneas.Std
 
