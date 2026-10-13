@@ -7,27 +7,15 @@ namespace Itasca.SignedLeb32
 /-- The signed 32-bit specialization of the shared decoder proof. -/
 def format : SignedLeb.Format := ⟨4#u32, (-2147483648)#i128, 2147483647#i128, by decide⟩
 
-def finalValue (acc mult : Int) (last : U8) : Int :=
-  acc + (last.val : Int) * mult - if 64 ≤ last.val then 128 * mult else 0
-
 /-- Signed 32-bit LEB128 bytes, permitting nonminimal sign extension. -/
-def Encoding (bytes : List U8) (value : Int) : Prop :=
-  ∃ before last, bytes = before ++ [last] ∧ before.length ≤ 4 ∧
-    (∀ b ∈ before, 128 ≤ b.val) ∧ last.val < 128 ∧
-    value = finalValue (Leb128.payload before) (128 ^ before.length) last ∧
-    -2147483648 ≤ value ∧ value ≤ 2147483647
+abbrev Encoding := SignedLeb.Encoding format
 
 /-- The consumed encoding and untouched input suffix determine a successful read. -/
-def Decoded (data : Slice U8) (start : Usize) (value : Int) (next : Usize) : Prop :=
-  ∃ bytes, data.val.drop start.val = bytes ++ data.val.drop next.val ∧
-    next.val = start.val + bytes.length ∧ next.val ≤ data.length ∧ Encoding bytes value
+abbrev Decoded := SignedLeb.Decoded format
 
 abbrev Rejected := SignedLeb.Rejected format
 
-def Post (data : Slice U8) (start : Usize) {ty : IScalarTy} :
-    core.result.Result (IScalar ty × Usize) error.OpError → Prop
-  | .Ok (value, next) => Decoded data start value.val next
-  | .Err e => Rejected data start e
+abbrev Post := SignedLeb.Post format
 
 theorem spec128 (data : Slice U8) (start : Usize) :
     reader.read_sn_leb data start 4#u32 (-2147483648)#i128 2147483647#i128 ⦃ Post data start ⦄ :=
@@ -76,14 +64,14 @@ theorem reader.read_s32_leb.spec (data : Slice U8) (start : Usize) :
   cases r with
   | Err e =>
     simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, SignedLeb32.Post]
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, SignedLeb.Post]
     exact hp
   | Ok r =>
     rcases r with ⟨v, p⟩
     have hb := SignedLeb32.Decoded.range data start v.val p hp
     simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-    step with IScalar.cast_inBounds_spec .I32 v (by scalar_tac)
-    simpa [SignedLeb32.Post, *] using hp
+    step with IScalar.cast_inBounds_spec .I32 v (by scalar_tac) as ⟨x, hx⟩
+    simpa [SignedLeb.Post, hx] using hp
 
 theorem reader.read_s32_leb.total (data : Slice U8) (start : Usize) :
     ∃ r, reader.read_s32_leb data start = .ok r := by
@@ -95,7 +83,7 @@ theorem reader.read_s32_leb.sound (data : Slice U8) (start : Usize)
     (h : reader.read_s32_leb data start = .ok (.Ok (value, next))) :
     SignedLeb32.Decoded data start value.val next := by
   have hs := reader.read_s32_leb.spec data start
-  simpa [h, SignedLeb32.Post] using hs
+  simpa [h, SignedLeb.Post] using hs
 
 theorem reader.read_s32_leb.success_span (data : Slice U8) (start : Usize)
     (value : I32) (next : Usize)
@@ -107,7 +95,7 @@ theorem reader.read_s32_leb.rejected (data : Slice U8) (start : Usize)
     (e : error.OpError) (h : reader.read_s32_leb data start = .ok (.Err e)) :
     SignedLeb32.Rejected data start e := by
   have hs := reader.read_s32_leb.spec data start
-  simpa [h, SignedLeb32.Post] using hs
+  simpa [h, SignedLeb.Post] using hs
 
 end Itasca
 

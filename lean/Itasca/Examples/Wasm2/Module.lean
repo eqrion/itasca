@@ -67,11 +67,11 @@ theorem typed : Module_ok (moduleOf raw) := by
 
 private theorem zero32 : SignedLeb32.Encoding [0#u8] (0#i32).val := by
   refine ⟨[], 0#u8, rfl, by decide, by simp, by decide, ?_, by decide, by decide⟩
-  norm_num [SignedLeb32.finalValue, Leb128.payload]
+  norm_num [SignedLeb.finalValue, Leb128.payload]
 
 private theorem zero64 : SignedLeb64.Encoding [0#u8] (0#i64).val := by
   refine ⟨[], 0#u8, rfl, by decide, by simp, by decide, ?_, by decide, by decide⟩
-  norm_num [SignedLeb64.finalValue, Leb128.payload]
+  norm_num [SignedLeb.finalValue, Leb128.payload]
 
 private theorem base_body_encoding : Itasca.Profile.BodyBytes .Wasm1 entry.body
     [0x41#u8, 0#u8, 0x42#u8, 0#u8, 0x0B#u8] := by

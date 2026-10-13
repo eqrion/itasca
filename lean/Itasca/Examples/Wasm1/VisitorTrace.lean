@@ -263,7 +263,7 @@ theorem nested_bare_if_trace (env : module.Env) :
   have hon : SignedLeb32.Decoded bareIfBytes 3#usize (1#i32).val 4#usize := by
     refine ⟨[1#u8], rfl, rfl, by decide, [], 1#u8, rfl, by decide,
       by simp, by decide, ?_, by decide, by decide⟩
-    norm_num [SignedLeb32.finalValue, Leb128.payload]
+    norm_num [SignedLeb.finalValue, Leb128.payload]
   have hconst : code.read_i32_const {s2 with pos := 3#usize} bareIfBytes = .ok (.Ok 1#i32, s4) := by
     exact read_one _ _ _ _ hon (by simp [s2, state]; scalar_tac) rfl rfl rfl
   have hif : code.read_if {s4 with pos := 5#usize} bareIfBytes = .ok (.Ok .Empty, s6) := by
@@ -347,7 +347,7 @@ theorem nested_else_if_trace (env : module.Env) :
   have hon : SignedLeb32.Decoded elseIfBytes 3#usize (1#i32).val 4#usize := by
     refine ⟨[1#u8], rfl, rfl, by decide, [], 1#u8, rfl, by decide,
       by simp, by decide, ?_, by decide, by decide⟩
-    norm_num [SignedLeb32.finalValue, Leb128.payload]
+    norm_num [SignedLeb.finalValue, Leb128.payload]
   have hconst : code.read_i32_const {s2 with pos := 3#usize} elseIfBytes = .ok (.Ok 1#i32, s4) := by
     exact read_one _ _ _ _ hon (by simp [s2, state]; scalar_tac) rfl rfl rfl
   have hif : code.read_if {s4 with pos := 5#usize} elseIfBytes = .ok (.Ok .Empty, s6) := by

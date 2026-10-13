@@ -55,7 +55,7 @@ private theorem indexed_first_not_negative_tag (data : Slice U8) (pos : Usize)
     simp only [List.drop_eq_getElem_cons hp, List.nil_append, List.singleton_append,
       List.head?_cons, Option.some.injEq] at hh
     subst last
-    simp [SignedLeb33.finalValue, Leb128.payload, hlo] at hv
+    simp [SignedLeb.finalValue, Leb128.payload, hlo] at hv
     omega
   | cons b bs =>
     simp only [List.drop_eq_getElem_cons hp, List.cons_append,

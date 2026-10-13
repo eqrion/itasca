@@ -23,7 +23,7 @@ theorem i64_body_accepted (env : module.Env) :
   have hencoded : SignedLeb64.Decoded i64Bytes 1#usize ((-1)#i64).val 3#usize := by
     refine ⟨[0xFF#u8, 0x7F#u8], rfl, rfl, by decide, [0xFF#u8], 0x7F#u8, rfl, by decide,
       by simp, by decide, ?_, by decide, by decide⟩
-    norm_num [SignedLeb64.finalValue, Leb128.payload]
+    norm_num [SignedLeb.finalValue, Leb128.payload]
   have hleb := reader.read_s64_leb.complete i64Bytes 1#usize (-1)#i64 3#usize hencoded
   obtain ⟨⟨_, pushed⟩, hconst, rfl, hv, hc, hp⟩ := WP.spec_imp_exists
     (code.read_i64_const.from_read first i64Bytes (-1)#i64 3#usize hleb

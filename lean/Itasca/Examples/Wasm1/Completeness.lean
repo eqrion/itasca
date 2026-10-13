@@ -26,9 +26,9 @@ def nestedOps : List instr := [.BLOCK (Control.blockType (.Value .I32)) nestedIn
 private theorem constant_encoded (b : U8) (v : I32)
     (hb : b.val < 64) (hv : v.val = b.val) : SignedLeb32.Encoding [b] v.val := by
   refine ⟨[], b, rfl, by simp, by simp, by omega, ?_, ?_, ?_⟩
-  · simp [SignedLeb32.finalValue, Leb128.payload, Nat.not_le.mpr hb, hv]
-  · have := v.hmin; norm_num at this ⊢; exact this
-  · have := v.hmax; norm_num at this ⊢; omega
+  · simp [SignedLeb.finalValue, Leb128.payload, Nat.not_le.mpr hb, hv]
+  · have := v.hmin; norm_num [SignedLeb32.format] at this ⊢; exact this
+  · have := v.hmax; norm_num [SignedLeb32.format] at this ⊢; omega
 
 private theorem unsigned_encoded (b : U8) (h : b.val < 128) : Leb128.Encoding [b] b.val := by
   exact ⟨[], b, rfl, by simp, by simp, h, by simp, by simp [Leb128.payload, Nat.mod_eq_of_lt h]⟩

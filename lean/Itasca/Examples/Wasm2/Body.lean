@@ -12,7 +12,7 @@ open Wasm2
 theorem padded_index : BlockEncoding (.TypeIndex 0#u32) [128#u8, 0#u8] := by
   refine ⟨[128#u8], 0#u8, rfl, by decide, ?_, by decide, ?_, by decide, by decide⟩
   · simp
-  · norm_num [SignedLeb33.finalValue, Leb128.payload]
+  · norm_num [SignedLeb.finalValue, Leb128.payload]
 
 /-- Padded negative s33 encodings are not inline value-type tags. -/
 theorem padded_negative_not_inline (t : types.ValueType) :
@@ -101,17 +101,17 @@ private theorem unsigned (b : U8) (h : b.val < 128) : Leb128.Encoding [b] b.val 
 private theorem index_encoding (b : U8) (idx : U32) (hb : b.val < 64) (hi : idx.val = b.val) :
     BlockEncoding (.TypeIndex idx) [b] := by
   refine ⟨[], b, rfl, by simp, by simp, by omega, ?_, ?_, ?_⟩
-  · simp [SignedLeb33.finalValue, Leb128.payload, Nat.not_le.mpr hb, hi]
-  · omega
-  · have := idx.hmax; scalar_tac
+  · simp [SignedLeb.finalValue, Leb128.payload, Nat.not_le.mpr hb, hi]
+  · simp [SignedLeb33.format]
+  · have := idx.hmax; simp [SignedLeb33.format]; scalar_tac
 
 private theorem zero32 : SignedLeb32.Encoding [0#u8] (0#i32).val := by
   refine ⟨[], 0#u8, rfl, by decide, by simp, by decide, ?_, by decide, by decide⟩
-  norm_num [SignedLeb32.finalValue, Leb128.payload]
+  norm_num [SignedLeb.finalValue, Leb128.payload]
 
 private theorem zero64 : SignedLeb64.Encoding [0#u8] (0#i64).val := by
   refine ⟨[], 0#u8, rfl, by decide, by simp, by decide, ?_, by decide, by decide⟩
-  norm_num [SignedLeb64.finalValue, Leb128.payload]
+  norm_num [SignedLeb.finalValue, Leb128.payload]
 
 def pairOps : List instr := [Spec.i32Const 0#i32, ScalarConst.i64 0#i64]
 

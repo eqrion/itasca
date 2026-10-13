@@ -84,7 +84,7 @@ private theorem indexed_prefix_not_negative {index : U32} {bytes rest tail : Lis
   | nil =>
     have hhead := (List.cons.inj he).1
     subst last
-    simp [SignedLeb33.finalValue, Leb128.payload, hlo] at hv
+    simp [SignedLeb.finalValue, Leb128.payload, hlo] at hv
     omega
   | cons b bs =>
     have hhead := (List.cons.inj he).1

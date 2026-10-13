@@ -7,27 +7,15 @@ namespace Itasca.SignedLeb64
 /-- The signed 64-bit specialization of the shared decoder proof. -/
 def format : SignedLeb.Format := ⟨9#u32, (-9223372036854775808)#i128, 9223372036854775807#i128, by decide⟩
 
-def finalValue (acc mult : Int) (last : U8) : Int :=
-  acc + (last.val : Int) * mult - if 64 ≤ last.val then 128 * mult else 0
-
 /-- Signed 64-bit LEB128 bytes, permitting nonminimal sign extension. -/
-def Encoding (bytes : List U8) (value : Int) : Prop :=
-  ∃ before last, bytes = before ++ [last] ∧ before.length ≤ 9 ∧
-    (∀ b ∈ before, 128 ≤ b.val) ∧ last.val < 128 ∧
-    value = finalValue (Leb128.payload before) (128 ^ before.length) last ∧
-    -9223372036854775808 ≤ value ∧ value ≤ 9223372036854775807
+abbrev Encoding := SignedLeb.Encoding format
 
 /-- The consumed encoding and untouched input suffix determine a successful read. -/
-def Decoded (data : Slice U8) (start : Usize) (value : Int) (next : Usize) : Prop :=
-  ∃ bytes, data.val.drop start.val = bytes ++ data.val.drop next.val ∧
-    next.val = start.val + bytes.length ∧ next.val ≤ data.length ∧ Encoding bytes value
+abbrev Decoded := SignedLeb.Decoded format
 
 abbrev Rejected := SignedLeb.Rejected format
 
-def Post (data : Slice U8) (start : Usize) {ty : IScalarTy} :
-    core.result.Result (IScalar ty × Usize) error.OpError → Prop
-  | .Ok (value, next) => Decoded data start value.val next
-  | .Err e => Rejected data start e
+abbrev Post := SignedLeb.Post format
 
 theorem spec128 (data : Slice U8) (start : Usize) :
     reader.read_sn_leb data start 9#u32 (-9223372036854775808)#i128 9223372036854775807#i128 ⦃ Post data start ⦄ :=
@@ -76,14 +64,14 @@ theorem reader.read_s64_leb.spec (data : Slice U8) (start : Usize) :
   cases r with
   | Err e =>
     simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, SignedLeb64.Post]
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, SignedLeb.Post]
     exact hp
   | Ok r =>
     rcases r with ⟨v, p⟩
     have hb := SignedLeb64.Decoded.range data start v.val p hp
     simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-    step with IScalar.cast_inBounds_spec .I64 v (by scalar_tac)
-    simpa [SignedLeb64.Post, *] using hp
+    step with IScalar.cast_inBounds_spec .I64 v (by scalar_tac) as ⟨x, hx⟩
+    simpa [SignedLeb.Post, hx] using hp
 
 theorem reader.read_s64_leb.total (data : Slice U8) (start : Usize) :
     ∃ r, reader.read_s64_leb data start = .ok r := by
@@ -95,7 +83,7 @@ theorem reader.read_s64_leb.sound (data : Slice U8) (start : Usize)
     (h : reader.read_s64_leb data start = .ok (.Ok (value, next))) :
     SignedLeb64.Decoded data start value.val next := by
   have hs := reader.read_s64_leb.spec data start
-  simpa [h, SignedLeb64.Post] using hs
+  simpa [h, SignedLeb.Post] using hs
 
 theorem reader.read_s64_leb.success_span (data : Slice U8) (start : Usize)
     (value : I64) (next : Usize)
@@ -107,7 +95,7 @@ theorem reader.read_s64_leb.rejected (data : Slice U8) (start : Usize)
     (e : error.OpError) (h : reader.read_s64_leb data start = .ok (.Err e)) :
     SignedLeb64.Rejected data start e := by
   have hs := reader.read_s64_leb.spec data start
-  simpa [h, SignedLeb64.Post] using hs
+  simpa [h, SignedLeb.Post] using hs
 
 end Itasca
 
