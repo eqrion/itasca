@@ -1,20 +1,15 @@
 # Lean verification
 
 Lean checks the extracted Rust validator against SpecTec-generated Wasm 2.0
-declarative judgments, an independent binary grammar, and explicit supported
-profiles. The [project README](../README.md#formal-verification) states the public
-guarantees and trust boundary. [DEVELOPMENT.md](../DEVELOPMENT.md) describes the
-change workflow. This guide covers setup and the proof contracts behind the API.
-
-For an introduction aimed at Wasm developers new to Lean, read
-[A guide to the itasca proofs](PROOF_GUIDE.md). It starts with the top-level
-theorems and follows their certificates into the supporting proof layers.
+typing rules, an independent binary grammar, and explicit Wasm 1.0 and Wasm 2.0
+profiles. The [project README](../README.md#formal-verification) states the
+public guarantees and trust boundary, and [DEVELOPMENT.md](../DEVELOPMENT.md)
+the change workflow. This guide covers setup, proof contracts, and layout. If
+you are new to Lean, start with [A guide to the itasca proofs](PROOF_GUIDE.md).
 
 ## Setup
 
-The repository pins the following dependencies:
-
-| Component | Selection |
+| Component | Pin |
 | --- | --- |
 | Aeneas | `557eff83ecef5083b98a52a94ca7fae63d6c1dab` |
 | Charon | `c8f15d7d658c86a95658f71ad99cddd4be002e04`, from Aeneas's `charon-pin` |
@@ -23,25 +18,17 @@ The repository pins the following dependencies:
 | SpecTec | `edc84f7ec81f927f3fdb952a82ecd38fed8e4f29` |
 | OCaml and Dune | `5.2.0` and `3.23.1`, in the `itasca-lean` opam switch |
 
-Initialize the source submodules from the repository root:
+From the repository root:
 
 ```sh
 git submodule update --init vendor/aeneas-lean vendor/spectec tests/third_party/wasm-spec
-```
 
-Create the OCaml switch and install its dependencies:
-
-```sh
 opam switch create itasca-lean ocaml-base-compiler.5.2.0 --no-switch -y
 opam install --switch=itasca-lean -y dune.3.23.1 dune-build-info.3.23.1 \
   ocamlformat.0.27.0 calendar core_unix \
   domainslib easy_logging menhir ocamlgraph ppx_deriving ppx_deriving_yojson \
   progress unionFind visitors yojson zarith pprint
-```
 
-Clone Charon at the pinned revision and install the Rust and Lean toolchains:
-
-```sh
 git clone https://github.com/AeneasVerif/charon.git vendor/aeneas-lean/charon
 git -C vendor/aeneas-lean/charon checkout "$(tail -n 1 vendor/aeneas-lean/charon-pin)"
 rustup toolchain install nightly-2026-09-17 --profile minimal \
@@ -52,305 +39,185 @@ cd lean
 lake exe cache get
 ```
 
-Use the committed `lake-manifest.json`; ordinary builds do not need `lake update`.
-`OPAM_SWITCH` can select another compatible switch. The SpecTec checkout's own
-Lake project selects Lean 4.32, but this project compiles its regenerated
-definitions and handwritten equality helper on Lean 4.31 alongside Aeneas.
-Dune 3.23.1 is retained because 3.24 rejects SpecTec's nested legacy Coq project.
-No Rocq installation is required.
+Use the committed `lake-manifest.json`; builds do not need `lake update`.
+`OPAM_SWITCH` selects another compatible switch. Dune stays at 3.23.1 because
+3.24 rejects SpecTec's nested legacy Coq project. SpecTec's own Lake project
+selects Lean 4.32, but its generated output compiles here on 4.31.
 
-## Commands and generated sources
-
-Run these commands from the repository root:
+## Commands
 
 ```sh
 just extract          # Rust -> LLBC -> committed Lean program model
 just extract-check    # Regenerate separately and reject stale models
-just check Itasca.Module.Validation
-just profile Itasca.Wasm2.Step.ScalarContext  # Build imports, then profile this file
-just prove            # Audit import coverage and build the integrated proofs
-just audit-imports    # Regenerate Itasca.Audit's imports after moving files
-just trust            # Rerun the transitive axiom report
+just check Itasca.Module.Validation  # Build specific modules
+just profile Itasca.Wasm2.Step.ScalarContext  # Profile one file's elaboration
+just prove            # Check audit coverage and build all proofs
+just audit-imports    # Regenerate Itasca.Audit's imports
+just trust            # Rerun the detailed axiom report
+just spec-update      # Copy a regenerated specification into the source tree
 just spec-check       # Regenerate, compare, and compile the specification
 just regressions      # Extract and compile Aeneas regression cases
-just verify           # Both Rust test configurations and all verification checks
+just verify           # Rust tests and all verification checks
 ```
 
-`make -C lean checkpoint` checks the specification and concrete external models
-independently. `just lean-spec` generates a candidate specification in
-`lean/.build/`; `just spec-update` copies it into the committed source after an
-intentional source or generator change. Preserve `.lake/` and `.build/` caches.
-The `lean-extract` and `lean-prove` aliases remain available.
+Preserve the `.lake/` and `.build/` caches.
 
-Targeted checks accept several module names and use Lake's incremental dependency
-tracking. The profile command deliberately re-elaborates one file and reports
-import, tactic, and kernel-checking costs. Use it to measure a suspected hot spot;
-it is not needed for routine verification. Keep dependencies current through
-Lake rather than bypassing dependency checks. A warm `just prove` reuses compiled
-proofs and the checked audit; `just trust` reruns the audit with a detailed report.
+## Generated sources
 
-[Itasca/Generated/Types.lean](Itasca/Generated/Types.lean) and
-[Funs.lean](Itasca/Generated/Funs.lean) are generated by Aeneas and must never be
-edited by hand. [FunsExternal.lean](Itasca/Generated/FunsExternal.lean) is the
-handwritten concrete model for `Vec.pop` and `Vec.is_empty`. The generated
-external template is ignored and must not be imported. Extraction uses the
-Makefile's explicit `cfg(charon)`, Clone/Copy exclusions, and distributed
-standard-library MIR through `--sysroot=default`.
+[Generated/Types.lean](Itasca/Generated/Types.lean) and
+[Funs.lean](Itasca/Generated/Funs.lean) come from `just extract`; never edit them
+by hand. [FunsExternal.lean](Itasca/Generated/FunsExternal.lean) is the
+handwritten model of `Vec.pop` and `Vec.is_empty`. The generated external
+template is ignored and must not be imported.
 
-The `SpecTecGenerated` Lake library compiles the committed
-[SpecTec/wasm2.0.lean](SpecTec/wasm2.0.lean). `SpecTecSupport` compiles upstream's
-handwritten `ExtendedDeriveDecEq.lean` helper. Neither library relies on upstream
-compiled Lean artifacts. Specification generation uses `--lean
---single-pattern-match --wf-state all` and is checked byte for byte.
+[SpecTec/wasm2.0.lean](SpecTec/wasm2.0.lean) is generated from the pinned SpecTec
+sources and the patches below, and checked byte for byte by `just spec-check`.
+The `SpecTecSupport` library compiles upstream's handwritten
+`ExtendedDeriveDecEq.lean`. Neither relies on upstream compiled artifacts.
 
 ## Proof contracts
 
-The `profile_*` theorem families quantify over both `ValidationProfile` values.
-The `wasm_*` module and streaming corollaries specialize them to Wasm 1.0.
-Rust implementation namespaces remain in the extracted model even when their
-component functions are private in the consumer API.
+`profile_*` theorems quantify over both `ValidationProfile` values; `wasm_*`
+corollaries specialize to Wasm 1.0.
 
-| Layer | Principal contracts |
+| Layer | Contracts |
 | --- | --- |
-| Whole module | [Module/Validation](Itasca/Module/Validation.lean): `module.validate_module.profile_total`, `profile_sound`, and `profile_spec`. [Module/Completeness](Itasca/Module/Completeness.lean): `profile_complete` and `profile_complete_with_metadata`. |
-| Generic streaming | [Stream/DriverSound](Itasca/Stream/DriverSound.lean): `stream.validate_streaming.profile_sound`. [Stream/DriverTotal](Itasca/Stream/DriverTotal.lean) and [Stream/DriverComplete](Itasca/Stream/DriverComplete.lean): `profile_total` and `profile_complete`. |
-| Contiguous adapter | [Stream/SliceSound](Itasca/Stream/SliceSound.lean) and [Stream/SliceComplete](Itasca/Stream/SliceComplete.lean) discharge the generic contracts for the private source and synchronous worker. |
-| Worker batches | [Stream/Batch](Itasca/Stream/Batch.lean) connects actual operations, ordered entry validation, and exact coverage. [Stream/BatchComplete](Itasca/Stream/BatchComplete.lean) derives successful validation from independently typed entries. |
-| Shared body and entry | [Profile/BodyVisitor](Itasca/Profile/BodyVisitor.lean), [Profile/EntrySound](Itasca/Profile/EntrySound.lean), and [Profile/EntryComplete](Itasca/Profile/EntryComplete.lean) supply both profiles' certificates and visitor contracts. |
-| Wasm 1.0 body | [Wasm1/Soundness](Itasca/Wasm1/Soundness.lean), [Wasm1/ProfileSoundness](Itasca/Wasm1/ProfileSoundness.lean), and [Wasm1/Completeness](Itasca/Wasm1/Completeness.lean) establish termination, generated typing, profile restrictions, and independent completeness. |
-| Wasm 2.0 body | [Wasm2/Totality](Itasca/Wasm2/Totality.lean), [Wasm2/Soundness](Itasca/Wasm2/Soundness.lean), and [Wasm2/Completeness](Itasca/Wasm2/Completeness.lean) connect the shared worker to the complete Wasm 2.0 grammar, generated typing, and independent reference declarations. |
-| Wasm 1.0 callback traces | [Wasm1/Trace/Body](Itasca/Wasm1/Trace/Body.lean), [Module/Code/EntryTrace](Itasca/Module/Code/EntryTrace.lean), and [Wasm1/Trace/Corollaries](Itasca/Wasm1/Trace/Corollaries.lean) identify accepted traces and rejection stopping behavior. |
-| Wasm 2.0 callback traces | [Wasm2/Trace/Correspondence](Itasca/Wasm2/Trace/Correspondence.lean) and [Wasm2/Trace/BodyRefinement](Itasca/Wasm2/Trace/BodyRefinement.lean) establish exact body callback bytes, accepted typing, completeness, instrumentation, and rejection stopping behavior. |
+| Whole module | [Module/Validation](Itasca/Module/Validation.lean): `module.validate_module.profile_total`, `profile_sound`, `profile_spec`. [Module/Completeness](Itasca/Module/Completeness.lean): `profile_complete`, `profile_complete_with_metadata`. |
+| Streaming driver | `stream.validate_streaming.profile_sound`, `profile_total`, and `profile_complete` in [Stream/DriverSound](Itasca/Stream/DriverSound.lean), [DriverTotal](Itasca/Stream/DriverTotal.lean), and [DriverComplete](Itasca/Stream/DriverComplete.lean). |
+| Contiguous adapter | [Stream/SliceSound](Itasca/Stream/SliceSound.lean) and [SliceComplete](Itasca/Stream/SliceComplete.lean) discharge the driver contracts for `validate_module`. |
+| Worker batches | [Stream/Batch](Itasca/Stream/Batch.lean) and [BatchComplete](Itasca/Stream/BatchComplete.lean): ordered entry validation and exact coverage. |
+| Bodies and entries | [Profile/BodyVisitor](Itasca/Profile/BodyVisitor.lean), [EntrySound](Itasca/Profile/EntrySound.lean), and [EntryComplete](Itasca/Profile/EntryComplete.lean) for both profiles, built on [Wasm1/](Itasca/Wasm1) and [Wasm2/](Itasca/Wasm2) `Soundness`, `Totality`, and `Completeness`. |
+| Callback traces | [Wasm1/Trace/Body](Itasca/Wasm1/Trace/Body.lean), [Module/Code/EntryTrace](Itasca/Module/Code/EntryTrace.lean), and [Wasm2/Trace/Correspondence](Itasca/Wasm2/Trace/Correspondence.lean). |
+| Decoding uniqueness | [Binary/ModuleUnique](Itasca/Binary/ModuleUnique.lean) and [Profile/BinaryUnique](Itasca/Profile/BinaryUnique.lean), without typing or size premises. |
 
-`ModuleSound.Validated` identifies one independently encoded raw module,
-elaborates it to generated syntax, proves `Module_ok` and the selected profile,
-and relates the actual returned environment and tail to that module. Its
-metadata facts prove that `import_types` and `export_types` succeed with the
-same module's external types in declaration order. Type caches and imported and
-defined index spaces are connected to the actual parser output.
-
-Completeness starts from `ModuleEncodingWithinLimits`,
-`ModuleSignaturesWithinLimits`, `Elaborates`, generated `Module_ok`, and
-`ModuleElaboration.Profile` for the same raw module. It assumes neither parser
-success nor a local validity checker. Byte bounds include the final body `end`;
-local bounds exclude parameters. Wasm 2.0 signatures have at most 1000
-parameters and results; the Wasm 1.0 signature predicate imposes no cap.
-Resource limits stay separate from language validity.
+Soundness yields `ModuleSound.Validated`: one raw module that the bytes encode,
+that elaborates to a `Module_ok` SpecTec module satisfying the profile, and that
+the returned environment, tail, and accessors describe. Completeness assumes
+`ModuleEncodingWithinLimits`, `ModuleSignaturesWithinLimits`, `Elaborates`,
+`Module_ok`, and `ModuleElaboration.Profile`, and never parser success. Body byte
+bounds include the final `end`; local bounds exclude parameters.
 
 ### Streaming premises
 
-| Claim | Required contracts |
+| Claim | Requires |
 | --- | --- |
-| Soundness | `StreamSource.Coherent` relates successful views to fixed logical bytes. `StreamScheduler.Provenance` relates returned workers to issued seeds through `StreamBatch.Reachable`, preserving that relation across every callback. |
-| Termination | `StreamSource.CallbacksTotal` and `StreamScheduler.CallbacksTotal` require ordinary callback returns. They do not require valid bytes, source coherence, worker provenance, or finished workers. |
-| Completeness | `StreamSource.CanonicalAvailable` supplies the independent input's canonical regions. `StreamAcceptingScheduler.Accepts` supplies positive batch settings, accepting callbacks, preserved queues, and returned results of actual `validate_all` executions in any order. |
+| Soundness | `StreamSource.Coherent`: successful views agree with fixed logical bytes. `StreamScheduler.Provenance`: returned workers derive from issued seeds through `StreamBatch.Reachable`. |
+| Termination | `StreamSource.CallbacksTotal` and `StreamScheduler.CallbacksTotal`: callbacks return. Nothing about the bytes or workers. |
+| Completeness | `StreamSource.CanonicalAvailable`: canonical regions are readable. `StreamAcceptingScheduler.Accepts`: positive batch settings, accepting callbacks, and actual `validate_all` results in any order. |
 
-Soundness allows read errors and does not assume a canonical split. Worker
-provenance does not assume successful finish: the driver checks pending IDs and
-completion. Worker completeness derives finish from independent typed entry
-encodings. The accepting scheduler is one sufficient policy, not a classification
-of every possible implementation.
+Soundness allows read errors and any split. The driver itself checks pending IDs
+and completion, so provenance does not assume workers finish. The accepting
+scheduler is one sufficient policy, not the only one. Logical coherence across
+separate source calls remains the embedding's obligation.
 
-The generic accepted-run witness identifies the tail delivered to `tail_ready`.
-It does not assume arbitrary visitor state stores that tail. The contiguous
-adapter proves its returned `Module` contains exactly the decoded environment
-and tail. Rust borrows protect individual views; logical coherence across
-separate source calls remains an embedding obligation.
+### Traces
 
-### Body and trace boundaries
-
-Wasm 1.0 body soundness requires zero or one declared function result. Its
-termination theorem allows arbitrary environments and result vectors.
-Completeness additionally requires zero-or-one results in stored signatures and
-the body-byte bound. Whole-module proofs derive these environment obligations
-from actual module decoding.
-
-Wasm 2.0 body soundness selects results from the actual function type index.
-Completeness requires bounded signatures, independently encoded and typed
-instructions, and the independent `ref.func` declaration condition. The grammar
-covers indexed block parameters/results, branch tables with a common `BOT`
-subtype, sign extension, saturating conversions, reference/table operations,
-bulk memory, and all 236 Wasm 2.0 SIMD operations. Instruction typing uses the
-actual element types and declared data count from the environment.
-[Examples/Wasm1/ProfileBoundary](Itasca/Examples/Wasm1/ProfileBoundary.lean) checks
-why Wasm 1.0 branch-table equality must be an explicit restriction of Wasm 2.0.
-
-Body traces for both profiles identify operator hooks, their order, state
-snapshots, and immediates, including float bits and branch-table labels. Wasm 2.0
-traces also record indexed block signatures, references, bulk operations, and all
-SIMD immediates. Wasm 1.0 entry traces additionally identify the function-start
-callback and body/local bounds. An observed rejecting callback
-is included, returns the observed error, and is last. Label callbacks occur
-after decoding and label bounds checks but before later target-compatibility
-checks. The default label appears in the closing table callback.
-
-Trace statements quantify ordinary returned executions. They do not claim a
-trace for a panicking or diverging callback, a complete trace specification for
-rejected module/entry runs, or an exact error variant for every malformed input.
-[Binary/Wasm1/EncodingUnique](Itasca/Binary/Wasm1/EncodingUnique.lean) and
-[Binary/ModuleUnique](Itasca/Binary/ModuleUnique.lean) prove independent
-decoding uniqueness without typing or implementation-size assumptions.
-[Profile/BinaryUnique](Itasca/Profile/BinaryUnique.lean) extends these guarantees
-to body, code-entry, and complete-module decoding under either profile.
+Body traces identify operator hooks, their order, state snapshots, and
+immediates (float bits, branch-table labels, block signatures, and SIMD
+immediates). Wasm 1.0 entry traces also cover the function-start callback. An
+observed rejecting callback is included and is last. Traces cover only
+executions that return; they do not specify full traces of rejected modules or
+an exact error for every malformed input.
 
 ## Proof architecture
 
-The proofs under `Itasca/` are layered roughly in the order of this table.
-`just prove` enforces the foundation: `Support/`, `Spec/`, and `Binary/` import
-only the rows above them, and `Handler/` adds only `Visitor/`. The binary grammar
-therefore stays readable without the validator proofs. Above the foundation the
-order is a guide. `Handler/` and `Visitor/` share hook lemmas, the `Profile/`
-code-entry contracts use `Module/Code/`, and the public theorems in
-`Module/Validation` and `Module/Completeness` build on `Stream/`, because
-`module.validate_module` runs through the streaming adapter.
+The directories below are layered top to bottom. `just prove` enforces the
+foundation: `Support/`, `Spec/`, and `Binary/` import only rows above them, and
+`Handler/` adds only `Visitor/`. Above that, the order is a guide.
 
-| Directory | Responsibility |
+| Directory | Contents |
 | --- | --- |
-| `Generated/` | Committed Aeneas models of the Rust validator and the handwritten external models. |
-| `Support/` | Result inversion, loop-state conjugation, literal-dispatch simprocs, and translation of Rust types, block types, and `module.Env` into SpecTec contexts (`EnvTranslation.Matches`). |
-| `Spec/` | Checks of and supplements to the generated specification: `Checks`, the `ref.func` declaration condition (`DeclaredReferences`), `Instrs_ok` inversion, and constant instructions. |
-| `Binary/` | The independent binary grammar. Top-level files cover LEB128, float bits, the module grammar `ModuleEncodingWith`, Unicode names, and decoding uniqueness. `Binary/Wasm1/` is the Wasm 1.0 instruction grammar with its numeric and memory opcode tables; `Binary/Wasm2/` extends it with sign extension, references, bulk memory, SIMD, and type-index block types. |
-| `Handler/` | Profile-agnostic lemmas about individual extracted handlers (`code.read_*`, `code.step_*`, stack primitives). `Sequence` defines `Realizes` and `TypedPrefix`, which relate validator stack types to declarative stacks. |
-| `Visitor/` | Profile-agnostic visitor contracts (`FullVisitor.Total`, `FullVisitor.Accepts`), step-level erasure, lift and refinement, and the event and trace framework (`VisitorTrace`). |
-| `Wasm1/` | The Wasm 1.0 body development: typed zipper and invariant (`Frames`, `Invariant`), per-instruction steps (`Step*`), and the body results (`Soundness`, `ProfileSoundness`, `Completeness`). `Complete/` builds successful executions from independent premises, `Visitor/` relates visiting and plain validation, and `Trace/` proves callback traces. |
-| `Wasm2/` | The Wasm 2.0 body development. Top-level files hold the contract (`BodySpec`), zipper, invariant, and the body results (`Soundness`, `Totality`, `Completeness`). Instruction families follow the Rust dispatch: `Scalar/` (shared `code.step` arms), `NumericExt/` (`code.step_extended`), `References/`, `Bulk/`, and `Simd/` (leaves of `code.step_wasm2`), combined in `Step/`, plus `Control/`. `Complete/`, `Visitor/`, and `Trace/` mirror `Wasm1/`. |
-| `Profile/` | Profile-parametric body and code-entry contracts over `.Wasm1` and `.Wasm2`, so the module and streaming proofs treat both profiles uniformly. |
-| `Module/` | Whole modules. `Readers/` covers primitive readers, `Const/` constant expressions, `Sections/` one parser and its completeness per section, `Env/` the environment decoded before the code section, `Code/` code entries, `Elab/` elaboration to SpecTec syntax and `Module_ok` assembly, and `Custom/` custom-section hooks and traces. Top-level files hold the public theorems and the byte layout of the module regions. |
-| `Stream/` | Source and scheduler contracts, code-entry framing, worker batches, submission, the generic driver, and the contiguous-slice adapter behind `module.validate_module`. |
-| `Examples/` | Kernel-checked examples grouped as `Wasm1/`, `Wasm2/`, `Module/`, and `Stream`. |
+| `Generated/` | Aeneas models of the Rust validator and the handwritten external models. |
+| `Support/` | Result inversion, loop lemmas, dispatch simprocs, and translation of Rust types and `module.Env` into SpecTec contexts. |
+| `Spec/` | Checks of and additions to the generated specification: declared references, `Instrs_ok` inversion, constants. |
+| `Binary/` | The independent grammar: LEB128, floats, names, modules, uniqueness, and the `Wasm1/` and `Wasm2/` instruction grammars. |
+| `Handler/` | Lemmas about individual extracted handlers, and `Realizes`/`TypedPrefix` for stacks. |
+| `Visitor/` | Profile-agnostic visitor contracts, erasure, lifting, and the trace framework. |
+| `Wasm1/` | Wasm 1.0 bodies: zipper, invariant, steps, results, plus `Complete/`, `Visitor/`, and `Trace/`. |
+| `Wasm2/` | Wasm 2.0 bodies, split like the Rust dispatch into `Scalar/`, `NumericExt/`, `References/`, `Bulk/`, `Simd/`, `Control/`, and `Step/`, with the same subdirectories as `Wasm1/`. |
+| `Profile/` | Body and entry contracts parametric over the profile. |
+| `Module/` | Readers, constant expressions, sections, environment, code entries, elaboration, custom sections, and the public theorems. |
+| `Stream/` | Source and scheduler contracts, batches, the driver, and the contiguous adapter. |
+| `Examples/` | Kernel-checked examples. |
 
-File names inside a family carry the kind of proof: `X` or `XSound` proves an
-extracted function's soundness `spec` or preserves the body invariant,
-`XTotal` proves termination, and `XComplete` proves acceptance from independent
-encoding and typing. [Audit.lean](Itasca/Audit.lean) imports the sink modules of
-the import graph; run `just audit-imports` after adding or moving files.
+Within a family, `X` or `XSound` proves soundness or invariant preservation,
+`XTotal` termination, and `XComplete` acceptance from independent premises.
 
-The extracted body loop `code.body_loop_loop` is shared by both profiles.
-[Wasm1/SharedLoop](Itasca/Wasm1/SharedLoop.lean) proves it equal, at `.Wasm1`,
-to the proof-only [Wasm1/LegacyExecution](Itasca/Wasm1/LegacyExecution.lean)
-model that the Wasm 1.0 body proofs are stated against. Both profiles feed one
-module and streaming proof chain through `Profile/`.
+Some dependencies run against intuition. The public module theorems build on
+`Stream/` because `validate_module` runs through the streaming adapter. Both
+profiles share `code.body_loop_loop`; [Wasm1/SharedLoop](Itasca/Wasm1/SharedLoop.lean)
+proves it equal at `.Wasm1` to the proof-only
+[Wasm1/LegacyExecution](Itasca/Wasm1/LegacyExecution.lean) model. Keep the
+independent body contracts in [Wasm2/BodySpec](Itasca/Wasm2/BodySpec.lean) and
+[Profile/BodySpec](Itasca/Profile/BodySpec.lean) free of the soundness and
+completeness proofs, so grammar and module code can import them cheaply.
 
-Independent body contracts live in [Wasm2/BodySpec](Itasca/Wasm2/BodySpec.lean)
-and [Profile/BodySpec](Itasca/Profile/BodySpec.lean). Grammar, module
-certificates, and context-transport lemmas can import these without importing
-the full body soundness and completeness proofs.
-[Profile/Body](Itasca/Profile/Body.lean) connects those contracts to the
-validators. Keep dependencies in this direction when adding instructions.
+## Specification gaps
 
-[Wasm2/Step/ScalarContext](Itasca/Wasm2/Step/ScalarContext.lean) records the
-control-opcode boundary and the shared scalar dispatch's dependence on locals.
-[Wasm2/Step/Context](Itasca/Wasm2/Step/Context.lean) lifts this fact to the
-Wasm 2.0 dispatcher. Soundness and completeness both use these execution
-equalities; neither needs the other's scalar correctness proof. Dispatch
-equalities should follow the extracted match branches instead of enumerating
-every possible byte. Scalar termination and soundness share one memory
-opcode-range lemma in [Wasm2/Scalar/Total](Itasca/Wasm2/Scalar/Total.lean).
+The proofs supplement the pinned specification without editing it:
 
-### Expanding the supported profile
+- The generated typing omits the `C.refs` condition on `ref.func`.
+  [Spec/DeclaredReferences](Itasca/Spec/DeclaredReferences.lean) requires every
+  `ref.func` target to occur in the module outside function definitions and the
+  start declaration. Module, entry, and body certificates carry it.
+- The generated module judgment lacks export-name uniqueness and similar
+  conditions, which the profile adds.
+- The SpecTec binary table assigns SIMD subopcode 92 to both `v128.load32_zero`
+  and `v128.load64_zero`. The grammar and Rust use 92 and 93. The proofs use
+  SpecTec typing, not its binary decoding, so no assumption is needed.
+- Wasm 1.0 requires `br_table` targets to be equal, which Wasm 2.0 typing does
+  not; [Examples/Wasm1/ProfileBoundary](Itasca/Examples/Wasm1/ProfileBoundary.lean)
+  shows why.
+
+### Source patches
+
+Build targets apply these to the pinned checkouts:
+
+- [aeneas-lean-extraction.patch](../patches/aeneas-lean-extraction.patch) fixes
+  Lean name shadowing and nested branch indentation; `just regressions` checks
+  it.
+- [spectec-wasm2-global-mutability.patch](../patches/spectec-wasm2-global-mutability.patch)
+  keeps both global mutabilities in typing.
+- [spectec-wasm2-module.patch](../patches/spectec-wasm2-module.patch)
+  disambiguates import projections and fixes the four-byte UTF-8 upper bound.
+
+## Extending the profile
 
 The Wasm 2.0 instruction restriction in
-[Profile/Instructions](Itasca/Profile/Instructions.lean) is `True`: its
-independent binary grammar supplies the supported instruction boundary. Broader
-SpecTec typing alone therefore does not extend the accepted language. Extend
-binary syntax and encoding, implementation dispatch, typing/stack preservation,
-and independent completeness together. Keep language restrictions separate from
-the bounds in [Profile/Types](Itasca/Profile/Types.lean).
+[Profile/Instructions](Itasca/Profile/Instructions.lean) is `True`: the binary
+grammar bounds the accepted instructions, so broader SpecTec typing alone
+accepts nothing new. Add binary syntax, Rust dispatch, typing preservation, and
+completeness together. Keep language restrictions separate from the bounds in
+[Profile/Types](Itasca/Profile/Types.lean).
 
-The pinned generated specification omits the `C.refs` condition on `ref.func`.
-[Spec/DeclaredReferences](Itasca/Spec/DeclaredReferences.lean) supplies an
-independent syntactic condition: every `ref.func` target must occur in the
-module after removing function definitions and the start declaration. Module
-certificates identify that declaration set, and body/entry certificates preserve
-membership for every `ref.func`, including nested instructions. This condition
-is checked alongside generated typing; the vendored specification remains
-unchanged. Function-index bounds remain a separate typing obligation.
-
-[Binary/Wasm2/Simd](Itasca/Binary/Wasm2/Simd.lean) defines SIMD immediates
-independently of runtime dispatch.
-[Binary/Wasm2/SimdPureMeaning](Itasca/Binary/Wasm2/SimdPureMeaning.lean) and the
-lane, memory, and bit-pattern meaning modules connect them to generated typing
-rules. [Wasm2/Simd/Sound](Itasca/Wasm2/Simd/Sound.lean) and
-[Wasm2/Simd/Complete](Itasca/Wasm2/Simd/Complete.lean) establish both
-directions, including alignment, lane bounds, shuffle bytes, and valid
-nonminimal prefix encodings. Relaxed SIMD opcodes are excluded.
-
-The pinned SpecTec binary table assigns subopcode 92 to both
-`v128.load32_zero` and `v128.load64_zero`. The independent grammar and Rust
-implementation use the Wasm 2.0 encodings 92 and 93 respectively after the
-`0xfd` prefix. The proofs use SpecTec's generated typing judgments, not its
-binary decoding relation. This binary-table discrepancy is recorded explicitly;
-it does not require a vendor edit or a new logical assumption.
-
-Bulk-memory and table-segment instructions cross a module/body boundary.
-[Module/Code/BodyContext](Itasca/Module/Code/BodyContext.lean) transports
-typing while preserving existing segment indices and types. Wasm 1.0's
-restriction on instructions that index segments is in
-[Module/Code/BodySyntax](Itasca/Module/Code/BodySyntax.lean); it is not imposed
-on Wasm 2.0. Changes to tables, value types, segment forms, or constant
-expressions must also update
+Segment and table instructions cross the module/body boundary.
+[Module/Code/BodyContext](Itasca/Module/Code/BodyContext.lean) transports typing
+across it, and [Module/Code/BodySyntax](Itasca/Module/Code/BodySyntax.lean)
+holds the Wasm 1.0 restriction on them. Changes to tables, value types, segments,
+or constant expressions also touch
 [Module/Elab/Elaboration](Itasca/Module/Elab/Elaboration.lean),
-[Module/Elab/Profile](Itasca/Module/Elab/Profile.lean), and independent module
-encodings.
-Preserve the Wasm 1.0 specialization and source/worker contracts throughout.
-
-## Source patches
-
-Build targets apply these versioned patches reproducibly to pinned checkouts:
-
-- [aeneas-lean-extraction.patch](../patches/aeneas-lean-extraction.patch) repairs
-  Lean name shadowing and nested branch indentation. `just regressions` runs
-  the patched upstream namespace-shadow and deep-else-if cases and compiles
-  their regenerated output in this Lake environment.
-- [spectec-wasm2-global-mutability.patch](../patches/spectec-wasm2-global-mutability.patch)
-  preserves both global mutabilities in the generated typing rules.
-- [spectec-wasm2-module.patch](../patches/spectec-wasm2-module.patch) disambiguates
-  import projections and corrects the four-byte UTF-8 upper bound.
-
-General upstream issue tracking and reproducers are maintained elsewhere.
-The local source patches remain build inputs; deleting a tracker does not
-remove a patch or change the trust boundary. Regeneration and
-[Spec/Checks](Itasca/Spec/Checks.lean) check the specification used by these proofs.
+[Module/Elab/Profile](Itasca/Module/Elab/Profile.lean), and the module grammar.
 
 ## Audit
 
+[Audit.lean](Itasca/Audit.lean) checks every declaration from an imported Itasca
+module, including private helpers, generated auxiliaries, adapters, and external
+models. Only `propext`, `Classical.choice`, and `Quot.sound` are allowed.
+`just trust` sets `ITASCA_AUDIT_VERBOSE=1` to print each declaration's axioms;
+the setting changes only the report.
+
 [scripts/check_audit.py](scripts/check_audit.py) checks that `Itasca.Audit`
-imports exactly the sink modules of the import graph, so every local proof
-module is reachable, that the foundation layers import only downward, and that
-nothing imports the external model template. `just audit-imports` regenerates
-the audit's import list. [scripts/check_externals.py](scripts/check_externals.py) compares
-fresh extraction requests with concrete external-model declarations. Both use
-[scripts/lean_source.py](scripts/lean_source.py); these scripts are required by
-`just prove` and `just extract-check`.
+imports exactly the sink modules of the import graph, that the foundation
+layers import only downward, and that nothing imports the external template.
+[scripts/check_externals.py](scripts/check_externals.py) compares extraction
+requests with the external models. Both run under `just prove` and
+`just extract-check`.
 
-[Audit.lean](Itasca/Audit.lean) checks every declaration originating in an
-imported Itasca module, across namespaces and declaration kinds. Its only
-permitted transitive axioms are `propext`, `Classical.choice`, and `Quot.sound`.
-It also checks private helpers, generated auxiliaries, proof-bearing adapters,
-and external models. Add no axioms, `sorry`, `admit`, `native_decide`, unsafe
-proof shortcuts, or kernel bypasses.
-
-The normal audit checks every declaration and prints a summary. `just trust`
-sets `ITASCA_AUDIT_VERBOSE=1` for a fresh audit and prints each declaration's
-axioms. This setting controls reporting and sorting only; it cannot disable or
-narrow the checks.
-
-Upstream generated sources still contain unfinished lemmas and opaque execution
-models. The audited project proofs must not depend on them. Compiling the
-specification alone is not evidence of validator correctness. Run `just prove`
-for the integrated build and `just trust` for the current axiom report.
+Upstream sources contain unfinished lemmas and opaque execution models; the
+audit ensures the proofs do not depend on them.
 
 ## Execution boundary
 
-The Rust `runtime` module is excluded under `cfg(charon)`. It implements
-instantiation and execution, but neither its rewriting compiler nor interpreter
-has an extracted correspondence theorem. Native floating operations and fallible
-allocation have documented [extraction gaps](../docs/EXECUTION_NUMERICS.md).
-The validator's generated models and concrete external dependencies are unchanged.
-
-Bytecode well-formedness, branch and stack preservation, store/frame invariants,
-host-continuation consumption, and bounded-fuel proofs are deferred. Independent
-runtime invariant models are not part of the current proof scope. The concrete
-Wasm 2.0 callback correspondence proofs are audited. The
-[execution guide](../docs/EXECUTION.md) distinguishes runtime tests from proof
-claims and records the remaining correspondence work.
+The Rust `runtime` module is excluded under `cfg(charon)` and has no
+correspondence proof. See the [execution guide](../docs/EXECUTION.md) and the
+[numeric extraction gaps](../docs/EXECUTION_NUMERICS.md).
