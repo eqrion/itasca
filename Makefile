@@ -16,7 +16,7 @@ test:
 tools extract extract-check prove trust spec-check spec-update regressions clean:
 	$(MAKE) -C lean $@
 
-# Example: make check MODULE=Itasca.ModuleValidation
+# Example: make check MODULE=Itasca.Module.ModuleValidation
 check:
 	@test -n "$(MODULE)" || { echo "Set MODULE=Itasca.ModuleName"; exit 1; }
 	cd lean && lake build $(MODULE)
