@@ -7,6 +7,12 @@ supports the WebAssembly 1.0 and 2.0 core profiles, including
 parallel function validation and compiler callbacks. Both profiles have
 whole-module termination, soundness, and completeness proofs.
 
+It also includes a fuel-metered rewriting interpreter for instantiation and
+execution under both profiles. The runtime is tested against both pinned
+specification corpora; execution is not covered by the validator proofs. See
+the [execution guide](docs/EXECUTION.md) for linking, host calls, resource limits,
+and resumable invocation.
+
 This is an experiment in AI-assisted formal verification by Ryan Hunt, built
 extensively with Claude. The proof statements and their trust boundary are
 part of the project: read [formal verification](#formal-verification) before
@@ -90,7 +96,7 @@ provenance comes from the independent handwritten binary grammar.
 | --- | --- |
 | `validate_module` | Arbitrary bytes terminate. Acceptance establishes exact module encoding, generated `Module_ok`, the selected profile, coherent index spaces, and exact returned metadata. Independently encoded and typed modules within the limits are accepted. |
 | `validate_streaming` | Soundness requires coherent source views and worker provenance. Termination requires returning callbacks. Completeness additionally requires available canonical input regions and an accepting scheduler policy. |
-| `CodeBatch::validate_func` and visitors | Batch proofs connect actual entry validations to ordered function coverage. Shared body and entry proofs establish typing under both profiles. Wasm 1.0 trace proofs identify callback names, order, immediates, and an observed rejecting callback's stopping behavior. |
+| `CodeBatch::validate_func` and visitors | Batch proofs connect actual entry validations to ordered function coverage. Shared body and entry proofs establish typing under both profiles. Body trace proofs for both profiles identify callback names, order, immediates, and an observed rejecting callback's stopping behavior. |
 
 The [Lean guide](lean/README.md#proof-contracts) links these statements to their
 source files and spells out their premises. Whole-module completeness starts
@@ -147,6 +153,11 @@ proof-bearing definitions, and external models. Only `propext`,
 `Classical.choice`, and `Quot.sound` are permitted. There are no project-specific
 axioms or kernel bypasses in the checked dependencies. Unfinished upstream lemmas
 and opaque execution models are excluded from those dependencies.
+
+The new `runtime` module is explicitly excluded from Charon extraction. Native
+numeric operations and fallible runtime allocation remain an unverified
+implementation boundary, documented with [extraction probes](docs/EXECUTION_NUMERICS.md).
+No runtime assumptions or external axioms have been added to the validator proofs.
 
 These guarantees cover validation and decoding. They do not establish Wasm
 execution, compiler IR correctness, OS scheduling, network progress, or FFI memory

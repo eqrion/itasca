@@ -198,7 +198,7 @@ theorem tableBody.transfer {V W : Type} (visitor : code.OpVisitor V)
         exact tableRest.transfer visitor replacement ha s env count i depth ts arity v' w' cf h hg
 
 
-private theorem tableRest.cont_progress {V : Type} (visitor : code.OpVisitor V)
+theorem tableRest.cont_progress {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (env : module.Env) (count i depth : U32)
     (ts : signature.ResultType) (arity : Option Usize) (v : V)
     (ois : code.OpIterState)
@@ -227,7 +227,7 @@ private theorem tableRest.cont_progress {V : Type} (visitor : code.OpVisitor V)
       obtain ⟨_, _, _, rfl⟩ := h
       scalar_tac
 
-private theorem tableBody.cont_progress {V : Type} (visitor : code.OpVisitor V)
+theorem tableBody.cont_progress {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : module.Env) (count : U32) (st : code.BodyState)
     (v : V) (arity : Option Usize) (i : U32)
     (ois : code.OpIterState)

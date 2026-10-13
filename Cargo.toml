@@ -17,6 +17,9 @@ include = [
 default = ["std"]
 std = []
 
+[target.'cfg(not(charon))'.dependencies]
+libm = { version = "=0.2.16", default-features = false }
+
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(charon)'] }
 
@@ -24,3 +27,6 @@ unexpected_cfgs = { level = "warn", check-cfg = ['cfg(charon)'] }
 wasmparser = "=0.252.0"
 wast = "=252.0.0"
 anyhow = "1"
+wasmi = { version = "=2.0.0", default-features = false, features = ["std", "validate", "simd", "stable"] }
+wasm-smith = "=0.252.0"
+arbitrary = "1"

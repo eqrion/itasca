@@ -15,6 +15,50 @@ itasca = { path = ".." }
 wasmparser = "=0.252.0"
 wasm-smith = "=0.252.0"
 arbitrary = "1"
+wasmi = { version = "=2.0.0", default-features = false, features = ["std", "validate", "simd", "stable"] }
+wast = "=252.0.0"
+
+[[bin]]
+name = "wasm1_execute"
+path = "fuzz_targets/wasm1_execute.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "wasm2_execute"
+path = "fuzz_targets/wasm2_execute.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "runtime_numeric"
+path = "fuzz_targets/runtime_numeric.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "runtime_compile"
+path = "fuzz_targets/runtime_compile.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "runtime_stateful"
+path = "fuzz_targets/runtime_stateful.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "runtime_linking"
+path = "fuzz_targets/runtime_linking.rs"
+test = false
+doc = false
+bench = false
 
 [[bin]]
 name = "raw_bytes"

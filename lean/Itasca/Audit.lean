@@ -1,4 +1,13 @@
 import Itasca.Examples.DeclaredReferences
+import Itasca.MultiValue.CallbackRefinement
+import Itasca.MultiValue.CallbackBodyRefinement
+import Itasca.MultiValue.CallbackControlBytes
+import Itasca.MultiValue.CallbackTrace
+import Itasca.MultiValue.CallbackBytesSimd
+import Itasca.MultiValue.CallbackBytesDispatch
+import Itasca.MultiValue.CallbackReturnBytes
+import Itasca.MultiValue.CallbackStepTrace
+import Itasca.MultiValue.CallbackCorrespondence
 import Itasca.MultiValue.BlockDecode
 import Itasca.Profile.BinaryUnique
 import Itasca.MultiValue.Typing

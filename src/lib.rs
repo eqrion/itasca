@@ -70,3 +70,7 @@ pub enum ValidationProfile {
     /// WebAssembly Core 2.0, including reference types, bulk memory, and SIMD.
     Wasm2,
 }
+
+/// Instantiation and execution. This component is not covered by the validator proofs.
+#[cfg(not(charon))]
+pub mod runtime;

@@ -6,6 +6,10 @@ profiles. The [project README](../README.md#formal-verification) states the publ
 guarantees and trust boundary. [DEVELOPMENT.md](../DEVELOPMENT.md) describes the
 change workflow. This guide covers setup and the proof contracts behind the API.
 
+For an introduction aimed at Wasm developers new to Lean, read
+[A guide to the itasca proofs](PROOF_GUIDE.md). It starts with the top-level
+theorems and follows their certificates into the supporting proof layers.
+
 ## Setup
 
 The repository pins the following dependencies:
@@ -115,6 +119,7 @@ component functions are private in the consumer API.
 | Wasm 1.0 body | [WasmSoundness](Itasca/Body/WasmSoundness.lean), [Wasm1Soundness](Itasca/Body/Wasm1Soundness.lean), and [WasmComplete](Itasca/Body/WasmComplete.lean) establish termination, generated typing, profile restrictions, and independent completeness. |
 | Wasm 2.0 body | [BodyTotal](Itasca/MultiValue/BodyTotal.lean), [Soundness](Itasca/MultiValue/Soundness.lean), and [Complete](Itasca/MultiValue/Complete.lean) connect the shared worker to the complete Core 2.0 grammar, generated typing, and independent reference declarations. |
 | Wasm 1.0 callback traces | [VisitorBodyTrace](Itasca/Visitor/VisitorBodyTrace.lean), [ModuleEntryTrace](Itasca/Module/ModuleEntryTrace.lean), and [VisitorTraceCorollaries](Itasca/Visitor/VisitorTraceCorollaries.lean) identify accepted traces and rejection stopping behavior. |
+| Core 2.0 callback traces | [CallbackCorrespondence](Itasca/MultiValue/CallbackCorrespondence.lean) and [CallbackBodyRefinement](Itasca/MultiValue/CallbackBodyRefinement.lean) establish exact body callback bytes, accepted typing, completeness, instrumentation, and rejection stopping behavior. |
 
 `ModuleSound.Validated` identifies one independently encoded raw module,
 elaborates it to generated syntax, proves `Module_ok` and the selected profile,
@@ -169,9 +174,11 @@ actual element types and declared data count from the environment.
 [WasmCompletenessBoundary](Itasca/Examples/WasmCompletenessBoundary.lean) checks
 why Wasm 1.0 branch-table equality must be an explicit restriction of Wasm 2.0.
 
-Wasm 1.0 traces identify the profile's operator hooks, their order, state snapshots, and
-immediates, including float bits and branch-table labels. Entry traces add the
-function-start callback and body/local bounds. An observed rejecting callback
+Body traces for both profiles identify operator hooks, their order, state
+snapshots, and immediates, including float bits and branch-table labels. Core 2.0
+traces retain indexed block signatures, references, bulk operations, and all SIMD
+immediates. Wasm 1.0 entry traces additionally identify the function-start
+callback and body/local bounds. An observed rejecting callback
 is included, returns the observed error, and is last. Label callbacks occur
 after decoding and label bounds checks but before later target-compatibility
 checks. The default label appears in the closing table callback.
@@ -310,3 +317,18 @@ Upstream generated sources still contain unfinished lemmas and opaque execution
 models. The audited project proofs must not depend on them. Compiling the
 specification alone is not evidence of validator correctness. Run `just prove`
 for the integrated build and `just trust` for the current axiom report.
+
+## Execution boundary
+
+The Rust `runtime` module is excluded under `cfg(charon)`. It implements
+instantiation and execution, but neither its rewriting compiler nor interpreter
+has an extracted correspondence theorem. Native floating operations and fallible
+allocation have documented [extraction gaps](../docs/EXECUTION_NUMERICS.md).
+The validator's generated models and concrete external dependencies are unchanged.
+
+Bytecode well-formedness, branch and stack preservation, store/frame invariants,
+host-continuation consumption, and bounded-fuel proofs are deferred. Independent
+runtime invariant models are not part of the current proof scope. The concrete
+Core 2.0 callback correspondence proofs remain audited. The
+[execution guide](../docs/EXECUTION.md) distinguishes runtime tests from proof
+claims and records the remaining correspondence work.
