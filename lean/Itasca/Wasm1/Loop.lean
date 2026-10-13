@@ -2,10 +2,21 @@ import Itasca.Handler.Control
 import Itasca.Wasm1.SharedLoop
 import Itasca.Binary.ReadByte
 
+/-!
+# Wasm 1.0 loop induction
+
+Termination and invariant induction for the body loop, stated on `code.validate_body_with_loop`
+and transferred to `code.validate_body_with` and `code.validate_body`. `Wasm1.Loop.StepContract`
+is the per-iteration obligation, and `code.validate_body_with.spec` concludes a postcondition for
+accepted runs. The file also characterizes `code.start_function`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm1.Loop
 
+/-- The loop state after `code.start_function`: one body control frame with block type `bt`, an
+empty value stack, and position `0`. -/
 def initial (bt : code.BlockType) : code.OpIterState :=
   ⟨alloc.vec.Vec.new _,
     alloc.vec.Vec.from [⟨.Body, bt, Control.signature bt, 0#usize, false⟩] (by scalar_tac), 0#usize⟩
@@ -13,8 +24,8 @@ def initial (bt : code.BlockType) : code.OpIterState :=
 theorem initial_shape (bt : code.BlockType) : Control.Shape (initial bt) := by
   constructor <;> simp [initial]
 
-/-- Successful loop iterations preserve an invariant and advance through the
-bounded input. Errors remain ordinary validator errors and need no invariant. -/
+/-- A successful `code.step` preserves the invariant and advances the position within the input.
+Errors need no invariant. -/
 def StepContract {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (inv : V → code.OpIterState → Prop) : Prop :=
   ∀ st v, inv v st → st.ctrls.val ≠ [] → ∀ (hpos : st.pos.val < data.length)
@@ -27,11 +38,12 @@ end Itasca.Wasm1.Loop
 
 namespace Itasca
 
-/-- Cursor arithmetic just past a maximal function body cannot overflow. -/
+/-- Cursor arithmetic just past a body of maximal size does not overflow `Usize`. -/
 theorem limits.MAX_FUNCTION_BYTES.room : limits.MAX_FUNCTION_BYTES.val + 2 < Usize.max := by
   simp only [limits.MAX_FUNCTION_BYTES]
   scalar_tac
 
+/-- `code.start_function` returns `Wasm1.Loop.initial bt` when the results encode `bt`. -/
 theorem code.start_function.spec (results : Slice types.ValueType) (bt : code.BlockType)
     (hresults : results.val = Control.results bt) :
     code.start_function results = .ok (Wasm1.Loop.initial bt) := by
@@ -61,9 +73,9 @@ theorem code.read_op.eof (st : code.OpIterState) (data : Slice U8)
     core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-/-- Termination and invariant induction for the Wasm 1.0 view of the shared
-loop. `code.validate_body_with.eq_model` connects this view to the extracted
-worker. The profile-specific step proof is an explicit parameter here. -/
+/-- Termination and invariant induction for `code.validate_body_with_loop`, the proof-only loop
+equal to the extracted shared loop at `.Wasm1` (`code.validate_body_with.eq_model`). The step
+contract is a hypothesis. -/
 theorem code.validate_body_with_loop.spec {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (inv : V → code.OpIterState → Prop) (post : V → Prop)
@@ -112,8 +124,8 @@ theorem code.validate_body_with_loop.spec {V : Type} (visitor : code.OpVisitor V
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   · exact hinv
 
-/-- Lifts a profile's step invariant through initialization, the size guard,
-and the public validator entry point. -/
+/-- Lifts a step invariant through the size guard, `code.start_function` and the loop to
+`code.validate_body_with`. -/
 theorem code.validate_body_with.spec {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (bt : code.BlockType)
     (hresults : ctx.results.val = Control.results bt)
@@ -136,7 +148,7 @@ theorem code.validate_body_with.spec {V : Type} (visitor : code.OpVisitor V)
     apply hinit
     scalar_tac
 
-/-- The non-visiting public validator follows from the same checked loop. -/
+/-- The same lifting for `code.validate_body`, which uses the empty visitor. -/
 theorem code.validate_body.spec
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (bt : code.BlockType)
     (hresults : ctx.results.val = Control.results bt)
@@ -156,8 +168,8 @@ end Itasca
 
 namespace Itasca.Wasm1.Loop
 
-/-- Initialization mirrors the extracted implementation even for an arbitrary
-caller-supplied result list. Soundness separately restricts Wasm 1.0 results. -/
+/-- The block type that `code.start_function` builds from a result list: `.Value t` for a
+singleton `[t]` and `.Empty` otherwise. -/
 def initialBlockType (results : List types.ValueType) : code.BlockType :=
   match results with
   | [t] => .Value t
@@ -171,6 +183,7 @@ end Itasca.Wasm1.Loop
 
 namespace Itasca
 
+/-- `code.start_function` returns the initial state for any result list. -/
 theorem code.start_function.raw_spec (results : Slice types.ValueType) :
     code.start_function results = .ok (Wasm1.Loop.initial (Wasm1.Loop.initialBlockType results.val)) := by
   cases hv : results.val with

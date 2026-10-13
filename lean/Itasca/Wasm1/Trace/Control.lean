@@ -5,6 +5,15 @@ import Itasca.Visitor.BrTableTrace
 import Itasca.Wasm1.StepControl
 import Itasca.Wasm1.StepBranch
 
+/-!
+# Control instruction callback traces
+
+`StepRecords` for `block`, `loop`, `if`, `else`, `end`, `br`, `br_if`, `br_table` and `return`:
+each `code.step` return of that opcode in a `Wasm1.Pending` state records its callbacks with the
+exact bytes of the instruction. `step_br_table` also covers the partial vector left by a
+rejection.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.VisitorTrace
@@ -150,9 +159,9 @@ theorem step_return {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
   exact ⟨.plain .RETURN, rfl, by simp [Action.opcode],
     .no_immediate p.inbounds (by simpa [global_simps] using hbyte) (by simpa [hp] using p.pos) .return_⟩
 
-/-- The table's final callback follows every vector callback and the unobserved
-default, with all validation complete. A rejecting closing callback remains in
-the complete byte chunk; any earlier failure leaves just its observed prefix. -/
+/-- The table's final callback follows every vector callback and the unobserved default, with
+all validation complete. A rejecting closing callback is part of the complete byte chunk. Any
+earlier failure leaves only the callbacks observed so far. -/
 theorem step_br_table {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe)

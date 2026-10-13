@@ -4,11 +4,20 @@ import Itasca.Wasm1.Complete.BrTable
 import Itasca.Wasm1.Complete.Control
 import Itasca.Wasm1.Complete.Env
 
+/-!
+# Wasm 1.0 leaf instruction contract
+
+`leaf_contract` discharges `LeafContract` for every non-structured Wasm 1.0 instruction by case
+analysis on the independent encoding relation, using the per-instruction theorems of
+`Wasm1/Complete/Scalar`, `Control`, `BrTable` and `Env`. `memory_contract` covers the load and
+store rows separately.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm1.Completeness
 
-/-- Separate family interface for the independently enumerated load/store map. -/
+/-- The completeness statement for the load and store rows of `MemoryMeaning.opcodeMeaning`. -/
 def MemoryContract (data : Slice U8) (env : module.Env) (ctx : code.Context) : Prop :=
   ∀ (C : context) (st : code.OpIterState) (f : Frame st) (opcode : U8)
     (op : MemoryMeaning.Operation) (arg : code.MemArg) (alignment offset : List U8)
@@ -27,8 +36,8 @@ theorem memory_contract (data : Slice U8) (env : module.Env) (ctx : code.Context
   exact memory f data env ctx C hc opcode op hmap arg alignment offset next ha ho hb
     front input output ht hr hsize
 
-/-- Exhaust the independent Wasm 1.0 leaf encoding relation. Every branch uses
-a proved actual-dispatch success theorem and a primitive generated typing rule. -/
+/-- Every Wasm 1.0 leaf encoding in the independent grammar is accepted by `code.step` when its
+primitive generated typing rule applies. -/
 theorem leaf_contract (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (henv : Wasm1.Environment env) :
     LeafContract data env ctx := by

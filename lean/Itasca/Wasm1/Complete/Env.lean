@@ -5,6 +5,15 @@ import Itasca.Handler.EnvDispatch
 import Itasca.Binary.Wasm1.MemoryTyping
 import Itasca.Visitor.StepErasure
 
+/-!
+# Wasm 1.0 environment instruction completeness
+
+For `local.get`, `local.set`, `local.tee`, `global.get`, `global.set`, `call`, `call_indirect`,
+`memory.size`, `memory.grow` and the load/store rows (`memory`), the generated `Instr_ok` typing
+under a matching `context` makes `code.step` accept the encoded instruction. Each result has the
+`StepResult` form.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm1.Completeness

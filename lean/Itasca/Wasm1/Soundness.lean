@@ -1,12 +1,20 @@
 import Itasca.Wasm1.Step
 
+/-!
+# Wasm 1.0 body soundness and totality
+
+Main soundness results for `code.validate_body_with` and `code.validate_body` under Wasm 1.0.
+Acceptance gives `Wasm1.Validated`: an independent binary encoding with generated SpecTec typing
+(`code.validate_body.wasm_sound`). `code.validate_body.wasm_total` shows the validator never
+panics or diverges. The profile-strengthened versions are in `Wasm1/ProfileSoundness`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- Full Wasm 1.0 body validation on arbitrary bytes. A visitor may reject;
-termination requires its hooks to terminate. Acceptance produces independent
-binary syntax and the generated SpecTec declarative typing judgment. -/
+/-- `code.validate_body_with` on arbitrary bytes and a total visitor accepts only bodies that
+satisfy `Wasm1.Validated`. -/
 theorem code.validate_body_with.wasm_spec {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (bt : code.BlockType)
@@ -17,8 +25,8 @@ theorem code.validate_body_with.wasm_spec {V : Type} (visitor : code.OpVisitor V
     (by rw [hresults]; exact Wasm1.Loop.initialBlockType_results bt)
     (Wasm1.steps visitor hvisitor data env ctx bt) v
 
-/-- Even an arbitrary caller-supplied result vector cannot cause the extracted
-body validator to panic or diverge, provided visitor hooks terminate. -/
+/-- For any result vector in the context, `code.validate_body_with` returns without panicking or
+diverging, provided the visitor hooks terminate. -/
 theorem code.validate_body_with.wasm_total {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (v : V) :
@@ -38,7 +46,8 @@ theorem code.validate_body_with.wasm_sound_of_total {V : Type} (visitor : code.O
   have hs := code.validate_body_with.wasm_spec visitor hvisitor data env ctx bt hresults v
   simpa [haccepted] using hs
 
-/-- The public non-visiting API has no visitor or valid-input precondition. -/
+/-- `code.validate_body` accepts only bodies that satisfy `Wasm1.Validated`. It has no visitor and
+no valid-input precondition. -/
 theorem code.validate_body.wasm_spec (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (bt : code.BlockType)
     (hresults : ctx.results.val = Control.results bt) :
@@ -48,12 +57,14 @@ theorem code.validate_body.wasm_spec (data : Slice U8) (env : module.Env)
       FullVisitor.empty_total data env ctx bt hresults ())
   simpa [code.validate_body, hr] using hp
 
+/-- `code.validate_body` returns without panicking or diverging. -/
 theorem code.validate_body.wasm_total (data : Slice U8) (env : module.Env) (ctx : code.Context) :
     ∃ r, code.validate_body data env ctx = .ok r := by
   obtain ⟨⟨r, v⟩, hr⟩ := code.validate_body_with.wasm_total
     code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_total data env ctx ()
   exact ⟨r, by simp [code.validate_body, hr]⟩
 
+/-- If `code.validate_body` returns `Ok`, the body satisfies `Wasm1.Validated`. -/
 theorem code.validate_body.wasm_sound (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (bt : code.BlockType)
     (hresults : ctx.results.val = Control.results bt)

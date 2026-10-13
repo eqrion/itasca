@@ -1,6 +1,16 @@
 import Itasca.Wasm1.Complete.Program
 import Itasca.Wasm1.Complete.Control
 
+/-!
+# Wasm 1.0 structured instruction completeness
+
+Executes `block`, `loop`, `if`, `else` and `end` through `code.step`, and builds `AtomProgram`
+for `block`, `loop` and `if` with and without `else` (`atom_block`, `atom_loop`, `atom_ifEnd`,
+`atom_ifElse`) from `Program` for their nested bodies. The signature lemmas recover block types
+from the generated `Instr_ok` rule, and the profile lemmas restrict `Wasm1.Instruction` to the
+nested instructions.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm1.Completeness
@@ -100,8 +110,8 @@ theorem bounds_after_token {data : Slice U8} {st s : code.OpIterState}
   have hcs := h.ctrls
   refine ⟨h.size, by simpa [hp] using hs.2, ?_, ?_⟩ <;> rw [hp] <;> omega
 
-/-- Execute the actual final delimiter, retaining exact parent frames and
-materializing the declared result operands. Also applies to the function body. -/
+/-- Executing the final `end` of a frame pops it, keeps the parent frames and pushes the declared
+result operands. This also covers the end of the function body. -/
 theorem execute_end {st : code.OpIterState} (f : Frame st) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (next : Usize)
     (hb : Wasm1.Bounds data st) (hat : Wasm1.At data st.pos .end_ next)
@@ -235,7 +245,7 @@ theorem execute_if {st : code.OpIterState} (f : Frame st) (data : Slice U8)
     · simp only [hv, f.vals, List.length_append]; omega
     · simp [hc]
 
-/-- Run a recursively typed child body and close its final end delimiter. -/
+/-- Runs a typed nested body and then its closing `end`. -/
 theorem execute_body {data : Slice U8} {env : module.Env} {ctx : code.Context}
     {tokens : List Wasm1.Token} {ops : List instr}
     (program : Program data env ctx tokens ops) (C : context)

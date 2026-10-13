@@ -4,11 +4,21 @@ import Itasca.Wasm1.Invariant
 import Itasca.Handler.RawControl
 import Itasca.Visitor.Total
 
+/-!
+# Wasm 1.0 structured control steps
+
+Shows that `code.step` on `end`, `else`, `block`, `loop` and `if` either rejects or reaches
+`Pending.After`. `code.read_end.wasm1_frames` advances the typed zipper of `Wasm1/Frames`: it
+closes a structured frame into its parent or completes the function body. The `Pending.step_*`
+lemmas use it together with the opening and `else` zipper updates.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- The extracted end handler either rejects or advances the complete typed syntax zipper. -/
+/-- `code.read_end` either rejects or advances the typed zipper, closing a structured frame or
+completing the function body. -/
 @[step]
 theorem code.read_end.wasm1_frames (root : context) (hroot : wf_context root)
     (st : code.OpIterState) (parents : List Wasm1.Frames.Saved) (current : Wasm1.Frames.Saved)
@@ -71,6 +81,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.Wasm1
 
 
+/-- `code.step` on `code.OP_END` either rejects or reaches `Pending.After`. -/
 theorem Pending.step_end {V : Type} {data env ctx bodyBt st}
     (p : Pending data env ctx bodyBt st) (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V)
@@ -95,6 +106,7 @@ theorem Pending.step_end {V : Type} {data env ctx bodyBt st}
   · intro r hr hok
     exact (hr.2 hok).choose_spec
 
+/-- `code.step` on `code.OP_ELSE` either rejects or reaches `Pending.After`. -/
 theorem Pending.step_else {V : Type} {data env ctx bodyBt st}
     (p : Pending data env ctx bodyBt st) (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V)
@@ -128,6 +140,7 @@ theorem Pending.step_else {V : Type} {data env ctx bodyBt st}
   · intro r hr hok
     exact (hr.2 hok).choose_spec
 
+/-- `code.step` on `code.OP_BLOCK` either rejects or reaches `Pending.After`. -/
 theorem Pending.step_block {V : Type} {data env ctx bodyBt st}
     (p : Pending data env ctx bodyBt st) (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V)
@@ -156,6 +169,7 @@ theorem Pending.step_block {V : Type} {data env ctx bodyBt st}
   · intro r hr hok
     exact (hr.2 hok).choose_spec
 
+/-- `code.step` on `code.OP_LOOP` either rejects or reaches `Pending.After`. -/
 theorem Pending.step_loop {V : Type} {data env ctx bodyBt st}
     (p : Pending data env ctx bodyBt st) (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V)
@@ -184,6 +198,7 @@ theorem Pending.step_loop {V : Type} {data env ctx bodyBt st}
   · intro r hr hok
     exact (hr.2 hok).choose_spec
 
+/-- `code.step` on `code.OP_IF` either rejects or reaches `Pending.After`. -/
 theorem Pending.step_if {V : Type} {data env ctx bodyBt st}
     (p : Pending data env ctx bodyBt st) (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V)

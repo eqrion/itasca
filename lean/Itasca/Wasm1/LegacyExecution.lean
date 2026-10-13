@@ -1,18 +1,21 @@
 import Itasca.Generated.Funs
 
+/-!
+# Proof-only Wasm 1.0 body loop
+
+A proof-only copy of an earlier Wasm 1.0 body loop and its entry point, kept as the model that
+`Wasm1/SharedLoop` relates to the extracted shared loop `code.body_loop_loop`. These definitions
+are not a Rust execution path and no extracted code calls them.
+-/
+
 open Aeneas Aeneas.Std Result ControlFlow
 
 noncomputable section
 
 namespace Itasca
 
-/-! A proof-only snapshot of the former Wasm 1.0 loop. These definitions are
-not a Rust execution path. The shared-runtime refinement theorem must relate
-this model to the sole extracted body loop before any public proof uses it. -/
-
-/-- [itasca::code::validate_body_with]: loop body 0:
-    Source: 'src/code.rs', lines 1442:4-1452:5
-    Visibility: public -/
+/-- One iteration of the model loop. It stops at an empty control stack, checking for trailing
+bytes, and otherwise reads an opcode and runs `code.step`, stopping on the first error. -/
 @[rust_loop_body]
 def code.validate_body_with_loop.body
   {V : Type} (OpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
@@ -52,9 +55,7 @@ def code.validate_body_with_loop.body
           Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
       ok (done (r1, v2))
 
-/-- [itasca::code::validate_body_with]: loop 0:
-    Source: 'src/code.rs', lines 1442:4-1452:5
-    Visibility: public -/
+/-- The model loop: iterates `code.validate_body_with_loop.body` until it is done. -/
 @[rust_loop]
 def code.validate_body_with_loop
   {V : Type} (OpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
@@ -69,9 +70,8 @@ def code.validate_body_with_loop
       v v1 v3 st1)
     (v2, st)
 
-/-- [itasca::code::validate_body_with]:
-    Source: 'src/code.rs', lines 1432:0-1453:1
-    Visibility: public -/
+/-- The model of `code.validate_body_with`. It checks the size cap, initializes the control stack
+with `code.start_function`, and runs the model loop. -/
 def code.validate_body_with_model
   {V : Type} (OpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
   (env : _root_.Itasca.module.Env) (ctx : _root_.Itasca.code.Context) 

@@ -4,11 +4,19 @@ import Itasca.Visitor.Total
 import Itasca.Wasm1.BrTableProfile
 import Itasca.Binary.Wasm1.BrTableLabels
 
+/-!
+# Wasm 1.0 branch steps
+
+Shows that `code.step` on `br`, `br_if`, `return` and `br_table` either rejects or reaches
+`Pending.After`. The `br_table` case uses `code.read_br_table.profile_prefix` to establish the
+Wasm 1.0 profile for the decoded instruction.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm1
 
-
+/-- `code.step` on `code.OP_BR` either rejects or reaches `Pending.After`. -/
 theorem Pending.step_br {V : Type} {data env ctx bt st}
     (p : Pending data env ctx bt st) (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V)
@@ -34,6 +42,7 @@ theorem Pending.step_br {V : Type} {data env ctx bt st}
   · intro r hr hok
     exact (hr.2 hok).choose_spec
 
+/-- `code.step` on `code.OP_BR_IF` either rejects or reaches `Pending.After`. -/
 theorem Pending.step_brIf {V : Type} {data env ctx bt st}
     (p : Pending data env ctx bt st) (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V)
@@ -62,6 +71,7 @@ theorem Pending.step_brIf {V : Type} {data env ctx bt st}
   · intro r hr hok
     exact (hr.2 hok).choose_spec
 
+/-- `code.step` on `code.OP_RETURN` either rejects or reaches `Pending.After`. -/
 theorem Pending.step_return {V : Type} {data env ctx bt st}
     (p : Pending data env ctx bt st) (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V)
@@ -88,6 +98,7 @@ theorem Pending.step_return {V : Type} {data env ctx bt st}
   · intro r hr hok
     exact (hr.2 hok).choose_spec
 
+/-- `code.step` on `code.OP_BR_TABLE` either rejects or reaches `Pending.After`. -/
 theorem Pending.step_brTable {V : Type} {data env ctx bt st}
     (p : Pending data env ctx bt st) (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V)

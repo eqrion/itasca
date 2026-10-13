@@ -2,6 +2,14 @@ import Itasca.Wasm1.Trace.Leaves
 import Itasca.Wasm1.Trace.Control
 import Itasca.Wasm1.Trace.BodyContract
 
+/-!
+# Step contract for all opcodes
+
+`VisitorTrace.steps` proves `StepContract` by case analysis on the opcode byte, combining the
+leaf and control `StepRecords` theorems with the silent cases for unrecognized numeric opcodes
+and reserved bytes.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.VisitorTrace
@@ -14,8 +22,8 @@ private theorem memory_meaning_exists (opcode : U8)
   change n ≤ 62 at hhi
   interval_cases n <;> exact ⟨_, rfl⟩
 
-/-- All 256 byte values: every successful callback has independent byte
-provenance, and rejection retains precisely the already reported prefix. -/
+/-- For all 256 opcode bytes, every successful callback has independent byte provenance, and a
+rejection leaves exactly the callbacks reported so far. -/
 theorem steps {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (bt : code.BlockType) :

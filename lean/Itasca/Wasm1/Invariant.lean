@@ -3,10 +3,22 @@ import Itasca.Wasm1.Frames
 import Itasca.Support.EnvTranslation
 import Itasca.Wasm1.Loop
 
+/-!
+# Wasm 1.0 body invariant
+
+The invariant of the body loop over the consumed prefix. `Wasm1.State` says that the loop state
+either has an open `Wasm1.Frames.Open` zipper whose trace is the consumed bytes, or is closed
+with a completed typed body. `Wasm1.Pending` is the state after reading an opcode byte and
+before its immediates are validated. `Pending.append_result` and `Pending.append_simple`
+extend the invariant by one typed leaf instruction.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm1.Frames
 
+/-- The context at the end of a spine rooted at the translated environment matches `env` and
+`ctx`. -/
 theorem Spine.matches {env ctx parents C outer form}
     (h : Spine (EnvTranslation.context env ctx) parents C outer form) :
     EnvTranslation.Matches env ctx C := by
@@ -18,11 +30,13 @@ end Itasca.Wasm1.Frames
 
 namespace Itasca.Wasm1
 
+/-- The generated SpecTec judgment `Instrs_ok` for a function body with block type `bt`. -/
 def FunctionTyped (env : module.Env) (ctx : code.Context) (bt : code.BlockType)
     (ops : List instr) : Prop :=
   Instrs_ok (Wasm1.Frames.enter (EnvTranslation.context env ctx) .body bt) ops
     (.mk_functype (.mk_list []) (.mk_list (Control.resultTypes bt)))
 
+/-- Size bounds on the body and on the stacks, which rule out arithmetic overflow. -/
 structure Bounds (data : Slice U8) (st : code.OpIterState) : Prop where
   size : data.length ≤ limits.MAX_FUNCTION_BYTES.val
   pos : st.pos.val ≤ data.length
@@ -30,9 +44,9 @@ structure Bounds (data : Slice U8) (st : code.OpIterState) : Prop where
   ctrls : st.ctrls.val.length ≤ st.pos.val + 1
 
 
-
-/-- The invariant records only the bytes already consumed. The unread suffix
-may contain arbitrary malformed or unsupported instructions. -/
+/-- The body invariant. It records only the bytes already consumed, so the unread suffix may be
+arbitrary. A running state has an open zipper. A closed state has an empty control stack and
+a completed typed body. -/
 inductive State (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (bt : code.BlockType) : code.OpIterState → Prop where
   | running (st : code.OpIterState) (parents : List Wasm1.Frames.Saved) (current : Wasm1.Frames.Saved) :
@@ -45,9 +59,11 @@ inductive State (data : Slice U8) (env : module.Env) (ctx : code.Context)
       Wasm1.Instructions (Wasm1.Frames.enter (EnvTranslation.context env ctx) .body bt) ops →
       State data env ctx bt st
 
+/-- A state satisfying the invariant satisfies its size bounds. -/
 theorem State.bounds {data env ctx bt st} (h : State data env ctx bt st) : Bounds data st := by
   cases h <;> assumption
 
+/-- A closed state at the end of the input gives the body encoding, typing and profile. -/
 theorem State.finished {data env ctx bt st} (h : State data env ctx bt st)
     (hctrls : st.ctrls.val = []) (hpos : st.pos.val = data.length) :
     ∃ ops, BodyEncoding data ops ∧ FunctionTyped env ctx bt ops ∧
@@ -59,7 +75,7 @@ theorem State.finished {data env ctx bt st} (h : State data env ctx bt st)
   | closed ops tokens _ _ hbody htyped hconsumed hprofile =>
       exact ⟨ops, ⟨tokens, st.pos, hconsumed, hpos, hbody⟩, htyped, hprofile⟩
 
-/-- A pending opcode has been read; its immediate has not been assumed valid. -/
+/-- A state after reading the opcode byte at `start`, with its immediates not yet read. -/
 structure Pending (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (bt : code.BlockType) (st : code.OpIterState) where
   start : Usize
@@ -74,6 +90,8 @@ structure Pending (data : Slice U8) (env : module.Env) (ctx : code.Context)
   vals : st.vals.val.length ≤ start.val
   ctrls : st.ctrls.val.length ≤ start.val + 1
 
+/-- The state reached after a step from a pending state: the invariant holds and the position
+advances within the input. -/
 def Pending.After {data env ctx bt st} (_ : Pending data env ctx bt st)
     (s : code.OpIterState) : Prop :=
   State data env ctx bt s ∧ st.pos.val ≤ s.pos.val ∧ s.pos.val ≤ data.length
@@ -133,7 +151,8 @@ theorem Pending.closed_after {data env ctx bt st} (p : Pending data env ctx bt s
   have := p.pos
   omega
 
-/-- Append a typed leaf at the actual current context, including its decoded bytes. -/
+/-- A leaf instruction appended to the current frame, with its encoding and typing, yields a
+state satisfying the invariant. -/
 theorem Pending.append_result {data env ctx bt st} (p : Pending data env ctx bt st)
     (C : context) (outer : List code.StackType)
     (spine : Wasm1.Frames.Spine (EnvTranslation.context env ctx) p.parents C outer p.current.form)
@@ -161,7 +180,7 @@ theorem Pending.append_result {data env ctx bt st} (p : Pending data env ctx bt 
     omega
   · simp [hc, ctrls]
 
-/-- Context-independent leaf rules also compose through the same invariant. -/
+/-- `Pending.append_result` for a leaf whose typing and profile hold in every context. -/
 theorem Pending.append_simple {data env ctx bt st} (p : Pending data env ctx bt st)
     (st' : code.OpIterState) (op : instr) (poly : Bool) (vals : List code.StackType)
     (hwf : wf_instr op) (encoded : At data p.start (.plain op) st'.pos)

@@ -4,11 +4,21 @@ import Itasca.Wasm1.Loop
 import Itasca.Handler.RawControl
 import Itasca.Wasm1.Soundness
 
+/-!
+# Erasing visitor callbacks (Wasm 1.0)
+
+If `code.validate_body_with` accepts with some visitor, the visitor-free `code.validate_body`
+accepts the same bytes (`accepted_erase`), without assuming anything about the visitor. It
+follows that accepted bodies are Wasm 1.0 valid (`code.validate_body_with.wasm_sound`). The
+`_of_contract` lemmas take the step-level erasure as a hypothesis and lift it through the loop.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- Byte progress of the empty visitor supplies induction even when the original visitor is not total. -/
+/-- The empty visitor's byte progress supplies the induction measure, so the visitor need not be
+total. -/
 theorem code.validate_body_with_loop.accepted_erase_of_contract {V : Type}
     (visitor : code.OpVisitor V) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (inv : code.OpIterState → Prop)
@@ -65,7 +75,8 @@ theorem code.validate_body_with_loop.accepted_erase_of_contract {V : Type}
         simp [core.result.Result.Insts.CoreOpsTry.branch,
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
 
-/-- Initialization and the size guard preserve acceptance when callbacks are erased. -/
+/-- Initialization and the size guard of `code.validate_body_with` preserve acceptance when
+callbacks are erased. -/
 theorem code.validate_body_with.accepted_erase_of_contract {V : Type}
     (visitor : code.OpVisitor V) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (inv : code.OpIterState → Prop)
@@ -90,7 +101,8 @@ theorem code.validate_body_with.accepted_erase_of_contract {V : Type}
       inv hstep herase _ v v' _ h
     simpa [alloc.vec.Vec.deref] using hinit (by scalar_tac)
 
-/-- Any accepted visitor execution is accepted by the public validator, without assumptions on the visitor. -/
+/-- Any accepted visitor execution is accepted by `code.validate_body`, with no assumption on the
+visitor. -/
 theorem code.validate_body_with.accepted_erase {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (v v' : V)
     (haccepted : code.validate_body_with visitor data env ctx v = .ok (.Ok (), v')) :
@@ -105,7 +117,8 @@ theorem code.validate_body_with.accepted_erase {V : Type} (visitor : code.OpVisi
     (fun hsize => Wasm1.State.start data env ctx bt hsize) v v' haccepted
   simp [code.validate_body, hempty]
 
-/-- Soundness of accepted bodies needs no visitor totality premise and no prevalidated-byte profile. -/
+/-- A body accepted by `code.validate_body_with` is `Wasm1.Validated`, with no premise on the
+visitor or on the bytes. -/
 theorem code.validate_body_with.wasm_sound {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (bt : code.BlockType)
     (hresults : ctx.results.val = Control.results bt) (v v' : V)

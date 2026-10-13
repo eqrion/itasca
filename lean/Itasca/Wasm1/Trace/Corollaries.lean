@@ -1,6 +1,16 @@
 import Itasca.Wasm1.Trace.Body
 import Itasca.Visitor.TraceProperties
 
+/-!
+# Corollaries of the body traces
+
+Consequences of `code.validate_body_with.trace` for the public body API: a rejecting callback
+is last (`trace_rejection_last`), no function-start callback is issued
+(`trace_no_function_start`), and the pure projection of the `recorder` trace recovers the
+typed body (`recorder_projection`, `recorder_projection_sound`,
+`recorder_projection_complete`).
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.VisitorTrace
@@ -20,8 +30,8 @@ namespace Itasca
 
 open VisitorTrace
 
-/-- A callback observed to reject during the public API is last; the result
-contains that same visitor error and every preceding callback accepted. -/
+/-- A callback observed to reject in `code.validate_body_with` is last. The result contains that
+visitor error and every earlier callback accepted. -/
 theorem code.validate_body_with.trace_rejection_last {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (hrecords : Records visitor observe)
     (data : Slice U8) (env : module.Env) (ctx : code.Context)
@@ -37,7 +47,7 @@ theorem code.validate_body_with.trace_rejection_last {V : Type} (visitor : code.
   rw [he] at ht
   exact ht.1.rejecting
 
-/-- The body API never synthesizes an entry-level function-start callback. -/
+/-- `code.validate_body_with` never issues a function-start callback. -/
 theorem code.validate_body_with.trace_no_function_start {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (hrecords : Records visitor observe)
     (data : Slice U8) (env : module.Env) (ctx : code.Context)

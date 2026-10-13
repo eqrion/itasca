@@ -2,12 +2,21 @@ import Itasca.Binary.Wasm1.SyntaxComplete
 import Itasca.Binary.Wasm1.EncodingComplete
 import Itasca.Wasm1.Loop
 
+/-!
+# Successful execution prefixes
+
+`Wasm1.Execution` is a chain of successful opcode reads and `code.step` dispatches with the
+empty visitor. `Execution.loop_eq` places `code.validate_body_with_loop` at the final state of
+such a chain, and `Execution.finish` and `Execution.public` turn a chain that ends with no open control frames
+at the end of the bytes into a successful loop and a successful `code.validate_body`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm1
 
-/-- Finite successful execution of actual opcode reads and dispatches. This
-relation is proof infrastructure, not the specification of valid input. -/
+/-- Finite successful execution of `code.read_op` and `code.step` with the empty visitor. It
+is proof infrastructure and does not specify valid input. -/
 inductive Execution (data : Slice U8) (env : module.Env) (ctx : code.Context) :
     code.OpIterState → code.OpIterState → Prop where
   | nil (st : code.OpIterState) : Execution data env ctx st st
@@ -33,8 +42,8 @@ theorem Execution.single {data env ctx st decoded next opcode}
       .ok (.Ok (), next, ())) : Execution data env ctx st next :=
   .cons st decoded next next opcode hc hr hs (.nil next)
 
-/-- Every finite successful instruction prefix leaves the public loop at
-exactly its final state; this theorem assumes no precomputed validator result. -/
+/-- Every finite successful instruction prefix leaves `code.validate_body_with_loop` at exactly
+its final state. No validator result is assumed. -/
 theorem Execution.loop_eq {data env ctx st final}
     (h : Execution data env ctx st final) :
     code.validate_body_with_loop code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
@@ -51,6 +60,8 @@ theorem Execution.loop_eq {data env ctx st final}
     simp [code.validate_body_with_loop.body, code.control_stack_empty,
       alloc.vec.Vec.is_empty, hempty, hr, hs, core.result.Result.Insts.CoreOpsTry.branch]
 
+/-- A finite successful prefix that ends with no open control frames at the end of the bytes
+makes the empty-visitor loop return `Ok`. -/
 theorem Execution.finish {data env ctx st final}
     (h : Execution data env ctx st final) (hc : final.ctrls.val = [])
     (hp : final.pos.val = data.length) :
@@ -63,6 +74,8 @@ theorem Execution.finish {data env ctx st final}
   simp [code.validate_body_with_loop.body, code.control_stack_empty,
     alloc.vec.Vec.is_empty, hc, hpos]
 
+/-- A successful execution from the initial state of `Wasm1.Loop.initial bt` to a closed frame
+stack at the end of the bytes makes `code.validate_body` return `Ok`. -/
 theorem Execution.public {data env ctx bt final}
     (h : Execution data env ctx (Wasm1.Loop.initial bt) final)
     (hresults : ctx.results.val = Control.results bt)

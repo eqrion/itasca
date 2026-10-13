@@ -1,6 +1,14 @@
 import Itasca.Wasm1.Complete.Frame
 import Itasca.Handler.BrTableComplete
 
+/-!
+# Wasm 1.0 branch table completeness
+
+`Frame.step_brTable` shows that the extracted `br_table` handler and `code.step` dispatch
+succeed on an independently encoded branch table whose generated `Instr_ok` typing holds. The
+Wasm 1.0 same-target condition (`Wasm1.SameTargets`) makes all labels agree with the default.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm1.Completeness
@@ -17,8 +25,8 @@ private theorem resultTypes_injective : Function.Injective Control.resultTypes :
             simpa [Control.resultTypes, Control.results] using h
           exact congrArg code.BlockType.Value (Translate.valueType_injective he)
 
-/-- Wasm 1.0 target homogeneity strengthens the generated branch-table rule
-    enough to force the actual handler and dispatcher to accept. -/
+/-- Under the Wasm 1.0 same-target condition, the generated `br_table` typing makes `code.step`
+accept the encoded table and produce the typed outputs. -/
 theorem Frame.step_brTable {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (depths : List U32) (default : U32)
     (count entries final : List U8) (next : Usize)

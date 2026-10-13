@@ -2,13 +2,24 @@ import Itasca.Wasm1.ProfileSyntax
 import Itasca.Handler.ResumePrefix
 import Itasca.Binary.Wasm1.Syntax
 
+/-!
+# Typed zipper for Wasm 1.0 bodies
+
+A ghost zipper that links the extracted operand and control stacks of `code.OpIterState` to the
+typing of the consumed prefix. `Saved` is one open structured frame, `Spine` the chain of
+suspended parents, and `Open` ties them to a concrete state. `Open.close`, `Open.else_`,
+`Open.enter_child`, `Open.start` and `Open.finish_body` show how entering, leaving and finishing
+frames update the zipper, the consumed token trace and the Wasm 1.0 profile.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm1.Frames
 
 open Sequence
 
-/-- The pending structured construct, including the saved first arm of an if. -/
+/-- The kind of an open structured construct. An else frame saves the tokens and instructions of
+its completed then arm. -/
 inductive Form where
   | body
   | block
@@ -16,6 +27,7 @@ inductive Form where
   | then_
   | else_ (thenTokens : List Wasm1.Token) (thenOps : List instr)
 
+/-- The `code.LabelKind` of a frame form. -/
 def Form.kind : Form → code.LabelKind
   | .body => .Body
   | .block => .Block
@@ -23,30 +35,34 @@ def Form.kind : Form → code.LabelKind
   | .then_ => .Then
   | .else_ _ _ => .Else
 
+/-- The value types a frame form consumes from its parent when it is entered. -/
 def Form.inputs : Form → List valtype
   | .then_ | .else_ _ _ => [.I32]
   | _ => []
 
+/-- The label types of a frame: empty for a loop and the block results otherwise. -/
 def Form.label (form : Form) (bt : code.BlockType) : List valtype :=
   match form with
   | .loop => []
   | _ => Control.resultTypes bt
 
+/-- The typing context inside a frame of the given form and block type. -/
 def enter (C : context) (form : Form) (bt : code.BlockType) : context :=
   Control.labelContext (form.label bt) ++ C
 
-/-- An else frame carries the completed typing derivation for its then arm. -/
+/-- An else frame carries the emitted tokens and typing derivation of its then arm. -/
 def Form.Valid (C : context) (bt : code.BlockType) : Form → Prop
   | .else_ thenTokens thenOps => Wasm1.Emits thenTokens thenOps ∧
       Instrs_ok (enter C (.else_ thenTokens thenOps) bt) thenOps
         (.mk_functype (.mk_list []) (.mk_list (Control.resultTypes bt)))
   | _ => True
 
-/-- Profile of the already checked then arm while the else arm is active. -/
+/-- The Wasm 1.0 profile of the then arm while the else arm is open. -/
 def Form.Profile (C : context) (bt : code.BlockType) : Form → Prop
   | .else_ _ thenOps => Wasm1.Instructions (enter C (.else_ [] thenOps) bt) thenOps
   | _ => True
 
+/-- An open frame: its control entry, form, instructions, operand types and consumed tokens. -/
 structure Saved where
   ctrl : code.Ctrl
   form : Form
@@ -54,6 +70,7 @@ structure Saved where
   vals : List code.StackType
   tokens : List Wasm1.Token
 
+/-- Facts about the consumed prefix of a frame in context `C`: kind, emitted tokens, and profile. -/
 structure Header (C : context) (f : Saved) : Prop where
   kind : f.ctrl.kind = f.form.kind
   prior : f.form.Valid C f.ctrl.block_type
@@ -61,7 +78,8 @@ structure Header (C : context) (f : Saved) : Prop where
   profile : Wasm1.Instructions (enter C f.form f.ctrl.block_type) f.ops
   priorProfile : f.form.Profile C f.ctrl.block_type
 
-/-- Suspended frames run from outermost to innermost, matching the Rust control vector. -/
+/-- The suspended parent frames, from outermost to innermost as in the extracted control vector.
+The indices are the typing context and the operand types below the current frame. -/
 inductive Spine (root : context) : List Saved → context → List code.StackType → Form → Prop where
   | root : Spine root [] root [] .body
   | push (parents : List Saved) (parentC : context) (outer : List code.StackType)
@@ -75,7 +93,7 @@ inductive Spine (root : context) : List Saved → context → List code.StackTyp
       Spine root (parents ++ [parent]) (enter parentC parent.form parent.ctrl.block_type)
         (outer ++ parent.vals) child
 
-/-- The ghost zipper links every open frame to the concrete operand and control stacks. -/
+/-- The zipper links the open frames to the concrete operand and control stacks of a state. -/
 def Open (root : context) (st : code.OpIterState) (parents : List Saved) (current : Saved) : Prop :=
   ∃ C outer, Spine root parents C outer current.form ∧ Header C current ∧
     current.ctrl.value_stack_base.val = outer.length ∧
@@ -84,6 +102,7 @@ def Open (root : context) (st : code.OpIterState) (parents : List Saved) (curren
     st.ctrls.val = parents.map Saved.ctrl ++ [current.ctrl] ∧
     st.vals.val = outer ++ current.vals
 
+/-- Entering a frame preserves well-formedness of the context. -/
 theorem enter_wf (C : context) (hC : wf_context C) (form : Form) (bt : code.BlockType) :
     wf_context (enter C form bt) := Control.enter_context_wf C hC _
 
@@ -108,7 +127,7 @@ theorem Spine.labels {root : context} {parents : List Saved} {C : context}
     simp [enter, Control.labelContext_labels, List.map_append,
       Control.labels_push, header.label, ih]
 
-/-- A closing delimiter determines exactly one structured instruction. -/
+/-- The structured instruction produced by closing a frame of the given form. -/
 inductive Closed : Form → code.BlockType → List instr → instr → Prop where
   | block (bt : code.BlockType) (ops : List instr) :
       Closed .block bt ops (.BLOCK (Control.blockType bt) ops)
@@ -158,6 +177,7 @@ theorem Closed.profile {C : context} {form : Form} {bt : code.BlockType}
   | then_ => exact .ifElse C _ _ _ hops (.nil _)
   | else_ => exact .ifElse C _ _ _ hprior hops
 
+/-- The tokens that open a frame. -/
 def Form.opening (form : Form) (bt : code.BlockType) : List Wasm1.Token :=
   match form with
   | .body => []
@@ -166,8 +186,10 @@ def Form.opening (form : Form) (bt : code.BlockType) : List Wasm1.Token :=
   | .then_ => [.if_ bt]
   | .else_ thenTokens _ => [.if_ bt] ++ thenTokens ++ [.else_]
 
+/-- The tokens consumed by a frame, including its opening tokens. -/
 def Saved.trace (f : Saved) : List Wasm1.Token := f.form.opening f.ctrl.block_type ++ f.tokens
 
+/-- The tokens consumed so far: the parents in order, then the current frame. -/
 def trace (parents : List Saved) (current : Saved) : List Wasm1.Token :=
   parents.flatMap Saved.trace ++ current.trace
 
@@ -235,11 +257,13 @@ theorem Spine.change_form {root : context} {parents : List Saved} {C : context}
     exact .push ps pc out parent after spine header base
       (by simpa [hinputs] using resume) (fun heq => notBody (hbody.mpr heq))
 
+/-- The frame after an `else`: an empty else frame that saves the then arm. -/
 def Saved.nextElse (current : Saved) : Saved :=
   { ctrl := { current.ctrl with kind := .Else, polymorphic_base := false }
     form := .else_ current.tokens current.ops
     ops := [], vals := [], tokens := [] }
 
+/-- Reading `else` replaces a then frame by an empty else frame. -/
 theorem Open.else_ {root : context} {st st' : code.OpIterState}
     {parents : List Saved} {current : Saved} (h : Open root st parents current)
     (hroot : wf_context root) (hform : current.form = .then_)
@@ -261,6 +285,7 @@ theorem Open.else_ {root : context} {st st' : code.OpIterState}
     · simpa [vals, base, Saved.nextElse] using hvals
   · simp [trace, Saved.trace, Saved.nextElse, hform, Form.opening, List.append_assoc]
 
+/-- The frame after one more instruction with its token, operand types and polymorphism. -/
 def Saved.advance (current : Saved) (token : Wasm1.Token) (op : instr)
     (poly : Bool) (vals : List code.StackType) : Saved :=
   { current with
@@ -270,12 +295,15 @@ def Saved.advance (current : Saved) (token : Wasm1.Token) (op : instr)
     tokens := current.tokens ++ [token] }
 
 
+/-- A newly entered frame whose control entry is `Control.frame`. -/
 def Saved.fresh (st : code.OpIterState) (form : Form) (bt : code.BlockType) : Saved :=
   { ctrl := Control.frame st form.kind bt, form := form, ops := [], vals := [], tokens := [] }
 
-/-- Entering a child suspends the parent with its consumed argument types still recorded. -/
+/-- The forms that can be entered by a block, loop or if instruction. -/
 def Form.Initial (form : Form) : Prop := form = .block ∨ form = .loop ∨ form = .then_
 
+/-- Entering a child frame suspends the current frame with the operands left after popping its
+inputs. -/
 theorem Open.enter_child {root : context} {st st' : code.OpIterState}
     {parents : List Saved} {current : Saved} (h : Open root st parents current)
     (hroot : wf_context root) (form : Form) (bt : code.BlockType) (hi : form.Initial)
@@ -304,6 +332,7 @@ theorem Open.enter_child {root : context} {st st' : code.OpIterState}
     · simpa [Saved.fresh] using hrest
   · simp [trace, Saved.trace, Saved.fresh, Control.frame, List.append_assoc]
 
+/-- The initial state has a single open body frame. -/
 theorem Open.start (root : context) (hroot : wf_context root) (st : code.OpIterState)
     (bt : code.BlockType) (hctrls : st.ctrls.val = [(Control.frame st .Body bt)])
     (hvals : st.vals.val = []) :
@@ -322,6 +351,7 @@ theorem Spine.body {root : context} {parents : List Saved} {C : context}
   | root => exact ⟨rfl, rfl, rfl⟩
   | push _ _ _ _ _ _ _ _ _ notBody => exact False.elim (notBody rfl)
 
+/-- Closing the body frame yields the function body tokens, typing and profile. -/
 theorem Open.finish_body {root : context} {st : code.OpIterState}
     {parents : List Saved} {current : Saved} (h : Open root st parents current)
     (hform : current.form = .body)
@@ -368,7 +398,7 @@ theorem Open.context {root : context} {st : code.OpIterState}
   · simp [enter, ctrls, Control.labels_push, header.label, spine.labels]
   · exact spine.returns
 
-/-- The function result is stored in the outermost physical frame. -/
+/-- The function result type, stored in the outermost frame. -/
 def bodyType (parents : List Saved) (current : Saved) : Option code.BlockType :=
   ((parents ++ [current]).head?).map (fun f => f.ctrl.block_type)
 
@@ -396,7 +426,7 @@ theorem bodyType_close (grandparents : List Saved) (parent current : Saved) (op 
         bodyType (grandparents ++ [parent]) current := by
   cases grandparents <;> rfl
 
-/-- A running zipper or its completed function body, with the original result type retained. -/
+/-- Either an open zipper with the given body type and trace, or a completed function body. -/
 def Status (root : context) (bodyBt : code.BlockType) (st : code.OpIterState)
     (tokens : List Wasm1.Token) : Prop :=
   (∃ parents current, Open root st parents current ∧ trace parents current = tokens ∧
@@ -436,6 +466,7 @@ theorem Spine.bounds {root : context} {parents : List Saved} {C : context}
         omega
       · simp [base]
 
+/-- An open zipper gives the extracted stacks the shape invariant `Control.Shape`. -/
 theorem Open.shape {root : _root_.context} {st : code.OpIterState}
     {parents : List Saved} {current : Saved} (h : Open root st parents current) : Control.Shape st := by
   obtain ⟨C, outer, spine, header, base, typed, ctrls, vals⟩ := h

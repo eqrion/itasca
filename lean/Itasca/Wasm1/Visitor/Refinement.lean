@@ -2,14 +2,23 @@ import Itasca.Support.Result
 import Itasca.Visitor.StepRefinement
 import Itasca.Wasm1.Visitor.Erasure
 
+/-!
+# Visitor refinement and instrumentation (Wasm 1.0)
+
+If a replacement visitor refines a visitor (`Refines`), `code.validate_body_with` returns the same
+outcome with either (`code.validate_body_with.refines`). The `instrument` wrapper that appends
+`Observation`s is a refinement, so instrumenting preserves the result and the underlying visitor
+state (`instrument_forward`, `instrument_backward`, `instrument_iff`).
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
 open VisitorTrace
 
-/-- Successful empty-visitor steps supply byte progress; callback refinement
-then preserves every ordinary body-loop outcome, including rejection. -/
+/-- Successful empty-visitor steps supply byte progress. Callback refinement then preserves
+every returned outcome of the body loop, including rejection. -/
 theorem code.validate_body_with_loop.refines_of_contract {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
@@ -83,7 +92,8 @@ theorem code.validate_body_with_loop.refines_of_contract {V W : Type}
         obtain ⟨rfl, rfl⟩ := h
         exact ⟨rfl, hrelated⟩
 
-/-- Hook refinement lifts through the public size guard and initialization. -/
+/-- Hook refinement lifts through the size guard and initialization of
+`code.validate_body_with`. -/
 theorem code.validate_body_with.refines_of_contract {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
@@ -110,8 +120,8 @@ theorem code.validate_body_with.refines_of_contract {V W : Type}
       data env ctx inv hstep _ v w _ hrelated res v' h
     simpa [alloc.vec.Vec.deref] using hinit (by scalar_tac)
 
-/-- Any callback refinement preserves the exact public ordinary outcome. There
-are no byte-validity, environment, or visitor-termination premises. -/
+/-- Any callback refinement preserves the returned outcome of `code.validate_body_with`. There
+are no premises on the bytes, the environment or visitor termination. -/
 theorem code.validate_body_with.refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
@@ -128,8 +138,8 @@ theorem code.validate_body_with.refines {V W : Type}
     (hsteps.contract code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor data env ctx bt)
     (fun hsize => Wasm1.State.start data env ctx bt hsize) v w hrelated res v' h
 
-/-- Recording an arbitrary visitor preserves every ordinary public outcome and
-its underlying final visitor state, appending an observation suffix. -/
+/-- Instrumenting an arbitrary visitor preserves every returned outcome and the underlying final
+visitor state, and appends a suffix to the observation log. -/
 theorem code.validate_body_with.instrument_forward {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) (log : List Observation)
     (res : core.result.Result Unit error.OpError) (v' : V)
@@ -144,8 +154,8 @@ theorem code.validate_body_with.instrument_forward {V : Type} (visitor : code.Op
   subst log'
   exact ⟨added, hw⟩
 
-/-- Removing the wrapper preserves both rejection and acceptance, without
-assuming that the underlying visitor terminates on other executions. -/
+/-- Removing the `instrument` wrapper preserves both rejection and acceptance. The underlying
+visitor need not terminate on other executions. -/
 theorem code.validate_body_with.instrument_backward {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) (log : List Observation)
     (res : core.result.Result Unit error.OpError) (v' : V) (log' : List Observation)
@@ -156,8 +166,8 @@ theorem code.validate_body_with.instrument_backward {V : Type} (visitor : code.O
     _ (instrument_refines_back visitor) data env ctx (v, log) v rfl res (v', log') h
   simpa only [← heq] using hw
 
-/-- Exact two-way public preservation of an ordinary result and the underlying
-visitor state, with the appended observations left as the execution's witness. -/
+/-- An instrumented execution returns a result and underlying visitor state exactly when the
+plain visitor does, with the appended observations as the witness. -/
 theorem code.validate_body_with.instrument_iff {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) (log : List Observation)
     (res : core.result.Result Unit error.OpError) (v' : V) :
@@ -170,7 +180,7 @@ theorem code.validate_body_with.instrument_iff {V : Type} (visitor : code.OpVisi
     exact code.validate_body_with.instrument_backward visitor data env ctx v log res v'
       (log ++ added) h
 
-/-- Any returned instrumented body extends its initial observation log. -/
+/-- Any returned instrumented execution extends its initial observation log. -/
 theorem code.validate_body_with.instrument_log_extension {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) (log : List Observation)
     (res : core.result.Result Unit error.OpError) (v' : V) (log' : List Observation)

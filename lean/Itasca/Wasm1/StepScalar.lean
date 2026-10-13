@@ -4,12 +4,20 @@ import Itasca.Handler.ScalarConst
 import Itasca.Handler.NumericDispatch
 import Itasca.Handler.Select
 
+/-!
+# Wasm 1.0 scalar steps
+
+For each context-independent instruction (`nop`, `unreachable`, `drop`, `select`, the four
+constants and the numeric operations), shows that `code.step` either rejects or reaches
+`Pending.After`. `code.step.reserved` shows that reserved opcode bytes below the numeric range
+are rejected before any reader or visitor hook runs.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm1
 
-
-/-- NOP accepts arbitrary unread suffixes and records its opcode byte. -/
+/-- `code.step` on `nop` preserves the invariant for any unread suffix. -/
 theorem Pending.step_nop {data env ctx bt st}
     (p : Pending data env ctx bt st) {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V)
@@ -25,7 +33,7 @@ theorem Pending.step_nop {data env ctx bt st}
   · simpa using hc
   · simp [hv, hbase]
 
-/-- UNREACHABLE trims the current frame and records the exact byte. -/
+/-- `code.step` on `unreachable` marks the current frame polymorphic and preserves the invariant. -/
 theorem Pending.step_unreachable {data env ctx bt st}
     (p : Pending data env ctx bt st) {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V)
@@ -47,7 +55,8 @@ theorem Pending.step_unreachable {data env ctx bt st}
   · intro r hr hok
     exact (hr.2 hok).choose_spec
 
-/-- DROP covers concrete and polymorphic operands, and may reject an empty stack. -/
+/-- `code.step` on `drop` preserves the invariant for concrete and polymorphic operands, and
+rejects an empty stack. -/
 theorem Pending.step_drop {data env ctx bt st}
     (p : Pending data env ctx bt st) {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V)
@@ -85,7 +94,8 @@ end Itasca.Wasm1
 namespace Itasca.Wasm1
 
 
-/-- The i32 constant step terminates on arbitrary immediate bytes and preserves the invariant on success. -/
+/-- `code.step` on `i32.const` terminates on arbitrary immediate bytes and preserves the invariant
+on success. -/
 theorem Pending.step_i32Const {data env ctx bt st}
     (p : Pending data env ctx bt st) {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V)
@@ -112,7 +122,8 @@ theorem Pending.step_i32Const {data env ctx bt st}
   · intro r hr hok
     exact (hr.2 hok).choose_spec
 
-/-- The i64 constant step terminates on arbitrary immediate bytes and preserves the invariant on success. -/
+/-- `code.step` on `i64.const` terminates on arbitrary immediate bytes and preserves the invariant
+on success. -/
 theorem Pending.step_i64Const {data env ctx bt st}
     (p : Pending data env ctx bt st) {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V)
@@ -139,7 +150,8 @@ theorem Pending.step_i64Const {data env ctx bt st}
   · intro r hr hok
     exact (hr.2 hok).choose_spec
 
-/-- The f32 constant step terminates on arbitrary immediate bytes and preserves the invariant on success. -/
+/-- `code.step` on `f32.const` terminates on arbitrary immediate bytes and preserves the invariant
+on success. -/
 theorem Pending.step_f32Const {data env ctx bt st}
     (p : Pending data env ctx bt st) {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V)
@@ -166,7 +178,8 @@ theorem Pending.step_f32Const {data env ctx bt st}
   · intro r hr hok
     exact (hr.2 hok).choose_spec
 
-/-- The f64 constant step terminates on arbitrary immediate bytes and preserves the invariant on success. -/
+/-- `code.step` on `f64.const` terminates on arbitrary immediate bytes and preserves the invariant
+on success. -/
 theorem Pending.step_f64Const {data env ctx bt st}
     (p : Pending data env ctx bt st) {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V)
@@ -198,7 +211,7 @@ end Itasca.Wasm1
 namespace Itasca.Wasm1
 
 
-/-- Every numeric opcode extends the generated typing derivation under the current frame context. -/
+/-- `code.step` on an opcode with a `Numeric.opcodeMeaning` preserves the invariant. -/
 theorem Pending.step_numeric_mapped {data env ctx bt st}
     (p : Pending data env ctx bt st) {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V) (opcode : U8) (op : Numeric.Operation)
@@ -223,7 +236,8 @@ theorem Pending.step_numeric_mapped {data env ctx bt st}
   · simpa [hpoly] using hout hok
   · simpa [hc] using ctrls
 
-/-- Unmapped high opcodes terminate with rejection; mapped scalar opcodes preserve the invariant. -/
+/-- `code.step` on an opcode byte from `0x45` upward rejects unmapped bytes and preserves the
+invariant for mapped numeric opcodes. -/
 theorem Pending.step_numeric {data env ctx bt st}
     (p : Pending data env ctx bt st) {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V) (opcode : U8)
@@ -236,7 +250,8 @@ theorem Pending.step_numeric {data env ctx bt st}
     simp
   | some op => exact p.step_numeric_mapped visitor hvisitor v opcode op hbyte hm
 
-/-- SELECT preserves its joined concrete/bottom result and exact opcode provenance. -/
+/-- `code.step` on untyped `select` preserves the invariant, joining concrete and bottom operand
+types. -/
 theorem Pending.step_select {data env ctx bt st}
     (p : Pending data env ctx bt st) {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V)
@@ -270,7 +285,8 @@ private theorem opcode_eq {a b : U8} : a = b ↔ a.val = b.val :=
 
 set_option maxRecDepth 4096 in
 set_option maxHeartbeats 1000000 in
-/-- Reserved bytes below the numeric range fail before any reader or visitor is called. -/
+/-- Reserved opcode bytes below the numeric range are rejected before any reader or visitor hook
+runs. -/
 theorem code.step.reserved {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (opcode : U8) (v : V)

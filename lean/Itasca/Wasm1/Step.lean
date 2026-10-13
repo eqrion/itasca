@@ -4,6 +4,15 @@ import Itasca.Wasm1.StepEnv
 import Itasca.Wasm1.StepControl
 import Itasca.Wasm1.StepBranch
 
+/-!
+# Wasm 1.0 step dispatch
+
+`Wasm1.steps` proves `Wasm1.Steps` for `code.step`: for every opcode byte, `code.step` either
+preserves the body invariant or returns a validation error. It splits on the opcode and applies
+the per-instruction lemmas of `Wasm1/StepScalar`, `Wasm1/StepEnv`, `Wasm1/StepControl` and
+`Wasm1/StepBranch`. Reserved bytes are rejected by `code.step.reserved`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm1
@@ -17,8 +26,8 @@ private theorem memory_meaning_exists (opcode : U8)
   change n ≤ 62 at hhi
   interval_cases n <;> exact ⟨_, rfl⟩
 
-/-- Every possible opcode byte either preserves the invariant or returns an
-ordinary validation error. No lexical or immediate-validity premise is used. -/
+/-- For every opcode byte, `code.step` preserves the invariant or returns a validation error.
+There is no premise on the opcode or its immediates. -/
 theorem steps {V : Type} (visitor : code.OpVisitor V) (hvisitor : FullVisitor.Total visitor)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (bt : code.BlockType) :
     Steps visitor data env ctx bt := by

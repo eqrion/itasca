@@ -1,33 +1,43 @@
 import Itasca.Binary.Wasm1.Syntax
 
+/-!
+# Wasm 1.0 semantic profile
+
+The Wasm 1.0 restriction on instruction trees that the SpecTec Wasm 2.0 typing rules do not
+state. `Wasm1.Instruction` and `Wasm1.Instructions` require every `br_table` to have identical
+target signatures, and `Wasm1.Environment` bounds the result counts of the signature tables the
+body validator consults. The predicates depend on the label context only
+(`Wasm1.Instructions.congr_labels`).
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm1
 
-/-- The body API consults these two signature tables directly. Wasm 1.0
-permits at most one result in each signature; cache coherence is a separate
-module obligation. -/
+/-- The body API consults the function and type signature tables of `env` directly. Wasm 1.0
+permits at most one result in each signature. Coherence of these tables with the module is a
+separate module-level obligation. -/
 structure Environment (env : module.Env) : Prop where
   funcs : ∀ ft ∈ env.func_types.val, ft.results.val.length ≤ 1
   types : ∀ ft ∈ env.types.val, ft.results.val.length ≤ 1
 
-/-- Wasm 1.0 branch tables require identical target signatures. Wasm 2.0's
-generated typing rule only requires a common subtype, which is strictly weaker
-in unreachable code. Bounds are supplied separately by declarative typing. -/
+/-- Wasm 1.0 branch tables require identical target signatures. The generated Wasm 2.0 typing
+rule only requires a common subtype, which is weaker in unreachable code. Label bounds are
+supplied separately by declarative typing. -/
 def SameTargets (C : context) (targets : List labelidx) (fallback : labelidx) : Prop :=
   ∀ target ∈ targets,
     C.LABELS[proj_uN_0 target]! = C.LABELS[proj_uN_0 fallback]!
 
-/-- Conditions for a leaf. Binary provenance already restricts the opcode
-set; structured instructions must use the recursive constructors below. -/
+/-- Conditions on a non-structured instruction. Binary provenance already restricts the opcode
+set. Structured instructions are excluded and must use the recursive constructors below. -/
 def Leaf (C : context) : instr → Prop
   | .BR_TABLE targets fallback => SameTargets C targets fallback
   | .BLOCK _ _ | .LOOP _ _ | .IFELSE _ _ _ => False
   | _ => True
 
 mutual
-/-- Independent, context-sensitive Wasm 1.0 semantic restrictions on the
-generated instruction tree. This predicate does not mention execution. -/
+/-- The context-sensitive Wasm 1.0 restrictions on a generated instruction tree. It does not
+mention execution. -/
 inductive Instruction : context → instr → Prop where
   | leaf (C : context) (op : instr) : Leaf C op → Instruction C op
   | block (C : context) (bt : code.BlockType) (body : List instr) :
@@ -41,6 +51,7 @@ inductive Instruction : context → instr → Prop where
       Instructions (Control.labelContext (Control.resultTypes bt) ++ C) no →
       Instruction C (.IFELSE (Control.blockType bt) yes no)
 
+/-- The Wasm 1.0 restrictions hold for every instruction of a sequence. -/
 inductive Instructions : context → List instr → Prop where
   | nil (C : context) : Instructions C []
   | cons {C : context} {op : instr} {ops : List instr} :
@@ -87,8 +98,8 @@ end Itasca.Wasm1
 
 namespace Itasca.Wasm1
 
-/-- The version profile observes label signatures only. In particular its
-meaning is independent of the Rust environment and of later module segments. -/
+/-- The profile observes label signatures only, so it is independent of the other context
+fields. -/
 theorem Instructions.congr_labels {C : context} {ops : List instr}
     (h : Instructions C ops) : ∀ D, C.LABELS = D.LABELS → Instructions D ops := by
   induction h using Instructions.rec

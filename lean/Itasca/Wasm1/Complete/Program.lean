@@ -1,5 +1,14 @@
 import Itasca.Wasm1.Complete.Frame
 
+/-!
+# Executing typed instruction lists
+
+`Program` says that the instructions of a token sequence run successfully in one control frame
+under a typing derivation, and `AtomProgram` is the same statement for a single instruction.
+`program_of_atoms` derives `Program` from `AtomProgram` by induction on the declarative
+derivation, and `atom_of_leaf` builds `AtomProgram` for a leaf instruction from `LeafContract`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm1.Completeness
@@ -17,8 +26,8 @@ def Program (data : Slice U8) (env : module.Env) (ctx : code.Context)
     ∃ s, Wasm1.Execution data env ctx st s ∧ s.pos = next ∧ f.Output output s ∧
       Wasm1.Bounds data s
 
-/-- The normalized head instruction has a primitive generated typing rule
-and a preserved prefix on its operand stack. -/
+/-- Execution of one instruction that has a primitive generated typing rule, with an untouched
+prefix `front` below its inputs on the operand stack. -/
 def AtomProgram (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (tokens : List Wasm1.Token) (op : instr) : Prop :=
   ∀ (C : context) (st : code.OpIterState) (f : Frame st) (next : Usize)
@@ -31,6 +40,7 @@ def AtomProgram (data : Slice U8) (env : module.Env) (ctx : code.Context)
     ∃ s, Wasm1.Execution data env ctx st s ∧ s.pos = next ∧
       f.Output (front ++ output) s ∧ Wasm1.Bounds data s
 
+/-- `Program` holds for every emitted token sequence shorter than `n`. -/
 def SmallerPrograms (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (n : Nat) : Prop :=
   ∀ tokens ops, tokens.length < n → Wasm1.Emits tokens ops → Program data env ctx tokens ops
@@ -51,9 +61,9 @@ theorem Frame.Output.transfer {st s t} {f : Frame st} {g : Frame s}
     simp_all
   exact ⟨poly, operands, by simpa [hp, he] using hc, by simpa [ho] using hv, ht⟩
 
-/-- Left-to-right execution follows a declarative derivation even when that
-derivation uses arbitrary sequence, framing, and subsumption rules. The atom
-obligation recursively receives only strictly smaller nested bodies. -/
+/-- Left-to-right execution follows a declarative derivation, including its sequence, framing
+and subsumption rules. The atom hypothesis receives `Program` only for strictly shorter nested
+bodies. -/
 theorem program_of_atoms (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (hatom : ∀ tokens op, Wasm1.Atom tokens op →
       SmallerPrograms data env ctx tokens.length → AtomProgram data env ctx tokens op)
@@ -106,6 +116,8 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm1.Completeness
 
+/-- The completeness statement for a non-structured instruction `op` with encoded immediates
+`bytes`: `code.step` accepts it, given its primitive generated typing. -/
 def LeafContract (data : Slice U8) (env : module.Env) (ctx : code.Context) : Prop :=
   ∀ (C : context) (st : code.OpIterState) (f : Frame st) (opcode : U8)
     (op : instr) (bytes : List U8) (next : Usize) (front input output : List valtype),
@@ -116,6 +128,7 @@ def LeafContract (data : Slice U8) (env : module.Env) (ctx : code.Context) : Pro
     Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output)) →
     Wasm1.Instruction C op → StepResult f data env ctx opcode next (front ++ output)
 
+/-- A `LeafContract` yields `AtomProgram` for the single token of a plain instruction. -/
 theorem atom_of_leaf (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (hstep : LeafContract data env ctx) (op : instr) :
     AtomProgram data env ctx [.plain op] op := by

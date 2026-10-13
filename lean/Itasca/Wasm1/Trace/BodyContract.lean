@@ -2,11 +2,20 @@ import Itasca.Support.Result
 import Itasca.Visitor.TraceBytes
 import Itasca.Wasm1.Visitor.Erasure
 
+/-!
+# Body trace from a step contract
+
+`StepContract` states the trace property for a single `code.step` return. The theorems
+`code.validate_body_with_loop.trace_of_contract` and `code.validate_body_with.trace_of_contract`
+lift it to the body loop and to `code.validate_body_with`, using the empty-visitor invariant for
+progress.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.VisitorTrace
 
-/-- Byte provenance and stopping for every ordinary returned step. -/
+/-- Every returned `code.step` records callbacks with byte provenance and stops at a rejection. -/
 def StepContract {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (bt : code.BlockType) : Prop :=
   ∀ st (p : Wasm1.Pending data env ctx bt st) v result out v',
@@ -42,8 +51,8 @@ end Itasca.VisitorTrace
 
 namespace Itasca
 
-/-- Lift returned-step trace correctness through the actual body loop. The
-existing empty-visitor invariant supplies progress; callbacks need not be total. -/
+/-- A `StepContract` lifts through the extracted body loop. The empty-visitor invariant supplies
+progress, so callbacks need not be total. -/
 theorem code.validate_body_with_loop.trace_of_contract {V : Type}
     (visitor : code.OpVisitor V) (observe : V → List VisitorTrace.Observation)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (bt : code.BlockType)
@@ -113,7 +122,8 @@ theorem code.validate_body_with_loop.trace_of_contract {V : Type}
         obtain ⟨rfl, rfl⟩ := h
         exact ⟨[], by simp, .empty hi.bounds.pos (by simp)⟩
 
-/-- Initialization adds no body callback, including on a size-limit error. -/
+/-- A `StepContract` lifts through `code.validate_body_with`. Initialization makes no body
+callback, including when it fails the size limit. -/
 theorem code.validate_body_with.trace_of_contract {V : Type}
     (visitor : code.OpVisitor V) (observe : V → List VisitorTrace.Observation)
     (data : Slice U8) (env : module.Env) (ctx : code.Context)

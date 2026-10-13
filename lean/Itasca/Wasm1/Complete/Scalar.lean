@@ -3,6 +3,15 @@ import Itasca.Handler.ScalarComplete
 import Itasca.Visitor.StepErasure
 import Itasca.Visitor.Basic
 
+/-!
+# Wasm 1.0 scalar instruction completeness
+
+`Numeric.signature` recovers the independent input and output types of a numeric opcode from its
+generated typing. `Frame.step_numeric`, `step_drop`, `step_select` and the four `step_*Const`
+theorems, together with `nop` and `unreachable`, show that `code.step` accepts these
+instructions when the generated `Instr_ok` typing holds on the represented stack.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Numeric
@@ -72,7 +81,7 @@ theorem Frame.step_drop {st} (f : Frame st) (data : Slice U8) (env : module.Env)
       simp [global_simps, hs, code.OpVisitor.on_drop.default, code.visit,
         core.result.Result.Insts.CoreOpsTry.branch]
 
-/-- Implicit select retains the common principal operand interpretation. -/
+/-- Untyped `select` consumes the operands given by its principal typing rule. -/
 theorem Frame.step_select {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (next : Usize) (C : context) (front ins outs : List valtype)
     (hb : Wasm1.BytesAt data st.pos [] next) (hsize : st.vals.val.length < Usize.max)
@@ -170,6 +179,7 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm1.Completeness
 
+/-- `code.step` accepts `nop` whenever its generated typing holds. -/
 theorem nop {st data env ctx C next front ins outs}
     (f : Frame st) (hb : Wasm1.BytesAt data st.pos [] next)
     (hop : Instr_ok C .NOP (.mk_functype (.mk_list ins) (.mk_list outs)))
@@ -182,6 +192,7 @@ theorem nop {st data env ctx C next front ins outs}
   simp [global_simps, code.OpVisitor.on_nop.default, code.visit,
     core.result.Result.Insts.CoreOpsTry.branch]
 
+/-- `code.step` accepts `unreachable` and marks the current frame polymorphic. -/
 theorem unreachable {st data env ctx C next front ins outs}
     (f : Frame st) (hb : Wasm1.BytesAt data st.pos [] next)
     (_hop : Instr_ok C .UNREACHABLE (.mk_functype (.mk_list ins) (.mk_list outs))) :

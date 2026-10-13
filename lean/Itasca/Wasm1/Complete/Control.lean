@@ -1,15 +1,26 @@
 import Itasca.Handler.ControlComplete
 import Itasca.Wasm1.Complete.Frame
 
+/-!
+# Wasm 1.0 branch and return completeness
+
+`step_br`, `step_br_if` and `step_return` show that `code.step` accepts an encoded `br`,
+`br_if` or `return` whose generated `Instr_ok` typing holds on the represented stack.
+`Frame.output_unreachable` describes the state after an unconditional branch.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm1.Completeness
 
+/-- A state whose current frame is marked polymorphic and whose operands are cut back to the
+frame's outer stack realizes every output type list. -/
 theorem Frame.output_unreachable {st} (f : Frame st) {s : code.OpIterState}
     (hc : s.ctrls.val = f.parents ++ [{ f.current with polymorphic_base := true }])
     (hv : s.vals.val = f.outer) (out : List valtype) : f.Output out s :=
   ⟨true, [], hc, by simpa using hv, Sequence.realizes_polymorphic_empty out⟩
 
+/-- `code.step` accepts an encoded `br` whose generated typing holds on the represented stack. -/
 theorem step_br {st : code.OpIterState} (f : Frame st) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (C : context)
     (idx : U32) (bytes : List U8) (next : Usize) (front input output : List valtype)
@@ -37,6 +48,8 @@ theorem step_br {st : code.OpIterState} (f : Frame st) (data : Slice U8)
     · simp only [hv, f.vals, List.length_append]
       omega
 
+/-- `code.step` accepts an encoded `br_if` whose generated typing holds on the represented
+stack. -/
 theorem step_br_if {st : code.OpIterState} (f : Frame st) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (C : context)
     (idx : U32) (bytes : List U8) (next : Usize) (front input output : List valtype)
@@ -66,6 +79,8 @@ theorem step_br_if {st : code.OpIterState} (f : Frame st) (data : Slice U8)
     · simp only [hv, f.vals, List.length_append]
       omega
 
+/-- `code.step` accepts an encoded `return` whose generated typing holds on the represented
+stack. -/
 theorem step_return {st : code.OpIterState} (f : Frame st) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (C : context)
     (next : Usize) (front input output : List valtype)

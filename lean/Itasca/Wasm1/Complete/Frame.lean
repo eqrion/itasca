@@ -3,6 +3,15 @@ import Itasca.Spec.TypingInversion
 import Itasca.Handler.StackComplete
 import Itasca.Wasm1.Complete.Execution
 
+/-!
+# Concrete frames for forward execution
+
+`Frame st` decomposes the control and value stacks of an extracted `code.OpIterState` into
+parent frames, the current frame, the outer operands and the current frame's operands.
+`Frame.Output` states what a frame may become after executing instructions, and `StepResult`
+is the common conclusion of the per-instruction completeness theorems in `Wasm1/Complete/`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm1.Completeness
@@ -50,8 +59,8 @@ theorem Frame.Output.mono {st} {f : Frame st} {a b : List valtype} {s : code.OpI
   obtain ⟨poly, operands, hc, hv, ht⟩ := h
   exact ⟨poly, operands, hc, hv, DeclarativeComplete.realizes_mono ht hs⟩
 
-/-- Reconstruction after an instruction exposes a new concrete frame, ready
-for the next residual typing derivation. -/
+/-- A state satisfying `Frame.Output` has a concrete frame of its own with the same parents,
+outer operands and fixed fields, ready for the next typing derivation. -/
 theorem Frame.Output.next {st} {f : Frame st} {out : List valtype} {s : code.OpIterState}
     (h : f.Output out s) :
     ∃ g : Frame s, g.parents = f.parents ∧ g.outer = f.outer ∧
@@ -68,8 +77,8 @@ theorem Frame.Output.labels {st} {f : Frame st} {out : List valtype} {s : code.O
   obtain ⟨poly, operands, hc, hv, ht⟩ := h
   simp [Control.labels, hc, f.ctrls, Control.targetTypes, Control.targetBlockType]
 
-/-- Common conclusion of a complete leaf dispatch, after its opcode has been
-read. Immediate bytes and declarative typing will supply the premises. -/
+/-- Common conclusion of a leaf dispatch after its opcode has been read: `code.step` returns
+`Ok` at the cursor `next` and the resulting state realizes the output types. -/
 def StepResult {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (opcode : U8) (next : Usize) (out : List valtype) : Prop :=
   ∃ s, code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx opcode () =

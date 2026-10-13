@@ -1,11 +1,21 @@
 import Itasca.Handler.BrTable
 import Itasca.Wasm1.Profile
 
+/-!
+# Wasm 1.0 branch-table profile
+
+Shows that a successful `code.read_br_table` satisfies the Wasm 1.0 semantic profile: all targets
+share one label signature. `BrTable.instruction_profile` gives the profile fact for a merged
+target list, and `code.read_br_table.profile_prefix` extends a typed prefix with the decoded
+`br_table` instruction and proves it is profile-valid.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.BrTable
 
-/-- Successful target merging yields the stronger Wasm 1.0 equality requirement. -/
+/-- Successful target merging gives the Wasm 1.0 requirement that every target has the same label
+signature. -/
 theorem instruction_profile (C : context) (cs : List code.Ctrl)
     (hlabels : C.LABELS = Control.labels cs) (depths : List U32) (default : U32)
     (bt : code.BlockType) (htargets : Targets cs (depths ++ [default]) (some bt)) :
@@ -31,6 +41,8 @@ end Itasca.BrTable
 
 namespace Itasca
 
+/-- A successful `code.read_br_table` decodes the instruction bytes, pops the operands, marks the
+frame unreachable, and extends the typed prefix with a profile-valid `br_table`. -/
 theorem code.read_br_table.profile_prefix {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (v : V)
     (cs : List code.Ctrl) (c : code.Ctrl) (outer segment : List code.StackType)

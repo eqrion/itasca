@@ -1,12 +1,21 @@
 import Itasca.Wasm1.LegacyExecution
 import Itasca.Support.LoopMap
 
+/-!
+# Refinement of the shared body loop
+
+Proves that the extracted shared loop `code.body_loop_loop` at `.Wasm1` equals the proof-only
+loop of `Wasm1/LegacyExecution` up to wrapping the state in `code.BodyState`
+(`code.body_loop_loop.wasm1_eq`). Hence `code.validate_body_with` equals
+`code.validate_body_with_model` (`code.validate_body_with.eq_model`).
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- The shared worker specializes to the former Wasm 1.0 iteration, with only
-its state record wrapped. Hook order and the complete returned state coincide. -/
+/-- One iteration of `code.body_loop_loop` at `.Wasm1` equals one iteration of the proof-only
+loop, with the state record wrapped. Hook order and the returned state coincide. -/
 theorem code.body_loop_loop.body_wasm1 {V : Type}
     (visitor : code.OpVisitor V) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (v : V) (st : code.OpIterState) :
@@ -35,7 +44,7 @@ theorem code.body_loop_loop.body_wasm1 {V : Type}
       rcases out with ⟨res, next, w⟩
       cases res <;> simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-/-- Exact refinement of the actual shared loop by the proof-only former loop. -/
+/-- The extracted shared loop at `.Wasm1` equals the proof-only loop. -/
 theorem code.body_loop_loop.wasm1_eq {V : Type}
     (visitor : code.OpVisitor V) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (v : V) (st : code.OpIterState) :
@@ -52,8 +61,8 @@ theorem code.body_loop_loop.wasm1_eq {V : Type}
   funext cf
   cases cf <;> rfl
 
-/-- This equation preserves the historical raw-body API, including arbitrary
-caller-supplied result vectors and every visitor callback. -/
+/-- The extracted `code.validate_body_with` equals the proof-only model for every visitor,
+including arbitrary result vectors in the context. -/
 theorem code.validate_body_with.eq_model {V : Type}
     (visitor : code.OpVisitor V) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (v : V) :

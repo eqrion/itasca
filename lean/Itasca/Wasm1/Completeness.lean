@@ -1,12 +1,22 @@
 import Itasca.Wasm1.Complete.Structured
 import Itasca.Wasm1.Complete.LeafContracts
 
+/-!
+# Wasm 1.0 body completeness
+
+`code.validate_body.wasm_complete` shows that `code.validate_body` accepts every body satisfying
+`Wasm1.Body`, given the size cap, the result shape and `Wasm1.Environment`. The proof composes
+the program executions of `Wasm1/Complete/` (`Wasm1.Completeness.programs`) and closes the body
+frame in `Wasm1.Completeness.body_of_programs`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm1.Completeness
 
-/-- Close the body frame after executing its independently encoded and typed
-instruction list, then discharge the public size and trailing-byte guards. -/
+/-- Given executions for every emitted token list, a body in `Wasm1.Body` is accepted. The proof
+closes the body frame after the instruction list and discharges the size and trailing-byte
+guards. -/
 theorem body_of_programs (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (bt : code.BlockType) (hresults : ctx.results.val = Control.results bt)
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
@@ -48,8 +58,7 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm1.Completeness
 
-/-- All instruction trees in the binary Wasm 1.0 profile execute successfully
-when their generated typing derivation and version-specific restrictions hold. -/
+/-- Every emitted token list for Wasm 1.0 has a successful program execution. -/
 theorem programs (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (henv : Wasm1.Environment env) (tokens : List Wasm1.Token) (ops : List instr)
     (he : Wasm1.Emits tokens ops) : Program data env ctx tokens ops := by
@@ -68,10 +77,9 @@ end Itasca.Wasm1.Completeness
 
 namespace Itasca
 
-/-- Completeness of the actual extracted public body validator. The premises
-are independent binary provenance, generated SpecTec declarative typing,
-Wasm 1.0 branch-table semantics and signatures, and existing API limits.
-There is no executable checker, handler-success, or step-contract premise. -/
+/-- Completeness of the extracted `code.validate_body`. The premises are independent binary
+provenance, generated SpecTec typing, the Wasm 1.0 profile, the signature tables and the API
+size cap. There is no premise about handler success or step contracts. -/
 theorem code.validate_body.wasm_complete (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (bt : code.BlockType)
     (henv : Wasm1.Environment env)
@@ -82,7 +90,7 @@ theorem code.validate_body.wasm_complete (data : Slice U8) (env : module.Env)
   Wasm1.Completeness.body_of_programs data env ctx bt hresults hsize
     (Wasm1.Completeness.programs data env ctx henv) hbody
 
-/-- An explicit instruction-tree form of the public completeness theorem. -/
+/-- `code.validate_body.wasm_complete` with the instruction list given explicitly. -/
 theorem code.validate_body.wasm_complete_of_typing (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (bt : code.BlockType) (ops : List instr)
     (henv : Wasm1.Environment env)

@@ -3,6 +3,16 @@ import Itasca.Visitor.StepLift
 import Itasca.Wasm1.Visitor.Erasure
 import Itasca.Wasm1.Completeness
 
+/-!
+# Lifting acceptance to visitors (Wasm 1.0)
+
+If the visitor-free validator accepts, `code.validate_body_with` accepts with any visitor whose
+hooks all accept (`FullVisitor.Accepts`; `accepted_lift`). Combined with Wasm 1.0 completeness,
+`code.validate_body_with.wasm_complete` shows that an independently encoded, typed body is
+accepted by every accepting visitor. The `_of_contract` lemmas lift a step-level contract through
+the loop.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
@@ -21,8 +31,8 @@ private theorem visiting_loop_step {V : Type} (visitor : code.OpVisitor V)
   simp [code.validate_body_with_loop.body, code.control_stack_empty,
     alloc.vec.Vec.is_empty, hempty, hr, hs, core.result.Result.Insts.CoreOpsTry.branch]
 
-/-- Successful empty-visitor iterations supply a decreasing byte measure.
-Accepting hooks can change their own state but preserve each validator state. -/
+/-- Successful empty-visitor iterations supply a decreasing byte measure. Accepting hooks can
+change their own state but leave each validator state unchanged. -/
 theorem code.validate_body_with_loop.accepted_lift_of_contract {V : Type}
     (visitor : code.OpVisitor V) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (inv : code.OpIterState → Prop)
@@ -84,7 +94,7 @@ theorem code.validate_body_with_loop.accepted_lift_of_contract {V : Type}
         simp [core.result.Result.Insts.CoreOpsTry.branch,
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
 
-/-- The exact public size guard and initialization retain successful execution
+/-- The size guard and initialization of `code.validate_body_with` preserve successful execution
 when each accepted empty-visitor step lifts to the chosen visitor. -/
 theorem code.validate_body_with.accepted_lift_of_contract {V : Type}
     (visitor : code.OpVisitor V) (data : Slice U8) (env : module.Env) (ctx : code.Context)
@@ -112,8 +122,8 @@ theorem code.validate_body_with.accepted_lift_of_contract {V : Type}
       inv hstep hlift _ v _ h
     simpa [alloc.vec.Vec.deref] using hinit (by scalar_tac)
 
-/-- Accepting hooks preserve every successful public body validation. No
-valid-input, result-shape, or environment restriction is needed for transfer. -/
+/-- Accepting hooks preserve every successful `code.validate_body`. No input, result-shape or
+environment premise is needed. -/
 theorem code.validate_body_with.accepted_lift {V : Type} (visitor : code.OpVisitor V)
     (haccept : FullVisitor.Accepts visitor) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (v : V)
@@ -133,8 +143,8 @@ theorem code.validate_body_with.accepted_lift {V : Type} (visitor : code.OpVisit
     (fun st st' opcode v h => code.step.accepted_lift visitor haccept st st' data env ctx opcode v h)
     (fun hsize => Wasm1.State.start data env ctx bt hsize) v hrun
 
-/-- Independent Wasm 1.0 byte encoding and generated declarative typing
-force public visiting validation to accept when every hook accepts. -/
+/-- Independent Wasm 1.0 byte encoding and generated typing force `code.validate_body_with` to
+accept when every hook accepts. -/
 theorem code.validate_body_with.wasm_complete {V : Type} (visitor : code.OpVisitor V)
     (haccept : FullVisitor.Accepts visitor) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (bt : code.BlockType) (henv : Wasm1.Environment env)

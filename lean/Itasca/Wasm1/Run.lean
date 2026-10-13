@@ -1,11 +1,21 @@
 import Itasca.Wasm1.Invariant
 import Itasca.Handler.RawControl
 
+/-!
+# Wasm 1.0 body runs
+
+Turns per-step contracts into a result about `code.validate_body_with`. `Wasm1.Steps` says that
+`code.step` takes a `Wasm1.Pending` state to its `After` state, and `Wasm1.State.start` shows the
+initial loop state satisfies the invariant. `code.validate_body_with.of_wasm1_steps` and
+`code.validate_body_with.of_wasm_steps` conclude `Wasm1.Profiled` and `Wasm1.Validated` for
+accepted bodies.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm1
 
-
+/-- The initial loop state satisfies the body invariant when the body fits the size cap. -/
 theorem State.start (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (bt : code.BlockType) (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val) :
     State data env ctx bt (Wasm1.Loop.initial bt) := by
@@ -19,6 +29,7 @@ theorem State.start (data : Slice U8) (env : module.Env) (ctx : code.Context)
       Wasm1.Frames.Form.opening, Wasm1.Loop.initial] using
       Consumed.nil (data := data) 0#usize (by simp)
 
+/-- A running state with an open control frame and an unread byte yields a pending step. -/
 theorem State.pending {data env ctx bt st} (h : State data env ctx bt st)
     (hctrls : st.ctrls.val ≠ []) (hpos : st.pos.val < data.length)
     (next : Usize) (hnext : next.val = st.pos.val + 1) :
@@ -29,12 +40,16 @@ theorem State.pending {data env ctx bt st} (h : State data env ctx bt st)
     exact ⟨⟨st.pos, parents, current, bounds.size, hopen, hbody, hconsumed,
       hpos, hnext, bounds.vals, bounds.ctrls⟩, rfl⟩
 
+/-- Every `code.step` call from a pending state, on any visitor state, either rejects or reaches
+the state `Pending.After`. -/
 def Steps {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (bt : code.BlockType) : Prop :=
   ∀ st (p : Pending data env ctx bt st) v,
     code.step visitor st data env ctx (data.val[p.start.val]'p.inbounds) v ⦃ r =>
       r.1 = .Ok () → p.After r.2.1 ⦄
 
+/-- `Wasm1.Steps` gives the step contract of the shared loop `code.body_loop_loop` for the
+invariant `Wasm1.State`. -/
 theorem Steps.contract {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (bt : code.BlockType)
     (hsteps : Steps visitor data env ctx bt) :
@@ -43,11 +58,11 @@ theorem Steps.contract {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
   obtain ⟨p, hstart⟩ := hi.pending hc hp next hn
   simpa only [hstart, Pending.After] using hsteps { st with pos := next } p v
 
-/-- Acceptance without the additional version profile. -/
+/-- The body bytes encode an instruction list with generated declarative body typing. -/
 def Validated (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (bt : code.BlockType) : Prop := ∃ ops, BodyEncoding data ops ∧ FunctionTyped env ctx bt ops
 
-/-- Acceptance has independent binary provenance and generated declarative body typing. -/
+/-- `Wasm1.Validated` together with the Wasm 1.0 profile on the instruction list. -/
 def Profiled (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (bt : code.BlockType) : Prop := ∃ ops, BodyEncoding data ops ∧ FunctionTyped env ctx bt ops ∧
     Wasm1.Instructions (Wasm1.Frames.enter (EnvTranslation.context env ctx) .body bt) ops
@@ -56,8 +71,9 @@ end Itasca.Wasm1
 
 namespace Itasca
 
-/-- The implementation initializes one result only for a singleton result list.
-Keeping that exact behavior here makes the termination result unconditional. -/
+/-- Accepted executions of `code.validate_body_with` satisfy `Wasm1.Profiled`, given the step
+contract. The hypothesis `hbt` matches the extracted initial block type, which carries a result
+only for a singleton result list. -/
 theorem code.validate_body_with.of_wasm1_steps {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (bt : code.BlockType)
     (hbt : Wasm1.Loop.initialBlockType ctx.results.val = bt)
@@ -83,7 +99,8 @@ theorem code.validate_body_with.of_wasm1_steps {V : Type} (visitor : code.OpVisi
     · apply Wasm1.State.start
       scalar_tac
 
-/-- The public typing contract projects from the shared profile invariant. -/
+/-- Accepted executions of `code.validate_body_with` satisfy `Wasm1.Validated`. This projects
+`code.validate_body_with.of_wasm1_steps`. -/
 theorem code.validate_body_with.of_wasm_steps {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (bt : code.BlockType)
     (hbt : Wasm1.Loop.initialBlockType ctx.results.val = bt)

@@ -2,10 +2,18 @@ import Itasca.Wasm1.Profile
 import Itasca.Wasm1.Invariant
 import Itasca.Handler.EnvDispatch
 
+/-!
+# Wasm 1.0 environment-dependent steps
+
+For each instruction whose typing consults the environment (`local.get`, `local.set`,
+`local.tee`, `global.get`, `global.set`, `call`, `call_indirect`, `memory.size`, `memory.grow`
+and the loads and stores), shows that `code.step` either rejects or reaches `Pending.After`.
+The environment-dependent typing premises come from `EnvTranslation.Matches`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm1
-
 
 private theorem run_after {A V : Type} {data env ctx bt st}
     (p : Pending data env ctx bt st)
@@ -44,6 +52,7 @@ private theorem Pending.index_post_after {data env ctx bt st} (p : Pending data 
     exact .of_immediate p.inbounds hbyte p.pos (himm idx bytes he) ⟨hs, hn, hb⟩
   · simp [hc, ctrls]
 
+/-- `code.step` on `code.OP_LOCAL_GET` either rejects or reaches `Pending.After`. -/
 theorem Pending.step_local_get {data env ctx bt st} (p : Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hvisitor : FullVisitor.Total visitor)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x20#u8) :
@@ -62,6 +71,7 @@ theorem Pending.step_local_get {data env ctx bt st} (p : Pending data env ctx bt
     (fun idx => .instr_case_43 _ (EnvTranslation.index_wf idx))
     (fun idx _ he => .localGet idx he) r hr idx hi
 
+/-- `code.step` on `code.OP_LOCAL_SET` either rejects or reaches `Pending.After`. -/
 theorem Pending.step_local_set {data env ctx bt st} (p : Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hvisitor : FullVisitor.Total visitor)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x21#u8) :
@@ -80,6 +90,7 @@ theorem Pending.step_local_set {data env ctx bt st} (p : Pending data env ctx bt
     (fun idx => .instr_case_44 _ (EnvTranslation.index_wf idx))
     (fun idx _ he => .localSet idx he) r hr idx hi
 
+/-- `code.step` on `code.OP_LOCAL_TEE` either rejects or reaches `Pending.After`. -/
 theorem Pending.step_local_tee {data env ctx bt st} (p : Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hvisitor : FullVisitor.Total visitor)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x22#u8) :
@@ -99,6 +110,7 @@ theorem Pending.step_local_tee {data env ctx bt st} (p : Pending data env ctx bt
     (fun idx => .instr_case_45 _ (EnvTranslation.index_wf idx))
     (fun idx _ he => .localTee idx he) r hr idx hi
 
+/-- `code.step` on `code.OP_GLOBAL_GET` either rejects or reaches `Pending.After`. -/
 theorem Pending.step_global_get {data env ctx bt st} (p : Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hvisitor : FullVisitor.Total visitor)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x23#u8) :
@@ -117,6 +129,7 @@ theorem Pending.step_global_get {data env ctx bt st} (p : Pending data env ctx b
     (fun idx => .instr_case_46 _ (EnvTranslation.index_wf idx))
     (fun idx _ he => .globalGet idx he) r hr idx hi
 
+/-- `code.step` on `code.OP_GLOBAL_SET` either rejects or reaches `Pending.After`. -/
 theorem Pending.step_global_set {data env ctx bt st} (p : Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hvisitor : FullVisitor.Total visitor)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x24#u8) :
@@ -135,6 +148,7 @@ theorem Pending.step_global_set {data env ctx bt st} (p : Pending data env ctx b
     (fun idx => .instr_case_47 _ (EnvTranslation.index_wf idx))
     (fun idx _ he => .globalSet idx he) r hr idx hi
 
+/-- `code.step` on `code.OP_CALL` either rejects or reaches `Pending.After`. -/
 theorem Pending.step_call {data env ctx bt st} (p : Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hvisitor : FullVisitor.Total visitor)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x10#u8) :
@@ -154,6 +168,7 @@ theorem Pending.step_call {data env ctx bt st} (p : Pending data env ctx bt st)
     (fun idx => .instr_case_10 _ (EnvTranslation.index_wf idx))
     (fun idx _ he => .call idx he) r hr idx hi
 
+/-- `code.step` on `code.OP_CALL_INDIRECT` either rejects or reaches `Pending.After`. -/
 theorem Pending.step_call_indirect {data env ctx bt st} (p : Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hvisitor : FullVisitor.Total visitor)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x11#u8) :
@@ -203,6 +218,7 @@ private theorem Pending.reserved_post_after {data env ctx bt st} (p : Pending da
   · exact .of_immediate p.inbounds hbyte p.pos himm (.byte data st.pos r.2.pos 0#u8 hp hz hn)
   · simp [hc, ctrls]
 
+/-- `code.step` on `code.OP_MEMORY_SIZE` either rejects or reaches `Pending.After`. -/
 theorem Pending.step_memory_size {data env ctx bt st} (p : Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hvisitor : FullVisitor.Total visitor)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x3F#u8) :
@@ -221,6 +237,7 @@ theorem Pending.step_memory_size {data env ctx bt st} (p : Pending data env ctx 
   exact p.reserved_post_after C outer spine header base ctrls vals 0x3F#u8 _ hbyte
     .instr_case_62 .memorySize r hr hi
 
+/-- `code.step` on `code.OP_MEMORY_GROW` either rejects or reaches `Pending.After`. -/
 theorem Pending.step_memory_grow {data env ctx bt st} (p : Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hvisitor : FullVisitor.Total visitor)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x40#u8) :
@@ -240,6 +257,8 @@ theorem Pending.step_memory_grow {data env ctx bt st} (p : Pending data env ctx 
   exact p.reserved_post_after C outer spine header base ctrls vals 0x40#u8 _ hbyte
     .instr_case_63 .memoryGrow r hr hi
 
+/-- `code.step` on a load or store opcode with meaning `operation` either rejects or reaches
+`Pending.After`. -/
 theorem Pending.step_memory {data env ctx bt st} (p : Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hvisitor : FullVisitor.Total visitor)
     (opcode : U8) (operation : MemoryMeaning.Operation)

@@ -3,12 +3,22 @@ import Itasca.Wasm1.Visitor.Refinement
 import Itasca.Wasm1.Visitor.Lift
 import Itasca.Binary.Wasm1.EncodingUnique
 
+/-!
+# Wasm 1.0 body traces
+
+For a visitor that records its callbacks (`Records`), `code.validate_body_with.trace` gives
+every returned execution of `code.validate_body_with` a byte-accurate callback trace.
+`trace_sound` and `trace_complete` relate accepted traces (`AcceptedBody`) to the independent
+encoding and the generated typing of the body, and `recorder_total` and `recorder_complete` apply
+this to the concrete `recorder` visitor.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.VisitorTrace
 
-/-- An accepted trace spells exactly the complete independently encoded,
-SpecTec-typed instruction body, including all structural delimiters. -/
+/-- Every callback in the trace accepted, and the callbacks spell a complete body that is
+independently encoded and SpecTec-typed, including all structural delimiters. -/
 def AcceptedBody (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (bt : code.BlockType) (observations : List Observation) : Prop :=
   AllAccepted observations ∧ ∃ tokens ops next,
@@ -21,9 +31,9 @@ namespace Itasca
 
 open VisitorTrace
 
-/-- Every ordinary public body return has exact observed callback byte
-provenance. The final rejected instruction may leave a partial table vector;
-an observed rejecting callback is retained and no callback follows it. -/
+/-- Every returned execution of `code.validate_body_with` has an observed callback trace with
+exact byte provenance. A rejected final `br_table` may leave a partial vector, and no callback
+follows an observed rejecting callback. -/
 theorem code.validate_body_with.trace {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (hrecords : Records visitor observe)
     (data : Slice U8) (env : module.Env) (ctx : code.Context)
@@ -34,8 +44,8 @@ theorem code.validate_body_with.trace {V : Type} (visitor : code.OpVisitor V)
   code.validate_body_with.trace_of_contract visitor observe data env ctx
     (VisitorTrace.steps visitor observe hrecords data env ctx _) v v' result h
 
-/-- Accepted traces and declarative body typing refer to the same syntax,
-using uniqueness of the independent byte grammar to align their witnesses. -/
+/-- An accepted run yields an `AcceptedBody` trace. The trace and the body's typing derivation
+describe the same syntax, by uniqueness of the independent byte grammar. -/
 theorem code.validate_body_with.trace_sound {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (hrecords : Records visitor observe)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (bt : code.BlockType)
@@ -54,8 +64,8 @@ theorem code.validate_body_with.trace_sound {V : Type} (visitor : code.OpVisitor
   subst tokens'
   exact ⟨observations, hlog, ha, tokens, ops, next, hc, hend, hsyntax, htyped⟩
 
-/-- Independent Wasm 1.0 encoding and typing force acceptance and a complete
-trace for every accepting recording visitor. No successful run is assumed. -/
+/-- Independent Wasm 1.0 encoding and typing force every accepting recording visitor to accept
+and to produce an `AcceptedBody` trace. No successful run is assumed. -/
 theorem code.validate_body_with.trace_complete {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (hrecords : Records visitor observe)
     (haccept : FullVisitor.Accepts visitor) (data : Slice U8) (env : module.Env)
@@ -71,8 +81,8 @@ theorem code.validate_body_with.trace_complete {V : Type} (visitor : code.OpVisi
     hrecords data env ctx bt hresults v v' hrun
   exact ⟨v', observations, hrun, hlog, htrace⟩
 
-/-- Instrument any ordinary returned execution without changing its result or
-underlying visitor state; the added log satisfies the independent trace relation. -/
+/-- Wrapping a visitor with `instrument` keeps the result and the underlying visitor state of any
+returned execution, and the added log satisfies `BodyTrace`. -/
 theorem code.validate_body_with.instrument_trace {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V)
     (log : List Observation) (result : BodyResult) (v' : V)
@@ -85,8 +95,8 @@ theorem code.validate_body_with.instrument_trace {V : Type} (visitor : code.OpVi
   have he : added = observations := List.append_cancel_left heq
   exact ⟨added, hrun, he ▸ ht⟩
 
-/-- The concrete recorder terminates and produces a valid trace on arbitrary
-input bytes, including malformed and unsupported instructions. -/
+/-- The concrete `recorder` visitor terminates with a `BodyTrace` on arbitrary input bytes,
+including malformed and unsupported instructions. -/
 theorem code.validate_body_with.recorder_total (data : Slice U8) (env : module.Env)
     (ctx : code.Context) : ∃ result observations,
     code.validate_body_with recorder data env ctx [] = .ok (result, observations) ∧
@@ -98,8 +108,8 @@ theorem code.validate_body_with.recorder_total (data : Slice U8) (env : module.E
   simp only [id_eq, List.nil_append] at heq
   exact ⟨result, observations, hrun, heq ▸ ht⟩
 
-/-- The concrete accepting recorder visits every instruction of an independently
-encoded, typed Wasm 1.0 body, with all entries of every branch table in order. -/
+/-- The concrete `recorder` visitor accepts an independently encoded, typed Wasm 1.0 body and
+visits every instruction, with all entries of every branch table in order. -/
 theorem code.validate_body_with.recorder_complete (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (bt : code.BlockType) (henv : Wasm1.Environment env)
     (hresults : ctx.results.val = Control.results bt)

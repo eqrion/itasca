@@ -4,19 +4,30 @@ import Itasca.Wasm1.Invariant
 import Itasca.Visitor.EventDispatch
 import Itasca.Handler.ScalarConst
 
+/-!
+# Leaf instruction callback traces
+
+`StepRecords` states that every returned `code.step` for an opcode records its callbacks with
+the exact encoded bytes of the instruction. `run_step_trace` derives this from the byte
+provenance of a single callback, and the `step_*` theorems prove it for `nop`, `unreachable`,
+constants, `drop`, `select`, local and global access, `call`, `call_indirect`, `memory.size`,
+`memory.grow`, and the numeric and load/store rows.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.VisitorTrace
 
-/-- An ordinary step return records its exact independently encoded callback chunk. -/
+/-- Every returned `code.step` for `opcode` appends callbacks that match the independently
+encoded bytes of the instruction. -/
 def StepRecords {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation) (opcode : U8) : Prop :=
   ∀ v result final v', code.step visitor st data env ctx opcode v = .ok (result, final, v') →
     ∃ observations, observe v' = observe v ++ observations ∧
       StepTrace data p.start observations result final
 
-/-- Lift independent success-byte provenance through a single recorded callback.
-Failure before the callback is silent; the callback's own rejection is retained. -/
+/-- Lifts byte provenance of a successful read through one recorded callback. A failure before
+the callback records nothing, and the callback's own rejection is recorded. -/
 theorem run_step_trace {A V : Type} (data : Slice U8) (start : Usize)
     (read : Result (core.result.Result A error.OpError × code.OpIterState))
     (visitor : code.OpVisitor V) (observe : V → List Observation)
