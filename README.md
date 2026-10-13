@@ -2,21 +2,17 @@
 
 ***veritas caput***
 
-A streaming WebAssembly validator written in Rust and verified in Lean. It
-supports the WebAssembly 1.0 and 2.0 core profiles, including
+A streaming WebAssembly validator written in Rust and verified in Lean.
+
+It supports the WebAssembly 1.0 and 2.0 core profiles, including
 parallel function validation and compiler callbacks. Both profiles have
 whole-module termination, soundness, and completeness proofs.
 
-It also includes a fuel-metered rewriting interpreter for instantiation and
-execution under both profiles. The runtime is tested against both pinned
-specification corpora; execution is not covered by the validator proofs. See
-the [execution guide](docs/EXECUTION.md) for linking, host calls, resource limits,
-and resumable invocation.
+There is also an execution runtime as well, but it is not covered by any proofs.
 
-This is an experiment in AI-assisted formal verification by Ryan Hunt, built
-extensively with Claude. The proof statements and their trust boundary are
-part of the project: read [formal verification](#formal-verification) before
-relying on a guarantee.
+This is an experiment in AI-assisted formal verification, built extensively
+with Claude and Codex. Read [formal verification](#formal-verification) for
+more details.
 
 ## Usage
 
@@ -27,57 +23,73 @@ let imports = itasca::import_types(module.env())?;
 let exports = itasca::export_types(module.env())?;
 ```
 
-`validate_module` accepts arbitrary bytes, validates the complete module, and
-returns read-only declarations and data segments. `Module::env`, `Module::tail`,
-and the `Env` accessors expose metadata without allowing callers to change the
-validated environment. Import and export types are resolved in declaration order.
-The crate supports `no_std` with `alloc` when default features are disabled.
+The two profiles:
 
-Select a profile explicitly:
-
-| Profile | Supported language |
+| Profile | Extensions |
 | --- | --- |
-| `ValidationProfile::Wasm1` | WebAssembly 1.0, including single-result functions and blocks, original active-segment encodings, and identical branch-table target signatures. |
-| `ValidationProfile::Wasm2` | WebAssembly Core 2.0: multi-value control, sign extension, saturating conversions, reference types, multiple tables, bulk memory, passive and declarative segments, and all 236 SIMD instructions. |
+| `Wasm1` | None |
+| `Wasm2` | multi-value, sign extension, saturating conversions, reference types, multiple tables, bulk memory, passive and declarative segments, SIMD instructions. |
 
-Both profiles allow at most one memory, counting imports and definitions
-together, and require unique decoded export names. Wasm 1.0 permits one table;
-Wasm 2.0 permits multiple tables of `funcref` or `externref`. Constant expressions
-contain one permitted constant, reference instruction, or read of an immutable
-imported global, according to the selected profile. Proposals added after Core
-2.0, including relaxed SIMD, are outside these profiles.
+`validate_module` is internally implemented using the more powerful and complex
+`validate_streaming` API. This API supports streaming reads, discontiguous
+buffers, and parallel compilation of function bodies.
 
-## Streaming and callbacks
+```rust
+use itasca::{
+    CodeBatch, Config, Env, Error, Region, Result, Source, StreamingVisitor, Tail,
+    ValidationProfile,
+};
+use std::vec::Vec;
 
-`validate_streaming` is the shared module driver. `validate_module`
-supplies its private contiguous source and synchronous worker. Advanced consumers
-implement `Source` and `StreamingVisitor` to provide separate
-input regions and schedule the issued `CodeBatch` workers.
+struct Input(&'static [u8]);
+impl Source for Input {
+    fn environment(&self) -> Result<&[u8]> { Ok(self.0) }
+    fn code_len(&self) -> usize { 0 }
+    fn code(&self, start: usize, end: usize) -> Result<&[u8]> {
+        if start == 0 && end == 0 { Ok(&[]) } else { Err(Error::Host) }
+    }
+    fn tail(&self) -> Result<&[u8]> { Ok(&[]) }
+}
 
-The driver decodes the environment, submits code batches, validates the tail,
-and retires every outstanding batch before accepting. Workers may finish in any
-order. `CodeBatch::next_entry` frames entries for dispatch;
-`CodeBatch::validate_func` validates them with an `OpVisitor` and retains the
-first error. The driver checks module identity, pending batch identity, complete
-validation, and exact byte coverage.
+#[derive(Default)]
+struct Visitor<'a> { returned: Vec<CodeBatch<'a>> }
 
-`OpVisitor` reports function context and decoded operators. `ModuleVisitor`
-reports custom sections. Callback errors can reject valid input. Metadata or
-operators observed before the driver returns successfully do not certify a
-complete module. Sources must provide coherent bytes, invocation IDs must be
-unique among workers sharing a scheduler, and borrowed storage must outlive
-workers even after an error. See the
-[embedding contract](DEVELOPMENT.md#streaming-contract).
+impl itasca::ModuleVisitor for Visitor<'_> {}
 
-Implementation modules, raw body/environment/entry/tail validators, opcode
-constants, and dispatch macros are private. Consumers use the crate's explicit
-root exports, including all streaming types and entry points. The duplicate
-`validate_module_with_profile` spelling has been removed; use
-`validate_module(bytes, profile)`.
+impl<'a> StreamingVisitor<'a> for Visitor<'a> {
+    fn custom_region(&mut self, _region: Region) {}
+    fn environment_ready(&mut self, _env: &Env) -> Result<Config> {
+        Ok(Config { batch_bytes: 4096, max_batches: 2 })
+    }
+    fn submit_code_batch(&mut self, mut batch: CodeBatch<'a>) -> Result<()> {
+        // Implementations can synchronously validate a batch, or schedule it
+        // for background validation. They must call `validate_func` on all
+        // entries of the batch and eventually return it via `poll_code_batch`.
+        let mut count = 0;
+        while count < batch.len() {
+            let entry = batch.next_entry()?;
+            batch.validate_func(entry.index, &mut itasca::EmptyOpVisitor)?;
+            count += 1;
+        }
+        self.returned.push(batch);
+        Ok(())
+    }
+    fn poll_code_batch(&mut self) -> Result<CodeBatch<'a>> {
+        self.returned.pop().ok_or(Error::Host)
+    }
+    fn code_end(&mut self) -> Result<()> { Ok(()) }
+    fn tail_ready(&mut self, _tail: Tail) -> Result<()> { Ok(()) }
+}
+
+let source = Input(b"\x00asm\x01\x00\x00\x00");
+let mut visitor = Visitor::default();
+let mut env = Env::new();
+itasca::validate_streaming(0, ValidationProfile::Wasm1, &source, &mut visitor, &mut env)?;
+```
 
 ## Formal verification
 
-The checked pipeline is:
+The pipeline is:
 
 ```text
 Rust --Charon--> LLBC --Aeneas--> Lean program model
@@ -86,99 +98,24 @@ Independent binary grammar ------> exact bytes and selected profile
 Handwritten Lean proofs ----------> validator guarantees
 ```
 
-“Accepts” means the extracted function returns ordinary `Ok`. “Terminates”
-means it returns success or an error without modeled panic, arithmetic overflow,
-out-of-bounds access, or divergence. Allocation failure is outside the model.
-“Well typed” refers to the generated SpecTec declarative judgments; byte
-provenance comes from the independent handwritten binary grammar.
+“Accepts” means the extracted function returns ordinary `Ok`.
+“Terminates” means it returns success or an error without panic, arithmetic overflow, out-of-bounds access, or divergence (allocation failure is not modeled).
+“Well typed” refers to the generated SpecTec declarative judgments.
+"Total" means that arbitrary bytes terminate.
+"Sound" acceptance implies the bytes encode a module that is well typed.
+"Complete" means that all well-typed binary encoded modules within implementation limits are accepted.
 
 | Entry point | Guarantee |
 | --- | --- |
-| `validate_module` | Arbitrary bytes terminate. Acceptance establishes exact module encoding, generated `Module_ok`, the selected profile, coherent index spaces, and exact returned metadata. Independently encoded and typed modules within the limits are accepted. |
-| `validate_streaming` | Soundness requires coherent source views and worker provenance. Termination requires returning callbacks. Completeness additionally requires available canonical input regions and an accepting scheduler policy. |
-| `CodeBatch::validate_func` and visitors | Batch proofs connect actual entry validations to ordered function coverage. Shared body and entry proofs establish typing under both profiles. Body trace proofs for both profiles identify callback names, order, immediates, and an observed rejecting callback's stopping behavior. |
-
-The [Lean guide](lean/README.md#proof-contracts) links these statements to their
-source files and spells out their premises. Whole-module completeness starts
-from independent encoding, elaboration, typing, profile restrictions, and
-resource bounds. It does not assume parser success or prevalidated bodies.
-
-The grammar covers nonminimal valid LEB encodings, strict UTF-8, section order
-and framing, grouped locals, active/passive/declarative segments, data-count
-sections, and complete input consumption. Float and vector immediates preserve
-their raw bits. Independent body and module decoding are unique without typing or implementation-size premises.
-
-### Implementation limits
-
-Completeness applies within the caps in [src/limits.rs](src/limits.rs):
-
-| Resource | Limit |
-| --- | ---: |
-| Complete module bytes | 1,073,741,824 |
-| Instruction-body bytes, including final `end`, excluding local declarations | 7,654,321 |
-| Declared locals per function, excluding parameters | 50,000 |
-| Parameters per signature in the Wasm 2.0 profile | 1,000 |
-| Results per signature in the Wasm 2.0 profile | 1,000 |
-
-Wasm 1.0 retains its single-result restriction and existing parameter behavior.
-Resource caps are separate from language validity; otherwise valid modules may
-exceed them. Specification bounds, including 65,536 memory pages, also apply.
+| `validate_module` | Total, sound, and complete. |
+| `validate_streaming` | Total, if callbacks are total. Sound, if source views are coherent and if Rust field-privacy of `CodeBatch` is respected. Complete, if source views spans are correct and `poll_code_batch` eventually receives all dispatched `CodeBatch`. |
 
 ### Trust boundary
 
-The proofs depend on faithful Rust translation by Charon and Aeneas, faithful
-specification generation by SpecTec, and the correspondence of handwritten
-grammars and type translations with WebAssembly. They also rely on Aeneas's
-standard-library and loop models, including the local concrete models of
-`Vec.pop` and `Vec.is_empty`. Allocation capacity and allocator failure are not
-modeled. Lean's kernel and standard logical foundations are trusted, together
-with the compiler, runtime, and hardware used to run the Rust library.
-
-Generated Rust models and the specification are committed and reproducibly
-checked. Local tool/specification repairs are versioned [source patches](patches),
-with their scope described in the [Lean guide](lean/README.md#source-patches).
-The explicit profile supplements gaps in the generated module judgment, including
-export-name uniqueness. The independent
-[declared-reference condition](lean/Itasca/Spec/DeclaredReferences.lean) requires
-every `ref.func` target to occur in the module outside function definitions and
-the start declaration. This supplements the pinned model's missing reference
-declaration context without modifying its generated typing rules. Elaboration
-checks type references and function/code counts. The independent SIMD grammar
-also distinguishes the two load-zero encodings duplicated in the pinned binary
-table, as documented in the [Lean guide](lean/README.md#expanding-the-supported-profile).
-
-[Itasca.Audit](lean/Itasca/Audit.lean) checks every declaration originating in
-an imported local module, including private helpers, generated auxiliaries,
-proof-bearing definitions, and external models. Only `propext`,
-`Classical.choice`, and `Quot.sound` are permitted. There are no project-specific
-axioms or kernel bypasses in the checked dependencies. Unfinished upstream lemmas
-and opaque execution models are excluded from those dependencies.
-
-The new `runtime` module is explicitly excluded from Charon extraction. Native
-numeric operations and fallible runtime allocation remain an unverified
-implementation boundary, documented with [extraction probes](docs/EXECUTION_NUMERICS.md).
-No runtime assumptions or external axioms have been added to the validator proofs.
-
-These guarantees cover validation and decoding. They do not establish Wasm
-execution, compiler IR correctness, OS scheduling, network progress, or FFI memory
-safety. Generic streaming retains its source and worker contracts. A general
-choice of error variant and complete traces of rejected whole-module runs are
-not specified. The earlier Rocq implementation is archived under the
-`rocq-baseline` tag and is not an active build dependency.
-
-## Development
-
-```sh
-cargo build
-just test         # Default and no-default-feature corpus tests
-```
-
-The retained tests use the Wasm 1.0 specification corpus and a
-[complete pinned Wasm 2.0 corpus](tests/spec2/README.md), with wasmparser as
-an independent oracle. [fuzz](fuzz) contains differential byte and generated-module
-fuzzers. Lean examples check typing, malformed inputs, traces, and worker protocol
-behavior. External integrations have their own validation and lifetime obligations.
-
-See [DEVELOPMENT.md](DEVELOPMENT.md) for the source layout and change workflow,
-[lean/README.md](lean/README.md) for verification setup and proof architecture,
-and [AGENTS.md](AGENTS.md) for coding-agent requirements.
+The proofs depend on:
+  1. Rust translation into Lean by Charon and Aeneas.
+  2. Aeneas's standard-library and loop models.
+  3. Validation judgements generated by SpecTec.
+  4. Hand-written binary grammar.
+  5. The rustc compiler.
+  6. Lean's kernel and standard logical foundations.
