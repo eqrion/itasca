@@ -390,7 +390,7 @@ input will succeed. Completeness starts from independent encoding and typing
 and constructs a successful execution.
 
 [WasmComplete.lean](Itasca/Wasm1/Completeness.lean) exposes
-`code.validate_body.wasm_complete`. Follow `Completeness.programs` into
+`code.validate_body.wasm_complete`. Follow `Wasm1.Completeness.programs` into
 [CompletenessProgram.lean](Itasca/Wasm1/Complete/Program.lean), where
 `Program` states that a typed encoded instruction list executes successfully
 from a suitable frame. The proof recurses through encoded instruction
