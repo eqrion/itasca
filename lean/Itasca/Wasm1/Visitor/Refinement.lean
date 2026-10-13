@@ -15,7 +15,7 @@ theorem code.validate_body_with_loop.refines_of_contract {V W : Type}
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
     (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (inv : code.OpIterState → Prop)
-    (hstep : Body.StepContract code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+    (hstep : Wasm1.Loop.StepContract code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       data env ctx (fun _ st => inv st))
     (st : code.OpIterState) (v : V) (w : W) (hi : inv st) (hrelated : related v w)
     (res : core.result.Result Unit error.OpError) (v' : V)
@@ -89,10 +89,10 @@ theorem code.validate_body_with.refines_of_contract {V W : Type}
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
     (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (inv : code.OpIterState → Prop)
-    (hstep : Body.StepContract code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+    (hstep : Wasm1.Loop.StepContract code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       data env ctx (fun _ st => inv st))
     (hinit : data.length ≤ limits.MAX_FUNCTION_BYTES.val →
-      inv (Body.initial (Body.initialBlockType ctx.results.val)))
+      inv (Wasm1.Loop.initial (Wasm1.Loop.initialBlockType ctx.results.val)))
     (v : V) (w : W) (hrelated : related v w)
     (res : core.result.Result Unit error.OpError) (v' : V)
     (h : code.validate_body_with visitor data env ctx v = .ok (res, v')) :
@@ -120,7 +120,7 @@ theorem code.validate_body_with.refines {V W : Type}
     (res : core.result.Result Unit error.OpError) (v' : V)
     (h : code.validate_body_with visitor data env ctx v = .ok (res, v')) :
     ∃ w', code.validate_body_with replacement data env ctx w = .ok (res, w') ∧ related v' w' := by
-  let bt := Body.initialBlockType ctx.results.val
+  let bt := Wasm1.Loop.initialBlockType ctx.results.val
   have hsteps := Wasm1.steps code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
     FullVisitor.empty_total data env ctx bt
   exact code.validate_body_with.refines_of_contract visitor replacement related hrefines

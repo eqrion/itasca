@@ -3,7 +3,7 @@ import Itasca.Wasm1.Complete.LeafContracts
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Completeness
+namespace Itasca.Wasm1.Completeness
 
 /-- Close the body frame after executing its independently encoded and typed
 instruction list, then discharge the public size and trailing-byte guards. -/
@@ -17,7 +17,7 @@ theorem body_of_programs (data : Slice U8) (env : module.Env) (ctx : code.Contex
   obtain ⟨tokens, next, hbytes, hfinish, inner, heq, hemits⟩ := hencoding
   subst tokens
   obtain ⟨middle, hinner, hend⟩ := Wasm1.Consumed.split hbytes
-  let st := Body.initial bt
+  let st := Wasm1.Loop.initial bt
   let f : Frame st :=
     ⟨[], ⟨.Body, bt, Control.signature bt, 0#usize, false⟩, [], [], rfl, rfl, rfl⟩
   let C := Wasm1.Frames.enter (EnvTranslation.context env ctx) .body bt
@@ -42,11 +42,11 @@ theorem body_of_programs (data : Slice U8) (env : module.Env) (ctx : code.Contex
   · simpa [hgp, f] using hc'
   · simpa [hp'] using hfinish
 
-end Itasca.Completeness
+end Itasca.Wasm1.Completeness
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Completeness
+namespace Itasca.Wasm1.Completeness
 
 /-- All instruction trees in the binary Wasm 1.0 profile execute successfully
 when their generated typing derivation and version-specific restrictions hold. -/
@@ -64,7 +64,7 @@ theorem programs (data : Slice U8) (env : module.Env) (ctx : code.Context)
   | ifElse bt hy hn => exact atom_ifElse bt hy hn smaller
   | ifEnd bt hb => exact atom_ifEnd bt hb smaller
 
-end Itasca.Completeness
+end Itasca.Wasm1.Completeness
 
 namespace Itasca
 
@@ -79,8 +79,8 @@ theorem code.validate_body.wasm_complete (data : Slice U8) (env : module.Env)
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
     (hbody : Wasm1.Body data env ctx bt) :
     code.validate_body data env ctx = .ok (.Ok ()) :=
-  Completeness.body_of_programs data env ctx bt hresults hsize
-    (Completeness.programs data env ctx henv) hbody
+  Wasm1.Completeness.body_of_programs data env ctx bt hresults hsize
+    (Wasm1.Completeness.programs data env ctx henv) hbody
 
 /-- An explicit instruction-tree form of the public completeness theorem. -/
 theorem code.validate_body.wasm_complete_of_typing (data : Slice U8) (env : module.Env)

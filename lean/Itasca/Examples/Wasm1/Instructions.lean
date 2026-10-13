@@ -10,7 +10,7 @@ private theorem public_of_loop (data : Slice U8) (env : module.Env) (ctx : code.
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
     (hresults : ctx.results.val = Control.results bt)
     (hloop : code.validate_body_with_loop code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
-      data env ctx.locals ctx.results () (Body.initial bt) = .ok (result, ())) :
+      data env ctx.locals ctx.results () (Wasm1.Loop.initial bt) = .ok (result, ())) :
     code.validate_body data env ctx = .ok result := by
   have hguard : ¬ Slice.len data > limits.MAX_FUNCTION_BYTES := by scalar_tac
   simp [code.validate_body, code.validate_body_with.eq_model, code.validate_body_with_model, hguard,
@@ -95,20 +95,20 @@ private theorem single_accepted (data : Slice U8) (env : module.Env) (ctx : code
     (hfirst : 0 < data.length) (hbyte : data.val[0] = opcode)
     (hend : s.pos.val < data.length) (hendbyte : data.val[s.pos.val] = code.OP_END)
     (hendpos : (Slice.len data).val = s.pos.val + 1)
-    (hctrls : s.ctrls = (Body.initial bt).ctrls)
+    (hctrls : s.ctrls = (Wasm1.Loop.initial bt).ctrls)
     (hvals : s.vals.val = (Control.results bt).map code.StackType.Val)
     (hstep : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
-      {Body.initial bt with pos := 1#usize} data env ctx opcode () = .ok (.Ok (), s, ())) :
+      {Wasm1.Loop.initial bt with pos := 1#usize} data env ctx opcode () = .ok (.Ok (), s, ())) :
     code.validate_body data env ctx = .ok (.Ok ()) := by
   let last := {s with pos := Slice.len data}
   obtain ⟨⟨_, finished⟩, hr, rfl, hc, _, hp⟩ := WP.spec_imp_exists
     (code.read_end.concrete last [] ⟨.Body, bt, Control.signature (bt), 0#usize, false⟩ []
-      (by simp [last, hctrls, Body.initial]) (by simpa [last] using hvals) rfl (by simp))
+      (by simp [last, hctrls, Wasm1.Loop.initial]) (by simpa [last] using hvals) rfl (by simp))
   dsimp only at hc hp
   apply public_of_loop data env ctx bt (.Ok ()) hsize hresults
-  rw [loop_step data env ctx (Body.initial bt) {Body.initial bt with pos := 1#usize} s opcode
-    (by simp [Body.initial]) (read_at data (Body.initial bt) 1#usize opcode hfirst rfl hbyte) hstep]
-  rw [loop_step data env ctx s last finished code.OP_END (by simp [hctrls, Body.initial])
+  rw [loop_step data env ctx (Wasm1.Loop.initial bt) {Wasm1.Loop.initial bt with pos := 1#usize} s opcode
+    (by simp [Wasm1.Loop.initial]) (read_at data (Wasm1.Loop.initial bt) 1#usize opcode hfirst rfl hbyte) hstep]
+  rw [loop_step data env ctx s last finished code.OP_END (by simp [hctrls, Wasm1.Loop.initial])
     (read_at data s (Slice.len data) code.OP_END hend hendpos hendbyte)
     (step_end data env ctx last finished .Body bt hr)]
   exact loop_done data env ctx finished hc hp
@@ -134,7 +134,7 @@ private theorem zero_byte (data : Slice U8) (st : code.OpIterState) (next : Usiz
 theorem local_get_accepted (env : module.Env) :
     code.validate_body (bytes [0x20#u8, 0#u8, 0x0B#u8]) env localContext = .ok (.Ok ()) := by
   let data := bytes [0x20#u8, 0#u8, 0x0B#u8]
-  let first := {Body.initial (.Value .I32) with pos := 1#usize}
+  let first := {Wasm1.Loop.initial (.Value .I32) with pos := 1#usize}
   have hlookup : code.local_type localContext 0#u32 = .ok (.Ok .I32) := by
     obtain ⟨r, hr, ht⟩ := WP.spec_imp_exists (code.local_type.spec localContext 0#u32)
     cases r with
@@ -147,7 +147,7 @@ theorem local_get_accepted (env : module.Env) :
       .ok (.Ok (0#u32, .I32), {first with pos := 2#usize}) := by
     simp [code.take_local, first, hleb, hlookup, core.result.Result.Insts.CoreOpsTry.branch]
   obtain ⟨s, hpush, hv, hc, hp⟩ := WP.spec_imp_exists
-    (code.push_val.spec {first with pos := 2#usize} (.Val .I32) (by simp [first, Body.initial]; scalar_tac))
+    (code.push_val.spec {first with pos := 2#usize} (.Val .I32) (by simp [first, Wasm1.Loop.initial]; scalar_tac))
   have hstep : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor first data env localContext code.OP_LOCAL_GET () =
       .ok (.Ok (), s, ()) := by
     rw [code.step_local_get.dispatch]
@@ -157,7 +157,7 @@ theorem local_get_accepted (env : module.Env) :
     (by simp [data, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl (by decide) (by simp [data, bytes, alloc.vec.Vec.deref, code.OP_LOCAL_GET])
     (by simp [hp, data, bytes, alloc.vec.Vec.deref]) (by simp [hp, data, bytes, alloc.vec.Vec.deref, code.OP_END])
     (by simp [hp, data, bytes, alloc.vec.Vec.deref]) hc _ hstep
-  simpa [first, Body.initial, Control.results] using hv
+  simpa [first, Wasm1.Loop.initial, Control.results] using hv
 
 theorem local_get_validated (env : module.Env) :
     Wasm1.Validated (bytes [0x20#u8, 0#u8, 0x0B#u8]) env localContext (.Value .I32) :=
@@ -167,12 +167,12 @@ theorem local_get_validated (env : module.Env) :
 theorem memory_size_accepted (env : module.Env) (hmem : env.mem_types.val ≠ []) :
     code.validate_body (bytes [0x3F#u8, 0#u8, 0x0B#u8]) env i32Context = .ok (.Ok ()) := by
   let data := bytes [0x3F#u8, 0#u8, 0x0B#u8]
-  let first := {Body.initial (.Value .I32) with pos := 1#usize}
+  let first := {Wasm1.Loop.initial (.Value .I32) with pos := 1#usize}
   have hreserved := zero_byte data first 2#usize (by simp [data, first, bytes, alloc.vec.Vec.deref]) rfl rfl
   have hrequire : code.require_memory env = .ok (.Ok ()) := by
     simp [code.require_memory, alloc.vec.Vec.is_empty, hmem]
   obtain ⟨s, hpush, hv, hc, hp⟩ := WP.spec_imp_exists
-    (code.push_val.spec {first with pos := 2#usize} (.Val .I32) (by simp [first, Body.initial]; scalar_tac))
+    (code.push_val.spec {first with pos := 2#usize} (.Val .I32) (by simp [first, Wasm1.Loop.initial]; scalar_tac))
   have hstep : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor first data env i32Context code.OP_MEMORY_SIZE () =
       .ok (.Ok (), s, ()) := by
     rw [code.step_memory_size.dispatch]
@@ -183,7 +183,7 @@ theorem memory_size_accepted (env : module.Env) (hmem : env.mem_types.val ≠ []
     (by simp [data, bytes, alloc.vec.Vec.deref, code.OP_MEMORY_SIZE])
     (by simp [hp, data, bytes, alloc.vec.Vec.deref]) (by simp [hp, data, bytes, alloc.vec.Vec.deref, code.OP_END])
     (by simp [hp, data, bytes, alloc.vec.Vec.deref]) hc _ hstep
-  simpa [first, Body.initial, Control.results] using hv
+  simpa [first, Wasm1.Loop.initial, Control.results] using hv
 
 theorem memory_size_validated (env : module.Env) (hmem : env.mem_types.val ≠ []) :
     Wasm1.Validated (bytes [0x3F#u8, 0#u8, 0x0B#u8]) env i32Context (.Value .I32) :=
@@ -194,7 +194,7 @@ theorem reserved_byte_rejected (env : module.Env) :
     code.validate_body (bytes [0x3F#u8, 1#u8, 0x0B#u8]) env i32Context =
       .ok (.Err .ReservedByteNotZero) := by
   let data := bytes [0x3F#u8, 1#u8, 0x0B#u8]
-  let first := {Body.initial (.Value .I32) with pos := 1#usize}
+  let first := {Wasm1.Loop.initial (.Value .I32) with pos := 1#usize}
   obtain ⟨r, hr, next, rfl, hn⟩ := WP.spec_imp_exists (reader.read_byte.spec data first.pos (by decide))
   have hb : data.val[first.pos.val]'(by decide) = 1#u8 := rfl
   have hreserved : code.read_reserved_zero first data = .ok (.Err .ReservedByteNotZero, first) := by
@@ -206,10 +206,10 @@ theorem reserved_byte_rejected (env : module.Env) :
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   apply public_of_loop data env i32Context (.Value .I32) (.Err .ReservedByteNotZero)
     (by simp [data, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
-  exact loop_error data env i32Context (Body.initial (.Value .I32)) first first code.OP_MEMORY_SIZE
-    .ReservedByteNotZero (by simp [Body.initial])
-    (read_at data (Body.initial (.Value .I32)) 1#usize code.OP_MEMORY_SIZE (by decide) rfl
-      (by simp [data, bytes, alloc.vec.Vec.deref, code.OP_MEMORY_SIZE, Body.initial])) hstep
+  exact loop_error data env i32Context (Wasm1.Loop.initial (.Value .I32)) first first code.OP_MEMORY_SIZE
+    .ReservedByteNotZero (by simp [Wasm1.Loop.initial])
+    (read_at data (Wasm1.Loop.initial (.Value .I32)) 1#usize code.OP_MEMORY_SIZE (by decide) rfl
+      (by simp [data, bytes, alloc.vec.Vec.deref, code.OP_MEMORY_SIZE, Wasm1.Loop.initial])) hstep
 
 private theorem finish_empty (data : Slice U8) (env : module.Env)
     (st : code.OpIterState) (poly : Bool)
@@ -233,10 +233,10 @@ private theorem finish_empty (data : Slice U8) (env : module.Env)
 theorem polymorphic_select_accepted (env : module.Env) :
     code.validate_body (bytes [0#u8, 0x1B#u8, 0x1A#u8, 0x0B#u8]) env emptyContext = .ok (.Ok ()) := by
   let data := bytes [0#u8, 0x1B#u8, 0x1A#u8, 0x0B#u8]
-  let first := {Body.initial .Empty with pos := 1#usize}
+  let first := {Wasm1.Loop.initial .Empty with pos := 1#usize}
   obtain ⟨s1, hm, hv1, _, hc1, hp1⟩ := WP.spec_imp_exists
-    (code.mark_unreachable.spec first [] ⟨.Body, .Empty, Control.signature (.Empty), 0#usize, false⟩ rfl (by simp [first, Body.initial]))
-  have hv1' : s1.vals.val = [] := by simpa [first, Body.initial] using hv1
+    (code.mark_unreachable.spec first [] ⟨.Body, .Empty, Control.signature (.Empty), 0#usize, false⟩ rfl (by simp [first, Wasm1.Loop.initial]))
+  have hv1' : s1.vals.val = [] := by simpa [first, Wasm1.Loop.initial] using hv1
   have hunreachable : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor first data env emptyContext
       code.OP_UNREACHABLE () = .ok (.Ok (), s1, ()) := by
     simp [global_simps, code.read_unreachable, hm, code.OpVisitor.on_unreachable.default,
@@ -268,10 +268,10 @@ theorem polymorphic_select_accepted (env : module.Env) :
       code.visit, core.result.Result.Insts.CoreOpsTry.branch]
   apply public_of_loop data env emptyContext .Empty (.Ok ())
     (by simp [data, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
-  rw [loop_step data env emptyContext (Body.initial .Empty) first s1 code.OP_UNREACHABLE
-    (by simp [Body.initial])
-    (read_at data (Body.initial .Empty) 1#usize code.OP_UNREACHABLE (by decide) rfl
-      (by simp [data, bytes, alloc.vec.Vec.deref, Body.initial, code.OP_UNREACHABLE])) hunreachable]
+  rw [loop_step data env emptyContext (Wasm1.Loop.initial .Empty) first s1 code.OP_UNREACHABLE
+    (by simp [Wasm1.Loop.initial])
+    (read_at data (Wasm1.Loop.initial .Empty) 1#usize code.OP_UNREACHABLE (by decide) rfl
+      (by simp [data, bytes, alloc.vec.Vec.deref, Wasm1.Loop.initial, code.OP_UNREACHABLE])) hunreachable]
   rw [loop_step data env emptyContext s1 second s2 code.OP_SELECT (by simp [hc1])
     (read_at data s1 2#usize code.OP_SELECT (by simp [hp1, first, data, bytes, alloc.vec.Vec.deref])
       (by simp [hp1, first]) (by simp [hp1, first, data, bytes, alloc.vec.Vec.deref, code.OP_SELECT])) hselect]
@@ -291,15 +291,15 @@ theorem polymorphic_select_validated (env : module.Env) :
 theorem unknown_opcode_rejected (env : module.Env) :
     code.validate_body (bytes [0xFF#u8]) env emptyContext = .ok (.Err .UnrecognizedOpcode) := by
   let data := bytes [0xFF#u8]
-  let first := {Body.initial .Empty with pos := 1#usize}
+  let first := {Wasm1.Loop.initial .Empty with pos := 1#usize}
   have hstep : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor first data env emptyContext 0xFF#u8 () =
       .ok (.Err .UnrecognizedOpcode, first, ()) := by
     simp [code.step_numeric, global_simps]
   apply public_of_loop data env emptyContext .Empty (.Err .UnrecognizedOpcode)
     (by simp [data, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
-  exact loop_error data env emptyContext (Body.initial .Empty) first first 0xFF#u8
-    .UnrecognizedOpcode (by simp [Body.initial])
-    (read_at data (Body.initial .Empty) 1#usize 0xFF#u8 (by decide) rfl rfl) hstep
+  exact loop_error data env emptyContext (Wasm1.Loop.initial .Empty) first first 0xFF#u8
+    .UnrecognizedOpcode (by simp [Wasm1.Loop.initial])
+    (read_at data (Wasm1.Loop.initial .Empty) 1#usize 0xFF#u8 (by decide) rfl rfl) hstep
 
 def voidFunction : types.FuncType := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _⟩
 
@@ -308,7 +308,7 @@ def voidFunction : types.FuncType := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _
 theorem cached_call_accepted (env : module.Env) (hfun : env.func_types.val = [voidFunction]) :
     code.validate_body (bytes [0x10#u8, 0#u8, 0x0B#u8]) env emptyContext = .ok (.Ok ()) := by
   let data := bytes [0x10#u8, 0#u8, 0x0B#u8]
-  let first := {Body.initial .Empty with pos := 1#usize}
+  let first := {Wasm1.Loop.initial .Empty with pos := 1#usize}
   let decoded := {first with pos := 2#usize}
   have hleb := zero_leb data 1#usize 2#usize (by simp [data, bytes, alloc.vec.Vec.deref]) rfl rfl
   have htake : code.take_index first data = .ok (.Ok (0#u32), decoded) := by
@@ -322,7 +322,7 @@ theorem cached_call_accepted (env : module.Env) (hfun : env.func_types.val = [vo
   have hpop := code.pop_types.empty decoded (alloc.vec.Vec.deref voidFunction.params) rfl
   obtain ⟨s, hpush, hv, hc, hp⟩ := WP.spec_imp_exists
     (code.push_types.spec decoded (alloc.vec.Vec.deref voidFunction.results)
-      (by simp [decoded, first, Body.initial, voidFunction, alloc.vec.Vec.deref]))
+      (by simp [decoded, first, Wasm1.Loop.initial, voidFunction, alloc.vec.Vec.deref]))
   have hcall : code.read_call first data env = .ok (.Ok (0#u32), s) := by
     simp [code.read_call, htake, lift, hfun, hft, hrequire, hpop, hpush,
       core.result.Result.Insts.CoreOpsTry.branch]
@@ -337,7 +337,7 @@ theorem cached_call_accepted (env : module.Env) (hfun : env.func_types.val = [vo
     (by simp [hp, decoded, data, bytes, alloc.vec.Vec.deref])
     (by simp [hp, decoded, data, bytes, alloc.vec.Vec.deref, code.OP_END])
     (by simp [hp, decoded, data, bytes, alloc.vec.Vec.deref]) hc _ hstep
-  simpa [decoded, first, Body.initial, Control.results, voidFunction, alloc.vec.Vec.deref] using hv
+  simpa [decoded, first, Wasm1.Loop.initial, Control.results, voidFunction, alloc.vec.Vec.deref] using hv
 
 theorem cached_call_validated (env : module.Env) (hfun : env.func_types.val = [voidFunction]) :
     Wasm1.Validated (bytes [0x10#u8, 0#u8, 0x0B#u8]) env emptyContext .Empty :=
@@ -348,7 +348,7 @@ theorem immutable_global_rejected (env : module.Env)
     (hglobal : env.global_types.val = [⟨.Const, .I32⟩]) :
     code.validate_body (bytes [0x24#u8, 0#u8, 0x0B#u8]) env emptyContext = .ok (.Err .ImmutableGlobal) := by
   let data := bytes [0x24#u8, 0#u8, 0x0B#u8]
-  let first := {Body.initial .Empty with pos := 1#usize}
+  let first := {Wasm1.Loop.initial .Empty with pos := 1#usize}
   let decoded := {first with pos := 2#usize}
   have hlookup : code.global_type env 0#u32 = .ok (.Ok ⟨.Const, .I32⟩) := by
     obtain ⟨r, hr, ht⟩ := WP.spec_imp_exists (code.global_type.spec env 0#u32)
@@ -367,24 +367,24 @@ theorem immutable_global_rejected (env : module.Env)
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   apply public_of_loop data env emptyContext .Empty (.Err .ImmutableGlobal)
     (by simp [data, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
-  exact loop_error data env emptyContext (Body.initial .Empty) first decoded code.OP_GLOBAL_SET
-    .ImmutableGlobal (by simp [Body.initial])
-    (read_at data (Body.initial .Empty) 1#usize code.OP_GLOBAL_SET (by simp [data, bytes, alloc.vec.Vec.deref, Body.initial]) rfl
-      (by simp [data, bytes, alloc.vec.Vec.deref, Body.initial, code.OP_GLOBAL_SET])) hstep
+  exact loop_error data env emptyContext (Wasm1.Loop.initial .Empty) first decoded code.OP_GLOBAL_SET
+    .ImmutableGlobal (by simp [Wasm1.Loop.initial])
+    (read_at data (Wasm1.Loop.initial .Empty) 1#usize code.OP_GLOBAL_SET (by simp [data, bytes, alloc.vec.Vec.deref, Wasm1.Loop.initial]) rfl
+      (by simp [data, bytes, alloc.vec.Vec.deref, Wasm1.Loop.initial, code.OP_GLOBAL_SET])) hstep
 
 theorem trailing_bytes_rejected (env : module.Env) :
     code.validate_body (bytes [0x0B#u8, 1#u8]) env emptyContext = .ok (.Err .TrailingBytes) := by
   let data := bytes [0x0B#u8, 1#u8]
-  let first := {Body.initial .Empty with pos := 1#usize}
+  let first := {Wasm1.Loop.initial .Empty with pos := 1#usize}
   obtain ⟨⟨_, finished⟩, hr, rfl, hc, _, hp⟩ := WP.spec_imp_exists
     (code.read_end.empty first [] ⟨.Body, .Empty, Control.signature (.Empty), 0#usize, false⟩ rfl rfl rfl)
   dsimp only at hc hp
   apply public_of_loop data env emptyContext .Empty (.Err .TrailingBytes)
     (by simp [data, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
-  rw [loop_step data env emptyContext (Body.initial .Empty) first finished code.OP_END
-    (by simp [Body.initial])
-    (read_at data (Body.initial .Empty) 1#usize code.OP_END (by decide) rfl
-      (by simp [data, bytes, alloc.vec.Vec.deref, Body.initial, code.OP_END]))
+  rw [loop_step data env emptyContext (Wasm1.Loop.initial .Empty) first finished code.OP_END
+    (by simp [Wasm1.Loop.initial])
+    (read_at data (Wasm1.Loop.initial .Empty) 1#usize code.OP_END (by decide) rfl
+      (by simp [data, bytes, alloc.vec.Vec.deref, Wasm1.Loop.initial, code.OP_END]))
     (step_end data env emptyContext first finished .Body .Empty hr)]
   apply loop_trailing data env emptyContext finished hc
   intro heq

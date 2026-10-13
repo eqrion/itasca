@@ -14,7 +14,7 @@ theorem code.validate_body_with.wasm_spec {V : Type} (visitor : code.OpVisitor V
     code.validate_body_with visitor data env ctx v ⦃ r =>
       r.1 = .Ok () → Wasm1.Validated data env ctx bt ⦄ := by
   exact code.validate_body_with.of_wasm_steps visitor data env ctx bt
-    (by rw [hresults]; exact Body.initialBlockType_results bt)
+    (by rw [hresults]; exact Wasm1.Loop.initialBlockType_results bt)
     (Wasm1.steps visitor hvisitor data env ctx bt) v
 
 /-- Even an arbitrary caller-supplied result vector cannot cause the extracted
@@ -25,8 +25,8 @@ theorem code.validate_body_with.wasm_total {V : Type} (visitor : code.OpVisitor 
     ∃ r, code.validate_body_with visitor data env ctx v = .ok r := by
   obtain ⟨r, hr, _⟩ := WP.spec_imp_exists
     (code.validate_body_with.of_wasm_steps visitor data env ctx
-      (Body.initialBlockType ctx.results.val) rfl
-      (Wasm1.steps visitor hvisitor data env ctx (Body.initialBlockType ctx.results.val)) v)
+      (Wasm1.Loop.initialBlockType ctx.results.val) rfl
+      (Wasm1.steps visitor hvisitor data env ctx (Wasm1.Loop.initialBlockType ctx.results.val)) v)
   exact ⟨r, hr⟩
 
 theorem code.validate_body_with.wasm_sound_of_total {V : Type} (visitor : code.OpVisitor V)

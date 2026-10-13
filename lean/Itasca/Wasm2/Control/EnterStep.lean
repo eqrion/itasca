@@ -25,7 +25,7 @@ theorem Pending.enter_after {data env locals index st} (p : Pending data env loc
     code.enter st data env form.kind ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
   obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, vals⟩ := p.opened
   have hcap : st.blocks.val.length < Usize.max := by
-    have := p.ctrls; have := p.inbounds; have := p.size; have := Body.byte_limit_room
+    have := p.ctrls; have := p.inbounds; have := p.size; have := limits.MAX_FUNCTION_BYTES.room
     omega
   apply WP.spec_mono (code.enter.sound st data env form initial outer p.current.vals vals
     (by simp [Control.base, ctrls, base]) p.opened.shape.core p.opened.shape.aligned hcap)

@@ -22,7 +22,7 @@ theorem signature (opcode : U8) (op : Operation) (hmap : NumericOp opcode op)
 
 end Itasca.Numeric
 
-namespace Itasca.Completeness
+namespace Itasca.Wasm1.Completeness
 
 private theorem same_ctrls {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (opcode : U8) (next : Usize) (out : List valtype)
@@ -164,11 +164,11 @@ theorem Frame.step_f64Const {st} (f : Frame st) (data : Slice U8) (env : module.
   simp [global_simps, hs, code.OpVisitor.on_f64_const.default, code.visit,
     core.result.Result.Insts.CoreOpsTry.branch]
 
-end Itasca.Completeness
+end Itasca.Wasm1.Completeness
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Completeness
+namespace Itasca.Wasm1.Completeness
 
 theorem nop {st data env ctx C next front ins outs}
     (f : Frame st) (hb : Wasm1.BytesAt data st.pos [] next)
@@ -200,4 +200,4 @@ theorem unreachable {st data env ctx C next front ins outs}
   · simp only [hv', f.vals, List.length_append]
     omega
 
-end Itasca.Completeness
+end Itasca.Wasm1.Completeness

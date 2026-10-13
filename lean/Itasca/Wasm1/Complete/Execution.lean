@@ -64,7 +64,7 @@ theorem Execution.finish {data env ctx st final}
     alloc.vec.Vec.is_empty, hc, hpos]
 
 theorem Execution.public {data env ctx bt final}
-    (h : Execution data env ctx (Body.initial bt) final)
+    (h : Execution data env ctx (Wasm1.Loop.initial bt) final)
     (hresults : ctx.results.val = Control.results bt)
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
     (hc : final.ctrls.val = []) (hp : final.pos.val = data.length) :

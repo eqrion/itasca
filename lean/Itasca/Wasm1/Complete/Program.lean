@@ -2,7 +2,7 @@ import Itasca.Wasm1.Complete.Frame
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Completeness
+namespace Itasca.Wasm1.Completeness
 
 /-- Execution of a typed instruction list within one concrete control frame. -/
 def Program (data : Slice U8) (env : module.Env) (ctx : code.Context)
@@ -100,11 +100,11 @@ theorem program_of_atoms (data : Slice U8) (env : module.Env) (ctx : code.Contex
         exact ⟨last, hrun.append hrun', hpos',
           hout'.transfer hgp hgo hgk hgb hgsig hgba, hbound'⟩
 
-end Itasca.Completeness
+end Itasca.Wasm1.Completeness
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Completeness
+namespace Itasca.Wasm1.Completeness
 
 def LeafContract (data : Slice U8) (env : module.Env) (ctx : code.Context) : Prop :=
   ∀ (C : context) (st : code.OpIterState) (f : Frame st) (opcode : U8)
@@ -126,7 +126,7 @@ theorem atom_of_leaf (data : Slice U8) (env : module.Env) (ctx : code.Context)
   let g : Frame decoded :=
     ⟨f.parents, f.current, f.outer, f.operands, f.ctrls, f.vals, f.base⟩
   have hcap : decoded.vals.val.length < Usize.max := by
-    have hlimit := Body.byte_limit_room
+    have hlimit := limits.MAX_FUNCTION_BYTES.room
     have hlen := hat.span
     have hs := hbounds.size
     have hv := hbounds.vals
@@ -151,4 +151,4 @@ theorem atom_of_leaf (data : Slice U8) (env : module.Env) (ctx : code.Context)
     rw [hcl, hcursor]
     omega
 
-end Itasca.Completeness
+end Itasca.Wasm1.Completeness

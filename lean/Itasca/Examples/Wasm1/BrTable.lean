@@ -9,7 +9,7 @@ private theorem public_of_loop (data : Slice U8) (env : module.Env) (ctx : code.
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
     (hresults : ctx.results.val = Control.results bt)
     (hloop : code.validate_body_with_loop code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
-      data env ctx.locals ctx.results () (Body.initial bt) = .ok (result, ())) :
+      data env ctx.locals ctx.results () (Wasm1.Loop.initial bt) = .ok (result, ())) :
     code.validate_body data env ctx = .ok result := by
   have hguard : ¬ Slice.len data > limits.MAX_FUNCTION_BYTES := by scalar_tac
   simp [code.validate_body, code.validate_body_with.eq_model, code.validate_body_with_model, hguard,
@@ -100,7 +100,7 @@ private theorem labels_one (st next : code.OpIterState) (target : code.Ctrl)
 /-- The public validator executes a nonempty branch-table label loop on a polymorphic stack. -/
 theorem br_table_body_accepted (env : module.Env) :
     code.validate_body brTableBytes env emptyContext = .ok (.Ok ()) := by
-  let initial := Body.initial .Empty
+  let initial := Wasm1.Loop.initial .Empty
   let first := { initial with pos := 1#usize }
   let frame : code.Ctrl := ⟨.Body, .Empty, Control.signature (.Empty), 0#usize, false⟩
   let poly : code.Ctrl := { frame with polymorphic_base := true }
@@ -161,9 +161,9 @@ theorem br_table_body_accepted (env : module.Env) :
   apply public_of_loop brTableBytes env emptyContext .Empty (.Ok ())
     (by simp [brTableBytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
   rw [loop_step brTableBytes env emptyContext initial first marked code.OP_UNREACHABLE
-    (by simp [initial, Body.initial])
+    (by simp [initial, Wasm1.Loop.initial])
     (read_at brTableBytes initial 1#usize code.OP_UNREACHABLE (by decide) rfl
-      (by simp [brTableBytes, initial, Body.initial, alloc.vec.Vec.deref, code.OP_UNREACHABLE])) hstep0]
+      (by simp [brTableBytes, initial, Wasm1.Loop.initial, alloc.vec.Vec.deref, code.OP_UNREACHABLE])) hstep0]
   rw [loop_step brTableBytes env emptyContext marked table branched code.OP_BR_TABLE
     (by simp [hmc])
     (read_at brTableBytes marked 2#usize code.OP_BR_TABLE

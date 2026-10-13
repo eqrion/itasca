@@ -3,7 +3,7 @@ import Itasca.Wasm1.Complete.Control
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Completeness
+namespace Itasca.Wasm1.Completeness
 
 theorem blocktype_signature {C : context} (bt : code.BlockType) {input output : List valtype}
     (h : Blocktype_ok C (Control.blockType bt) (.mk_functype (.mk_list input) (.mk_list output))) :
@@ -121,7 +121,7 @@ theorem execute_end {st : code.OpIterState} (f : Frame st) (data : Slice U8)
     have hv := hb.vals
     have hp := hb.pos
     have hs := hb.size
-    have hm := Body.byte_limit_room
+    have hm := limits.MAX_FUNCTION_BYTES.room
     rw [f.vals, List.length_append] at hv
     omega
   obtain ⟨⟨_, s⟩, hr, rfl, hc, hv, hp⟩ := WP.spec_imp_exists
@@ -175,7 +175,7 @@ theorem execute_block {st : code.OpIterState} (f : Frame st) (data : Slice U8)
   obtain ⟨opcode, pos, bytes, hread, hpos, himm, hspan⟩ := hat.read_op st rfl
   cases himm
   have hcap : st.ctrls.val.length < Usize.max := by
-    have hc := hb.ctrls; have hp := hb.pos; have hs := hb.size; have hm := Body.byte_limit_room
+    have hc := hb.ctrls; have hp := hb.pos; have hs := hb.size; have hm := limits.MAX_FUNCTION_BYTES.room
     omega
   obtain ⟨⟨_, s⟩, hr, rfl, hp, hv, hc⟩ := WP.spec_imp_exists
     (code.read_block.complete {st with pos := pos} data bt next hspan hcap (by assumption))
@@ -195,7 +195,7 @@ theorem execute_loop {st : code.OpIterState} (f : Frame st) (data : Slice U8)
   obtain ⟨opcode, pos, bytes, hread, hpos, himm, hspan⟩ := hat.read_op st rfl
   cases himm
   have hcap : st.ctrls.val.length < Usize.max := by
-    have hc := hb.ctrls; have hp := hb.pos; have hs := hb.size; have hm := Body.byte_limit_room
+    have hc := hb.ctrls; have hp := hb.pos; have hs := hb.size; have hm := limits.MAX_FUNCTION_BYTES.room
     omega
   obtain ⟨⟨_, s⟩, hr, rfl, hp, hv, hc⟩ := WP.spec_imp_exists
     (code.read_loop.complete {st with pos := pos} data bt next hspan hcap (by assumption))
@@ -219,7 +219,7 @@ theorem execute_if {st : code.OpIterState} (f : Frame st) (data : Slice U8)
   obtain ⟨opcode, pos, bytes, hread, hpos, himm, hspan⟩ := hat.read_op st rfl
   cases himm
   have hcap : st.ctrls.val.length < Usize.max := by
-    have hc := hb.ctrls; have hp := hb.pos; have hs := hb.size; have hm := Body.byte_limit_room
+    have hc := hb.ctrls; have hp := hb.pos; have hs := hb.size; have hm := limits.MAX_FUNCTION_BYTES.room
     omega
   obtain ⟨⟨_, s⟩, hr, rfl, hp, rest, hv, hl, hc, ht'⟩ := WP.spec_imp_exists
     (code.read_if.complete {st with pos := pos} data bt next f.outer f.operands front
@@ -407,4 +407,4 @@ theorem atom_ifElse {data : Slice U8} {env : module.Env} {ctx : code.Context}
   · apply (Sequence.realizes_append_concrete _ _ _ _).mpr
     exact ⟨front, by simpa [f.poly_eq] using hreal, rfl⟩
 
-end Itasca.Completeness
+end Itasca.Wasm1.Completeness

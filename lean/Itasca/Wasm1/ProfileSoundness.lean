@@ -14,7 +14,7 @@ theorem code.validate_body_with.wasm1_spec {V : Type} (visitor : code.OpVisitor 
     code.validate_body_with visitor data env ctx v ⦃ r =>
       r.1 = .Ok () → Wasm1.Body data env ctx bt ⦄ := by
   exact code.validate_body_with.of_wasm1_steps visitor data env ctx bt
-    (by rw [hresults]; exact Body.initialBlockType_results bt)
+    (by rw [hresults]; exact Wasm1.Loop.initialBlockType_results bt)
     (Wasm1.steps visitor hvisitor data env ctx bt) v
 
 theorem code.validate_body.wasm1_spec (data : Slice U8) (env : module.Env)

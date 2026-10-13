@@ -12,7 +12,7 @@ namespace Itasca
 theorem code.validate_body_with_loop.accepted_erase_of_contract {V : Type}
     (visitor : code.OpVisitor V) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (inv : code.OpIterState → Prop)
-    (hstep : Body.StepContract code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+    (hstep : Wasm1.Loop.StepContract code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       data env ctx (fun _ st => inv st))
     (herase : ∀ st st' opcode v v', code.step visitor st data env ctx opcode v = .ok (.Ok (), st', v') →
       code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx opcode () = .ok (.Ok (), st', ()))
@@ -69,12 +69,12 @@ theorem code.validate_body_with_loop.accepted_erase_of_contract {V : Type}
 theorem code.validate_body_with.accepted_erase_of_contract {V : Type}
     (visitor : code.OpVisitor V) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (inv : code.OpIterState → Prop)
-    (hstep : Body.StepContract code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+    (hstep : Wasm1.Loop.StepContract code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       data env ctx (fun _ st => inv st))
     (herase : ∀ st st' opcode v v', code.step visitor st data env ctx opcode v = .ok (.Ok (), st', v') →
       code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx opcode () = .ok (.Ok (), st', ()))
     (hinit : data.length ≤ limits.MAX_FUNCTION_BYTES.val →
-      inv (Body.initial (Body.initialBlockType ctx.results.val)))
+      inv (Wasm1.Loop.initial (Wasm1.Loop.initialBlockType ctx.results.val)))
     (v v' : V)
     (h : code.validate_body_with visitor data env ctx v = .ok (.Ok (), v')) :
     code.validate_body_with code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor data env ctx () =
@@ -95,7 +95,7 @@ theorem code.validate_body_with.accepted_erase {V : Type} (visitor : code.OpVisi
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (v v' : V)
     (haccepted : code.validate_body_with visitor data env ctx v = .ok (.Ok (), v')) :
     code.validate_body data env ctx = .ok (.Ok ()) := by
-  let bt := Body.initialBlockType ctx.results.val
+  let bt := Wasm1.Loop.initialBlockType ctx.results.val
   have hsteps := Wasm1.steps code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
     FullVisitor.empty_total data env ctx bt
   have hempty := code.validate_body_with.accepted_erase_of_contract visitor data env ctx

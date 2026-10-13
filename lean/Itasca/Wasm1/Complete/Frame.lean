@@ -5,7 +5,7 @@ import Itasca.Wasm1.Complete.Execution
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Completeness
+namespace Itasca.Wasm1.Completeness
 
 /-- The concrete current-frame decomposition used in forward execution proofs. -/
 structure Frame (st : code.OpIterState) where
@@ -76,4 +76,4 @@ def StepResult {st} (f : Frame st) (data : Slice U8) (env : module.Env)
       .ok (.Ok (), s, ()) ∧ s.pos = next ∧ f.Output out s ∧
     s.vals.val.length ≤ st.vals.val.length + 1
 
-end Itasca.Completeness
+end Itasca.Wasm1.Completeness

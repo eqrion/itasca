@@ -6,7 +6,7 @@ import Itasca.Wasm1.Complete.Env
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Completeness
+namespace Itasca.Wasm1.Completeness
 
 /-- Separate family interface for the independently enumerated load/store map. -/
 def MemoryContract (data : Slice U8) (env : module.Env) (ctx : code.Context) : Prop :=
@@ -68,4 +68,4 @@ theorem leaf_contract (data : Slice U8) (env : module.Env) (ctx : code.Context)
   | numeric opcode operation hmap =>
       exact f.step_numeric data env ctx opcode operation next C front input output hmap hb hsize ht hr
 
-end Itasca.Completeness
+end Itasca.Wasm1.Completeness

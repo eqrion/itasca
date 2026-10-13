@@ -35,7 +35,7 @@ private theorem public_of_loop {V : Type} (visitor : code.OpVisitor V) (data : S
       v (bodyState false 0#usize) = .ok (result, log)) :
     code.validate_body_with visitor data env emptyContext v = .ok (result, log) := by
   have hguard : ¬ Slice.len data > limits.MAX_FUNCTION_BYTES := by scalar_tac
-  have hi : Body.initial .Empty = bodyState false 0#usize := rfl
+  have hi : Wasm1.Loop.initial .Empty = bodyState false 0#usize := rfl
   simp [code.validate_body_with.eq_model, code.validate_body_with_model, hguard,
     code.start_function.spec (alloc.vec.Vec.deref emptyContext.results) .Empty rfl, hi, hloop]
 

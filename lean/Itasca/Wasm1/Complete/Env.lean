@@ -7,7 +7,7 @@ import Itasca.Visitor.StepErasure
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Completeness
+namespace Itasca.Wasm1.Completeness
 
 private theorem finish {st : code.OpIterState} (f : Frame st)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (opcode : U8)
@@ -258,4 +258,4 @@ theorem memory {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : c
         core.result.Result.Insts.CoreOpsTry.branch] using hstep)
     simpa [houts, MemoryMeaning.Operation.outputs, hstore] using result
 
-end Itasca.Completeness
+end Itasca.Wasm1.Completeness

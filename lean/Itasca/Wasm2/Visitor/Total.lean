@@ -245,10 +245,10 @@ theorem code.body_loop_loop.body.wasm2_total {V : Type}
       simp only [bind_ok, Std.uncurry, Std.bind_assoc]
       have hspos : Control.Shape { s.core with pos := next } := ⟨hs.ordered, hs.bounded⟩
       have hcap : s.blocks.val.length < Usize.max := by
-        have := Body.byte_limit_room
+        have := limits.MAX_FUNCTION_BYTES.room
         omega
       have hpos : s.core.pos.val < Usize.max := by
-        have := Body.byte_limit_room
+        have := limits.MAX_FUNCTION_BYTES.room
         omega
       conv => arg 1; arg 1; whnf
       split

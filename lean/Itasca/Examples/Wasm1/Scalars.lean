@@ -10,7 +10,7 @@ private theorem public_of_loop (data : Slice U8) (env : module.Env) (ctx : code.
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
     (hresults : ctx.results.val = Control.results bt)
     (hloop : code.validate_body_with_loop code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
-      data env ctx.locals ctx.results () (Body.initial bt) = .ok (result, ())) :
+      data env ctx.locals ctx.results () (Wasm1.Loop.initial bt) = .ok (result, ())) :
     code.validate_body data env ctx = .ok result := by
   have hguard : ¬ Slice.len data > limits.MAX_FUNCTION_BYTES := by scalar_tac
   simp [code.validate_body, code.validate_body_with.eq_model, code.validate_body_with_model, hguard,
@@ -91,7 +91,7 @@ def f64Bytes : Slice U8 := bytes [0x44#u8, 1#u8, 0#u8, 0#u8, 0#u8, 0#u8, 0#u8, 0
 
 theorem i64_body_accepted (env : module.Env) :
     code.validate_body i64Bytes env (resultContext .I64) = .ok (.Ok ()) := by
-  let initial := Body.initial (.Value .I64)
+  let initial := Wasm1.Loop.initial (.Value .I64)
   let first := { initial with pos := 1#usize }
   have hencoded : SignedLeb64.Decoded i64Bytes 1#usize ((-1)#i64).val 3#usize := by
     refine ⟨[0xFF#u8, 0x7F#u8], rfl, rfl, by decide, [0xFF#u8], 0x7F#u8, rfl, by decide,
@@ -100,14 +100,14 @@ theorem i64_body_accepted (env : module.Env) :
   have hleb := reader.read_s64_leb.complete i64Bytes 1#usize (-1)#i64 3#usize hencoded
   obtain ⟨⟨_, pushed⟩, hconst, rfl, hv, hc, hp⟩ := WP.spec_imp_exists
     (code.read_i64_const.from_read first i64Bytes (-1)#i64 3#usize hleb
-      (by simp [first, initial, Body.initial]; scalar_tac))
+      (by simp [first, initial, Wasm1.Loop.initial]; scalar_tac))
   dsimp only at hv hc hp
   let last := { pushed with pos := 4#usize }
   have hctrls : last.ctrls.val = [⟨.Body, .Value .I64, Control.signature (.Value .I64), 0#usize, false⟩] := by
-    simp [last, hc, first, initial, Body.initial]
+    simp [last, hc, first, initial, Wasm1.Loop.initial]
   have hvals : last.vals.val = [] ++
       (Control.results (code.BlockType.Value .I64)).map code.StackType.Val := by
-    simpa [last, first, initial, Body.initial, Control.results] using hv
+    simpa [last, first, initial, Wasm1.Loop.initial, Control.results] using hv
   obtain ⟨⟨_, finished⟩, hend, rfl, hfc, hfv, hfp⟩ := WP.spec_imp_exists
     (code.read_end.concrete last [] ⟨.Body, .Value .I64, Control.signature (.Value .I64), 0#usize, false⟩ [] hctrls hvals rfl
       (by simp))
@@ -119,11 +119,11 @@ theorem i64_body_accepted (env : module.Env) :
   apply public_of_loop i64Bytes env (resultContext .I64) (.Value .I64) (.Ok ())
     (by simp [i64Bytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
   rw [loop_step i64Bytes env (resultContext .I64) initial first pushed code.OP_I64_CONST
-    (by simp [initial, Body.initial])
+    (by simp [initial, Wasm1.Loop.initial])
     (read_at i64Bytes initial 1#usize code.OP_I64_CONST (by decide) rfl
-      (by simp [i64Bytes, bytes, initial, Body.initial, code.OP_I64_CONST, alloc.vec.Vec.deref])) hstep]
+      (by simp [i64Bytes, bytes, initial, Wasm1.Loop.initial, code.OP_I64_CONST, alloc.vec.Vec.deref])) hstep]
   rw [loop_step i64Bytes env (resultContext .I64) pushed last finished code.OP_END
-    (by simp [hc, first, initial, Body.initial])
+    (by simp [hc, first, initial, Wasm1.Loop.initial])
     (read_at i64Bytes pushed 4#usize code.OP_END (by simp [hp, i64Bytes, bytes, alloc.vec.Vec.deref])
       (by simp [hp]) (by simp [hp, i64Bytes, bytes, code.OP_END, alloc.vec.Vec.deref]))
     (step_end i64Bytes env (resultContext .I64) last finished .Body (.Value .I64) hend)]
@@ -136,7 +136,7 @@ theorem i64_body_validated (env : module.Env) :
 
 theorem f32_body_accepted (env : module.Env) :
     code.validate_body f32Bytes env (resultContext .F32) = .ok (.Ok ()) := by
-  let initial := Body.initial (.Value .F32)
+  let initial := Wasm1.Loop.initial (.Value .F32)
   let first := { initial with pos := 1#usize }
   have hencoded : FloatBits.Decoded 4 f32Bytes 1#usize (0x80000000#u32).val 5#usize := by
     refine ⟨[0#u8, 0#u8, 0#u8, 0x80#u8], rfl, rfl, by decide, rfl, ?_⟩
@@ -144,14 +144,14 @@ theorem f32_body_accepted (env : module.Env) :
   have hleb := reader.read_f32_bits.complete f32Bytes 1#usize 0x80000000#u32 5#usize hencoded
   obtain ⟨⟨_, pushed⟩, hconst, rfl, hv, hc, hp⟩ := WP.spec_imp_exists
     (code.read_f32_const.from_read first f32Bytes 0x80000000#u32 5#usize hleb
-      (by simp [first, initial, Body.initial]; scalar_tac))
+      (by simp [first, initial, Wasm1.Loop.initial]; scalar_tac))
   dsimp only at hv hc hp
   let last := { pushed with pos := 6#usize }
   have hctrls : last.ctrls.val = [⟨.Body, .Value .F32, Control.signature (.Value .F32), 0#usize, false⟩] := by
-    simp [last, hc, first, initial, Body.initial]
+    simp [last, hc, first, initial, Wasm1.Loop.initial]
   have hvals : last.vals.val = [] ++
       (Control.results (code.BlockType.Value .F32)).map code.StackType.Val := by
-    simpa [last, first, initial, Body.initial, Control.results] using hv
+    simpa [last, first, initial, Wasm1.Loop.initial, Control.results] using hv
   obtain ⟨⟨_, finished⟩, hend, rfl, hfc, hfv, hfp⟩ := WP.spec_imp_exists
     (code.read_end.concrete last [] ⟨.Body, .Value .F32, Control.signature (.Value .F32), 0#usize, false⟩ [] hctrls hvals rfl
       (by simp))
@@ -163,11 +163,11 @@ theorem f32_body_accepted (env : module.Env) :
   apply public_of_loop f32Bytes env (resultContext .F32) (.Value .F32) (.Ok ())
     (by simp [f32Bytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
   rw [loop_step f32Bytes env (resultContext .F32) initial first pushed code.OP_F32_CONST
-    (by simp [initial, Body.initial])
+    (by simp [initial, Wasm1.Loop.initial])
     (read_at f32Bytes initial 1#usize code.OP_F32_CONST (by decide) rfl
-      (by simp [f32Bytes, bytes, initial, Body.initial, code.OP_F32_CONST, alloc.vec.Vec.deref])) hstep]
+      (by simp [f32Bytes, bytes, initial, Wasm1.Loop.initial, code.OP_F32_CONST, alloc.vec.Vec.deref])) hstep]
   rw [loop_step f32Bytes env (resultContext .F32) pushed last finished code.OP_END
-    (by simp [hc, first, initial, Body.initial])
+    (by simp [hc, first, initial, Wasm1.Loop.initial])
     (read_at f32Bytes pushed 6#usize code.OP_END (by simp [hp, f32Bytes, bytes, alloc.vec.Vec.deref])
       (by simp [hp]) (by simp [hp, f32Bytes, bytes, code.OP_END, alloc.vec.Vec.deref]))
     (step_end f32Bytes env (resultContext .F32) last finished .Body (.Value .F32) hend)]
@@ -180,7 +180,7 @@ theorem f32_body_validated (env : module.Env) :
 
 theorem f64_body_accepted (env : module.Env) :
     code.validate_body f64Bytes env (resultContext .F64) = .ok (.Ok ()) := by
-  let initial := Body.initial (.Value .F64)
+  let initial := Wasm1.Loop.initial (.Value .F64)
   let first := { initial with pos := 1#usize }
   have hencoded : FloatBits.Decoded 8 f64Bytes 1#usize (0xFFF8000000000001#u64).val 9#usize := by
     refine ⟨[1#u8, 0#u8, 0#u8, 0#u8, 0#u8, 0#u8, 0xF8#u8, 0xFF#u8], rfl, rfl, by decide, rfl, ?_⟩
@@ -188,14 +188,14 @@ theorem f64_body_accepted (env : module.Env) :
   have hleb := reader.read_f64_bits.complete f64Bytes 1#usize 0xFFF8000000000001#u64 9#usize hencoded
   obtain ⟨⟨_, pushed⟩, hconst, rfl, hv, hc, hp⟩ := WP.spec_imp_exists
     (code.read_f64_const.from_read first f64Bytes 0xFFF8000000000001#u64 9#usize hleb
-      (by simp [first, initial, Body.initial]; scalar_tac))
+      (by simp [first, initial, Wasm1.Loop.initial]; scalar_tac))
   dsimp only at hv hc hp
   let last := { pushed with pos := 10#usize }
   have hctrls : last.ctrls.val = [⟨.Body, .Value .F64, Control.signature (.Value .F64), 0#usize, false⟩] := by
-    simp [last, hc, first, initial, Body.initial]
+    simp [last, hc, first, initial, Wasm1.Loop.initial]
   have hvals : last.vals.val = [] ++
       (Control.results (code.BlockType.Value .F64)).map code.StackType.Val := by
-    simpa [last, first, initial, Body.initial, Control.results] using hv
+    simpa [last, first, initial, Wasm1.Loop.initial, Control.results] using hv
   obtain ⟨⟨_, finished⟩, hend, rfl, hfc, hfv, hfp⟩ := WP.spec_imp_exists
     (code.read_end.concrete last [] ⟨.Body, .Value .F64, Control.signature (.Value .F64), 0#usize, false⟩ [] hctrls hvals rfl
       (by simp))
@@ -207,11 +207,11 @@ theorem f64_body_accepted (env : module.Env) :
   apply public_of_loop f64Bytes env (resultContext .F64) (.Value .F64) (.Ok ())
     (by simp [f64Bytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
   rw [loop_step f64Bytes env (resultContext .F64) initial first pushed code.OP_F64_CONST
-    (by simp [initial, Body.initial])
+    (by simp [initial, Wasm1.Loop.initial])
     (read_at f64Bytes initial 1#usize code.OP_F64_CONST (by decide) rfl
-      (by simp [f64Bytes, bytes, initial, Body.initial, code.OP_F64_CONST, alloc.vec.Vec.deref])) hstep]
+      (by simp [f64Bytes, bytes, initial, Wasm1.Loop.initial, code.OP_F64_CONST, alloc.vec.Vec.deref])) hstep]
   rw [loop_step f64Bytes env (resultContext .F64) pushed last finished code.OP_END
-    (by simp [hc, first, initial, Body.initial])
+    (by simp [hc, first, initial, Wasm1.Loop.initial])
     (read_at f64Bytes pushed 10#usize code.OP_END (by simp [hp, f64Bytes, bytes, alloc.vec.Vec.deref])
       (by simp [hp]) (by simp [hp, f64Bytes, bytes, code.OP_END, alloc.vec.Vec.deref]))
     (step_end f64Bytes env (resultContext .F64) last finished .Body (.Value .F64) hend)]
@@ -272,7 +272,7 @@ private theorem overlong_i64_reader : reader.read_s64_leb overlongI64Bytes 1#usi
 /-- Truncation is rejected by the actual public body API. -/
 theorem truncated_f64_body_rejected (env : module.Env) :
     code.validate_body truncatedF64Bytes env (resultContext .F64) = .ok (.Err .UnexpectedEof) := by
-  let first := { Body.initial (.Value .F64) with pos := 1#usize }
+  let first := { Wasm1.Loop.initial (.Value .F64) with pos := 1#usize }
   have hread := code.read_f64_const.failed_read first truncatedF64Bytes .UnexpectedEof truncated_f64_reader
   have hstep : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor first truncatedF64Bytes env
       (resultContext .F64) code.OP_F64_CONST () = .ok (.Err .UnexpectedEof, first, ()) := by
@@ -280,15 +280,15 @@ theorem truncated_f64_body_rejected (env : module.Env) :
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   apply public_of_loop truncatedF64Bytes env (resultContext .F64) (.Value .F64) (.Err .UnexpectedEof)
     (by simp [truncatedF64Bytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
-  exact loop_error truncatedF64Bytes env (resultContext .F64) (Body.initial (.Value .F64)) first first
-    code.OP_F64_CONST .UnexpectedEof (by simp [Body.initial])
-    (read_at truncatedF64Bytes (Body.initial (.Value .F64)) 1#usize code.OP_F64_CONST (by decide) rfl
-      (by simp [truncatedF64Bytes, bytes, Body.initial, code.OP_F64_CONST, alloc.vec.Vec.deref])) hstep
+  exact loop_error truncatedF64Bytes env (resultContext .F64) (Wasm1.Loop.initial (.Value .F64)) first first
+    code.OP_F64_CONST .UnexpectedEof (by simp [Wasm1.Loop.initial])
+    (read_at truncatedF64Bytes (Wasm1.Loop.initial (.Value .F64)) 1#usize code.OP_F64_CONST (by decide) rfl
+      (by simp [truncatedF64Bytes, bytes, Wasm1.Loop.initial, code.OP_F64_CONST, alloc.vec.Vec.deref])) hstep
 
 /-- An unterminated ten-byte signed LEB is rejected before any missing final end matters. -/
 theorem overlong_i64_body_rejected (env : module.Env) :
     code.validate_body overlongI64Bytes env (resultContext .I64) = .ok (.Err .LebTooLong) := by
-  let first := { Body.initial (.Value .I64) with pos := 1#usize }
+  let first := { Wasm1.Loop.initial (.Value .I64) with pos := 1#usize }
   have hread := code.read_i64_const.failed_read first overlongI64Bytes .LebTooLong overlong_i64_reader
   have hstep : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor first overlongI64Bytes env
       (resultContext .I64) code.OP_I64_CONST () = .ok (.Err .LebTooLong, first, ()) := by
@@ -296,9 +296,9 @@ theorem overlong_i64_body_rejected (env : module.Env) :
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   apply public_of_loop overlongI64Bytes env (resultContext .I64) (.Value .I64) (.Err .LebTooLong)
     (by simp [overlongI64Bytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
-  exact loop_error overlongI64Bytes env (resultContext .I64) (Body.initial (.Value .I64)) first first
-    code.OP_I64_CONST .LebTooLong (by simp [Body.initial])
-    (read_at overlongI64Bytes (Body.initial (.Value .I64)) 1#usize code.OP_I64_CONST (by decide) rfl
-      (by simp [overlongI64Bytes, bytes, Body.initial, code.OP_I64_CONST, alloc.vec.Vec.deref])) hstep
+  exact loop_error overlongI64Bytes env (resultContext .I64) (Wasm1.Loop.initial (.Value .I64)) first first
+    code.OP_I64_CONST .LebTooLong (by simp [Wasm1.Loop.initial])
+    (read_at overlongI64Bytes (Wasm1.Loop.initial (.Value .I64)) 1#usize code.OP_I64_CONST (by decide) rfl
+      (by simp [overlongI64Bytes, bytes, Wasm1.Loop.initial, code.OP_I64_CONST, alloc.vec.Vec.deref])) hstep
 
 end Itasca.Examples.Wasm1Scalars

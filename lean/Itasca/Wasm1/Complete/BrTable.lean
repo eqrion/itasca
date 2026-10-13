@@ -3,7 +3,7 @@ import Itasca.Handler.BrTableComplete
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Completeness
+namespace Itasca.Wasm1.Completeness
 
 private theorem resultTypes_injective : Function.Injective Control.resultTypes := by
   intro a b h
@@ -80,4 +80,4 @@ theorem Frame.step_brTable {st} (f : Frame st) (data : Slice U8) (env : module.E
       · simp only [hv, f.vals, List.length_append]
         omega
 
-end Itasca.Completeness
+end Itasca.Wasm1.Completeness

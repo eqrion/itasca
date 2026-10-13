@@ -110,7 +110,7 @@ private theorem public_of_loop (data : Slice U8) (env : module.Env) (ctx : code.
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
     (hresults : ctx.results.val = Control.results bt)
     (hloop : code.validate_body_with_loop code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
-      data env ctx.locals ctx.results () (Body.initial bt) = .ok (result, ())) :
+      data env ctx.locals ctx.results () (Wasm1.Loop.initial bt) = .ok (result, ())) :
     code.validate_body data env ctx = .ok result := by
   have hguard : ¬ Slice.len data > limits.MAX_FUNCTION_BYTES := by scalar_tac
   simp [code.validate_body, code.validate_body_with.eq_model, code.validate_body_with_model, hguard,
@@ -198,23 +198,23 @@ private theorem labels_one (st next : code.OpIterState) (target : code.Ctrl) (bt
 /-- The actual public Wasm 1.0 validator rejects before consuming a table payload. -/
 theorem rejected (env : module.Env) :
     code.validate_body bytes env ctx = .ok (.Err .TypeMismatch) := by
-  let initial := Body.initial (.Value .I32)
+  let initial := Wasm1.Loop.initial (.Value .I32)
   let first := { initial with pos := 1#usize }
   let body : code.Ctrl := ⟨.Body, .Value .I32, Control.signature (.Value .I32), 0#usize, false⟩
   let frame : code.Ctrl := ⟨.Block, .Value .I64, Control.signature (.Value .I64), 0#usize, false⟩
   let poly : code.Ctrl := { frame with polymorphic_base := true }
   obtain ⟨⟨_, opened⟩, hopen, rfl, hop, hov, hoc⟩ := WP.spec_imp_exists
     (code.read_block.spec first bytes (.Value .I64) (by decide) rfl
-      (by simp [first, initial, Body.initial]; scalar_tac) trivial)
+      (by simp [first, initial, Wasm1.Loop.initial]; scalar_tac) trivial)
   dsimp only at hop hov hoc
   have hz : alloc.vec.Vec.len first.vals = 0#usize := by
     apply UScalar.eq_of_val_eq
-    simp [first, initial, Body.initial, alloc.vec.Vec.len]
+    simp [first, initial, Wasm1.Loop.initial, alloc.vec.Vec.len]
   have hf : Control.frame first .Block (.Value .I64) = frame := by
     simp only [Control.frame, hz, frame]
   have hoc' : opened.ctrls.val = [body, frame] := by
     rw [hf] at hoc
-    simpa [first, initial, Body.initial, body] using hoc
+    simpa [first, initial, Wasm1.Loop.initial, body] using hoc
   have hstep0 : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor first bytes env
       ctx code.OP_BLOCK () = .ok (.Ok (), opened, ()) := by
     simp [global_simps, hopen,
@@ -263,9 +263,9 @@ theorem rejected (env : module.Env) :
   apply public_of_loop bytes env ctx (.Value .I32) (.Err .TypeMismatch)
     (by simp [bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
   rw [loop_step bytes env ctx initial first opened code.OP_BLOCK
-    (by simp [initial, Body.initial])
+    (by simp [initial, Wasm1.Loop.initial])
     (read_at bytes initial 1#usize code.OP_BLOCK (by decide) rfl
-      (by simp [bytes, initial, Body.initial, alloc.vec.Vec.deref, code.OP_BLOCK])) hstep0]
+      (by simp [bytes, initial, Wasm1.Loop.initial, alloc.vec.Vec.deref, code.OP_BLOCK])) hstep0]
   rw [loop_step bytes env ctx opened unreachable marked code.OP_UNREACHABLE
     (by simp [hoc'])
     (read_at bytes opened 3#usize code.OP_UNREACHABLE

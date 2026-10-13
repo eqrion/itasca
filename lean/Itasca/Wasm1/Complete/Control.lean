@@ -3,7 +3,7 @@ import Itasca.Wasm1.Complete.Frame
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Completeness
+namespace Itasca.Wasm1.Completeness
 
 theorem Frame.output_unreachable {st} (f : Frame st) {s : code.OpIterState}
     (hc : s.ctrls.val = f.parents ++ [{ f.current with polymorphic_base := true }])
@@ -88,4 +88,4 @@ theorem step_return {st : code.OpIterState} (f : Frame st) (data : Slice U8)
     · simp only [hv, f.vals, List.length_append]
       omega
 
-end Itasca.Completeness
+end Itasca.Wasm1.Completeness

@@ -83,7 +83,7 @@ theorem Pending.val_capacity {data env ctx bt st} (p : Pending data env ctx bt s
   have := p.size
   have := p.vals
   have := p.inbounds
-  have := Body.byte_limit_room
+  have := limits.MAX_FUNCTION_BYTES.room
   omega
 
 theorem Pending.ctrl_capacity {data env ctx bt st} (p : Pending data env ctx bt st) :
@@ -91,7 +91,7 @@ theorem Pending.ctrl_capacity {data env ctx bt st} (p : Pending data env ctx bt 
   have := p.size
   have := p.ctrls
   have := p.inbounds
-  have := Body.byte_limit_room
+  have := limits.MAX_FUNCTION_BYTES.room
   omega
 
 theorem Pending.bounds_after {data env ctx bt st} (p : Pending data env ctx bt st)

@@ -42,7 +42,7 @@ theorem labelAt_congr {st s : code.BodyState}
 namespace Completeness
 
 structure Frame (st : code.BodyState) where
-  core : Itasca.Completeness.Frame st.core
+  core : Itasca.Wasm1.Completeness.Frame st.core
   parents : List signature.BlockType
   current : signature.BlockType
   blocks : st.blocks.val = parents ++ [current]
@@ -119,7 +119,7 @@ theorem Bounds.ctrl_capacity {data st} (h : Bounds data st) :
   have := h.ctrls
   have := h.pos
   have := h.size
-  have := Body.byte_limit_room
+  have := limits.MAX_FUNCTION_BYTES.room
   omega
 
 theorem bounds_after {data st s token next} (h : Bounds data st)

@@ -21,7 +21,7 @@ private theorem public_of_loop {V : Type} (visitor : code.OpVisitor V)
     (bt : code.BlockType) (result : core.result.Result Unit error.OpError) (v v' : V)
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
     (hresults : ctx.results.val = Control.results bt)
-    (hloop : code.validate_body_with_loop visitor data env ctx.locals ctx.results v (Body.initial bt) =
+    (hloop : code.validate_body_with_loop visitor data env ctx.locals ctx.results v (Wasm1.Loop.initial bt) =
       .ok (result, v')) :
     code.validate_body_with visitor data env ctx v = .ok (result, v') := by
   have hguard : ¬ Slice.len data > limits.MAX_FUNCTION_BYTES := by scalar_tac
@@ -94,7 +94,7 @@ theorem f32_signed_zero_trace (env : module.Env) :
     ∃ pushed finished, code.validate_body_with recorder f32Bytes env (resultContext .F32) [] =
       .ok (.Ok (), [observation pushed (.f32_const 0x80000000#u32),
         observation finished (.end_ .Body (.Value .F32))]) := by
-  let initial := Body.initial (.Value .F32)
+  let initial := Wasm1.Loop.initial (.Value .F32)
   let first := { initial with pos := 1#usize }
   have hencoded : FloatBits.Decoded 4 f32Bytes 1#usize (0x80000000#u32).val 5#usize := by
     refine ⟨[0#u8, 0#u8, 0#u8, 0x80#u8], rfl, rfl, by decide, rfl, ?_⟩
@@ -102,14 +102,14 @@ theorem f32_signed_zero_trace (env : module.Env) :
   have hleb := reader.read_f32_bits.complete f32Bytes 1#usize 0x80000000#u32 5#usize hencoded
   obtain ⟨⟨_, pushed⟩, hconst, rfl, hv, hc, hp⟩ := WP.spec_imp_exists
     (code.read_f32_const.from_read first f32Bytes 0x80000000#u32 5#usize hleb
-      (by simp [first, initial, Body.initial]; scalar_tac))
+      (by simp [first, initial, Wasm1.Loop.initial]; scalar_tac))
   dsimp only at hv hc hp
   let last := { pushed with pos := 6#usize }
   have hctrls : last.ctrls.val = [⟨.Body, .Value .F32, Control.signature (.Value .F32), 0#usize, false⟩] := by
-    simp [last, hc, first, initial, Body.initial]
+    simp [last, hc, first, initial, Wasm1.Loop.initial]
   have hvals : last.vals.val = [] ++
       (Control.results (code.BlockType.Value .F32)).map code.StackType.Val := by
-    simpa [last, first, initial, Body.initial, Control.results] using hv
+    simpa [last, first, initial, Wasm1.Loop.initial, Control.results] using hv
   obtain ⟨⟨_, finished⟩, hend, rfl, hfc, hfv, hfp⟩ := WP.spec_imp_exists
     (code.read_end.concrete last [] ⟨.Body, .Value .F32, Control.signature (.Value .F32), 0#usize, false⟩ [] hctrls hvals rfl
       (by simp))
@@ -122,11 +122,11 @@ theorem f32_signed_zero_trace (env : module.Env) :
   apply public_of_loop recorder f32Bytes env (resultContext .F32) (.Value .F32) (.Ok ()) [] _
     (by simp [f32Bytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
   rw [loop_step recorder f32Bytes env (resultContext .F32) [] _ initial first pushed code.OP_F32_CONST
-    (by simp [initial, Body.initial])
+    (by simp [initial, Wasm1.Loop.initial])
     (read_at f32Bytes initial 1#usize code.OP_F32_CONST (by decide) rfl
-      (by simp [f32Bytes, bytes, initial, Body.initial, code.OP_F32_CONST, alloc.vec.Vec.deref])) hstep]
+      (by simp [f32Bytes, bytes, initial, Wasm1.Loop.initial, code.OP_F32_CONST, alloc.vec.Vec.deref])) hstep]
   rw [loop_step recorder f32Bytes env (resultContext .F32) _ _ pushed last finished code.OP_END
-    (by simp [hc, first, initial, Body.initial])
+    (by simp [hc, first, initial, Wasm1.Loop.initial])
     (read_at f32Bytes pushed 6#usize code.OP_END (by simp [hp, f32Bytes, bytes, alloc.vec.Vec.deref])
       (by simp [hp]) (by simp [hp, f32Bytes, bytes, code.OP_END, alloc.vec.Vec.deref]))
     (step_end f32Bytes env (resultContext .F32) _ last finished .Body (.Value .F32) hend)]
@@ -138,7 +138,7 @@ theorem f64_nan_payload_trace (env : module.Env) :
     ∃ pushed finished, code.validate_body_with recorder f64Bytes env (resultContext .F64) [] =
       .ok (.Ok (), [observation pushed (.f64_const 0xFFF8000000000001#u64),
         observation finished (.end_ .Body (.Value .F64))]) := by
-  let initial := Body.initial (.Value .F64)
+  let initial := Wasm1.Loop.initial (.Value .F64)
   let first := { initial with pos := 1#usize }
   have hencoded : FloatBits.Decoded 8 f64Bytes 1#usize (0xFFF8000000000001#u64).val 9#usize := by
     refine ⟨[1#u8, 0#u8, 0#u8, 0#u8, 0#u8, 0#u8, 0xF8#u8, 0xFF#u8], rfl, rfl, by decide, rfl, ?_⟩
@@ -146,14 +146,14 @@ theorem f64_nan_payload_trace (env : module.Env) :
   have hleb := reader.read_f64_bits.complete f64Bytes 1#usize 0xFFF8000000000001#u64 9#usize hencoded
   obtain ⟨⟨_, pushed⟩, hconst, rfl, hv, hc, hp⟩ := WP.spec_imp_exists
     (code.read_f64_const.from_read first f64Bytes 0xFFF8000000000001#u64 9#usize hleb
-      (by simp [first, initial, Body.initial]; scalar_tac))
+      (by simp [first, initial, Wasm1.Loop.initial]; scalar_tac))
   dsimp only at hv hc hp
   let last := { pushed with pos := 10#usize }
   have hctrls : last.ctrls.val = [⟨.Body, .Value .F64, Control.signature (.Value .F64), 0#usize, false⟩] := by
-    simp [last, hc, first, initial, Body.initial]
+    simp [last, hc, first, initial, Wasm1.Loop.initial]
   have hvals : last.vals.val = [] ++
       (Control.results (code.BlockType.Value .F64)).map code.StackType.Val := by
-    simpa [last, first, initial, Body.initial, Control.results] using hv
+    simpa [last, first, initial, Wasm1.Loop.initial, Control.results] using hv
   obtain ⟨⟨_, finished⟩, hend, rfl, hfc, hfv, hfp⟩ := WP.spec_imp_exists
     (code.read_end.concrete last [] ⟨.Body, .Value .F64, Control.signature (.Value .F64), 0#usize, false⟩ [] hctrls hvals rfl
       (by simp))
@@ -166,11 +166,11 @@ theorem f64_nan_payload_trace (env : module.Env) :
   apply public_of_loop recorder f64Bytes env (resultContext .F64) (.Value .F64) (.Ok ()) [] _
     (by simp [f64Bytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
   rw [loop_step recorder f64Bytes env (resultContext .F64) [] _ initial first pushed code.OP_F64_CONST
-    (by simp [initial, Body.initial])
+    (by simp [initial, Wasm1.Loop.initial])
     (read_at f64Bytes initial 1#usize code.OP_F64_CONST (by decide) rfl
-      (by simp [f64Bytes, bytes, initial, Body.initial, code.OP_F64_CONST, alloc.vec.Vec.deref])) hstep]
+      (by simp [f64Bytes, bytes, initial, Wasm1.Loop.initial, code.OP_F64_CONST, alloc.vec.Vec.deref])) hstep]
   rw [loop_step recorder f64Bytes env (resultContext .F64) _ _ pushed last finished code.OP_END
-    (by simp [hc, first, initial, Body.initial])
+    (by simp [hc, first, initial, Wasm1.Loop.initial])
     (read_at f64Bytes pushed 10#usize code.OP_END (by simp [hp, f64Bytes, bytes, alloc.vec.Vec.deref])
       (by simp [hp]) (by simp [hp, f64Bytes, bytes, code.OP_END, alloc.vec.Vec.deref]))
     (step_end f64Bytes env (resultContext .F64) _ last finished .Body (.Value .F64) hend)]
@@ -181,17 +181,17 @@ open Examples.Wasm1Body in
 theorem trailing_bytes_after_end_trace (env : module.Env) :
     ∃ finished, code.validate_body_with recorder trailingBytes env emptyContext [] =
       .ok (.Err .TrailingBytes, [observation finished (.end_ .Body .Empty)]) := by
-  let st := { Body.initial .Empty with pos := 1#usize }
+  let st := { Wasm1.Loop.initial .Empty with pos := 1#usize }
   obtain ⟨⟨_, finished⟩, hend, rfl, hc, hv, hp⟩ := WP.spec_imp_exists
     (code.read_end.empty st [] ⟨.Body, .Empty, Control.signature (.Empty), 0#usize, false⟩ rfl rfl rfl)
   dsimp only at hc hv hp
   refine ⟨finished, ?_⟩
   apply public_of_loop recorder trailingBytes env emptyContext .Empty (.Err .TrailingBytes) [] _
     (by simp [trailingBytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
-  rw [loop_step recorder trailingBytes env emptyContext [] _ (Body.initial .Empty) st finished code.OP_END
-    (by simp [Body.initial])
-    (read_at trailingBytes (Body.initial .Empty) 1#usize code.OP_END (by decide) rfl
-      (by simp [trailingBytes, Body.initial, code.OP_END, alloc.vec.Vec.deref]))
+  rw [loop_step recorder trailingBytes env emptyContext [] _ (Wasm1.Loop.initial .Empty) st finished code.OP_END
+    (by simp [Wasm1.Loop.initial])
+    (read_at trailingBytes (Wasm1.Loop.initial .Empty) 1#usize code.OP_END (by decide) rfl
+      (by simp [trailingBytes, Wasm1.Loop.initial, code.OP_END, alloc.vec.Vec.deref]))
     (step_end trailingBytes env emptyContext [] st finished .Body .Empty hend)]
   apply loop_trailing recorder trailingBytes env emptyContext _ finished hc
   simp [hp, st, trailingBytes, alloc.vec.Vec.deref]
@@ -201,16 +201,16 @@ open Examples.Wasm1Body in
 theorem rejecting_first_hook_stops (env : module.Env) :
     code.validate_body_with (rejectAt 0 .OutOfMemory) nopBytes env emptyContext [] =
       .ok (.Err (.Visitor .OutOfMemory),
-        [⟨.op {Body.initial .Empty with pos := 1#usize} .nop, .Err .OutOfMemory⟩]) := by
-  let st := { Body.initial .Empty with pos := 1#usize }
+        [⟨.op {Wasm1.Loop.initial .Empty with pos := 1#usize} .nop, .Err .OutOfMemory⟩]) := by
+  let st := { Wasm1.Loop.initial .Empty with pos := 1#usize }
   apply public_of_loop (rejectAt 0 .OutOfMemory) nopBytes env emptyContext .Empty
     (.Err (.Visitor .OutOfMemory)) [] _
     (by simp [nopBytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
   apply loop_error (rejectAt 0 .OutOfMemory) nopBytes env emptyContext [] _
-    (Body.initial .Empty) st st code.OP_NOP (.Visitor .OutOfMemory)
-    (by simp [Body.initial])
-    (read_at nopBytes (Body.initial .Empty) 1#usize code.OP_NOP (by decide) rfl
-      (by simp [nopBytes, Body.initial, code.OP_NOP, alloc.vec.Vec.deref]))
+    (Wasm1.Loop.initial .Empty) st st code.OP_NOP (.Visitor .OutOfMemory)
+    (by simp [Wasm1.Loop.initial])
+    (read_at nopBytes (Wasm1.Loop.initial .Empty) 1#usize code.OP_NOP (by decide) rfl
+      (by simp [nopBytes, Wasm1.Loop.initial, code.OP_NOP, alloc.vec.Vec.deref]))
   simp [st, rejectAt, ofHandler, code.visit,
     core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -308,7 +308,7 @@ theorem nested_bare_if_trace (env : module.Env) :
     ∃ s2 s4 s6 s7 s8 s9 s10,
       code.validate_body_with recorder bareIfBytes env Examples.Wasm1Body.emptyContext [] =
         .ok (.Ok (), [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.end_ .Then .Empty), observation s9 (.end_ .Block .Empty), observation s10 (.end_ .Body .Empty)]) := by
-  let s0 := Body.initial .Empty
+  let s0 := Wasm1.Loop.initial .Empty
   let s2 := state 2#usize [frame .Body, frame .Block]
   let s4 := state 4#usize [frame .Body, frame .Block] [.Val .I32]
   let s6 := state 6#usize [frame .Body, frame .Block, frame .Then]
@@ -318,7 +318,7 @@ theorem nested_bare_if_trace (env : module.Env) :
   let s10 := state 10#usize []
   have hb : code.read_block {s0 with pos := 1#usize} bareIfBytes = .ok (.Ok .Empty, s2) := by
     apply read_block_empty _ _ _ 2#usize
-      ⟨rfl, rfl, by decide⟩ (by simp [s0, Body.initial]; scalar_tac)
+      ⟨rfl, rfl, by decide⟩ (by simp [s0, Wasm1.Loop.initial]; scalar_tac)
       (by rfl) (by with_unfolding_all rfl) rfl
   have hon : SignedLeb32.Decoded bareIfBytes 3#usize (1#i32).val 4#usize := by
     refine ⟨[1#u8], rfl, rfl, by decide, [], 1#u8, rfl, by decide,
@@ -340,9 +340,9 @@ theorem nested_bare_if_trace (env : module.Env) :
     (by simp [bareIfBytes, Examples.Wasm1Scalars.bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
   rw [loop_step recorder bareIfBytes env Examples.Wasm1Body.emptyContext [] [observation s2 (.block .Empty)]
     s0 {s0 with pos := 1#usize} s2 code.OP_BLOCK
-    (by simp [s0, Body.initial])
+    (by simp [s0, Wasm1.Loop.initial])
     (read_at bareIfBytes s0 1#usize code.OP_BLOCK (by decide) rfl
-      (by simp [bareIfBytes, Examples.Wasm1Scalars.bytes, alloc.vec.Vec.deref, s0, Body.initial, global_simps]))
+      (by simp [bareIfBytes, Examples.Wasm1Scalars.bytes, alloc.vec.Vec.deref, s0, Wasm1.Loop.initial, global_simps]))
     (by simp [hb, recorder, ofHandler, observation, code.visit, core.result.Result.Insts.CoreOpsTry.branch])]
   rw [loop_step recorder bareIfBytes env Examples.Wasm1Body.emptyContext [observation s2 (.block .Empty)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32)]
     s2 {s2 with pos := 3#usize} s4 code.OP_I32_CONST
@@ -390,7 +390,7 @@ theorem nested_else_if_trace (env : module.Env) :
     ∃ s2 s4 s6 s7 s8 s9 s10 s11 s12,
       code.validate_body_with recorder elseIfBytes env Examples.Wasm1Body.emptyContext [] =
         .ok (.Ok (), [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.else_ .Empty), observation s9 (.nop), observation s10 (.end_ .Else .Empty), observation s11 (.end_ .Block .Empty), observation s12 (.end_ .Body .Empty)]) := by
-  let s0 := Body.initial .Empty
+  let s0 := Wasm1.Loop.initial .Empty
   let s2 := state 2#usize [frame .Body, frame .Block]
   let s4 := state 4#usize [frame .Body, frame .Block] [.Val .I32]
   let s6 := state 6#usize [frame .Body, frame .Block, frame .Then]
@@ -402,7 +402,7 @@ theorem nested_else_if_trace (env : module.Env) :
   let s12 := state 12#usize []
   have hb : code.read_block {s0 with pos := 1#usize} elseIfBytes = .ok (.Ok .Empty, s2) := by
     apply read_block_empty _ _ _ 2#usize
-      ⟨rfl, rfl, by decide⟩ (by simp [s0, Body.initial]; scalar_tac)
+      ⟨rfl, rfl, by decide⟩ (by simp [s0, Wasm1.Loop.initial]; scalar_tac)
       (by rfl) (by with_unfolding_all rfl) rfl
   have hon : SignedLeb32.Decoded elseIfBytes 3#usize (1#i32).val 4#usize := by
     refine ⟨[1#u8], rfl, rfl, by decide, [], 1#u8, rfl, by decide,
@@ -426,9 +426,9 @@ theorem nested_else_if_trace (env : module.Env) :
     (by simp [elseIfBytes, Examples.Wasm1Scalars.bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
   rw [loop_step recorder elseIfBytes env Examples.Wasm1Body.emptyContext [] [observation s2 (.block .Empty)]
     s0 {s0 with pos := 1#usize} s2 code.OP_BLOCK
-    (by simp [s0, Body.initial])
+    (by simp [s0, Wasm1.Loop.initial])
     (read_at elseIfBytes s0 1#usize code.OP_BLOCK (by decide) rfl
-      (by simp [elseIfBytes, Examples.Wasm1Scalars.bytes, alloc.vec.Vec.deref, s0, Body.initial, global_simps]))
+      (by simp [elseIfBytes, Examples.Wasm1Scalars.bytes, alloc.vec.Vec.deref, s0, Wasm1.Loop.initial, global_simps]))
     (by simp [hb, recorder, ofHandler, observation, code.visit, core.result.Result.Insts.CoreOpsTry.branch])]
   rw [loop_step recorder elseIfBytes env Examples.Wasm1Body.emptyContext [observation s2 (.block .Empty)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32)]
     s2 {s2 with pos := 3#usize} s4 code.OP_I32_CONST

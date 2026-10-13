@@ -80,7 +80,7 @@ theorem step_block {data env locals index st} (p : Pending data env locals index
   apply bodyRun.trace data p.start _ visitor observe records .block ?_ v result final v' run
   intro state bt hr
   have capacity : st.blocks.val.length < Usize.max := by
-    have := p.ctrls; have := p.inbounds; have := p.size; have := Body.byte_limit_room
+    have := p.ctrls; have := p.inbounds; have := p.size; have := limits.MAX_FUNCTION_BYTES.room
     omega
   have spec := code.enter_info.bytes st data env .Block p.opened.shape.core
     p.opened.shape.aligned capacity
@@ -98,7 +98,7 @@ theorem step_loop {data env locals index st} (p : Pending data env locals index 
   apply bodyRun.trace data p.start _ visitor observe records .loop ?_ v result final v' run
   intro state bt hr
   have capacity : st.blocks.val.length < Usize.max := by
-    have := p.ctrls; have := p.inbounds; have := p.size; have := Body.byte_limit_room
+    have := p.ctrls; have := p.inbounds; have := p.size; have := limits.MAX_FUNCTION_BYTES.room
     omega
   have spec := code.enter_info.bytes st data env .Loop p.opened.shape.core
     p.opened.shape.aligned capacity
@@ -116,7 +116,7 @@ theorem step_if {data env locals index st} (p : Pending data env locals index st
   apply bodyRun.trace data p.start _ visitor observe records .if_ ?_ v result final v' run
   intro state bt hr
   have capacity : st.blocks.val.length < Usize.max := by
-    have := p.ctrls; have := p.inbounds; have := p.size; have := Body.byte_limit_room
+    have := p.ctrls; have := p.inbounds; have := p.size; have := limits.MAX_FUNCTION_BYTES.room
     omega
   have spec := code.enter_info.bytes st data env .Then p.opened.shape.core
     p.opened.shape.aligned capacity

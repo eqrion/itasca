@@ -8,15 +8,15 @@ namespace Itasca.Wasm1
 
 theorem State.start (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (bt : code.BlockType) (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val) :
-    State data env ctx bt (Body.initial bt) := by
-  apply State.running (Body.initial bt) [] (Wasm1.Frames.Saved.fresh (Body.initial bt) .body bt)
-  · constructor <;> simp [Body.initial, hsize]
+    State data env ctx bt (Wasm1.Loop.initial bt) := by
+  apply State.running (Wasm1.Loop.initial bt) [] (Wasm1.Frames.Saved.fresh (Wasm1.Loop.initial bt) .body bt)
+  · constructor <;> simp [Wasm1.Loop.initial, hsize]
   · apply Wasm1.Frames.Open.start _ (EnvTranslation.context_wf env ctx)
     · rfl
     · rfl
   · rfl
   · simpa [Wasm1.Frames.trace, Wasm1.Frames.Saved.trace, Wasm1.Frames.Saved.fresh,
-      Wasm1.Frames.Form.opening, Body.initial] using
+      Wasm1.Frames.Form.opening, Wasm1.Loop.initial] using
       Consumed.nil (data := data) 0#usize (by simp)
 
 theorem State.pending {data env ctx bt st} (h : State data env ctx bt st)
@@ -38,7 +38,7 @@ def Steps {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
 theorem Steps.contract {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (bt : code.BlockType)
     (hsteps : Steps visitor data env ctx bt) :
-    Body.StepContract visitor data env ctx (fun _ st => State data env ctx bt st) := by
+    Wasm1.Loop.StepContract visitor data env ctx (fun _ st => State data env ctx bt st) := by
   intro st v hi hc hp next hn
   obtain ⟨p, hstart⟩ := hi.pending hc hp next hn
   simpa only [hstart, Pending.After] using hsteps { st with pos := next } p v
@@ -60,7 +60,7 @@ namespace Itasca
 Keeping that exact behavior here makes the termination result unconditional. -/
 theorem code.validate_body_with.of_wasm1_steps {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (bt : code.BlockType)
-    (hbt : Body.initialBlockType ctx.results.val = bt)
+    (hbt : Wasm1.Loop.initialBlockType ctx.results.val = bt)
     (hsteps : Wasm1.Steps visitor data env ctx bt) (v : V) :
     code.validate_body_with visitor data env ctx v ⦃ r =>
       r.1 = .Ok () → Wasm1.Profiled data env ctx bt ⦄ := by
@@ -71,7 +71,7 @@ theorem code.validate_body_with.of_wasm1_steps {V : Type} (visitor : code.OpVisi
   · simp [WP.spec_ok]
   · rename_i hsize
     rw [code.start_function.raw_spec]
-    have heq : Body.initialBlockType (alloc.vec.Vec.deref ctx.results).val = bt := by
+    have heq : Wasm1.Loop.initialBlockType (alloc.vec.Vec.deref ctx.results).val = bt := by
       simpa [alloc.vec.Vec.deref] using hbt
     rw [heq]
     simp only [bind_ok]
@@ -86,7 +86,7 @@ theorem code.validate_body_with.of_wasm1_steps {V : Type} (visitor : code.OpVisi
 /-- The public typing contract projects from the shared profile invariant. -/
 theorem code.validate_body_with.of_wasm_steps {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (bt : code.BlockType)
-    (hbt : Body.initialBlockType ctx.results.val = bt)
+    (hbt : Wasm1.Loop.initialBlockType ctx.results.val = bt)
     (hsteps : Wasm1.Steps visitor data env ctx bt) (v : V) :
     code.validate_body_with visitor data env ctx v ⦃ r =>
       r.1 = .Ok () → Wasm1.Validated data env ctx bt ⦄ := by

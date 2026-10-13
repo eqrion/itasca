@@ -26,7 +26,7 @@ Accepting hooks can change their own state but preserve each validator state. -/
 theorem code.validate_body_with_loop.accepted_lift_of_contract {V : Type}
     (visitor : code.OpVisitor V) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (inv : code.OpIterState → Prop)
-    (hstep : Body.StepContract code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+    (hstep : Wasm1.Loop.StepContract code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       data env ctx (fun _ st => inv st))
     (hlift : ∀ st st' opcode v,
       code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx opcode () =
@@ -89,14 +89,14 @@ when each accepted empty-visitor step lifts to the chosen visitor. -/
 theorem code.validate_body_with.accepted_lift_of_contract {V : Type}
     (visitor : code.OpVisitor V) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (inv : code.OpIterState → Prop)
-    (hstep : Body.StepContract code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+    (hstep : Wasm1.Loop.StepContract code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       data env ctx (fun _ st => inv st))
     (hlift : ∀ st st' opcode v,
       code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx opcode () =
         .ok (.Ok (), st', ()) →
       ∃ v', code.step visitor st data env ctx opcode v = .ok (.Ok (), st', v'))
     (hinit : data.length ≤ limits.MAX_FUNCTION_BYTES.val →
-      inv (Body.initial (Body.initialBlockType ctx.results.val)))
+      inv (Wasm1.Loop.initial (Wasm1.Loop.initialBlockType ctx.results.val)))
     (v : V)
     (h : code.validate_body_with code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       data env ctx () = .ok (.Ok (), ())) :
@@ -124,7 +124,7 @@ theorem code.validate_body_with.accepted_lift {V : Type} (visitor : code.OpVisit
   cases w
   have hok : result = .Ok () := by simpa [code.validate_body, hrun] using haccepted
   subst result
-  let bt := Body.initialBlockType ctx.results.val
+  let bt := Wasm1.Loop.initialBlockType ctx.results.val
   have hsteps := Wasm1.steps code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
     FullVisitor.empty_total data env ctx bt
   exact code.validate_body_with.accepted_lift_of_contract visitor data env ctx

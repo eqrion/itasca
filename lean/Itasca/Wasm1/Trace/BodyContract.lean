@@ -118,7 +118,7 @@ theorem code.validate_body_with.trace_of_contract {V : Type}
     (visitor : code.OpVisitor V) (observe : V → List VisitorTrace.Observation)
     (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (htrace : VisitorTrace.StepContract visitor observe data env ctx
-      (Body.initialBlockType ctx.results.val))
+      (Wasm1.Loop.initialBlockType ctx.results.val))
     (v v' : V) (result : VisitorTrace.BodyResult)
     (h : code.validate_body_with visitor data env ctx v = .ok (result, v')) :
     ∃ observations, observe v' = observe v ++ observations ∧
