@@ -11,8 +11,8 @@ namespace Itasca.Profile
 def BodyBytes (profile : ValidationProfile) (ops : List instr) (bytes : List U8) : Prop :=
   match profile with
   | .Wasm1 => ModuleBinary.BodyEncoding ops bytes
-  | .Wasm2 => ∃ tokens, ModuleBinary.Rep MultiValue.TokenEncoding tokens bytes ∧
-      MultiValue.BodyTokens tokens ops
+  | .Wasm2 => ∃ tokens, ModuleBinary.Rep Wasm2.TokenEncoding tokens bytes ∧
+      Wasm2.BodyTokens tokens ops
 
 /-- Entry framing and locals are shared across the supported profiles. -/
 def CodeEncoding (profile : ValidationProfile) (entry : ModuleBinary.Code)
@@ -60,18 +60,18 @@ def Entry (profile : ValidationProfile) (data : Slice U8) (env : module.Env)
       entry.declared.length ≤ limits.MAX_LOCALS.val
 
 theorem multiValue_consumed_rep {data start tokens next}
-    (h : MultiValue.Consumed data start tokens next) :
-    ModuleBinary.At (ModuleBinary.Rep MultiValue.TokenEncoding) data start tokens next := by
+    (h : Wasm2.Consumed data start tokens next) :
+    ModuleBinary.At (ModuleBinary.Rep Wasm2.TokenEncoding) data start tokens next := by
   induction h with
-  | nil hb => exact ⟨[], .nil, Wasm.BytesAt.nil _ _ hb⟩
+  | nil hb => exact ⟨[], .nil, Wasm1.BytesAt.nil _ _ hb⟩
   | snoc _ ht ih =>
     obtain ⟨bs, he, hs⟩ := ih
     obtain ⟨cs, hc, hp⟩ := ht
     exact ⟨bs ++ cs, he.snoc hc, hs.append hp⟩
 
 theorem multiValue_rep_consumed {data start next tokens bytes}
-    (he : ModuleBinary.Rep MultiValue.TokenEncoding tokens bytes)
-    (hs : Wasm.BytesAt data start bytes next) : MultiValue.Consumed data start tokens next := by
+    (he : ModuleBinary.Rep Wasm2.TokenEncoding tokens bytes)
+    (hs : Wasm1.BytesAt data start bytes next) : Wasm2.Consumed data start tokens next := by
   induction he generalizing start with
   | nil =>
     have hn := hs.empty
@@ -79,7 +79,7 @@ theorem multiValue_rep_consumed {data start next tokens bytes}
     exact .nil _ hs.bound
   | cons ht _ ih =>
     obtain ⟨middle, hfirst, hrest⟩ := hs.split
-    exact MultiValue.Consumed.cons_iff.mpr ⟨middle, ⟨_, ht, hfirst⟩, ih hrest⟩
+    exact Wasm2.Consumed.cons_iff.mpr ⟨middle, ⟨_, ht, hfirst⟩, ih hrest⟩
 
 theorem BodyEncoding.bytes {profile data ops} (h : BodyEncoding profile data ops) :
     BodyBytes profile ops data.val := by
@@ -107,7 +107,7 @@ theorem codeEncoding_of_parts {profile data start content localEnd last size gro
     (hlength : last.val = content.val + size.val)
     (hlocals : ModuleBinary.At
       (ModuleBinary.VecEncoding ModuleBinary.LocalEncoding) data content groups localEnd)
-    (hbodybytes : Wasm.BytesAt data localEnd body.val last)
+    (hbodybytes : Wasm1.BytesAt data localEnd body.val last)
     (hbody : BodyEncoding profile body ops) :
     ModuleBinary.At (CodeEncoding profile) data start ⟨groups, ops⟩ last := by
   obtain ⟨header, hh, hn, hb, he⟩ := hsize
@@ -119,20 +119,20 @@ theorem codeEncoding_of_parts {profile data start content localEnd last size gro
   refine ⟨header ++ localBytes ++ body.val,
     ⟨header, localBytes, body.val, ?_, hl, hbody.bytes, rfl⟩, ?_⟩
   · simpa [hlen] using he
-  · exact ((⟨hh, hn, hb⟩ : Wasm.BytesAt data start header content).append hls).append hbodybytes
+  · exact ((⟨hh, hn, hb⟩ : Wasm1.BytesAt data start header content).append hls).append hbodybytes
 
 theorem functionContext_entry {env : module.Env} {locals : alloc.vec.Vec types.ValueType}
     {ft : types.FuncType} {declared : List types.ValueType}
     (hl : locals.val = ft.params.val ++ declared) :
     functionContext env locals ft = CodeEntry.bodyContext env ft.params.val declared ft.results.val := by
-  simp [functionContext, MultiValue.bodyContext, EnvTranslation.context,
+  simp [functionContext, Wasm2.bodyContext, EnvTranslation.context,
     Control.labelContext, CodeEntry.bodyContext, hl]
   rfl
 
 theorem EntryTyped.of_body {profile env locals index ft groups ops}
     (hi : env.types.val[index.val]? = some ft) (hs : FuncType profile ft)
     (hl : locals.val = ft.params.val ++ ModuleLocals.declared groups)
-    (ht : MultiValue.FunctionTyped env locals ft ops)
+    (ht : Wasm2.FunctionTyped env locals ft ops)
     (hp : Instructions profile (functionContext env locals ft) ops)
     (hallowed : ∀ group ∈ groups, ModuleBinary.ValueTypeAllowed profile group.2)
     (hdeclared : DeclaredReferences.Instructions

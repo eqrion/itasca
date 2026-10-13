@@ -9,7 +9,7 @@ namespace Itasca.ModuleTail
 open ModuleBinary
 
 theorem custom_decode {data : Slice U8} {pos next : Usize} {bytes : List U8}
-    (he : CustomEncoding bytes) (hs : Wasm.BytesAt data pos bytes next) :
+    (he : CustomEncoding bytes) (hs : Wasm1.BytesAt data pos bytes next) :
     ∃ first custom, SectionHeader data pos 0#u8 first next ∧
       module.decode_custom_section data first next = .ok (.Ok custom) := by
   obtain ⟨nm, payload, nameBytes, hn, hsec⟩ := he
@@ -44,7 +44,7 @@ theorem loop_eof (data : Slice U8) (env : module.Env) (segments : alloc.vec.Vec 
 
 theorem customs_prefix {profile} {data : Slice U8} {env : module.Env} {segments : alloc.vec.Vec module.Data}
     {pos next : Usize} {seen : Bool} {bytes : List U8}
-    (he : CustomsEncoding bytes) (hb : Wasm.BytesAt data pos bytes next)
+    (he : CustomsEncoding bytes) (hb : Wasm1.BytesAt data pos bytes next)
     {result : core.result.Result module.Tail error.Error × Unit}
     (hnext : module.validate_tail_with_loop module.EmptyModuleVisitor.Insts.ItascaModuleModuleVisitor
       data env profile () segments next seen = .ok result) :

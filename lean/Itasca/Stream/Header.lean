@@ -76,7 +76,7 @@ theorem stream.read_code_header.spec {S : Type} (source : stream.Source S) (stat
           apply UScalar.eq_of_val_eq
           simpa [module.SECTION_CODE] using hiscode
         have hbyte : ModuleBinary.At ModuleBinary.ByteEncoding header 0#usize 10#u8 1#usize :=
-          ⟨[10#u8], rfl, Wasm.BytesAt.byte header 0#usize 1#usize 10#u8 hpositive
+          ⟨[10#u8], rfl, Wasm1.BytesAt.byte header 0#usize 1#usize 10#u8 hpositive
             (by simpa [hidcode] using hidval.symm) (by simp)⟩
         obtain ⟨r, hs, hsp⟩ := WP.spec_imp_exists (stream.read_len.spec header 1#usize)
         rw [hs]
@@ -175,7 +175,7 @@ theorem HeaderChecked.sound {S : Type} {source : stream.Source S} {state : S}
       exact Nat.min_le_left _ _
     have hview := (stream.read_exact.sound source state environment data.val tail hcoherent
       0#usize (core.cmp.impls.OrdUsize.min codeLen 11#usize) header (by simp) hviewbound hread).1
-    have hspan := Wasm.BytesAt.of_slice_view (by simp) hviewbound hview
+    have hspan := Wasm1.BytesAt.of_slice_view (by simp) hviewbound hview
     have hid : ModuleBinary.At ModuleBinary.ByteEncoding data 0#usize 10#u8 1#usize := by
       obtain ⟨bs, hb, hs⟩ := hbyte
       exact ⟨bs, hb, hspan.transport hs (by simp) (by simp)⟩

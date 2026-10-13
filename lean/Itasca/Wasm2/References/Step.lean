@@ -4,7 +4,7 @@ import Itasca.Wasm2.Scalar.Step
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- A successful metadata decoder supplies byte provenance and a principal
 effect; the shared fixed checker transports both through the typed zipper. -/
@@ -151,7 +151,7 @@ theorem Pending.ref_func {data env locals index st} (p : Pending data env locals
       ⟨hbytes, hlen, hbound⟩) ?_ ?_ ?_ ?_ hdecl
   · apply typed.append hC.wf _ (.instr_case_41 _ (EnvTranslation.index_wf idx))
     intro ts ht
-    obtain ⟨front, hfront, rfl⟩ := (Frames.realizes_append_concrete _ _ [.FuncRef] ts).mp ht
+    obtain ⟨front, hfront, rfl⟩ := (Sequence.realizes_append_concrete _ _ [.FuncRef] ts).mp ht
     exact ⟨front, hfront, by simpa [Frames.enter, Translate.valueType] using (Instrs_ok.frame _ _ front [] [.FUNCREF]
       (.instr _ _ [] [.FUNCREF] (hC.ref_func idx hi) hC.wf
         (.instr_case_41 _ (EnvTranslation.index_wf idx))) hC.wf
@@ -195,7 +195,7 @@ theorem Pending.table_grow {data env locals index st} (p : Pending data env loca
     obtain ⟨bytes, hbytes, hlen, hbound, hencoding⟩ := (hd idx ty hok).1
     obtain ⟨prefixBytes, hp, hpl, hpb, hpe⟩ := hprefix
     exact At.of_immediate p.inbounds hbyte p.pos (.bulk 15#u32 hpe (.tableGrow idx hencoding))
-      ((Wasm.BytesAt.mk hp hpl hpb).append ⟨hbytes, hlen, hbound⟩)
+      ((Wasm1.BytesAt.mk hp hpl hpb).append ⟨hbytes, hlen, hbound⟩)
   · exact fun a => .instr_case_51 _ (EnvTranslation.index_wf a.1)
   · rintro ⟨idx, ty⟩ ⟨decoded, hrun⟩ C hC
     have hspec := code.take_table.spec {st.core with pos := next} data env
@@ -222,7 +222,7 @@ theorem Pending.table_size {data env locals index st} (p : Pending data env loca
     obtain ⟨bytes, hbytes, hlen, hbound, hencoding⟩ := (hd idx ty hok).1
     obtain ⟨prefixBytes, hp, hpl, hpb, hpe⟩ := hprefix
     exact At.of_immediate p.inbounds hbyte p.pos (.bulk 16#u32 hpe (.tableSize idx hencoding))
-      ((Wasm.BytesAt.mk hp hpl hpb).append ⟨hbytes, hlen, hbound⟩)
+      ((Wasm1.BytesAt.mk hp hpl hpb).append ⟨hbytes, hlen, hbound⟩)
   · exact fun a => .instr_case_50 _ (EnvTranslation.index_wf a.1)
   · rintro ⟨idx, ty⟩ ⟨decoded, hrun⟩ C hC
     have hspec := code.take_table.spec {st.core with pos := next} data env
@@ -249,7 +249,7 @@ theorem Pending.table_fill {data env locals index st} (p : Pending data env loca
     obtain ⟨bytes, hbytes, hlen, hbound, hencoding⟩ := (hd idx ty hok).1
     obtain ⟨prefixBytes, hp, hpl, hpb, hpe⟩ := hprefix
     exact At.of_immediate p.inbounds hbyte p.pos (.bulk 17#u32 hpe (.tableFill idx hencoding))
-      ((Wasm.BytesAt.mk hp hpl hpb).append ⟨hbytes, hlen, hbound⟩)
+      ((Wasm1.BytesAt.mk hp hpl hpb).append ⟨hbytes, hlen, hbound⟩)
   · exact fun a => .instr_case_52 _ (EnvTranslation.index_wf a.1)
   · rintro ⟨idx, ty⟩ ⟨decoded, hrun⟩ C hC
     have hspec := code.take_table.spec {st.core with pos := next} data env
@@ -275,7 +275,7 @@ theorem Pending.data_drop {data env locals index st} (p : Pending data env local
     obtain ⟨bytes, hbytes, hlen, hbound, hencoding⟩ := (hd idx hok).1
     obtain ⟨prefixBytes, hp, hpl, hpb, hpe⟩ := hprefix
     exact At.of_immediate p.inbounds hbyte p.pos (.bulk 9#u32 hpe (.dataDrop idx hencoding))
-      ((Wasm.BytesAt.mk hp hpl hpb).append ⟨hbytes, hlen, hbound⟩)
+      ((Wasm1.BytesAt.mk hp hpl hpb).append ⟨hbytes, hlen, hbound⟩)
   · exact fun a => .instr_case_67 _ (EnvTranslation.index_wf a)
   · rintro idx ⟨decoded, hrun⟩ C hC
     have hspec := code.take_data_index.spec {st.core with pos := next} data env
@@ -299,7 +299,7 @@ theorem Pending.elem_drop {data env locals index st} (p : Pending data env local
     obtain ⟨bytes, hbytes, hlen, hbound, hencoding⟩ := (hd idx ty hok).1
     obtain ⟨prefixBytes, hp, hpl, hpb, hpe⟩ := hprefix
     exact At.of_immediate p.inbounds hbyte p.pos (.bulk 13#u32 hpe (.elemDrop idx hencoding))
-      ((Wasm.BytesAt.mk hp hpl hpb).append ⟨hbytes, hlen, hbound⟩)
+      ((Wasm1.BytesAt.mk hp hpl hpb).append ⟨hbytes, hlen, hbound⟩)
   · exact fun a => .instr_case_55 _ (EnvTranslation.index_wf a.1)
   · rintro ⟨idx, ty⟩ ⟨decoded, hrun⟩ C hC
     have hspec := code.take_element.spec {st.core with pos := next} data env
@@ -335,4 +335,4 @@ theorem Pending.ref_is_null {data env locals index st} (p : Pending data env loc
   · simpa [hc] using ctrls
   · simpa [code.BodyState.blocks_eq_of_ctrls hc] using blocks
 
-end Itasca.MultiValue
+end Itasca.Wasm2

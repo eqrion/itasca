@@ -91,10 +91,10 @@ theorem if_profile {C : context} (bt : code.BlockType) (yes no : List instr)
     exact ⟨hy, hn⟩
 
 theorem bounds_after_token {data : Slice U8} {st s : code.OpIterState}
-    {token : Wasm.Token} {next : Usize} (h : Wasm.Bounds data st)
-    (hat : Wasm.At data st.pos token next) (hp : s.pos = next)
+    {token : Wasm1.Token} {next : Usize} (h : Wasm1.Bounds data st)
+    (hat : Wasm1.At data st.pos token next) (hp : s.pos = next)
     (hv : s.vals.val.length ≤ st.vals.val.length + 1)
-    (hc : s.ctrls.val.length ≤ st.ctrls.val.length + 1) : Wasm.Bounds data s := by
+    (hc : s.ctrls.val.length ≤ st.ctrls.val.length + 1) : Wasm1.Bounds data s := by
   have hs := hat.span
   have hvs := h.vals
   have hcs := h.ctrls
@@ -104,14 +104,14 @@ theorem bounds_after_token {data : Slice U8} {st s : code.OpIterState}
 materializing the declared result operands. Also applies to the function body. -/
 theorem execute_end {st : code.OpIterState} (f : Frame st) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (next : Usize)
-    (hb : Wasm.Bounds data st) (hat : Wasm.At data st.pos .end_ next)
+    (hb : Wasm1.Bounds data st) (hat : Wasm1.At data st.pos .end_ next)
     (hthen : f.current.kind = .Then → f.current.block_type = .Empty)
     (ht : Sequence.Realizes f.current.polymorphic_base f.operands
       (Control.resultTypes f.current.block_type)) :
-    ∃ s, Wasm.Execution data env ctx st s ∧ s.pos = next ∧
+    ∃ s, Wasm1.Execution data env ctx st s ∧ s.pos = next ∧
       s.ctrls.val = f.parents ∧
       s.vals.val = f.outer ++ (Control.results f.current.block_type).map code.StackType.Val ∧
-      Wasm.Bounds data s := by
+      Wasm1.Bounds data s := by
   obtain ⟨opcode, pos, bytes, hread, hpos, himm, hspan⟩ := hat.read_op st rfl
   cases himm
   have hnext := hspan.empty
@@ -143,13 +143,13 @@ theorem execute_end {st : code.OpIterState} (f : Frame st) (data : Slice U8)
 
 theorem execute_else {st : code.OpIterState} (f : Frame st) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (next : Usize)
-    (hb : Wasm.Bounds data st) (hat : Wasm.At data st.pos .else_ next)
+    (hb : Wasm1.Bounds data st) (hat : Wasm1.At data st.pos .else_ next)
     (hthen : f.current.kind = .Then)
     (ht : Sequence.Realizes f.current.polymorphic_base f.operands
       (Control.resultTypes f.current.block_type)) :
-    ∃ s, Wasm.Execution data env ctx st s ∧ s.pos = next ∧
+    ∃ s, Wasm1.Execution data env ctx st s ∧ s.pos = next ∧
       s.ctrls.val = f.parents ++ [{f.current with kind := .Else, polymorphic_base := false}] ∧
-      s.vals.val = f.outer ∧ Wasm.Bounds data s := by
+      s.vals.val = f.outer ∧ Wasm1.Bounds data s := by
   obtain ⟨opcode, pos, bytes, hread, hpos, himm, hspan⟩ := hat.read_op st rfl
   cases himm
   have hnext := hspan.empty
@@ -169,9 +169,9 @@ theorem execute_else {st : code.OpIterState} (f : Frame st) (data : Slice U8)
 
 theorem execute_block {st : code.OpIterState} (f : Frame st) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (bt : code.BlockType) (next : Usize)
-    (hb : Wasm.Bounds data st) (hat : Wasm.At data st.pos (.block bt) next) :
-    ∃ s, Wasm.Execution data env ctx st s ∧ s.pos = next ∧ s.vals = st.vals ∧
-      s.ctrls.val = st.ctrls.val ++ [Control.frame st .Block bt] ∧ Wasm.Bounds data s := by
+    (hb : Wasm1.Bounds data st) (hat : Wasm1.At data st.pos (.block bt) next) :
+    ∃ s, Wasm1.Execution data env ctx st s ∧ s.pos = next ∧ s.vals = st.vals ∧
+      s.ctrls.val = st.ctrls.val ++ [Control.frame st .Block bt] ∧ Wasm1.Bounds data s := by
   obtain ⟨opcode, pos, bytes, hread, hpos, himm, hspan⟩ := hat.read_op st rfl
   cases himm
   have hcap : st.ctrls.val.length < Usize.max := by
@@ -189,9 +189,9 @@ theorem execute_block {st : code.OpIterState} (f : Frame st) (data : Slice U8)
 
 theorem execute_loop {st : code.OpIterState} (f : Frame st) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (bt : code.BlockType) (next : Usize)
-    (hb : Wasm.Bounds data st) (hat : Wasm.At data st.pos (.loop bt) next) :
-    ∃ s, Wasm.Execution data env ctx st s ∧ s.pos = next ∧ s.vals = st.vals ∧
-      s.ctrls.val = st.ctrls.val ++ [Control.frame st .Loop bt] ∧ Wasm.Bounds data s := by
+    (hb : Wasm1.Bounds data st) (hat : Wasm1.At data st.pos (.loop bt) next) :
+    ∃ s, Wasm1.Execution data env ctx st s ∧ s.pos = next ∧ s.vals = st.vals ∧
+      s.ctrls.val = st.ctrls.val ++ [Control.frame st .Loop bt] ∧ Wasm1.Bounds data s := by
   obtain ⟨opcode, pos, bytes, hread, hpos, himm, hspan⟩ := hat.read_op st rfl
   cases himm
   have hcap : st.ctrls.val.length < Usize.max := by
@@ -210,12 +210,12 @@ theorem execute_loop {st : code.OpIterState} (f : Frame st) (data : Slice U8)
 theorem execute_if {st : code.OpIterState} (f : Frame st) (data : Slice U8)
     (env : module.Env) (ctx : code.Context) (bt : code.BlockType) (next : Usize)
     (front : List valtype)
-    (hb : Wasm.Bounds data st) (hat : Wasm.At data st.pos (.if_ bt) next)
+    (hb : Wasm1.Bounds data st) (hat : Wasm1.At data st.pos (.if_ bt) next)
     (ht : Sequence.Realizes f.current.polymorphic_base f.operands (front ++ [.I32])) :
-    ∃ s rest, Wasm.Execution data env ctx st s ∧ s.pos = next ∧
+    ∃ s rest, Wasm1.Execution data env ctx st s ∧ s.pos = next ∧
       s.vals.val = f.outer ++ rest ∧
       s.ctrls.val = st.ctrls.val ++ [Control.frame s .Then bt] ∧
-      Sequence.Realizes f.current.polymorphic_base rest front ∧ Wasm.Bounds data s := by
+      Sequence.Realizes f.current.polymorphic_base rest front ∧ Wasm1.Bounds data s := by
   obtain ⟨opcode, pos, bytes, hread, hpos, himm, hspan⟩ := hat.read_op st rfl
   cases himm
   have hcap : st.ctrls.val.length < Usize.max := by
@@ -237,19 +237,19 @@ theorem execute_if {st : code.OpIterState} (f : Frame st) (data : Slice U8)
 
 /-- Run a recursively typed child body and close its final end delimiter. -/
 theorem execute_body {data : Slice U8} {env : module.Env} {ctx : code.Context}
-    {tokens : List Wasm.Token} {ops : List instr}
+    {tokens : List Wasm1.Token} {ops : List instr}
     (program : Program data env ctx tokens ops) (C : context)
     (st : code.OpIterState) (f : Frame st) (next : Usize)
     (hm : EnvTranslation.Matches env ctx C) (hl : C.LABELS = Control.labels st.ctrls.val)
-    (hb : Wasm.Bounds data st) (hbytes : Wasm.Consumed data st.pos (tokens ++ [Wasm.Token.end_]) next)
+    (hb : Wasm1.Bounds data st) (hbytes : Wasm1.Consumed data st.pos (tokens ++ [Wasm1.Token.end_]) next)
     (ht : Sequence.Realizes f.current.polymorphic_base f.operands [])
     (hbody : Instrs_ok C ops (.mk_functype (.mk_list []) (.mk_list (Control.resultTypes f.current.block_type))))
     (hp : Wasm1.Instructions C ops)
     (hthen : f.current.kind = .Then → f.current.block_type = .Empty) :
-    ∃ s, Wasm.Execution data env ctx st s ∧ s.pos = next ∧
+    ∃ s, Wasm1.Execution data env ctx st s ∧ s.pos = next ∧
       s.ctrls.val = f.parents ∧
       s.vals.val = f.outer ++ (Control.results f.current.block_type).map code.StackType.Val ∧
-      Wasm.Bounds data s := by
+      Wasm1.Bounds data s := by
   obtain ⟨middle, hinner, hend⟩ := hbytes.split
   obtain ⟨mid, hrun, hpos, hout, hbounds⟩ :=
     program C st f middle [] _ hm hl hb hinner ht hbody hp
@@ -261,15 +261,15 @@ theorem execute_body {data : Slice U8} {env : module.Env} {ctx : code.Context}
   exact ⟨s, hrun.append hclose, hpos', hc', hv', hb'⟩
 
 theorem atom_block {data : Slice U8} {env : module.Env} {ctx : code.Context}
-    (bt : code.BlockType) {tokens : List Wasm.Token} {ops : List instr}
-    (he : Wasm.Emits tokens ops)
-    (smaller : SmallerPrograms data env ctx ([Wasm.Token.block bt] ++ tokens ++ [Wasm.Token.end_]).length) :
-    AtomProgram data env ctx ([.block bt] ++ tokens ++ [Wasm.Token.end_]) (.BLOCK (Control.blockType bt) ops) := by
+    (bt : code.BlockType) {tokens : List Wasm1.Token} {ops : List instr}
+    (he : Wasm1.Emits tokens ops)
+    (smaller : SmallerPrograms data env ctx ([Wasm1.Token.block bt] ++ tokens ++ [Wasm1.Token.end_]).length) :
+    AtomProgram data env ctx ([.block bt] ++ tokens ++ [Wasm1.Token.end_]) (.BLOCK (Control.blockType bt) ops) := by
   intro C st f next front input output hm hl hb hbytes ht htyped hp
   obtain ⟨rfl, rfl, hbody⟩ := block_signature bt ops htyped
   have hprofile := block_profile bt ops hp
   have hreal : Sequence.Realizes f.current.polymorphic_base f.operands front := by simpa using ht
-  obtain ⟨header, hhead, hrest⟩ := Wasm.Consumed.cons_iff.mp (by simpa using hbytes)
+  obtain ⟨header, hhead, hrest⟩ := Wasm1.Consumed.cons_iff.mp (by simpa using hbytes)
   obtain ⟨entered, henter, hpos, hv, hc, hbounds⟩ := execute_block f data env ctx bt header hb hhead
   let child : Frame entered := ⟨st.ctrls.val, Control.frame st .Block bt, st.vals.val, [],
     hc, by simp [hv], rfl⟩
@@ -285,19 +285,19 @@ theorem atom_block {data : Slice U8} {env : module.Env} {ctx : code.Context}
   apply f.output_of_same_ctrls (alloc.vec.Vec.ext _ _ hc')
     (operands := f.operands ++ (Control.results bt).map code.StackType.Val)
   · simpa [child, Control.frame, f.vals, List.append_assoc] using hv'
-  · apply (Frames.realizes_append_concrete _ _ _ _).mpr
+  · apply (Sequence.realizes_append_concrete _ _ _ _).mpr
     exact ⟨front, by simpa [f.poly_eq] using hreal, rfl⟩
 
 theorem atom_loop {data : Slice U8} {env : module.Env} {ctx : code.Context}
-    (bt : code.BlockType) {tokens : List Wasm.Token} {ops : List instr}
-    (he : Wasm.Emits tokens ops)
-    (smaller : SmallerPrograms data env ctx ([Wasm.Token.loop bt] ++ tokens ++ [Wasm.Token.end_]).length) :
-    AtomProgram data env ctx ([.loop bt] ++ tokens ++ [Wasm.Token.end_]) (.LOOP (Control.blockType bt) ops) := by
+    (bt : code.BlockType) {tokens : List Wasm1.Token} {ops : List instr}
+    (he : Wasm1.Emits tokens ops)
+    (smaller : SmallerPrograms data env ctx ([Wasm1.Token.loop bt] ++ tokens ++ [Wasm1.Token.end_]).length) :
+    AtomProgram data env ctx ([.loop bt] ++ tokens ++ [Wasm1.Token.end_]) (.LOOP (Control.blockType bt) ops) := by
   intro C st f next front input output hm hl hb hbytes ht htyped hp
   obtain ⟨rfl, rfl, hbody⟩ := loop_signature bt ops htyped
   have hprofile := loop_profile bt ops hp
   have hreal : Sequence.Realizes f.current.polymorphic_base f.operands front := by simpa using ht
-  obtain ⟨header, hhead, hrest⟩ := Wasm.Consumed.cons_iff.mp (by simpa using hbytes)
+  obtain ⟨header, hhead, hrest⟩ := Wasm1.Consumed.cons_iff.mp (by simpa using hbytes)
   obtain ⟨entered, henter, hpos, hv, hc, hbounds⟩ := execute_loop f data env ctx bt header hb hhead
   let child : Frame entered := ⟨st.ctrls.val, Control.frame st .Loop bt, st.vals.val, [],
     hc, by simp [hv], rfl⟩
@@ -313,7 +313,7 @@ theorem atom_loop {data : Slice U8} {env : module.Env} {ctx : code.Context}
   apply f.output_of_same_ctrls (alloc.vec.Vec.ext _ _ hc')
     (operands := f.operands ++ (Control.results bt).map code.StackType.Val)
   · simpa [child, Control.frame, f.vals, List.append_assoc] using hv'
-  · apply (Frames.realizes_append_concrete _ _ _ _).mpr
+  · apply (Sequence.realizes_append_concrete _ _ _ _).mpr
     exact ⟨front, by simpa [f.poly_eq] using hreal, rfl⟩
 
 theorem empty_if_result {C : context} (bt : code.BlockType)
@@ -323,16 +323,16 @@ theorem empty_if_result {C : context} (bt : code.BlockType)
   cases bt <;> simp_all [Control.resultTypes, Control.results]
 
 theorem atom_ifEnd {data : Slice U8} {env : module.Env} {ctx : code.Context}
-    (bt : code.BlockType) {tokens : List Wasm.Token} {ops : List instr}
-    (he : Wasm.Emits tokens ops)
-    (smaller : SmallerPrograms data env ctx ([Wasm.Token.if_ bt] ++ tokens ++ [Wasm.Token.end_]).length) :
-    AtomProgram data env ctx ([.if_ bt] ++ tokens ++ [Wasm.Token.end_])
+    (bt : code.BlockType) {tokens : List Wasm1.Token} {ops : List instr}
+    (he : Wasm1.Emits tokens ops)
+    (smaller : SmallerPrograms data env ctx ([Wasm1.Token.if_ bt] ++ tokens ++ [Wasm1.Token.end_]).length) :
+    AtomProgram data env ctx ([.if_ bt] ++ tokens ++ [Wasm1.Token.end_])
       (.IFELSE (Control.blockType bt) ops []) := by
   intro C st f next front input output hm hl hb hbytes ht htyped hp
   obtain ⟨rfl, rfl, hbody, hempty⟩ := if_signature bt ops [] htyped
   have hbt := empty_if_result bt hempty
   have hprofile := (if_profile bt ops [] hp).1
-  obtain ⟨header, hhead, hrest⟩ := Wasm.Consumed.cons_iff.mp (by simpa using hbytes)
+  obtain ⟨header, hhead, hrest⟩ := Wasm1.Consumed.cons_iff.mp (by simpa using hbytes)
   obtain ⟨entered, rest, henter, hpos, hv, hc, hreal, hbounds⟩ :=
     execute_if f data env ctx bt header front hb hhead ht
   let child : Frame entered := ⟨st.ctrls.val, Control.frame entered .Then bt, entered.vals.val, [],
@@ -349,21 +349,21 @@ theorem atom_ifEnd {data : Slice U8} {env : module.Env} {ctx : code.Context}
   apply f.output_of_same_ctrls (alloc.vec.Vec.ext _ _ hc')
     (operands := rest ++ (Control.results bt).map code.StackType.Val)
   · simpa [child, Control.frame, hv, List.append_assoc] using hv'
-  · apply (Frames.realizes_append_concrete _ _ _ _).mpr
+  · apply (Sequence.realizes_append_concrete _ _ _ _).mpr
     exact ⟨front, by simpa [f.poly_eq] using hreal, rfl⟩
 
 theorem atom_ifElse {data : Slice U8} {env : module.Env} {ctx : code.Context}
-    (bt : code.BlockType) {yesTokens noTokens : List Wasm.Token} {yes no : List instr}
-    (hyes : Wasm.Emits yesTokens yes) (hno : Wasm.Emits noTokens no)
+    (bt : code.BlockType) {yesTokens noTokens : List Wasm1.Token} {yes no : List instr}
+    (hyes : Wasm1.Emits yesTokens yes) (hno : Wasm1.Emits noTokens no)
     (smaller : SmallerPrograms data env ctx
-      ([Wasm.Token.if_ bt] ++ yesTokens ++ [Wasm.Token.else_] ++ noTokens ++ [Wasm.Token.end_]).length) :
-    AtomProgram data env ctx ([.if_ bt] ++ yesTokens ++ [Wasm.Token.else_] ++ noTokens ++ [Wasm.Token.end_])
+      ([Wasm1.Token.if_ bt] ++ yesTokens ++ [Wasm1.Token.else_] ++ noTokens ++ [Wasm1.Token.end_]).length) :
+    AtomProgram data env ctx ([.if_ bt] ++ yesTokens ++ [Wasm1.Token.else_] ++ noTokens ++ [Wasm1.Token.end_])
       (.IFELSE (Control.blockType bt) yes no) := by
   intro C st f next front input output hm hl hb hbytes ht htyped hp
   obtain ⟨rfl, rfl, hyesBody, hnoBody⟩ := if_signature bt yes no htyped
   obtain ⟨hyesProfile, hnoProfile⟩ := if_profile bt yes no hp
-  obtain ⟨header, hhead, hrest⟩ := Wasm.Consumed.cons_iff.mp
-    (show Wasm.Consumed data st.pos (.if_ bt :: (yesTokens ++ [Wasm.Token.else_] ++ noTokens ++ [Wasm.Token.end_])) next by
+  obtain ⟨header, hhead, hrest⟩ := Wasm1.Consumed.cons_iff.mp
+    (show Wasm1.Consumed data st.pos (.if_ bt :: (yesTokens ++ [Wasm1.Token.else_] ++ noTokens ++ [Wasm1.Token.end_])) next by
       simpa using hbytes)
   obtain ⟨entered, rest, henter, hpos, hv, hc, hreal, hbounds⟩ :=
     execute_if f data env ctx bt header front hb hhead ht
@@ -373,8 +373,8 @@ theorem atom_ifElse {data : Slice U8} {env : module.Env} {ctx : code.Context}
       Control.labels entered.ctrls.val := by
     simp [hc, Control.labels_push, Control.frame, Control.targetTypes,
       Control.targetBlockType, Control.resultTypes, hl]
-  obtain ⟨yesEnd, hybytes, hnbytes⟩ := Wasm.Consumed.split
-    (show Wasm.Consumed data entered.pos (yesTokens ++ ([Wasm.Token.else_] ++ noTokens ++ [Wasm.Token.end_])) next by
+  obtain ⟨yesEnd, hybytes, hnbytes⟩ := Wasm1.Consumed.split
+    (show Wasm1.Consumed data entered.pos (yesTokens ++ ([Wasm1.Token.else_] ++ noTokens ++ [Wasm1.Token.end_])) next by
       simpa [hpos, List.append_assoc] using hrest)
   have hprogramYes := smaller yesTokens yes (by simp) hyes
   obtain ⟨yesState, hyesRun, hyesPos, hyesOut, hyesBounds⟩ :=
@@ -383,8 +383,8 @@ theorem atom_ifElse {data : Slice U8} {env : module.Env} {ctx : code.Context}
   obtain ⟨yesPoly, yesOperands, hyc, hyv, hyr⟩ := hyesOut
   let yesFrame : Frame yesState := ⟨child.parents, {child.current with polymorphic_base := yesPoly},
     child.outer, yesOperands, hyc, hyv, child.base⟩
-  obtain ⟨elseStart, hatElse, hnoBytes⟩ := Wasm.Consumed.cons_iff.mp
-    (show Wasm.Consumed data yesState.pos (.else_ :: (noTokens ++ [Wasm.Token.end_])) next by
+  obtain ⟨elseStart, hatElse, hnoBytes⟩ := Wasm1.Consumed.cons_iff.mp
+    (show Wasm1.Consumed data yesState.pos (.else_ :: (noTokens ++ [Wasm1.Token.end_])) next by
       simpa [hyesPos] using hnbytes)
   obtain ⟨elseState, helseRun, helsePos, hec, hev, heBounds⟩ :=
     execute_else yesFrame data env ctx elseStart hyesBounds hatElse rfl hyr
@@ -404,7 +404,7 @@ theorem atom_ifElse {data : Slice U8} {env : module.Env} {ctx : code.Context}
   apply f.output_of_same_ctrls (alloc.vec.Vec.ext _ _ hc')
     (operands := rest ++ (Control.results bt).map code.StackType.Val)
   · simpa [elseFrame, yesFrame, child, Control.frame, hv, List.append_assoc] using hv'
-  · apply (Frames.realizes_append_concrete _ _ _ _).mpr
+  · apply (Sequence.realizes_append_concrete _ _ _ _).mpr
     exact ⟨front, by simpa [f.poly_eq] using hreal, rfl⟩
 
 end Itasca.Completeness

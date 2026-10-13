@@ -95,9 +95,9 @@ theorem float_prefix_unique (n : Nat) :
   obtain ⟨rfl, rfl⟩ := split_of_length he (hx.1.trans hy.1.symm)
   exact ⟨hx.2.trans hy.2.symm, rfl, rfl⟩
 
-theorem signed32_prefix_unique : PrefixUnique (fun n bs => SignedLeb.Encoding bs n) := by
+theorem signed32_prefix_unique : PrefixUnique (fun n bs => SignedLeb32.Encoding bs n) := by
   intro x y a b rest tail hx hy he
-  obtain ⟨rfl, rfl⟩ := SignedLeb.Encoding.prefix_unique hx hy he
+  obtain ⟨rfl, rfl⟩ := SignedLeb32.Encoding.prefix_unique hx hy he
   exact ⟨rfl, rfl, List.append_cancel_left he⟩
 
 theorem signed64_prefix_unique : PrefixUnique (fun n bs => SignedLeb64.Encoding bs n) := by

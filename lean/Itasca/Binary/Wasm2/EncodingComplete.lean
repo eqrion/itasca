@@ -4,14 +4,14 @@ import Itasca.Binary.Wasm1.EncodingComplete
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- Expose the actual opcode and immediate witness while preserving all payload information. -/
 theorem At.immediate {data start token next} (h : At data start token next)
     (pos : Usize) (hpos : pos.val = start.val + 1) :
     ∃ opcode immediate, Immediate opcode token immediate ∧
       (∃ hp : start.val < data.length, data.val[start.val] = opcode) ∧
-      Wasm.BytesAt data pos immediate next := by
+      Wasm1.BytesAt data pos immediate next := by
   obtain ⟨_, ⟨opcode, imm, rfl, hi⟩, hs⟩ := h
   have hl := hs.length
   have hb := hs.bound
@@ -27,7 +27,7 @@ theorem At.read_op {data start token next} (h : At data start token next)
     ∃ opcode pos immediate,
       code.read_op st data = .ok (.Ok opcode, { st with pos := pos }) ∧
       pos.val = start.val + 1 ∧ Immediate opcode token immediate ∧
-      Wasm.BytesAt data pos immediate next := by
+      Wasm1.BytesAt data pos immediate next := by
   have hp : st.pos.val < data.length := by
     have := h.span
     simpa [hpos] using Nat.lt_of_lt_of_le this.1 this.2
@@ -97,4 +97,4 @@ theorem Consumed.cons_iff {data start next token tokens} :
     exact Consumed.append (.snoc (.nil start hb) hh) ht
 
 
-end Itasca.MultiValue
+end Itasca.Wasm2

@@ -3,7 +3,7 @@ import Itasca.Wasm2.NumericExt.Visitor
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Visitor
+namespace Itasca.Wasm2.Visitor
 
 /-- Accepted replacement hooks preserve every successful bulk reader state. -/
 theorem bulk_transfer {V W : Type} (visitor : code.OpVisitor V)
@@ -37,4 +37,4 @@ theorem bulk_transfer {V W : Type} (visitor : code.OpVisitor V)
     exact CoreVisitor.run.accepted_lift _ _ _ v w final v' h (fun a => ha.on_table_fill w final a)
   case h_11 => simp at h
 
-end Itasca.MultiValue.Visitor
+end Itasca.Wasm2.Visitor

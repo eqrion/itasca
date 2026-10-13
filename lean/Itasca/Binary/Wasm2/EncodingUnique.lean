@@ -7,7 +7,7 @@ import Itasca.Binary.Wasm1.PrefixUnique
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 open ModuleBinary
 
@@ -61,7 +61,7 @@ theorem BlockEncoding.prefix_unique : PrefixUnique BlockEncoding := by
     subst j
     exact ⟨rfl, rfl, List.append_cancel_left he⟩
 
-private theorem plain_opcode {opcode op bytes} (h : Wasm.Immediate opcode (.plain op) bytes) :
+private theorem plain_opcode {opcode op bytes} (h : Wasm1.Immediate opcode (.plain op) bytes) :
     opcode.val < 192 ∧ opcode.val ∉ [2, 3, 4, 5, 11, 28, 37, 38, 208, 209, 210, 252, 253] := by
   cases h with
   | numeric opcode operation hmap =>
@@ -88,7 +88,7 @@ private theorem reference_opcodes {opcode op bytes} (h : ReferencesBinary.Immedi
   cases h <;> decide
 
 private theorem plain_reference_prefix {opcode x y a b rest tail}
-    (hx : Wasm.Immediate opcode (.plain x) a) (hy : ReferencesBinary.Immediate opcode y b)
+    (hx : Wasm1.Immediate opcode (.plain x) a) (hy : ReferencesBinary.Immediate opcode y b)
     (he : a ++ rest = b ++ tail) : x = y ∧ a = b ∧ rest = tail := by
   have hop := plain_opcode hx
   have hyr := reference_opcodes hy
@@ -121,8 +121,8 @@ theorem Immediate.prefix_unique (opcode : U8) : PrefixUnique (Immediate opcode) 
   all_goals try { have hb := reference_opcodes (by assumption); norm_num at hb }
   case plain.plain =>
     rename_i op hp op' hp'
-    obtain ⟨hh, rfl, rfl⟩ := Wasm.Immediate.prefix_unique opcode hp hp' he
-    exact ⟨congrArg Token.plain (Wasm.Token.plain.inj hh), rfl, rfl⟩
+    obtain ⟨hh, rfl, rfl⟩ := Wasm1.Immediate.prefix_unique opcode hp hp' he
+    exact ⟨congrArg Token.plain (Wasm1.Token.plain.inj hh), rfl, rfl⟩
   case plain.reference =>
     rename_i op hp op' hp'
     obtain ⟨rfl, rfl, rfl⟩ := plain_reference_prefix hp hp' he
@@ -230,4 +230,4 @@ theorem BodyEncoding.unique {data xs ys}
   subst yt
   exact hxs.unique hys
 
-end Itasca.MultiValue
+end Itasca.Wasm2

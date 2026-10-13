@@ -5,7 +5,7 @@ open Aeneas Aeneas.Std
 
 set_option maxHeartbeats 1600000
 
-namespace Itasca.Wasm
+namespace Itasca.Wasm1
 
 theorem BytesAt.get {data start bytes next} (h : BytesAt data start bytes next)
     (i : Nat) (hi : i < bytes.length) :
@@ -19,7 +19,7 @@ theorem BytesAt.get {data start bytes next} (h : BytesAt data start bytes next)
     simp only [h.suffix, List.getElem_append_left hi]
   simpa only [List.getElem_drop] using he
 
-end Itasca.Wasm
+end Itasca.Wasm1
 
 namespace Itasca
 open ModuleBinary
@@ -32,7 +32,7 @@ open ModuleBinary
   step*
 
 theorem module.utf8_sequence_len.complete (data : Slice U8) (pos next : Usize)
-    (encoded : List U8) (hc : Utf8Char encoded) (hb : Wasm.BytesAt data pos encoded next) :
+    (encoded : List U8) (hc : Utf8Char encoded) (hb : Wasm1.BytesAt data pos encoded next) :
     ∃ count, module.utf8_sequence_len data pos = .ok (.Ok count) ∧ count.val = encoded.length := by
   have hs : module.utf8_sequence_len data pos ⦃ r =>
       ∃ count, r = .Ok count ∧ count.val = encoded.length ⦄ := by
@@ -112,7 +112,7 @@ theorem module.utf8_sequence_len.complete (data : Slice U8) (pos next : Usize)
 /-- The scanner accepts a complete independently valid UTF-8 suffix. -/
 theorem module.validate_utf8_loop.complete (data : Slice U8) (pos : Usize)
     (encoded : List U8) (hc : Utf8 encoded)
-    (hb : Wasm.BytesAt data pos encoded (Slice.len data)) :
+    (hb : Wasm1.BytesAt data pos encoded (Slice.len data)) :
     module.validate_utf8_loop data pos = .ok (.Ok ()) := by
   induction hc generalizing pos with
   | nil =>

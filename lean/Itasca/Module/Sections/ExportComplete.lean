@@ -26,7 +26,7 @@ theorem At.export_desc_split {data pos desc next}
   cases he <;> rename_i idx indexBytes hi
   all_goals
     obtain ⟨middle, htag, hindex⟩ :=
-      (show Wasm.BytesAt data pos ([_] ++ indexBytes) next from hs).split
+      (show Wasm1.BytesAt data pos ([_] ++ indexBytes) next from hs).split
     exact ⟨middle, ⟨_, rfl, htag⟩, ⟨indexBytes, hi, hindex⟩⟩
 
 theorem At.export_split {data pos entry next}

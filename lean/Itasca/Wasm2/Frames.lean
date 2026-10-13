@@ -4,7 +4,7 @@ import Itasca.Wasm2.Prefix
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Frames
+namespace Itasca.Wasm2.Frames
 
 inductive Form where
   | body | block | loop | then_
@@ -55,8 +55,8 @@ structure Saved where
 structure Header (env : module.Env) (C : context) (f : Saved) : Prop where
   kind : f.ctrl.kind = f.form.kind
   placeholder : f.ctrl.block_type = .Empty
-  inputs : resolve env (MultiValue.inputs f.bt) = some f.ins
-  outputs : resolve env (MultiValue.outputs f.bt) = some f.outs
+  inputs : resolve env (Wasm2.inputs f.bt) = some f.ins
+  outputs : resolve env (Wasm2.outputs f.bt) = some f.outs
   prior : f.form.Valid C f.ins f.outs
   emits : Emits f.tokens f.ops
 
@@ -126,7 +126,7 @@ theorem Header.target {env C f} (h : Header env C f) :
     resolve env (target f.ctrl.kind f.bt) =
       some (match f.form with | .loop => f.ins | _ => f.outs) := by
   rw [h.kind]
-  cases hf : f.form <;> simp only [Form.kind, MultiValue.target]
+  cases hf : f.form <;> simp only [Form.kind, Wasm2.target]
   all_goals first | exact h.inputs | exact h.outputs
 
 /-- An omitted else is the identity arm. It is valid for a nonempty indexed
@@ -489,4 +489,4 @@ theorem bodyType_close (grandparents : List Saved) (parent current : Saved) (op 
 theorem Open.with_pos {env root st parents current} (h : Open env root st parents current)
     (pos : Usize) : Open env root { st with core := { st.core with pos := pos } } parents current := h
 
-end Itasca.MultiValue.Frames
+end Itasca.Wasm2.Frames

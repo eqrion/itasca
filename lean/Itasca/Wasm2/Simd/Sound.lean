@@ -9,7 +9,7 @@ import Itasca.Wasm2.Simd.MemoryTyping
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 private theorem lane_wf (lane : U8) : wf_uN 8 (.mk_uN lane.val) := by
   constructor
@@ -78,7 +78,7 @@ theorem Pending.simd_lane {data env locals index st}
     (hv : FullVisitor.Total visitor) (subopcode : U32) (op : Simd.LaneOperation)
     (hmap : Simd.laneMeaning subopcode.val = some op) (pos : Usize)
     (hsize : st.core.vals.val.length < Usize.max)
-    (hencoded : ∀ lane next, Wasm.BytesAt data pos [lane] next →
+    (hencoded : ∀ lane next, Wasm1.BytesAt data pos [lane] next →
       At data p.start (.plain (op.instruction (.mk_uN lane.val))) next) :
     Simd.subStep visitor {st.core with pos := pos} data env subopcode v ⦃ r =>
       r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
@@ -179,7 +179,7 @@ theorem Pending.simd_memory_lane {data env locals index st}
     (hmap : Simd.memoryMeaning subopcode.val = some op) (hlaned : op.laneCount ≠ 0) (pos : Usize)
     (hsize : st.core.vals.val.length < Usize.max)
     (hencoded : ∀ arg middle ending lane next, Leb128.Decoded data pos arg.align middle →
-      Leb128.Decoded data middle arg.offset ending → Wasm.BytesAt data ending [lane] next →
+      Leb128.Decoded data middle arg.offset ending → Wasm1.BytesAt data ending [lane] next →
       At data p.start (.plain (op.instruction (MemoryMeaning.memArg arg) (.mk_uN lane.val))) next) :
     Simd.subStep visitor {st.core with pos := pos} data env subopcode v ⦃ r =>
       r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
@@ -274,9 +274,9 @@ theorem Pending.simd {data env locals index st} (p : Pending data env locals ind
   | Ok pair =>
     obtain ⟨subopcode, next⟩ := pair
     obtain ⟨prefixBytes, hs, hn, hb, he⟩ := hd
-    have hprefix : Wasm.BytesAt data st.core.pos prefixBytes next := ⟨hs, hn, hb⟩
+    have hprefix : Wasm1.BytesAt data st.core.pos prefixBytes next := ⟨hs, hn, hb⟩
     have henc : ∀ op bytes ending, Simd.Immediate subopcode op bytes →
-        Wasm.BytesAt data next bytes ending → At data p.start (.plain op) ending := by
+        Wasm1.BytesAt data next bytes ending → At data p.start (.plain op) ending := by
       intro op bytes ending hi hbytes
       exact At.of_immediate p.inbounds hbyte p.pos (.simd subopcode he hi) (hprefix.append hbytes)
     by_cases hconstant : subopcode = 12#u32
@@ -294,7 +294,7 @@ theorem Pending.simd {data env locals index st} (p : Pending data env locals ind
     cases hp : Simd.pureMeaning subopcode.val with
     | some op =>
       exact p.simd_pure visitor v hv subopcode op hp next hsize
-        (henc _ _ _ (.pure subopcode op hp) (Wasm.BytesAt.nil data next hb))
+        (henc _ _ _ (.pure subopcode op hp) (Wasm1.BytesAt.nil data next hb))
     | none =>
       cases hl : Simd.laneMeaning subopcode.val with
       | some op =>
@@ -310,13 +310,13 @@ theorem Pending.simd {data env locals index st} (p : Pending data env locals ind
             obtain ⟨alignment, ha1, ha2, ha3, ha4⟩ := halign
             obtain ⟨offset, ho1, ho2, ho3, ho4⟩ := hoffset
             exact henc _ _ _ (.memory subopcode op arg hm hfull ha4 ho4)
-              ((show Wasm.BytesAt data next alignment middle from ⟨ha1, ha2, ha3⟩).append ⟨ho1, ho2, ho3⟩)
+              ((show Wasm1.BytesAt data next alignment middle from ⟨ha1, ha2, ha3⟩).append ⟨ho1, ho2, ho3⟩)
           · apply p.simd_memory_lane visitor v hv subopcode op hm hfull next hsize
             intro arg middle ending lane final halign hoffset hspan
             obtain ⟨alignment, ha1, ha2, ha3, ha4⟩ := halign
             obtain ⟨offset, ho1, ho2, ho3, ho4⟩ := hoffset
             exact henc _ _ _ (.memoryLane subopcode op arg lane hm hfull ha4 ho4)
-              (((show Wasm.BytesAt data next alignment middle from ⟨ha1, ha2, ha3⟩).append
+              (((show Wasm1.BytesAt data next alignment middle from ⟨ha1, ha2, ha3⟩).append
                 ⟨ho1, ho2, ho3⟩).append hspan)
         | none =>
           simp only [Simd.subStep, Simd.pure_table, Simd.lane_table, Simd.memory_table,
@@ -325,4 +325,4 @@ theorem Pending.simd {data env locals index st} (p : Pending data env locals ind
           · exact False.elim (hconstant (by with_unfolding_all rfl))
           · exact False.elim (hshuffle (by with_unfolding_all rfl))
 
-end Itasca.MultiValue
+end Itasca.Wasm2

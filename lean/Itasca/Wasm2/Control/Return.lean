@@ -3,7 +3,7 @@ import Itasca.Wasm2.LoopDispatch
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- Returning checks the root function's complete result vector, even within
 nested blocks, and erases only the current active stack segment. -/
@@ -80,4 +80,4 @@ theorem Pending.return_ {data env locals index st} (p : Pending data env locals 
     (.plain (.no_immediate p.inbounds hbyte (by simpa [hp] using p.pos) .return_)) ht hc
     (by simpa [hb] using blocks) (by simpa using hv)
 
-end Itasca.MultiValue
+end Itasca.Wasm2

@@ -2,9 +2,9 @@ import Itasca.Wasm2.Invariant
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValueGrammar
+namespace Itasca.Examples.Wasm2Grammar
 
-open MultiValue
+open Wasm2
 
 /-- A type index uses signed LEB, including nonminimal positive encodings. -/
 theorem padded_index : BlockEncoding (.TypeIndex 0#u32) [128#u8, 0#u8] := by
@@ -39,11 +39,11 @@ theorem identity_if (env : module.Env) (C : context) (hC : wf_context C)
     (hout : resolve env (outputs (.TypeIndex index)) = some [.I32, .I64]) :
     Instr_ok C (.IFELSE (blockType (.TypeIndex index)) [] [])
       (.mk_functype (.mk_list [.I32, .I64, .I32]) (.mk_list [.I32, .I64])) := by
-  let f := MultiValue.Frames.Saved.fresh 0#usize .then_ (.TypeIndex index) [.I32, .I64] [.I32, .I64]
-  have hh : MultiValue.Frames.Header env C f := ⟨rfl, rfl, hin, hout, trivial, .nil⟩
-  have ht := TypedPrefix.start (MultiValue.Frames.enter C .then_ [.I32, .I64] [.I32, .I64])
-    (MultiValue.Frames.enter_wf C hC _ _ _) [.I32, .I64]
-  exact (MultiValue.Frames.Closed.then_ _ _).typed (f := f) hC htypes hh ht
+  let f := Wasm2.Frames.Saved.fresh 0#usize .then_ (.TypeIndex index) [.I32, .I64] [.I32, .I64]
+  have hh : Wasm2.Frames.Header env C f := ⟨rfl, rfl, hin, hout, trivial, .nil⟩
+  have ht := TypedPrefix.start (Wasm2.Frames.enter C .then_ [.I32, .I64] [.I32, .I64])
+    (Wasm2.Frames.enter_wf C hC _ _ _) [.I32, .I64]
+  exact (Wasm2.Frames.Closed.then_ _ _).typed (f := f) hC htypes hh ht
     (Sequence.realizes_default false [.Val .I32, .Val .I64]) (fun _ => rfl)
 
-end Itasca.MultiValueGrammar
+end Itasca.Examples.Wasm2Grammar

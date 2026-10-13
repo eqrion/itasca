@@ -3,7 +3,7 @@ import Itasca.Wasm2.Prefix
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Simd
+namespace Itasca.Wasm2.Simd
 
 /-- Fixed arity operand checking, normalized independently of SIMD dispatch.
 Inputs are listed in pop order; there is at most one concrete result. -/
@@ -133,4 +133,4 @@ theorem readFixed.complete (st : code.OpIterState) (inputs : List types.ValueTyp
       exact ⟨out, after, by simp [readFixed, hr, ho], hoc.trans hc, hop.trans hp, hov,
         by omega, by simpa [Control.polymorphic, hc] using hot⟩
 
-end Itasca.MultiValue.Simd
+end Itasca.Wasm2.Simd

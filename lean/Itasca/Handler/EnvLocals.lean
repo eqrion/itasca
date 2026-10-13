@@ -39,7 +39,7 @@ theorem code.read_local_get.prefix (st : code.OpIterState) (data : Slice U8)
       obtain ⟨hd, hi, ht⟩ := hout
       obtain ⟨s', hp, hv', hc', hpos⟩ := WP.spec_imp_exists
         (code.push_val.spec s (.Val t) (by simpa [hv] using hsize))
-      have htyping := (Frames.ResumePrefix.of_prefix htyped).finish hC.wf
+      have htyping := (Sequence.ResumePrefix.of_prefix htyped).finish hC.wf
         (.LOCAL_GET (.mk_uN idx.val)) [t] (.instr_case_43 _ (EnvTranslation.index_wf idx))
         (hC.local_get idx t hi ht)
       rw [WP.spec_equiv_exists]
@@ -78,7 +78,7 @@ theorem code.read_local_set.prefix (st : code.OpIterState) (data : Slice U8)
           have hpop : ∀ ts, Sequence.Realizes (Control.polymorphic st) rest ts →
               Sequence.Realizes (Control.polymorphic st) segment (ts ++ [Translate.valueType t]) := by
             simpa [Control.polymorphic, hc] using hout'.2
-          have htyping := (Frames.ResumePrefix.after_pop htyped hpop).finish hC.wf
+          have htyping := (Sequence.ResumePrefix.after_pop htyped hpop).finish hC.wf
             (.LOCAL_SET (.mk_uN idx.val)) [] (.instr_case_44 _ (EnvTranslation.index_wf idx))
             (hC.local_set idx t hi ht)
           rw [WP.spec_equiv_exists]
@@ -123,7 +123,7 @@ theorem code.read_local_tee.prefix (st : code.OpIterState) (data : Slice U8)
           have hpop : ∀ ts, Sequence.Realizes (Control.polymorphic st) rest ts →
               Sequence.Realizes (Control.polymorphic st) segment (ts ++ [Translate.valueType t]) := by
             simpa [Control.polymorphic, hc] using hout'.2
-          have htyping := (Frames.ResumePrefix.after_pop htyped hpop).finish hC.wf
+          have htyping := (Sequence.ResumePrefix.after_pop htyped hpop).finish hC.wf
             (.LOCAL_TEE (.mk_uN idx.val)) [t] (.instr_case_45 _ (EnvTranslation.index_wf idx))
             (hC.local_tee idx t hi ht)
           rw [WP.spec_equiv_exists]
@@ -153,7 +153,7 @@ theorem code.read_global_get.prefix (st : code.OpIterState) (data : Slice U8)
       obtain ⟨hd, hi, ht⟩ := hout
       obtain ⟨s', hp, hv', hc', hpos⟩ := WP.spec_imp_exists
         (code.push_val.spec s (.Val t.valtype) (by simpa [hv] using hsize))
-      have htyping := (Frames.ResumePrefix.of_prefix htyped).finish hC.wf
+      have htyping := (Sequence.ResumePrefix.of_prefix htyped).finish hC.wf
         (.GLOBAL_GET (.mk_uN idx.val)) [t.valtype] (.instr_case_46 _ (EnvTranslation.index_wf idx))
         (hC.global_get idx t hi ht)
       rw [WP.spec_equiv_exists]
@@ -197,7 +197,7 @@ theorem code.read_global_set.prefix (st : code.OpIterState) (data : Slice U8)
               have hpop : ∀ ts, Sequence.Realizes (Control.polymorphic st) rest ts →
                   Sequence.Realizes (Control.polymorphic st) segment (ts ++ [Translate.valueType t.valtype]) := by
                 simpa [Control.polymorphic, hc] using hout'.2
-              have htyping := (Frames.ResumePrefix.after_pop htyped hpop).finish hC.wf
+              have htyping := (Sequence.ResumePrefix.after_pop htyped hpop).finish hC.wf
                 (.GLOBAL_SET (.mk_uN idx.val)) [] (.instr_case_47 _ (EnvTranslation.index_wf idx))
                 (hC.global_set idx t hi ht hm)
               rw [WP.spec_equiv_exists]

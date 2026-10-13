@@ -7,7 +7,7 @@ namespace Itasca.ModuleTrace
 /-- The public `name_len` field identifies exactly the UTF-8 bytes immediately
 before `payload_start`, as documented by the Rust CustomSection API. -/
 theorem CustomAt.name_bytes {data start finish chunk} (h : CustomAt data start finish chunk) :
-    ∃ nameStart nm, Wasm.BytesAt data nameStart nm chunk.payload_start ∧ ModuleBinary.Utf8 nm ∧
+    ∃ nameStart nm, Wasm1.BytesAt data nameStart nm chunk.payload_start ∧ ModuleBinary.Utf8 nm ∧
       nameStart.val + chunk.name_len.val = chunk.payload_start.val ∧ start.val < nameStart.val := by
   obtain ⟨first, nm, hh, hnameAt, hp, he, hlen⟩ := h
   obtain ⟨bytes, hn, hb⟩ := hnameAt

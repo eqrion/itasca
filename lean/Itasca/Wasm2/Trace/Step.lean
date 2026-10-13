@@ -4,7 +4,7 @@ import Itasca.Wasm2.Trace.Body
 import Itasca.Wasm2.Trace.TableBytes
 
 open Aeneas Aeneas.Std
-namespace Itasca.MultiValue.CallbackTrace
+namespace Itasca.Wasm2.CallbackTrace
 open VisitorTrace
 
 /-- Factor the capacity-guarded scalar arm without changing error outcomes. -/
@@ -95,4 +95,4 @@ theorem steps {V : Type} (visitor : code.OpVisitor V)
   exact step_contract_of_table visitor observe records data env locals ctx index hlocals
     (fun _ p byte => step_br_table p visitor observe records ctx byte)
 
-end Itasca.MultiValue.CallbackTrace
+end Itasca.Wasm2.CallbackTrace

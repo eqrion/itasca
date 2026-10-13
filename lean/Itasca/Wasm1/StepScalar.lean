@@ -6,7 +6,7 @@ import Itasca.Handler.Select
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Wasm
+namespace Itasca.Wasm1
 
 
 /-- NOP accepts arbitrary unread suffixes and records its opcode byte. -/
@@ -35,7 +35,7 @@ theorem Pending.step_unreachable {data env ctx bt st}
     (fun _ => True) (fun _ s => p.After s) ?_ hvisitor.toCore) ?_
   · obtain ⟨_, outer, _, _, hbase, _, hc, hv⟩ := p.opened
     obtain ⟨s, hr, hsvals, _, hsctrls, hspos⟩ := WP.spec_imp_exists
-      (code.mark_unreachable.spec st (p.parents.map WasmFrames.Saved.ctrl) p.current.ctrl hc
+      (code.mark_unreachable.spec st (p.parents.map Wasm1.Frames.Saved.ctrl) p.current.ctrl hc
         (by simp [hbase, hv]))
     have encoded : At data p.start (.plain .UNREACHABLE) s.pos :=
       .no_immediate p.inbounds (by simpa [global_simps] using hbyte)
@@ -80,9 +80,9 @@ theorem Pending.step_drop {data env ctx bt st}
   · intro r hr hok
     exact (hr.2 hok).choose_spec
 
-end Itasca.Wasm
+end Itasca.Wasm1
 
-namespace Itasca.Wasm
+namespace Itasca.Wasm1
 
 
 /-- The i32 constant step terminates on arbitrary immediate bytes and preserves the invariant on success. -/
@@ -102,10 +102,10 @@ theorem Pending.step_i32Const {data env ctx bt st}
     subst res
     obtain ⟨hd, hv⟩ := hout
     obtain ⟨_, outer, _, _, hbase, _, hctrls, hstack⟩ := p.opened
-    have encoded : At data p.start (.plain (Core.i32Const value)) s.pos :=
+    have encoded : At data p.start (.plain (Spec.i32Const value)) s.pos :=
       .of_s32 value p.inbounds (by simpa [global_simps] using hbyte) p.pos hd
-    apply p.append_simple s (Core.i32Const value) p.current.ctrl.polymorphic_base
-      (p.current.vals ++ [.Val .I32]) (Core.i32Const_wf value) encoded
+    apply p.append_simple s (Spec.i32Const value) p.current.ctrl.polymorphic_base
+      (p.current.vals ++ [.Val .I32]) (Spec.i32Const_wf value) encoded
       (fun C hC h => h.i32Const hC value) _ _ (by simp)
     · simpa [hc] using hctrls
     · simpa [hstack, hbase, List.append_assoc] using hv
@@ -193,9 +193,9 @@ theorem Pending.step_f64Const {data env ctx bt st}
   · intro r hr hok
     exact (hr.2 hok).choose_spec
 
-end Itasca.Wasm
+end Itasca.Wasm1
 
-namespace Itasca.Wasm
+namespace Itasca.Wasm1
 
 
 /-- Every numeric opcode extends the generated typing derivation under the current frame context. -/
@@ -206,7 +206,7 @@ theorem Pending.step_numeric_mapped {data env ctx bt st}
     (hmap : Numeric.opcodeMeaning opcode = some op) :
     code.step visitor st data env ctx opcode v ⦃ r => r.1 = .Ok () → p.After r.2.1 ⦄ := by
   obtain ⟨C, outer, spine, header, base, typed, ctrls, stack⟩ := id p.opened
-  have hC := WasmFrames.enter_wf C (spine.context_wf (EnvTranslation.context_wf env ctx))
+  have hC := Wasm1.Frames.enter_wf C (spine.context_wf (EnvTranslation.context_wf env ctx))
     p.current.form p.current.ctrl.block_type
   have hbase : (Control.base st).val = outer.length := by simp [Control.base, ctrls, base]
   have hpoly : Control.polymorphic st = p.current.ctrl.polymorphic_base := by
@@ -243,7 +243,7 @@ theorem Pending.step_select {data env ctx bt st}
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_SELECT) :
     code.step visitor st data env ctx code.OP_SELECT v ⦃ r => r.1 = .Ok () → p.After r.2.1 ⦄ := by
   obtain ⟨C, outer, spine, header, base, typed, ctrls, stack⟩ := id p.opened
-  have hC := WasmFrames.enter_wf C (spine.context_wf (EnvTranslation.context_wf env ctx))
+  have hC := Wasm1.Frames.enter_wf C (spine.context_wf (EnvTranslation.context_wf env ctx))
     p.current.form p.current.ctrl.block_type
   have hbase : (Control.base st).val = outer.length := by simp [Control.base, ctrls, base]
   have hpoly : Control.polymorphic st = p.current.ctrl.polymorphic_base := by
@@ -261,7 +261,7 @@ theorem Pending.step_select {data env ctx bt st}
   · simpa [hpoly] using hout hok
   · simpa [hc] using ctrls
 
-end Itasca.Wasm
+end Itasca.Wasm1
 
 namespace Itasca
 

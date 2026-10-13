@@ -1,6 +1,6 @@
 import Itasca.Binary.Wasm2.Syntax
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- A single generated instruction and its complete flat token spelling. -/
 inductive Atom : List Token → instr → Prop where
@@ -89,4 +89,4 @@ theorem Emits.singleton_iff {tokens op} : Emits tokens [op] ↔ Atom tokens op :
   · intro h
     exact ⟨tokens, [], by simp, h, .nil⟩
 
-end Itasca.MultiValue
+end Itasca.Wasm2

@@ -4,7 +4,7 @@ import Itasca.Wasm2.Visitor.Body
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.CallbackTrace
+namespace Itasca.Wasm2.CallbackTrace
 
 open VisitorTrace
 
@@ -18,7 +18,7 @@ def AcceptedBody (data : Slice U8) (env : module.Env) (ctx : code.Context)
     BodyTokens tokens ops ∧ FunctionTyped env ctx.locals ft ops ∧
     DeclaredReferences.Instructions (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) ops
 
-end Itasca.MultiValue.CallbackTrace
+end Itasca.Wasm2.CallbackTrace
 
 namespace Itasca
 
@@ -33,9 +33,9 @@ theorem code.validate_multi_value_body_with.trace {V : Type} (visitor : code.OpV
     (v v' : V) (result : BodyResult)
     (run : code.validate_multi_value_body_with visitor data env ctx index v = .ok (result, v')) :
     ∃ observations, observe v' = observe v ++ observations ∧
-      MultiValue.CallbackTrace.BodyTrace data 0#usize observations result :=
+      Wasm2.CallbackTrace.BodyTrace data 0#usize observations result :=
   code.validate_multi_value_body_with.trace_of_contract visitor observe data env ctx index
-    (MultiValue.CallbackTrace.steps visitor observe records data env ctx.locals ctx index rfl)
+    (Wasm2.CallbackTrace.steps visitor observe records data env ctx.locals ctx index rfl)
     v v' result run
 
 /-- Accepted callback syntax and generated typing refer to the same Core 2.0
@@ -45,7 +45,7 @@ theorem code.validate_multi_value_body_with.trace_sound {V : Type} (visitor : co
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32) (v v' : V)
     (run : code.validate_multi_value_body_with visitor data env ctx index v = .ok (.Ok (), v')) :
     ∃ observations, observe v' = observe v ++ observations ∧
-      MultiValue.CallbackTrace.AcceptedBody data env ctx index observations := by
+      Wasm2.CallbackTrace.AcceptedBody data env ctx index observations := by
   obtain ⟨observations, log, trace⟩ := code.validate_multi_value_body_with.trace
     visitor observe records data env ctx index v v' (.Ok ()) run
   obtain ⟨accepted, tokens, next, chunks, endpos⟩ := trace.accepted
@@ -63,13 +63,13 @@ trace for accepting recording visitors within the documented resource bounds. -/
 theorem code.validate_multi_value_body_with.trace_complete {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (records : Records visitor observe)
     (accepts : FullVisitor.Accepts visitor) (data : Slice U8) (env : module.Env)
-    (ctx : code.Context) (index : U32) (environment : MultiValue.EnvironmentWithinLimits env)
+    (ctx : code.Context) (index : U32) (environment : Wasm2.EnvironmentWithinLimits env)
     (size : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
-    (body : MultiValue.Validated data env ctx.locals index) (v : V) :
+    (body : Wasm2.Validated data env ctx.locals index) (v : V) :
     ∃ v' observations,
       code.validate_multi_value_body_with visitor data env ctx index v = .ok (.Ok (), v') ∧
       observe v' = observe v ++ observations ∧
-      MultiValue.CallbackTrace.AcceptedBody data env ctx index observations := by
+      Wasm2.CallbackTrace.AcceptedBody data env ctx index observations := by
   obtain ⟨v', run⟩ := code.validate_multi_value_body_with.wasm_complete visitor accepts
     data env ctx index environment size body v
   obtain ⟨observations, log, trace⟩ := code.validate_multi_value_body_with.trace_sound
@@ -85,7 +85,7 @@ theorem code.validate_multi_value_body_with.instrument_trace {V : Type} (visitor
     ∃ added,
       code.validate_multi_value_body_with (instrument visitor) data env ctx index (v, log) =
         .ok (result, (v', log ++ added)) ∧
-      MultiValue.CallbackTrace.BodyTrace data 0#usize added result := by
+      Wasm2.CallbackTrace.BodyTrace data 0#usize added result := by
   obtain ⟨added, instrumented⟩ := code.validate_multi_value_body_with.instrument_forward
     visitor data env ctx index v log result v' run
   obtain ⟨observations, equal_log, trace⟩ := code.validate_multi_value_body_with.trace
@@ -99,7 +99,7 @@ input, including malformed instructions and reserved opcodes. -/
 theorem code.validate_multi_value_body_with.recorder_total (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) : ∃ result observations,
     code.validate_multi_value_body_with recorder data env ctx index [] = .ok (result, observations) ∧
-      MultiValue.CallbackTrace.BodyTrace data 0#usize observations result := by
+      Wasm2.CallbackTrace.BodyTrace data 0#usize observations result := by
   obtain ⟨⟨result, observations⟩, run⟩ := code.validate_multi_value_body_with.wasm_total
     recorder VisitorTrace.recorder_total data env ctx index []
   obtain ⟨added, equal_log, trace⟩ := code.validate_multi_value_body_with.trace

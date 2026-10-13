@@ -3,7 +3,7 @@ import Itasca.Wasm2.Simd.DispatchTotal
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- Every Core 2.0 opcode is total on a bounded active operand stack when the
 visitor hooks return; the cursor never moves backwards. -/
@@ -77,4 +77,4 @@ theorem wasm2_total {V : Type} (visitor : code.OpVisitor V)
     exact ⟨neq h28, neq h37, neq h38, neq h208, neq h209, neq h210, neq h252, neq h253⟩)]
   exact extended_total visitor st data env ctx opcode v hs hsize hscalar hv
 
-end Itasca.MultiValue
+end Itasca.Wasm2

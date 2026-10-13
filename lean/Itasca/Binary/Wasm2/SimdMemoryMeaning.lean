@@ -1,6 +1,6 @@
 import Itasca.Binary.Wasm2.SimdLaneMeaning
 
-namespace Itasca.MultiValue.Simd
+namespace Itasca.Wasm2.Simd
 
 /-- Core 2.0 vector memory instructions and their independently specified effects. -/
 inductive MemoryOperation where
@@ -235,4 +235,4 @@ def memoryMeaning (opcode : Nat) : Option MemoryOperation :=
   | 93 => some .load64Zero
   | _ => none
 
-end Itasca.MultiValue.Simd
+end Itasca.Wasm2.Simd

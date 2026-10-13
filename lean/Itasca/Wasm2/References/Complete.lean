@@ -6,7 +6,7 @@ import Itasca.Wasm2.Bulk.Dispatch
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Completeness
+namespace Itasca.Wasm2.Completeness
 
 /-- Complete metadata decoding followed by the shared fixed operand checker.
 The contract retains exactly the final cursor and original control frames. -/
@@ -54,7 +54,7 @@ theorem Frame.reader_step {st} (f : Frame st) (data : Slice U8) (env : module.En
 
 theorem Frame.ref_null {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (rt : types.ElemType) (next : Usize) (front : List valtype)
-    (hb : Wasm.BytesAt data st.core.pos [ReferencesBinary.referenceByte rt] next)
+    (hb : Wasm1.BytesAt data st.core.pos [ReferencesBinary.referenceByte rt] next)
     (hsize : st.core.vals.val.length < Usize.max)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands front) :
     ∃ s, step st data env ctx index 208#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
@@ -160,7 +160,7 @@ theorem Frame.table_fill {st} (f : Frame st) (data : Slice U8) (env : module.Env
 theorem Frame.typed_select {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (ty : types.ValueType) (count : List U8)
     (next : Usize) (front : List valtype)
-    (he : Leb128.Encoding count 1) (hb : Wasm.BytesAt data st.core.pos (count ++ [valueByte ty]) next)
+    (he : Leb128.Encoding count 1) (hb : Wasm1.BytesAt data st.core.pos (count ++ [valueByte ty]) next)
     (hsize : st.core.vals.val.length < Usize.max)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands
       (front ++ [Translate.valueType ty, Translate.valueType ty, .I32])) :
@@ -191,7 +191,7 @@ theorem Frame.ref_func {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     ∃ s, step st data env ctx index 210#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
       f.Output (front ++ [.FUNCREF]) s ∧ s.core.vals.val.length ≤ st.core.vals.val.length + 1 := by
   obtain ⟨bs, hbs, hbl, hbb, hbe⟩ := hd
-  have hread := (Wasm.BytesAt.mk hbs hbl hbb).take_index st.core idx hbe
+  have hread := (Wasm1.BytesAt.mk hbs hbl hbb).take_index st.core idx hbe
   obtain ⟨i, himem, hie⟩ := List.mem_map.mp (DeclaredReferences.Instruction.ref_func_iff.mp hdecl)
   have heq : i = idx := UScalar.eq_of_val_eq (uN.mk_uN.inj hie)
   subst i
@@ -209,7 +209,7 @@ theorem Frame.ref_func {st} (f : Frame st) (data : Slice U8) (env : module.Env)
 
 theorem Frame.ref_is_null {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (rt : reftype) (next : Usize) (front : List valtype)
-    (hb : Wasm.BytesAt data st.core.pos [] next)
+    (hb : Wasm1.BytesAt data st.core.pos [] next)
     (hsize : st.core.vals.val.length < Usize.max)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands
       (front ++ [valtype_reftype rt])) :
@@ -236,4 +236,4 @@ theorem Frame.ref_is_null {st} (f : Frame st) (data : Slice U8) (env : module.En
   · simp only [hsv, hv, f.core.vals, List.length_append, List.length_singleton]
     omega
 
-end Itasca.MultiValue.Completeness
+end Itasca.Wasm2.Completeness

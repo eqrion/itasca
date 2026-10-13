@@ -8,18 +8,18 @@ namespace Itasca
 /-- The extracted end handler either rejects or advances the complete typed syntax zipper. -/
 @[step]
 theorem code.read_end.wasm1_frames (root : context) (hroot : wf_context root)
-    (st : code.OpIterState) (parents : List WasmFrames.Saved) (current : WasmFrames.Saved)
-    (bodyBt : code.BlockType) (hopen : WasmFrames.Open root st parents current)
-    (hbody : WasmFrames.bodyType parents current = some bodyBt)
+    (st : code.OpIterState) (parents : List Wasm1.Frames.Saved) (current : Wasm1.Frames.Saved)
+    (bodyBt : code.BlockType) (hopen : Wasm1.Frames.Open root st parents current)
+    (hbody : Wasm1.Frames.bodyType parents current = some bodyBt)
     (hsize : st.vals.val.length + 1 ≤ Usize.max) :
     code.read_end st ⦃ r => r.2.pos = st.pos ∧
       ∀ result, r.1 = .Ok result →
         r.2.vals.val.length ≤ st.vals.val.length + 1 ∧
         r.2.ctrls.val.length ≤ st.ctrls.val.length ∧
-        WasmFrames.Status root bodyBt r.2 (WasmFrames.trace parents current ++ [.end_]) ⦄ := by
+        Wasm1.Frames.Status root bodyBt r.2 (Wasm1.Frames.trace parents current ++ [.end_]) ⦄ := by
   obtain ⟨C, outer, spine, header, base, typed, ctrls, vals⟩ := id hopen
   obtain ⟨⟨result, st'⟩, hr, hp, hsem⟩ := WP.spec_imp_exists
-    (code.read_end.realizes st (parents.map WasmFrames.Saved.ctrl) current.ctrl outer current.vals
+    (code.read_end.realizes st (parents.map Wasm1.Frames.Saved.ctrl) current.ctrl outer current.vals
       ctrls vals base hsize)
   dsimp only [EndResult] at hp hsem
   rw [hr, WP.spec_ok]
@@ -42,7 +42,7 @@ theorem code.read_end.wasm1_frames (root : context) (hroot : wf_context root)
       refine ⟨by simpa [hparents] using hc, current.ops, htokens, ?_, ?_⟩
       simpa [hbt] using htyped
       simpa [hbt] using hprofile
-    · have hex : ∃ op, WasmFrames.Closed current.form current.ctrl.block_type current.ops op := by
+    · have hex : ∃ op, Wasm1.Frames.Closed current.form current.ctrl.block_type current.ops op := by
         cases hf : current.form with
         | body => exact False.elim (hform hf)
         | block => exact ⟨_, .block _ _⟩
@@ -57,7 +57,7 @@ theorem code.read_end.wasm1_frames (root : context) (hroot : wf_context root)
         (by simpa [vals, base] using hv)
       left
       refine ⟨gps, _, hnext, htrace, ?_⟩
-      rw [WasmFrames.bodyType_close, ← hparents]
+      rw [Wasm1.Frames.bodyType_close, ← hparents]
       exact hbody
 
 

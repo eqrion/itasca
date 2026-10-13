@@ -5,7 +5,7 @@ import Itasca.Visitor.Total
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Wasm
+namespace Itasca.Wasm1
 
 
 theorem Pending.step_end {V : Type} {data env ctx bodyBt st}
@@ -41,7 +41,7 @@ theorem Pending.step_else {V : Type} {data env ctx bodyBt st}
   obtain ⟨C, outer, spine, header, base, typed, ctrls, vals⟩ := id p.opened
   refine WP.spec_mono (code.step_else.of_read visitor st data env ctx v
     (fun _ => True) (fun _ s => p.After s) ?_ hvisitor.toCore) ?_
-  · apply WP.spec_mono (code.read_else.realizes st (p.parents.map WasmFrames.Saved.ctrl)
+  · apply WP.spec_mono (code.read_else.realizes st (p.parents.map Wasm1.Frames.Saved.ctrl)
       p.current.ctrl outer p.current.vals ctrls vals base)
     rintro ⟨result, s⟩ ⟨hp, hs⟩
     dsimp only [ElseResult] at hp hs
@@ -52,13 +52,13 @@ theorem Pending.step_else {V : Type} {data env ctx bodyBt st}
     obtain ⟨hk, rfl, hc, hv, hresults⟩ := hs
     have hf : p.current.form = .then_ := by
       rw [header.kind] at hk
-      cases heq : p.current.form <;> simp_all [WasmFrames.Form.kind]
+      cases heq : p.current.form <;> simp_all [Wasm1.Frames.Form.kind]
     obtain ⟨hopen, htrace⟩ := p.opened.else_ (EnvTranslation.context_wf env ctx) hf hresults hc
       (by simpa [vals, base] using hv)
     have encoded : At data p.start .else_ s.pos :=
       .no_immediate p.inbounds hbyte (by simpa [hp] using p.pos) .else_
     refine p.running_after s p.parents p.current.nextElse .else_ encoded hopen ?_ htrace ?_ ?_
-    · simpa [WasmFrames.bodyType_else] using p.bodyType
+    · simpa [Wasm1.Frames.bodyType_else] using p.bodyType
     · simp only [hv, vals, List.length_append]
       omega
     · simp [hc, ctrls]
@@ -82,12 +82,12 @@ theorem Pending.step_block {V : Type} {data env ctx bodyBt st}
     obtain ⟨hd, hv, hc⟩ := hs bt hok
     obtain ⟨hopen, htrace⟩ := p.opened.enter_child (st' := s)
       (EnvTranslation.context_wf env ctx) .block bt (.inl rfl) p.current.vals
-      (by intro ts ht; simpa [WasmFrames.Form.inputs] using ht)
-      (by simpa [WasmFrames.Saved.fresh, WasmFrames.Form.kind, Control.frame, hv] using hc)
+      (by intro ts ht; simpa [Wasm1.Frames.Form.inputs] using ht)
+      (by simpa [Wasm1.Frames.Saved.fresh, Wasm1.Frames.Form.kind, Control.frame, hv] using hc)
       (by simpa [vals, base] using congrArg alloc.vec.Vec.val hv)
     apply p.running_after s _ _ (.block bt) (.of_block_type bt p.inbounds hbyte p.pos (.block bt) hd) hopen
-    · simpa [WasmFrames.bodyType_enter] using p.bodyType
-    · simpa [WasmFrames.Form.opening] using htrace
+    · simpa [Wasm1.Frames.bodyType_enter] using p.bodyType
+    · simpa [Wasm1.Frames.Form.opening] using htrace
     · simp [hv]
     · simp [hc]
   · intro r hr hok
@@ -110,12 +110,12 @@ theorem Pending.step_loop {V : Type} {data env ctx bodyBt st}
     obtain ⟨hd, hv, hc⟩ := hs bt hok
     obtain ⟨hopen, htrace⟩ := p.opened.enter_child (st' := s)
       (EnvTranslation.context_wf env ctx) .loop bt (.inr (.inl rfl)) p.current.vals
-      (by intro ts ht; simpa [WasmFrames.Form.inputs] using ht)
-      (by simpa [WasmFrames.Saved.fresh, WasmFrames.Form.kind, Control.frame, hv] using hc)
+      (by intro ts ht; simpa [Wasm1.Frames.Form.inputs] using ht)
+      (by simpa [Wasm1.Frames.Saved.fresh, Wasm1.Frames.Form.kind, Control.frame, hv] using hc)
       (by simpa [vals, base] using congrArg alloc.vec.Vec.val hv)
     apply p.running_after s _ _ (.loop bt) (.of_block_type bt p.inbounds hbyte p.pos (.loop bt) hd) hopen
-    · simpa [WasmFrames.bodyType_enter] using p.bodyType
-    · simpa [WasmFrames.Form.opening] using htrace
+    · simpa [Wasm1.Frames.bodyType_enter] using p.bodyType
+    · simpa [Wasm1.Frames.Form.opening] using htrace
     · simp [hv]
     · simp [hc]
   · intro r hr hok
@@ -139,16 +139,16 @@ theorem Pending.step_if {V : Type} {data env ctx bodyBt st}
     obtain ⟨hd, remaining, hv, hlen, hc, hback⟩ := hs bt hok
     obtain ⟨hopen, htrace⟩ := p.opened.enter_child (st' := s)
       (EnvTranslation.context_wf env ctx) .then_ bt (.inr (.inr rfl)) remaining
-      (by simpa [WasmFrames.Form.inputs, Control.polymorphic, ctrls] using hback)
-      (by simpa [WasmFrames.Saved.fresh, WasmFrames.Form.kind] using hc)
+      (by simpa [Wasm1.Frames.Form.inputs, Control.polymorphic, ctrls] using hback)
+      (by simpa [Wasm1.Frames.Saved.fresh, Wasm1.Frames.Form.kind] using hc)
       (by simpa [vals, base] using hv)
     apply p.running_after s _ _ (.if_ bt) (.of_block_type bt p.inbounds hbyte p.pos (.if_ bt) hd) hopen
-    · simpa [WasmFrames.bodyType_enter] using p.bodyType
-    · simpa [WasmFrames.Form.opening] using htrace
+    · simpa [Wasm1.Frames.bodyType_enter] using p.bodyType
+    · simpa [Wasm1.Frames.Form.opening] using htrace
     · simp only [hv, vals, List.length_append]
       omega
     · simp [hc]
   · intro r hr hok
     exact (hr.2 hok).choose_spec
 
-end Itasca.Wasm
+end Itasca.Wasm1

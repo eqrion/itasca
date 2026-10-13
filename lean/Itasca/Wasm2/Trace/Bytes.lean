@@ -8,7 +8,7 @@ silent; successful reads retain the precise decoded arguments even when the
 callback itself rejects. No accepting-visitor premise is used. -/
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.CallbackBytes
+namespace Itasca.Wasm2.CallbackBytes
 
 open VisitorTrace CallbackTrace
 
@@ -94,4 +94,4 @@ def ReadBytes {A : Type} (data : Slice U8) (start : Usize)
     actionToken (action a) [] = some token ∧ (action a).opcode ≠ some 0x0E#u8 ∧
     At data start token s.pos
 
-end Itasca.MultiValue.CallbackBytes
+end Itasca.Wasm2.CallbackBytes

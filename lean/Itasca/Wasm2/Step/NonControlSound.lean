@@ -4,7 +4,7 @@ import Itasca.Wasm2.Step.Context
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- Scalar preservation includes the extracted capacity guard. -/
 theorem Pending.scalar_step {data env locals index st} (p : Pending data env locals index st)
@@ -23,4 +23,4 @@ theorem Pending.scalar_step {data env locals index st} (p : Pending data env loc
     rw [WP.spec_equiv_exists]
     exact ⟨(r, {st with core := s}), by simp [hr], hout⟩
 
-end Itasca.MultiValue
+end Itasca.Wasm2

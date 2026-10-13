@@ -5,7 +5,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.SignedLeb33
 
 /-- The signed 33-bit specialization of the shared decoder proof. -/
-def format : SignedLebGeneric.Format := ⟨4#u32, (-4294967296)#i128, 4294967295#i128, by decide⟩
+def format : SignedLeb.Format := ⟨4#u32, (-4294967296)#i128, 4294967295#i128, by decide⟩
 
 def finalValue (acc mult : Int) (last : U8) : Int :=
   acc + (last.val : Int) * mult - if 64 ≤ last.val then 128 * mult else 0
@@ -22,7 +22,7 @@ def Decoded (data : Slice U8) (start : Usize) (value : Int) (next : Usize) : Pro
   ∃ bytes, data.val.drop start.val = bytes ++ data.val.drop next.val ∧
     next.val = start.val + bytes.length ∧ next.val ≤ data.length ∧ Encoding bytes value
 
-abbrev Rejected := SignedLebGeneric.Rejected format
+abbrev Rejected := SignedLeb.Rejected format
 
 def Post (data : Slice U8) (start : Usize) {ty : IScalarTy} :
     core.result.Result (IScalar ty × Usize) error.OpError → Prop
@@ -31,36 +31,36 @@ def Post (data : Slice U8) (start : Usize) {ty : IScalarTy} :
 
 theorem spec128 (data : Slice U8) (start : Usize) :
     reader.read_sn_leb data start 4#u32 (-4294967296)#i128 4294967295#i128 ⦃ Post data start ⦄ :=
-  SignedLebGeneric.spec128 format data start
+  SignedLeb.spec128 format data start
 
 theorem Decoded.span (data : Slice U8) (start : Usize) (value : Int) (next : Usize)
     (h : Decoded data start value next) :
     start.val < next.val ∧ next.val ≤ start.val + 5 ∧ next.val ≤ data.length :=
-  SignedLebGeneric.Decoded.span format data start value next h
+  SignedLeb.Decoded.span format data start value next h
 
 theorem Decoded.range (data : Slice U8) (start : Usize) (value : Int) (next : Usize)
     (h : Decoded data start value next) : -4294967296 ≤ value ∧ value ≤ 4294967295 :=
-  SignedLebGeneric.Decoded.range format data start value next h
+  SignedLeb.Decoded.range format data start value next h
 
 theorem Rejected.kind {data : Slice U8} {start : Usize} {e : error.OpError}
     (h : Rejected data start e) : e = .UnexpectedEof ∨ e = .LebTooLong :=
-  SignedLebGeneric.Rejected.kind format h
+  SignedLeb.Rejected.kind format h
 
 theorem Encoding.prefix_unique {xs ys : List U8} {x y : Int} {leftTail rightTail : List U8}
     (hx : Encoding xs x) (hy : Encoding ys y) (he : xs ++ leftTail = ys ++ rightTail) :
     xs = ys ∧ x = y :=
-  SignedLebGeneric.Encoding.prefix_unique format hx hy he
+  SignedLeb.Encoding.prefix_unique format hx hy he
 
 theorem Decoded.deterministic (data : Slice U8) (start : Usize)
     (v₁ v₂ : Int) (q₁ q₂ : Usize)
     (h₁ : Decoded data start v₁ q₁) (h₂ : Decoded data start v₂ q₂) :
     v₁ = v₂ ∧ q₁ = q₂ :=
-  SignedLebGeneric.Decoded.deterministic format data start v₁ v₂ q₁ q₂ h₁ h₂
+  SignedLeb.Decoded.deterministic format data start v₁ v₂ q₁ q₂ h₁ h₂
 
 private theorem decoded_not_rejected (data : Slice U8) (start : Usize)
     (value : Int) (next : Usize) (e : error.OpError)
     (hd : Decoded data start value next) (hr : Rejected data start e) : False :=
-  SignedLebGeneric.decoded_not_rejected format data start value next e hd hr
+  SignedLeb.decoded_not_rejected format data start value next e hd hr
 
 end Itasca.SignedLeb33
 

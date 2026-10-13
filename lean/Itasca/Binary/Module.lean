@@ -48,7 +48,7 @@ structure Module where
 /-- Lift an independent encoding to an exact interval of a caller's buffer. -/
 def At {α : Type} (R : α → List U8 → Prop) (data : Slice U8)
     (start : Usize) (value : α) (next : Usize) : Prop :=
-  ∃ bytes, R value bytes ∧ Wasm.BytesAt data start bytes next
+  ∃ bytes, R value bytes ∧ Wasm1.BytesAt data start bytes next
 
 inductive Rep {α : Type} (R : α → List U8 → Prop) : List α → List U8 → Prop where
   | nil : Rep R [] []
@@ -143,7 +143,7 @@ def GlobalTypeEncoding (ty : types.GlobalType) (bytes : List U8) : Prop :=
   bytes = [valueByte ty.valtype, mutByte ty.mutability]
 
 inductive ConstEncoding : types.ConstExpr → List U8 → Prop where
-  | i32 (value : I32) {bytes} : SignedLeb.Encoding bytes value.val →
+  | i32 (value : I32) {bytes} : SignedLeb32.Encoding bytes value.val →
       ConstEncoding (.I32 value) (0x41#u8 :: (bytes ++ [0x0B#u8]))
   | i64 (value : I64) {bytes} : SignedLeb64.Encoding bytes value.val →
       ConstEncoding (.I64 value) (0x42#u8 :: (bytes ++ [0x0B#u8]))
@@ -319,7 +319,7 @@ def LocalEncoding (entry : U32 × types.ValueType) (bytes : List U8) : Prop :=
 /-- Body syntax includes the final end and reconstructs structured instructions.
 It imposes no typing or validator acceptance premise. -/
 def BodyEncoding (body : List instr) (bytes : List U8) : Prop :=
-  ∃ tokens, Rep Wasm.TokenEncoding tokens bytes ∧ Wasm.BodyTokens tokens body
+  ∃ tokens, Rep Wasm1.TokenEncoding tokens bytes ∧ Wasm1.BodyTokens tokens body
 
 def CodeEncoding (entry : Code) (bytes : List U8) : Prop :=
   ∃ size locals body, Leb128.Encoding size (locals.length + body.length) ∧

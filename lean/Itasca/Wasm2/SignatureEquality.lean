@@ -8,8 +8,8 @@ namespace Itasca
 assuming descriptor identity (distinct type indices may have equal types). -/
 theorem code.same_types_loop.spec (env : module.Env)
     (a b : signature.ResultType) (ts us : List types.ValueType)
-    (ha : MultiValue.resolve env a = some ts)
-    (hb : MultiValue.resolve env b = some us)
+    (ha : Wasm2.resolve env a = some ts)
+    (hb : Wasm2.resolve env b = some us)
     (n i : Usize) (hn : n.val = ts.length) (hu : us.length = ts.length)
     (hi : i.val ≤ n.val) (hpre : ∀ j < i.val, ts[j]? = us[j]?) :
     code.same_types_loop env a b n i ⦃ r =>
@@ -64,10 +64,10 @@ theorem code.same_types_loop.spec (env : module.Env)
 theorem code.same_types.spec (env : module.Env) (a b : signature.ResultType) :
     code.same_types env a b ⦃ r =>
       match r with
-      | .Ok equal => ∃ ts us, MultiValue.resolve env a = some ts ∧
-          MultiValue.resolve env b = some us ∧ (equal = true ↔ ts = us)
+      | .Ok equal => ∃ ts us, Wasm2.resolve env a = some ts ∧
+          Wasm2.resolve env b = some us ∧ (equal = true ↔ ts = us)
       | .Err e => e = .UnknownType ∧
-          (MultiValue.resolve env a = none ∨ MultiValue.resolve env b = none) ⦄ := by
+          (Wasm2.resolve env a = none ∨ Wasm2.resolve env b = none) ⦄ := by
   obtain ⟨ra, hra, hsa⟩ := WP.spec_imp_exists (signature.ResultType.len.spec a env)
   unfold code.same_types
   rw [hra]
@@ -99,8 +99,8 @@ theorem code.same_types.spec (env : module.Env) (a b : signature.ResultType) :
         exact ⟨ts, us, ha, hb, hs⟩
 
 theorem code.same_types.complete (env : module.Env) (a b : signature.ResultType)
-    (ts : List types.ValueType) (ha : MultiValue.resolve env a = some ts)
-    (hb : MultiValue.resolve env b = some ts) :
+    (ts : List types.ValueType) (ha : Wasm2.resolve env a = some ts)
+    (hb : Wasm2.resolve env b = some ts) :
     code.same_types env a b = .ok (.Ok true) := by
   obtain ⟨r, hr, hs⟩ := WP.spec_imp_exists (code.same_types.spec env a b)
   cases r with

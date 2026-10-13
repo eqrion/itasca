@@ -42,14 +42,14 @@ theorem module.const_global.spec (env : module.Env) (idx : U32) :
 theorem module.read_expr_end.spec (data : Slice U8) (pos : Usize) :
     module.read_expr_end data pos ⦃ r =>
       match r with
-      | .Ok next => Wasm.BytesAt data pos [0x0B#u8] next
+      | .Ok next => Wasm1.BytesAt data pos [0x0B#u8] next
       | .Err _ => True ⦄ := by
   unfold module.read_expr_end
   by_cases hb : pos.val < data.length
   · obtain ⟨_, hr, next, rfl, hp⟩ := WP.spec_imp_exists (reader.read_byte.spec data pos hb)
     by_cases he : data.val[pos.val] = 0x0B#u8
     · simpa [hr, core.result.Result.Insts.CoreOpsTry.branch, global_simps, he] using
-        Wasm.BytesAt.byte data pos next _ hb he hp
+        Wasm1.BytesAt.byte data pos next _ hb he hp
     · have hv : data.val[pos.val].val ≠ 11 := by scalar_tac
       simp [hr, core.result.Result.Insts.CoreOpsTry.branch, global_simps, hv]
   · simp [reader.read_byte.eof data pos (by omega),
@@ -70,7 +70,7 @@ def Post (data : Slice U8) (pos : Usize) (env : module.Env)
 
 private theorem finish_spec (data : Slice U8) (start mid : Usize)
     (env : module.Env) (expected actual : types.ValueType) (expr : types.ConstExpr)
-    (before : List U8) (hspan : Wasm.BytesAt data start before mid)
+    (before : List U8) (hspan : Wasm1.BytesAt data start before mid)
     (hencoding : ModuleBinary.ConstEncoding expr (before ++ [0x0B#u8]))
     (hvalid : Valid env expr actual) :
     (do
@@ -139,8 +139,8 @@ theorem module.decode_const_expr.spec (data : Slice U8) (pos : Usize)
         obtain ⟨value, mid⟩ := pair
         obtain ⟨bytes, hs, hl, hbound, he⟩ := hdecode
         have hop' : data.val[pos.val] = 0x41#u8 := by with_unfolding_all exact hop
-        have himm : Wasm.BytesAt data next bytes mid := ⟨hs, hl, hbound⟩
-        have hs := (Wasm.BytesAt.byte data pos next _ hb hop' hp).append himm
+        have himm : Wasm1.BytesAt data next bytes mid := ⟨hs, hl, hbound⟩
+        have hs := (Wasm1.BytesAt.byte data pos next _ hb hop' hp).append himm
         have ht := ModuleConstants.finish_spec data pos mid env expected .I32
           (.I32 value) (0x41#u8 :: bytes) hs
           (by simpa using ModuleBinary.ConstEncoding.i32 value he)
@@ -162,8 +162,8 @@ theorem module.decode_const_expr.spec (data : Slice U8) (pos : Usize)
         obtain ⟨value, mid⟩ := pair
         obtain ⟨bytes, hs, hl, hbound, he⟩ := hdecode
         have hop' : data.val[pos.val] = 0x42#u8 := by with_unfolding_all exact hop
-        have himm : Wasm.BytesAt data next bytes mid := ⟨hs, hl, hbound⟩
-        have hs := (Wasm.BytesAt.byte data pos next _ hb hop' hp).append himm
+        have himm : Wasm1.BytesAt data next bytes mid := ⟨hs, hl, hbound⟩
+        have hs := (Wasm1.BytesAt.byte data pos next _ hb hop' hp).append himm
         have ht := ModuleConstants.finish_spec data pos mid env expected .I64
           (.I64 value) (0x42#u8 :: bytes) hs
           (by simpa using ModuleBinary.ConstEncoding.i64 value he)
@@ -185,8 +185,8 @@ theorem module.decode_const_expr.spec (data : Slice U8) (pos : Usize)
         obtain ⟨value, mid⟩ := pair
         obtain ⟨bytes, hs, hl, hbound, he⟩ := hdecode
         have hop' : data.val[pos.val] = 0x43#u8 := by with_unfolding_all exact hop
-        have himm : Wasm.BytesAt data next bytes mid := ⟨hs, by rw [he.1]; exact hl, hbound⟩
-        have hs := (Wasm.BytesAt.byte data pos next _ hb hop' hp).append himm
+        have himm : Wasm1.BytesAt data next bytes mid := ⟨hs, by rw [he.1]; exact hl, hbound⟩
+        have hs := (Wasm1.BytesAt.byte data pos next _ hb hop' hp).append himm
         have ht := ModuleConstants.finish_spec data pos mid env expected .F32
           (.F32 value) (0x43#u8 :: bytes) hs
           (by simpa using ModuleBinary.ConstEncoding.f32 value he)
@@ -208,8 +208,8 @@ theorem module.decode_const_expr.spec (data : Slice U8) (pos : Usize)
         obtain ⟨value, mid⟩ := pair
         obtain ⟨bytes, hs, hl, hbound, he⟩ := hdecode
         have hop' : data.val[pos.val] = 0x44#u8 := by with_unfolding_all exact hop
-        have himm : Wasm.BytesAt data next bytes mid := ⟨hs, by rw [he.1]; exact hl, hbound⟩
-        have hs := (Wasm.BytesAt.byte data pos next _ hb hop' hp).append himm
+        have himm : Wasm1.BytesAt data next bytes mid := ⟨hs, by rw [he.1]; exact hl, hbound⟩
+        have hs := (Wasm1.BytesAt.byte data pos next _ hb hop' hp).append himm
         have ht := ModuleConstants.finish_spec data pos mid env expected .F64
           (.F64 value) (0x44#u8 :: bytes) hs
           (by simpa using ModuleBinary.ConstEncoding.f64 value he)
@@ -239,8 +239,8 @@ theorem module.decode_const_expr.spec (data : Slice U8) (pos : Usize)
           obtain ⟨hi, hgt, himport, hconst⟩ := hglobal
           obtain ⟨bytes, hs, hl, hbound, he⟩ := hdecode
           have hop' : data.val[pos.val] = 0x23#u8 := by with_unfolding_all exact hop
-          have himm : Wasm.BytesAt data next bytes mid := ⟨hs, hl, hbound⟩
-          have hs := (Wasm.BytesAt.byte data pos next _ hb hop' hp).append himm
+          have himm : Wasm1.BytesAt data next bytes mid := ⟨hs, hl, hbound⟩
+          have hs := (Wasm1.BytesAt.byte data pos next _ hb hop' hp).append himm
           have ht := ModuleConstants.finish_spec data pos mid env expected gt.valtype
             (.GlobalGet idx) (0x23#u8 :: bytes) hs
             (by simpa using ModuleBinary.ConstEncoding.globalGet idx he)
@@ -265,7 +265,7 @@ theorem module.decode_const_expr.spec (data : Slice U8) (pos : Usize)
           obtain ⟨ty, mid⟩ := pair
           obtain ⟨bytes, ⟨rfl, _⟩, himm⟩ := hdecode
           have hop' : data.val[pos.val] = 0xD0#u8 := by with_unfolding_all exact hop
-          have hs := (Wasm.BytesAt.byte data pos next _ hb hop' hp).append himm
+          have hs := (Wasm1.BytesAt.byte data pos next _ hb hop' hp).append himm
           have hv : types.ElemType.value_type ty = .ok (ModuleConstants.referenceValueType ty) := by
             cases ty <;> rfl
           have ht := ModuleConstants.finish_spec data pos mid env expected
@@ -297,8 +297,8 @@ theorem module.decode_const_expr.spec (data : Slice U8) (pos : Usize)
           · have hi : idx.val < env.func_types.val.length := by scalar_tac
             obtain ⟨bytes, hsuffix, hlen, hbound, he⟩ := hdecode
             have hop' : data.val[pos.val] = 0xD2#u8 := by with_unfolding_all exact hop
-            have himm : Wasm.BytesAt data next bytes mid := ⟨hsuffix, hlen, hbound⟩
-            have hs := (Wasm.BytesAt.byte data pos next _ hb hop' hp).append himm
+            have himm : Wasm1.BytesAt data next bytes mid := ⟨hsuffix, hlen, hbound⟩
+            have hs := (Wasm1.BytesAt.byte data pos next _ hb hop' hp).append himm
             have ht := ModuleConstants.finish_spec data pos mid env expected .FuncRef
               (.RefFunc idx) (0xD2#u8 :: bytes) hs
               (by simpa using ModuleBinary.ConstEncoding.refFunc idx he)
@@ -342,11 +342,11 @@ theorem module.decode_const_expr.spec (data : Slice U8) (pos : Usize)
                 obtain ⟨subbytes, hss, hsl, hsb, hse⟩ := hsubdecode
                 obtain ⟨lowbytes, hls, hll, hlb, hle⟩ := hlowdecode
                 obtain ⟨highbytes, hhs, hhl, hhb, hhe⟩ := hhighdecode
-                have hs : Wasm.BytesAt data next subbytes first := ⟨hss, hsl, hsb⟩
-                have hl : Wasm.BytesAt data first lowbytes second := ⟨hls, by rw [hle.1]; exact hll, hlb⟩
-                have hh : Wasm.BytesAt data second highbytes mid := ⟨hhs, by rw [hhe.1]; exact hhl, hhb⟩
+                have hs : Wasm1.BytesAt data next subbytes first := ⟨hss, hsl, hsb⟩
+                have hl : Wasm1.BytesAt data first lowbytes second := ⟨hls, by rw [hle.1]; exact hll, hlb⟩
+                have hh : Wasm1.BytesAt data second highbytes mid := ⟨hhs, by rw [hhe.1]; exact hhl, hhb⟩
                 have hop' : data.val[pos.val] = 0xFD#u8 := by with_unfolding_all exact hop
-                have hs := (((Wasm.BytesAt.byte data pos next _ hb hop' hp).append hs).append hl).append hh
+                have hs := (((Wasm1.BytesAt.byte data pos next _ hb hop' hp).append hs).append hl).append hh
                 have ht := ModuleConstants.finish_spec data pos mid env expected .V128
                   (.V128 low high) (0xFD#u8 :: (subbytes ++ lowbytes ++ highbytes))
                   (by simpa using hs)

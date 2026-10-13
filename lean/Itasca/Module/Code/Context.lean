@@ -137,11 +137,11 @@ theorem body_context {env : module.Env} {ctx : code.Context} {bt : code.BlockTyp
     {params declared results : List types.ValueType}
     (hl : ctx.locals.val = params ++ declared) (hr : ctx.results.val = results)
     (hbt : results = Control.results bt) :
-    WasmFrames.enter (EnvTranslation.context env ctx) .body bt =
+    Wasm1.Frames.enter (EnvTranslation.context env ctx) .body bt =
       bodyContext env params declared results := by
   cases env
   cases ctx
-  simp_all [WasmFrames.enter, WasmFrames.Form.label, Control.labelContext,
+  simp_all [Wasm1.Frames.enter, Wasm1.Frames.Form.label, Control.labelContext,
     EnvTranslation.context, bodyContext, Control.resultTypes]
   rfl
 

@@ -3,7 +3,7 @@ import Itasca.Wasm2.Step.Dispatch
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- All non-control opcodes use the capacity-guarded shared scalar arm. -/
 theorem step.scalar_eq (st : code.BodyState) (data : Slice U8) (env : module.Env)
@@ -36,4 +36,4 @@ theorem step_context (st : code.BodyState) (data : Slice U8) (env : module.Env)
     rcases hm with h | h | h | h | h | h | h | h | h | h | h <;>
       subst n <;> simp [step]
 
-end Itasca.MultiValue
+end Itasca.Wasm2

@@ -8,7 +8,7 @@ import Itasca.Binary.Wasm1.Encoding
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- Literal block tags or a nonnegative signed s33 type index. This grammar
 does not resolve indices, impose implementation limits, or run a reader. -/
@@ -20,7 +20,7 @@ def BlockEncoding (bt : signature.BlockType) (bytes : List U8) : Prop :=
 
 theorem blockDecoded_iff {data pos bt next} :
     BlockDecoded data pos bt next ↔
-      ∃ bytes, BlockEncoding bt bytes ∧ Wasm.BytesAt data pos bytes next := by
+      ∃ bytes, BlockEncoding bt bytes ∧ Wasm1.BytesAt data pos bytes next := by
   cases bt with
   | Empty | Value _ =>
     constructor
@@ -40,7 +40,7 @@ theorem blockDecoded_iff {data pos bt next} :
 /-- Shared leaf bytes plus multi-value structured control. Reusing only the
 `plain` case excludes the old grammar's single-byte block restriction. -/
 inductive Immediate : U8 → Token → List U8 → Prop where
-  | plain {opcode op bytes} : Wasm.Immediate opcode (.plain op) bytes →
+  | plain {opcode op bytes} : Wasm1.Immediate opcode (.plain op) bytes →
       Immediate opcode (.plain op) bytes
   | signExtension (opcode : U8) (operation : Numeric.Operation) :
       NumericExtensions.signMeaning opcode = some operation →
@@ -64,7 +64,7 @@ def TokenEncoding (token : Token) (bytes : List U8) : Prop :=
   ∃ opcode immediate, bytes = opcode :: immediate ∧ Immediate opcode token immediate
 
 def At (data : Slice U8) (start : Usize) (token : Token) (next : Usize) : Prop :=
-  ∃ bytes, TokenEncoding token bytes ∧ Wasm.BytesAt data start bytes next
+  ∃ bytes, TokenEncoding token bytes ∧ Wasm1.BytesAt data start bytes next
 
 /-- Only the consumed prefix is constrained; unread bytes may be malformed. -/
 inductive Consumed (data : Slice U8) : Usize → List Token → Usize → Prop where
@@ -89,9 +89,9 @@ theorem At.of_immediate {data start pos next opcode token immediate}
     (hstart : start.val < data.length) (hbyte : data.val[start.val] = opcode)
     (hpos : pos.val = start.val + 1)
     (himmediate : Immediate opcode token immediate)
-    (hspan : Wasm.BytesAt data pos immediate next) : At data start token next := by
+    (hspan : Wasm1.BytesAt data pos immediate next) : At data start token next := by
   exact ⟨opcode :: immediate, ⟨opcode, immediate, rfl, himmediate⟩,
-    by simpa using (Wasm.BytesAt.byte data start pos opcode hstart hbyte hpos).append hspan⟩
+    by simpa using (Wasm1.BytesAt.byte data start pos opcode hstart hbyte hpos).append hspan⟩
 
 theorem At.of_block_type {data start pos next opcode token} (bt : signature.BlockType)
     (hstart : start.val < data.length) (hbyte : data.val[start.val] = opcode)
@@ -101,7 +101,7 @@ theorem At.of_block_type {data start pos next opcode token} (bt : signature.Bloc
   obtain ⟨bytes, he, hs⟩ := blockDecoded_iff.mp hdecoded
   exact .of_immediate hstart hbyte hpos (himm bytes he) hs
 
-theorem At.plain {data start op next} (h : Wasm.At data start (.plain op) next) :
+theorem At.plain {data start op next} (h : Wasm1.At data start (.plain op) next) :
     At data start (.plain op) next := by
   obtain ⟨bs, ⟨opcode, imm, rfl, hi⟩, hs⟩ := h
   exact ⟨_, ⟨opcode, imm, rfl, .plain hi⟩, hs⟩
@@ -124,4 +124,4 @@ theorem BodyEncoding.wellFormed {data ops} (h : BodyEncoding data ops) :
   obtain ⟨_, _, _, _, _, _, he⟩ := h
   exact he.wellFormed
 
-end Itasca.MultiValue
+end Itasca.Wasm2

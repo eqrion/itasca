@@ -35,7 +35,7 @@ theorem module.decode_import.complete (data : Slice U8) (pos : Usize)
   rcases entry with ⟨moduleName, rawName, desc⟩
   obtain ⟨bs, ⟨modBytes, nameBytes, descBytes, hm, hn, hd, rfl⟩, hs⟩ := hb
   obtain ⟨p1, hmbytes, hremain⟩ :=
-    (show Wasm.BytesAt data pos (modBytes ++ (nameBytes ++ descBytes)) next from
+    (show Wasm1.BytesAt data pos (modBytes ++ (nameBytes ++ descBytes)) next from
       by simpa [List.append_assoc] using hs).split
   obtain ⟨p2, hnbytes, hdbytes⟩ := hremain.split
   obtain ⟨modName, hmod, hmodval⟩ := module.decode_name.complete_raw data pos moduleName p1 ⟨_, hm, hmbytes⟩
@@ -44,7 +44,7 @@ theorem module.decode_import.complete (data : Slice U8) (pos : Usize)
   have hpos2 := hnbytes.length
   cases hd with
   | func idx he =>
-    obtain ⟨p3, htag, hidx⟩ := (show Wasm.BytesAt data p2 ([0#u8] ++ _) next from hdbytes).split
+    obtain ⟨p3, htag, hidx⟩ := (show Wasm1.BytesAt data p2 ([0#u8] ++ _) next from hdbytes).split
     have hprogress := htag.length
     have hspan := hidx.u32_decoded idx he |>.span
     have hidxvalid : idx.val < env.types.val.length := hv
@@ -63,7 +63,7 @@ theorem module.decode_import.complete (data : Slice U8) (pos : Usize)
     · simp_all [ModuleEnv.rawImport, actual]
     · exact ⟨env.types.val[idx.val], ⟨hidxvalid, rfl⟩, rfl, hfuncs, hnumval⟩
   | table tt he =>
-    obtain ⟨p3, htag, hty⟩ := (show Wasm.BytesAt data p2 ([1#u8] ++ _) next from hdbytes).split
+    obtain ⟨p3, htag, hty⟩ := (show Wasm1.BytesAt data p2 ([1#u8] ++ _) next from hdbytes).split
     have hprogress := htag.length
     have hnext := hty.bound
     have hv' : ModuleBinary.LimitsValid tt.limits limits.MAX_TABLE_ELEMS ∧ (profile = .Wasm1 → env.table_types.val.length + 1 ≤ 1) := hv
@@ -85,7 +85,7 @@ theorem module.decode_import.complete (data : Slice U8) (pos : Usize)
     · simpa [ModuleTranslation.LimitsValid, ModuleBinary.LimitsValid,
         Option.mem_def, global_simps, U32.rMax] using hv'.1
   | memory mt he =>
-    obtain ⟨p3, htag, hty⟩ := (show Wasm.BytesAt data p2 ([2#u8] ++ _) next from hdbytes).split
+    obtain ⟨p3, htag, hty⟩ := (show Wasm1.BytesAt data p2 ([2#u8] ++ _) next from hdbytes).split
     have hprogress := htag.length
     have hnext := hty.bound
     have hv' : ModuleBinary.LimitsValid mt.limits limits.MAX_MEMORY_PAGES ∧ env.mem_types.val.length + 1 ≤ 1 := hv
@@ -108,7 +108,7 @@ theorem module.decode_import.complete (data : Slice U8) (pos : Usize)
     · simpa [ModuleTranslation.LimitsValid, ModuleBinary.LimitsValid,
         Option.mem_def, global_simps] using hv'.1
   | global gt he =>
-    obtain ⟨p3, htag, hty⟩ := (show Wasm.BytesAt data p2 ([3#u8] ++ _) next from hdbytes).split
+    obtain ⟨p3, htag, hty⟩ := (show Wasm1.BytesAt data p2 ([3#u8] ++ _) next from hdbytes).split
     have hprogress := htag.length
     have hnext := hty.bound
     have hread := module.decode_global_type.complete data p3 gt next ⟨_, he, hty⟩ profile hallowed

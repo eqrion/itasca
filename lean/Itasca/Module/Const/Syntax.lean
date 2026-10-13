@@ -42,7 +42,7 @@ theorem Valid.const_allowed {env value expected} (h : Valid env value expected)
 
 /-- Initializer syntax preserves the low-to-high order of all vector bits. -/
 def instruction : types.ConstExpr → instr
-  | .I32 value => Core.i32Const value
+  | .I32 value => Spec.i32Const value
   | .I64 value => ScalarConst.i64 value
   | .F32 bits => ScalarConst.f32 bits
   | .F64 bits => ScalarConst.f64 bits
@@ -55,7 +55,7 @@ def expression (e : types.ConstExpr) : expr := [instruction e]
 
 theorem instruction_wf (e : types.ConstExpr) : wf_instr (instruction e) := by
   cases e with
-  | I32 value => exact Core.i32Const_wf value
+  | I32 value => exact Spec.i32Const_wf value
   | I64 value => exact ScalarConst.i64_wf value
   | F32 value => exact ScalarConst.f32_wf value
   | F64 value => exact ScalarConst.f64_wf value

@@ -4,7 +4,7 @@ import Itasca.Wasm2.NumericExt.Total
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- A returning hook preserves a reader's structural termination contract. -/
 theorem run_reader_total {A V : Type} (st : code.OpIterState)
@@ -75,4 +75,4 @@ theorem bulk_total {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterStat
     · exact fun s a => hv.on_table_fill v s a
   · simp [hs]
 
-end Itasca.MultiValue
+end Itasca.Wasm2

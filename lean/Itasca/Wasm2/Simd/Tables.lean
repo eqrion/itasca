@@ -3,7 +3,7 @@ import Itasca.Wasm2.Simd.Runtime
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Simd
+namespace Itasca.Wasm2.Simd
 
 set_option maxRecDepth 4096 in
 set_option maxHeartbeats 3000000 in
@@ -72,4 +72,4 @@ theorem memory_lane_none {opcode : Nat} {op : MemoryOperation}
   split at h <;> first | rfl | contradiction
 
 
-end Itasca.MultiValue.Simd
+end Itasca.Wasm2.Simd

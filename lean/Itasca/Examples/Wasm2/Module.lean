@@ -5,7 +5,7 @@ import Itasca.Binary.ModuleUnique
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValueModule
+namespace Itasca.Examples.Wasm2Module
 
 open ModuleBinary ModuleElaboration
 
@@ -28,17 +28,17 @@ private theorem omitted {α : Type} (id : U8) (R : α → List U8 → Prop) (abs
 def functionType : types.FuncType :=
   ⟨alloc.vec.Vec.new _, alloc.vec.Vec.from [.I32, .I64] (by scalar_tac)⟩
 
-def entry : Code := ⟨[], [Core.i32Const 0#i32, ScalarConst.i64 0#i64]⟩
+def entry : Code := ⟨[], [Spec.i32Const 0#i32, ScalarConst.i64 0#i64]⟩
 
 def env : module.Env :=
-  { ModuleExamples.emptyEnv with
+  { Examples.ModuleBasic.emptyEnv with
     types := alloc.vec.Vec.from [functionType] (by scalar_tac)
     func_type_indices := alloc.vec.Vec.from [0#u32] (by scalar_tac)
     func_types := alloc.vec.Vec.from [functionType] (by scalar_tac) }
 
 def raw : ModuleBinary.Module := fromEnv env [] [] [entry] []
 
-def input : Slice U8 := ModuleExamples.bytes
+def input : Slice U8 := Examples.ModuleBasic.bytes
   (magicVersion ++ [1#u8, 6#u8, 1#u8, 0x60#u8, 0#u8, 2#u8, 0x7F#u8, 0x7E#u8,
     3#u8, 2#u8, 1#u8, 0#u8,
     10#u8, 8#u8, 1#u8, 6#u8, 0#u8, 0x41#u8, 0#u8, 0x42#u8, 0#u8, 0x0B#u8])
@@ -47,11 +47,11 @@ def input : Slice U8 := ModuleExamples.bytes
 private theorem cache : ModuleEnv.Cache env [] [] := by
   constructor
   · exact .cons ⟨by simp [env], rfl⟩ .nil
-  all_goals simp [env, ModuleExamples.emptyEnv, ModuleEnv.importedFuncs,
+  all_goals simp [env, Examples.ModuleBasic.emptyEnv, ModuleEnv.importedFuncs,
     ModuleEnv.importedGlobals, ModuleEnv.importedTables, ModuleEnv.importedMems]
 
 private theorem environment_valid : ModuleEnv.Valid env .Wasm2 := by
-  constructor <;> simp [env, ModuleExamples.emptyEnv, Itasca.Profile.FuncTypeAdmissible,
+  constructor <;> simp [env, Examples.ModuleBasic.emptyEnv, Itasca.Profile.FuncTypeAdmissible,
     functionType, limits.MAX_MULTI_VALUE_PARAMS, limits.MAX_MULTI_VALUE_RESULTS,
     ModuleReferences.Coherent, ModuleReferences.collected]
 
@@ -59,13 +59,13 @@ private theorem entry_typed : CodeEntry.Typed env 0#u32 entry .Wasm2 := by
   refine ⟨by simp [env], ?_, trivial, by simp [entry], ?_⟩
   · let C := CodeEntry.bodyContext env [] [] [.I32, .I64]
     have hC : wf_context C := by
-      constructor <;> simp [env, ModuleExamples.emptyEnv, Forall]
+      constructor <;> simp [env, Examples.ModuleBasic.emptyEnv, Forall]
     have hp := ((Sequence.TypedPrefix.empty C hC).i32Const hC 0#i32).i64Const hC 0#i64
     simpa [env, functionType, entry, Code.declared, CodeEntry.instructionType, C,
       Sequence.stackTypes, Translate.valueType] using hp.typed _
         (Sequence.realizes_default false [.Val .I32, .Val .I64])
   · simp [entry, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices,
-      DeclaredReferences.instructionIndices, Core.i32Const, ScalarConst.i64]
+      DeclaredReferences.instructionIndices, Spec.i32Const, ScalarConst.i64]
 
 private theorem codes_typed : List.Forall₂
     (fun idx code => CodeEntry.Typed env idx code .Wasm2) env.func_type_indices.val [entry] :=
@@ -75,12 +75,12 @@ private theorem codes_typed : List.Forall₂
 body typing and exact environment caches, without a successful validator call. -/
 theorem typed : Module_ok (moduleOf raw) := by
   exact ModuleElaboration.typed cache environment_valid
-    (by simp [env, ModuleExamples.emptyEnv]) (by simp [env, ModuleExamples.emptyEnv])
-    codes_typed (by simp) (by simp [env, ModuleExamples.emptyEnv]) (List.Forall₂.nil : List.Forall₂ (ModuleExternals.ExportResolves env) [] [])
+    (by simp [env, Examples.ModuleBasic.emptyEnv]) (by simp [env, Examples.ModuleBasic.emptyEnv])
+    codes_typed (by simp) (by simp [env, Examples.ModuleBasic.emptyEnv]) (List.Forall₂.nil : List.Forall₂ (ModuleExternals.ExportResolves env) [] [])
 
-private theorem zero32 : SignedLeb.Encoding [0#u8] (0#i32).val := by
+private theorem zero32 : SignedLeb32.Encoding [0#u8] (0#i32).val := by
   refine ⟨[], 0#u8, rfl, by decide, by simp, by decide, ?_, by decide, by decide⟩
-  norm_num [SignedLeb.finalValue, Leb128.payload]
+  norm_num [SignedLeb32.finalValue, Leb128.payload]
 
 private theorem zero64 : SignedLeb64.Encoding [0#u8] (0#i64).val := by
   refine ⟨[], 0#u8, rfl, by decide, by simp, by decide, ?_, by decide, by decide⟩
@@ -88,37 +88,37 @@ private theorem zero64 : SignedLeb64.Encoding [0#u8] (0#i64).val := by
 
 private theorem base_body_encoding : Itasca.Profile.BodyBytes .Wasm1 entry.body
     [0x41#u8, 0#u8, 0x42#u8, 0#u8, 0x0B#u8] := by
-  refine ⟨[.plain (Core.i32Const 0#i32), .plain (ScalarConst.i64 0#i64), .end_], ?_, ?_⟩
+  refine ⟨[.plain (Spec.i32Const 0#i32), .plain (ScalarConst.i64 0#i64), .end_], ?_, ?_⟩
   · exact Rep.cons
-      (show Wasm.TokenEncoding (.plain (Core.i32Const 0#i32)) [0x41#u8,0#u8] from
+      (show Wasm1.TokenEncoding (.plain (Spec.i32Const 0#i32)) [0x41#u8,0#u8] from
         ⟨0x41#u8, [0#u8], rfl, .i32Const 0#i32 zero32⟩)
       (Rep.cons
-        (show Wasm.TokenEncoding (.plain (ScalarConst.i64 0#i64)) [0x42#u8,0#u8] from
+        (show Wasm1.TokenEncoding (.plain (ScalarConst.i64 0#i64)) [0x42#u8,0#u8] from
           ⟨0x42#u8, [0#u8], rfl, .i64Const 0#i64 zero64⟩)
-        (Rep.cons (show Wasm.TokenEncoding .end_ [0x0B#u8] from
+        (Rep.cons (show Wasm1.TokenEncoding .end_ [0x0B#u8] from
           ⟨0x0B#u8, [], rfl, .end_⟩) .nil))
-  · exact ⟨_, rfl, .simple (.simple .nil (.plain _ (Core.i32Const_wf _)))
+  · exact ⟨_, rfl, .simple (.simple .nil (.plain _ (Spec.i32Const_wf _)))
       (.plain _ (ScalarConst.i64_wf _))⟩
 
 private theorem body_encoding : Itasca.Profile.BodyBytes .Wasm2 entry.body
     [0x41#u8, 0#u8, 0x42#u8, 0#u8, 0x0B#u8] := by
-  refine ⟨[.plain (Core.i32Const 0#i32), .plain (ScalarConst.i64 0#i64), .end_], ?_, ?_⟩
+  refine ⟨[.plain (Spec.i32Const 0#i32), .plain (ScalarConst.i64 0#i64), .end_], ?_, ?_⟩
   · exact Rep.cons
-      (show MultiValue.TokenEncoding (.plain (Core.i32Const 0#i32)) [0x41#u8,0#u8] from
+      (show Wasm2.TokenEncoding (.plain (Spec.i32Const 0#i32)) [0x41#u8,0#u8] from
         ⟨0x41#u8, [0#u8], rfl, .plain (.i32Const 0#i32 zero32)⟩)
       (Rep.cons
-        (show MultiValue.TokenEncoding (.plain (ScalarConst.i64 0#i64)) [0x42#u8,0#u8] from
+        (show Wasm2.TokenEncoding (.plain (ScalarConst.i64 0#i64)) [0x42#u8,0#u8] from
           ⟨0x42#u8, [0#u8], rfl, .plain (.i64Const 0#i64 zero64)⟩)
-        (Rep.cons (show MultiValue.TokenEncoding .end_ [0x0B#u8] from
+        (Rep.cons (show Wasm2.TokenEncoding .end_ [0x0B#u8] from
           ⟨0x0B#u8, [], rfl, .end_⟩) .nil))
-  · exact ⟨_, rfl, .simple (.simple .nil (.plain _ (Core.i32Const_wf _)))
+  · exact ⟨_, rfl, .simple (.simple .nil (.plain _ (Spec.i32Const_wf _)))
       (.plain _ (ScalarConst.i64_wf _))⟩
 
 /-- The binary premise records the complete module and its actual encoded
 body size; no parser execution or canonical re-encoding is assumed. -/
 theorem encoded (profile : ValidationProfile) : ModuleEncodingWithinLimits raw input.val profile := by
   constructor
-  · simp [input, ModuleExamples.bytes, alloc.vec.Vec.deref, magicVersion, limits.MAX_MODULE_BYTES]
+  · simp [input, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref, magicVersion, limits.MAX_MODULE_BYTES]
   · refine ⟨[1#u8,6#u8,1#u8,0x60#u8,0#u8,2#u8,0x7F#u8,0x7E#u8], [],
       [3#u8,2#u8,1#u8,0#u8], [], [], [], [], [], [], [],
       [10#u8,8#u8,1#u8,6#u8,0#u8,0x41#u8,0#u8,0x42#u8,0#u8,0x0B#u8], [], [],
@@ -140,9 +140,9 @@ theorem encoded (profile : ValidationProfile) : ModuleEncodingWithinLimits raw i
         by cases profile; exact base_body_encoding; exact body_encoding,
         by simp [limits.MAX_FUNCTION_BYTES], rfl⟩
     · cases profile <;> simp [ModuleTypesAllowed, ValueTypeAllowed, raw, fromEnv, env,
-        ModuleExamples.emptyEnv, functionType, entry]
-    · simp [DataCountValid, raw, fromEnv, env, ModuleExamples.emptyEnv, entry,
-        instructionsUseData, instructionUsesData, Core.i32Const, ScalarConst.i64]
+        Examples.ModuleBasic.emptyEnv, functionType, entry]
+    · simp [DataCountValid, raw, fromEnv, env, Examples.ModuleBasic.emptyEnv, entry,
+        instructionsUseData, instructionUsesData, Spec.i32Const, ScalarConst.i64]
 
 /-- A real two-result function is accepted by the public module API as a
 consequence of the shared completeness theorem. -/
@@ -174,4 +174,4 @@ theorem wasm1_rejected : ∃ err, module.validate_module input .Wasm1 = .ok (.Er
     have h := hp.arity functionType (by simp [raw, fromEnv, env])
     norm_num [Itasca.Profile.FuncType, functionType] at h
 
-end Itasca.MultiValueModule
+end Itasca.Examples.Wasm2Module

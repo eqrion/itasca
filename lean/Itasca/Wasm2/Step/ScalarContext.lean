@@ -2,7 +2,7 @@ import Itasca.Generated.Funs
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- Opcodes whose control effects are handled by the multi-value dispatcher. -/
 def controlOpcodes : List Nat := [2, 3, 4, 5, 11, 12, 13, 14, 15, 16, 17]
@@ -21,4 +21,4 @@ theorem scalar_context {V : Type} (visitor : code.OpVisitor V)
     | simp only [code.read_local_get, code.read_local_set, code.read_local_tee,
         code.take_local, code.local_type, hlocals]
 
-end Itasca.MultiValue
+end Itasca.Wasm2

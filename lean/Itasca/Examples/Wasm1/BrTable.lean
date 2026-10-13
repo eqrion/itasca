@@ -2,7 +2,7 @@ import Itasca.Wasm1.Soundness
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.BrTableExamples
+namespace Itasca.Examples.Wasm1BrTable
 
 private theorem public_of_loop (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (bt : code.BlockType) (result : core.result.Result Unit error.OpError)
@@ -178,7 +178,7 @@ theorem br_table_body_accepted (env : module.Env) :
   exact loop_done brTableBytes env emptyContext finished hfc hfp
 
 theorem br_table_body_validated (env : module.Env) :
-    Wasm.Validated brTableBytes env emptyContext .Empty :=
+    Wasm1.Validated brTableBytes env emptyContext .Empty :=
   code.validate_body.wasm_sound brTableBytes env emptyContext .Empty rfl (br_table_body_accepted env)
 
-end Itasca.BrTableExamples
+end Itasca.Examples.Wasm1BrTable

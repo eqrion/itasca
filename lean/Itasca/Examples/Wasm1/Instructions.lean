@@ -3,7 +3,7 @@ import Itasca.Handler.EnvDispatch
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.WasmExamples
+namespace Itasca.Examples.Wasm1Instructions
 
 private theorem public_of_loop (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (bt : code.BlockType) (result : core.result.Result Unit error.OpError)
@@ -160,7 +160,7 @@ theorem local_get_accepted (env : module.Env) :
   simpa [first, Body.initial, Control.results] using hv
 
 theorem local_get_validated (env : module.Env) :
-    Wasm.Validated (bytes [0x20#u8, 0#u8, 0x0B#u8]) env localContext (.Value .I32) :=
+    Wasm1.Validated (bytes [0x20#u8, 0#u8, 0x0B#u8]) env localContext (.Value .I32) :=
   code.validate_body.wasm_sound _ env localContext (.Value .I32) rfl (local_get_accepted env)
 
 /-- Memory size uses memory zero and consumes the required reserved zero byte. -/
@@ -186,7 +186,7 @@ theorem memory_size_accepted (env : module.Env) (hmem : env.mem_types.val ≠ []
   simpa [first, Body.initial, Control.results] using hv
 
 theorem memory_size_validated (env : module.Env) (hmem : env.mem_types.val ≠ []) :
-    Wasm.Validated (bytes [0x3F#u8, 0#u8, 0x0B#u8]) env i32Context (.Value .I32) :=
+    Wasm1.Validated (bytes [0x3F#u8, 0#u8, 0x0B#u8]) env i32Context (.Value .I32) :=
   code.validate_body.wasm_sound _ env i32Context (.Value .I32) rfl (memory_size_accepted env hmem)
 
 /-- A nonzero reserved memory byte is rejected before any environment lookup. -/
@@ -284,7 +284,7 @@ theorem polymorphic_select_accepted (env : module.Env) :
     (by simp [hp3, third, data, bytes, alloc.vec.Vec.deref])
 
 theorem polymorphic_select_validated (env : module.Env) :
-    Wasm.Validated (bytes [0#u8, 0x1B#u8, 0x1A#u8, 0x0B#u8]) env emptyContext .Empty :=
+    Wasm1.Validated (bytes [0#u8, 0x1B#u8, 0x1A#u8, 0x0B#u8]) env emptyContext .Empty :=
   code.validate_body.wasm_sound _ env emptyContext .Empty rfl (polymorphic_select_accepted env)
 
 /-- The public API rejects an unknown opcode as an ordinary validation error. -/
@@ -340,7 +340,7 @@ theorem cached_call_accepted (env : module.Env) (hfun : env.func_types.val = [vo
   simpa [decoded, first, Body.initial, Control.results, voidFunction, alloc.vec.Vec.deref] using hv
 
 theorem cached_call_validated (env : module.Env) (hfun : env.func_types.val = [voidFunction]) :
-    Wasm.Validated (bytes [0x10#u8, 0#u8, 0x0B#u8]) env emptyContext .Empty :=
+    Wasm1.Validated (bytes [0x10#u8, 0#u8, 0x0B#u8]) env emptyContext .Empty :=
   code.validate_body.wasm_sound _ env emptyContext .Empty rfl (cached_call_accepted env hfun)
 
 /-- An immutable global rejects before attempting to pop a value. -/
@@ -391,4 +391,4 @@ theorem trailing_bytes_rejected (env : module.Env) :
   have hn := congrArg UScalar.val heq
   simp [hp, first, data, bytes, alloc.vec.Vec.deref] at hn
 
-end Itasca.WasmExamples
+end Itasca.Examples.Wasm1Instructions

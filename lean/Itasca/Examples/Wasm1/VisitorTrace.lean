@@ -10,7 +10,7 @@ open Aeneas Aeneas.Std
 
 attribute [local simp] Itasca.Control.signature Itasca.Control.resultView
 
-namespace Itasca.VisitorTraceExamples
+namespace Itasca.Examples.Wasm1VisitorTrace
 
 open VisitorTrace
 
@@ -89,7 +89,7 @@ private theorem step_end (data : Slice U8) (env : module.Env) (ctx : code.Contex
   simp [hr, recorder, ofHandler, observation,
     code.visit, core.result.Result.Insts.CoreOpsTry.branch]
 
-open WasmScalarExamples in
+open Examples.Wasm1Scalars in
 /-- The callback retains f32's negative-zero sign bit through the actual public body. -/
 theorem f32_signed_zero_trace (env : module.Env) :
     ∃ pushed finished, code.validate_body_with recorder f32Bytes env (resultContext .F32) [] =
@@ -133,7 +133,7 @@ theorem f32_signed_zero_trace (env : module.Env) :
     (step_end f32Bytes env (resultContext .F32) _ last finished .Body (.Value .F32) hend)]
   exact loop_done recorder f32Bytes env (resultContext .F32) _ finished hfc hfp
 
-open WasmScalarExamples in
+open Examples.Wasm1Scalars in
 /-- All 64 raw bits, including NaN sign and payload, reach the f64 callback unchanged. -/
 theorem f64_nan_payload_trace (env : module.Env) :
     ∃ pushed finished, code.validate_body_with recorder f64Bytes env (resultContext .F64) [] =
@@ -177,7 +177,7 @@ theorem f64_nan_payload_trace (env : module.Env) :
     (step_end f64Bytes env (resultContext .F64) _ last finished .Body (.Value .F64) hend)]
   exact loop_done recorder f64Bytes env (resultContext .F64) _ finished hfc hfp
 
-open CoreExamples in
+open Examples.Wasm1Body in
 /-- The closing body end is observed before the driver rejects trailing bytes. -/
 theorem trailing_bytes_after_end_trace (env : module.Env) :
     ∃ finished, code.validate_body_with recorder trailingBytes env emptyContext [] =
@@ -197,7 +197,7 @@ theorem trailing_bytes_after_end_trace (env : module.Env) :
   apply loop_trailing recorder trailingBytes env emptyContext _ finished hc
   simp [hp, st, trailingBytes, alloc.vec.Vec.deref]
 
-open CoreExamples in
+open Examples.Wasm1Body in
 /-- Rejecting the first NOP callback stops before the otherwise valid final end. -/
 theorem rejecting_first_hook_stops (env : module.Env) :
     code.validate_body_with (rejectAt 0 .OutOfMemory) nopBytes env emptyContext [] =
@@ -231,7 +231,7 @@ private theorem state_ext (s t : code.OpIterState)
   simp_all
 
 private theorem read_block_empty (st out : code.OpIterState) (data : Slice U8) (next : Usize)
-    (hb : Wasm.BytesAt data st.pos [0x40#u8] next)
+    (hb : Wasm1.BytesAt data st.pos [0x40#u8] next)
     (hcap : st.ctrls.val.length < Usize.max)
     (hv : out.vals.val = st.vals.val)
     (hc : out.ctrls.val = st.ctrls.val ++ [Control.frame st .Block .Empty])
@@ -244,7 +244,7 @@ private theorem read_block_empty (st out : code.OpIterState) (data : Slice U8) (
   simpa [heq] using hr
 
 private theorem read_if_empty (st out : code.OpIterState) (data : Slice U8) (next : Usize)
-    (hb : Wasm.BytesAt data st.pos [0x40#u8] next)
+    (hb : Wasm1.BytesAt data st.pos [0x40#u8] next)
     (hcap : st.ctrls.val.length < Usize.max)
     (hvs : st.vals.val = [.Val .I32]) (hbase : (Control.base st).val = 0)
     (hv : out.vals.val = []) (hc : out.ctrls.val = st.ctrls.val ++ [frame .Then])
@@ -287,7 +287,7 @@ private theorem read_else_empty (st out : code.OpIterState) (parents : List code
   simpa [heq, frame] using hr
 
 private theorem read_one (st out : code.OpIterState) (data : Slice U8) (next : Usize)
-    (hb : SignedLeb.Decoded data st.pos (1#i32).val next)
+    (hb : SignedLeb32.Decoded data st.pos (1#i32).val next)
     (hcap : st.vals.val.length < Usize.max)
     (hv : out.vals.val = st.vals.val ++ [.Val .I32]) (hc : out.ctrls = st.ctrls)
     (hp : out.pos = next) : code.read_i32_const st data = .ok (.Ok 1#i32, out) := by
@@ -301,13 +301,13 @@ private theorem read_one (st out : code.OpIterState) (data : Slice U8) (next : U
 
 
 
-def bareIfBytes : Slice U8 := WasmScalarExamples.bytes
+def bareIfBytes : Slice U8 := Examples.Wasm1Scalars.bytes
   [2#u8, 64#u8, 65#u8, 1#u8, 4#u8, 64#u8, 1#u8, 11#u8, 11#u8, 11#u8]
 
 /-- Exact public callback order for nested block and a bare if with no synthetic else callback. -/
 theorem nested_bare_if_trace (env : module.Env) :
     ∃ s2 s4 s6 s7 s8 s9 s10,
-      code.validate_body_with recorder bareIfBytes env CoreExamples.emptyContext [] =
+      code.validate_body_with recorder bareIfBytes env Examples.Wasm1Body.emptyContext [] =
         .ok (.Ok (), [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.end_ .Then .Empty), observation s9 (.end_ .Block .Empty), observation s10 (.end_ .Body .Empty)]) := by
   let s0 := Body.initial .Empty
   let s2 := state 2#usize [frame .Body, frame .Block]
@@ -321,10 +321,10 @@ theorem nested_bare_if_trace (env : module.Env) :
     apply read_block_empty _ _ _ 2#usize
       ⟨rfl, rfl, by decide⟩ (by simp [s0, Body.initial]; scalar_tac)
       (by rfl) (by with_unfolding_all rfl) rfl
-  have hon : SignedLeb.Decoded bareIfBytes 3#usize (1#i32).val 4#usize := by
+  have hon : SignedLeb32.Decoded bareIfBytes 3#usize (1#i32).val 4#usize := by
     refine ⟨[1#u8], rfl, rfl, by decide, [], 1#u8, rfl, by decide,
       by simp, by decide, ?_, by decide, by decide⟩
-    norm_num [SignedLeb.finalValue, Leb128.payload]
+    norm_num [SignedLeb32.finalValue, Leb128.payload]
   have hconst : code.read_i32_const {s2 with pos := 3#usize} bareIfBytes = .ok (.Ok 1#i32, s4) := by
     exact read_one _ _ _ _ hon (by simp [s2, state]; scalar_tac) rfl rfl rfl
   have hif : code.read_if {s4 with pos := 5#usize} bareIfBytes = .ok (.Ok .Empty, s6) := by
@@ -337,59 +337,59 @@ theorem nested_bare_if_trace (env : module.Env) :
   have he10 : code.read_end {s9 with pos := 10#usize} = .ok (.Ok (.Body, .Empty), s10) := by
     exact read_end_empty _ _ [] .Body rfl rfl rfl rfl rfl
   refine ⟨s2, s4, s6, s7, s8, s9, s10, ?_⟩
-  apply public_of_loop recorder bareIfBytes env CoreExamples.emptyContext .Empty (.Ok ()) [] _
-    (by simp [bareIfBytes, WasmScalarExamples.bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
-  rw [loop_step recorder bareIfBytes env CoreExamples.emptyContext [] [observation s2 (.block .Empty)]
+  apply public_of_loop recorder bareIfBytes env Examples.Wasm1Body.emptyContext .Empty (.Ok ()) [] _
+    (by simp [bareIfBytes, Examples.Wasm1Scalars.bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
+  rw [loop_step recorder bareIfBytes env Examples.Wasm1Body.emptyContext [] [observation s2 (.block .Empty)]
     s0 {s0 with pos := 1#usize} s2 code.OP_BLOCK
     (by simp [s0, Body.initial])
     (read_at bareIfBytes s0 1#usize code.OP_BLOCK (by decide) rfl
-      (by simp [bareIfBytes, WasmScalarExamples.bytes, alloc.vec.Vec.deref, s0, Body.initial, global_simps]))
+      (by simp [bareIfBytes, Examples.Wasm1Scalars.bytes, alloc.vec.Vec.deref, s0, Body.initial, global_simps]))
     (by simp [hb, recorder, ofHandler, observation, code.visit, core.result.Result.Insts.CoreOpsTry.branch])]
-  rw [loop_step recorder bareIfBytes env CoreExamples.emptyContext [observation s2 (.block .Empty)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32)]
+  rw [loop_step recorder bareIfBytes env Examples.Wasm1Body.emptyContext [observation s2 (.block .Empty)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32)]
     s2 {s2 with pos := 3#usize} s4 code.OP_I32_CONST
     (by simp [s2, state])
     (read_at bareIfBytes s2 3#usize code.OP_I32_CONST (by decide) rfl
-      (by simp [bareIfBytes, WasmScalarExamples.bytes, alloc.vec.Vec.deref, s2, state, global_simps]))
+      (by simp [bareIfBytes, Examples.Wasm1Scalars.bytes, alloc.vec.Vec.deref, s2, state, global_simps]))
     (by simp [hconst, recorder, ofHandler, observation, code.visit, core.result.Result.Insts.CoreOpsTry.branch])]
-  rw [loop_step recorder bareIfBytes env CoreExamples.emptyContext [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty)]
+  rw [loop_step recorder bareIfBytes env Examples.Wasm1Body.emptyContext [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty)]
     s4 {s4 with pos := 5#usize} s6 code.OP_IF
     (by simp [s4, state])
     (read_at bareIfBytes s4 5#usize code.OP_IF (by decide) rfl
-      (by simp [bareIfBytes, WasmScalarExamples.bytes, alloc.vec.Vec.deref, s4, state, global_simps]))
+      (by simp [bareIfBytes, Examples.Wasm1Scalars.bytes, alloc.vec.Vec.deref, s4, state, global_simps]))
     (by simp [hif, recorder, ofHandler, observation, code.visit, core.result.Result.Insts.CoreOpsTry.branch])]
-  rw [loop_step recorder bareIfBytes env CoreExamples.emptyContext [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop)]
+  rw [loop_step recorder bareIfBytes env Examples.Wasm1Body.emptyContext [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop)]
     s6 {s6 with pos := 7#usize} s7 code.OP_NOP
     (by simp [s6, state])
     (read_at bareIfBytes s6 7#usize code.OP_NOP (by decide) rfl
-      (by simp [bareIfBytes, WasmScalarExamples.bytes, alloc.vec.Vec.deref, s6, state, global_simps]))
+      (by simp [bareIfBytes, Examples.Wasm1Scalars.bytes, alloc.vec.Vec.deref, s6, state, global_simps]))
     (by simp [recorder, ofHandler, observation, code.visit, core.result.Result.Insts.CoreOpsTry.branch, s6, s7, state])]
-  rw [loop_step recorder bareIfBytes env CoreExamples.emptyContext [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.end_ .Then .Empty)]
+  rw [loop_step recorder bareIfBytes env Examples.Wasm1Body.emptyContext [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.end_ .Then .Empty)]
     s7 {s7 with pos := 8#usize} s8 code.OP_END
     (by simp [s7, state])
     (read_at bareIfBytes s7 8#usize code.OP_END (by decide) rfl
-      (by simp [bareIfBytes, WasmScalarExamples.bytes, alloc.vec.Vec.deref, s7, state, global_simps]))
+      (by simp [bareIfBytes, Examples.Wasm1Scalars.bytes, alloc.vec.Vec.deref, s7, state, global_simps]))
     (by simp [he8, recorder, ofHandler, observation, code.visit, core.result.Result.Insts.CoreOpsTry.branch])]
-  rw [loop_step recorder bareIfBytes env CoreExamples.emptyContext [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.end_ .Then .Empty)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.end_ .Then .Empty), observation s9 (.end_ .Block .Empty)]
+  rw [loop_step recorder bareIfBytes env Examples.Wasm1Body.emptyContext [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.end_ .Then .Empty)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.end_ .Then .Empty), observation s9 (.end_ .Block .Empty)]
     s8 {s8 with pos := 9#usize} s9 code.OP_END
     (by simp [s8, state])
     (read_at bareIfBytes s8 9#usize code.OP_END (by decide) rfl
-      (by simp [bareIfBytes, WasmScalarExamples.bytes, alloc.vec.Vec.deref, s8, state, global_simps]))
+      (by simp [bareIfBytes, Examples.Wasm1Scalars.bytes, alloc.vec.Vec.deref, s8, state, global_simps]))
     (by simp [he9, recorder, ofHandler, observation, code.visit, core.result.Result.Insts.CoreOpsTry.branch])]
-  rw [loop_step recorder bareIfBytes env CoreExamples.emptyContext [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.end_ .Then .Empty), observation s9 (.end_ .Block .Empty)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.end_ .Then .Empty), observation s9 (.end_ .Block .Empty), observation s10 (.end_ .Body .Empty)]
+  rw [loop_step recorder bareIfBytes env Examples.Wasm1Body.emptyContext [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.end_ .Then .Empty), observation s9 (.end_ .Block .Empty)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.end_ .Then .Empty), observation s9 (.end_ .Block .Empty), observation s10 (.end_ .Body .Empty)]
     s9 {s9 with pos := 10#usize} s10 code.OP_END
     (by simp [s9, state])
     (read_at bareIfBytes s9 10#usize code.OP_END (by decide) rfl
-      (by simp [bareIfBytes, WasmScalarExamples.bytes, alloc.vec.Vec.deref, s9, state, global_simps]))
+      (by simp [bareIfBytes, Examples.Wasm1Scalars.bytes, alloc.vec.Vec.deref, s9, state, global_simps]))
     (by simp [he10, recorder, ofHandler, observation, code.visit, core.result.Result.Insts.CoreOpsTry.branch])]
-  exact loop_done recorder bareIfBytes env CoreExamples.emptyContext _ s10 rfl rfl
+  exact loop_done recorder bareIfBytes env Examples.Wasm1Body.emptyContext _ s10 rfl rfl
 
-def elseIfBytes : Slice U8 := WasmScalarExamples.bytes
+def elseIfBytes : Slice U8 := Examples.Wasm1Scalars.bytes
   [2#u8, 64#u8, 65#u8, 1#u8, 4#u8, 64#u8, 1#u8, 5#u8, 1#u8, 11#u8, 11#u8, 11#u8]
 
 /-- Exact public callback order for nested block and an explicit else. -/
 theorem nested_else_if_trace (env : module.Env) :
     ∃ s2 s4 s6 s7 s8 s9 s10 s11 s12,
-      code.validate_body_with recorder elseIfBytes env CoreExamples.emptyContext [] =
+      code.validate_body_with recorder elseIfBytes env Examples.Wasm1Body.emptyContext [] =
         .ok (.Ok (), [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.else_ .Empty), observation s9 (.nop), observation s10 (.end_ .Else .Empty), observation s11 (.end_ .Block .Empty), observation s12 (.end_ .Body .Empty)]) := by
   let s0 := Body.initial .Empty
   let s2 := state 2#usize [frame .Body, frame .Block]
@@ -405,10 +405,10 @@ theorem nested_else_if_trace (env : module.Env) :
     apply read_block_empty _ _ _ 2#usize
       ⟨rfl, rfl, by decide⟩ (by simp [s0, Body.initial]; scalar_tac)
       (by rfl) (by with_unfolding_all rfl) rfl
-  have hon : SignedLeb.Decoded elseIfBytes 3#usize (1#i32).val 4#usize := by
+  have hon : SignedLeb32.Decoded elseIfBytes 3#usize (1#i32).val 4#usize := by
     refine ⟨[1#u8], rfl, rfl, by decide, [], 1#u8, rfl, by decide,
       by simp, by decide, ?_, by decide, by decide⟩
-    norm_num [SignedLeb.finalValue, Leb128.payload]
+    norm_num [SignedLeb32.finalValue, Leb128.payload]
   have hconst : code.read_i32_const {s2 with pos := 3#usize} elseIfBytes = .ok (.Ok 1#i32, s4) := by
     exact read_one _ _ _ _ hon (by simp [s2, state]; scalar_tac) rfl rfl rfl
   have hif : code.read_if {s4 with pos := 5#usize} elseIfBytes = .ok (.Ok .Empty, s6) := by
@@ -423,62 +423,62 @@ theorem nested_else_if_trace (env : module.Env) :
   have he12 : code.read_end {s11 with pos := 12#usize} = .ok (.Ok (.Body, .Empty), s12) := by
     exact read_end_empty _ _ [] .Body rfl rfl rfl rfl rfl
   refine ⟨s2, s4, s6, s7, s8, s9, s10, s11, s12, ?_⟩
-  apply public_of_loop recorder elseIfBytes env CoreExamples.emptyContext .Empty (.Ok ()) [] _
-    (by simp [elseIfBytes, WasmScalarExamples.bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
-  rw [loop_step recorder elseIfBytes env CoreExamples.emptyContext [] [observation s2 (.block .Empty)]
+  apply public_of_loop recorder elseIfBytes env Examples.Wasm1Body.emptyContext .Empty (.Ok ()) [] _
+    (by simp [elseIfBytes, Examples.Wasm1Scalars.bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES]) rfl
+  rw [loop_step recorder elseIfBytes env Examples.Wasm1Body.emptyContext [] [observation s2 (.block .Empty)]
     s0 {s0 with pos := 1#usize} s2 code.OP_BLOCK
     (by simp [s0, Body.initial])
     (read_at elseIfBytes s0 1#usize code.OP_BLOCK (by decide) rfl
-      (by simp [elseIfBytes, WasmScalarExamples.bytes, alloc.vec.Vec.deref, s0, Body.initial, global_simps]))
+      (by simp [elseIfBytes, Examples.Wasm1Scalars.bytes, alloc.vec.Vec.deref, s0, Body.initial, global_simps]))
     (by simp [hb, recorder, ofHandler, observation, code.visit, core.result.Result.Insts.CoreOpsTry.branch])]
-  rw [loop_step recorder elseIfBytes env CoreExamples.emptyContext [observation s2 (.block .Empty)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32)]
+  rw [loop_step recorder elseIfBytes env Examples.Wasm1Body.emptyContext [observation s2 (.block .Empty)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32)]
     s2 {s2 with pos := 3#usize} s4 code.OP_I32_CONST
     (by simp [s2, state])
     (read_at elseIfBytes s2 3#usize code.OP_I32_CONST (by decide) rfl
-      (by simp [elseIfBytes, WasmScalarExamples.bytes, alloc.vec.Vec.deref, s2, state, global_simps]))
+      (by simp [elseIfBytes, Examples.Wasm1Scalars.bytes, alloc.vec.Vec.deref, s2, state, global_simps]))
     (by simp [hconst, recorder, ofHandler, observation, code.visit, core.result.Result.Insts.CoreOpsTry.branch])]
-  rw [loop_step recorder elseIfBytes env CoreExamples.emptyContext [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty)]
+  rw [loop_step recorder elseIfBytes env Examples.Wasm1Body.emptyContext [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty)]
     s4 {s4 with pos := 5#usize} s6 code.OP_IF
     (by simp [s4, state])
     (read_at elseIfBytes s4 5#usize code.OP_IF (by decide) rfl
-      (by simp [elseIfBytes, WasmScalarExamples.bytes, alloc.vec.Vec.deref, s4, state, global_simps]))
+      (by simp [elseIfBytes, Examples.Wasm1Scalars.bytes, alloc.vec.Vec.deref, s4, state, global_simps]))
     (by simp [hif, recorder, ofHandler, observation, code.visit, core.result.Result.Insts.CoreOpsTry.branch])]
-  rw [loop_step recorder elseIfBytes env CoreExamples.emptyContext [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop)]
+  rw [loop_step recorder elseIfBytes env Examples.Wasm1Body.emptyContext [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop)]
     s6 {s6 with pos := 7#usize} s7 code.OP_NOP
     (by simp [s6, state])
     (read_at elseIfBytes s6 7#usize code.OP_NOP (by decide) rfl
-      (by simp [elseIfBytes, WasmScalarExamples.bytes, alloc.vec.Vec.deref, s6, state, global_simps]))
+      (by simp [elseIfBytes, Examples.Wasm1Scalars.bytes, alloc.vec.Vec.deref, s6, state, global_simps]))
     (by simp [recorder, ofHandler, observation, code.visit, core.result.Result.Insts.CoreOpsTry.branch, s6, s7, state])]
-  rw [loop_step recorder elseIfBytes env CoreExamples.emptyContext [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.else_ .Empty)]
+  rw [loop_step recorder elseIfBytes env Examples.Wasm1Body.emptyContext [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.else_ .Empty)]
     s7 {s7 with pos := 8#usize} s8 code.OP_ELSE
     (by simp [s7, state])
     (read_at elseIfBytes s7 8#usize code.OP_ELSE (by decide) rfl
-      (by simp [elseIfBytes, WasmScalarExamples.bytes, alloc.vec.Vec.deref, s7, state, global_simps]))
+      (by simp [elseIfBytes, Examples.Wasm1Scalars.bytes, alloc.vec.Vec.deref, s7, state, global_simps]))
     (by simp [hel, recorder, ofHandler, observation, code.visit, core.result.Result.Insts.CoreOpsTry.branch])]
-  rw [loop_step recorder elseIfBytes env CoreExamples.emptyContext [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.else_ .Empty)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.else_ .Empty), observation s9 (.nop)]
+  rw [loop_step recorder elseIfBytes env Examples.Wasm1Body.emptyContext [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.else_ .Empty)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.else_ .Empty), observation s9 (.nop)]
     s8 {s8 with pos := 9#usize} s9 code.OP_NOP
     (by simp [s8, state])
     (read_at elseIfBytes s8 9#usize code.OP_NOP (by decide) rfl
-      (by simp [elseIfBytes, WasmScalarExamples.bytes, alloc.vec.Vec.deref, s8, state, global_simps]))
+      (by simp [elseIfBytes, Examples.Wasm1Scalars.bytes, alloc.vec.Vec.deref, s8, state, global_simps]))
     (by simp [recorder, ofHandler, observation, code.visit, core.result.Result.Insts.CoreOpsTry.branch, s8, s9, state])]
-  rw [loop_step recorder elseIfBytes env CoreExamples.emptyContext [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.else_ .Empty), observation s9 (.nop)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.else_ .Empty), observation s9 (.nop), observation s10 (.end_ .Else .Empty)]
+  rw [loop_step recorder elseIfBytes env Examples.Wasm1Body.emptyContext [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.else_ .Empty), observation s9 (.nop)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.else_ .Empty), observation s9 (.nop), observation s10 (.end_ .Else .Empty)]
     s9 {s9 with pos := 10#usize} s10 code.OP_END
     (by simp [s9, state])
     (read_at elseIfBytes s9 10#usize code.OP_END (by decide) rfl
-      (by simp [elseIfBytes, WasmScalarExamples.bytes, alloc.vec.Vec.deref, s9, state, global_simps]))
+      (by simp [elseIfBytes, Examples.Wasm1Scalars.bytes, alloc.vec.Vec.deref, s9, state, global_simps]))
     (by simp [he10, recorder, ofHandler, observation, code.visit, core.result.Result.Insts.CoreOpsTry.branch])]
-  rw [loop_step recorder elseIfBytes env CoreExamples.emptyContext [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.else_ .Empty), observation s9 (.nop), observation s10 (.end_ .Else .Empty)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.else_ .Empty), observation s9 (.nop), observation s10 (.end_ .Else .Empty), observation s11 (.end_ .Block .Empty)]
+  rw [loop_step recorder elseIfBytes env Examples.Wasm1Body.emptyContext [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.else_ .Empty), observation s9 (.nop), observation s10 (.end_ .Else .Empty)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.else_ .Empty), observation s9 (.nop), observation s10 (.end_ .Else .Empty), observation s11 (.end_ .Block .Empty)]
     s10 {s10 with pos := 11#usize} s11 code.OP_END
     (by simp [s10, state])
     (read_at elseIfBytes s10 11#usize code.OP_END (by decide) rfl
-      (by simp [elseIfBytes, WasmScalarExamples.bytes, alloc.vec.Vec.deref, s10, state, global_simps]))
+      (by simp [elseIfBytes, Examples.Wasm1Scalars.bytes, alloc.vec.Vec.deref, s10, state, global_simps]))
     (by simp [he11, recorder, ofHandler, observation, code.visit, core.result.Result.Insts.CoreOpsTry.branch])]
-  rw [loop_step recorder elseIfBytes env CoreExamples.emptyContext [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.else_ .Empty), observation s9 (.nop), observation s10 (.end_ .Else .Empty), observation s11 (.end_ .Block .Empty)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.else_ .Empty), observation s9 (.nop), observation s10 (.end_ .Else .Empty), observation s11 (.end_ .Block .Empty), observation s12 (.end_ .Body .Empty)]
+  rw [loop_step recorder elseIfBytes env Examples.Wasm1Body.emptyContext [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.else_ .Empty), observation s9 (.nop), observation s10 (.end_ .Else .Empty), observation s11 (.end_ .Block .Empty)] [observation s2 (.block .Empty), observation s4 (.i32_const 1#i32), observation s6 (.if_ .Empty), observation s7 (.nop), observation s8 (.else_ .Empty), observation s9 (.nop), observation s10 (.end_ .Else .Empty), observation s11 (.end_ .Block .Empty), observation s12 (.end_ .Body .Empty)]
     s11 {s11 with pos := 12#usize} s12 code.OP_END
     (by simp [s11, state])
     (read_at elseIfBytes s11 12#usize code.OP_END (by decide) rfl
-      (by simp [elseIfBytes, WasmScalarExamples.bytes, alloc.vec.Vec.deref, s11, state, global_simps]))
+      (by simp [elseIfBytes, Examples.Wasm1Scalars.bytes, alloc.vec.Vec.deref, s11, state, global_simps]))
     (by simp [he12, recorder, ofHandler, observation, code.visit, core.result.Result.Insts.CoreOpsTry.branch])]
-  exact loop_done recorder elseIfBytes env CoreExamples.emptyContext _ s12 rfl rfl
+  exact loop_done recorder elseIfBytes env Examples.Wasm1Body.emptyContext _ s12 rfl rfl
 
-end Itasca.VisitorTraceExamples
+end Itasca.Examples.Wasm1VisitorTrace

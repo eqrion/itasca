@@ -6,7 +6,7 @@ import Itasca.Wasm1.StepBranch
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Wasm
+namespace Itasca.Wasm1
 
 
 private theorem memory_meaning_exists (opcode : U8)
@@ -116,4 +116,4 @@ theorem steps {V : Type} (visitor : code.OpVisitor V) (hvisitor : FullVisitor.To
   rw [code.step.reserved visitor st data env ctx opcode v hreserved]
   simp
 
-end Itasca.Wasm
+end Itasca.Wasm1

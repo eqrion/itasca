@@ -3,7 +3,7 @@ import Itasca.Wasm2.Simd.Tables
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Simd
+namespace Itasca.Wasm2.Simd
 
 theorem subStep.pure {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
     (data : Slice U8) (env : module.Env) (opcode : U32) (v : V) (op : Operation)
@@ -64,4 +64,4 @@ theorem subStep.shuffle {V : Type} (visitor : code.OpVisitor V) (st : code.OpIte
   simp only [subStep, pure_table, lane_table, memory_table, hp, hl, hm, Option.map_none, bind_ok]
   with_unfolding_all rfl
 
-end Itasca.MultiValue.Simd
+end Itasca.Wasm2.Simd

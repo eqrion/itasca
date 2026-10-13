@@ -153,7 +153,7 @@ def Action.nextPending (action : Action) (pending : List U32) : List U32 :=
 
 /-- Recover flat instruction tokens and any unfinished table labels from callbacks.
 The outcome is retained in the original trace but does not change what was observed. -/
-def project : List Observation → List U32 → List Wasm.Token × List U32
+def project : List Observation → List U32 → List Wasm1.Token × List U32
   | [], pending => ([], pending)
   | observation :: rest, pending =>
     match observation.event with
@@ -181,7 +181,7 @@ theorem LabelsAt.project {data pos observations depths last}
   | cons hd ht ih =>
     simp [VisitorTrace.project, Action.token, Action.nextPending, ih, List.append_assoc]
 
-private theorem Action.nextPending_nil_of_token {action : Action} {token : Wasm.Token}
+private theorem Action.nextPending_nil_of_token {action : Action} {token : Wasm1.Token}
     (h : action.token [] = some token) : action.nextPending [] = [] := by
   cases action <;> try rfl
   simp [Action.token] at h
@@ -217,7 +217,7 @@ Acceptance consumes the complete input and leaves no pending table. -/
 theorem BodyTrace.project {data start observations result}
     (h : BodyTrace data start observations result) :
     ∃ tokens cursor pending, project observations [] = (tokens, pending) ∧
-      Wasm.Consumed data start tokens cursor ∧
+      Wasm1.Consumed data start tokens cursor ∧
       (result = .Ok () → pending = [] ∧ cursor.val = data.length) := by
   obtain ⟨_, complete, tokens, cursor, tail, heq, hc, ht, hend⟩ := h
   have hp : ∃ pending, VisitorTrace.project tail [] = ([], pending) := by

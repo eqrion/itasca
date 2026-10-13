@@ -16,7 +16,7 @@ theorem BodyBytes.unique (profile : ValidationProfile) : Unique (BodyBytes profi
   | Wasm1 => exact ModuleBinary.BodyEncoding.unique
   | Wasm2 =>
     rintro xs ys bytes ⟨xt, hx, hxs⟩ ⟨yt, hy, hys⟩
-    obtain rfl := MultiValue.tokens_unique hx hy
+    obtain rfl := Wasm2.tokens_unique hx hy
     exact hxs.unique hys
 
 /-- Entry sizes and local declarations retain uniqueness for both grammars. -/

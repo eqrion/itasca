@@ -42,7 +42,7 @@ theorem module.decode_name.spec (data : Slice U8) (start : Usize) :
               obtain ⟨countBytes, hs, hl, hb, he⟩ := hd
               refine ⟨countBytes ++ bytes.val, ⟨?_, by simpa [alloc.vec.Vec.deref] using hutf⟩, ?_⟩
               · exact ByteVecEncoding.iff.mpr ⟨countBytes, by simpa [hlength] using he, rfl⟩
-              · exact (show Wasm.BytesAt data start countBytes pos from ⟨hs, hl, hb⟩).append bytes_post
+              · exact (show Wasm1.BytesAt data start countBytes pos from ⟨hs, hl, hb⟩).append bytes_post
 
 /-- The checked custom-section name fits in the section; payload bytes remain
 uninterpreted, and the public metadata identifies their exact interval. -/

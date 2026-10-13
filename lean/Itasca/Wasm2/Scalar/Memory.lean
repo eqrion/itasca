@@ -2,7 +2,7 @@ import Itasca.Wasm2.Scalar.Env
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Scalar
+namespace Itasca.Wasm2.Scalar
 
 def MemoryPost (inputs : List valtype) (data : Slice U8) (st : code.OpIterState)
     (outer segment : List code.StackType) (C : context) (ops : List instr)
@@ -12,7 +12,7 @@ def MemoryPost (inputs : List valtype) (data : Slice U8) (st : code.OpIterState)
     (∃ middle, Leb128.Decoded data st.pos arg.align middle ∧
       Leb128.Decoded data middle arg.offset r.2.pos) ∧ r.2.ctrls = st.ctrls ∧
       ∃ rest, r.2.vals.val = outer ++ rest ∧ rest.length ≤ segment.length + 1 ∧
-        MultiValue.TypedPrefix C inputs (ops ++ [op arg]) (Control.polymorphic st) rest
+        Wasm2.TypedPrefix C inputs (ops ++ [op arg]) (Control.polymorphic st) rest
 
 def ReservedPost (inputs : List valtype) (data : Slice U8) (st : code.OpIterState)
     (outer segment : List code.StackType) (C : context) (ops : List instr)
@@ -20,9 +20,9 @@ def ReservedPost (inputs : List valtype) (data : Slice U8) (st : code.OpIterStat
   r.1 = .Ok () →
     (∃ hp : st.pos.val < data.length, data.val[st.pos.val] = 0#u8 ∧ r.2.pos.val = st.pos.val + 1) ∧
     r.2.ctrls = st.ctrls ∧ ∃ rest, r.2.vals.val = outer ++ rest ∧ rest.length ≤ segment.length + 1 ∧
-      MultiValue.TypedPrefix C inputs (ops ++ [op]) (Control.polymorphic st) rest
+      Wasm2.TypedPrefix C inputs (ops ++ [op]) (Control.polymorphic st) rest
 
-end Itasca.MultiValue.Scalar
+end Itasca.Wasm2.Scalar
 
 namespace Itasca
 
@@ -31,24 +31,24 @@ theorem code.read_load.multi_prefix {inputs : List valtype} (st : code.OpIterSta
     (hvals : st.vals.val = outer ++ segment) (hbase : (Control.base st).val = outer.length)
     (hsize : st.vals.val.length < Usize.max)
     (C : context) (hC : EnvTranslation.Matches env ctx C) (ops : List instr)
-    (htyped : MultiValue.TypedPrefix C inputs ops (Control.polymorphic st) segment)
+    (htyped : Wasm2.TypedPrefix C inputs ops (Control.polymorphic st) segment)
     (opcode : U8) (operation : MemoryMeaning.Operation)
     (hrow : MemoryMeaning.opcodeMeaning opcode = some operation) (hload : operation.store = false) :
     code.read_load st data env operation.ty operation.naturalAlign ⦃
-      MultiValue.Scalar.MemoryPost inputs data st outer segment C ops operation.op ⦄ := by
+      Wasm2.Scalar.MemoryPost inputs data st outer segment C ops operation.op ⦄ := by
   obtain ⟨⟨r, s⟩, hr, hv, hc, hout⟩ := WP.spec_imp_exists (code.read_memarg.spec st data)
   dsimp only at hv hc hout
   cases r with
   | Err e =>
       simp [code.read_load, hr, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, MultiValue.Scalar.MemoryPost]
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, Wasm2.Scalar.MemoryPost]
   | Ok arg =>
       obtain ⟨rcheck, hcheck, hcheckpost⟩ := WP.spec_imp_exists
         (code.check_memory_and_alignment.spec env arg operation.naturalAlign)
       cases rcheck with
       | Err e =>
           simp [code.read_load, hr, hcheck, core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, MultiValue.Scalar.MemoryPost]
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, Wasm2.Scalar.MemoryPost]
       | Ok u =>
           obtain ⟨⟨r', s'⟩, hp, hc', hpos, rest, hv', hlen, hout'⟩ := WP.spec_imp_exists
             (code.pop_with_type.realizes s outer segment .I32 (by simpa [hv] using hvals)
@@ -57,7 +57,7 @@ theorem code.read_load.multi_prefix {inputs : List valtype} (st : code.OpIterSta
           cases r' with
           | Err e =>
               simp [code.read_load, hr, hcheck, hp, core.result.Result.Insts.CoreOpsTry.branch,
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, MultiValue.Scalar.MemoryPost]
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, Wasm2.Scalar.MemoryPost]
           | Ok popped =>
               have hcap : s'.vals.val.length < Usize.max := by
                 simp only [hv', hvals, List.length_append] at *
@@ -68,7 +68,7 @@ theorem code.read_load.multi_prefix {inputs : List valtype} (st : code.OpIterSta
                   Sequence.Realizes (Control.polymorphic st) segment (ts ++ [.I32]) := by
                 simpa [Control.polymorphic, hc, Translate.valueType] using hout'.2
               obtain ⟨hwf, hop⟩ := hC.memory_operation opcode operation hrow arg hcheckpost.1 hcheckpost.2
-              have htyping := (MultiValue.ResumePrefix.after_pop htyped hpop).finish hC.wf
+              have htyping := (Wasm2.ResumePrefix.after_pop htyped hpop).finish hC.wf
                 (operation.op arg) [operation.ty] hwf
                 (by simpa [MemoryMeaning.Operation.inputs, MemoryMeaning.Operation.outputs, hload,
                   Translate.valueType] using hop)
@@ -86,24 +86,24 @@ theorem code.read_store.multi_prefix {inputs : List valtype} (st : code.OpIterSt
     (env : module.Env) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Control.base st).val = outer.length)
     (C : context) (hC : EnvTranslation.Matches env ctx C) (ops : List instr)
-    (htyped : MultiValue.TypedPrefix C inputs ops (Control.polymorphic st) segment)
+    (htyped : Wasm2.TypedPrefix C inputs ops (Control.polymorphic st) segment)
     (opcode : U8) (operation : MemoryMeaning.Operation)
     (hrow : MemoryMeaning.opcodeMeaning opcode = some operation) (hstore : operation.store = true) :
     code.read_store st data env operation.ty operation.naturalAlign ⦃
-      MultiValue.Scalar.MemoryPost inputs data st outer segment C ops operation.op ⦄ := by
+      Wasm2.Scalar.MemoryPost inputs data st outer segment C ops operation.op ⦄ := by
   obtain ⟨⟨r, s⟩, hr, hv, hc, hout⟩ := WP.spec_imp_exists (code.read_memarg.spec st data)
   dsimp only at hv hc hout
   cases r with
   | Err e =>
       simp [code.read_store, hr, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, MultiValue.Scalar.MemoryPost]
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, Wasm2.Scalar.MemoryPost]
   | Ok arg =>
       obtain ⟨rcheck, hcheck, hcheckpost⟩ := WP.spec_imp_exists
         (code.check_memory_and_alignment.spec env arg operation.naturalAlign)
       cases rcheck with
       | Err e =>
           simp [code.read_store, hr, hcheck, core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, MultiValue.Scalar.MemoryPost]
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, Wasm2.Scalar.MemoryPost]
       | Ok u =>
           obtain ⟨⟨r', s'⟩, hp, hc', hpos, rest, hv', hlen, hout'⟩ := WP.spec_imp_exists
             (code.pop_with_type.realizes s outer segment operation.ty (by simpa [hv] using hvals)
@@ -112,7 +112,7 @@ theorem code.read_store.multi_prefix {inputs : List valtype} (st : code.OpIterSt
           cases r' with
           | Err e =>
               simp [code.read_store, hr, hcheck, hp, core.result.Result.Insts.CoreOpsTry.branch,
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, MultiValue.Scalar.MemoryPost]
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, Wasm2.Scalar.MemoryPost]
           | Ok popped =>
               obtain ⟨⟨r'', s''⟩, hp', hc'', hpos', rest', hv'', hlen', hout''⟩ := WP.spec_imp_exists
                 (code.pop_with_type.realizes s' outer rest .I32 hv'
@@ -121,7 +121,7 @@ theorem code.read_store.multi_prefix {inputs : List valtype} (st : code.OpIterSt
               cases r'' with
               | Err e =>
                   simp [code.read_store, hr, hcheck, hp, hp', core.result.Result.Insts.CoreOpsTry.branch,
-                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, MultiValue.Scalar.MemoryPost]
+                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, Wasm2.Scalar.MemoryPost]
               | Ok popped =>
                   have hfirst : ∀ ts, Sequence.Realizes (Control.polymorphic st) rest ts →
                       Sequence.Realizes (Control.polymorphic st) segment (ts ++ [Translate.valueType operation.ty]) := by
@@ -134,7 +134,7 @@ theorem code.read_store.multi_prefix {inputs : List valtype} (st : code.OpIterSt
                     intro ts ht
                     simpa [List.append_assoc] using hfirst _ (hsecond ts ht)
                   obtain ⟨hwf, hop⟩ := hC.memory_operation opcode operation hrow arg hcheckpost.1 hcheckpost.2
-                  have htyping := (MultiValue.ResumePrefix.after_pop htyped hpop).finish hC.wf
+                  have htyping := (Wasm2.ResumePrefix.after_pop htyped hpop).finish hC.wf
                     (operation.op arg) [] hwf
                     (by simpa [MemoryMeaning.Operation.inputs, MemoryMeaning.Operation.outputs, hstore,
                       Translate.valueType] using hop)
@@ -150,24 +150,24 @@ theorem code.read_memory_size.multi_prefix {inputs : List valtype} (st : code.Op
     (env : module.Env) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hsize : st.vals.val.length < Usize.max)
     (C : context) (hC : EnvTranslation.Matches env ctx C) (ops : List instr)
-    (htyped : MultiValue.TypedPrefix C inputs ops (Control.polymorphic st) segment) :
-    code.read_memory_size st data env ⦃ MultiValue.Scalar.ReservedPost inputs data st outer segment C ops .MEMORY_SIZE ⦄ := by
+    (htyped : Wasm2.TypedPrefix C inputs ops (Control.polymorphic st) segment) :
+    code.read_memory_size st data env ⦃ Wasm2.Scalar.ReservedPost inputs data st outer segment C ops .MEMORY_SIZE ⦄ := by
   obtain ⟨⟨r, s⟩, hr, hv, hc, hout⟩ := WP.spec_imp_exists (code.read_reserved_zero.spec st data)
   dsimp only at hv hc hout
   cases r with
   | Err e =>
       simp [code.read_memory_size, hr, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, MultiValue.Scalar.ReservedPost]
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, Wasm2.Scalar.ReservedPost]
   | Ok u =>
       obtain ⟨rmem, hmem, hmempost⟩ := WP.spec_imp_exists (code.require_memory.spec env)
       cases rmem with
       | Err e =>
           simp [code.read_memory_size, hr, hmem, core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, MultiValue.Scalar.ReservedPost]
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, Wasm2.Scalar.ReservedPost]
       | Ok u =>
           obtain ⟨s', hp, hv', hc', hpos⟩ := WP.spec_imp_exists
             (code.push_val.spec s (.Val .I32) (by simpa [hv] using hsize))
-          have htyping := (MultiValue.ResumePrefix.of_prefix htyped).finish hC.wf .MEMORY_SIZE [.I32]
+          have htyping := (Wasm2.ResumePrefix.of_prefix htyped).finish hC.wf .MEMORY_SIZE [.I32]
             .instr_case_62 (hC.memory_size hmempost)
           rw [WP.spec_equiv_exists]
           refine ⟨(.Ok (), s'), ?_, ?_⟩
@@ -182,20 +182,20 @@ theorem code.read_memory_grow.multi_prefix {inputs : List valtype} (st : code.Op
     (hvals : st.vals.val = outer ++ segment) (hbase : (Control.base st).val = outer.length)
     (hsize : st.vals.val.length < Usize.max)
     (C : context) (hC : EnvTranslation.Matches env ctx C) (ops : List instr)
-    (htyped : MultiValue.TypedPrefix C inputs ops (Control.polymorphic st) segment) :
-    code.read_memory_grow st data env ⦃ MultiValue.Scalar.ReservedPost inputs data st outer segment C ops .MEMORY_GROW ⦄ := by
+    (htyped : Wasm2.TypedPrefix C inputs ops (Control.polymorphic st) segment) :
+    code.read_memory_grow st data env ⦃ Wasm2.Scalar.ReservedPost inputs data st outer segment C ops .MEMORY_GROW ⦄ := by
   obtain ⟨⟨r, s⟩, hr, hv, hc, hout⟩ := WP.spec_imp_exists (code.read_reserved_zero.spec st data)
   dsimp only at hv hc hout
   cases r with
   | Err e =>
       simp [code.read_memory_grow, hr, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, MultiValue.Scalar.ReservedPost]
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, Wasm2.Scalar.ReservedPost]
   | Ok u =>
       obtain ⟨rmem, hmem, hmempost⟩ := WP.spec_imp_exists (code.require_memory.spec env)
       cases rmem with
       | Err e =>
           simp [code.read_memory_grow, hr, hmem, core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, MultiValue.Scalar.ReservedPost]
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, Wasm2.Scalar.ReservedPost]
       | Ok u =>
           obtain ⟨⟨r', s'⟩, hp, hc', hpos, rest, hv', hlen, hout'⟩ := WP.spec_imp_exists
             (code.pop_with_type.realizes s outer segment .I32 (by simpa [hv] using hvals)
@@ -204,7 +204,7 @@ theorem code.read_memory_grow.multi_prefix {inputs : List valtype} (st : code.Op
           cases r' with
           | Err e =>
               simp [code.read_memory_grow, hr, hmem, hp, core.result.Result.Insts.CoreOpsTry.branch,
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, MultiValue.Scalar.ReservedPost]
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, Wasm2.Scalar.ReservedPost]
           | Ok popped =>
               have hcap : s'.vals.val.length < Usize.max := by
                 simp only [hv', hvals, List.length_append] at *
@@ -214,7 +214,7 @@ theorem code.read_memory_grow.multi_prefix {inputs : List valtype} (st : code.Op
               have hpop : ∀ ts, Sequence.Realizes (Control.polymorphic st) rest ts →
                   Sequence.Realizes (Control.polymorphic st) segment (ts ++ [.I32]) := by
                 simpa [Control.polymorphic, hc, Translate.valueType] using hout'.2
-              have htyping := (MultiValue.ResumePrefix.after_pop htyped hpop).finish hC.wf .MEMORY_GROW [.I32]
+              have htyping := (Wasm2.ResumePrefix.after_pop htyped hpop).finish hC.wf .MEMORY_GROW [.I32]
                 .instr_case_63 (hC.memory_grow hmempost)
               rw [WP.spec_equiv_exists]
               refine ⟨(.Ok (), s''), ?_, ?_⟩

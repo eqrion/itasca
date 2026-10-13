@@ -2,7 +2,7 @@ import Itasca.Binary.Leb128
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.SignedLebGeneric
+namespace Itasca.SignedLeb
 
 /-- Parameters of the shared I128 signed decoder. The largest supported
 continuation index keeps every intermediate arithmetic operation in I128. -/
@@ -55,9 +55,9 @@ private theorem byte_spec (data : Slice U8) (p : Usize) (acc mult : I128) (i : U
   all_goals
     (try split) <;> step* <;> simp_all [BytePost, finalValue] <;> split_ifs <;> scalar_tac
 
-end Itasca.SignedLebGeneric
+end Itasca.SignedLeb
 
-namespace Itasca.SignedLebGeneric
+namespace Itasca.SignedLeb
 
 variable (format : Format)
 
@@ -191,9 +191,9 @@ theorem Rejected.kind {data : Slice U8} {start : Usize} {e : error.OpError}
     (h : Rejected format data start e) : e = .UnexpectedEof ∨ e = .LebTooLong := by
   cases h <;> simp
 
-end Itasca.SignedLebGeneric
+end Itasca.SignedLeb
 
-namespace Itasca.SignedLebGeneric
+namespace Itasca.SignedLeb
 
 variable (format : Format)
 
@@ -281,4 +281,4 @@ theorem Decoded.deterministic (data : Slice U8) (start : Usize)
   rw [hbs] at hq₁
   exact hq₁.trans hq₂.symm
 
-end Itasca.SignedLebGeneric
+end Itasca.SignedLeb

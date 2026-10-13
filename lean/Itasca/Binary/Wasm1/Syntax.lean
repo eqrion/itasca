@@ -3,7 +3,7 @@ import Itasca.Handler.Block
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Wasm
+namespace Itasca.Wasm1
 
 /-- The flat instruction stream for the full Wasm 1.0 body proof.
 Block types retain all four Wasm 1.0 value types. Delimiters are explicit. -/
@@ -76,4 +76,4 @@ theorem Emits.wellFormed {tokens : List Token} {ops : List instr}
 def BodyTokens (tokens : List Token) (ops : List instr) : Prop :=
   ∃ inner, tokens = inner ++ [.end_] ∧ Emits inner ops
 
-end Itasca.Wasm
+end Itasca.Wasm1

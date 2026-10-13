@@ -3,7 +3,7 @@ import Itasca.Wasm2.Frames
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 structure Bounds (data : Slice U8) (st : code.BodyState) : Prop where
   size : data.length ≤ limits.MAX_FUNCTION_BYTES.val
@@ -175,7 +175,7 @@ theorem Pending.append_result {data env locals index st} (p : Pending data env l
   · obtain ⟨_, _, _, _, _, _, _, hblocks, _⟩ := p.opened
     simp [hb, hblocks]
 
-end Itasca.MultiValue
+end Itasca.Wasm2
 
 namespace Itasca
 
@@ -183,8 +183,8 @@ namespace Itasca
 theorem code.push_frame.initial (index : U32) :
     code.push_frame
       { core := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _, 0#usize⟩ } .Body (.TypeIndex index) =
-      .ok (MultiValue.initial index) := by
-  simp [code.push_frame, code.push_ctrl, MultiValue.initial,
+      .ok (Wasm2.initial index) := by
+  simp [code.push_frame, code.push_ctrl, Wasm2.initial,
     alloc.vec.Vec.push, U32.max, U32.numBits]
   rfl
 

@@ -5,7 +5,7 @@ import Itasca.Handler.Sequence
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Core
+namespace Itasca.Spec
 
 /-- An I32 constant's generated typing uses its unsigned bit pattern. -/
 theorem i32Const_typed (C : context) (hC : wf_context C) (value : I32) :
@@ -18,7 +18,7 @@ theorem i32Const_framed (C : context) (hC : wf_context C) (value : I32) (ts : Li
     (.instr C _ [] [.I32] (i32Const_typed C hC value) hC (i32Const_wf value))
     hC (by simpa [Forall] using i32Const_wf value)
 
-end Itasca.Core
+end Itasca.Spec
 
 namespace Itasca
 
@@ -47,9 +47,9 @@ theorem code.read_i32_const.spec (st : code.OpIterState) (data : Slice U8)
     (hsize : st.vals.val.length < Usize.max) :
     code.read_i32_const st data ⦃ r => r.2.ctrls = st.ctrls ∧
       match r.1 with
-      | .Ok value => SignedLeb.Decoded data st.pos value.val r.2.pos ∧
+      | .Ok value => SignedLeb32.Decoded data st.pos value.val r.2.pos ∧
           r.2.vals.val = st.vals.val ++ [.Val .I32]
-      | .Err e => SignedLeb.Rejected data st.pos e ∧ r.2 = st ⦄ := by
+      | .Err e => SignedLeb32.Rejected data st.pos e ∧ r.2 = st ⦄ := by
   obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_s32_leb.spec data st.pos)
   cases r with
   | Err e =>
@@ -117,11 +117,11 @@ theorem Realizes.snoc_val {poly : Bool} {vals : List code.StackType} {ts : List 
 theorem TypedPrefix.i32Const {C : context} {ops : List instr} {poly : Bool}
     {vals : List code.StackType} (h : TypedPrefix C ops poly vals)
     (hC : wf_context C) (value : I32) :
-    TypedPrefix C (ops ++ [Core.i32Const value]) poly (vals ++ [.Val .I32]) := by
-  apply h.append hC _ (Core.i32Const_wf value)
+    TypedPrefix C (ops ++ [Spec.i32Const value]) poly (vals ++ [.Val .I32]) := by
+  apply h.append hC _ (Spec.i32Const_wf value)
   intro out hout
   obtain ⟨before, rfl, hb⟩ := Realizes.snoc_val .I32 hout
-  exact ⟨before, hb, Core.i32Const_framed C hC value before⟩
+  exact ⟨before, hb, Spec.i32Const_framed C hC value before⟩
 
 end Itasca.Sequence
 

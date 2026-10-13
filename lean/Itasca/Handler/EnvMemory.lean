@@ -69,7 +69,7 @@ theorem code.read_load.prefix (st : code.OpIterState) (data : Slice U8)
                   Sequence.Realizes (Control.polymorphic st) segment (ts ++ [.I32]) := by
                 simpa [Control.polymorphic, hc, Translate.valueType] using hout'.2
               obtain ⟨hwf, hop⟩ := hC.memory_operation opcode operation hrow arg hcheckpost.1 hcheckpost.2
-              have htyping := (Frames.ResumePrefix.after_pop htyped hpop).finish hC.wf
+              have htyping := (Sequence.ResumePrefix.after_pop htyped hpop).finish hC.wf
                 (operation.op arg) [operation.ty] hwf
                 (by simpa [MemoryMeaning.Operation.inputs, MemoryMeaning.Operation.outputs, hload,
                   Translate.valueType] using hop)
@@ -135,7 +135,7 @@ theorem code.read_store.prefix (st : code.OpIterState) (data : Slice U8)
                     intro ts ht
                     simpa [List.append_assoc] using hfirst _ (hsecond ts ht)
                   obtain ⟨hwf, hop⟩ := hC.memory_operation opcode operation hrow arg hcheckpost.1 hcheckpost.2
-                  have htyping := (Frames.ResumePrefix.after_pop htyped hpop).finish hC.wf
+                  have htyping := (Sequence.ResumePrefix.after_pop htyped hpop).finish hC.wf
                     (operation.op arg) [] hwf
                     (by simpa [MemoryMeaning.Operation.inputs, MemoryMeaning.Operation.outputs, hstore,
                       Translate.valueType] using hop)
@@ -168,7 +168,7 @@ theorem code.read_memory_size.prefix (st : code.OpIterState) (data : Slice U8)
       | Ok u =>
           obtain ⟨s', hp, hv', hc', hpos⟩ := WP.spec_imp_exists
             (code.push_val.spec s (.Val .I32) (by simpa [hv] using hsize))
-          have htyping := (Frames.ResumePrefix.of_prefix htyped).finish hC.wf .MEMORY_SIZE [.I32]
+          have htyping := (Sequence.ResumePrefix.of_prefix htyped).finish hC.wf .MEMORY_SIZE [.I32]
             .instr_case_62 (hC.memory_size hmempost)
           rw [WP.spec_equiv_exists]
           refine ⟨(.Ok (), s'), ?_, ?_⟩
@@ -215,7 +215,7 @@ theorem code.read_memory_grow.prefix (st : code.OpIterState) (data : Slice U8)
               have hpop : ∀ ts, Sequence.Realizes (Control.polymorphic st) rest ts →
                   Sequence.Realizes (Control.polymorphic st) segment (ts ++ [.I32]) := by
                 simpa [Control.polymorphic, hc, Translate.valueType] using hout'.2
-              have htyping := (Frames.ResumePrefix.after_pop htyped hpop).finish hC.wf .MEMORY_GROW [.I32]
+              have htyping := (Sequence.ResumePrefix.after_pop htyped hpop).finish hC.wf .MEMORY_GROW [.I32]
                 .instr_case_63 (hC.memory_grow hmempost)
               rw [WP.spec_equiv_exists]
               refine ⟨(.Ok (), s''), ?_, ?_⟩

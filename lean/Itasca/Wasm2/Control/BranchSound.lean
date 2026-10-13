@@ -5,7 +5,7 @@ import Itasca.Handler.BrTableComplete
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- Resolved runtime labels agree with the generated context's label space. -/
 def BranchLabels (env : module.Env) (st : code.BodyState) (C : context) : Prop :=
@@ -23,7 +23,7 @@ theorem branch_typed {C : context} (hC : wf_context C) (depth : U32) (ts : List 
     rw [getElem!_pos C.LABELS depth.val hi, (List.getElem?_eq_some_iff.mp hl).2]
     rfl
   · exact hC
-  · exact .instr_case_7 _ (Core.label_wf depth)
+  · exact .instr_case_7 _ (Spec.label_wf depth)
 
 theorem branchIf_typed {C : context} (hC : wf_context C) (depth : U32) (ts : List valtype)
     (hl : C.LABELS[depth.val]? = some (.mk_list ts)) :
@@ -36,9 +36,9 @@ theorem branchIf_typed {C : context} (hC : wf_context C) (depth : U32) (ts : Lis
     rw [getElem!_pos C.LABELS depth.val hi, (List.getElem?_eq_some_iff.mp hl).2]
     rfl
   · exact hC
-  · exact .instr_case_8 _ (Core.label_wf depth)
+  · exact .instr_case_8 _ (Spec.label_wf depth)
 
-end Itasca.MultiValue
+end Itasca.Wasm2
 
 namespace Itasca
 
@@ -46,7 +46,7 @@ theorem code.read_multi_value_label.complete (st : code.BodyState) (data : Slice
     (depth : U32) (next : Usize) (view : signature.ResultType)
     (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (hd : Leb128.Decoded data st.core.pos depth next)
-    (hl : MultiValue.labelAt st depth.val = some view) :
+    (hl : Wasm2.labelAt st depth.val = some view) :
     code.read_multi_value_label st data =
       .ok (.Ok view, { st with core := { st.core with pos := next } }) := by
   have hlabel := code.label.complete
@@ -63,18 +63,18 @@ theorem code.branch.prefix (st : code.BodyState) (data : Slice U8)
     (hbase : c.value_stack_base.val = outer.length)
     (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (C : context) (hC : wf_context C) (inputs : List valtype) (ops : List instr)
-    (htyped : MultiValue.TypedPrefix C inputs ops c.polymorphic_base segment)
-    (hlabels : MultiValue.BranchLabels env st C) :
+    (htyped : Wasm2.TypedPrefix C inputs ops c.polymorphic_base segment)
+    (hlabels : Wasm2.BranchLabels env st C) :
     code.branch st data env false ⦃ r => r.1 = .Ok () →
       ∃ depth, Leb128.Decoded data st.core.pos depth r.2.core.pos ∧
         r.2.core.vals.val = outer ∧ r.2.blocks = st.blocks ∧
         r.2.core.ctrls.val = cs ++ [{ c with polymorphic_base := true }] ∧
-        MultiValue.TypedPrefix C inputs (ops ++ [.BR (.mk_uN depth.val)]) true [] ⦄ := by
+        Wasm2.TypedPrefix C inputs (ops ++ [.BR (.mk_uN depth.val)]) true [] ⦄ := by
   obtain ⟨⟨res, s⟩, hr, hv, hc, hb, _, hout⟩ := WP.spec_imp_exists
     (code.read_multi_value_label.spec st data ha)
   dsimp only at hv hc hb hout
   cases res with
-  | Err e => simp [code.branch.eq_core, MultiValue.branchCore, hr, core.result.Result.Insts.CoreOpsTry.branch,
+  | Err e => simp [code.branch.eq_core, Wasm2.branchCore, hr, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok view =>
     obtain ⟨depth, hd, hl⟩ := hout view rfl
@@ -86,23 +86,23 @@ theorem code.branch.prefix (st : code.BodyState) (data : Slice U8)
         (by simpa [hv] using hvals) hbs)
     dsimp only at hc' hp' hv' ht
     cases res' with
-    | Err e => simp [code.branch.eq_core, MultiValue.branchCore, hr, hr', core.result.Result.Insts.CoreOpsTry.branch,
+    | Err e => simp [code.branch.eq_core, Wasm2.branchCore, hr, hr', core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
     | Ok u =>
       obtain ⟨s'', hm, hv'', _, hc'', hp''⟩ := WP.spec_imp_exists
         (code.mark_unreachable.spec s' cs c (by simpa [hc', hc] using hctrls)
           (by simp [hv', hbase]))
       have hargs := ht rfl _ (Sequence.realizes_default (Control.polymorphic s.core) rest)
-      have htyping : MultiValue.TypedPrefix C inputs (ops ++ [.BR (.mk_uN depth.val)]) true [] := by
-        apply htyped.append hC _ (.instr_case_7 _ (Core.label_wf depth))
+      have htyping : Wasm2.TypedPrefix C inputs (ops ++ [.BR (.mk_uN depth.val)]) true [] := by
+        apply htyped.append hC _ (.instr_case_7 _ (Spec.label_wf depth))
         intro out _
         refine ⟨_, by simpa [hpoly] using hargs, .instr C _ _ _ ?_ hC
-          (.instr_case_7 _ (Core.label_wf depth))⟩
-        exact MultiValue.branch_typed hC depth _ hlabel _ out
+          (.instr_case_7 _ (Spec.label_wf depth))⟩
+        exact Wasm2.branch_typed hC depth _ hlabel _ out
       rw [WP.spec_equiv_exists]
       refine ⟨(.Ok (), {s with core := s''}), ?_, fun _ =>
         ⟨depth, by simpa [hp'', hp'] using hd, ?_, by simp [hc'', hctrls], hc'', htyping⟩⟩
-      · simp [code.branch.eq_core, MultiValue.branchCore, hr, hr', hm, core.result.Result.Insts.CoreOpsTry.branch]
+      · simp [code.branch.eq_core, Wasm2.branchCore, hr, hr', hm, core.result.Result.Insts.CoreOpsTry.branch]
       · simpa [hv', hbase] using hv''
 
 /-- Conditional branches reify the entire checked target signature on their
@@ -113,19 +113,19 @@ theorem code.branch.conditional_prefix (st : code.BodyState) (data : Slice U8)
     (hbase : (Control.base st.core).val = outer.length)
     (hs : Control.Shape st.core) (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (C : context) (hC : wf_context C) (inputs : List valtype) (ops : List instr)
-    (htyped : MultiValue.TypedPrefix C inputs ops (Control.polymorphic st.core) segment)
-    (hlabels : MultiValue.BranchLabels env st C) :
+    (htyped : Wasm2.TypedPrefix C inputs ops (Control.polymorphic st.core) segment)
+    (hlabels : Wasm2.BranchLabels env st C) :
     code.branch st data env true ⦃ r => r.1 = .Ok () →
       ∃ depth, Leb128.Decoded data st.core.pos depth r.2.core.pos ∧
         r.2.core.ctrls = st.core.ctrls ∧ r.2.blocks = st.blocks ∧
         ∃ rest, r.2.core.vals.val = outer ++ rest ∧
-          MultiValue.TypedPrefix C inputs (ops ++ [.BR_IF (.mk_uN depth.val)])
+          Wasm2.TypedPrefix C inputs (ops ++ [.BR_IF (.mk_uN depth.val)])
             (Control.polymorphic st.core) rest ⦄ := by
   obtain ⟨⟨res, s⟩, hr, hv, hc, hb, _, hout⟩ := WP.spec_imp_exists
     (code.read_multi_value_label.spec st data ha)
   dsimp only at hv hc hb hout
   cases res with
-  | Err e => simp [code.branch.eq_core, MultiValue.branchCore, hr, core.result.Result.Insts.CoreOpsTry.branch,
+  | Err e => simp [code.branch.eq_core, Wasm2.branchCore, hr, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok view =>
     obtain ⟨depth, hd, hl⟩ := hout view rfl
@@ -136,7 +136,7 @@ theorem code.branch.conditional_prefix (st : code.BodyState) (data : Slice U8)
         (by simpa [hv] using hvals) (by simpa [Control.base, hc] using hbase))
     dsimp only at hcc hpc hvc htc
     cases rc with
-    | Err e => simp [code.branch.eq_core, MultiValue.branchCore, hr, hcond, core.result.Result.Insts.CoreOpsTry.branch,
+    | Err e => simp [code.branch.eq_core, Wasm2.branchCore, hr, hcond, core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
     | Ok popped =>
       obtain ⟨⟨res', s'⟩, hr', hc', hp', rest, hv', _, ht⟩ := WP.spec_imp_exists
@@ -144,7 +144,7 @@ theorem code.branch.conditional_prefix (st : code.BodyState) (data : Slice U8)
           (by simpa [Control.base, hcc, hc] using hbase))
       dsimp only at hc' hp' hv' ht
       cases res' with
-      | Err e => simp [code.branch.eq_core, MultiValue.branchCore, hr, hcond, hr', core.result.Result.Insts.CoreOpsTry.branch,
+      | Err e => simp [code.branch.eq_core, Wasm2.branchCore, hr, hcond, hr', core.result.Result.Insts.CoreOpsTry.branch,
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       | Ok u =>
         have hs' : Control.Shape s' := hs.replace_operands (hc'.trans (hcc.trans hc)) (by
@@ -155,7 +155,7 @@ theorem code.branch.conditional_prefix (st : code.BodyState) (data : Slice U8)
           (code.push_results.total s' env view hs')
         dsimp only at hcp hpp hvp
         cases rp with
-        | Err e => simp [code.branch.eq_core, MultiValue.branchCore, hr, hcond, hr', hpush,
+        | Err e => simp [code.branch.eq_core, Wasm2.branchCore, hr, hcond, hr', hpush,
             core.result.Result.Insts.CoreOpsTry.branch]
         | Ok u =>
           obtain ⟨ts', hts', hvs⟩ := hvp rfl
@@ -168,15 +168,15 @@ theorem code.branch.conditional_prefix (st : code.BodyState) (data : Slice U8)
             have hparam := ht rfl out (by simpa [Control.polymorphic, hcc, hc] using ho)
             have hargs := htc.2 _ (by simpa [Control.polymorphic, hcc] using hparam)
             simpa [Control.polymorphic, hc, Translate.valueType, List.append_assoc] using hargs
-          have htyping := (MultiValue.ResumePrefix.after_pop htyped htransfer).finish hC
-            (.BR_IF (.mk_uN depth.val)) ts (.instr_case_8 _ (Core.label_wf depth))
-            (MultiValue.branchIf_typed hC depth _ hlabel)
+          have htyping := (Wasm2.ResumePrefix.after_pop htyped htransfer).finish hC
+            (.BR_IF (.mk_uN depth.val)) ts (.instr_case_8 _ (Spec.label_wf depth))
+            (Wasm2.branchIf_typed hC depth _ hlabel)
           rw [WP.spec_equiv_exists]
           refine ⟨(.Ok (), {s with core := sp}), ?_, fun _ =>
             ⟨depth, by simpa [hpp, hp', hpc] using hd,
               hcp.trans (hc'.trans (hcc.trans hc)),
               code.BodyState.blocks_eq_of_ctrls (hcp.trans (hc'.trans (hcc.trans hc))), _, ?_, htyping⟩⟩
-          · simp [code.branch.eq_core, MultiValue.branchCore, hr, hcond, hr', hpush, core.result.Result.Insts.CoreOpsTry.branch]
+          · simp [code.branch.eq_core, Wasm2.branchCore, hr, hcond, hr', hpush, core.result.Result.Insts.CoreOpsTry.branch]
           · simpa [hv', List.append_assoc] using hvs
 
 end Itasca

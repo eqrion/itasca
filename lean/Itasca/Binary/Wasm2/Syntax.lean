@@ -3,7 +3,7 @@ import Itasca.Binary.Wasm1.Syntax
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- The flat multi-value instruction stream. Block signatures retain their
 type-section indices; delimiters are explicit. -/
@@ -76,4 +76,4 @@ theorem Emits.wellFormed {tokens : List Token} {ops : List instr}
 def BodyTokens (tokens : List Token) (ops : List instr) : Prop :=
   ∃ inner, tokens = inner ++ [.end_] ∧ Emits inner ops
 
-end Itasca.MultiValue
+end Itasca.Wasm2

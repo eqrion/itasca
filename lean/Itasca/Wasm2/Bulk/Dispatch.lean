@@ -2,7 +2,7 @@ import Itasca.Wasm2.Step.Dispatch
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- Exact factorization of bulk instruction callbacks around their readers. -/
 def bulkStep {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
@@ -21,14 +21,14 @@ def bulkStep {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
   | 17#uscalar => CoreVisitor.run (code.read_table_fill st data env) (fun v s a => visitor.on_table_fill v s a) v
   | _ => .ok (.Err .UnrecognizedOpcode, st, v)
 
-end Itasca.MultiValue
+end Itasca.Wasm2
 
 namespace Itasca
 
 theorem code.step_bulk.eq_runs {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (opcode : U32) (v : V) :
-    code.step_bulk visitor st data env opcode v = MultiValue.bulkStep visitor st data env opcode v := by
-  unfold code.step_bulk MultiValue.bulkStep
+    code.step_bulk visitor st data env opcode v = Wasm2.bulkStep visitor st data env opcode v := by
+  unfold code.step_bulk Wasm2.bulkStep
   split <;> try rfl
   all_goals simp only [CoreVisitor.run]
   all_goals congr 1

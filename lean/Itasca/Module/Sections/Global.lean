@@ -135,7 +135,7 @@ theorem module.decode_global_section_loop.spec (data : Slice U8) (env : module.E
           · scalar_tac
   · exact ⟨by simp, [], by simp,
       ⟨by cases env; rfl, by simp, by simp, by simp⟩,
-      ⟨[], .nil, Wasm.BytesAt.nil data start hstart⟩, by simp, hglobals, htypes, hreferences⟩
+      ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, by simp, hglobals, htypes, hreferences⟩
 
 @[step]
 theorem module.decode_global_section.spec (data : Slice U8) (pos : Usize) (env : module.Env)

@@ -2,12 +2,12 @@ import Itasca.Wasm2.References.Complete
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Completeness
+namespace Itasca.Wasm2.Completeness
 
 theorem Frame.memory_fill {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (middle next : Usize) (front : List valtype)
     (hprefix : Leb128.Decoded data st.core.pos 11#u32 middle)
-    (hb : Wasm.BytesAt data middle [0#u8] next) (hmem : 0 < env.mem_types.val.length)
+    (hb : Wasm1.BytesAt data middle [0#u8] next) (hmem : 0 < env.mem_types.val.length)
     (hsize : st.core.vals.val.length < Usize.max)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ [.I32, .I32, .I32])) :
     ∃ s, step st data env ctx index 252#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
@@ -26,14 +26,14 @@ theorem Frame.memory_fill {st} (f : Frame st) (data : Slice U8) (env : module.En
 theorem Frame.memory_copy {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (middle next : Usize) (front : List valtype)
     (hprefix : Leb128.Decoded data st.core.pos 10#u32 middle)
-    (hb : Wasm.BytesAt data middle [0#u8, 0#u8] next) (hmem : 0 < env.mem_types.val.length)
+    (hb : Wasm1.BytesAt data middle [0#u8, 0#u8] next) (hmem : 0 < env.mem_types.val.length)
     (hsize : st.core.vals.val.length < Usize.max)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ [.I32, .I32, .I32])) :
     ∃ s, step st data env ctx index 252#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
       f.Output front s ∧ s.core.vals.val.length ≤ st.core.vals.val.length + 1 := by
   have hmeta : memoryCopyMetadata {st.core with pos := middle} data env =
       .ok (.Ok (), {st.core with pos := next}) := by
-    obtain ⟨reserved, hfirst, hsecond⟩ := (show Wasm.BytesAt data middle ([0#u8] ++ [0#u8]) next from hb).split
+    obtain ⟨reserved, hfirst, hsecond⟩ := (show Wasm1.BytesAt data middle ([0#u8] ++ [0#u8]) next from hb).split
     simp [memoryCopyMetadata, code.read_bulk_memory.complete {st.core with pos := middle} data env reserved hfirst hmem,
       code.read_reserved_zero.complete {st.core with pos := reserved} data next hsecond]
   obtain ⟨s, hs, hp, hout, hl⟩ := f.metadata_read (memoryCopyMetadata {st.core with pos := middle} data env)
@@ -49,7 +49,7 @@ theorem Frame.memory_init {st} (f : Frame st) (data : Slice U8) (env : module.En
     (idx count : U32) (dataBytes : List U8)
     (he : Leb128.Encoding dataBytes idx.val) (hcount : env.data_count = some count) (hidx : idx.val < count.val)
     (hprefix : Leb128.Decoded data st.core.pos 8#u32 middle)
-    (hb : Wasm.BytesAt data middle (dataBytes ++ [0#u8]) next) (hmem : 0 < env.mem_types.val.length)
+    (hb : Wasm1.BytesAt data middle (dataBytes ++ [0#u8]) next) (hmem : 0 < env.mem_types.val.length)
     (hsize : st.core.vals.val.length < Usize.max)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ [.I32, .I32, .I32])) :
     ∃ s, step st data env ctx index 252#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
@@ -107,7 +107,7 @@ theorem Frame.table_init {st} (f : Frame st) (data : Slice U8) (env : module.Env
     (firstBytes secondBytes : List U8)
     (hfirst : Leb128.Encoding firstBytes i.val) (hsecond : Leb128.Encoding secondBytes j.val)
     (hprefix : Leb128.Decoded data st.core.pos 12#u32 middle)
-    (hb : Wasm.BytesAt data middle (firstBytes ++ secondBytes) next)
+    (hb : Wasm1.BytesAt data middle (firstBytes ++ secondBytes) next)
     (hi : i.val < env.elements.val.length) (hj : j.val < env.table_types.val.length)
     (helem : env.elements.val[i.val].elem = env.table_types.val[j.val].elem)
     (hsize : st.core.vals.val.length < Usize.max)
@@ -138,7 +138,7 @@ theorem Frame.table_copy {st} (f : Frame st) (data : Slice U8) (env : module.Env
     (firstBytes secondBytes : List U8)
     (hfirst : Leb128.Encoding firstBytes i.val) (hsecond : Leb128.Encoding secondBytes j.val)
     (hprefix : Leb128.Decoded data st.core.pos 14#u32 middle)
-    (hb : Wasm.BytesAt data middle (firstBytes ++ secondBytes) next)
+    (hb : Wasm1.BytesAt data middle (firstBytes ++ secondBytes) next)
     (hi : i.val < env.table_types.val.length) (hj : j.val < env.table_types.val.length)
     (helem : env.table_types.val[i.val].elem = env.table_types.val[j.val].elem)
     (hsize : st.core.vals.val.length < Usize.max)
@@ -164,4 +164,4 @@ theorem Frame.table_copy {st} (f : Frame st) (data : Slice U8) (env : module.Env
     (by rw [code.step_wasm2.bulk _ _ _ _ _ 14#u32 middle _ hprefix (by decide), code.step_bulk.eq_runs]; rfl)
     hs rfl hp (by simpa [Simd.outputTypes] using hout) hl hsize
 
-end Itasca.MultiValue.Completeness
+end Itasca.Wasm2.Completeness

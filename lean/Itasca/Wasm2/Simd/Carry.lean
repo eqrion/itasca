@@ -3,7 +3,7 @@ import Itasca.Visitor.Basic
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Simd
+namespace Itasca.Wasm2.Simd
 
 /-- Retain the parsed immediate while applying a fixed operand effect. -/
 def carryFixed {A : Type} (a : A) (st : code.OpIterState) (inputs : List types.ValueType)
@@ -60,4 +60,4 @@ theorem carryFixed.run {A V : Type} (a : A) (st : code.OpIterState)
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
 
-end Itasca.MultiValue.Simd
+end Itasca.Wasm2.Simd

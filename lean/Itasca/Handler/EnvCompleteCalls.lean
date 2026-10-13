@@ -44,7 +44,7 @@ theorem code.read_call.complete (st : code.OpIterState) (data : Slice U8) (env :
       core.result.Result.Insts.CoreOpsTry.branch]
   · simpa [hvs, List.append_assoc, alloc.vec.Vec.deref] using hv'
   · simpa using Nat.add_le_add_right hlen ft.results.val.length
-  · exact (Frames.realizes_append_concrete _ rest ft.results.val _).mpr ⟨before, hrest, rfl⟩
+  · exact (Sequence.realizes_append_concrete _ rest ft.results.val _).mpr ⟨before, hrest, rfl⟩
 
 /-- Indirect calls consume the selector before the arguments and use env.types. -/
 theorem code.read_call_indirect.complete (st : code.OpIterState) (data : Slice U8) (env : module.Env)
@@ -102,7 +102,7 @@ theorem code.read_call_indirect.complete (st : code.OpIterState) (data : Slice U
       lift, hsmall, hft, hreq, hcond, hpop, hpush, core.result.Result.Insts.CoreOpsTry.branch]
   · simpa [hvs, List.append_assoc, alloc.vec.Vec.deref] using hv'
   · simpa using Nat.add_le_add_right (hlen.trans hlc) ft.results.val.length
-  · apply (Frames.realizes_append_concrete _ rest ft.results.val _).mpr
+  · apply (Sequence.realizes_append_concrete _ rest ft.results.val _).mpr
     exact ⟨before, by simpa [Control.polymorphic, hcc] using hrest, rfl⟩
 
 end Itasca

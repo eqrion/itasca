@@ -4,9 +4,9 @@ import Itasca.Binary.Wasm1.Syntax
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.WasmFrames
+namespace Itasca.Wasm1.Frames
 
-open Frames
+open Sequence
 
 /-- The pending structured construct, including the saved first arm of an if. -/
 inductive Form where
@@ -14,7 +14,7 @@ inductive Form where
   | block
   | loop
   | then_
-  | else_ (thenTokens : List Wasm.Token) (thenOps : List instr)
+  | else_ (thenTokens : List Wasm1.Token) (thenOps : List instr)
 
 def Form.kind : Form → code.LabelKind
   | .body => .Body
@@ -37,7 +37,7 @@ def enter (C : context) (form : Form) (bt : code.BlockType) : context :=
 
 /-- An else frame carries the completed typing derivation for its then arm. -/
 def Form.Valid (C : context) (bt : code.BlockType) : Form → Prop
-  | .else_ thenTokens thenOps => Wasm.Emits thenTokens thenOps ∧
+  | .else_ thenTokens thenOps => Wasm1.Emits thenTokens thenOps ∧
       Instrs_ok (enter C (.else_ thenTokens thenOps) bt) thenOps
         (.mk_functype (.mk_list []) (.mk_list (Control.resultTypes bt)))
   | _ => True
@@ -52,12 +52,12 @@ structure Saved where
   form : Form
   ops : List instr
   vals : List code.StackType
-  tokens : List Wasm.Token
+  tokens : List Wasm1.Token
 
 structure Header (C : context) (f : Saved) : Prop where
   kind : f.ctrl.kind = f.form.kind
   prior : f.form.Valid C f.ctrl.block_type
-  emits : Wasm.Emits f.tokens f.ops
+  emits : Wasm1.Emits f.tokens f.ops
   profile : Wasm1.Instructions (enter C f.form f.ctrl.block_type) f.ops
   priorProfile : f.form.Profile C f.ctrl.block_type
 
@@ -116,7 +116,7 @@ inductive Closed : Form → code.BlockType → List instr → instr → Prop whe
       Closed .loop bt ops (.LOOP (Control.blockType bt) ops)
   | then_ (ops : List instr) :
       Closed .then_ .Empty ops (.IFELSE (Control.blockType .Empty) ops [])
-  | else_ (bt : code.BlockType) (thenTokens : List Wasm.Token) (thenOps ops : List instr) :
+  | else_ (bt : code.BlockType) (thenTokens : List Wasm1.Token) (thenOps ops : List instr) :
       Closed (.else_ thenTokens thenOps) bt ops (.IFELSE (Control.blockType bt) thenOps ops)
 
 theorem Closed.wf {form : Form} {bt : code.BlockType} {ops : List instr} {op : instr}
@@ -158,7 +158,7 @@ theorem Closed.profile {C : context} {form : Form} {bt : code.BlockType}
   | then_ => exact .ifElse C _ _ _ hops (.nil _)
   | else_ => exact .ifElse C _ _ _ hprior hops
 
-def Form.opening (form : Form) (bt : code.BlockType) : List Wasm.Token :=
+def Form.opening (form : Form) (bt : code.BlockType) : List Wasm1.Token :=
   match form with
   | .body => []
   | .block => [.block bt]
@@ -166,9 +166,9 @@ def Form.opening (form : Form) (bt : code.BlockType) : List Wasm.Token :=
   | .then_ => [.if_ bt]
   | .else_ thenTokens _ => [.if_ bt] ++ thenTokens ++ [.else_]
 
-def Saved.trace (f : Saved) : List Wasm.Token := f.form.opening f.ctrl.block_type ++ f.tokens
+def Saved.trace (f : Saved) : List Wasm1.Token := f.form.opening f.ctrl.block_type ++ f.tokens
 
-def trace (parents : List Saved) (current : Saved) : List Wasm.Token :=
+def trace (parents : List Saved) (current : Saved) : List Wasm1.Token :=
   parents.flatMap Saved.trace ++ current.trace
 
 theorem Closed.not_body {form : Form} {bt : code.BlockType} {ops : List instr} {op : instr}
@@ -176,14 +176,14 @@ theorem Closed.not_body {form : Form} {bt : code.BlockType} {ops : List instr} {
   cases closed <;> simp
 
 theorem Closed.emits {form : Form} {bt : code.BlockType} {ops : List instr} {op : instr}
-    {tokens : List Wasm.Token} (closed : Closed form bt ops op)
-    (C : context) (hprior : form.Valid C bt) (hemits : Wasm.Emits tokens ops) :
-    Wasm.Emits (form.opening bt ++ tokens ++ [.end_]) [op] := by
+    {tokens : List Wasm1.Token} (closed : Closed form bt ops op)
+    (C : context) (hprior : form.Valid C bt) (hemits : Wasm1.Emits tokens ops) :
+    Wasm1.Emits (form.opening bt ++ tokens ++ [.end_]) [op] := by
   cases closed with
-  | block => simpa [Form.opening] using Wasm.Emits.block bt .nil hemits
-  | loop => simpa [Form.opening] using Wasm.Emits.loop bt .nil hemits
-  | then_ => simpa [Form.opening] using Wasm.Emits.ifEnd .Empty .nil hemits
-  | else_ => simpa [Form.opening] using Wasm.Emits.ifElse bt .nil hprior.1 hemits
+  | block => simpa [Form.opening] using Wasm1.Emits.block bt .nil hemits
+  | loop => simpa [Form.opening] using Wasm1.Emits.loop bt .nil hemits
+  | then_ => simpa [Form.opening] using Wasm1.Emits.ifEnd .Empty .nil hemits
+  | else_ => simpa [Form.opening] using Wasm1.Emits.ifElse bt .nil hprior.1 hemits
 
 /-- Closing a nested frame resumes its suspended parent and records the closing token. -/
 theorem Open.close {root : context} {st st' : code.OpIterState}
@@ -261,7 +261,7 @@ theorem Open.else_ {root : context} {st st' : code.OpIterState}
     · simpa [vals, base, Saved.nextElse] using hvals
   · simp [trace, Saved.trace, Saved.nextElse, hform, Form.opening, List.append_assoc]
 
-def Saved.advance (current : Saved) (token : Wasm.Token) (op : instr)
+def Saved.advance (current : Saved) (token : Wasm1.Token) (op : instr)
     (poly : Bool) (vals : List code.StackType) : Saved :=
   { current with
     ctrl := { current.ctrl with polymorphic_base := poly }
@@ -328,7 +328,7 @@ theorem Open.finish_body {root : context} {st : code.OpIterState}
     (hresults : Sequence.Realizes current.ctrl.polymorphic_base current.vals
       (Control.resultTypes current.ctrl.block_type)) :
     parents = [] ∧
-      Wasm.BodyTokens (trace parents current ++ [.end_]) current.ops ∧
+      Wasm1.BodyTokens (trace parents current ++ [.end_]) current.ops ∧
       Instrs_ok (enter root .body current.ctrl.block_type) current.ops
         (.mk_functype (.mk_list []) (.mk_list (Control.resultTypes current.ctrl.block_type))) ∧
       Wasm1.Instructions (enter root .body current.ctrl.block_type) current.ops := by
@@ -375,7 +375,7 @@ def bodyType (parents : List Saved) (current : Saved) : Option code.BlockType :=
 @[simp]
 theorem bodyType_root (current : Saved) : bodyType [] current = some current.ctrl.block_type := rfl
 
-theorem bodyType_advance (parents : List Saved) (current : Saved) (token : Wasm.Token)
+theorem bodyType_advance (parents : List Saved) (current : Saved) (token : Wasm1.Token)
     (op : instr) (poly : Bool) (vals : List code.StackType) :
     bodyType parents (current.advance token op poly vals) = bodyType parents current := by
   cases parents <;> rfl
@@ -398,19 +398,19 @@ theorem bodyType_close (grandparents : List Saved) (parent current : Saved) (op 
 
 /-- A running zipper or its completed function body, with the original result type retained. -/
 def Status (root : context) (bodyBt : code.BlockType) (st : code.OpIterState)
-    (tokens : List Wasm.Token) : Prop :=
+    (tokens : List Wasm1.Token) : Prop :=
   (∃ parents current, Open root st parents current ∧ trace parents current = tokens ∧
       bodyType parents current = some bodyBt) ∨
   (st.ctrls.val = [] ∧ ∃ ops,
-    Wasm.BodyTokens tokens ops ∧
+    Wasm1.BodyTokens tokens ops ∧
     Instrs_ok (enter root .body bodyBt) ops
       (.mk_functype (.mk_list []) (.mk_list (Control.resultTypes bodyBt))) ∧
     Wasm1.Instructions (enter root .body bodyBt) ops)
 
 theorem Status.completed {root : context} {bodyBt : code.BlockType}
-    {st : code.OpIterState} {tokens : List Wasm.Token} (h : Status root bodyBt st tokens)
+    {st : code.OpIterState} {tokens : List Wasm1.Token} (h : Status root bodyBt st tokens)
     (hctrls : st.ctrls.val = []) :
-    ∃ ops, Wasm.BodyTokens tokens ops ∧
+    ∃ ops, Wasm1.BodyTokens tokens ops ∧
       Instrs_ok (enter root .body bodyBt) ops
         (.mk_functype (.mk_list []) (.mk_list (Control.resultTypes bodyBt))) ∧
       Wasm1.Instructions (enter root .body bodyBt) ops := by
@@ -452,4 +452,4 @@ theorem Open.shape {root : _root_.context} {st : code.OpIterState}
     · have heq : c = current.ctrl := by simpa using hc
       simp [heq, base, vals]
 
-end Itasca.WasmFrames
+end Itasca.Wasm1.Frames

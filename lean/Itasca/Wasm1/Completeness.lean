@@ -8,8 +8,8 @@ namespace Itasca.Completeness
 /-- All instruction trees in the binary Wasm 1.0 profile execute successfully
 when their generated typing derivation and version-specific restrictions hold. -/
 theorem programs (data : Slice U8) (env : module.Env) (ctx : code.Context)
-    (henv : Wasm1.Environment env) (tokens : List Wasm.Token) (ops : List instr)
-    (he : Wasm.Emits tokens ops) : Program data env ctx tokens ops := by
+    (henv : Wasm1.Environment env) (tokens : List Wasm1.Token) (ops : List instr)
+    (he : Wasm1.Emits tokens ops) : Program data env ctx tokens ops := by
   apply program_of_atoms data env ctx ?_ tokens ops he
   intro tokens op ha smaller
   cases ha with
@@ -45,9 +45,9 @@ theorem code.validate_body.wasm_complete_of_typing (data : Slice U8) (env : modu
     (henv : Wasm1.Environment env)
     (hresults : ctx.results.val = Control.results bt)
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
-    (hbytes : Wasm.BodyEncoding data ops) (htyped : Wasm.FunctionTyped env ctx bt ops)
+    (hbytes : Wasm1.BodyEncoding data ops) (htyped : Wasm1.FunctionTyped env ctx bt ops)
     (hprofile : Wasm1.Instructions
-      (WasmFrames.enter (EnvTranslation.context env ctx) .body bt) ops) :
+      (Wasm1.Frames.enter (EnvTranslation.context env ctx) .body bt) ops) :
     code.validate_body data env ctx = .ok (.Ok ()) :=
   code.validate_body.wasm_complete data env ctx bt henv hresults hsize
     ⟨ops, hbytes, htyped, hprofile⟩

@@ -11,12 +11,12 @@ relation does not claim that an arbitrary visitor emits such a trace.
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.CallbackTrace
+namespace Itasca.Wasm2.CallbackTrace
 
 open VisitorTrace
 
 /-- Embed a Wasm 1.0 token without changing its specification instruction. -/
-def liftToken : Wasm.Token → Token
+def liftToken : Wasm1.Token → Token
   | .plain op => .plain op
   | .block bt => .block (Control.signature bt)
   | .loop bt => .loop (Control.signature bt)
@@ -43,7 +43,7 @@ inductive Chunk (data : Slice U8) (start : Usize) :
       At data start token st.pos →
       Chunk data start [⟨.op st action, reply⟩] token st.pos
   | table {pos count first labels depths last fallback st bt reply} :
-      Wasm.BytesAt data start [0x0E#u8] pos →
+      Wasm1.BytesAt data start [0x0E#u8] pos →
       Leb128.Decoded data pos count first →
       LabelsAt data first labels depths last → depths.length = count.val →
       Leb128.Decoded data last fallback st.pos →
@@ -132,4 +132,4 @@ theorem run_step_trace {A V : Type} (data : Slice U8) (start : Usize)
     exact Outcomes.single (.op final (action a)) reply
 
 
-end Itasca.MultiValue.CallbackTrace
+end Itasca.Wasm2.CallbackTrace

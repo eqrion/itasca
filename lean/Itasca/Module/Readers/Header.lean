@@ -9,7 +9,7 @@ open ModuleBinary
 /-- The public module header reader checks the exact magic and version bytes. -/
 theorem module.read_header.spec (data : Slice U8) :
     module.read_header data ⦃ r => match r with
-      | .Ok next => Wasm.BytesAt data 0#usize magicVersion next
+      | .Ok next => Wasm1.BytesAt data 0#usize magicVersion next
       | .Err _ => True ⦄ := by
   obtain ⟨r, h1, hb1⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data 0#usize)
   cases r with

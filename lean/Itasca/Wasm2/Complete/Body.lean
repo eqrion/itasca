@@ -3,7 +3,7 @@ import Itasca.Wasm2.ExecutionContext
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Completeness
+namespace Itasca.Wasm2.Completeness
 
 /-- Independent typing starts the body with no operands, even when its type
 has parameters. The final end closes the selected multi-result signature. -/
@@ -49,4 +49,4 @@ theorem body_of_programs (data : Slice U8) (env : module.Env)
   · simpa [hgp, f] using hb'
   · simpa [hp'] using hfinish
 
-end Itasca.MultiValue.Completeness
+end Itasca.Wasm2.Completeness

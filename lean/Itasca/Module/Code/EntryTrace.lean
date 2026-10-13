@@ -14,7 +14,7 @@ def AcceptedTrace (data : Slice U8) (env : module.Env) (index start finish : Usi
     (observations : List Observation) : Prop :=
   ∃ (typeIdx : U32) (groups : List (U32 × types.ValueType)) (ctx : code.Context)
       (bt : code.BlockType) (bodyStart : Usize) (body : Slice U8)
-      (bodyObservations : List Observation) (tokens : List Wasm.Token)
+      (bodyObservations : List Observation) (tokens : List Wasm1.Token)
       (ops : List instr) (next : Usize),
     (∃ hi : index.val < env.func_type_indices.val.length,
       env.func_type_indices.val[index.val] = typeIdx) ∧
@@ -25,11 +25,11 @@ def AcceptedTrace (data : Slice U8) (env : module.Env) (index start finish : Usi
       ctx.locals.val = env.types.val[typeIdx.val].params.val ++ ModuleLocals.declared groups ∧
       ctx.results.val = env.types.val[typeIdx.val].results.val) ∧
     ctx.results.val = Control.results bt ∧
-    Wasm.BytesAt data bodyStart body.val finish ∧
+    Wasm1.BytesAt data bodyStart body.val finish ∧
     observations = ⟨.functionStart ctx typeIdx bodyStart finish, .Ok ()⟩ :: bodyObservations ∧
     AllAccepted bodyObservations ∧
     Completed body 0#usize bodyObservations tokens next ∧ next.val = body.length ∧
-    Wasm.BodyTokens tokens ops ∧ Wasm.FunctionTyped env ctx bt ops ∧
+    Wasm1.BodyTokens tokens ops ∧ Wasm1.FunctionTyped env ctx bt ops ∧
     (∃ (content : Usize) (size : U32),
       Leb128.Decoded data start size content ∧
       finish.val = content.val + size.val ∧
@@ -87,7 +87,7 @@ theorem Witness.trace_sound {V : Type} {visitor : code.OpVisitor V}
   · simpa [hstart, List.append_assoc] using hlog
   · refine ⟨w.type_lt, ?_, ?_, w.locals_allowed, ?_⟩
     · rw [w.function_type]
-      unfold Wasm.FunctionTyped at ht
+      unfold Wasm1.FunctionTyped at ht
       rw [body_context w.context_locals w.context_results hbt] at ht
       simpa only [instructionType, Control.resultTypes, ← hbt, ModuleBinary.Code.declared,
         ModuleLocals.declared] using ht

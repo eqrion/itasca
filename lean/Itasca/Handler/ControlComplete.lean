@@ -18,7 +18,7 @@ theorem Sequence.Realizes.empty_values {poly : Bool} {vals : List code.StackType
 /-- An independently encoded block header forces successful frame entry. -/
 theorem code.read_block.complete (st : code.OpIterState) (data : Slice U8)
     (bt : code.BlockType) (next : Usize)
-    (hbytes : Wasm.BytesAt data st.pos [Control.blockByte bt] next)
+    (hbytes : Wasm1.BytesAt data st.pos [Control.blockByte bt] next)
     (hsize : st.ctrls.val.length < Usize.max) (hbt : Control.ScalarBlockType bt) :
     code.read_block st data ⦃ r => r.1 = .Ok bt ∧ r.2.pos = next ∧
       r.2.vals = st.vals ∧
@@ -31,7 +31,7 @@ theorem code.read_block.complete (st : code.OpIterState) (data : Slice U8)
 
 theorem code.read_loop.complete (st : code.OpIterState) (data : Slice U8)
     (bt : code.BlockType) (next : Usize)
-    (hbytes : Wasm.BytesAt data st.pos [Control.blockByte bt] next)
+    (hbytes : Wasm1.BytesAt data st.pos [Control.blockByte bt] next)
     (hsize : st.ctrls.val.length < Usize.max) (hbt : Control.ScalarBlockType bt) :
     code.read_loop st data ⦃ r => r.1 = .Ok bt ∧ r.2.pos = next ∧
       r.2.vals = st.vals ∧
@@ -47,7 +47,7 @@ parent operand prefix beneath the new frame's fresh operand base. -/
 theorem code.read_if.complete (st : code.OpIterState) (data : Slice U8)
     (bt : code.BlockType) (next : Usize) (outer segment : List code.StackType)
     (ts : List valtype)
-    (hbytes : Wasm.BytesAt data st.pos [Control.blockByte bt] next)
+    (hbytes : Wasm1.BytesAt data st.pos [Control.blockByte bt] next)
     (hvals : st.vals.val = outer ++ segment)
     (hbase : (Control.base st).val = outer.length)
     (hsize : st.ctrls.val.length < Usize.max)
@@ -246,7 +246,7 @@ theorem code.read_br_if.complete (st : code.OpIterState) (data : Slice U8)
   · simpa [hv', alloc.vec.Vec.deref, List.append_assoc] using hv''
   · simp only [List.length_append, List.length_map]
     omega
-  · apply (Frames.realizes_append_concrete _ _ _ _).mpr
+  · apply (Sequence.realizes_append_concrete _ _ _ _).mpr
     exact ⟨front, by simpa [hpoly] using ht', by simp [hrsv]⟩
 
 end Itasca

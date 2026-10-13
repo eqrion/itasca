@@ -8,13 +8,13 @@ namespace Itasca
 theorem code.check_suffix.complete_of_base (st : code.OpIterState) (env : module.Env)
     (view : signature.ResultType) (ts : List types.ValueType)
     (hbase : (Control.base st).val ≤ st.vals.val.length)
-    (hts : MultiValue.resolve env view = some ts) (hfits : MultiValue.Suffix st ts) :
+    (hts : Wasm2.resolve env view = some ts) (hfits : Wasm2.Suffix st ts) :
     code.check_suffix st env view = .ok (.Ok ()) := by
   obtain ⟨n, hn, hnv⟩ := signature.ResultType.len.complete view env ts hts
   obtain ⟨res, hr, hout⟩ := WP.spec_imp_exists
     (code.check_suffix_loop.spec st env view ts hts (alloc.vec.Vec.len st.vals) n
       hbase (by simp) (by omega))
-  have he : res = .Ok () := hout.mpr (by simpa [hnv, MultiValue.Suffix] using hfits)
+  have he : res = .Ok () := hout.mpr (by simpa [hnv, Wasm2.Suffix] using hfits)
   subst res
   obtain ⟨base, hreadbase, rfl⟩ := WP.spec_imp_exists (code.cur_base.spec st)
   simp [code.check_suffix, hreadbase, hn, hr, core.result.Result.Insts.CoreOpsTry.branch]
@@ -28,7 +28,7 @@ theorem code.branch_table_loop.complete (st : code.BodyState) (data : Slice U8)
     (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (hi : i.val ≤ count.val) (hlen : i.val + depths.length = count.val + 1)
     (hd : BrTable.LabelsDecoded data st.core.pos depths next)
-    (ht : MultiValue.TableTargets env st depths (some n))
+    (ht : Wasm2.TableTargets env st depths (some n))
     (harity : arity = none ∨ arity = some n) :
     ∃ s, code.branch_table_loop st.core st.blocks data env count arity i = .ok (.Ok (), s) ∧
       s.core.vals.val = st.core.vals.val.take c.value_stack_base.val ∧
@@ -65,14 +65,14 @@ theorem code.branch_table_loop.complete (st : code.BodyState) (data : Slice U8)
       unfold code.branch_table_loop code.branch_table_with_loop
       rw [loop]
       dsimp only
-      rw [MultiValue.tableBody_eq data env count st.core st.blocks arity i, hbody]
+      rw [Wasm2.tableBody_eq data env count st.core st.blocks arity i, hbody]
       simp [hic, hm]
     | cons d ds =>
       have hilt : i.val < count.val := by simp only [List.length_cons] at hlen; omega
       have hine : i ≠ count := fun h => by subst i; omega
       obtain ⟨j, hj, hjv⟩ := WP.spec_imp_exists
         (UScalar.add_spec (x := i) (y := 1#u32) (by scalar_tac))
-      have htargets : MultiValue.TableTargets env s (d :: ds) (some n) := by
+      have htargets : Wasm2.TableTargets env s (d :: ds) (some n) := by
         intro x hx
         exact ht x (by simp [hx])
       obtain ⟨out, hrec, hv, hc, hb, hp⟩ := ih s j (some n) hctrls hs' ha
@@ -82,7 +82,7 @@ theorem code.branch_table_loop.complete (st : code.BodyState) (data : Slice U8)
       unfold code.branch_table_loop code.branch_table_with_loop
       rw [loop]
       dsimp only
-      rw [MultiValue.tableBody_eq data env count st.core st.blocks arity i, hbody]
+      rw [Wasm2.tableBody_eq data env count st.core st.blocks arity i, hbody]
       simpa [hine, hj, code.branch_table_loop, code.branch_table_with_loop, Std.bind_assoc] using hrec
 
 /-- The generated common-subtype branch-table premise suffices for each
@@ -96,7 +96,7 @@ theorem code.branch_table.complete (st : code.BodyState) (data : Slice U8)
     (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (hd : BrTable.Decoded data st.core.pos depths default next)
     (htargets : ∀ d ∈ depths ++ [default], ∃ view ts,
-      MultiValue.labelAt st d.val = some view ∧ MultiValue.resolve env view = some ts ∧
+      Wasm2.labelAt st d.val = some view ∧ Wasm2.resolve env view = some ts ∧
       Resulttype_sub (.mk_list common) (.mk_list (ts.map Translate.valueType)))
     (hreal : Sequence.Realizes (Control.polymorphic st.core) segment
       (front ++ (common ++ [.I32]))) :
@@ -119,12 +119,12 @@ theorem code.branch_table.complete (st : code.BodyState) (data : Slice U8)
     have := List.Forall₂.length_eq (DeclarativeComplete.result_sub_iff.mp h)
     simpa using this.symm
   have hncommon : n.val = common.length := hn.trans (hsub_len hsubd)
-  have htargets' : MultiValue.TableTargets env popped (depths ++ [default]) (some n) := by
+  have htargets' : Wasm2.TableTargets env popped (depths ++ [default]) (some n) := by
     intro d hd
     obtain ⟨view, ts, hl, ht, hsub⟩ := htargets d hd
     refine ⟨view, ts, n, ?_, ht, rfl, hncommon.trans (hsub_len hsub).symm, ?_⟩
-    · simpa [popped, MultiValue.labelAt, hcc] using hl
-    · apply MultiValue.Suffix.of_realizes front
+    · simpa [popped, Wasm2.labelAt, hcc] using hl
+    · apply Wasm2.Suffix.of_realizes front
       have hreal' : Sequence.Realizes (Control.polymorphic sc) rest (front ++ common) := by
         simpa [Control.polymorphic, hcc] using htc
       have hmono := DeclarativeComplete.realizes_mono hreal'
@@ -138,7 +138,7 @@ theorem code.branch_table.complete (st : code.BodyState) (data : Slice U8)
   have hblocks' : popped.blocks = st.blocks := code.BodyState.blocks_eq_of_ctrls hcc
   simp only [hblocks'] at hloop
   refine ⟨s, ?_, hctrls', hblocks.trans hblocks', hpos, ?_⟩
-  · simp [code.branch_table.eq_core, MultiValue.tableCore, hread, hcond, hloop, popped,
+  · simp [code.branch_table.eq_core, Wasm2.tableCore, hread, hcond, hloop, popped,
       core.result.Result.Insts.CoreOpsTry.branch]
   · simpa [popped, hvc, hb] using hvals
 

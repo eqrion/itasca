@@ -4,7 +4,7 @@ import Itasca.Handler.Select
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- The least types of the top `n` operands, padding implicit unreachable
 operands with bottom. This depends on arity alone, never on a target's types. -/
@@ -106,7 +106,7 @@ theorem Suffix.of_realizes {st : code.OpIterState} {ts : List types.ValueType}
   apply Fits.of_realizes front
   simpa using h
 
-end Itasca.MultiValue
+end Itasca.Wasm2
 
 namespace Itasca
 
@@ -117,7 +117,7 @@ theorem code.check_suffix.wasm_spec (st : code.OpIterState) (env : module.Env)
     (view : signature.ResultType) (hshape : Control.Shape st) :
     code.check_suffix st env view ⦃ r =>
       r = .Ok () ↔ ∃ ts front common,
-        MultiValue.resolve env view = some ts ∧
+        Wasm2.resolve env view = some ts ∧
         Sequence.Realizes (Control.polymorphic st)
           (st.vals.val.drop (Control.base st).val) (front ++ common) ∧
         Resulttype_sub (.mk_list common) (.mk_list (ts.map Translate.valueType)) ⦄ := by
@@ -130,7 +130,7 @@ theorem code.check_suffix.wasm_spec (st : code.OpIterState) (env : module.Env)
     exact ⟨ts, front, _, ht, hreal, hsub⟩
   · rintro ⟨ts, front, common, ht, hreal, hsub⟩
     apply hr.mpr
-    refine ⟨ts, ht, MultiValue.Suffix.of_realizes front ?_⟩
+    refine ⟨ts, ht, Wasm2.Suffix.of_realizes front ?_⟩
     exact DeclarativeComplete.realizes_mono hreal
       (DeclarativeComplete.result_sub_append (DeclarativeComplete.result_sub_refl front) hsub)
 
@@ -138,13 +138,13 @@ theorem code.check_suffix.wasm_spec (st : code.OpIterState) (env : module.Env)
 actual suffix check, without requiring equality of the target signatures. -/
 theorem code.check_suffix.complete_of_subtype (st : code.OpIterState) (env : module.Env)
     (view : signature.ResultType) (ts : List types.ValueType) (front common : List valtype)
-    (hshape : Control.Shape st) (hts : MultiValue.resolve env view = some ts)
+    (hshape : Control.Shape st) (hts : Wasm2.resolve env view = some ts)
     (hr : Sequence.Realizes (Control.polymorphic st)
       (st.vals.val.drop (Control.base st).val) (front ++ common))
     (hsub : Resulttype_sub (.mk_list common) (.mk_list (ts.map Translate.valueType))) :
     code.check_suffix st env view = .ok (.Ok ()) := by
   apply code.check_suffix.complete st env view ts hshape hts
-  apply MultiValue.Suffix.of_realizes front
+  apply Wasm2.Suffix.of_realizes front
   exact DeclarativeComplete.realizes_mono hr
     (DeclarativeComplete.result_sub_append (DeclarativeComplete.result_sub_refl front) hsub)
 

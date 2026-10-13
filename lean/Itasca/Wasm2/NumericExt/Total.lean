@@ -61,7 +61,7 @@ theorem Accepts.visit_saturating {V : Type} {visitor : code.OpVisitor V}
 
 end Itasca.FullVisitor
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 private theorem conversion_total (st : code.OpIterState) (input output : types.ValueType)
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
@@ -132,4 +132,4 @@ theorem extended_total {V : Type} (visitor : code.OpVisitor V)
     · rw [code.step_extended.base visitor st data env ctx opcode v hm hp]
       exact scalar_total visitor st data env ctx opcode v hs hsize hscalar hv
 
-end Itasca.MultiValue
+end Itasca.Wasm2

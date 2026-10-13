@@ -54,7 +54,7 @@ theorem module.decode_limits.spec (data : Slice U8) (start : Usize) :
                   obtain ⟨rest, hs', hl', hb', he'⟩ := hd'
                   refine ⟨1#u8 :: (first ++ rest), .max min max he he', ?_⟩
                   simpa [hone] using (At.byte hp).append
-                    ((show Wasm.BytesAt data pos first middle from ⟨hs, hl, hb⟩).append ⟨hs', hl', hb'⟩)
+                    ((show Wasm1.BytesAt data pos first middle from ⟨hs, hl, hb⟩).append ⟨hs', hl', hb'⟩)
         · simp [module.decode_limits, hr, core.result.Result.Insts.CoreOpsTry.branch, ParserPost]
           split <;> simp_all [U8.ofNat, UScalar.ofNat, UScalar.ofNatCore]
 
@@ -197,7 +197,7 @@ theorem module.decode_value_types_loop0.spec (data : Slice U8) (start : Usize)
             scalar_tac
           · rw [out1_post]
             exact hrep.rep_snoc ⟨_, rfl, hs⟩
-  · exact ⟨by scalar_tac, rfl, by simp, ⟨[], .nil, Wasm.BytesAt.nil data start hb⟩⟩
+  · exact ⟨by scalar_tac, rfl, by simp, ⟨[], .nil, Wasm1.BytesAt.nil data start hb⟩⟩
 
 @[step]
 theorem module.decode_value_types.spec (data : Slice U8) (start : Usize)
@@ -223,7 +223,7 @@ theorem module.decode_value_types.spec (data : Slice U8) (start : Usize)
           obtain ⟨countBytes, hcs, hcl, hcb, hcount⟩ := hd
           obtain ⟨entries, hr, hs⟩ := he
           exact ⟨countBytes ++ entries, ⟨countBytes, entries, by simpa [hlen] using hcount, hr, rfl⟩,
-            (show Wasm.BytesAt data start countBytes pos from ⟨hcs, hcl, hcb⟩).append hs⟩
+            (show Wasm1.BytesAt data start countBytes pos from ⟨hcs, hcl, hcb⟩).append hs⟩
 
 /-- Extraction emits two identical loops for the bounded and unbounded arms. -/
 theorem module.decode_value_types_loop1.eq_loop0 (data : Slice U8) (count : U32)
@@ -274,7 +274,7 @@ theorem module.decode_value_types.profile_spec (data : Slice U8) (start : Usize)
                   obtain ⟨entries, hr, hs⟩ := he
                   exact ⟨countBytes ++ entries,
                     ⟨countBytes, entries, by simpa [hlen] using hcount, hr, rfl⟩,
-                    (show Wasm.BytesAt data start countBytes pos from ⟨hcs, hcl, hcb⟩).append hs⟩
+                    (show Wasm1.BytesAt data start countBytes pos from ⟨hcs, hcl, hcb⟩).append hs⟩
                 · intro limit' err' heq
                   cases heq
                   have hc := U32.cast_Usize_val_eq count

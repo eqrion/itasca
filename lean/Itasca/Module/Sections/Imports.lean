@@ -86,7 +86,7 @@ theorem module.decode_import_section_loop.spec (data : Slice U8) (env : module.E
         · simpa only [List.map_append, List.map_cons, List.map_nil] using hbytes.snoc hb
         · scalar_tac
   · exact ⟨by simp, [], by simp, .nil,
-      ⟨[], .nil, Wasm.BytesAt.nil data start hstart⟩, hbound⟩
+      ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, hbound⟩
 
 @[step]
 theorem module.decode_import_section.spec (data : Slice U8) (pos : Usize) (env : module.Env)

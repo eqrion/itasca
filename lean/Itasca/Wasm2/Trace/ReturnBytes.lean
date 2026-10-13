@@ -2,7 +2,7 @@ import Itasca.Wasm2.Trace.ControlRecords
 import Itasca.Wasm2.Control.Return
 
 open Aeneas Aeneas.Std
-namespace Itasca.MultiValue.CallbackTrace
+namespace Itasca.Wasm2.CallbackTrace
 open VisitorTrace
 
 /-- Factor the actual return callback after result checking and stack erasure. -/
@@ -64,4 +64,4 @@ theorem step_return {data env locals index st} (p : Pending data env locals inde
   refine ⟨.plain .RETURN, rfl, by simp [Action.opcode], ?_⟩
   exact At.plain (.no_immediate p.inbounds byte (by simpa [spec] using p.pos) .return_)
 
-end Itasca.MultiValue.CallbackTrace
+end Itasca.Wasm2.CallbackTrace

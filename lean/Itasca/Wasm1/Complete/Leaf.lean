@@ -9,7 +9,7 @@ def LeafContract (data : Slice U8) (env : module.Env) (ctx : code.Context) : Pro
     (op : instr) (bytes : List U8) (next : Usize) (front input output : List valtype),
     EnvTranslation.Matches env ctx C → C.LABELS = Control.labels st.ctrls.val →
     st.vals.val.length < Usize.max →
-    Wasm.Immediate opcode (.plain op) bytes → Wasm.BytesAt data st.pos bytes next →
+    Wasm1.Immediate opcode (.plain op) bytes → Wasm1.BytesAt data st.pos bytes next →
     Sequence.Realizes f.current.polymorphic_base f.operands (front ++ input) →
     Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output)) →
     Wasm1.Instruction C op → StepResult f data env ctx opcode next (front ++ output)

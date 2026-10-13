@@ -3,7 +3,7 @@ import Itasca.Wasm2.NumericExt.Total
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- A unary numeric extension preserves the multi-value zipper while recording
 its independently encoded instruction, including any consumed prefix bytes. -/
@@ -60,7 +60,7 @@ theorem Pending.extended_scalar {data env locals index st} (p : Pending data env
     apply p.extended_numeric v operation (NumericExtensions.sign_properties hm).1 (NumericExtensions.sign_declared hm _) st.core.pos hsize
       _ (fun s _ => hv.visit_sign_extension v s opcode)
     exact At.of_immediate p.inbounds hbyte p.pos (.signExtension opcode operation hm)
-      (Wasm.BytesAt.nil data st.core.pos (by have := p.pos; have := p.inbounds; omega))
+      (Wasm1.BytesAt.nil data st.core.pos (by have := p.pos; have := p.inbounds; omega))
   | none =>
     by_cases hprefix : opcode = code.OP_MISC_PREFIX
     · have he : opcode = 0xFC#u8 := by simpa [global_simps] using hprefix
@@ -86,4 +86,4 @@ theorem Pending.extended_scalar {data env locals index st} (p : Pending data env
     · rw [code.step_extended.base visitor st.core data env ctx opcode v hm hprefix]
       exact p.scalar visitor v hv ctx hlocals opcode hscalar hsize hbyte
 
-end Itasca.MultiValue
+end Itasca.Wasm2

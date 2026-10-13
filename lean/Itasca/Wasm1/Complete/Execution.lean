@@ -4,7 +4,7 @@ import Itasca.Wasm1.Loop
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Wasm
+namespace Itasca.Wasm1
 
 /-- Finite successful execution of actual opcode reads and dispatches. This
 relation is proof infrastructure, not the specification of valid input. -/
@@ -75,4 +75,4 @@ theorem Execution.public {data env ctx bt final}
     code.start_function.spec (alloc.vec.Vec.deref ctx.results) bt
       (by simpa [alloc.vec.Vec.deref] using hresults), hloop]
 
-end Itasca.Wasm
+end Itasca.Wasm1

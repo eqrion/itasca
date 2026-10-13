@@ -2,7 +2,7 @@ import Itasca.Wasm2.Control.EndSound
 
 open Aeneas Aeneas.Std Result
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- Realizing the declared results is sufficient to close a frame. -/
 theorem finishFrame.complete (st : code.BodyState) (env : module.Env) (isElse : Bool)
@@ -58,7 +58,7 @@ theorem finishFrame.complete (st : code.BodyState) (env : module.Env) (isElse : 
       hin (by simpa [hsv'] using hcap) as ⟨r1, s1, hr1, hv1, hc1, hp1⟩
     exact ⟨hr1, hp1.trans hsp, by simp [hc1, hcnew, hc, hv1, hsv']⟩
 
-end Itasca.MultiValue
+end Itasca.Wasm2
 
 namespace Itasca
 
@@ -70,17 +70,17 @@ theorem code.end_frame.complete (st : code.BodyState) (env : module.Env) (isElse
     (hc : st.core.ctrls.val = parents ++ [frame])
     (hb : st.blocks.val = blocks ++ [bt]) (ha : blocks.length = parents.length)
     (hv : st.core.vals.val = outer ++ segment) (hbase : frame.value_stack_base.val = outer.length)
-    (hin : MultiValue.resolve env (MultiValue.inputs bt) = some ins)
-    (hout : MultiValue.resolve env (MultiValue.outputs bt) = some outs)
+    (hin : Wasm2.resolve env (Wasm2.inputs bt) = some ins)
+    (hout : Wasm2.resolve env (Wasm2.outputs bt) = some outs)
     (ht : Sequence.Realizes frame.polymorphic_base segment (outs.map Translate.valueType))
-    (hallowed : MultiValue.EndAllowed frame isElse ins outs)
+    (hallowed : Wasm2.EndAllowed frame isElse ins outs)
     (hcap : outer.length + (if isElse then ins.length else outs.length) ≤ Usize.max) :
     code.end_frame st env isElse ⦃ r => r.1 = .Ok () ∧
-      MultiValue.EndEffect st r.2 parents blocks frame isElse ins outs outer ⦄ := by
-  rw [MultiValue.end_frame_eq st env isElse parents blocks frame bt hc hb ha]
+      Wasm2.EndEffect st r.2 parents blocks frame isElse ins outs outer ⦄ := by
+  rw [Wasm2.end_frame_eq st env isElse parents blocks frame bt hc hb ha]
   step as ⟨i, hi⟩
   have hi' : i.val = parents.length := by simp [hc, hb, ha] at hi; omega
-  have hsfinish := MultiValue.finishFrame.complete st env isElse bt frame i
+  have hsfinish := Wasm2.finishFrame.complete st env isElse bt frame i
     (alloc.vec.Vec.len st.blocks) parents blocks ins outs outer segment hc hb ha hi'
     (by simp [hc, hb, ha]) hv hbase hin hout ht hcap
   cases isElse
@@ -88,7 +88,7 @@ theorem code.end_frame.complete (st : code.BodyState) (env : module.Env) (isElse
     split
     · rename_i hk
       have heq := hallowed hk
-      rw [code.same_types.complete env (MultiValue.inputs bt) (MultiValue.outputs bt)
+      rw [code.same_types.complete env (Wasm2.inputs bt) (Wasm2.outputs bt)
         ins hin (by simpa [heq] using hout)]
       simpa [core.result.Result.Insts.CoreOpsTry.branch] using hsfinish
     · exact hsfinish

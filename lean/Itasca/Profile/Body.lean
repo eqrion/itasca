@@ -12,9 +12,9 @@ theorem functionContext_wasm1 {env : module.Env} {ctx : code.Context}
     {ft : types.FuncType} {bt : code.BlockType}
     (hr : ctx.results.val = ft.results.val) (hb : ft.results.val = Control.results bt) :
     functionContext env ctx.locals ft =
-      WasmFrames.enter (EnvTranslation.context env ctx) .body bt := by
-  simp only [functionContext, MultiValue.bodyContext, WasmFrames.enter,
-    WasmFrames.Form.label, Control.resultTypes, hb]
+      Wasm1.Frames.enter (EnvTranslation.context env ctx) .body bt := by
+  simp only [functionContext, Wasm2.bodyContext, Wasm1.Frames.enter,
+    Wasm1.Frames.Form.label, Control.resultTypes, hb]
   congr 1
   simp only [EnvTranslation.context, hr]
 
@@ -34,19 +34,19 @@ theorem Body.wasm1_iff (data : Slice U8) (env : module.Env) (ctx : code.Context)
     subst ft'
     refine ⟨ops, he, ?_, ?_⟩
     · change Instrs_ok (functionContext env ctx.locals ft) ops _ at ht
-      simpa only [Wasm.FunctionTyped, hc, Control.resultTypes, hb] using ht
+      simpa only [Wasm1.FunctionTyped, hc, Control.resultTypes, hb] using ht
     · change Wasm1.Instructions (functionContext env ctx.locals ft) ops at hp
       exact hc ▸ hp
   · rintro ⟨ops, he, ht, hp⟩
     refine ⟨ft, ops, hi, hs, he, ?_, ?_, he.declared _⟩
     · change Instrs_ok (functionContext env ctx.locals ft) ops _
-      simpa only [Wasm.FunctionTyped, hc, Control.resultTypes, hb] using ht
+      simpa only [Wasm1.FunctionTyped, hc, Control.resultTypes, hb] using ht
     · change Wasm1.Instructions (functionContext env ctx.locals ft) ops
       exact hc.symm ▸ hp
 
 theorem Body.multiValue_iff (data : Slice U8) (env : module.Env)
     (locals : alloc.vec.Vec types.ValueType) (index : U32) :
-    Body .Wasm2 data env locals index ↔ MultiValue.Validated data env locals index := by
+    Body .Wasm2 data env locals index ↔ Wasm2.Validated data env locals index := by
   constructor
   · rintro ⟨ft, ops, hi, _, he, ht, _, hd⟩
     exact ⟨ft, ops, hi, he, ht, hd⟩
@@ -112,7 +112,7 @@ theorem run.complete (profile : ValidationProfile) (data : Slice U8) (env : modu
     exact code.validate_body.wasm_complete data env ctx bt ⟨henv.2, henv.1⟩
       (hr.trans hb) hsize ((Body.wasm1_iff data env ctx index ft bt hi hr hb).mp hbody)
   | Wasm2 =>
-    have hcap : MultiValue.EnvironmentWithinLimits env := by
+    have hcap : Wasm2.EnvironmentWithinLimits env := by
       constructor
       · simpa [FuncTypeWithinLimits, limits.MAX_MULTI_VALUE_PARAMS,
           limits.MAX_MULTI_VALUE_RESULTS] using hlimits.1

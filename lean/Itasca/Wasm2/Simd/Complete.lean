@@ -10,14 +10,14 @@ import Itasca.Wasm2.Complete.Frame
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Completeness
+namespace Itasca.Wasm2.Completeness
 
 /-- Pure SIMD operators accept every realization of their principal signature. -/
 theorem Frame.simd_pure {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (subopcode : U32) (op : Simd.Operation)
     (bytes : List U8) (next : Usize) (C : context) (front ins outs : List valtype)
     (hmap : Simd.pureMeaning subopcode.val = some op)
-    (he : Leb128.Encoding bytes subopcode.val) (hb : Wasm.BytesAt data st.core.pos bytes next)
+    (he : Leb128.Encoding bytes subopcode.val) (hb : Wasm1.BytesAt data st.core.pos bytes next)
     (hsize : st.core.vals.val.length < Usize.max)
     (ht : Instr_ok C op.instruction (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ ins)) :
@@ -50,7 +50,7 @@ theorem Frame.simd_lane {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     (lane : U8) (prefixBytes : List U8) (next : Usize) (C : context) (front ins outs : List valtype)
     (hmap : Simd.laneMeaning subopcode.val = some op)
     (he : Leb128.Encoding prefixBytes subopcode.val)
-    (hb : Wasm.BytesAt data st.core.pos (prefixBytes ++ [lane]) next)
+    (hb : Wasm1.BytesAt data st.core.pos (prefixBytes ++ [lane]) next)
     (hsize : st.core.vals.val.length < Usize.max)
     (ht : Instr_ok C (op.instruction (.mk_uN lane.val)) (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ ins)) :
@@ -87,7 +87,7 @@ theorem Frame.simd_const {st} (f : Frame st) (data : Slice U8) (env : module.Env
     (prefixBytes lower upper : List U8) (next : Usize) (C : context) (front ins outs : List valtype)
     (he : Leb128.Encoding prefixBytes 12)
     (hlower : FloatBits.Encoding 8 lower low.val) (hupper : FloatBits.Encoding 8 upper high.val)
-    (hb : Wasm.BytesAt data st.core.pos (prefixBytes ++ (lower ++ upper)) next)
+    (hb : Wasm1.BytesAt data st.core.pos (prefixBytes ++ (lower ++ upper)) next)
     (hsize : st.core.vals.val.length < Usize.max)
     (ht : Instr_ok C (Simd.vectorConstant low high) (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ ins)) :
@@ -125,7 +125,7 @@ theorem Frame.simd_memory {st} (f : Frame st) (data : Slice U8) (env : module.En
     (hmap : Simd.memoryMeaning subopcode.val = some op) (hfull : op.laneCount = 0)
     (he : Leb128.Encoding prefixBytes subopcode.val)
     (ha : Leb128.Encoding alignment arg.align.val) (ho : Leb128.Encoding offset arg.offset.val)
-    (hb : Wasm.BytesAt data st.core.pos (prefixBytes ++ (alignment ++ offset)) next)
+    (hb : Wasm1.BytesAt data st.core.pos (prefixBytes ++ (alignment ++ offset)) next)
     (hmatch : EnvTranslation.Matches env semantic C)
     (hsize : st.core.vals.val.length < Usize.max)
     (ht : Instr_ok C (op.instruction (MemoryMeaning.memArg arg) (.mk_uN 0))
@@ -143,7 +143,7 @@ theorem Frame.simd_memory {st} (f : Frame st) (data : Slice U8) (env : module.En
       simpa only [op.inputs_full hfull, decoded, Control.polymorphic, f.core.ctrls,
         List.getLast?_concat] using hr)
   have hread := hprefix.read_u32 subopcode he
-  have hargread := Wasm.BytesAt.read_memarg {st.core with pos := middle} arg harg ha ho
+  have hargread := Wasm1.BytesAt.read_memarg {st.core with pos := middle} arg harg ha ho
   have hcheck := code.check_memory_and_alignment.complete env arg op.runtime.1
     (by simpa [hmatch.mems] using hcond.1) (by simpa [Simd.MemoryOperation.runtime] using hcond.2.1)
   refine ⟨{st with core := s}, ?_, hp,
@@ -167,7 +167,7 @@ theorem Frame.simd_memory_lane {st} (f : Frame st) (data : Slice U8) (env : modu
     (hmap : Simd.memoryMeaning subopcode.val = some op) (hlaned : op.laneCount ≠ 0)
     (he : Leb128.Encoding prefixBytes subopcode.val)
     (ha : Leb128.Encoding alignment arg.align.val) (ho : Leb128.Encoding offset arg.offset.val)
-    (hb : Wasm.BytesAt data st.core.pos (prefixBytes ++ (alignment ++ offset ++ [lane])) next)
+    (hb : Wasm1.BytesAt data st.core.pos (prefixBytes ++ (alignment ++ offset ++ [lane])) next)
     (hmatch : EnvTranslation.Matches env semantic C)
     (hsize : st.core.vals.val.length < Usize.max)
     (ht : Instr_ok C (op.instruction (MemoryMeaning.memArg arg) (.mk_uN lane.val))
@@ -186,7 +186,7 @@ theorem Frame.simd_memory_lane {st} (f : Frame st) (data : Slice U8) (env : modu
       simpa only [op.inputs_lane hlaned, decoded, Control.polymorphic, f.core.ctrls,
         List.getLast?_concat] using hr)
   have hread := hprefix.read_u32 subopcode he
-  have hargread := Wasm.BytesAt.read_memarg {st.core with pos := middle} arg harg ha ho
+  have hargread := Wasm1.BytesAt.read_memarg {st.core with pos := middle} arg harg ha ho
   have hlaneread := Simd.take_lane_complete {st.core with pos := ending} data op.runtime.2.2 lane next
     hlane (by simpa [Simd.MemoryOperation.runtime] using hcond.2.2 hlaned)
   have hcheck := code.check_memory_and_alignment.complete env arg op.runtime.1
@@ -212,7 +212,7 @@ theorem Frame.simd_shuffle {st} (f : Frame st) (data : Slice U8) (env : module.E
     (prefixBytes lower upper : List U8) (next : Usize) (C : context) (front ins outs : List valtype)
     (he : Leb128.Encoding prefixBytes 13)
     (hlower : FloatBits.Encoding 8 lower low.val) (hupper : FloatBits.Encoding 8 upper high.val)
-    (hb : Wasm.BytesAt data st.core.pos (prefixBytes ++ (lower ++ upper)) next)
+    (hb : Wasm1.BytesAt data st.core.pos (prefixBytes ++ (lower ++ upper)) next)
     (hsize : st.core.vals.val.length < Usize.max)
     (ht : Instr_ok C (Simd.shuffle low high) (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ ins)) :
@@ -254,7 +254,7 @@ theorem Frame.simd {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx semantic : code.Context) (index : U32) (subopcode : U32) (op : instr)
     (prefixBytes immediate : List U8) (next : Usize) (C : context) (front ins outs : List valtype)
     (he : Leb128.Encoding prefixBytes subopcode.val) (hi : Simd.Immediate subopcode op immediate)
-    (hb : Wasm.BytesAt data st.core.pos (prefixBytes ++ immediate) next)
+    (hb : Wasm1.BytesAt data st.core.pos (prefixBytes ++ immediate) next)
     (hmatch : EnvTranslation.Matches env semantic C)
     (hsize : st.core.vals.val.length < Usize.max)
     (ht : Instr_ok C op (.mk_functype (.mk_list ins) (.mk_list outs)))
@@ -281,4 +281,4 @@ theorem Frame.simd {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     exact f.simd_shuffle data env ctx index low high prefixBytes _ _ next C front ins outs
       he hlo hhi hb hsize ht hr
 
-end Itasca.MultiValue.Completeness
+end Itasca.Wasm2.Completeness

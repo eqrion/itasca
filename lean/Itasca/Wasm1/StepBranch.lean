@@ -6,7 +6,7 @@ import Itasca.Binary.Wasm1.BrTableLabels
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Wasm
+namespace Itasca.Wasm1
 
 
 theorem Pending.step_br {V : Type} {data env ctx bt st}
@@ -17,18 +17,18 @@ theorem Pending.step_br {V : Type} {data env ctx bt st}
   simp only [code.OP_BR] at hbyte
   obtain ⟨C, outer, spine, header, base, typed, ctrls, vals, hC, labels, returns⟩ :=
     p.opened.context (EnvTranslation.context_wf env ctx)
-  have hlabels : (WasmFrames.enter C p.current.form p.current.ctrl.block_type).LABELS =
+  have hlabels : (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type).LABELS =
       Control.labels st.ctrls.val := by simpa [EnvTranslation.context] using labels
   refine WP.spec_mono (code.step_br.of_read visitor st data env ctx v
     (fun _ => True) (fun _ s => p.After s) ?_ hvisitor.toCore) ?_
-  · apply WP.spec_mono (code.read_br.prefix st data (p.parents.map WasmFrames.Saved.ctrl)
+  · apply WP.spec_mono (code.read_br.prefix st data (p.parents.map Wasm1.Frames.Saved.ctrl)
       p.current.ctrl outer p.current.vals ctrls vals base _ hC p.current.ops typed hlabels)
     intro r hr
     refine ⟨trivial, ?_⟩
     rintro ⟨d, resultBt⟩ hok
     obtain ⟨hd, hv, hc, ht⟩ := hr d resultBt hok
     apply p.append_result C outer spine header base ctrls vals r.2 (.BR (.mk_uN d.val)) true []
-      (.instr_case_7 _ (Core.label_wf d))
+      (.instr_case_7 _ (Spec.label_wf d))
       (.of_u32 d p.inbounds hbyte p.pos (fun _ => .br d) hd)
       ht hc (by simpa using hv) (by simp)
   · intro r hr hok
@@ -42,7 +42,7 @@ theorem Pending.step_brIf {V : Type} {data env ctx bt st}
   simp only [code.OP_BR_IF] at hbyte
   obtain ⟨C, outer, spine, header, base, typed, ctrls, vals, hC, labels, returns⟩ :=
     p.opened.context (EnvTranslation.context_wf env ctx)
-  have hlabels : (WasmFrames.enter C p.current.form p.current.ctrl.block_type).LABELS =
+  have hlabels : (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type).LABELS =
       Control.labels st.ctrls.val := by simpa [EnvTranslation.context] using labels
   have hb : (Control.base st).val = outer.length := by simp [Control.base, ctrls, base]
   have hp : Control.polymorphic st = p.current.ctrl.polymorphic_base := by simp [Control.polymorphic, ctrls]
@@ -55,7 +55,7 @@ theorem Pending.step_brIf {V : Type} {data env ctx bt st}
     rintro ⟨d, resultBt⟩ hok
     obtain ⟨hd, hc, rest, hv, hlen, ht⟩ := hr d resultBt hok
     apply p.append_result C outer spine header base ctrls vals r.2 (.BR_IF (.mk_uN d.val))
-      p.current.ctrl.polymorphic_base rest (.instr_case_8 _ (Core.label_wf d))
+      p.current.ctrl.polymorphic_base rest (.instr_case_8 _ (Spec.label_wf d))
       (.of_u32 d p.inbounds hbyte p.pos (fun _ => .brIf d) hd)
       (by simpa [hp] using ht) _ hv hlen
     simpa [hc] using ctrls
@@ -70,12 +70,12 @@ theorem Pending.step_return {V : Type} {data env ctx bt st}
   simp only [code.OP_RETURN] at hbyte
   obtain ⟨C, outer, spine, header, base, typed, ctrls, vals, hC, labels, returns⟩ :=
     p.opened.context (EnvTranslation.context_wf env ctx)
-  have hreturn : (WasmFrames.enter C p.current.form p.current.ctrl.block_type).RETURN =
+  have hreturn : (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type).RETURN =
       some (.mk_list (ctx.results.val.map Translate.valueType)) := by
     simpa [EnvTranslation.context] using returns
   refine WP.spec_mono (code.step_return.of_read visitor st data env ctx v
     (fun _ => True) (fun _ s => p.After s) ?_ hvisitor.toCore) ?_
-  · apply WP.spec_mono (code.read_return.prefix st ctx (p.parents.map WasmFrames.Saved.ctrl)
+  · apply WP.spec_mono (code.read_return.prefix st ctx (p.parents.map Wasm1.Frames.Saved.ctrl)
       p.current.ctrl outer p.current.vals ctrls vals base _ hC p.current.ops typed hreturn)
     intro r hr
     refine ⟨trivial, ?_⟩
@@ -96,11 +96,11 @@ theorem Pending.step_brTable {V : Type} {data env ctx bt st}
   simp only [code.OP_BR_TABLE] at hbyte
   obtain ⟨C, outer, spine, header, base, typed, ctrls, vals, hC, labels, returns⟩ :=
     p.opened.context (EnvTranslation.context_wf env ctx)
-  have hlabels : (WasmFrames.enter C p.current.form p.current.ctrl.block_type).LABELS =
+  have hlabels : (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type).LABELS =
       Control.labels st.ctrls.val := by simpa [EnvTranslation.context] using labels
   refine WP.spec_mono (code.step_br_table.of_read visitor st data env ctx v
     (fun _ s => p.After s) ?_ hvisitor.on_br_table) ?_
-  · apply WP.spec_mono (code.read_br_table.profile_prefix visitor st data v (p.parents.map WasmFrames.Saved.ctrl)
+  · apply WP.spec_mono (code.read_br_table.profile_prefix visitor st data v (p.parents.map Wasm1.Frames.Saved.ctrl)
       p.current.ctrl outer p.current.vals ctrls vals base _ hC p.current.ops typed hlabels
       hvisitor.on_br_table_label)
     intro r hr
@@ -113,4 +113,4 @@ theorem Pending.step_brTable {V : Type} {data env ctx bt st}
   · intro r hr hok
     exact (hr hok).choose_spec
 
-end Itasca.Wasm
+end Itasca.Wasm1

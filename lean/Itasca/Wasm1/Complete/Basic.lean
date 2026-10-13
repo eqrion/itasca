@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.Completeness
 
 theorem nop {st data env ctx C next front ins outs}
-    (f : Frame st) (hb : Wasm.BytesAt data st.pos [] next)
+    (f : Frame st) (hb : Wasm1.BytesAt data st.pos [] next)
     (hop : Instr_ok C .NOP (.mk_functype (.mk_list ins) (.mk_list outs)))
     (ht : Sequence.Realizes f.current.polymorphic_base f.operands (front ++ ins)) :
     StepResult f data env ctx 0x01#u8 next (front ++ outs) := by
@@ -18,7 +18,7 @@ theorem nop {st data env ctx C next front ins outs}
     core.result.Result.Insts.CoreOpsTry.branch]
 
 theorem unreachable {st data env ctx C next front ins outs}
-    (f : Frame st) (hb : Wasm.BytesAt data st.pos [] next)
+    (f : Frame st) (hb : Wasm1.BytesAt data st.pos [] next)
     (_hop : Instr_ok C .UNREACHABLE (.mk_functype (.mk_list ins) (.mk_list outs))) :
     StepResult f data env ctx 0x00#u8 next (front ++ outs) := by
   have he : next = st.pos := hb.empty

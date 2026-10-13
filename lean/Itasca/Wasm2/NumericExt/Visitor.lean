@@ -3,7 +3,7 @@ import Itasca.Visitor.StepLift
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Visitor
+namespace Itasca.Wasm2.Visitor
 
 /-- Accepting replacement hooks preserve the state of every successful scalar
 extension, including the cursor after a nonminimal prefix encoding. -/
@@ -43,4 +43,4 @@ theorem extended_transfer {V W : Type} (visitor : code.OpVisitor V)
       rw [scalar_context _ _ data env ctx ctx' opcode () hscalar hlocals] at he
       exact code.step.accepted_lift replacement ha st final data env ctx' opcode w he
 
-end Itasca.MultiValue.Visitor
+end Itasca.Wasm2.Visitor

@@ -3,7 +3,7 @@ import Itasca.Binary.Wasm2.DeclaredReferences
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- Return typing comes from the selected type-section entry. The runtime's
 shared scalar context carries empty results because return is dispatched by
@@ -24,4 +24,4 @@ def Validated (data : Slice U8) (env : module.Env) (locals : alloc.vec.Vec types
     FunctionTyped env locals ft ops ∧
     DeclaredReferences.Instructions (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) ops
 
-end Itasca.MultiValue
+end Itasca.Wasm2

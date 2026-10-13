@@ -230,7 +230,7 @@ theorem stream.get_next_batch.complete_spec {S : Type}
     refine ⟨?_, by omega, [], entries, by simp, by simp, hcount.symm, ?_, hbytes⟩
     · simp [StreamFraming.BatchInvariant, hstart]
       omega
-    · exact ⟨[], .nil, Wasm.BytesAt.nil code start (by omega)⟩
+    · exact ⟨[], .nil, Wasm1.BytesAt.nil code start (by omega)⟩
 
 /-- Independent bounded entry encodings force an actual successful batch,
 retaining precisely the nonempty encoded prefix and its unconsumed suffix. -/
@@ -261,7 +261,7 @@ theorem stream.read_exact.complete_rep {S A : Type}
     (R : A → List U8 → Prop) (start finish : Usize) (entries : List A)
     (hbytes : At (Rep R) code start entries finish) :
     ∃ view, stream.read_exact source state start finish = .ok (.Ok view) ∧
-      Wasm.BytesAt code start view.val finish ∧ Rep R entries view.val := by
+      Wasm1.BytesAt code start view.val finish ∧ Rep R entries view.val := by
   obtain ⟨bytes, hrep, hspan⟩ := hbytes
   have ho : start.val ≤ finish.val := by have := hspan.length; omega
   obtain ⟨view, hread, hview⟩ := ha.code_read start finish ho hspan.bound
@@ -272,7 +272,7 @@ theorem stream.read_exact.complete_rep {S A : Type}
     change finish.val - start.val ≤ code.length - start.val
     have := hspan.bound
     omega
-  have hvspan := Wasm.BytesAt.of_slice_view ho hspan.bound hview
+  have hvspan := Wasm1.BytesAt.of_slice_view ho hspan.bound hview
   have heq : bytes = view.val := List.append_cancel_right (hspan.suffix.symm.trans hvspan.suffix)
   exact ⟨view, stream.read_exact.complete source state start finish view ho hread hvlen,
     hvspan, heq ▸ hrep⟩
@@ -294,7 +294,7 @@ theorem stream.get_next_batch.complete_view {S : Type}
       At (Rep (Profile.CodeEncodingWithinLimits profile)) code start taken finish ∧
       At (Rep (Profile.CodeEncodingWithinLimits profile)) code finish rest codeLen ∧
       stream.read_exact source state start finish = .ok (.Ok view) ∧
-      Wasm.BytesAt code start view.val finish ∧ Rep (Profile.CodeEncodingWithinLimits profile) taken view.val := by
+      Wasm1.BytesAt code start view.val finish ∧ Rep (Profile.CodeEncodingWithinLimits profile) taken view.val := by
   obtain ⟨finish, next, taken, rest, hrun, hp, heq, hne, hn, hr, htaken, hrest⟩ :=
     stream.get_next_batch.complete source state environment tail code ha codeLen start first num threshold
       entries hlen hcap hmore hcount hbytes

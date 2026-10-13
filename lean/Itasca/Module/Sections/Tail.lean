@@ -56,7 +56,7 @@ theorem header_payload {α : Type} {R : α → List U8 → Prop} {data start id 
   obtain ⟨payload, hp, hs⟩ := hp
   obtain ⟨sizeBytes, hd, hl, hn, hc⟩ := hd
   have hlen : payload.length = size.val := by have := hs.length; omega
-  have hsize : Wasm.BytesAt data pos sizeBytes first := ⟨hd, hl, hn⟩
+  have hsize : Wasm1.BytesAt data pos sizeBytes first := ⟨hd, hl, hn⟩
   refine ⟨id :: (sizeBytes ++ payload), ⟨sizeBytes, payload, ?_, hp, rfl⟩, ?_⟩
   · simpa [hlen] using hc
   · simpa using hb.byte.append (hsize.append hs)
@@ -200,7 +200,7 @@ theorem module.validate_tail_with.spec {V : Type} (visitor : module.ModuleVisito
           · have hn : id.val ≠ module.SECTION_DATA.val := fun h => hd (UScalar.eq_of_val_eq h)
             simp [hn]
   · refine ⟨?_, by simp [alloc.vec.Vec.new]⟩
-    exact ⟨[], .empty, Wasm.BytesAt.nil data start hstart⟩
+    exact ⟨[], .empty, Wasm1.BytesAt.nil data start hstart⟩
 
 theorem module.validate_tail.spec (data : Slice U8) (start : Usize) (env : module.Env)
     (hstart : start.val ≤ data.length) (profile : ValidationProfile := .Wasm1) :

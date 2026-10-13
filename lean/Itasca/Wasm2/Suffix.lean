@@ -4,7 +4,7 @@ open Aeneas Aeneas.Std
 
 set_option maxRecDepth 2048
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- Compatibility from the top of an operand stack downwards. Each target is
 compared to the original operands; a `Bot` is never specialized to one target. -/
@@ -25,7 +25,7 @@ def Suffix (st : code.OpIterState) (ts : List types.ValueType) : Prop :=
   Fits (Control.polymorphic st)
     (st.vals.val.drop (Control.base st).val).reverse ts.reverse
 
-end Itasca.MultiValue
+end Itasca.Wasm2
 
 namespace Itasca
 
@@ -33,21 +33,21 @@ namespace Itasca
 remaining signature with the unchanged stack slice. -/
 theorem code.check_suffix_loop.spec (st : code.OpIterState) (env : module.Env)
     (view : signature.ResultType) (ts : List types.ValueType)
-    (hts : MultiValue.resolve env view = some ts) (stack i : Usize)
+    (hts : Wasm2.resolve env view = some ts) (stack i : Usize)
     (hb : (Control.base st).val ≤ stack.val) (hs : stack.val ≤ st.vals.val.length)
     (hi : i.val ≤ ts.length) :
     code.check_suffix_loop st.vals st.ctrls st.pos env view (Control.base st) stack i ⦃ r =>
-      r = .Ok () ↔ MultiValue.Fits (Control.polymorphic st)
+      r = .Ok () ↔ Wasm2.Fits (Control.polymorphic st)
         ((st.vals.val.take stack.val).drop (Control.base st).val).reverse
         (ts.take i.val).reverse ⦄ := by
   unfold code.check_suffix_loop
   apply loop.spec_decr_nat (fun p => p.2.val)
     (fun p => (Control.base st).val ≤ p.1.val ∧ p.1.val ≤ st.vals.val.length ∧
       p.2.val ≤ ts.length ∧
-      (MultiValue.Fits (Control.polymorphic st)
+      (Wasm2.Fits (Control.polymorphic st)
           ((st.vals.val.take stack.val).drop (Control.base st).val).reverse
           (ts.take i.val).reverse ↔
-        MultiValue.Fits (Control.polymorphic st)
+        Wasm2.Fits (Control.polymorphic st)
           ((st.vals.val.take p.1.val).drop (Control.base st).val).reverse
           (ts.take p.2.val).reverse))
   · rintro ⟨s, j⟩ ⟨hb', hs', hj, he⟩
@@ -78,10 +78,10 @@ theorem code.check_suffix_loop.spec (st : code.OpIterState) (env : module.Env)
         · rename_i hpoly
           simp only [WP.spec_ok]
           refine ⟨hb', hs', by omega, ?_, by omega⟩
-          simpa [hempty, ht, hpoly, MultiValue.Fits] using he
+          simpa [hempty, ht, hpoly, Wasm2.Fits] using he
         · rename_i hpoly
           simp only [WP.spec_ok]
-          simpa [hempty, ht, MultiValue.Fits, hpoly] using he.symm
+          simpa [hempty, ht, Wasm2.Fits, hpoly] using he.symm
       · rename_i hbase
         have hbne : s.val ≠ (Control.base st).val := fun h => hbase (UScalar.eq_of_val_eq h)
         step
@@ -107,16 +107,16 @@ theorem code.check_suffix_loop.spec (st : code.OpIterState) (env : module.Env)
             have hbad : Translate.valueType actual ≠ Translate.valueType ts[i2.val] :=
               fun h => (hdifferent.mp hne) (Translate.valueType_injective h)
             simp only [WP.spec_ok]
-            simpa [hv, ht, hactual, MultiValue.Fits, Sequence.Accepts, eq_comm, hbad] using he.symm
+            simpa [hv, ht, hactual, Wasm2.Fits, Sequence.Accepts, eq_comm, hbad] using he.symm
           · rename_i heq
             have hequal : actual = ts[i2.val] := by simpa [heq] using hdifferent
             simp only [WP.spec_ok]
             refine ⟨hbstep, by omega, by omega, ?_, by omega⟩
-            simpa [hv, ht, hactual, MultiValue.Fits, Sequence.Accepts, eq_comm, hequal] using he
+            simpa [hv, ht, hactual, Wasm2.Fits, Sequence.Accepts, eq_comm, hequal] using he
         · rename_i hbot
           simp only [WP.spec_ok]
           refine ⟨hbstep, by omega, by omega, ?_, by omega⟩
-          simpa [hv, ht, hbot, MultiValue.Fits, Sequence.Accepts] using he
+          simpa [hv, ht, hbot, Wasm2.Fits, Sequence.Accepts] using he
   · exact ⟨hb, hs, hi, Iff.rfl⟩
 
 /-- The actual non-destructive suffix checker is total, sound, and complete
@@ -124,7 +124,7 @@ for the independently specified multi-value operand compatibility relation. -/
 theorem code.check_suffix.spec (st : code.OpIterState) (env : module.Env)
     (view : signature.ResultType) (hshape : Control.Shape st) :
     code.check_suffix st env view ⦃ r =>
-      r = .Ok () ↔ ∃ ts, MultiValue.resolve env view = some ts ∧ MultiValue.Suffix st ts ⦄ := by
+      r = .Ok () ↔ ∃ ts, Wasm2.resolve env view = some ts ∧ Wasm2.Suffix st ts ⦄ := by
   unfold code.check_suffix
   step with code.cur_base.spec st
   subst base
@@ -139,12 +139,12 @@ theorem code.check_suffix.spec (st : code.OpIterState) (env : module.Env)
     apply WP.spec_mono (code.check_suffix_loop.spec st env view ts hts
       (alloc.vec.Vec.len st.vals) n hshape.base_le (by simp) (by omega))
     intro res hs
-    simpa [hts, hn, MultiValue.Suffix] using hs
+    simpa [hts, hn, Wasm2.Suffix] using hs
 
 theorem code.check_suffix.complete (st : code.OpIterState) (env : module.Env)
     (view : signature.ResultType) (ts : List types.ValueType)
-    (hshape : Control.Shape st) (hts : MultiValue.resolve env view = some ts)
-    (hfits : MultiValue.Suffix st ts) :
+    (hshape : Control.Shape st) (hts : Wasm2.resolve env view = some ts)
+    (hfits : Wasm2.Suffix st ts) :
     code.check_suffix st env view = .ok (.Ok ()) := by
   obtain ⟨r, hr, hs⟩ := WP.spec_imp_exists (code.check_suffix.spec st env view hshape)
   rw [hs.mpr ⟨ts, hts, hfits⟩] at hr

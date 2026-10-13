@@ -16,7 +16,7 @@ theorem module.decode_name.from_utf8 (data : Slice U8) (pos : Usize)
       | .Ok _ => .Ok (nm, next)
       | .Err e => .Err e) := by
   obtain ⟨count, middle, hcount, hlen, encoded, hrep, hbytes⟩ := h.vector_split
-  have hb : Wasm.BytesAt data middle nm.val next := by simpa only [hrep.bytes] using hbytes
+  have hb : Wasm1.BytesAt data middle nm.val next := by simpa only [hrep.bytes] using hbytes
   have hr := reader.read_u32_leb.complete data pos count middle hlen
   have hs : module.decode_name data pos ⦃ r => r = (match reply with
       | .Ok _ => .Ok (nm, next)

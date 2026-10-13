@@ -1,7 +1,7 @@
 import Itasca.Binary.Wasm2.Syntax
 import Itasca.Spec.DeclaredReferences
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- The flat stream carries reference obligations only at instruction tokens. -/
 def Token.Declared (refs : List funcidx) : Token → Prop
@@ -45,4 +45,4 @@ theorem BodyTokens.declared_iff {tokens ops} (h : BodyTokens tokens ops) (refs :
   obtain ⟨inner, rfl, he⟩ := h
   simpa [Token.Declared] using he.declared_iff refs
 
-end Itasca.MultiValue
+end Itasca.Wasm2

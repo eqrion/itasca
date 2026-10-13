@@ -40,7 +40,7 @@ structure Witness {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
   locals_allowed : ∀ group ∈ groups, ModuleBinary.ValueTypeAllowed profile group.2
   context_locals : ctx.locals.val = ft.params.val ++ ModuleLocals.declared groups
   context_results : ctx.results.val = ft.results.val
-  body_bytes : Wasm.BytesAt data bodyStart body.val finish
+  body_bytes : Wasm1.BytesAt data bodyStart body.val finish
   function_start : visitor.on_function_start v ctx typeIdx bodyStart finish = .ok (.Ok (), startedState)
   body_accepted : runBody visitor profile body env ctx typeIdx startedState = .ok (.Ok (), v')
 
@@ -79,7 +79,7 @@ theorem Witness.validated {V : Type} {visitor : code.OpVisitor V} {data env inde
   rw [w.index_type]
   refine ⟨w.type_lt, ?_, ?_, w.locals_allowed, hbytes.declared _⟩
   · rw [w.function_type]
-    unfold Wasm.FunctionTyped at htyped
+    unfold Wasm1.FunctionTyped at htyped
     rw [body_context w.context_locals w.context_results hbt] at htyped
     simpa only [instructionType, Control.resultTypes, ← hbt, ModuleBinary.Code.declared,
       ModuleLocals.declared] using htyped

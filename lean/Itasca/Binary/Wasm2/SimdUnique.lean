@@ -3,7 +3,7 @@ import Itasca.Binary.PrefixUnique
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Simd
+namespace Itasca.Wasm2.Simd
 
 open ModuleBinary
 
@@ -76,4 +76,4 @@ theorem Immediate.prefix_unique (subopcode : U32) : PrefixUnique (Immediate subo
     obtain rfl := UScalar.eq_of_val_eq hhieq
     exact ⟨rfl, rfl, rfl⟩
 
-end Itasca.MultiValue.Simd
+end Itasca.Wasm2.Simd

@@ -48,7 +48,7 @@ theorem BrTable.Decoded.unique {data start xs ys x y next last}
 
 end Itasca
 
-namespace Itasca.Wasm
+namespace Itasca.Wasm1
 
 theorem Immediate.unique {data start opcode t u bs cs next last}
     (ht : Immediate opcode t bs) (hu : Immediate opcode u cs)
@@ -103,4 +103,4 @@ theorem BodyEncoding.unique {data xs ys}
   subst yt
   exact hxs.unique hys
 
-end Itasca.Wasm
+end Itasca.Wasm1

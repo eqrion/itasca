@@ -125,13 +125,13 @@ theorem code.validate_body_with.accepted_lift {V : Type} (visitor : code.OpVisit
   have hok : result = .Ok () := by simpa [code.validate_body, hrun] using haccepted
   subst result
   let bt := Body.initialBlockType ctx.results.val
-  have hsteps := Wasm.steps code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+  have hsteps := Wasm1.steps code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
     FullVisitor.empty_total data env ctx bt
   exact code.validate_body_with.accepted_lift_of_contract visitor data env ctx
-    (Wasm.State data env ctx bt)
+    (Wasm1.State data env ctx bt)
     (hsteps.contract code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor data env ctx bt)
     (fun st st' opcode v h => code.step.accepted_lift visitor haccept st st' data env ctx opcode v h)
-    (fun hsize => Wasm.State.start data env ctx bt hsize) v hrun
+    (fun hsize => Wasm1.State.start data env ctx bt hsize) v hrun
 
 /-- Independent Wasm 1.0 byte encoding and generated declarative typing
 force public visiting validation to accept when every hook accepts. -/

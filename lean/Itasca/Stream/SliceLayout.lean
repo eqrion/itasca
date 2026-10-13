@@ -10,9 +10,9 @@ open ModuleBinary ModuleElaboration ModuleEnv StreamCompleteRegions
 private theorem slice_spec (data : Slice U8) (first last : Usize)
     (hfirst : first.val ≤ last.val) (hlast : last.val ≤ data.length) :
     core.slice.index.Slice.index (core.slice.index.SliceIndexRangeUsizeSlice U8)
-      data ⟨first, last⟩ ⦃ region => Wasm.BytesAt data first region.val last ⦄ := by
+      data ⟨first, last⟩ ⦃ region => Wasm1.BytesAt data first region.val last ⦄ := by
   step
-  apply Wasm.BytesAt.of_slice_view hfirst hlast
+  apply Wasm1.BytesAt.of_slice_view hfirst hlast
   assumption
 
 /-- Component-based regression certificates use the canonical independent

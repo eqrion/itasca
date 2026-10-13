@@ -167,7 +167,7 @@ private theorem constant_complete {A : Type}
 /-- The complete immediate is accepted and its scalar type extends the represented stack. -/
 theorem code.read_i32_const.complete (st : code.OpIterState) (data : Slice U8)
     (value : I32) (next : Usize) (outer segment : List code.StackType) (ts : List valtype)
-    (hd : SignedLeb.Decoded data st.pos value.val next)
+    (hd : SignedLeb32.Decoded data st.pos value.val next)
     (hvals : st.vals.val = outer ++ segment) (hsize : st.vals.val.length < Usize.max)
     (ht : Sequence.Realizes (Control.polymorphic st) segment ts) :
     ∃ s after, code.read_i32_const st data = .ok (.Ok value, s) ∧

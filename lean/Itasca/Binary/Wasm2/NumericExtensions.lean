@@ -3,7 +3,7 @@ import Itasca.Spec.DeclaredReferences
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.NumericExtensions
+namespace Itasca.Wasm2.NumericExtensions
 
 /-! Independent scalar instruction meanings for the Wasm 2.0 additions. -/
 
@@ -194,4 +194,4 @@ theorem saturating_declared {opcode op} (hmap : saturatingMeaning opcode = some 
     DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
 
 
-end Itasca.MultiValue.NumericExtensions
+end Itasca.Wasm2.NumericExtensions

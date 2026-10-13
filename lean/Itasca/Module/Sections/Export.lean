@@ -301,7 +301,7 @@ theorem module.decode_export_section_loop.spec (data : Slice U8) (env : module.E
           · simp only [List.length_append, List.length_singleton]
             omega
           · simpa using hbytes.snoc he
-  · exact ⟨by simp, [], by simp, .nil, ⟨[], .nil, Wasm.BytesAt.nil data start hstart⟩, hbound⟩
+  · exact ⟨by simp, [], by simp, .nil, ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, hbound⟩
 
 /-- The export section enforces fresh names and valid indices as it appends
 entries, while preserving their independent binary representations. -/

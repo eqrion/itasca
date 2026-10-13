@@ -129,6 +129,6 @@ theorem code.apply_func_type.complete (st : code.OpIterState) (ft : types.FuncTy
       rest ++ ft.results.val.map code.StackType.Val, ?_, ?_, ?_⟩
     · simp_all [alloc.vec.Vec.deref, List.append_assoc]
     · simpa using Nat.add_le_add_right hlen ft.results.val.length
-    · exact (Frames.realizes_append_concrete _ rest ft.results.val _).mpr ⟨before, ht', rfl⟩
+    · exact (Sequence.realizes_append_concrete _ rest ft.results.val _).mpr ⟨before, ht', rfl⟩
 
 end Itasca

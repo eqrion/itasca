@@ -2,7 +2,7 @@ import Itasca.Wasm2.Control.EndSound
 
 open Aeneas Aeneas.Std Result
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- Common parameter pop and frame setup in all extracted entry branches. -/
 def enterParams (st : code.BodyState) (env : module.Env)
@@ -155,7 +155,7 @@ theorem enterParams.sound (st : code.BodyState) (env : module.Env)
     have he : ts = ins := by simpa [hin] using hts.symm
     refine ⟨hp2.trans (hp1.trans hp), remaining, alloc.vec.Vec.len s.vals, hl,
       by simp [hv'], ht hok, ?_, by simpa [hc2, hc] using hb1, ?_⟩
-    · simp [hc2, hc1, hc, Frames.Saved.fresh, MultiValue.frame]
+    · simp [hc2, hc1, hc, Frames.Saved.fresh, Wasm2.frame]
     · simpa [he, hv1, hv'] using hvs
   · step*
 
@@ -197,23 +197,23 @@ theorem enterArgs.sound (st : code.BodyState) (env : module.Env)
       · simpa [hc] using hctrl
     · step*
 
-end Itasca.MultiValue
+end Itasca.Wasm2
 
 namespace Itasca
 
 theorem code.enter.sound (st : code.BodyState) (data : Slice U8) (env : module.Env)
-    (form : MultiValue.Frames.Form) (initial : form.Initial)
+    (form : Wasm2.Frames.Form) (initial : form.Initial)
     (outer segment : List code.StackType)
     (hv : st.core.vals.val = outer ++ segment) (hb : (Control.base st.core).val = outer.length)
     (hs : Control.Shape st.core) (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (hcap : st.blocks.val.length < Usize.max) :
     code.enter st data env form.kind ⦃ r => r.1 = .Ok () → ∃ bt ins outs,
-      MultiValue.BlockDecoded data st.core.pos bt r.2.core.pos ∧
-      MultiValue.resolve env (MultiValue.inputs bt) = some ins ∧
-      MultiValue.resolve env (MultiValue.outputs bt) = some outs ∧
+      Wasm2.BlockDecoded data st.core.pos bt r.2.core.pos ∧
+      Wasm2.resolve env (Wasm2.inputs bt) = some ins ∧
+      Wasm2.resolve env (Wasm2.outputs bt) = some outs ∧
       ins.length ≤ 1000 ∧ outs.length ≤ 1000 ∧
-      MultiValue.EnterEffect st r.2 form bt ins outs outer segment ⦄ := by
-  rw [MultiValue.enter_eq]
+      Wasm2.EnterEffect st r.2 form bt ins outs outer segment ⦄ := by
+  rw [Wasm2.enter_eq]
   step with signature.read_block_type.spec data st.core.pos as ⟨r, hdecoded⟩
   cases r with
   | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
@@ -221,13 +221,13 @@ theorem code.enter.sound (st : code.BodyState) (data : Slice U8) (env : module.E
   | Ok pair =>
     obtain ⟨bt, next⟩ := pair
     simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-    step with MultiValue.checkBlock.spec env bt as ⟨r, hcheck⟩
+    step with Wasm2.checkBlock.spec env bt as ⟨r, hcheck⟩
     cases r with
     | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
     | Ok u =>
       obtain ⟨ins, outs, hin, hout, hip, hop⟩ := hcheck (by cases u; rfl)
       simp only [bind_ok]
-      apply WP.spec_mono (MultiValue.enterArgs.sound { st with core := { st.core with pos := next } }
+      apply WP.spec_mono (Wasm2.enterArgs.sound { st with core := { st.core with pos := next } }
         env form bt ins outs outer segment initial hin hv hb ⟨hs.ordered, hs.bounded⟩ ha hcap)
       intro result hresult hok
       obtain ⟨hpos, heffect⟩ := hresult hok

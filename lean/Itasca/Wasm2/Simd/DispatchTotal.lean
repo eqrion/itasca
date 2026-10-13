@@ -3,7 +3,7 @@ import Itasca.Wasm2.Simd.Tables
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Simd
+namespace Itasca.Wasm2.Simd
 
 private theorem run_total {A V : Type}
     (read : Result (core.result.Result A error.OpError × code.OpIterState))
@@ -86,4 +86,4 @@ theorem simd_total {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterStat
     have hn : next.val ≤ r.2.1.pos.val := h.2.2.1
     exact ⟨h.1, h.2.1, by omega, h.2.2.2⟩
 
-end Itasca.MultiValue.Simd
+end Itasca.Wasm2.Simd

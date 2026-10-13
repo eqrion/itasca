@@ -244,7 +244,7 @@ theorem Prefix.typed {profile : ValidationProfile} {issued : Issued} {count : Na
         issued.code 0#usize entries finish ∧
       ModuleCode.EntriesTyped (profile := profile) issued.env issued.first_func.val entries := by
   induction h with
-  | nil => exact ⟨[], rfl, ⟨[], .nil, Wasm.BytesAt.nil _ _ (by simp)⟩, .nil _⟩
+  | nil => exact ⟨[], rfl, ⟨[], .nil, Wasm1.BytesAt.nil _ _ (by simp)⟩, .nil _⟩
   | @snoc V visitor v v' count pos index finish previous hindex hentry ih =>
     have hs := module.validate_code_entry_with.profile_sound visitor issued.code pos
       issued.env index finish v v' hbound profile hresults (by simpa [hprofile] using hentry)

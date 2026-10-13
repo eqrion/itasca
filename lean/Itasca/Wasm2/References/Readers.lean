@@ -9,7 +9,7 @@ namespace Itasca
 theorem code.take_reference_type.spec (st : code.OpIterState) (data : Slice U8) :
     code.take_reference_type st data ⦃ r => r.2.vals = st.vals ∧ r.2.ctrls = st.ctrls ∧
       ∀ ty : types.ElemType, r.1 = .Ok ty →
-        Wasm.BytesAt data st.pos [MultiValue.ReferencesBinary.referenceByte ty] r.2.pos ⦄ := by
+        Wasm1.BytesAt data st.pos [Wasm2.ReferencesBinary.referenceByte ty] r.2.pos ⦄ := by
   by_cases hp : st.pos.val < data.length
   · obtain ⟨_, hr, next, rfl, hn⟩ := WP.spec_imp_exists (reader.read_byte.spec data st.pos hp)
     simp only [code.take_reference_type, hr, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
@@ -19,7 +19,7 @@ theorem code.take_reference_type.spec (st : code.OpIterState) (data : Slice U8) 
     all_goals refine ⟨trivial, trivial, ?_⟩
     all_goals intro ty he
     all_goals try cases he
-    all_goals exact Wasm.BytesAt.byte data st.pos next _ hp (by assumption) hn
+    all_goals exact Wasm1.BytesAt.byte data st.pos next _ hp (by assumption) hn
   · simp [code.take_reference_type, reader.read_byte.eof data st.pos (by omega),
       core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -28,7 +28,7 @@ theorem code.take_reference_type.spec (st : code.OpIterState) (data : Slice U8) 
 theorem code.take_value_type.spec (st : code.OpIterState) (data : Slice U8) :
     code.take_value_type st data ⦃ r => r.2.vals = st.vals ∧ r.2.ctrls = st.ctrls ∧
       ∀ ty : types.ValueType, r.1 = .Ok ty →
-        Wasm.BytesAt data st.pos [MultiValue.valueByte ty] r.2.pos ⦄ := by
+        Wasm1.BytesAt data st.pos [Wasm2.valueByte ty] r.2.pos ⦄ := by
   by_cases hp : st.pos.val < data.length
   · obtain ⟨_, hr, next, rfl, hn⟩ := WP.spec_imp_exists (reader.read_byte.spec data st.pos hp)
     simp only [code.take_value_type, hr, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
@@ -38,7 +38,7 @@ theorem code.take_value_type.spec (st : code.OpIterState) (data : Slice U8) :
     all_goals refine ⟨trivial, trivial, ?_⟩
     all_goals intro ty he
     all_goals try cases he
-    all_goals exact Wasm.BytesAt.byte data st.pos next _ hp (by assumption) hn
+    all_goals exact Wasm1.BytesAt.byte data st.pos next _ hp (by assumption) hn
   · simp [code.take_value_type, reader.read_byte.eof data st.pos (by omega),
       core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -134,7 +134,7 @@ theorem code.take_data_index.spec (st : code.OpIterState) (data : Slice U8) (env
 /-- Bulk memory instructions consume one literal reserved byte and require memory zero. -/
 theorem code.read_bulk_memory.spec (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
     code.read_bulk_memory st data env ⦃ r => r.2.vals = st.vals ∧ r.2.ctrls = st.ctrls ∧
-      (r.1 = .Ok () → Wasm.BytesAt data st.pos [0#u8] r.2.pos ∧ 0 < env.mem_types.val.length) ⦄ := by
+      (r.1 = .Ok () → Wasm1.BytesAt data st.pos [0#u8] r.2.pos ∧ 0 < env.mem_types.val.length) ⦄ := by
   obtain ⟨⟨r, s⟩, hr, hv, hc, hd⟩ := WP.spec_imp_exists (code.read_reserved_zero.spec st data)
   dsimp only at hv hc hd
   cases r with
@@ -153,7 +153,7 @@ theorem code.read_bulk_memory.spec (st : code.OpIterState) (data : Slice U8) (en
           core.result.Result.Insts.CoreOpsTry.branch]
       · intro _
         obtain ⟨hp, hz, hpos⟩ := hd
-        exact ⟨Wasm.BytesAt.byte data st.pos s.pos 0#u8 hp hz hpos, List.length_pos_iff.mpr hm⟩
+        exact ⟨Wasm1.BytesAt.byte data st.pos s.pos 0#u8 hp hz hpos, List.length_pos_iff.mpr hm⟩
 
 /-- Successful `ref.func` decoding establishes the independent declaration
 condition in addition to ordinary function-index bounds. -/

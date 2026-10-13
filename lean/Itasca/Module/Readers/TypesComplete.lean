@@ -25,11 +25,11 @@ theorem module.decode_limits.complete (data : Slice U8) (pos : Usize)
   obtain ⟨bytes, he, hs⟩ := h
   cases he with
   | noMax minimum hb =>
-      obtain ⟨middle, htag, hbytes⟩ := (show Wasm.BytesAt data pos ([0#u8] ++ _) next from hs).split
+      obtain ⟨middle, htag, hbytes⟩ := (show Wasm1.BytesAt data pos ([0#u8] ++ _) next from hs).split
       simp [module.decode_limits, htag.read_byte, hbytes.read_u32 minimum hb,
         core.result.Result.Insts.CoreOpsTry.branch]
   | max minimum maximum hlo hhi =>
-      obtain ⟨first, htag, hbytes⟩ := (show Wasm.BytesAt data pos ([1#u8] ++ _) next from hs).split
+      obtain ⟨first, htag, hbytes⟩ := (show Wasm1.BytesAt data pos ([1#u8] ++ _) next from hs).split
       obtain ⟨middle, hl, hh⟩ := hbytes.split
       simp [module.decode_limits, htag.read_byte, hl.read_u32 minimum hlo,
         hh.read_u32 maximum hhi, core.result.Result.Insts.CoreOpsTry.branch]
@@ -40,7 +40,7 @@ theorem module.decode_global_type.complete (data : Slice U8) (pos : Usize)
     module.decode_global_type data pos profile = .ok (.Ok (ty, next)) := by
   obtain ⟨bytes, rfl, hs⟩ := h
   obtain ⟨middle, hvalue, hmut⟩ :=
-    (show Wasm.BytesAt data pos ([valueByte ty.valtype] ++ [mutByte ty.mutability]) next from hs).split
+    (show Wasm1.BytesAt data pos ([valueByte ty.valtype] ++ [mutByte ty.mutability]) next from hs).split
   have hv := module.decode_value_type.complete data pos ty.valtype middle ⟨_, rfl, hvalue⟩ profile hallowed
   have hm := hmut.read_byte
   cases ty with
@@ -63,7 +63,7 @@ theorem module.decode_table_type.complete (data : Slice U8) (pos : Usize)
     (profile : ValidationProfile) (hallowed : ElemTypeAllowed profile ty.elem) :
     module.decode_table_type data pos profile = .ok (.Ok (ty, next)) := by
   obtain ⟨bytes, ⟨limitBytes, hl, rfl⟩, hs⟩ := h
-  obtain ⟨middle, htag, hbytes⟩ := (show Wasm.BytesAt data pos ([elemByte ty.elem] ++ limitBytes) next from hs).split
+  obtain ⟨middle, htag, hbytes⟩ := (show Wasm1.BytesAt data pos ([elemByte ty.elem] ++ limitBytes) next from hs).split
   have hr := module.decode_limits.complete data middle ty.limits next ⟨_, hl, hbytes⟩
   have hc := limits.validate_limits.complete ty.limits limits.MAX_TABLE_ELEMS hv
   have ht := module.decode_elem_type.complete data pos ty.elem middle ⟨_, rfl, htag⟩ profile hallowed
@@ -157,7 +157,7 @@ theorem module.decode_func_type.complete (data : Slice U8) (pos : Usize)
     module.decode_func_type data pos .Wasm1 = .ok (.Ok (ty, next)) := by
   obtain ⟨bytes, ⟨params, results, hp, hr, rfl⟩, hs⟩ := h
   obtain ⟨first, htag, hbytes⟩ :=
-    (show Wasm.BytesAt data pos ([0x60#u8] ++ (params ++ results)) next from hs).split
+    (show Wasm1.BytesAt data pos ([0x60#u8] ++ (params ++ results)) next from hs).split
   obtain ⟨middle, hparams, hresultsBytes⟩ := hbytes.split
   have hp' := module.decode_value_types.complete data first ty.params middle ⟨params, hp, hparams⟩
     .Wasm1 (fun t ht => hallowed t (List.mem_append_left _ ht))
@@ -180,7 +180,7 @@ theorem module.decode_func_type.profile_complete (data : Slice U8) (pos : Usize)
   | Wasm2 =>
       obtain ⟨bytes, ⟨params, results, hp, hr, rfl⟩, hs⟩ := h
       obtain ⟨first, htag, hbytes⟩ :=
-        (show Wasm.BytesAt data pos ([0x60#u8] ++ (params ++ results)) next from hs).split
+        (show Wasm1.BytesAt data pos ([0x60#u8] ++ (params ++ results)) next from hs).split
       obtain ⟨middle, hparams, hresultsBytes⟩ := hbytes.split
       have hp' := module.decode_value_types.profile_complete data first ty.params middle
         (some (limits.MAX_MULTI_VALUE_PARAMS, error.OpError.TooManyParams)) ⟨params, hp, hparams⟩

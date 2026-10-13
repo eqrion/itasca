@@ -12,7 +12,7 @@ open ModuleBinary
 ghost phase; only actual sections update the parser's last-seen section id. -/
 theorem Chain.profile_complete {profile raw n bytes} (h : Chain raw n bytes profile)
     (data : Slice U8) (env : module.Env) (decls : Declarations) (pos next : Usize) (last : U8)
-    (hb : Wasm.BytesAt data pos bytes next) (hstop : StopAt data next)
+    (hb : Wasm1.BytesAt data pos bytes next) (hstop : StopAt data next)
     (hready : Ready raw n decls env) (hbound : Bounded env pos.val)
     (hlast : last.val ≤ n) (hreq : Requirements raw profile)
     (hallowed : ModuleTypesAllowed profile {raw with codes := [], data := []}) :
@@ -58,7 +58,7 @@ theorem Chain.profile_complete {profile raw n bytes} (h : Chain raw n bytes prof
 
 theorem Chain.complete {raw n bytes} (h : Chain raw n bytes)
     (data : Slice U8) (env : module.Env) (decls : Declarations) (pos next : Usize) (last : U8)
-    (hb : Wasm.BytesAt data pos bytes next) (hstop : StopAt data next)
+    (hb : Wasm1.BytesAt data pos bytes next) (hstop : StopAt data next)
     (hready : Ready raw n decls env) (hbound : Bounded env pos.val)
     (hlast : last.val ≤ n) (hreq : Requirements raw)
     (hallowed : ModuleTypesAllowed .Wasm1 {raw with codes := [], data := []}) :

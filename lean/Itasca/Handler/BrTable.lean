@@ -165,8 +165,8 @@ theorem instruction_wf (depths : List U32) (default : U32) :
   apply wf_instr.instr_case_9
   · simp only [Forall, List.mem_map]
     rintro _ ⟨d, hd, rfl⟩
-    exact Core.label_wf d
-  · exact Core.label_wf default
+    exact Spec.label_wf d
+  · exact Spec.label_wf default
 
 theorem instruction_typed (C : context) (hC : wf_context C)
     (cs : List code.Ctrl) (hlabels : C.LABELS = Control.labels cs)

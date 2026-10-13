@@ -90,7 +90,7 @@ def code.branch_table_loop
     code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor ois data env () count arity i
   .ok (r, s)
 
-def MultiValue.tableCore
+def Wasm2.tableCore
   (st : _root_.Itasca.code.BodyState) (data : Slice Std.U8)
   (env : _root_.Itasca.module.Env) :
   Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
@@ -119,7 +119,7 @@ def MultiValue.tableCore
     ok (r1, st)
 
 
-namespace MultiValue
+namespace Wasm2
 
 @[simp] def tableCont (p : code.OpIterState × alloc.vec.Vec signature.BlockType × Option Usize × U32) :=
   (p.1, (), p.2.2.1, p.2.2.2)
@@ -172,12 +172,12 @@ theorem tableBody_eq (data : Slice U8) (env : module.Env) (count : U32)
       funext r
       cases r <;> simp [Std.bind_assoc, tableFlow, tableCont, tableDone]
 
-end MultiValue
+end Wasm2
 
 /-- The non-visiting table wrapper executes the same generic reader and loop. -/
 theorem code.branch_table.eq_core (st : code.BodyState) (data : Slice U8) (env : module.Env) :
-    code.branch_table st data env = MultiValue.tableCore st data env := by
-  simp only [code.branch_table, code.branch_table_with, MultiValue.tableCore,
+    code.branch_table st data env = Wasm2.tableCore st data env := by
+  simp only [code.branch_table, code.branch_table_with, Wasm2.tableCore,
     code.branch_table_loop, Std.bind_assoc]
   congr 1
   funext r

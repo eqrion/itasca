@@ -92,7 +92,7 @@ theorem module.decode_table_section_loop.spec (data : Slice U8) (env : module.En
             exact (hmax hprofile).trans (Nat.le_max_right _ _)
           · scalar_tac
   · exact ⟨by simp, [], by simp, ⟨by cases env; rfl, by simp⟩,
-      ⟨[], .nil, Wasm.BytesAt.nil data start hstart⟩, by simp, hsize, fun _ => Nat.le_max_left _ _⟩
+      ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, by simp, hsize, fun _ => Nat.le_max_left _ _⟩
 
 @[step]
 theorem module.decode_table_section.spec (data : Slice U8) (pos : Usize) (env : module.Env)

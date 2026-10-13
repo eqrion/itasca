@@ -2,7 +2,7 @@ import Itasca.Wasm2.Control.EnterSound
 
 open Aeneas Aeneas.Std Result
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 theorem checkBlock.complete (env : module.Env) (bt : signature.BlockType)
     (ins outs : List types.ValueType)
@@ -66,7 +66,7 @@ theorem enterParams.complete (st : code.BodyState) (env : module.Env)
     as ⟨r1, s2, hok, hvs, hc2, hp2⟩
   refine ⟨hok, hp2.trans (hp1.trans hp), remaining, alloc.vec.Vec.len s.vals, hl,
     by simp [hv'], ht', ?_, by simpa [hc2, hc] using hb1, ?_⟩
-  · simp [hc2, hc1, hc, Frames.Saved.fresh, MultiValue.frame]
+  · simp [hc2, hc1, hc, Frames.Saved.fresh, Wasm2.frame]
   · simpa [hv1, hv'] using hvs
 
 theorem enterArgs.complete (st : code.BodyState) (env : module.Env)
@@ -100,19 +100,19 @@ theorem enterArgs.complete (st : code.BodyState) (env : module.Env)
     exact ⟨hok, hpos.trans hp, remaining, base, hlen.trans hl, hbase,
       by simpa [Control.polymorphic, hc] using htyped, by simpa [hc] using hctrl, by simpa [hc] using hblocks, hvals⟩
 
-end Itasca.MultiValue
+end Itasca.Wasm2
 
 namespace Itasca
 
 /-- Every compatible independently encoded structured entry is accepted,
 including indexed parameters/results and the if condition. -/
 theorem code.enter.complete (st : code.BodyState) (data : Slice U8) (env : module.Env)
-    (form : MultiValue.Frames.Form) (initial : form.Initial)
+    (form : Wasm2.Frames.Form) (initial : form.Initial)
     (bt : signature.BlockType) (next : Usize) (ins outs : List types.ValueType)
     (outer segment : List code.StackType) (ts : List valtype)
-    (hdecoded : MultiValue.BlockDecoded data st.core.pos bt next)
-    (hin : MultiValue.resolve env (MultiValue.inputs bt) = some ins)
-    (hout : MultiValue.resolve env (MultiValue.outputs bt) = some outs)
+    (hdecoded : Wasm2.BlockDecoded data st.core.pos bt next)
+    (hin : Wasm2.resolve env (Wasm2.inputs bt) = some ins)
+    (hout : Wasm2.resolve env (Wasm2.outputs bt) = some outs)
     (hip : ins.length ≤ 1000) (hop : outs.length ≤ 1000)
     (hv : st.core.vals.val = outer ++ segment) (hb : (Control.base st.core).val = outer.length)
     (ha : st.blocks.val.length = st.core.ctrls.val.length)
@@ -120,12 +120,12 @@ theorem code.enter.complete (st : code.BodyState) (data : Slice U8) (env : modul
     (hvalsCap : st.core.vals.val.length + ins.length ≤ Usize.max)
     (ht : Sequence.Realizes (Control.polymorphic st.core) segment (ts ++ form.args ins)) :
     code.enter st data env form.kind ⦃ r => r.1 = .Ok () ∧ r.2.core.pos = next ∧
-      MultiValue.EnterForward st r.2 form bt ins outs outer segment ts ⦄ := by
-  rw [MultiValue.enter_eq, signature.read_block_type.complete data st.core.pos bt next hdecoded]
+      Wasm2.EnterForward st r.2 form bt ins outs outer segment ts ⦄ := by
+  rw [Wasm2.enter_eq, signature.read_block_type.complete data st.core.pos bt next hdecoded]
   simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-  rw [MultiValue.checkBlock.complete env bt ins outs hin hout hip hop]
+  rw [Wasm2.checkBlock.complete env bt ins outs hin hout hip hop]
   simp only [bind_ok]
-  exact MultiValue.enterArgs.complete { st with core := { st.core with pos := next } } env form bt
+  exact Wasm2.enterArgs.complete { st with core := { st.core with pos := next } } env form bt
     ins outs outer segment ts initial hin hv hb ha hcap hvalsCap ht
 
 end Itasca

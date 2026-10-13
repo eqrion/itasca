@@ -15,16 +15,16 @@ theorem code.call.direct_prefix (st : code.BodyState) (data : Slice U8)
     (hvals : st.core.vals.val = outer ++ segment)
     (hbase : (Control.base st.core).val = outer.length)
     (C : context) (hC : EnvTranslation.Matches env ctx C) (inputs : List valtype) (ops : List instr)
-    (htyped : MultiValue.TypedPrefix C inputs ops (Control.polymorphic st.core) segment) :
+    (htyped : Wasm2.TypedPrefix C inputs ops (Control.polymorphic st.core) segment) :
     code.call st data env false ⦃ r => r.1 = .Ok () →
       ∃ idx, Leb128.Decoded data st.core.pos idx r.2.core.pos ∧
       r.2.core.ctrls = st.core.ctrls ∧ r.2.blocks = st.blocks ∧
       ∃ rest, r.2.core.vals.val = outer ++ rest ∧
-        MultiValue.TypedPrefix C inputs (ops ++ [.CALL (.mk_uN idx.val)])
+        Wasm2.TypedPrefix C inputs (ops ++ [.CALL (.mk_uN idx.val)])
           (Control.polymorphic st.core) rest ⦄ := by
   obtain ⟨r, hr, hd⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data st.core.pos)
   cases r with
-  | Err e => simp [code.call.eq_core, MultiValue.callCore, hr, core.result.Result.Insts.CoreOpsTry.branch,
+  | Err e => simp [code.call.eq_core, Wasm2.callCore, hr, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok pair =>
     obtain ⟨idx, next⟩ := pair
@@ -37,7 +37,7 @@ theorem code.call.direct_prefix (st : code.BodyState) (data : Slice U8)
       obtain ⟨⟨res, s⟩, hs, hout⟩ := WP.spec_imp_exists
         (code.apply_func_type.realizes { st.core with pos := next } ft outer segment hvals hbase)
       cases res with
-      | Err e => simp [code.call.eq_core, MultiValue.callCore, hr, lift, hsmall, hft, htype, hs,
+      | Err e => simp [code.call.eq_core, Wasm2.callCore, hr, lift, hsmall, hft, htype, hs,
           core.result.Result.Insts.CoreOpsTry.branch]
       | Ok u =>
         obtain ⟨hc, hp, _, _, rest, hv, _, ht⟩ := hout rfl
@@ -45,16 +45,16 @@ theorem code.call.direct_prefix (st : code.BodyState) (data : Slice U8)
         have ht' : ∀ ts, Sequence.Realizes (Control.polymorphic st.core) rest ts →
             Sequence.Realizes (Control.polymorphic st.core) segment
               (ts ++ ft.params.val.map Translate.valueType) := ht
-        have htyping := (MultiValue.ResumePrefix.after_pop htyped ht').finish hC.wf
+        have htyping := (Wasm2.ResumePrefix.after_pop htyped ht').finish hC.wf
           (.CALL (.mk_uN idx.val)) ft.results.val (.instr_case_10 _ (EnvTranslation.index_wf idx))
           (hC.call idx ft hi htype)
         rw [WP.spec_equiv_exists]
         refine ⟨(.Ok (), ⟨s⟩), ?_, fun _ => ?_⟩
-        · simp [code.call.eq_core, MultiValue.callCore, hr, lift, hsmall, hft, htype, hs,
+        · simp [code.call.eq_core, Wasm2.callCore, hr, lift, hsmall, hft, htype, hs,
             core.result.Result.Insts.CoreOpsTry.branch]
         · exact ⟨idx, by simpa [hp, Leb128.Post] using hd, hc, code.BodyState.blocks_eq_of_ctrls hc, _, hv, htyping⟩
     · have hlarge := Nat.le_of_not_gt hi
-      simp [code.call.eq_core, MultiValue.callCore, hr, lift, hlarge, core.result.Result.Insts.CoreOpsTry.branch]
+      simp [code.call.eq_core, Wasm2.callCore, hr, lift, hlarge, core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Direct calls accept independently encoded, in-range function indices and
 compatible operands within the explicit signature and operand capacity limits. -/
@@ -86,7 +86,7 @@ theorem code.call.direct_complete (st : code.BodyState) (data : Slice U8)
   have hsmall := Nat.not_le_of_gt hi
   rw [WP.spec_equiv_exists]
   refine ⟨(.Ok (), ⟨s⟩), ?_, rfl, hc, code.BodyState.blocks_eq_of_ctrls hc, hpos, rest, hvs, hlen, hreal'⟩
-  simp [code.call.eq_core, MultiValue.callCore, hread, lift, hsmall, hft, ht, hs,
+  simp [code.call.eq_core, Wasm2.callCore, hread, lift, hsmall, hft, ht, hs,
     core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Indirect calls decode both indices and require a function-reference table.
@@ -96,13 +96,13 @@ theorem code.call.indirect_prefix (st : code.BodyState) (data : Slice U8)
     (hvals : st.core.vals.val = outer ++ segment)
     (hbase : (Control.base st.core).val = outer.length)
     (C : context) (hC : EnvTranslation.Matches env ctx C) (inputs : List valtype) (ops : List instr)
-    (htyped : MultiValue.TypedPrefix C inputs ops (Control.polymorphic st.core) segment) :
+    (htyped : Wasm2.TypedPrefix C inputs ops (Control.polymorphic st.core) segment) :
     code.call st data env true ⦃ r => r.1 = .Ok () →
       ∃ idx table middle, Leb128.Decoded data st.core.pos idx middle ∧
       Leb128.Decoded data middle table r.2.core.pos ∧
       r.2.core.ctrls = st.core.ctrls ∧ r.2.blocks = st.blocks ∧
       ∃ rest, r.2.core.vals.val = outer ++ rest ∧
-        MultiValue.TypedPrefix C inputs (ops ++ [.CALL_INDIRECT (.mk_uN table.val) (.mk_uN idx.val)])
+        Wasm2.TypedPrefix C inputs (ops ++ [.CALL_INDIRECT (.mk_uN table.val) (.mk_uN idx.val)])
           (Control.polymorphic st.core) rest ⦄ := by
   obtain ⟨r, hr, hd⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data st.core.pos)
   cases r with
@@ -173,7 +173,7 @@ theorem code.call.indirect_prefix (st : code.BodyState) (data : Slice U8)
                   have hparam := ht ts (by simpa [Control.polymorphic, hcc] using hts)
                   have hargs := htc.2 _ (by simpa [Control.polymorphic, hcc] using hparam)
                   simpa [Translate.valueType, List.append_assoc, Control.polymorphic] using hargs
-                have htyping := (MultiValue.ResumePrefix.after_pop htyped htransfer).finish hC.wf
+                have htyping := (Wasm2.ResumePrefix.after_pop htyped htransfer).finish hC.wf
                   (.CALL_INDIRECT (.mk_uN table.val) (.mk_uN idx.val)) ft.results.val
                   (.instr_case_11 _ _ (EnvTranslation.index_wf table) (EnvTranslation.index_wf idx))
                   (hC.call_indirect idx table ft hi htype htable hfun)

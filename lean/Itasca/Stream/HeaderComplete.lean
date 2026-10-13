@@ -55,7 +55,7 @@ theorem stream.read_code_header.complete {S : Type} (source : stream.Source S) (
       hsizeDecoded.to_slice_view (by simp) hviewbound hview (by simp) (by simp) hsizeWithin
     have hcountHeader : Leb128.Decoded header content count entries :=
       hcount.to_slice_view (by simp) hviewbound hview (by simp) (by simp) hcountWithin
-    have hbyteHeader := (Wasm.BytesAt.of_slice_view (by simp) hviewbound hview).restrict
+    have hbyteHeader := (Wasm1.BytesAt.of_slice_view (by simp) hviewbound hview).restrict
       hbyte.byte (pos := 0#usize) (next := 1#usize) (by simp) (by simp) hbyteWithin
     have hpositive : (0#usize).val < header.length := by have := hbyteHeader.bound; scalar_tac
     have hindex : Slice.index_usize header 0#usize = .ok 10#u8 := by

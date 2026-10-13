@@ -5,7 +5,7 @@ import Itasca.Wasm2.Suffix
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- Frame bases remain ordered and within the operand stack. The signature
 projection has the same indexing as the runtime control vector. -/
@@ -43,7 +43,7 @@ def labelAt (st : code.BodyState) (depth : Nat) : Option signature.ResultType :=
     some (target c.kind bt)
   else none
 
-end Itasca.MultiValue
+end Itasca.Wasm2
 
 namespace Itasca
 
@@ -52,11 +52,11 @@ theorem code.push_frame.spec (st : code.BodyState)
     (kind : code.LabelKind) (bt : signature.BlockType)
     (hc : st.core.ctrls.val.length < Usize.max) (hb : st.blocks.val.length < Usize.max) :
     code.push_frame st kind bt ⦃ s =>
-      s.core.ctrls.val = st.core.ctrls.val ++ [MultiValue.frame st.core kind bt] ∧
+      s.core.ctrls.val = st.core.ctrls.val ++ [Wasm2.frame st.core kind bt] ∧
       s.core.vals = st.core.vals ∧ s.core.pos = st.core.pos ∧
       s.blocks.val = st.blocks.val ++ [bt] ⦄ := by
   unfold code.push_frame
-  step* <;> simp_all [MultiValue.frame]
+  step* <;> simp_all [Wasm2.frame]
 
 /-- Label lookup uses loop inputs and all other frames' outputs, in reverse
 nesting order. Out-of-range labels produce an ordinary validation error. -/
@@ -65,7 +65,7 @@ theorem code.label.spec (st : code.BodyState) (depth : U32)
     (ha : st.blocks.val.length = st.core.ctrls.val.length) :
     code.label st depth ⦃ r =>
       match r with
-      | .Ok view => MultiValue.labelAt st depth.val = some view
+      | .Ok view => Wasm2.labelAt st depth.val = some view
       | .Err e => e = .UnknownLabel ∧ st.blocks.val.length ≤ depth.val ⦄ := by
   unfold code.label
   step
@@ -79,20 +79,20 @@ theorem code.label.spec (st : code.BodyState) (depth : U32)
     step
     split <;> simp only [signature.BlockType.params.spec, signature.BlockType.results.spec, bind_ok, WP.spec_ok]
     all_goals simp_all [signature.BlockType.params.spec, signature.BlockType.results.spec,
-      MultiValue.labelAt, MultiValue.target]
+      Wasm2.labelAt, Wasm2.target]
     all_goals have hi : depth.val < st.core.ctrls.val.length := by scalar_tac
     all_goals have hc : st.core.ctrls.val.length - 1 - depth.val < st.core.ctrls.val.length := by omega
     all_goals simp_all
 
 theorem code.label.complete (st : code.BodyState) (depth : U32)
     (ha : st.blocks.val.length = st.core.ctrls.val.length) (view : signature.ResultType)
-    (hl : MultiValue.labelAt st depth.val = some view) :
+    (hl : Wasm2.labelAt st depth.val = some view) :
     code.label st depth = .ok (.Ok view) := by
   obtain ⟨r, hr, hs⟩ := WP.spec_imp_exists (code.label.spec st depth ha)
   cases r with
   | Err e =>
     have hd : st.core.ctrls.val.length ≤ depth.val := by simpa using hs.2
-    simp [MultiValue.labelAt, Nat.not_lt.mpr hd] at hl
+    simp [Wasm2.labelAt, Nat.not_lt.mpr hd] at hl
   | Ok actual =>
     have he : actual = view := by simpa [hs] using hl
     simpa [he] using hr
@@ -105,7 +105,7 @@ theorem code.read_multi_value_label.spec (st : code.BodyState) (data : Slice U8)
       st.core.pos.val ≤ r.2.core.pos.val ∧
       (∀ view, r.1 = .Ok view → ∃ depth,
         Leb128.Decoded data st.core.pos depth r.2.core.pos ∧
-        MultiValue.labelAt st depth.val = some view) ⦄ := by
+        Wasm2.labelAt st depth.val = some view) ⦄ := by
   obtain ⟨r, hr, hs⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data st.core.pos)
   cases r with
   | Err e => simp [code.read_multi_value_label, code.read_label_info, hr, core.result.Result.Insts.CoreOpsTry.branch,

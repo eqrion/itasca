@@ -10,7 +10,7 @@ mixed concrete/`Bot` stacks and implicit operands at an unreachable base. -/
 theorem code.pop_results.realizes (st : code.OpIterState) (env : module.Env)
     (view : signature.ResultType) (expected : List types.ValueType)
     (outer segment : List code.StackType)
-    (hts : MultiValue.resolve env view = some expected)
+    (hts : Wasm2.resolve env view = some expected)
     (hvals : st.vals.val = outer ++ segment)
     (hbase : (Control.base st).val = outer.length) :
     code.pop_results st env view ⦃ r =>
@@ -21,12 +21,12 @@ theorem code.pop_results.realizes (st : code.OpIterState) (env : module.Env)
             (ts ++ expected.map Translate.valueType)) ⦄ := by
   cases view with
   | Empty =>
-    simp [MultiValue.resolve] at hts
+    simp [Wasm2.resolve] at hts
     subst expected
     simp only [code.pop_results, WP.spec_ok]
     exact ⟨trivial, trivial, segment, hvals, le_refl _, by simp⟩
   | One t =>
-    simp [MultiValue.resolve] at hts
+    simp [Wasm2.resolve] at hts
     subst expected
     obtain ⟨⟨res, s⟩, hr, hc, hp, rest, hv, hl, ht⟩ := WP.spec_imp_exists
       (code.pop_with_type.realizes st outer segment t hvals hbase)
@@ -37,7 +37,7 @@ theorem code.pop_results.realizes (st : code.OpIterState) (env : module.Env)
     · exact ⟨hc, hp, rest, hv, hl⟩
   | «Type» index part =>
     by_cases hi : index.val < env.types.val.length
-    · cases part <;> simp [MultiValue.resolve, List.getElem?_eq_getElem hi] at hts
+    · cases part <;> simp [Wasm2.resolve, List.getElem?_eq_getElem hi] at hts
       all_goals subst expected
       all_goals unfold code.pop_results
       all_goals step
@@ -47,13 +47,13 @@ theorem code.pop_results.realizes (st : code.OpIterState) (env : module.Env)
       all_goals step with code.pop_types.realizes st outer segment _ hvals hbase
       all_goals simp_all [alloc.vec.Vec.deref]
       all_goals intro hok; simpa [hok] using r_post4
-    · simp [MultiValue.resolve, List.getElem?_eq_none (by omega : env.types.val.length ≤ index.val)] at hts
+    · simp [Wasm2.resolve, List.getElem?_eq_none (by omega : env.types.val.length ≤ index.val)] at hts
 
 /-- Independent stack compatibility suffices for descriptor-pop acceptance. -/
 theorem code.pop_results.complete (st : code.OpIterState) (env : module.Env)
     (view : signature.ResultType) (expected : List types.ValueType)
     (outer segment : List code.StackType) (ts : List valtype)
-    (hts : MultiValue.resolve env view = some expected)
+    (hts : Wasm2.resolve env view = some expected)
     (hvals : st.vals.val = outer ++ segment)
     (hbase : (Control.base st).val = outer.length)
     (ht : Sequence.Realizes (Control.polymorphic st) segment
@@ -64,12 +64,12 @@ theorem code.pop_results.complete (st : code.OpIterState) (env : module.Env)
         Sequence.Realizes (Control.polymorphic st) rest ts ⦄ := by
   cases view with
   | Empty =>
-    simp [MultiValue.resolve] at hts
+    simp [Wasm2.resolve] at hts
     subst expected
     simp only [code.pop_results, WP.spec_ok]
     exact ⟨trivial, trivial, trivial, segment, hvals, le_refl _, by simpa using ht⟩
   | One t =>
-    simp [MultiValue.resolve] at hts
+    simp [Wasm2.resolve] at hts
     subst expected
     obtain ⟨v, s, rest, hr, hc, hp, hv, hl, _, ht'⟩ :=
       code.pop_with_type.complete st outer segment ts t hvals hbase (by simpa using ht)
@@ -77,7 +77,7 @@ theorem code.pop_results.complete (st : code.OpIterState) (env : module.Env)
       using And.intro hc (And.intro hp ⟨rest, hv, hl, ht'⟩)
   | «Type» index part =>
     by_cases hi : index.val < env.types.val.length
-    · cases part <;> simp [MultiValue.resolve, List.getElem?_eq_getElem hi] at hts
+    · cases part <;> simp [Wasm2.resolve, List.getElem?_eq_getElem hi] at hts
       all_goals subst expected
       all_goals unfold code.pop_results
       all_goals step
@@ -88,7 +88,7 @@ theorem code.pop_results.complete (st : code.OpIterState) (env : module.Env)
         | step with code.pop_types.complete st outer segment ts (alloc.vec.Vec.deref ft.params) hvals hbase (by simpa [alloc.vec.Vec.deref, ft_post, r_post] using ht)
         | step with code.pop_types.complete st outer segment ts (alloc.vec.Vec.deref ft.results) hvals hbase (by simpa [alloc.vec.Vec.deref, ft_post, r_post] using ht)
       all_goals simp_all
-    · simp [MultiValue.resolve, List.getElem?_eq_none (by omega : env.types.val.length ≤ index.val)] at hts
+    · simp [Wasm2.resolve, List.getElem?_eq_none (by omega : env.types.val.length ≤ index.val)] at hts
 
 /-- No descriptor, including an invalid type index, can make a bounded pop
 panic or diverge. Frame bounds are preserved even on rejection. -/
@@ -120,7 +120,7 @@ theorem code.push_results.total (st : code.OpIterState) (env : module.Env)
     (view : signature.ResultType) (hshape : Control.Shape st) :
     code.push_results st env view ⦃ r =>
       Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧ r.2.pos = st.pos ∧
-      (r.1 = .Ok () → ∃ ts, MultiValue.resolve env view = some ts ∧
+      (r.1 = .Ok () → ∃ ts, Wasm2.resolve env view = some ts ∧
         r.2.vals.val = st.vals.val ++ ts.map code.StackType.Val) ⦄ := by
   obtain ⟨res, hr, hs⟩ := WP.spec_imp_exists (signature.ResultType.len.spec view env)
   cases res with

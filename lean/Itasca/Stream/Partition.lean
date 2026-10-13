@@ -15,7 +15,7 @@ inductive Partition (code : Slice U8) (env : module.Env) :
       Partition code env pos func [] pos func
   | cons {pos func issued rest middle finish next} :
       issued.env = env → issued.code_offset = pos → issued.first_func.val = func →
-      Wasm.BytesAt code pos issued.code.val middle →
+      Wasm1.BytesAt code pos issued.code.val middle →
       Partition code env middle (func + issued.num_funcs.val) rest finish next →
       Partition code env pos func (issued :: rest) finish next
 
@@ -23,7 +23,7 @@ theorem Partition.snoc {code env pos func history middle next issued finish}
     (h : Partition code env pos func history middle next)
     (henv : issued.env = env) (hoffset : issued.code_offset = middle)
     (hfunc : issued.first_func.val = next)
-    (hbytes : Wasm.BytesAt code middle issued.code.val finish) :
+    (hbytes : Wasm1.BytesAt code middle issued.code.val finish) :
     Partition code env pos func (history ++ [issued]) finish (next + issued.num_funcs.val) := by
   induction h with
   | nil => exact .cons henv hoffset hfunc hbytes (.nil _ _ hbytes.bound)
@@ -39,7 +39,7 @@ theorem Partition.encoding {code env pos func history finish next}
       ModuleCode.EntriesTyped (profile := profile) env func entries := by
   induction h with
   | nil pos func hbound =>
-    exact ⟨[], by simp, ⟨[], .nil, Wasm.BytesAt.nil _ _ hbound⟩, .nil _⟩
+    exact ⟨[], by simp, ⟨[], .nil, Wasm1.BytesAt.nil _ _ hbound⟩, .nil _⟩
   | @cons pos func issued rest middle finish next he ho hf hb hp ih =>
     obtain ⟨entries, hn, hr, ht⟩ := hcompleted issued (by simp)
     obtain ⟨restEntries, hnext, hrestBytes, hrestTyped⟩ := ih (fun issued hm => hcompleted issued (by simp [hm]))

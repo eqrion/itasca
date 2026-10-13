@@ -5,7 +5,7 @@ import Itasca.Handler.ScalarComplete
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Completeness
+namespace Itasca.Wasm2.Completeness
 
 private theorem empty_sign (st : code.OpIterState) (opcode : U8) :
     code.visit_sign_extension code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor () st opcode =
@@ -24,7 +24,7 @@ theorem Frame.sign_extension {st} (f : Frame st) (data : Slice U8) (env : module
     (ctx : code.Context) (index : U32) (opcode : U8) (op : Numeric.Operation) (next : Usize)
     (C : context) (front ins outs : List valtype)
     (hmap : NumericExtensions.signMeaning opcode = some op)
-    (hb : Wasm.BytesAt data st.core.pos [] next)
+    (hb : Wasm1.BytesAt data st.core.pos [] next)
     (hsize : st.core.vals.val.length < Usize.max)
     (ht : Instr_ok C op.instruction (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ ins)) :
@@ -54,7 +54,7 @@ theorem Frame.saturating {st} (f : Frame st) (data : Slice U8) (env : module.Env
     (ctx : code.Context) (index : U32) (subopcode : U32) (op : Numeric.Operation)
     (bytes : List U8) (next : Usize) (C : context) (front ins outs : List valtype)
     (hmap : NumericExtensions.saturatingMeaning subopcode = some op)
-    (he : Leb128.Encoding bytes subopcode.val) (hb : Wasm.BytesAt data st.core.pos bytes next)
+    (he : Leb128.Encoding bytes subopcode.val) (hb : Wasm1.BytesAt data st.core.pos bytes next)
     (hsize : st.core.vals.val.length < Usize.max)
     (ht : Instr_ok C op.instruction (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ ins)) :
@@ -81,12 +81,12 @@ theorem Frame.saturating {st} (f : Frame st) (data : Slice U8) (env : module.Env
   · simp only [hv, f.core.vals, List.length_append]
     omega
 
-end Itasca.MultiValue.Completeness
+end Itasca.Wasm2.Completeness
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- The inherited Wasm 1.0 leaf grammar never enters an extension dispatch arm. -/
-theorem base_immediate {opcode op bytes} (hi : Wasm.Immediate opcode (.plain op) bytes) :
+theorem base_immediate {opcode op bytes} (hi : Wasm1.Immediate opcode (.plain op) bytes) :
     NumericExtensions.signMeaning opcode = none ∧ opcode ≠ code.OP_MISC_PREFIX := by
   have hb : opcode.val < 192 := by
     cases hi with
@@ -107,7 +107,7 @@ theorem base_immediate {opcode op bytes} (hi : Wasm.Immediate opcode (.plain op)
     omega
 
 /-- The inherited grammar never selects the new reference, table, or vector arms. -/
-theorem wasm2_base_immediate {opcode op bytes} (hi : Wasm.Immediate opcode (.plain op) bytes) :
+theorem wasm2_base_immediate {opcode op bytes} (hi : Wasm1.Immediate opcode (.plain op) bytes) :
     opcode.val ∉ [28, 37, 38, 208, 209, 210, 252, 253] := by
   cases hi with
   | numeric opcode operation hmap =>
@@ -119,4 +119,4 @@ theorem wasm2_base_immediate {opcode op bytes} (hi : Wasm.Immediate opcode (.pla
     split at hmap <;> simp_all
   | _ => decide
 
-end Itasca.MultiValue
+end Itasca.Wasm2

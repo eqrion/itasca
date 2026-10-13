@@ -64,23 +64,23 @@ theorem memory_segmentFree (opcode : U8) (op : MemoryMeaning.Operation)
   split at hmap <;> simp only [Option.some.injEq, reduceCtorEq] at hmap
   all_goals first | contradiction | subst op; exact .plain _ trivial
 
-def TokenSegmentFree : Wasm.Token → Prop
+def TokenSegmentFree : Wasm1.Token → Prop
   | .plain op => SegmentFree op
   | _ => True
 
-theorem immediate_segmentFree {opcode token bytes} (h : Wasm.Immediate opcode token bytes) :
+theorem immediate_segmentFree {opcode token bytes} (h : Wasm1.Immediate opcode token bytes) :
     TokenSegmentFree token := by
   cases h
   case memory => exact memory_segmentFree _ _ (by assumption) _
   case numeric => exact numeric_segmentFree _ _ (by assumption)
   all_goals first | trivial | exact .plain _ trivial
 
-theorem token_segmentFree {token bytes} (h : Wasm.TokenEncoding token bytes) :
+theorem token_segmentFree {token bytes} (h : Wasm1.TokenEncoding token bytes) :
     TokenSegmentFree token := by
   obtain ⟨_, _, _, h⟩ := h
   exact immediate_segmentFree h
 
-theorem emits_segmentFree {tokens ops} (h : Wasm.Emits tokens ops)
+theorem emits_segmentFree {tokens ops} (h : Wasm1.Emits tokens ops)
     (ht : Forall TokenSegmentFree tokens) : Forall SegmentFree ops := by
   induction h with
   | nil => simp [Forall]

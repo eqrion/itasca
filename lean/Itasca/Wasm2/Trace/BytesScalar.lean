@@ -11,7 +11,7 @@ retained, and an undecodable instruction contributes no operator callback.
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.CallbackBytes
+namespace Itasca.Wasm2.CallbackBytes
 
 open VisitorTrace CallbackTrace
 
@@ -52,7 +52,7 @@ theorem step_i32_const {data env locals index st} (p : Pending data env locals i
   have hs := code.read_i32_const.spec st.core data (by have := capacity; omega)
   rw [hr, WP.spec_ok] at hs
   dsimp only at hs
-  exact ⟨.plain (Core.i32Const a), rfl, by simp only [Action.opcode]; decide,
+  exact ⟨.plain (Spec.i32Const a), rfl, by simp only [Action.opcode]; decide,
     .plain (.of_s32 a p.inbounds (by simpa [global_simps] using hbyte) p.pos hs.2.1)⟩
 
 theorem step_i64_const {data env locals index st} (p : Pending data env locals index st)
@@ -540,7 +540,7 @@ theorem extended_scalar_records {data env locals index st} (p : Pending data env
     have unary := (NumericExtensions.sign_properties hm).1
     have bytes : At data p.start (.plain operation.instruction) st.core.pos :=
       At.of_immediate p.inbounds hbyte p.pos (.signExtension opcode operation hm)
-        (Wasm.BytesAt.nil data st.core.pos (by have := p.pos; have := p.inbounds; omega))
+        (Wasm1.BytesAt.nil data st.core.pos (by have := p.pos; have := p.inbounds; omega))
     have bounds := (NumericExtensions.sign_properties hm).2.2
     rcases opcode with ⟨⟨n, hn⟩⟩
     change 192 ≤ n ∧ n ≤ 196 at bounds
@@ -628,4 +628,4 @@ theorem scalar {data env locals index st} (p : Pending data env locals index st)
   exact extended_scalar_records p visitor observe records capacity ctx hlocals opcode hscalar hbyte
     v result final v' run
 
-end Itasca.MultiValue.CallbackBytes
+end Itasca.Wasm2.CallbackBytes

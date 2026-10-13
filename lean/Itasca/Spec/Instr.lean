@@ -2,7 +2,7 @@ import Itasca.Support.TypeTranslation
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Core
+namespace Itasca.Spec
 
 /-- SpecTec represents an i32 constant by its unsigned 32-bit bit pattern. -/
 def i32Const (value : I32) : instr :=
@@ -23,4 +23,4 @@ theorem label_wf (depth : U32) : wf_uN 32 (.mk_uN depth.val) := by
   norm_num at h ⊢
   omega
 
-end Itasca.Core
+end Itasca.Spec

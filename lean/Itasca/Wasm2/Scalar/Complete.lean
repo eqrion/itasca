@@ -5,7 +5,7 @@ import Itasca.Wasm1.Complete.Env
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- Every independently encoded scalar instruction accepts its principal
 SpecTec typing. This imposes neither a Wasm 1.0 environment restriction nor a
@@ -15,7 +15,7 @@ theorem scalar_complete (data : Slice U8) (env : module.Env) (ctx : code.Context
     (op : instr) (bytes : List U8) (next : Usize) (front input output : List valtype)
     (hc : EnvTranslation.Matches env ctx C) (hsize : st.vals.val.length < Usize.max)
     (hscalar : opcode.val ∉ controlOpcodes)
-    (hi : Wasm.Immediate opcode (.plain op) bytes) (hb : Wasm.BytesAt data st.pos bytes next)
+    (hi : Wasm1.Immediate opcode (.plain op) bytes) (hb : Wasm1.BytesAt data st.pos bytes next)
     (hr : Sequence.Realizes f.current.polymorphic_base f.operands (front ++ input))
     (ht : Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output))) :
     Completeness.StepResult f data env ctx opcode next (front ++ output) := by
@@ -43,4 +43,4 @@ theorem scalar_complete (data : Slice U8) (env : module.Env) (ctx : code.Context
   | numeric opcode operation hmap =>
       exact f.step_numeric data env ctx opcode operation next C front input output hmap hb hsize ht hr
 
-end Itasca.MultiValue
+end Itasca.Wasm2

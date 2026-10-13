@@ -3,7 +3,7 @@ import Itasca.Wasm2.Simd.Visitor
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Visitor
+namespace Itasca.Wasm2.Visitor
 
 /-- Replacing callbacks by accepting callbacks preserves every successful
 Core 2.0 step and its exact final validator state. -/
@@ -66,4 +66,4 @@ theorem wasm2_transfer {V W : Type} (visitor : code.OpVisitor V)
   rw [code.step_wasm2.base replacement st data env ctx' opcode w hbase]
   exact extended_transfer visitor replacement ha st final data env ctx ctx' opcode v v' w hscalar hlocals h
 
-end Itasca.MultiValue.Visitor
+end Itasca.Wasm2.Visitor

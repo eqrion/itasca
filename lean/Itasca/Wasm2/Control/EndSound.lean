@@ -3,7 +3,7 @@ import Itasca.Wasm2.Invariant
 
 open Aeneas Aeneas.Std Result
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 noncomputable local instance : DecidableEq code.LabelKind := Classical.decEq _
 
@@ -138,7 +138,7 @@ theorem finishFrame.sound (st : code.BodyState) (env : module.Env) (isElse : Boo
         exact ⟨hres, hpos.trans hsp, by simp [hctrl, hcnew, hc, hvals, het, hsv']⟩
   · step*
 
-end Itasca.MultiValue
+end Itasca.Wasm2
 
 namespace Itasca
 
@@ -151,24 +151,24 @@ theorem code.end_frame.sound (st : code.BodyState) (env : module.Env) (isElse : 
     (hc : st.core.ctrls.val = parents ++ [frame])
     (hb : st.blocks.val = blocks ++ [bt]) (ha : blocks.length = parents.length)
     (hv : st.core.vals.val = outer ++ segment) (hbase : frame.value_stack_base.val = outer.length)
-    (hin : MultiValue.resolve env (MultiValue.inputs bt) = some ins)
-    (hout : MultiValue.resolve env (MultiValue.outputs bt) = some outs)
+    (hin : Wasm2.resolve env (Wasm2.inputs bt) = some ins)
+    (hout : Wasm2.resolve env (Wasm2.outputs bt) = some outs)
     (hs : Control.Shape st.core) :
     code.end_frame st env isElse ⦃ r => r.1 = .Ok () →
-      MultiValue.EndAllowed frame isElse ins outs ∧
+      Wasm2.EndAllowed frame isElse ins outs ∧
       Sequence.Realizes frame.polymorphic_base segment (outs.map Translate.valueType) ∧
-      MultiValue.EndEffect st r.2 parents blocks frame isElse ins outs outer ⦄ := by
-  rw [MultiValue.end_frame_eq st env isElse parents blocks frame bt hc hb ha]
+      Wasm2.EndEffect st r.2 parents blocks frame isElse ins outs outer ⦄ := by
+  rw [Wasm2.end_frame_eq st env isElse parents blocks frame bt hc hb ha]
   step as ⟨i, hi⟩
   have hi' : i.val = parents.length := by simp [hc, hb, ha] at hi; omega
-  have hsfinish (b : Bool) := MultiValue.finishFrame.sound st env b bt frame i
+  have hsfinish (b : Bool) := Wasm2.finishFrame.sound st env b bt frame i
     (alloc.vec.Vec.len st.blocks) parents blocks ins outs outer segment hc hb ha hi'
     (by simp [hc, hb, ha]) hv hbase hin hout hs
   cases isElse
   · simp only [Bool.false_eq_true, ↓reduceIte]
     split
     · rename_i hk
-      step with code.same_types.spec env (MultiValue.inputs bt) (MultiValue.outputs bt)
+      step with code.same_types.spec env (Wasm2.inputs bt) (Wasm2.outputs bt)
         as ⟨r, hequal⟩
       cases r with
       | Err e => simp [hin, hout] at hequal
@@ -186,7 +186,7 @@ theorem code.end_frame.sound (st : code.BodyState) (env : module.Env) (isElse : 
     · rename_i hk
       apply WP.spec_mono (hsfinish false)
       intro r hr hok
-      exact ⟨by simp [MultiValue.EndAllowed, hk], hr hok⟩
+      exact ⟨by simp [Wasm2.EndAllowed, hk], hr hok⟩
   · simp only [↓reduceIte]
     split
     · rename_i hk

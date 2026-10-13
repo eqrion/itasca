@@ -4,7 +4,7 @@ import Itasca.Wasm1.Trace.BodyContract
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.CallbackTrace
+namespace Itasca.Wasm2.CallbackTrace
 
 open VisitorTrace
 
@@ -42,11 +42,11 @@ theorem BodyTrace.prepend {data start first token middle rest result}
   exact ⟨hout.prepend ho, first ++ complete, token :: tokens, cursor, tail,
     by simp [List.append_assoc], .cons hc hcomplete, htail, hend⟩
 
-end Itasca.MultiValue.CallbackTrace
+end Itasca.Wasm2.CallbackTrace
 
 namespace Itasca
 
-open MultiValue
+open Wasm2
 
 /-- Lift returned-step Core 2.0 byte provenance through the actual body loop.
 The existing accepting-visitor invariant supplies strict cursor progress. -/

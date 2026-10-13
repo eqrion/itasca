@@ -17,7 +17,7 @@ theorem code.push_val.shape_total (st : code.OpIterState) (t : code.StackType)
   exact ⟨hs.replace_operands hc (by simp [hv]; have := hs.base_le; omega),
     hc, hp, by simp [hv]⟩
 
-namespace MultiValue.ScalarReaders
+namespace Wasm2.ScalarReaders
 
 private theorem same_stacks {st s : code.OpIterState} (hs : Control.Shape st)
     (hc : s.ctrls = st.ctrls) (hv : s.vals = st.vals) : Control.Shape s :=
@@ -185,7 +185,7 @@ theorem i32_const (st : code.OpIterState) (data : Slice U8)
   | Err e => simpa [hp.2] using (show Control.Shape st ∧ st.ctrls = st.ctrls ∧ st.pos.val ≤ st.pos.val from ⟨hs, rfl, le_refl _⟩)
   | Ok value =>
     obtain ⟨hd, hv⟩ := hp
-    refine ⟨hs.replace_operands hc ?_, hc, (SignedLeb.Decoded.span _ _ _ _ hd).1.le⟩
+    refine ⟨hs.replace_operands hc ?_, hc, (SignedLeb32.Decoded.span _ _ _ _ hd).1.le⟩
     simp only [hv, List.length_append, List.length_singleton]
     have := hs.base_le
     omega
@@ -238,5 +238,5 @@ theorem f64_const (st : code.OpIterState) (data : Slice U8)
     have := hs.base_le
     omega
 
-end MultiValue.ScalarReaders
+end Wasm2.ScalarReaders
 end Itasca

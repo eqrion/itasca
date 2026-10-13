@@ -4,7 +4,7 @@ import Itasca.Wasm1.Complete.Program
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- The experimental profile's actual per-signature limits, including the
 direct-call cache used by the standalone body API. -/
@@ -132,4 +132,4 @@ theorem bounds_after {data st s token next} (h : Bounds data st)
   refine ⟨h.size, by simpa [hp] using hs.2, ?_, ?_⟩ <;> rw [hp] <;> omega
 
 end Completeness
-end Itasca.MultiValue
+end Itasca.Wasm2

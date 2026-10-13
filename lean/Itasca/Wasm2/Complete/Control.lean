@@ -4,7 +4,7 @@ import Itasca.Wasm2.Control.EndStep
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Completeness
+namespace Itasca.Wasm2.Completeness
 
 theorem blocktype_signature {env : module.Env} {ctx : code.Context} {C : context}
     (hm : EnvTranslation.Matches env ctx C) (bt : signature.BlockType) {input output : List valtype}
@@ -199,7 +199,7 @@ theorem execute_body {data : Slice U8} {env : module.Env} {ctx : code.Context} {
 
 private theorem concrete_realizes (ts : List types.ValueType) :
     Sequence.Realizes false (ts.map code.StackType.Val) (ts.map Translate.valueType) := by
-  apply (Frames.realizes_append_concrete false [] ts _).mpr
+  apply (Sequence.realizes_append_concrete false [] ts _).mpr
   exact ⟨[], by simp [Sequence.Realizes], rfl⟩
 
 private theorem resume_parent {st s : code.BodyState} (f : Frame st)
@@ -211,7 +211,7 @@ private theorem resume_parent {st s : code.BodyState} (f : Frame st)
   constructor
   · apply f.core.output_of_same_ctrls (alloc.vec.Vec.ext _ _ hc)
       (operands := remaining ++ outs.map code.StackType.Val) (by simpa [List.append_assoc] using hv)
-    apply (Frames.realizes_append_concrete _ _ _ _).mpr
+    apply (Sequence.realizes_append_concrete _ _ _ _).mpr
     exact ⟨front, by simpa [f.core.poly_eq] using hreal, rfl⟩
   · exact alloc.vec.Vec.ext _ _ hb
 
@@ -295,7 +295,7 @@ theorem empty_identity {C : context} (ins outs : List types.ValueType)
     (h : Instrs_ok C [] (.mk_functype (.mk_list (ins.map Translate.valueType))
       (.mk_list (outs.map Translate.valueType)))) : ins = outs := by
   have hreal := DeclarativeComplete.empty_realizes (concrete_realizes ins) h
-  obtain ⟨pre, hp, he⟩ := (Frames.realizes_append_concrete false [] ins _).mp hreal
+  obtain ⟨pre, hp, he⟩ := (Sequence.realizes_append_concrete false [] ins _).mp hreal
   have hp' := (Sequence.realizes_empty _).mp hp
   have hm : ins.map Translate.valueType = outs.map Translate.valueType := by simpa [hp'] using he.symm
   clear h hreal he hp hp' pre
@@ -438,4 +438,4 @@ theorem atom_ifElse {data : Slice U8} {env : module.Env} {ctx : code.Context} {i
     rw [hpos] at hy
     omega
 
-end Itasca.MultiValue.Completeness
+end Itasca.Wasm2.Completeness

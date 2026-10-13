@@ -2,7 +2,7 @@ import Itasca.Support.LiteralDispatch
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- Logical list denoted by a descriptor; no such list is allocated by Rust. -/
 def resolve (env : module.Env) : signature.ResultType → Option (List types.ValueType)
@@ -13,7 +13,7 @@ def resolve (env : module.Env) : signature.ResultType → Option (List types.Val
       | .Params => ft.params.val
       | .Results => ft.results.val
 
-end Itasca.MultiValue
+end Itasca.Wasm2
 
 namespace Itasca
 
@@ -27,15 +27,15 @@ theorem types.ValueType.eq_spec (a b : types.ValueType) :
 theorem signature.ResultType.len.spec (view : signature.ResultType) (env : module.Env) :
     signature.ResultType.len view env ⦃ r =>
       match r with
-      | .Ok n => ∃ ts, MultiValue.resolve env view = some ts ∧ n.val = ts.length
-      | .Err e => e = .UnknownType ∧ MultiValue.resolve env view = none ⦄ := by
+      | .Ok n => ∃ ts, Wasm2.resolve env view = some ts ∧ n.val = ts.length
+      | .Err e => e = .UnknownType ∧ Wasm2.resolve env view = none ⦄ := by
   cases view with
-  | Empty => simp [signature.ResultType.len, MultiValue.resolve]
-  | One t => simp [signature.ResultType.len, MultiValue.resolve]
+  | Empty => simp [signature.ResultType.len, Wasm2.resolve]
+  | One t => simp [signature.ResultType.len, Wasm2.resolve]
   | «Type» index part =>
     unfold signature.ResultType.len
     step*
-    all_goals cases part <;> simp_all [MultiValue.resolve]
+    all_goals cases part <;> simp_all [Wasm2.resolve]
     all_goals have hi : index.val < env.types.val.length := by scalar_tac
     all_goals simp_all
 
@@ -43,23 +43,23 @@ theorem signature.ResultType.len.spec (view : signature.ResultType) (env : modul
 theorem signature.ResultType.get.spec (view : signature.ResultType) (env : module.Env) (i : Usize) :
     signature.ResultType.get view env i ⦃ r =>
       match r with
-      | .Ok v => ∃ ts, MultiValue.resolve env view = some ts ∧ v = ts[i.val]?
-      | .Err e => e = .UnknownType ∧ MultiValue.resolve env view = none ⦄ := by
+      | .Ok v => ∃ ts, Wasm2.resolve env view = some ts ∧ v = ts[i.val]?
+      | .Err e => e = .UnknownType ∧ Wasm2.resolve env view = none ⦄ := by
   cases view with
-  | Empty => simp [signature.ResultType.get, MultiValue.resolve]
+  | Empty => simp [signature.ResultType.get, Wasm2.resolve]
   | One t =>
     unfold signature.ResultType.get
     step*
-    all_goals simp_all [MultiValue.resolve] <;> omega
+    all_goals simp_all [Wasm2.resolve] <;> omega
   | «Type» index part =>
     unfold signature.ResultType.get
     step*
-    all_goals cases part <;> simp_all [MultiValue.resolve]
+    all_goals cases part <;> simp_all [Wasm2.resolve]
     all_goals have hi : index.val < env.types.val.length := by scalar_tac
     all_goals simp_all
 
 theorem signature.ResultType.len.complete (view : signature.ResultType) (env : module.Env)
-    (ts : List types.ValueType) (hts : MultiValue.resolve env view = some ts) :
+    (ts : List types.ValueType) (hts : Wasm2.resolve env view = some ts) :
     ∃ n, signature.ResultType.len view env = .ok (.Ok n) ∧ n.val = ts.length := by
   obtain ⟨r, hr, hs⟩ := WP.spec_imp_exists (signature.ResultType.len.spec view env)
   cases r with
@@ -70,7 +70,7 @@ theorem signature.ResultType.len.complete (view : signature.ResultType) (env : m
     exact ⟨n, hr, he ▸ hn⟩
 
 theorem signature.ResultType.get.complete (view : signature.ResultType) (env : module.Env)
-    (ts : List types.ValueType) (hts : MultiValue.resolve env view = some ts) (i : Usize) :
+    (ts : List types.ValueType) (hts : Wasm2.resolve env view = some ts) (i : Usize) :
     signature.ResultType.get view env i = .ok (.Ok ts[i.val]?) := by
   obtain ⟨r, hr, hs⟩ := WP.spec_imp_exists (signature.ResultType.get.spec view env i)
   cases r with

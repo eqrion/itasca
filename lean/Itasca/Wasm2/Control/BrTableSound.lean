@@ -3,7 +3,7 @@ import Itasca.Binary.Wasm1.BrTableLabels
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- Every target is checked against the original operand suffix. Only arities
 must agree; unreachable bottom operands may support different concrete types. -/
@@ -36,7 +36,7 @@ private def TableLoopInv (data : Slice U8) (env : module.Env) (initial : code.Bo
     BrTable.LabelsDecoded data initial.core.pos depths p.1.pos ∧
     TableTargets env initial depths p.2.2.1
 
-end Itasca.MultiValue
+end Itasca.Wasm2
 
 namespace Itasca
 
@@ -66,24 +66,24 @@ theorem code.branch_table_loop.spec (st : code.BodyState) (data : Slice U8)
     code.branch_table_loop st.core st.blocks data env count none 0#u32 ⦃ r =>
       r.1 = .Ok () → ∃ depths n, depths.length = count.val + 1 ∧
         BrTable.LabelsDecoded data st.core.pos depths r.2.core.pos ∧
-        MultiValue.TableTargets env st depths (some n) ∧
+        Wasm2.TableTargets env st depths (some n) ∧
         r.2.core.vals.val = st.core.vals.val.take c.value_stack_base.val ∧
         r.2.core.ctrls.val = cs ++ [{c with polymorphic_base := true}] ∧ r.2.blocks = st.blocks ⦄ := by
   have hlo : code.branch_table_with_loop code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       st.core data env () count none 0#u32 ⦃ r =>
       r.1 = .Ok () → ∃ depths n, depths.length = count.val + 1 ∧
         BrTable.LabelsDecoded data st.core.pos depths r.2.1.core.pos ∧
-        MultiValue.TableTargets env st depths (some n) ∧
+        Wasm2.TableTargets env st depths (some n) ∧
         r.2.1.core.vals.val = st.core.vals.val.take c.value_stack_base.val ∧
         r.2.1.core.ctrls.val = cs ++ [{c with polymorphic_base := true}] ∧ r.2.1.blocks = st.blocks ⦄ := by
     unfold code.branch_table_with_loop
     apply loop.spec_decr_nat (fun p => count.val - p.2.2.2.val)
-      (fun p => MultiValue.TableLoopInv data env st count (p.1, (code.BodyState.mk p.1).blocks, p.2.2))
+      (fun p => Wasm2.TableLoopInv data env st count (p.1, (code.BodyState.mk p.1).blocks, p.2.2))
     · rintro ⟨stateCore, visitor, arity, i⟩ ⟨hv, hc, hb, hi, depths, hlen, hd, ht⟩
       let blocks := (code.BodyState.mk stateCore).blocks
       cases visitor
       dsimp only
-      rw [MultiValue.tableBody_eq data env count stateCore blocks arity i]
+      rw [Wasm2.tableBody_eq data env count stateCore blocks arity i]
       apply ResultFacts.map_spec
       dsimp only at hv hc hb hi hlen hd ht
       have hshape : Control.Shape stateCore := ⟨by simpa [hc] using hs.ordered,
@@ -120,8 +120,8 @@ theorem code.branch_table_loop.spec (st : code.BodyState) (data : Slice U8)
               have he : ts' = ts := by simpa [hts] using hts'.symm
               subst ts'
               have htargets := ht.snoc depth view ts n
-                (by simpa [MultiValue.labelAt, hc, hb] using hlabel) hts hn
-                (by simpa [MultiValue.Suffix, Control.base, Control.polymorphic, hvs, hv, hcs, hc] using hsuffix)
+                (by simpa [Wasm2.labelAt, hc, hb] using hlabel) hts hn
+                (by simpa [Wasm2.Suffix, Control.base, Control.polymorphic, hvs, hv, hcs, hc] using hsuffix)
                 harity
               rw [code.branch_table_loop.body_checked ⟨stateCore⟩ s data env count i arity view n hr hreadlen hcheck harity]
               by_cases heq : i = count
@@ -130,7 +130,7 @@ theorem code.branch_table_loop.spec (st : code.BodyState) (data : Slice U8)
                   (code.mark_unreachable.spec s.core cs c (by simpa [hcs, hc] using hctrls)
                     (by simpa [hvs, hv] using hs.bounded c (by simp [hctrls])))
                 rw [hm]
-                simp only [bind_ok, MultiValue.tableFlow, MultiValue.tableCont, MultiValue.tableDone, WP.spec_ok]
+                simp only [bind_ok, Wasm2.tableFlow, Wasm2.tableCont, Wasm2.tableDone, WP.spec_ok]
                 intro _
                 exact ⟨depths ++ [depth], n, by simp [hlen, heq], by simpa [hp'] using hd.snoc hdecoded,
                   htargets, by simpa [hvs, hv] using hv', hc', by simp [hc', hctrls]⟩
@@ -139,7 +139,7 @@ theorem code.branch_table_loop.spec (st : code.BodyState) (data : Slice U8)
                   omega
                 obtain ⟨j, hj, hjv⟩ := WP.spec_imp_exists
                   (UScalar.add_spec (x := i) (y := 1#u32) (by scalar_tac))
-                simp only [heq, ↓reduceIte, hj, bind_ok, MultiValue.tableFlow, MultiValue.tableCont, MultiValue.tableDone, WP.spec_ok]
+                simp only [heq, ↓reduceIte, hj, bind_ok, Wasm2.tableFlow, Wasm2.tableCont, Wasm2.tableDone, WP.spec_ok]
                 refine ⟨⟨hvs.trans hv, hcs.trans hc, hbs.trans hb, ?_, depths ++ [depth], ?_,
                   hd.snoc hdecoded, htargets⟩, ?_⟩
                 all_goals try simp only [List.length_append, List.length_singleton]
@@ -151,14 +151,14 @@ theorem code.branch_table_loop.spec (st : code.BodyState) (data : Slice U8)
               have hev : expected.val ≠ n.val := fun h => he (UScalar.eq_of_val_eq h)
               simp [code.branch_table_loop.body, hr, hreadlen, hev,
                 core.result.Result.Insts.CoreOpsTry.branch]
-    · exact ⟨rfl, rfl, rfl, by simp, [], by simp, .nil, by simp [MultiValue.TableTargets]⟩
+    · exact ⟨rfl, rfl, rfl, by simp, [], by simp, .nil, by simp [Wasm2.TableTargets]⟩
   unfold code.branch_table_loop
   obtain ⟨⟨res, final, visitor⟩, hr, hp⟩ := WP.spec_imp_exists hlo
   simpa [hr] using hp
 
 end Itasca
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 theorem TableTargets.typed {env st depths default n C}
     (h : TableTargets env st (depths ++ [default]) (some n))
@@ -205,7 +205,7 @@ theorem TableTargets.realizes {env st depths default n}
   rw [hn]
   exact hs.common_subtype.2
 
-end Itasca.MultiValue
+end Itasca.Wasm2
 
 namespace Itasca.BrTable
 
@@ -230,16 +230,16 @@ theorem code.branch_table.prefix (st : code.BodyState) (data : Slice U8)
     (hbase : c.value_stack_base.val = outer.length)
     (hs : Control.Shape st.core) (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (C : context) (hC : wf_context C) (inputs : List valtype) (ops : List instr)
-    (htyped : MultiValue.TypedPrefix C inputs ops c.polymorphic_base segment)
-    (hlabels : MultiValue.BranchLabels env st C) :
+    (htyped : Wasm2.TypedPrefix C inputs ops c.polymorphic_base segment)
+    (hlabels : Wasm2.BranchLabels env st C) :
     code.branch_table st data env ⦃ r => r.1 = .Ok () →
       ∃ depths default, BrTable.Decoded data st.core.pos depths default r.2.core.pos ∧
         r.2.core.vals.val = outer ∧ r.2.blocks = st.blocks ∧
         r.2.core.ctrls.val = cs ++ [{ c with polymorphic_base := true }] ∧
-        MultiValue.TypedPrefix C inputs (ops ++ [BrTable.instruction depths default]) true [] ⦄ := by
+        Wasm2.TypedPrefix C inputs (ops ++ [BrTable.instruction depths default]) true [] ⦄ := by
   obtain ⟨res, hr, hd⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data st.core.pos)
   cases res with
-  | Err e => simp [code.branch_table.eq_core, MultiValue.tableCore, hr, core.result.Result.Insts.CoreOpsTry.branch,
+  | Err e => simp [code.branch_table.eq_core, Wasm2.tableCore, hr, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok pair =>
     obtain ⟨count, first⟩ := pair
@@ -248,7 +248,7 @@ theorem code.branch_table.prefix (st : code.BodyState) (data : Slice U8)
         (by simp [Control.base, hctrls, hbase]))
     dsimp only at hcc hpc hvc htc
     cases rc with
-    | Err e => simp [code.branch_table.eq_core, MultiValue.tableCore, hr, hcond, core.result.Result.Insts.CoreOpsTry.branch,
+    | Err e => simp [code.branch_table.eq_core, Wasm2.tableCore, hr, hcond, core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
     | Ok popped =>
       have hs' : Control.Shape sc := hs.replace_operands hcc (by
@@ -260,21 +260,21 @@ theorem code.branch_table.prefix (st : code.BodyState) (data : Slice U8)
         code.BodyState.blocks_eq_of_ctrls hcc
       simp only [hblocks] at hrun
       cases res with
-      | Err e => simp [code.branch_table.eq_core, MultiValue.tableCore, hr, hcond, hrun, core.result.Result.Insts.CoreOpsTry.branch]
+      | Err e => simp [code.branch_table.eq_core, Wasm2.tableCore, hr, hcond, hrun, core.result.Result.Insts.CoreOpsTry.branch]
       | Ok u =>
         obtain ⟨all, n, hlen, hdecoded, htargets, hv, hc, hb⟩ := hout rfl
         dsimp only at hlen hdecoded htargets hv hc hb
         obtain ⟨depths, default, middle, rfl, hprefix, hlast⟩ := hdecoded.unsnoc
           (by intro he; simp [he] at hlen)
-        have hl : MultiValue.BranchLabels env ⟨sc⟩ C := by
+        have hl : Wasm2.BranchLabels env ⟨sc⟩ C := by
           intro depth view h
-          exact hlabels depth view (by simpa [MultiValue.labelAt, hcc] using h)
+          exact hlabels depth view (by simpa [Wasm2.labelAt, hcc] using h)
         have hpoly : Control.polymorphic sc = c.polymorphic_base := by simp [Control.polymorphic, hcc, hctrls]
         have hdrop : sc.vals.val.drop (Control.base sc).val = condrest := by
           simp [hvc, Control.base, hcc, hctrls, hbase]
         obtain ⟨front, hreal⟩ := htargets.realizes
         have hargs := htc.2 _ (by simpa [hdrop, Control.polymorphic, hcc] using hreal)
-        have htyping : MultiValue.TypedPrefix C inputs
+        have htyping : Wasm2.TypedPrefix C inputs
             (ops ++ [BrTable.instruction depths default]) true [] := by
           apply htyped.append hC _ (BrTable.instruction_wf depths default)
           intro out _
@@ -284,7 +284,7 @@ theorem code.branch_table.prefix (st : code.BodyState) (data : Slice U8)
         refine ⟨(.Ok (), s), ?_, fun _ => ⟨depths, default,
           ⟨count, first, middle, hd, by simpa using hlen, by simpa [hpc] using hprefix, hlast⟩,
           ?_, hb.trans hblocks, hc, htyping⟩⟩
-        · simp [code.branch_table.eq_core, MultiValue.tableCore, hr, hcond, hrun, core.result.Result.Insts.CoreOpsTry.branch]
+        · simp [code.branch_table.eq_core, Wasm2.tableCore, hr, hcond, hrun, core.result.Result.Insts.CoreOpsTry.branch]
         · simpa [hvc, hbase] using hv
 
 end Itasca

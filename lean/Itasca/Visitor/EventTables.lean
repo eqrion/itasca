@@ -137,10 +137,10 @@ namespace Itasca.VisitorTrace
 theorem ExtendedNumericHook.meaning (hook : ExtendedNumericHook) :
     match hook.encoding.2 with
     | none => ∃ operation,
-        MultiValue.NumericExtensions.signMeaning hook.encoding.1 = some operation ∧
+        Wasm2.NumericExtensions.signMeaning hook.encoding.1 = some operation ∧
         operation.instruction = hook.instruction
     | some subopcode => ∃ operation,
-        MultiValue.NumericExtensions.saturatingMeaning subopcode = some operation ∧
+        Wasm2.NumericExtensions.saturatingMeaning subopcode = some operation ∧
         operation.instruction = hook.instruction := by
   cases hook <;> exact ⟨_, rfl, rfl⟩
 

@@ -8,7 +8,7 @@ import Itasca.Wasm2.References.Complete
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 theorem EnvironmentWithinLimits.resolve_bound {env} (h : EnvironmentWithinLimits env)
     (view : signature.ResultType) (ts : List types.ValueType) (ht : resolve env view = some ts) :
@@ -56,7 +56,7 @@ private theorem encoding_nonempty {bytes n} (h : Leb128.Encoding bytes n) : 1 �
 theorem Frame.call {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (index : U32) (C : context) (hmatch : EnvTranslation.Matches env ctx C)
     (henv : EnvironmentWithinLimits env) (idx : U32) (bytes : List U8) (next : Usize)
-    (he : Leb128.Encoding bytes idx.val) (hb : Wasm.BytesAt data st.core.pos bytes next)
+    (he : Leb128.Encoding bytes idx.val) (hb : Wasm1.BytesAt data st.core.pos bytes next)
     (front input output : List valtype)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
     (ht : Instr_ok C (.CALL (.mk_uN idx.val)) (.mk_functype (.mk_list input) (.mk_list output)))
@@ -85,7 +85,7 @@ theorem Frame.call_indirect_indexed {st} (f : Frame st) (data : Slice U8) (env :
     (index : U32) (C : context) (hmatch : EnvTranslation.Matches env ctx C)
     (henv : EnvironmentWithinLimits env) (idx table : U32) (bytes tableBytes : List U8) (next : Usize)
     (he : Leb128.Encoding bytes idx.val) (hte : Leb128.Encoding tableBytes table.val)
-    (hb : Wasm.BytesAt data st.core.pos (bytes ++ tableBytes) next)
+    (hb : Wasm1.BytesAt data st.core.pos (bytes ++ tableBytes) next)
     (front input output : List valtype)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
     (ht : Instr_ok C (.CALL_INDIRECT (.mk_uN table.val) (.mk_uN idx.val))
@@ -118,7 +118,7 @@ theorem Frame.call_indirect_indexed {st} (f : Frame st) (data : Slice U8) (env :
 theorem Frame.call_indirect {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (index : U32) (C : context) (hmatch : EnvTranslation.Matches env ctx C)
     (henv : EnvironmentWithinLimits env) (idx : U32) (bytes : List U8) (next : Usize)
-    (he : Leb128.Encoding bytes idx.val) (hb : Wasm.BytesAt data st.core.pos (bytes ++ [0#u8]) next)
+    (he : Leb128.Encoding bytes idx.val) (hb : Wasm1.BytesAt data st.core.pos (bytes ++ [0#u8]) next)
     (front input output : List valtype)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
     (ht : Instr_ok C (.CALL_INDIRECT (.mk_uN 0) (.mk_uN idx.val))
@@ -132,7 +132,7 @@ theorem Frame.call_indirect {st} (f : Frame st) (data : Slice U8) (env : module.
 theorem Frame.branch {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (index : U32) (C : context) (hlabels : Labels env st C)
     (depth : U32) (bytes : List U8) (next : Usize)
-    (he : Leb128.Encoding bytes depth.val) (hb : Wasm.BytesAt data st.core.pos bytes next)
+    (he : Leb128.Encoding bytes depth.val) (hb : Wasm1.BytesAt data st.core.pos bytes next)
     (front input output : List valtype)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
     (ht : Instr_ok C (.BR (.mk_uN depth.val)) (.mk_functype (.mk_list input) (.mk_list output))) :
@@ -156,7 +156,7 @@ theorem Frame.branch {st} (f : Frame st) (data : Slice U8) (env : module.Env) (c
 theorem Frame.branch_if {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (index : U32) (C : context) (hlabels : Labels env st C) (henv : EnvironmentWithinLimits env)
     (depth : U32) (bytes : List U8) (next : Usize)
-    (he : Leb128.Encoding bytes depth.val) (hb : Wasm.BytesAt data st.core.pos bytes next)
+    (he : Leb128.Encoding bytes depth.val) (hb : Wasm1.BytesAt data st.core.pos bytes next)
     (front input output : List valtype)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
     (ht : Instr_ok C (.BR_IF (.mk_uN depth.val)) (.mk_functype (.mk_list input) (.mk_list output)))
@@ -183,7 +183,7 @@ theorem Frame.branch_if {st} (f : Frame st) (data : Slice U8) (env : module.Env)
 theorem Frame.return_ {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (index : U32) (C : context) (hmatch : EnvTranslation.Matches env ctx C)
     (hroot : resolve env (.Type index .Results) = some ctx.results.val)
-    (next : Usize) (hb : Wasm.BytesAt data st.core.pos [] next)
+    (next : Usize) (hb : Wasm1.BytesAt data st.core.pos [] next)
     (front input output : List valtype)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
     (ht : Instr_ok C .RETURN (.mk_functype (.mk_list input) (.mk_list output))) :
@@ -204,9 +204,9 @@ theorem Frame.return_ {st} (f : Frame st) (data : Slice U8) (env : module.Env) (
 theorem Frame.branch_table {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (index : U32) (C : context) (hlabels : Labels env st C)
     (depths : List U32) (default : U32) (count entries final : List U8) (next : Usize)
-    (hcount : Leb128.Encoding count depths.length) (hentries : Wasm.IndicesEncoding depths entries)
+    (hcount : Leb128.Encoding count depths.length) (hentries : Wasm1.IndicesEncoding depths entries)
     (hdefault : Leb128.Encoding final default.val)
-    (hb : Wasm.BytesAt data st.core.pos (count ++ entries ++ final) next)
+    (hb : Wasm1.BytesAt data st.core.pos (count ++ entries ++ final) next)
     (front input output : List valtype)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
     (ht : Instr_ok C (BrTable.instruction depths default) (.mk_functype (.mk_list input) (.mk_list output))) :
@@ -244,7 +244,7 @@ theorem control_leaf (data : Slice U8) (env : module.Env) (ctx : code.Context) (
     (op : instr) (bytes : List U8) (next : Usize) (front input output : List valtype)
     (hmatch : EnvTranslation.Matches env ctx C) (hlabels : Labels env st C)
     (hcap : st.core.vals.val.length + 1000 < Usize.max)
-    (hi : ControlImmediate opcode op bytes) (hb : Wasm.BytesAt data st.core.pos bytes next)
+    (hi : ControlImmediate opcode op bytes) (hb : Wasm1.BytesAt data st.core.pos bytes next)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
     (ht : Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output))) :
     LeafResult f data env ctx index opcode bytes next (front ++ output) := by
@@ -266,7 +266,7 @@ theorem reference_leaf (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (op : instr) (bytes : List U8) (next : Usize) (front input output : List valtype)
     (hmatch : EnvTranslation.Matches env ctx C)
     (hcap : st.core.vals.val.length + 1000 < Usize.max)
-    (hi : ReferencesBinary.Immediate opcode op bytes) (hb : Wasm.BytesAt data st.core.pos bytes next)
+    (hi : ReferencesBinary.Immediate opcode op bytes) (hb : Wasm1.BytesAt data st.core.pos bytes next)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
     (ht : Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output)))
     (hdecl : DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) op) :
@@ -328,7 +328,7 @@ theorem bulk_leaf (data : Slice U8) (env : module.Env) (ctx : code.Context) (ind
     (hcap : st.core.vals.val.length + 1000 < Usize.max)
     (he : Leb128.Encoding prefixBytes subopcode.val)
     (hi : BulkBinary.Immediate subopcode op bytes)
-    (hb : Wasm.BytesAt data st.core.pos (prefixBytes ++ bytes) next)
+    (hb : Wasm1.BytesAt data st.core.pos (prefixBytes ++ bytes) next)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
     (ht : Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output))) :
     LeafResult f data env ctx index 252#u8 (prefixBytes ++ bytes) next (front ++ output) := by
@@ -442,4 +442,4 @@ theorem leaf_contract (data : Slice U8) (env : module.Env) (ctx : code.Context) 
     exact ⟨s, hs, hp, ho, by omega⟩
 
 end Completeness
-end Itasca.MultiValue
+end Itasca.Wasm2

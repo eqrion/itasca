@@ -16,7 +16,7 @@ namespace Itasca.ModuleBinary
 when that region is supplied as its own streaming buffer. -/
 theorem At.on_region {α : Type} {R : α → List U8 → Prop}
     {data region : Slice U8} {start next : Usize} {value : α}
-    (hregion : Wasm.BytesAt data start region.val next)
+    (hregion : Wasm1.BytesAt data start region.val next)
     (h : At R data start value next) :
     At R region 0#usize value (Slice.len region) := by
   obtain ⟨bytes, he, hs⟩ := h
@@ -100,9 +100,9 @@ structure Certificate (data : Slice U8) (raw : ModuleBinary.Module)
 private theorem slice_spec (data : Slice U8) (first last : Usize)
     (hfirst : first.val ≤ last.val) (hlast : last.val ≤ data.length) :
     core.slice.index.Slice.index (core.slice.index.SliceIndexRangeUsizeSlice U8)
-      data ⟨first, last⟩ ⦃ region => Wasm.BytesAt data first region.val last ⦄ := by
+      data ⟨first, last⟩ ⦃ region => Wasm1.BytesAt data first region.val last ⦄ := by
   step
-  apply Wasm.BytesAt.of_slice_view hfirst hlast
+  apply Wasm1.BytesAt.of_slice_view hfirst hlast
   assumption
 
 /-- Component completeness for the canonical streaming regions. No legacy

@@ -4,7 +4,7 @@ import Itasca.Support.Result
 
 open Aeneas Aeneas.Std Result ControlFlow
 
-namespace Itasca.MultiValue.Visitor
+namespace Itasca.Wasm2.Visitor
 
 /-- The silent suffix check, factored from the generated table loop. -/
 def tableCheck (st : code.BodyState) (env : module.Env) (ts : signature.ResultType)
@@ -256,11 +256,11 @@ theorem tableBody.cont_progress {V : Type} (visitor : code.OpVisitor V)
           ois v' arity' j hi h
 
 
-end Itasca.MultiValue.Visitor
+end Itasca.Wasm2.Visitor
 
 namespace Itasca
 
-open MultiValue.Visitor
+open Wasm2.Visitor
 
 /-- Successful branch-table execution transfers to every accepting replacement,
 with exactly the same validation state. -/

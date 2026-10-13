@@ -167,7 +167,7 @@ theorem module.decode_element_initializers_loop.spec (data : Slice U8) (env : mo
           omega
         · scalar_tac
   · exact ⟨by simp, by simp, ⟨rfl, by simp⟩,
-      ⟨[], .nil, Wasm.BytesAt.nil data start hstart⟩, by simp, hrefs⟩
+      ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, by simp, hrefs⟩
 
 /-- Vector decoding relates the returned expressions and declaration cache to
 one exact independent initializer vector. -/
@@ -204,6 +204,6 @@ theorem module.decode_element_initializers.spec (data : Slice U8) (pos : Usize)
       obtain ⟨bytes, he, hs⟩ := hbytes
       obtain ⟨cb, hcs, hcl, hcb, hce⟩ := hc
       exact ⟨cb ++ bytes, ⟨cb, bytes, by simpa [hlen] using hce, he, rfl⟩,
-        (show Wasm.BytesAt data pos cb start from ⟨hcs, hcl, hcb⟩).append hs⟩
+        (show Wasm1.BytesAt data pos cb start from ⟨hcs, hcl, hcb⟩).append hs⟩
 
 end Itasca

@@ -3,7 +3,7 @@ import Itasca.Wasm2.Control.BranchStep
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 theorem Pending.branch_table {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x0E#u8) :
@@ -23,4 +23,4 @@ theorem Pending.branch_table {data env locals index st} (p : Pending data env lo
     (by simpa [hb] using blocks) (by simpa using hv)
     (by simp [BrTable.instruction, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices])
 
-end Itasca.MultiValue
+end Itasca.Wasm2

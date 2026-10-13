@@ -3,7 +3,7 @@ import Itasca.Wasm2.Visitor.Step
 
 open Aeneas Aeneas.Std Result ControlFlow
 
-namespace Itasca.MultiValue.Visitor
+namespace Itasca.Wasm2.Visitor
 
 open VisitorTrace
 
@@ -88,11 +88,11 @@ theorem tableBody.refines {V W : Type} (visitor : code.OpVisitor V)
         simp [code.visit] at h ⊢
         exact tableRest.refines visitor replacement related hrefines s env count i depth ts arity v' w' hr' cf h
 
-end Itasca.MultiValue.Visitor
+end Itasca.Wasm2.Visitor
 
 namespace Itasca
 
-open VisitorTrace MultiValue.Visitor
+open VisitorTrace Wasm2.Visitor
 
 /-- Exact refinement of every table-loop outcome, including a partial vector
 ending at a rejected label or failed target check. -/
@@ -184,7 +184,7 @@ end Itasca
 
 namespace Itasca
 
-open VisitorTrace MultiValue.Visitor
+open VisitorTrace Wasm2.Visitor
 
 set_option maxHeartbeats 2000000 in
 /-- Complete Core 2.0 control dispatch preserves every ordinary result under

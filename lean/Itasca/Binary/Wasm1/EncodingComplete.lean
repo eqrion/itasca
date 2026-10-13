@@ -3,7 +3,7 @@ import Itasca.Handler.EnvReaders
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Wasm
+namespace Itasca.Wasm1
 
 /-- Split an encoded interval without assuming anything about its trailing bytes. -/
 theorem BytesAt.split {data start next first rest}
@@ -79,7 +79,7 @@ theorem BytesAt.read_u32 {data start next bytes} (value : U32)
   reader.read_u32_leb.complete data start value next (h.u32_decoded value he)
 
 theorem BytesAt.read_s32 {data start next bytes} (value : I32)
-    (h : BytesAt data start bytes next) (he : SignedLeb.Encoding bytes value.val) :
+    (h : BytesAt data start bytes next) (he : SignedLeb32.Encoding bytes value.val) :
     reader.read_s32_leb data start = .ok (.Ok (value, next)) :=
   reader.read_s32_leb.complete data start value next ⟨bytes, h.suffix, h.length, h.bound, he⟩
 
@@ -138,7 +138,7 @@ theorem BytesAt.index_zero {data start next bytes} (idx : U32)
   obtain ⟨middle, hindex, hzero⟩ := h.split
   exact ⟨middle, hindex.read_u32 idx he, hzero.read_byte, hzero⟩
 
-end Itasca.Wasm
+end Itasca.Wasm1
 
 namespace Itasca.BrTable
 
@@ -152,7 +152,7 @@ theorem LabelsDecoded.append {data start middle next first rest}
 
 end Itasca.BrTable
 
-namespace Itasca.Wasm
+namespace Itasca.Wasm1
 
 /-- Reverse the independent vector encoding into consecutive unsigned-reader spans. -/
 theorem IndicesEncoding.decoded {indices bytes} (he : IndicesEncoding indices bytes)
@@ -240,9 +240,9 @@ theorem Consumed.cons_iff {data start next token tokens} :
     have hb : start.val ≤ data.length := by have := hh.span; omega
     exact Consumed.append (.snoc (.nil start hb) hh) ht
 
-end Itasca.Wasm
+end Itasca.Wasm1
 
-namespace Itasca.Wasm
+namespace Itasca.Wasm1
 
 theorem At.opcode {data start token next} (h : At data start token next) :
     ∃ opcode immediate, Immediate opcode token immediate ∧
@@ -289,4 +289,4 @@ theorem At.end_cursor {data start next} (h : At data start .end_ next) :
   cases hi
   simpa using hs.length
 
-end Itasca.Wasm
+end Itasca.Wasm1

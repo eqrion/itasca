@@ -4,7 +4,7 @@ import Itasca.Stream.SliceLayout
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.ModuleSectionExamples
+namespace Itasca.Examples.ModuleSections
 
 open ModuleBinary ModuleEnv
 
@@ -45,7 +45,7 @@ def layout : Layout :=
     elements := [9#u8,6#u8,1#u8,0#u8,0x41#u8,0#u8,0x0B#u8,0#u8] }
 
 def dataBytes : List U8 := [11#u8,7#u8,1#u8,0#u8,0x41#u8,0#u8,0x0B#u8,1#u8,42#u8]
-def input : Slice U8 := ModuleExamples.bytes (magicVersion ++ layout.bytes ++ dataBytes)
+def input : Slice U8 := Examples.ModuleBasic.bytes (magicVersion ++ layout.bytes ++ dataBytes)
   (by simp [magicVersion, layout, Layout.bytes, dataBytes]; scalar_tac)
 
 private theorem zero_const : ConstEncoding (.I32 0#i32) [0x41#u8,0#u8,0x0B#u8] :=
@@ -132,18 +132,18 @@ a named global export, and both kinds of active segment. -/
 theorem sections_accepted : ∃ decoded, module.validate_module input .Wasm1 = .ok (.Ok decoded) := by
   have hp : At PrefixEncoding input 0#usize declarations 42#usize := by
     refine ⟨magicVersion ++ layout.bytes, layout_valid.encoding, ?_⟩
-    constructor <;> simp [input, ModuleExamples.bytes, alloc.vec.Vec.deref,
+    constructor <;> simp [input, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref,
       magicVersion, layout, Layout.bytes, dataBytes]
   have hd : At (SectionEncoding 11#u8 (VecEncoding DataEncoding)) input 42#usize
       [ModuleData.raw segment] 51#usize := by
     refine ⟨dataBytes, data_encoding, ?_⟩
-    constructor <;> simp [input, ModuleExamples.bytes, alloc.vec.Vec.deref,
+    constructor <;> simp [input, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref,
       magicVersion, layout, Layout.bytes, dataBytes]
   obtain ⟨first, hh, _⟩ := hd.section_split
   let tail : module.Tail := ⟨alloc.vec.Vec.from [segment] (by simp; scalar_tac)⟩
   have ht : At ModuleTail.Encoding input 42#usize (tail.data.val.map ModuleData.raw) (Slice.len input) := by
     refine ⟨dataBytes, ⟨dataBytes, [], ⟨[], dataBytes, .nil, .present data_encoding, rfl⟩, .nil, rfl⟩, ?_⟩
-    constructor <;> simp [input, ModuleExamples.bytes, alloc.vec.Vec.deref,
+    constructor <;> simp [input, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref,
       magicVersion, layout, Layout.bytes, dataBytes]
   have hl : ModuleLayout.Layout input raw declarations 42#usize 42#usize :=
     ⟨rfl, hp, .inr ⟨rfl, rfl, .inr ⟨11#u8, first, 51#usize, hh, by decide⟩⟩,
@@ -151,7 +151,7 @@ theorem sections_accepted : ∃ decoded, module.validate_module input .Wasm1 = .
       .inr ⟨11#u8, first, 51#usize, hh, by decide⟩⟩
   obtain ⟨env, ha⟩ := StreamSliceExamplesSupport.accepted_layout input raw declarations
     42#usize 42#usize hl (by
-      simp [input, ModuleExamples.bytes, alloc.vec.Vec.deref,
+      simp [input, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref,
         magicVersion, layout, Layout.bytes, dataBytes, limits.MAX_MODULE_BYTES])
     requirements tail rfl (by
       intro decls env hr
@@ -175,4 +175,4 @@ theorem sections_validated : ∃ decoded, module.validate_module input .Wasm1 = 
   obtain ⟨decoded, ha⟩ := sections_accepted
   exact ⟨decoded, ha, module.validate_module.wasm_sound _ _ ha⟩
 
-end Itasca.ModuleSectionExamples
+end Itasca.Examples.ModuleSections

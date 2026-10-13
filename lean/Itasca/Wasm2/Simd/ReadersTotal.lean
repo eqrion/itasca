@@ -5,7 +5,7 @@ open Aeneas Aeneas.Std
 
 set_option maxHeartbeats 2000000
 
-namespace Itasca.MultiValue.Simd
+namespace Itasca.Wasm2.Simd
 
 def ReaderPost (st s : code.OpIterState) : Prop :=
   Control.Shape s ∧ s.ctrls = st.ctrls ∧ st.pos.val ≤ s.pos.val ∧
@@ -136,4 +136,4 @@ attribute [local step] code.pop_with_type.total code.pop_stack_type.total
     code.read_simd_shuffle st data ⦃ r => ReaderPost st r.2 ⦄ :=
   shuffle_loop_total st data st.pos 0#i32 (by decide) hs hsize
 
-end Itasca.MultiValue.Simd
+end Itasca.Wasm2.Simd

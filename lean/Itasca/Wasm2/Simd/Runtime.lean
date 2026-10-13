@@ -2,7 +2,7 @@ import Itasca.Binary.Wasm2.Simd
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Simd
+namespace Itasca.Wasm2.Simd
 
 def Signature.runtime : Signature → code.SimdSignature
   | .unary => .Unary
@@ -24,4 +24,4 @@ def MemoryOperation.runtime (op : MemoryOperation) : U32 × Bool × U8 :=
   (U32.ofNatCore op.naturalAlign (by cases op <;> decide), op.store,
    U8.ofNatCore op.laneCount (by cases op <;> decide))
 
-end Itasca.MultiValue.Simd
+end Itasca.Wasm2.Simd

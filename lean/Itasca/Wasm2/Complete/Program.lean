@@ -3,7 +3,7 @@ import Itasca.Wasm2.Execution
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Completeness
+namespace Itasca.Wasm2.Completeness
 
 /-- Execution of a typed instruction list within one concrete control frame. -/
 def Program (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
@@ -83,4 +83,4 @@ theorem program_of_atoms (data : Slice U8) (env : module.Env) (ctx : code.Contex
       exact ⟨last, hrun.append hrun', hpos',
         hout'.transfer hout.2 hgp hgo hgk hgb hgba, hbound'⟩
 
-end Itasca.MultiValue.Completeness
+end Itasca.Wasm2.Completeness

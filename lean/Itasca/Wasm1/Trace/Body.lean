@@ -13,7 +13,7 @@ def AcceptedBody (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (bt : code.BlockType) (observations : List Observation) : Prop :=
   AllAccepted observations ∧ ∃ tokens ops next,
     Completed data 0#usize observations tokens next ∧ next.val = data.length ∧
-    Wasm.BodyTokens tokens ops ∧ Wasm.FunctionTyped env ctx bt ops
+    Wasm1.BodyTokens tokens ops ∧ Wasm1.FunctionTyped env ctx bt ops
 
 end Itasca.VisitorTrace
 

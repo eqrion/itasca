@@ -514,7 +514,7 @@ def ExtendedNumericHook.encoding : ExtendedNumericHook → U8 × Option U32
 
 /-- Recover the flat specification token represented by a completed callback.
 A table-label callback contributes only to the pending label vector. -/
-def Action.token (action : Action) (pending : List U32) : Option Wasm.Token :=
+def Action.token (action : Action) (pending : List U32) : Option Wasm1.Token :=
   match action with
   | .unreachable => some (.plain .UNREACHABLE)
   | .nop => some (.plain .NOP)
@@ -545,7 +545,7 @@ def Action.token (action : Action) (pending : List U32) : Option Wasm.Token :=
   | .global_set idx => some (.plain (.GLOBAL_SET (.mk_uN idx.val)))
   | .memory_size => some (.plain .MEMORY_SIZE)
   | .memory_grow => some (.plain .MEMORY_GROW)
-  | .i32_const value => some (.plain (Core.i32Const value))
+  | .i32_const value => some (.plain (Spec.i32Const value))
   | .i64_const value => some (.plain (ScalarConst.i64 value))
   | .f32_const bits => some (.plain (ScalarConst.f32 bits))
   | .f64_const bits => some (.plain (ScalarConst.f64 bits))
@@ -567,15 +567,15 @@ def Action.token (action : Action) (pending : List U32) : Option Wasm.Token :=
   | .table_grow a0 => some (.plain (.TABLE_GROW (.mk_uN a0.val)))
   | .table_size a0 => some (.plain (.TABLE_SIZE (.mk_uN a0.val)))
   | .table_fill a0 => some (.plain (.TABLE_FILL (.mk_uN a0.val)))
-  | .simd subopcode => (MultiValue.Simd.pureMeaning subopcode.val).map (fun op => .plain op.instruction)
-  | .simd_lane subopcode lane => (MultiValue.Simd.laneMeaning subopcode.val).map
+  | .simd subopcode => (Wasm2.Simd.pureMeaning subopcode.val).map (fun op => .plain op.instruction)
+  | .simd_lane subopcode lane => (Wasm2.Simd.laneMeaning subopcode.val).map
       (fun op => .plain (op.instruction (.mk_uN lane.val)))
-  | .simd_memory subopcode arg => (MultiValue.Simd.memoryMeaning subopcode.val).map
+  | .simd_memory subopcode arg => (Wasm2.Simd.memoryMeaning subopcode.val).map
       (fun op => .plain (op.instruction (MemoryMeaning.memArg arg) (.mk_uN 0)))
-  | .simd_memory_lane subopcode arg lane => (MultiValue.Simd.memoryMeaning subopcode.val).map
+  | .simd_memory_lane subopcode arg lane => (Wasm2.Simd.memoryMeaning subopcode.val).map
       (fun op => .plain (op.instruction (MemoryMeaning.memArg arg) (.mk_uN lane.val)))
-  | .simd_const low high => some (.plain (MultiValue.Simd.vectorConstant low high))
-  | .simd_shuffle low high => some (.plain (MultiValue.Simd.shuffle low high))
+  | .simd_const low high => some (.plain (Wasm2.Simd.vectorConstant low high))
+  | .simd_shuffle low high => some (.plain (Wasm2.Simd.shuffle low high))
   | .memory hook arg => some (.plain (hook.instruction arg))
 
 /-- The opcode represented by a hook; vector-entry hooks have no separate opcode. -/

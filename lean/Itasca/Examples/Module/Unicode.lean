@@ -5,7 +5,7 @@ import Itasca.Module.Readers.NamesComplete
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.ModuleUnicodeExamples
+namespace Itasca.Examples.ModuleUnicode
 
 def bytes (xs : List U8) (h : xs.length ≤ Usize.max := by scalar_tac) : Slice U8 :=
   alloc.vec.Vec.deref (alloc.vec.Vec.from xs h)
@@ -107,7 +107,7 @@ section name; successful callbacks leave the otherwise empty module unchanged. -
 private theorem four_byte_custom_reply (a b c d : U8) (reply : core.result.Result Unit error.Error)
     (hutf8 : module.validate_utf8 (bytes [a,b,c,d]) = .ok reply) :
     module.validate_module (fourByteCustom a b c d) .Wasm1 = .ok (match reply with
-      | .Ok _ => .Ok ModuleExamples.emptyModule
+      | .Ok _ => .Ok Examples.ModuleBasic.emptyModule
       | .Err e => .Err e) := by
   let data := fourByteCustom a b c d
   let nm := alloc.vec.Vec.from [a,b,c,d] (by simp; scalar_tac)
@@ -125,10 +125,10 @@ private theorem four_byte_custom_reply (a b c d : U8) (reply : core.result.Resul
     constructor <;> simp [data, fourByteCustom, bytes, alloc.vec.Vec.deref, ModuleBinary.magicVersion]
   have hname := module.decode_name.from_utf8 data 10#usize nm 15#usize hnamebytes reply hutf8
   have henv : module.validate_env data .Wasm1 = .ok (match reply with
-      | .Ok _ => .Ok (ModuleExamples.emptyEnv, 15#usize)
+      | .Ok _ => .Ok (Examples.ModuleBasic.emptyEnv, 15#usize)
       | .Err e => .Err e) := by
     simp [module.validate_env, module.validate_env_with, module.Env.new, hheader,
-      core.result.Result.Insts.CoreOpsTry.branch, ModuleExamples.emptyEnv]
+      core.result.Result.Insts.CoreOpsTry.branch, Examples.ModuleBasic.emptyEnv]
     unfold module.validate_env_with_loop
     rw [loop]
     simp only [module.validate_env_with_loop.body, hlen,
@@ -152,17 +152,17 @@ private theorem four_byte_custom_reply (a b c d : U8) (reply : core.result.Resul
     rw [split_skip_section data 8#usize 10#usize 15#usize 0#u8 hsection (by decide)]
     simpa [hlen] using split_loop_eof data
   cases reply with
-  | Err e => exact ModuleExamples.environment_error data e hsize hsplit henv
+  | Err e => exact Examples.ModuleBasic.environment_error data e hsize hsplit henv
   | Ok u =>
-      exact ModuleExamples.accepted_at_end data ModuleExamples.emptyEnv hsize rfl (by simpa [hlen] using henv)
+      exact Examples.ModuleBasic.accepted_at_end data Examples.ModuleBasic.emptyEnv hsize rfl (by simpa [hlen] using henv)
 
 theorem last_scalar_module_accepted :
     module.validate_module (fourByteCustom 0xF4#u8 0x8F#u8 0xBF#u8 0xBF#u8) .Wasm1 =
-      .ok (.Ok ModuleExamples.emptyModule) :=
+      .ok (.Ok Examples.ModuleBasic.emptyModule) :=
   four_byte_custom_reply _ _ _ _ (.Ok ()) last_scalar_accepted
 
 theorem last_scalar_module_validated :
-    ModuleSound.Validated (fourByteCustom 0xF4#u8 0x8F#u8 0xBF#u8 0xBF#u8) ModuleExamples.emptyModule :=
+    ModuleSound.Validated (fourByteCustom 0xF4#u8 0x8F#u8 0xBF#u8 0xBF#u8) Examples.ModuleBasic.emptyModule :=
   module.validate_module.wasm_sound _ _ last_scalar_module_accepted
 
 theorem beyond_unicode_module_rejected :
@@ -170,4 +170,4 @@ theorem beyond_unicode_module_rejected :
       .ok (.Err .InvalidUtf8) :=
   four_byte_custom_reply _ _ _ _ (.Err .InvalidUtf8) beyond_unicode_rejected
 
-end Itasca.ModuleUnicodeExamples
+end Itasca.Examples.ModuleUnicode

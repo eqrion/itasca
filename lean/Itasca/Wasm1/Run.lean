@@ -3,20 +3,20 @@ import Itasca.Handler.RawControl
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Wasm
+namespace Itasca.Wasm1
 
 
 theorem State.start (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (bt : code.BlockType) (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val) :
     State data env ctx bt (Body.initial bt) := by
-  apply State.running (Body.initial bt) [] (WasmFrames.Saved.fresh (Body.initial bt) .body bt)
+  apply State.running (Body.initial bt) [] (Wasm1.Frames.Saved.fresh (Body.initial bt) .body bt)
   · constructor <;> simp [Body.initial, hsize]
-  · apply WasmFrames.Open.start _ (EnvTranslation.context_wf env ctx)
+  · apply Wasm1.Frames.Open.start _ (EnvTranslation.context_wf env ctx)
     · rfl
     · rfl
   · rfl
-  · simpa [WasmFrames.trace, WasmFrames.Saved.trace, WasmFrames.Saved.fresh,
-      WasmFrames.Form.opening, Body.initial] using
+  · simpa [Wasm1.Frames.trace, Wasm1.Frames.Saved.trace, Wasm1.Frames.Saved.fresh,
+      Wasm1.Frames.Form.opening, Body.initial] using
       Consumed.nil (data := data) 0#usize (by simp)
 
 theorem State.pending {data env ctx bt st} (h : State data env ctx bt st)
@@ -50,9 +50,9 @@ def Validated (data : Slice U8) (env : module.Env) (ctx : code.Context)
 /-- Acceptance has independent binary provenance and generated declarative body typing. -/
 def Profiled (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (bt : code.BlockType) : Prop := ∃ ops, BodyEncoding data ops ∧ FunctionTyped env ctx bt ops ∧
-    Wasm1.Instructions (WasmFrames.enter (EnvTranslation.context env ctx) .body bt) ops
+    Wasm1.Instructions (Wasm1.Frames.enter (EnvTranslation.context env ctx) .body bt) ops
 
-end Itasca.Wasm
+end Itasca.Wasm1
 
 namespace Itasca
 
@@ -61,9 +61,9 @@ Keeping that exact behavior here makes the termination result unconditional. -/
 theorem code.validate_body_with.of_wasm1_steps {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (bt : code.BlockType)
     (hbt : Body.initialBlockType ctx.results.val = bt)
-    (hsteps : Wasm.Steps visitor data env ctx bt) (v : V) :
+    (hsteps : Wasm1.Steps visitor data env ctx bt) (v : V) :
     code.validate_body_with visitor data env ctx v ⦃ r =>
-      r.1 = .Ok () → Wasm.Profiled data env ctx bt ⦄ := by
+      r.1 = .Ok () → Wasm1.Profiled data env ctx bt ⦄ := by
   simp only [code.validate_body_with.eq_model]
   unfold code.validate_body_with_model
   dsimp only
@@ -76,20 +76,20 @@ theorem code.validate_body_with.of_wasm1_steps {V : Type} (visitor : code.OpVisi
     rw [heq]
     simp only [bind_ok]
     apply code.validate_body_with_loop.spec visitor data env ctx
-      (fun _ st => Wasm.State data env ctx bt st) (fun _ => Wasm.Profiled data env ctx bt)
+      (fun _ st => Wasm1.State data env ctx bt st) (fun _ => Wasm1.Profiled data env ctx bt)
       (hsteps.contract visitor data env ctx bt)
     · intro st w hi hc hp
       exact hi.finished hc hp
-    · apply Wasm.State.start
+    · apply Wasm1.State.start
       scalar_tac
 
 /-- The public typing contract projects from the shared profile invariant. -/
 theorem code.validate_body_with.of_wasm_steps {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (bt : code.BlockType)
     (hbt : Body.initialBlockType ctx.results.val = bt)
-    (hsteps : Wasm.Steps visitor data env ctx bt) (v : V) :
+    (hsteps : Wasm1.Steps visitor data env ctx bt) (v : V) :
     code.validate_body_with visitor data env ctx v ⦃ r =>
-      r.1 = .Ok () → Wasm.Validated data env ctx bt ⦄ := by
+      r.1 = .Ok () → Wasm1.Validated data env ctx bt ⦄ := by
   apply WP.spec_mono (code.validate_body_with.of_wasm1_steps visitor data env ctx bt hbt hsteps v)
   rintro r hr hsuccess
   obtain ⟨ops, hb, ht, _⟩ := hr hsuccess

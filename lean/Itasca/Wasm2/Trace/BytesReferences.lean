@@ -2,7 +2,7 @@ import Itasca.Wasm2.Trace.Bytes
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.CallbackBytes
+namespace Itasca.Wasm2.CallbackBytes
 
 open VisitorTrace CallbackTrace
 
@@ -117,6 +117,6 @@ theorem ref_is_null {data env locals index st} (p : Pending data env locals inde
   rw [hr, WP.spec_ok] at spec
   dsimp only at spec
   exact At.of_immediate p.inbounds byte p.pos (.reference .refIsNull)
-    (by simpa [spec.2.1] using Wasm.BytesAt.nil data st.core.pos (by have := p.pos; have := p.inbounds; omega))
+    (by simpa [spec.2.1] using Wasm1.BytesAt.nil data st.core.pos (by have := p.pos; have := p.inbounds; omega))
 
-end Itasca.MultiValue.CallbackBytes
+end Itasca.Wasm2.CallbackBytes

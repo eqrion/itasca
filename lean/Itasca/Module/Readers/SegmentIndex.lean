@@ -17,12 +17,12 @@ theorem module.decode_segment_index.profile_spec (data : Slice U8) (pos : Usize)
   cases profile with
   | Wasm1 =>
       simp only [module.decode_segment_index, WP.spec_ok]
-      exact ⟨[], ⟨rfl, rfl, rfl⟩, Wasm.BytesAt.nil data pos hpos⟩
+      exact ⟨[], ⟨rfl, rfl, rfl⟩, Wasm1.BytesAt.nil data pos hpos⟩
   | Wasm2 =>
       by_cases hzero : flags = 0#u32
       · subst flags
         simp only [module.decode_segment_index, WP.spec_ok]
-        exact ⟨[], Or.inl ⟨rfl, rfl, rfl, rfl⟩, Wasm.BytesAt.nil data pos hpos⟩
+        exact ⟨[], Or.inl ⟨rfl, rfl, rfl, rfl⟩, Wasm1.BytesAt.nil data pos hpos⟩
       · by_cases htwo : flags = 2#u32
         · subst flags
           obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)

@@ -4,7 +4,7 @@ import Itasca.Binary.Wasm2.SimdBitsMeaning
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Simd
+namespace Itasca.Wasm2.Simd
 
 /-- Operand validation after the sixteen shuffle bytes have been range checked. -/
 def shuffleFinish (st : code.OpIterState) (data : Slice U8) :
@@ -40,13 +40,13 @@ theorem shuffle_scan (st : code.OpIterState) (data : Slice U8)
     (hpos : st.pos.val ≤ data.length)
     (Q : core.result.Result (U64 × U64) error.OpError × code.OpIterState → Prop)
     (herr : ∀ e, Q (.Err e, st))
-    (hfinish : ∀ bytes next, Wasm.BytesAt data st.pos bytes next → bytes.length = 16 →
+    (hfinish : ∀ bytes next, Wasm1.BytesAt data st.pos bytes next → bytes.length = 16 →
       (∀ b ∈ bytes, b.val < 32) → shuffleFinish st data ⦃ Q ⦄) :
     code.read_simd_shuffle st data ⦃ Q ⦄ := by
   unfold code.read_simd_shuffle code.read_simd_shuffle_loop
   apply loop.spec_decr_nat (fun p => (16 - p.2.val).toNat)
     (fun p => 0 ≤ p.2.val ∧ p.2.val ≤ 16 ∧ ∃ before : List U8,
-      Wasm.BytesAt data st.pos before p.1 ∧ before.length = p.2.val.toNat ∧
+      Wasm1.BytesAt data st.pos before p.1 ∧ before.length = p.2.val.toNat ∧
       ∀ b ∈ before, b.val < 32)
   · rintro ⟨pos, i⟩ ⟨hi, hn, before, hb, hl, hbefore⟩
     dsimp only at *
@@ -60,7 +60,7 @@ theorem shuffle_scan (st : code.OpIterState) (data : Slice U8)
         · rename_i hsmall
           step
           refine ⟨by scalar_tac, by scalar_tac, ⟨before ++ [data.val[pos.val]],
-            hb.append (Wasm.BytesAt.byte data pos next _ hp rfl hnext), ?_, ?_⟩, ?_⟩
+            hb.append (Wasm1.BytesAt.byte data pos next _ hp rfl hnext), ?_, ?_⟩, ?_⟩
           · simp only [List.length_append, List.length_singleton]
             scalar_tac
           · intro b hm
@@ -78,11 +78,11 @@ theorem shuffle_scan (st : code.OpIterState) (data : Slice U8)
       · intro r hr
         simpa using hr
   · dsimp only
-    exact ⟨by decide, by decide, [], Wasm.BytesAt.nil data st.pos hpos, by simp, by simp⟩
+    exact ⟨by decide, by decide, [], Wasm1.BytesAt.nil data st.pos hpos, by simp, by simp⟩
 
 /-- Every independently valid shuffle immediate reaches the operand reader. -/
 theorem shuffle_complete (st : code.OpIterState) (data : Slice U8)
-    (bytes : List U8) (next : Usize) (hb : Wasm.BytesAt data st.pos bytes next)
+    (bytes : List U8) (next : Usize) (hb : Wasm1.BytesAt data st.pos bytes next)
     (hl : bytes.length = 16) (hbound : ∀ b ∈ bytes, b.val < 32)
     (r : core.result.Result (U64 × U64) error.OpError × code.OpIterState)
     (hfinish : shuffleFinish st data = .ok r) :
@@ -91,7 +91,7 @@ theorem shuffle_complete (st : code.OpIterState) (data : Slice U8)
     unfold code.read_simd_shuffle code.read_simd_shuffle_loop
     apply loop.spec_decr_nat (fun p => (16 - p.2.val).toNat)
       (fun p => 0 ≤ p.2.val ∧ ∃ rest : List U8,
-        Wasm.BytesAt data p.1 rest next ∧ p.2.val + (rest.length : Int) = 16 ∧
+        Wasm1.BytesAt data p.1 rest next ∧ p.2.val + (rest.length : Int) = 16 ∧
         ∀ b ∈ rest, b.val < 32)
     · rintro ⟨pos, i⟩ ⟨hi, rest, hrest, hlen, hsmall⟩
       dsimp only at *
@@ -99,7 +99,7 @@ theorem shuffle_complete (st : code.OpIterState) (data : Slice U8)
       · cases rest with
         | nil => simp only [List.length_nil] at hlen; scalar_tac
         | cons b rest =>
-          obtain ⟨middle, hb1, hb2⟩ := (show Wasm.BytesAt data pos ([b] ++ rest) next from hrest).split
+          obtain ⟨middle, hb1, hb2⟩ := (show Wasm1.BytesAt data pos ([b] ++ rest) next from hrest).split
           have hblt : ¬ b ≥ 32#u8 := by have := hsmall b (by simp); scalar_tac
           simp only [code.read_simd_shuffle_loop.body, hlt, if_true, hb1.read_byte,
             bind_ok, core.result.Result.Insts.CoreOpsTry.branch, Std.uncurry, hblt, if_false]
@@ -164,4 +164,4 @@ theorem shuffle_segment (st : code.OpIterState) (data : Slice U8)
       · simpa only [hposition] using hbits low high rfl
       · simpa only [Control.polymorphic, hc] using heff
 
-end Itasca.MultiValue.Simd
+end Itasca.Wasm2.Simd

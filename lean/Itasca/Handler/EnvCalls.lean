@@ -51,7 +51,7 @@ theorem code.read_call.prefix (st : code.OpIterState) (data : Slice U8)
                 have hpop : ∀ ts, Sequence.Realizes (Control.polymorphic st) rest ts →
                     Sequence.Realizes (Control.polymorphic st) segment (ts ++ ft.params.val.map Translate.valueType) := by
                   simpa [Control.polymorphic, hc, alloc.vec.Vec.deref] using hout'
-                have htyping := (Frames.ResumePrefix.after_pop htyped hpop).finish hC.wf
+                have htyping := (Sequence.ResumePrefix.after_pop htyped hpop).finish hC.wf
                   (.CALL (.mk_uN idx.val)) ft.results.val (.instr_case_10 _ (EnvTranslation.index_wf idx))
                   (hC.call idx ft hi htype)
                 rw [WP.spec_equiv_exists]
@@ -169,7 +169,7 @@ theorem code.read_call_indirect.prefix (st : code.OpIterState) (data : Slice U8)
                                     (ts ++ (ft.params.val.map Translate.valueType ++ [.I32])) := by
                                 intro ts ht
                                 simpa [List.append_assoc] using hcondpop _ (hparampop ts ht)
-                              have htyping := (Frames.ResumePrefix.after_pop htyped hpop).finish hC.wf
+                              have htyping := (Sequence.ResumePrefix.after_pop htyped hpop).finish hC.wf
                                 (.CALL_INDIRECT (.mk_uN 0) (.mk_uN idx.val)) ft.results.val
                                 (.instr_case_11 _ _ (EnvTranslation.index_wf 0#u32) (EnvTranslation.index_wf idx))
                                 (hC.call_indirect idx 0#u32 ft hi htype htablelen hfun)

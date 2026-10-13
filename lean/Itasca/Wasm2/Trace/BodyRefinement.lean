@@ -3,7 +3,7 @@ import Itasca.Wasm2.Visitor.Transfer
 
 open Aeneas Aeneas.Std Result ControlFlow
 
-namespace Itasca.MultiValue.Visitor
+namespace Itasca.Wasm2.Visitor
 
 open VisitorTrace
 
@@ -57,11 +57,11 @@ theorem body.refines {V W : Type} (visitor : code.OpVisitor V)
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h ⊢
       all_goals subst cf; exact ⟨rfl, hr1⟩
 
-end Itasca.MultiValue.Visitor
+end Itasca.Wasm2.Visitor
 
 namespace Itasca
 
-open VisitorTrace MultiValue.Visitor
+open VisitorTrace Wasm2.Visitor
 
 /-- The actual Core 2.0 body loop preserves every ordinary result under exact
 callback refinement. The empty visitor supplies structural progress only. -/
@@ -91,7 +91,7 @@ theorem code.validate_multi_value_body_with_loop.refines {V W : Type}
     obtain ⟨cf, hb, ht⟩ := ResultFacts.bind_ok_inv _ _ _ h
     obtain ⟨cf', hw, ho, hr⟩ := body.refines visitor replacement related hrefines
       data env ctx index st v w hrelated cf hb
-    simp only [MultiValue.Visitor.body, code.validate_multi_value_body_with_loop.body] at hw
+    simp only [Wasm2.Visitor.body, code.validate_multi_value_body_with_loop.body] at hw
     rw [hw]
     cases cf with
     | done pair =>
@@ -112,7 +112,7 @@ theorem code.validate_multi_value_body_with_loop.refines {V W : Type}
       have hp := code.validate_multi_value_body_with_loop.body_total
         code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_total
         data env ctx index st () hdata hs halign hbound
-      simp only [MultiValue.Visitor.body, code.validate_multi_value_body_with_loop.body] at he
+      simp only [Wasm2.Visitor.body, code.validate_multi_value_body_with_loop.body] at he
       simp only [code.validate_multi_value_body_with_loop.body] at hp
       rw [he, WP.spec_ok] at hp
       cases emptyCf with

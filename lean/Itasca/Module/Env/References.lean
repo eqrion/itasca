@@ -36,7 +36,7 @@ theorem initializer_indices (value : types.ConstExpr) :
       (initializer value).map (fun index => uN.mk_uN index.val) := by
   cases value <;> simp [ModuleConstants.expression, ModuleConstants.instruction,
     initializer, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices,
-    Core.i32Const, ScalarConst.i64, ScalarConst.f32, ScalarConst.f64]
+    Spec.i32Const, ScalarConst.i64, ScalarConst.f32, ScalarConst.f64]
 
 end Itasca.ModuleReferences
 

@@ -2,7 +2,7 @@ import Itasca.Wasm2.Trace.BytesSimd
 import Itasca.Wasm2.Trace.BytesScalar
 
 open Aeneas Aeneas.Std
-namespace Itasca.MultiValue.CallbackBytes
+namespace Itasca.Wasm2.CallbackBytes
 open VisitorTrace CallbackTrace
 
 /-- Assemble concrete Core 2.0 scalar dispatch from an exact extended-scalar
@@ -78,4 +78,4 @@ theorem wasm2_scalar {data env locals index st} (p : Pending data env locals ind
   exact wasm2_dispatch p visitor observe records ctx opcode hscalar hsize hbyte
     (fun op hs hb => extended_scalar_records p visitor observe records hsize ctx hlocals op hs hb)
 
-end Itasca.MultiValue.CallbackBytes
+end Itasca.Wasm2.CallbackBytes

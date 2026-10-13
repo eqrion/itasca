@@ -88,7 +88,7 @@ theorem code.read_local_get.complete (st : code.OpIterState) (data : Slice U8) (
   refine ⟨(.Ok idx, s), ?_, rfl, hcs, hps, segment ++ [.Val t], ?_, by simp, ?_⟩
   · simp [code.read_local_get, htake, hpush, core.result.Result.Insts.CoreOpsTry.branch]
   · simpa [hv, List.append_assoc] using hvs
-  · exact (Frames.realizes_append_concrete _ segment [t] _).mpr ⟨before, hr, rfl⟩
+  · exact (Sequence.realizes_append_concrete _ segment [t] _).mpr ⟨before, hr, rfl⟩
 
 theorem code.read_local_set.complete (st : code.OpIterState) (data : Slice U8) (ctx : code.Context)
     (idx : U32) (next : Usize) (t : types.ValueType)
@@ -125,7 +125,7 @@ theorem code.read_local_tee.complete (st : code.OpIterState) (data : Slice U8) (
     rest ++ [.Val t], ?_, by simpa using Nat.add_le_add_right hlen 1, ?_⟩
   · simp [code.read_local_tee, htake, hpop, hpush, core.result.Result.Insts.CoreOpsTry.branch]
   · simpa [hvs, List.append_assoc] using hv'
-  · exact (Frames.realizes_append_concrete _ rest [t] _).mpr ⟨before, hrest, rfl⟩
+  · exact (Sequence.realizes_append_concrete _ rest [t] _).mpr ⟨before, hrest, rfl⟩
 
 theorem code.read_global_get.complete (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (idx : U32) (next : Usize) (gt : types.GlobalType)
@@ -142,7 +142,7 @@ theorem code.read_global_get.complete (st : code.OpIterState) (data : Slice U8) 
   refine ⟨(.Ok idx, s), ?_, rfl, hcs, hps, segment ++ [.Val gt.valtype], ?_, by simp, ?_⟩
   · simp [code.read_global_get, htake, hpush, core.result.Result.Insts.CoreOpsTry.branch]
   · simpa [hv, List.append_assoc] using hvs
-  · exact (Frames.realizes_append_concrete _ segment [gt.valtype] _).mpr ⟨before, hr, rfl⟩
+  · exact (Sequence.realizes_append_concrete _ segment [gt.valtype] _).mpr ⟨before, hr, rfl⟩
 
 theorem code.read_global_set.complete (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (idx : U32) (next : Usize) (gt : types.GlobalType)

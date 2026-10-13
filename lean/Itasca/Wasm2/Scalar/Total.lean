@@ -6,7 +6,7 @@ import Itasca.Visitor.Dispatch
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 private theorem run_total {A V : Type}
     (read : Result (core.result.Result A error.OpError × code.OpIterState))
@@ -156,4 +156,4 @@ theorem scalar_total {V : Type} (visitor : code.OpVisitor V)
   rw [code.step.reserved visitor st data env ctx opcode v hreserved]
   simp [hs]
 
-end Itasca.MultiValue
+end Itasca.Wasm2

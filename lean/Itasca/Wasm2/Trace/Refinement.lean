@@ -14,7 +14,7 @@ open Aeneas Aeneas.Std
 
 namespace Itasca
 
-open VisitorTrace MultiValue
+open VisitorTrace Wasm2
 
 /-- All bulk callback identities and immediate arguments refine exactly, even
 when the reader or callback rejects the instruction. -/
@@ -69,7 +69,7 @@ end Itasca
 
 namespace Itasca
 
-open VisitorTrace MultiValue
+open VisitorTrace Wasm2
 
 /-- Exact replacement for sign-extension, saturating conversion, and inherited
 scalar callbacks, preserving errors and the full post-operator state. -/
@@ -154,7 +154,7 @@ theorem code.step_extended.refines {V W : Type}
 
 end Itasca
 
-namespace Itasca.MultiValue.Simd
+namespace Itasca.Wasm2.Simd
 
 open VisitorTrace
 
@@ -216,11 +216,11 @@ theorem subStep.refines {V W : Type}
           obtain ⟨rfl, rfl, rfl⟩ := h
           exact ⟨w, rfl, hrelated⟩
 
-end Itasca.MultiValue.Simd
+end Itasca.Wasm2.Simd
 
 namespace Itasca
 
-open VisitorTrace MultiValue.Simd
+open VisitorTrace Wasm2.Simd
 
 /-- SIMD prefix decoding and exact callback refinement preserve every ordinary
 return, including malformed prefix bytes and observed rejection. -/
@@ -251,7 +251,7 @@ end Itasca
 
 namespace Itasca
 
-open VisitorTrace MultiValue
+open VisitorTrace Wasm2
 
 /-- Exact callback refinement for the complete Core 2.0 scalar/reference/SIMD
  dispatcher, preserving reader failure, callback rejection, and both states. -/

@@ -58,7 +58,7 @@ theorem module.decode_func_indices_loop.spec (data : Slice U8) (env : module.Env
             · exact hvalid value hm
             · simpa [List.mem_singleton.mp hm] using hidx
           · scalar_tac
-  · exact ⟨by simp, by simp, ⟨[], .nil, Wasm.BytesAt.nil data start hstart⟩, by simp⟩
+  · exact ⟨by simp, by simp, ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, by simp⟩
 
 @[step]
 theorem module.decode_func_indices.spec (data : Slice U8) (pos : Usize) (env : module.Env) :
@@ -208,7 +208,7 @@ theorem module.decode_element_section_loop.profile_spec (data : Slice U8) (env :
         · exact hbound
         · scalar_tac
   · exact ⟨by simp, [], by simp, ⟨by cases env; rfl, by simp, by simp⟩,
-      ⟨[], .nil, Wasm.BytesAt.nil data start hstart⟩, by simp, hsize, hrefs⟩
+      ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, by simp, hsize, hrefs⟩
 
 @[step]
 theorem module.decode_element_section.profile_spec (data : Slice U8) (pos : Usize) (env : module.Env) (profile : ValidationProfile)

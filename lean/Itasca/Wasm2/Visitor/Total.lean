@@ -258,17 +258,17 @@ theorem code.validate_multi_value_body_with_loop.body_total {V : Type}
       all_goals try simp only [Std.bind_assoc, Std.uncurry]
       case h_12 =>
         rename_i _ h2 h3 h4 h5 h11 h12 h13 h14 h15 h16 h17
-        have hscalar : (data.val[s.core.pos.val]).val ∉ MultiValue.controlOpcodes := by
+        have hscalar : (data.val[s.core.pos.val]).val ∉ Wasm2.controlOpcodes := by
           have neq {a b : U8} (h : a ≠ b) : a.val ≠ b.val :=
             fun he => h (UScalar.eq_of_val_eq he)
-          simp only [MultiValue.controlOpcodes, List.mem_cons, List.not_mem_nil, or_false, not_or]
+          simp only [Wasm2.controlOpcodes, List.mem_cons, List.not_mem_nil, or_false, not_or]
           exact ⟨neq h2, neq h3, neq h4, neq h5, neq h11, neq h12,
             neq h13, neq h14, neq h15, neq h16, neq h17⟩
         split
         · simp [core.result.Result.Insts.CoreOpsTry.branch,
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
         · have hsize : s.core.vals.val.length < Usize.max := by scalar_tac
-          step with MultiValue.wasm2_total visitor
+          step with Wasm2.wasm2_total visitor
             { s.core with pos := next } data env ctx
             data.val[s.core.pos.val] v hspos hsize hscalar hv
             as ⟨r, hsc, hcount, hp'⟩

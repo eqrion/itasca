@@ -3,7 +3,7 @@ import Itasca.Visitor.StepLift
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Simd
+namespace Itasca.Wasm2.Simd
 
 private theorem sub_transfer {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (ha : FullVisitor.Accepts replacement)
@@ -70,4 +70,4 @@ theorem simd_transfer {V W : Type} (visitor : code.OpVisitor V)
     obtain ⟨subopcode, next⟩ := pair
     exact sub_transfer visitor replacement ha _ final data env subopcode v v' w h
 
-end Itasca.MultiValue.Simd
+end Itasca.Wasm2.Simd

@@ -1,7 +1,7 @@
 import Itasca.Binary.Wasm2.SimdPureMeaning
 import Mathlib.Tactic.CasesM
 
-namespace Itasca.MultiValue.Simd
+namespace Itasca.Wasm2.Simd
 
 /-- The fourteen lane instructions admit exactly the signedness forms in Core 2.0. -/
 inductive LaneOperation where
@@ -206,4 +206,4 @@ def laneMeaning (opcode : Nat) : Option LaneOperation :=
   | 34 => some .f64x2Replace
   | _ => none
 
-end Itasca.MultiValue.Simd
+end Itasca.Wasm2.Simd

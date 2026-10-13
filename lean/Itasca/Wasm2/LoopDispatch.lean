@@ -3,7 +3,7 @@ import Itasca.Wasm2.EmptyVisitorLoop
 
 open Aeneas Aeneas.Std Result
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- The return arm of the extracted loop, with its state exposed for proofs. -/
 def returnStep (st : code.BodyState) (env : module.Env) (index : U32) :
@@ -109,4 +109,4 @@ theorem loopBody_eq (data : Slice U8) (env : module.Env) (ctx : code.Context)
           cases r <;> simp [continueStep,
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-end Itasca.MultiValue
+end Itasca.Wasm2

@@ -4,7 +4,7 @@ import Itasca.Binary.Wasm1.Encoding
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.ReferencesBinary
+namespace Itasca.Wasm2.ReferencesBinary
 
 /-- Core 2.0 reference-type tags are literal bytes, not padded heap types. -/
 def referenceByte : types.ElemType → U8
@@ -41,4 +41,4 @@ theorem Immediate.wellFormed {opcode op bytes} (h : Immediate opcode op bytes) :
   | callIndirect ti table _ _ =>
       exact .instr_case_11 _ _ (EnvTranslation.index_wf table) (EnvTranslation.index_wf ti)
 
-end Itasca.MultiValue.ReferencesBinary
+end Itasca.Wasm2.ReferencesBinary

@@ -3,7 +3,7 @@ import Itasca.Wasm1.Profile
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.WasmCompletenessBoundary
+namespace Itasca.Examples.Wasm1ProfileBoundary
 
 /-- MVP-shaped bytes whose branch table uses Wasm 2.0's common-bottom rule. -/
 def bytes : Slice U8 := alloc.vec.Vec.deref (alloc.vec.Vec.from
@@ -43,8 +43,8 @@ theorem table_typed (C : context) (hC : wf_context C)
   · exact table_wf
 
 /-- Declarative typing alone therefore includes this body. -/
-theorem typed (env : module.Env) : Wasm.FunctionTyped env ctx (.Value .I32) ops := by
-  let C := WasmFrames.enter (EnvTranslation.context env ctx) .body (.Value .I32)
+theorem typed (env : module.Env) : Wasm1.FunctionTyped env ctx (.Value .I32) ops := by
+  let C := Wasm1.Frames.enter (EnvTranslation.context env ctx) .body (.Value .I32)
   let D := Control.labelContext [.I64] ++ C
   have hC : wf_context C := Control.enter_context_wf _ (EnvTranslation.context_wf env ctx) _
   have hD : wf_context D := Control.enter_context_wf C hC _
@@ -72,36 +72,36 @@ private theorem single_encoding (b : U8) (h : b.val < 128) : Leb128.Encoding [b]
   exact ⟨[], b, rfl, by simp, by simp, h, by simp, by simp [Leb128.payload, Nat.mod_eq_of_lt h]⟩
 
 /-- The counterexample has a complete independent Wasm 1.0 binary spelling. -/
-theorem encoded : Wasm.BodyEncoding bytes ops := by
-  have h0 : Wasm.At bytes 0#usize (.block (.Value .I64)) 2#usize :=
+theorem encoded : Wasm1.BodyEncoding bytes ops := by
+  have h0 : Wasm1.At bytes 0#usize (.block (.Value .I64)) 2#usize :=
     ⟨[0x02#u8, 0x7E#u8], ⟨0x02#u8, [0x7E#u8], rfl, .block (.Value .I64) trivial⟩,
       ⟨rfl, rfl, by decide⟩⟩
-  have h2 : Wasm.At bytes 2#usize (.plain .UNREACHABLE) 3#usize :=
+  have h2 : Wasm1.At bytes 2#usize (.plain .UNREACHABLE) 3#usize :=
     ⟨[0x00#u8], ⟨0x00#u8, [], rfl, .unreachable⟩, ⟨rfl, rfl, by decide⟩⟩
-  have h3 : Wasm.At bytes 3#usize (.plain table) 7#usize :=
+  have h3 : Wasm1.At bytes 3#usize (.plain table) 7#usize :=
     ⟨[0x0E#u8, 1#u8, 0#u8, 1#u8], ⟨0x0E#u8, [1#u8, 0#u8, 1#u8], rfl,
       .brTable [0#u32] 1#u32 (single_encoding 1#u8 (by decide))
         (.cons (single_encoding 0#u8 (by decide)) .nil) (single_encoding 1#u8 (by decide))⟩,
       ⟨rfl, rfl, by decide⟩⟩
-  have h7 : Wasm.At bytes 7#usize .end_ 8#usize :=
+  have h7 : Wasm1.At bytes 7#usize .end_ 8#usize :=
     ⟨[0x0B#u8], ⟨0x0B#u8, [], rfl, .end_⟩, ⟨rfl, rfl, by decide⟩⟩
-  have h8 : Wasm.At bytes 8#usize (.plain .DROP) 9#usize :=
+  have h8 : Wasm1.At bytes 8#usize (.plain .DROP) 9#usize :=
     ⟨[0x1A#u8], ⟨0x1A#u8, [], rfl, .drop⟩, ⟨rfl, rfl, by decide⟩⟩
-  have h9 : Wasm.At bytes 9#usize (.plain .UNREACHABLE) 10#usize :=
+  have h9 : Wasm1.At bytes 9#usize (.plain .UNREACHABLE) 10#usize :=
     ⟨[0x00#u8], ⟨0x00#u8, [], rfl, .unreachable⟩, ⟨rfl, rfl, by decide⟩⟩
-  have h10 : Wasm.At bytes 10#usize .end_ 11#usize :=
+  have h10 : Wasm1.At bytes 10#usize .end_ 11#usize :=
     ⟨[0x0B#u8], ⟨0x0B#u8, [], rfl, .end_⟩, ⟨rfl, rfl, by decide⟩⟩
-  have hi := Wasm.Emits.simple (Wasm.Emits.simple .nil (.plain .UNREACHABLE .instr_case_1))
+  have hi := Wasm1.Emits.simple (Wasm1.Emits.simple .nil (.plain .UNREACHABLE .instr_case_1))
     (.plain table table_wf)
-  have ho := Wasm.Emits.simple (Wasm.Emits.simple
-    (Wasm.Emits.block (.Value .I64) .nil hi) (.plain .DROP .instr_case_2))
+  have ho := Wasm1.Emits.simple (Wasm1.Emits.simple
+    (Wasm1.Emits.block (.Value .I64) .nil hi) (.plain .DROP .instr_case_2))
     (.plain .UNREACHABLE .instr_case_1)
   refine ⟨_, 11#usize,
-    ((((((Wasm.Consumed.nil 0#usize (by decide)).snoc h0).snoc h2).snoc h3).snoc h7).snoc h8).snoc h9 |>.snoc h10,
+    ((((((Wasm1.Consumed.nil 0#usize (by decide)).snoc h0).snoc h2).snoc h3).snoc h7).snoc h8).snoc h9 |>.snoc h10,
     rfl, ?_⟩
   exact ⟨_, rfl, ho⟩
 
-theorem validated (env : module.Env) : Wasm.Validated bytes env ctx (.Value .I32) :=
+theorem validated (env : module.Env) : Wasm1.Validated bytes env ctx (.Value .I32) :=
   ⟨ops, encoded, typed env⟩
 
 
@@ -279,7 +279,7 @@ theorem rejected (env : module.Env) :
 
 /-- Thus the earlier soundness postcondition has no unrestricted converse. -/
 theorem validated_but_rejected (env : module.Env) :
-    Wasm.Validated bytes env ctx (.Value .I32) ∧
+    Wasm1.Validated bytes env ctx (.Value .I32) ∧
       code.validate_body bytes env ctx = .ok (.Err .TypeMismatch) :=
   ⟨validated env, rejected env⟩
 
@@ -295,7 +295,7 @@ theorem table_not_wasm1 (C : context)
 /-- The whole decoded instruction tree fails the recursive Wasm 1.0 profile. -/
 theorem ops_not_wasm1 (env : module.Env) :
     ¬ Wasm1.Instructions
-      (WasmFrames.enter (EnvTranslation.context env ctx) .body (.Value .I32)) ops := by
+      (Wasm1.Frames.enter (EnvTranslation.context env ctx) .body (.Value .I32)) ops := by
   intro h
   cases h with
   | cons hb _ =>
@@ -318,4 +318,4 @@ theorem ops_not_wasm1 (env : module.Env) :
     | loop _ _ _ _ => cases heq
     | ifElse _ _ _ _ _ _ => cases heq
 
-end Itasca.WasmCompletenessBoundary
+end Itasca.Examples.Wasm1ProfileBoundary

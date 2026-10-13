@@ -2,7 +2,7 @@ import Itasca.Binary.SignedLeb33
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 def valueByte : types.ValueType → U8
   | .I32 => 127#u8
@@ -64,7 +64,7 @@ private theorem indexed_first_not_negative_tag (data : Slice U8) (pos : Usize)
     rw [← hh] at hb
     omega
 
-end Itasca.MultiValue
+end Itasca.Wasm2
 
 namespace Itasca
 
@@ -73,13 +73,13 @@ namespace Itasca
 theorem signature.read_block_type.spec (data : Slice U8) (pos : Usize) :
     signature.read_block_type data pos ⦃ r =>
       match r with
-      | .Ok (bt, next) => MultiValue.BlockDecoded data pos bt next
+      | .Ok (bt, next) => Wasm2.BlockDecoded data pos bt next
       | .Err _ => True ⦄ := by
   by_cases hp : pos.val < data.length
   · obtain ⟨_, hr, next, rfl, hn⟩ := WP.spec_imp_exists (reader.read_byte.spec data pos hp)
     rw [signature.read_block_type, hr]
     simp [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-    split <;> try solve | simp_all [MultiValue.BlockDecoded, MultiValue.valueByte,
+    split <;> try solve | simp_all [Wasm2.BlockDecoded, Wasm2.valueByte,
       U8.ofNat, UScalar.ofNat, UScalar.ofNatCore]
     obtain ⟨r, hs, hd⟩ := WP.spec_imp_exists (reader.read_s33_leb.spec data pos)
     rw [hs]
@@ -92,7 +92,7 @@ theorem signature.read_block_type.spec (data : Slice U8) (pos : Usize) :
       split
       · simp
       · step with IScalar.hcast_inBounds_spec .U32 v (by scalar_tac)
-        simp only [MultiValue.BlockDecoded]
+        simp only [Wasm2.BlockDecoded]
         convert (show SignedLeb33.Decoded data pos v.val endpos from hd) using 1
   · simp [signature.read_block_type, reader.read_byte.eof data pos (by omega),
       core.result.Result.Insts.CoreOpsTry.branch,
@@ -102,7 +102,7 @@ theorem signature.read_block_type.spec (data : Slice U8) (pos : Usize) :
     nonminimal nonnegative s33 indices. -/
 theorem signature.read_block_type.complete (data : Slice U8) (pos : Usize)
     (bt : signature.BlockType) (next : Usize)
-    (h : MultiValue.BlockDecoded data pos bt next) :
+    (h : Wasm2.BlockDecoded data pos bt next) :
     signature.read_block_type data pos = .ok (.Ok (bt, next)) := by
   cases bt with
   | Empty =>
@@ -114,15 +114,15 @@ theorem signature.read_block_type.complete (data : Slice U8) (pos : Usize)
     obtain ⟨hp, hb, hn⟩ := h
     obtain ⟨_, hr, q, rfl, hq⟩ := WP.spec_imp_exists (reader.read_byte.spec data pos hp)
     have heq : q = next := by scalar_tac
-    cases t <;> simp [signature.read_block_type, hr, hb, heq, MultiValue.valueByte,
+    cases t <;> simp [signature.read_block_type, hr, hb, heq, Wasm2.valueByte,
       core.result.Result.Insts.CoreOpsTry.branch]
   | TypeIndex index =>
     have hspan := SignedLeb33.Decoded.span data pos (index.val : Int) next h
     have hp : pos.val < data.length := by omega
-    have htag := MultiValue.indexed_first_not_negative_tag data pos index next h hp
+    have htag := Wasm2.indexed_first_not_negative_tag data pos index next h hp
     obtain ⟨_, hr, q, rfl, _⟩ := WP.spec_imp_exists (reader.read_byte.spec data pos hp)
     obtain ⟨v, _, hv⟩ := WP.spec_imp_exists (UScalar.hcast_inBounds_spec .I64 index (by scalar_tac))
-    have hd : SignedLeb33.Decoded data pos v.val next := by simpa only [hv, MultiValue.BlockDecoded] using h
+    have hd : SignedLeb33.Decoded data pos v.val next := by simpa only [hv, Wasm2.BlockDecoded] using h
     have hs := reader.read_s33_leb.complete data pos v next hd
     simp [signature.read_block_type, hr, core.result.Result.Insts.CoreOpsTry.branch]
     split <;> try (rename_i _ he; exact False.elim (htag (by rw [he]; decide)))
@@ -132,7 +132,7 @@ theorem signature.read_block_type.complete (data : Slice U8) (pos : Usize)
 
 end Itasca
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- Independent block bytes determine both the signature and its end cursor,
     including reference/vector tags and nonminimal positive type indices. -/
@@ -144,4 +144,4 @@ theorem BlockDecoded.unique {data pos first second next last}
     (signature.read_block_type.complete data pos second last hsecond)
   simpa using h
 
-end Itasca.MultiValue
+end Itasca.Wasm2

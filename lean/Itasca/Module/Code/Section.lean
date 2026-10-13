@@ -123,8 +123,8 @@ theorem Section.encoding {data start env cs entries} {profile : ValidationProfil
   obtain ⟨content, ⟨afterId, size, hid, hsize, hlen, _⟩, hcount, hcountval⟩ := h
   obtain ⟨countBytes, hc, hclen, hcbound, hcenc⟩ := hcount
   obtain ⟨entryBytes, he, hes⟩ := hb
-  have payload : Wasm.BytesAt data content (countBytes ++ entryBytes) cs.end :=
-    (⟨hc, hclen, hcbound⟩ : Wasm.BytesAt data content countBytes cs.entries).append hes
+  have payload : Wasm1.BytesAt data content (countBytes ++ entryBytes) cs.end :=
+    (⟨hc, hclen, hcbound⟩ : Wasm1.BytesAt data content countBytes cs.entries).append hes
   obtain ⟨sizeBytes, hs, hslen, hsbound, hsenc⟩ := hsize
   have hsizeval : size.val = (countBytes ++ entryBytes).length := by
     have := payload.length
@@ -134,7 +134,7 @@ theorem Section.encoding {data start env cs entries} {profile : ValidationProfil
   refine ⟨10#u8 :: (sizeBytes ++ (countBytes ++ entryBytes)), .present ?_, ?_⟩
   · exact ⟨sizeBytes, countBytes ++ entryBytes, by simpa [hsizeval] using hsenc, hpayload, rfl⟩
   · simpa using hid.byte.append
-      ((⟨hs, hslen, hsbound⟩ : Wasm.BytesAt data afterId sizeBytes content).append payload)
+      ((⟨hs, hslen, hsbound⟩ : Wasm1.BytesAt data afterId sizeBytes content).append payload)
 
 /-- An absent code section is justified by EOF or a complete non-code header.
 The header premise matters because the implementation checks its extent before

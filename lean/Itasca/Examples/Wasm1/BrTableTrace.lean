@@ -5,7 +5,7 @@ open Aeneas Aeneas.Std
 
 attribute [local simp] Itasca.Control.signature Itasca.Control.resultView
 
-namespace Itasca.BrTableTraceExamples
+namespace Itasca.Examples.Wasm1BrTableTrace
 
 open VisitorTrace
 
@@ -528,4 +528,4 @@ theorem loop_branch_label_type (env : module.Env) :
     core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-end Itasca.BrTableTraceExamples
+end Itasca.Examples.Wasm1BrTableTrace

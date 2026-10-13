@@ -1,6 +1,6 @@
 import Itasca.Spec.DeclaredReferences
 
-namespace Itasca.DeclaredReferencesExamples
+namespace Itasca.Examples.Wasm2DeclaredReferences
 
 open DeclaredReferences
 
@@ -162,4 +162,4 @@ theorem nested_reference_checked :
 theorem ordinary_call_needs_no_declaration : Instructions [] [.CALL (.mk_uN 0)] := by
   simp
 
-end Itasca.DeclaredReferencesExamples
+end Itasca.Examples.Wasm2DeclaredReferences

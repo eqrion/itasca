@@ -87,9 +87,9 @@ theorem stream.find_code_region.slices (bytes : Slice U8) (first last : Usize)
       (hf : finish.val ≤ bytes.length) :
       core.slice.index.Slice.index (core.slice.index.SliceIndexRangeUsizeSlice U8)
         bytes ⟨start, finish⟩ ⦃ region =>
-          Wasm.BytesAt bytes start region.val finish ⦄ := by
+          Wasm1.BytesAt bytes start region.val finish ⦄ := by
     step
-    apply Wasm.BytesAt.of_slice_view hs hf
+    apply Wasm1.BytesAt.of_slice_view hs hf
     assumption
   obtain ⟨environment, he, heSpan⟩ := WP.spec_imp_exists
     (slice_spec 0#usize first (by simp) (by omega))

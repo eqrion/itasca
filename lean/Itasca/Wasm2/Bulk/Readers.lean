@@ -2,12 +2,12 @@ import Itasca.Wasm2.Bulk.Operands
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 theorem memoryInitMetadata.spec (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
     memoryInitMetadata st data env ⦃ r => r.2.vals = st.vals ∧ r.2.ctrls = st.ctrls ∧
       ∀ idx, r.1 = .Ok idx → ∃ bytes,
-        Wasm.BytesAt data st.pos (bytes ++ [0#u8]) r.2.pos ∧ Leb128.Encoding bytes idx.val ∧
+        Wasm1.BytesAt data st.pos (bytes ++ [0#u8]) r.2.pos ∧ Leb128.Encoding bytes idx.val ∧
         (∃ count, env.data_count = some count ∧ idx.val < count.val) ∧ 0 < env.mem_types.val.length ⦄ := by
   obtain ⟨⟨res, middle⟩, hr, hv, hc, hd⟩ := WP.spec_imp_exists (code.take_data_index.spec st data env)
   dsimp only at hv hc hd
@@ -26,11 +26,11 @@ theorem memoryInitMetadata.spec (st : code.OpIterState) (data : Slice U8) (env :
       cases he
       obtain ⟨⟨bytes, hbs, hbl, hbb, hbe⟩, hcount⟩ := hd idx rfl
       obtain ⟨hzero, hmem⟩ := hod rfl
-      exact ⟨bytes, (Wasm.BytesAt.mk hbs hbl hbb).append hzero, hbe, hcount, hmem⟩
+      exact ⟨bytes, (Wasm1.BytesAt.mk hbs hbl hbb).append hzero, hbe, hcount, hmem⟩
 
 theorem memoryCopyMetadata.spec (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
     memoryCopyMetadata st data env ⦃ r => r.2.vals = st.vals ∧ r.2.ctrls = st.ctrls ∧
-      (r.1 = .Ok () → Wasm.BytesAt data st.pos [0#u8, 0#u8] r.2.pos ∧ 0 < env.mem_types.val.length) ⦄ := by
+      (r.1 = .Ok () → Wasm1.BytesAt data st.pos [0#u8, 0#u8] r.2.pos ∧ 0 < env.mem_types.val.length) ⦄ := by
   obtain ⟨⟨res, middle⟩, hr, hv, hc, hd⟩ := WP.spec_imp_exists (code.read_bulk_memory.spec st data env)
   dsimp only at hv hc hd
   cases res with
@@ -45,7 +45,7 @@ theorem memoryCopyMetadata.spec (st : code.OpIterState) (data : Slice U8) (env :
     dsimp only at hov hoc hod hok
     subst res
     obtain ⟨hp, hz, hpos⟩ := hod
-    exact ⟨(hd rfl).1.append (Wasm.BytesAt.byte data middle.pos out.pos _ hp hz hpos), (hd rfl).2⟩
+    exact ⟨(hd rfl).1.append (Wasm1.BytesAt.byte data middle.pos out.pos _ hp hz hpos), (hd rfl).2⟩
 
 /-- Sequential reference-index decoding preserves each byte span and compares
 the two resolved element types before the fixed operand checker runs. -/
@@ -83,4 +83,4 @@ theorem referencePairMetadata.spec
         exact ⟨middle.pos, ty, hd i ty rfl, hod j ty rfl⟩
       · simp [referencePairMetadata, hr, ho, he, hov, hoc, hv, hc]
 
-end Itasca.MultiValue
+end Itasca.Wasm2

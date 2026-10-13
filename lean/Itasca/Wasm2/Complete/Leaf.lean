@@ -4,7 +4,7 @@ import Itasca.Wasm2.Complete.Program
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- Read the opcode of an independent token encoding with the actual byte
 reader used by the multi-value body loop. -/
@@ -12,7 +12,7 @@ theorem At.read_byte {data start token next} (h : At data start token next) :
     ∃ opcode pos immediate,
       reader.read_byte data start = .ok (.Ok (opcode, pos)) ∧
       pos.val = start.val + 1 ∧ Immediate opcode token immediate ∧
-      Wasm.BytesAt data pos immediate next := by
+      Wasm1.BytesAt data pos immediate next := by
   have hb : start.val < data.length := by have := h.span; omega
   obtain ⟨_, hr, pos, rfl, hpos⟩ := WP.spec_imp_exists (reader.read_byte.spec data start hb)
   obtain ⟨opcode, imm, hi, ⟨_, hbyte⟩, hs⟩ := h.immediate pos hpos
@@ -26,7 +26,7 @@ inductive ControlImmediate : U8 → instr → List U8 → Prop where
   | brIf (idx : U32) {bytes} : Leb128.Encoding bytes idx.val →
       ControlImmediate 0x0D#u8 (.BR_IF (.mk_uN idx.val)) bytes
   | brTable (indices : List U32) (default : U32) {count entries final} :
-      Leb128.Encoding count indices.length → Wasm.IndicesEncoding indices entries →
+      Leb128.Encoding count indices.length → Wasm1.IndicesEncoding indices entries →
       Leb128.Encoding final default.val →
       ControlImmediate 0x0E#u8 (.BR_TABLE (indices.map (fun i => .mk_uN i.val)) (.mk_uN default.val))
         (count ++ entries ++ final)
@@ -37,7 +37,7 @@ inductive ControlImmediate : U8 → instr → List U8 → Prop where
       ControlImmediate 0x11#u8 (.CALL_INDIRECT (.mk_uN 0) (.mk_uN idx.val)) (bytes ++ [0#u8])
 
 /-- Exhaustive scalar/control classification of the independent plain grammar. -/
-theorem classify_plain {opcode op bytes} (h : Wasm.Immediate opcode (.plain op) bytes) :
+theorem classify_plain {opcode op bytes} (h : Wasm1.Immediate opcode (.plain op) bytes) :
     opcode.val ∉ controlOpcodes ∨ ControlImmediate opcode op bytes := by
   cases h with
   | br idx he => exact .inr (.br idx he)
@@ -59,9 +59,9 @@ theorem classify_plain {opcode op bytes} (h : Wasm.Immediate opcode (.plain op) 
     omega
   | _ => exact .inl (by decide)
 
-end Itasca.MultiValue
+end Itasca.Wasm2
 
-namespace Itasca.MultiValue.Completeness
+namespace Itasca.Wasm2.Completeness
 
 /-- Scalar dispatch accepts an independently encoded principal typing and
 preserves the current multi-value descriptor. The semantic return vector can
@@ -72,8 +72,8 @@ theorem Frame.scalar {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     (front input output : List valtype)
     (hmatch : EnvTranslation.Matches env semantic C) (hlocals : ctx.locals = semantic.locals)
     (hscalar : opcode.val ∉ controlOpcodes) (hsize : st.core.vals.val.length < Usize.max)
-    (hi : Wasm.Immediate opcode (.plain op) bytes)
-    (hb : Wasm.BytesAt data st.core.pos bytes next)
+    (hi : Wasm1.Immediate opcode (.plain op) bytes)
+    (hb : Wasm1.BytesAt data st.core.pos bytes next)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
     (ht : Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output))) :
     ∃ s, step st data env ctx index opcode = .ok (.Ok (), s) ∧
@@ -98,7 +98,7 @@ def LeafContract (data : Slice U8) (env : module.Env) (ctx : code.Context) (inde
     (op : instr) (bytes : List U8) (next : Usize) (front input output : List valtype),
     EnvTranslation.Matches env ctx C → Labels env st C →
     st.core.vals.val.length + 1000 < Usize.max →
-    Immediate opcode (.plain op) bytes → Wasm.BytesAt data st.core.pos bytes next →
+    Immediate opcode (.plain op) bytes → Wasm1.BytesAt data st.core.pos bytes next →
     Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input) →
     Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output)) →
     DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) op →
@@ -139,7 +139,7 @@ theorem scalar_leaf (data : Slice U8) (env : module.Env) (ctx : code.Context) (i
     (hmatch : EnvTranslation.Matches env ctx C)
     (hcap : st.core.vals.val.length + 1000 < Usize.max)
     (hscalar : opcode.val ∉ controlOpcodes)
-    (hi : Wasm.Immediate opcode (.plain op) bytes) (hb : Wasm.BytesAt data st.core.pos bytes next)
+    (hi : Wasm1.Immediate opcode (.plain op) bytes) (hb : Wasm1.BytesAt data st.core.pos bytes next)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
     (ht : Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output))) :
     ∃ s, step st data env ctx index opcode = .ok (.Ok (), s) ∧ s.core.pos = next ∧
@@ -155,4 +155,4 @@ theorem scalar_atom (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (hstep : LeafContract data env ctx index) : AtomProgram data env ctx index [.plain op] op :=
   atom_of_leaf data env ctx index hstep op
 
-end Itasca.MultiValue.Completeness
+end Itasca.Wasm2.Completeness

@@ -19,13 +19,13 @@ theorem encoded {data start p1 p2 p3 next memory offset count init}
     (hm : Leb128.Decoded data start memory p1)
     (ho : ModuleBinary.At ModuleBinary.ConstEncoding data p1 offset p2)
     (hc : Leb128.Decoded data p2 count p3)
-    (hi : Wasm.BytesAt data p3 init next) (hlen : init.length = count.val) :
+    (hi : Wasm1.BytesAt data p3 init next) (hlen : init.length = count.val) :
     ModuleBinary.At ModuleBinary.DataEncoding data start
       ⟨.Active memory offset, init⟩ next := by
   obtain ⟨mb, hm, hs⟩ := ModuleBinary.At.of_u32 hm
   obtain ⟨ob, ho, hos⟩ := ho
   obtain ⟨cb, hcs, hcl, hcb, hc⟩ := hc
-  have hspan : Wasm.BytesAt data p2 cb p3 := ⟨hcs, hcl, hcb⟩
+  have hspan : Wasm1.BytesAt data p2 cb p3 := ⟨hcs, hcl, hcb⟩
   refine ⟨mb ++ ob ++ (cb ++ init), ?_, ?_⟩
   · refine ⟨memory, offset, mb, ob, cb ++ init, rfl, hm, ho, ?_, rfl⟩
     apply ModuleBinary.ByteVecEncoding.iff.mpr
@@ -38,14 +38,14 @@ theorem profile_encoded {profile data start first p1 p2 p3 next flags memory exp
       data first (memory, explicit) p1)
     (ho : ModuleBinary.At ModuleBinary.ConstEncoding data p1 offset p2)
     (hc : Leb128.Decoded data p2 count p3)
-    (hi : Wasm.BytesAt data p3 init next) (hlen : init.length = count.val) :
+    (hi : Wasm1.BytesAt data p3 init next) (hlen : init.length = count.val) :
     ModuleBinary.At (ModuleBinary.DataEncodingFor profile) data start
       ⟨.Active memory offset, init⟩ next := by
   obtain ⟨fb, hf, hfs⟩ := ModuleBinary.At.of_u32 hf
   obtain ⟨mb, hm, hms⟩ := hm
   obtain ⟨ob, ho, hos⟩ := ho
   obtain ⟨cb, hcs, hcl, hcb, hc⟩ := hc
-  have hspan : Wasm.BytesAt data p2 cb p3 := ⟨hcs, hcl, hcb⟩
+  have hspan : Wasm1.BytesAt data p2 cb p3 := ⟨hcs, hcl, hcb⟩
   refine ⟨fb ++ mb ++ ob ++ (cb ++ init), ?_, ?_⟩
   · apply ModuleBinary.DataEncodingFor.of_parts hf hm ho
     exact ModuleBinary.ByteVecEncoding.iff.mpr ⟨cb, by simpa [hlen] using hc, rfl⟩
@@ -54,11 +54,11 @@ theorem profile_encoded {profile data start first p1 p2 p3 next flags memory exp
 theorem passive_encoded {data start first content next count init}
     (hf : Leb128.Decoded data start 1#u32 first)
     (hc : Leb128.Decoded data first count content)
-    (hi : Wasm.BytesAt data content init next) (hlen : init.length = count.val) :
+    (hi : Wasm1.BytesAt data content init next) (hlen : init.length = count.val) :
     ModuleBinary.At (ModuleBinary.DataEncodingFor .Wasm2) data start ⟨.Passive, init⟩ next := by
   obtain ⟨fb, hf, hfs⟩ := ModuleBinary.At.of_u32 hf
   obtain ⟨cb, hcs, hcl, hcb, hc⟩ := hc
-  have hcount : Wasm.BytesAt data first cb content := ⟨hcs, hcl, hcb⟩
+  have hcount : Wasm1.BytesAt data first cb content := ⟨hcs, hcl, hcb⟩
   exact ⟨fb ++ (cb ++ init), .passive hf
     (ModuleBinary.ByteVecEncoding.iff.mpr ⟨cb, by simpa [hlen] using hc, rfl⟩),
     hfs.append (hcount.append hi)⟩
@@ -255,7 +255,7 @@ theorem module.decode_data_section_loop.profile_spec (data : Slice U8) (env : mo
           · simpa [List.mem_singleton.mp he] using ht
         · scalar_tac
   · refine ⟨by simp, by simp, ?_, by simp [alloc.vec.Vec.new]⟩
-    exact ⟨[], .nil, Wasm.BytesAt.nil data start hstart⟩
+    exact ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩
 
 /-- The data count matches the list returned by the actual parser. -/
 @[step]
@@ -286,7 +286,7 @@ theorem module.decode_data_section.profile_spec (data : Slice U8) (pos : Usize) 
       obtain ⟨hlen, hbytes, hvalid⟩ := hp
       obtain ⟨bytes, he, hs⟩ := hbytes
       obtain ⟨countBytes, hcs, hcl, hcb, hce⟩ := hc
-      have hcspan : Wasm.BytesAt data pos countBytes start := ⟨hcs, hcl, hcb⟩
+      have hcspan : Wasm1.BytesAt data pos countBytes start := ⟨hcs, hcl, hcb⟩
       refine ⟨⟨countBytes ++ bytes, ?_, hcspan.append hs⟩, hvalid⟩
       exact ⟨countBytes, bytes, by simpa [hlen] using hce, he, rfl⟩
 

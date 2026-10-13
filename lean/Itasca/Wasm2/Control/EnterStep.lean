@@ -3,7 +3,7 @@ import Itasca.Wasm2.Totality
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 def Frames.Form.token (form : Frames.Form) (bt : signature.BlockType) : Token :=
   match form with
@@ -52,4 +52,4 @@ theorem Pending.enter_after {data env locals index st} (p : Pending data env loc
     simpa [he] using htrace
   · simp [hblocks]
 
-end Itasca.MultiValue
+end Itasca.Wasm2

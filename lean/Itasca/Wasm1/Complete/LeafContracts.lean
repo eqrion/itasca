@@ -17,7 +17,7 @@ def MemoryContract (data : Slice U8) (env : module.Env) (ctx : code.Context) : P
     EnvTranslation.Matches env ctx C → st.vals.val.length < Usize.max →
     MemoryMeaning.opcodeMeaning opcode = some op →
     Leb128.Encoding alignment arg.align.val → Leb128.Encoding offset arg.offset.val →
-    Wasm.BytesAt data st.pos (alignment ++ offset) next →
+    Wasm1.BytesAt data st.pos (alignment ++ offset) next →
     Sequence.Realizes f.current.polymorphic_base f.operands (front ++ input) →
     Instr_ok C (op.op arg) (.mk_functype (.mk_list input) (.mk_list output)) →
     StepResult f data env ctx opcode next (front ++ output)

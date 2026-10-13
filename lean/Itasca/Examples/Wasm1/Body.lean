@@ -5,7 +5,7 @@ import Itasca.Handler.SignedConst
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.CoreExamples
+namespace Itasca.Examples.Wasm1Body
 
 def emptyContext : code.Context := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _⟩
 
@@ -164,10 +164,10 @@ theorem i32_const_body_accepted (env : module.Env) :
     code.validate_body constBytes env i32Context = .ok (.Ok ()) := by
   let initial := Body.initial (.Value .I32)
   let first := { initial with pos := 1#usize }
-  have hencoded : SignedLeb.Decoded constBytes 1#usize (42#i32).val 2#usize := by
+  have hencoded : SignedLeb32.Decoded constBytes 1#usize (42#i32).val 2#usize := by
     refine ⟨[42#u8], rfl, rfl, by decide, [], 42#u8, rfl, by decide,
       by simp, by decide, ?_, by decide, by decide⟩
-    norm_num [SignedLeb.finalValue, Leb128.payload]
+    norm_num [SignedLeb32.finalValue, Leb128.payload]
   have hleb := reader.read_s32_leb.complete constBytes 1#usize 42#i32 2#usize hencoded
   obtain ⟨⟨_, pushed⟩, hconst, rfl, hv, hc, hp⟩ := WP.spec_imp_exists
     (code.read_i32_const.from_read first constBytes 42#i32 2#usize hleb
@@ -222,4 +222,4 @@ theorem drop_body_rejected (env : module.Env) :
     (read_at dropBytes (Body.initial .Empty) 1#usize code.OP_DROP (by decide) rfl
       (by simp [dropBytes, Body.initial, code.OP_DROP, alloc.vec.Vec.deref])) hstep
 
-end Itasca.CoreExamples
+end Itasca.Examples.Wasm1Body

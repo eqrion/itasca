@@ -4,7 +4,7 @@ import Itasca.Visitor.StepLift
 
 open Aeneas Aeneas.Std Result ControlFlow
 
-namespace Itasca.MultiValue.Visitor
+namespace Itasca.Wasm2.Visitor
 
 set_option maxHeartbeats 2000000 in
 /-- Accepting hooks preserve successful multi-value steps and the exact
@@ -134,4 +134,4 @@ theorem step_transfer {V W : Type} (visitor : code.OpVisitor V)
           st.core ois data env ctx ctx' opcode v v' w hscalar hlocals hs
         exact ⟨w', by simp [hw, core.result.Result.Insts.CoreOpsTry.branch]⟩
 
-end Itasca.MultiValue.Visitor
+end Itasca.Wasm2.Visitor

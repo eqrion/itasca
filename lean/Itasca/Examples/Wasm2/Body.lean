@@ -4,9 +4,9 @@ import Itasca.Examples.Wasm2.Grammar
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValueBody
+namespace Itasca.Examples.Wasm2Body
 
-open MultiValue
+open Wasm2
 
 def bytes (xs : List U8) (h : xs.length ≤ Usize.max := by scalar_tac) : Slice U8 :=
   alloc.vec.Vec.deref (alloc.vec.Vec.from xs h)
@@ -57,18 +57,18 @@ private theorem index_encoding (b : U8) (idx : U32) (hb : b.val < 64) (hi : idx.
   · omega
   · have := idx.hmax; scalar_tac
 
-private theorem zero32 : SignedLeb.Encoding [0#u8] (0#i32).val := by
+private theorem zero32 : SignedLeb32.Encoding [0#u8] (0#i32).val := by
   refine ⟨[], 0#u8, rfl, by decide, by simp, by decide, ?_, by decide, by decide⟩
-  norm_num [SignedLeb.finalValue, Leb128.payload]
+  norm_num [SignedLeb32.finalValue, Leb128.payload]
 
 private theorem zero64 : SignedLeb64.Encoding [0#u8] (0#i64).val := by
   refine ⟨[], 0#u8, rfl, by decide, by simp, by decide, ?_, by decide, by decide⟩
   norm_num [SignedLeb64.finalValue, Leb128.payload]
 
-def pairOps : List instr := [Core.i32Const 0#i32, ScalarConst.i64 0#i64]
+def pairOps : List instr := [Spec.i32Const 0#i32, ScalarConst.i64 0#i64]
 
 private theorem pair_wf : Forall wf_instr pairOps := by
-  simpa [pairOps, Forall] using And.intro (Core.i32Const_wf 0#i32) (ScalarConst.i64_wf 0#i64)
+  simpa [pairOps, Forall] using And.intro (Spec.i32Const_wf 0#i32) (ScalarConst.i64_wf 0#i64)
 
 private theorem pair_typed (C : context) (hC : wf_context C) :
     Instrs_ok C pairOps (.mk_functype (.mk_list []) (.mk_list [.I32, .I64])) := by
@@ -105,7 +105,7 @@ theorem block_typed : FunctionTyped env locals pairResult blockOps := by
     (.instr C _ _ _ hi hC block_wf) hC pair_wf (by simpa [Forall] using block_wf)
 
 def identityIf : instr := .IFELSE (blockType (.TypeIndex 1#u32)) [] []
-def ifOps : List instr := pairOps ++ [Core.i32Const 0#i32, identityIf]
+def ifOps : List instr := pairOps ++ [Spec.i32Const 0#i32, identityIf]
 def ifBytes : Slice U8 := bytes
   [0x41#u8, 0#u8, 0x42#u8, 0#u8, 0x41#u8, 0#u8, 0x04#u8, 1#u8, 0x0B#u8, 0x0B#u8]
 
@@ -114,16 +114,16 @@ theorem if_typed : FunctionTyped env locals pairResult ifOps := by
   let C := rootContext pairResult
   have hC := root_wf pairResult
   have hp := (((TypedPrefix.start C hC []).i32Const hC 0#i32).i64Const hC 0#i64).i32Const hC 0#i32
-  have hprefix : Instrs_ok C (pairOps ++ [Core.i32Const 0#i32])
+  have hprefix : Instrs_ok C (pairOps ++ [Spec.i32Const 0#i32])
       (.mk_functype (.mk_list []) (.mk_list [.I32, .I64, .I32])) := by
     simpa [pairOps, Sequence.stackTypes, Translate.valueType] using hp.typed _
       (Sequence.realizes_default false [.Val .I32, .Val .I64, .Val .I32])
   have hwf : wf_instr identityIf :=
     .instr_case_6 _ _ _ (blockType_wf _) (by simp [Forall]) (by simp [Forall])
-  have hi := MultiValueGrammar.identity_if env C hC rfl 1#u32 rfl rfl
+  have hi := Examples.Wasm2Grammar.identity_if env C hC rfl 1#u32 rfl rfl
   change Instrs_ok C ifOps (.mk_functype (.mk_list []) (.mk_list [.I32, .I64]))
   simpa [ifOps, pairOps, List.append_assoc] using
-    Instrs_ok.seq C (pairOps ++ [Core.i32Const 0#i32]) [identityIf] [] [.I32, .I64] [.I32, .I64, .I32]
+    Instrs_ok.seq C (pairOps ++ [Spec.i32Const 0#i32]) [identityIf] [] [.I32, .I64] [.I32, .I64, .I32]
       hprefix (.instr C _ _ _ hi hC hwf) hC hp.wellFormed (by simpa [Forall] using hwf)
 
 def loopInstr : instr := .LOOP (blockType (.TypeIndex 2#u32)) [.BR (.mk_uN 0)]
@@ -149,11 +149,11 @@ theorem loop_typed : FunctionTyped env locals emptyResult loopOps := by
     (.instr C _ _ _ hloop hC hwf) hC pair_wf (by simpa [Forall] using hwf)
 
 
-private theorem pair_emits : Emits [.plain (Core.i32Const 0#i32), .plain (ScalarConst.i64 0#i64)] pairOps :=
-  .simple (.simple .nil (.plain _ (Core.i32Const_wf 0#i32))) (.plain _ (ScalarConst.i64_wf 0#i64))
+private theorem pair_emits : Emits [.plain (Spec.i32Const 0#i32), .plain (ScalarConst.i64 0#i64)] pairOps :=
+  .simple (.simple .nil (.plain _ (Spec.i32Const_wf 0#i32))) (.plain _ (ScalarConst.i64_wf 0#i64))
 
 theorem block_encoded : BodyEncoding blockBytes blockOps := by
-  have h0 : At blockBytes 0#usize (.plain (Core.i32Const 0#i32)) 2#usize :=
+  have h0 : At blockBytes 0#usize (.plain (Spec.i32Const 0#i32)) 2#usize :=
     ⟨_, ⟨0x41#u8, [0#u8], rfl, .plain (.i32Const 0#i32 zero32)⟩, rfl, rfl, by decide⟩
   have h2 : At blockBytes 2#usize (.plain (ScalarConst.i64 0#i64)) 4#usize :=
     ⟨_, ⟨0x42#u8, [0#u8], rfl, .plain (.i64Const 0#i64 zero64)⟩, rfl, rfl, by decide⟩
@@ -166,11 +166,11 @@ theorem block_encoded : BodyEncoding blockBytes blockOps := by
   exact ⟨_, 8#usize, ((((((Consumed.nil 0#usize (by decide)).snoc h0).snoc h2).snoc h4).snoc h6).snoc h7), rfl, _, rfl, Emits.block (.TypeIndex 1#u32) pair_emits .nil⟩
 
 theorem if_encoded : BodyEncoding ifBytes ifOps := by
-  have h0 : At ifBytes 0#usize (.plain (Core.i32Const 0#i32)) 2#usize :=
+  have h0 : At ifBytes 0#usize (.plain (Spec.i32Const 0#i32)) 2#usize :=
     ⟨_, ⟨0x41#u8, [0#u8], rfl, .plain (.i32Const 0#i32 zero32)⟩, rfl, rfl, by decide⟩
   have h2 : At ifBytes 2#usize (.plain (ScalarConst.i64 0#i64)) 4#usize :=
     ⟨_, ⟨0x42#u8, [0#u8], rfl, .plain (.i64Const 0#i64 zero64)⟩, rfl, rfl, by decide⟩
-  have h4 : At ifBytes 4#usize (.plain (Core.i32Const 0#i32)) 6#usize :=
+  have h4 : At ifBytes 4#usize (.plain (Spec.i32Const 0#i32)) 6#usize :=
     ⟨_, ⟨0x41#u8, [0#u8], rfl, .plain (.i32Const 0#i32 zero32)⟩, rfl, rfl, by decide⟩
   have h6 : At ifBytes 6#usize (.if_ (.TypeIndex 1#u32)) 8#usize :=
     ⟨_, ⟨0x04#u8, [1#u8], rfl, .if_ (index_encoding 1#u8 1#u32 (by decide) rfl)⟩, rfl, rfl, by decide⟩
@@ -178,10 +178,10 @@ theorem if_encoded : BodyEncoding ifBytes ifOps := by
     ⟨_, ⟨0x0B#u8, [], rfl, .end_⟩, rfl, rfl, by decide⟩
   have h9 : At ifBytes 9#usize (.end_) 10#usize :=
     ⟨_, ⟨0x0B#u8, [], rfl, .end_⟩, rfl, rfl, by decide⟩
-  exact ⟨_, 10#usize, (((((((Consumed.nil 0#usize (by decide)).snoc h0).snoc h2).snoc h4).snoc h6).snoc h8).snoc h9), rfl, _, rfl, Emits.ifEnd (.TypeIndex 1#u32) (Emits.simple pair_emits (.plain _ (Core.i32Const_wf 0#i32))) .nil⟩
+  exact ⟨_, 10#usize, (((((((Consumed.nil 0#usize (by decide)).snoc h0).snoc h2).snoc h4).snoc h6).snoc h8).snoc h9), rfl, _, rfl, Emits.ifEnd (.TypeIndex 1#u32) (Emits.simple pair_emits (.plain _ (Spec.i32Const_wf 0#i32))) .nil⟩
 
 theorem loop_encoded : BodyEncoding loopBytes loopOps := by
-  have h0 : At loopBytes 0#usize (.plain (Core.i32Const 0#i32)) 2#usize :=
+  have h0 : At loopBytes 0#usize (.plain (Spec.i32Const 0#i32)) 2#usize :=
     ⟨_, ⟨0x41#u8, [0#u8], rfl, .plain (.i32Const 0#i32 zero32)⟩, rfl, rfl, by decide⟩
   have h2 : At loopBytes 2#usize (.plain (ScalarConst.i64 0#i64)) 4#usize :=
     ⟨_, ⟨0x42#u8, [0#u8], rfl, .plain (.i64Const 0#i64 zero64)⟩, rfl, rfl, by decide⟩
@@ -267,22 +267,22 @@ without evaluating or assuming any handler succeeds. -/
 theorem block_accepted : code.validate_multi_value_body blockBytes env locals 0#u32 = .ok (.Ok ()) :=
   code.validate_multi_value_body.wasm_complete_of_typing blockBytes env locals 0#u32 pairResult blockOps
     environment_limits (by simp [blockBytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
-    rfl block_encoded block_typed (by simp [blockOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, pairOps, identityBlock, identityIf, loopInstr, tableBlock, tableInner, heterogeneousTable, Core.i32Const, ScalarConst.i64, BrTable.instruction])
+    rfl block_encoded block_typed (by simp [blockOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, pairOps, identityBlock, identityIf, loopInstr, tableBlock, tableInner, heterogeneousTable, Spec.i32Const, ScalarConst.i64, BrTable.instruction])
 
 theorem if_accepted : code.validate_multi_value_body ifBytes env locals 0#u32 = .ok (.Ok ()) :=
   code.validate_multi_value_body.wasm_complete_of_typing ifBytes env locals 0#u32 pairResult ifOps
     environment_limits (by simp [ifBytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
-    rfl if_encoded if_typed (by simp [ifOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, pairOps, identityBlock, identityIf, loopInstr, tableBlock, tableInner, heterogeneousTable, Core.i32Const, ScalarConst.i64, BrTable.instruction])
+    rfl if_encoded if_typed (by simp [ifOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, pairOps, identityBlock, identityIf, loopInstr, tableBlock, tableInner, heterogeneousTable, Spec.i32Const, ScalarConst.i64, BrTable.instruction])
 
 theorem loop_accepted : code.validate_multi_value_body loopBytes env locals 3#u32 = .ok (.Ok ()) :=
   code.validate_multi_value_body.wasm_complete_of_typing loopBytes env locals 3#u32 emptyResult loopOps
     environment_limits (by simp [loopBytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
-    rfl loop_encoded loop_typed (by simp [loopOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, pairOps, identityBlock, identityIf, loopInstr, tableBlock, tableInner, heterogeneousTable, Core.i32Const, ScalarConst.i64, BrTable.instruction])
+    rfl loop_encoded loop_typed (by simp [loopOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, pairOps, identityBlock, identityIf, loopInstr, tableBlock, tableInner, heterogeneousTable, Spec.i32Const, ScalarConst.i64, BrTable.instruction])
 
 theorem table_accepted : code.validate_multi_value_body tableBytes env locals 0#u32 = .ok (.Ok ()) :=
   code.validate_multi_value_body.wasm_complete_of_typing tableBytes env locals 0#u32 pairResult tableOps
     environment_limits (by simp [tableBytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
-    rfl table_encoded table_typed (by simp [tableOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, pairOps, identityBlock, identityIf, loopInstr, tableBlock, tableInner, heterogeneousTable, Core.i32Const, ScalarConst.i64, BrTable.instruction])
+    rfl table_encoded table_typed (by simp [tableOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, pairOps, identityBlock, identityIf, loopInstr, tableBlock, tableInner, heterogeneousTable, Spec.i32Const, ScalarConst.i64, BrTable.instruction])
 
 /-- The same actual accepted runs produce independent soundness certificates. -/
 theorem block_validated : Validated blockBytes env locals 0#u32 :=
@@ -297,4 +297,4 @@ theorem loop_validated : Validated loopBytes env locals 3#u32 :=
 theorem table_validated : Validated tableBytes env locals 0#u32 :=
   code.validate_multi_value_body.wasm_sound tableBytes env locals 0#u32 table_accepted
 
-end Itasca.MultiValueBody
+end Itasca.Examples.Wasm2Body

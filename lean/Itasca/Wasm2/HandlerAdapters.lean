@@ -7,7 +7,7 @@ namespace Itasca
 
 /- State-only presentations of metadata-returning handlers. -/
 
-def MultiValue.branchCore
+def Wasm2.branchCore
   (st : _root_.Itasca.code.BodyState) (data : Slice Std.U8)
   (env : _root_.Itasca.module.Env) (conditional : Bool) :
   Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
@@ -67,7 +67,7 @@ def MultiValue.branchCore
         Unit (core.convert.FromSame _root_.Itasca.error.OpError) residual
     ok (r1, st1)
 
-def MultiValue.callCore (st : code.BodyState) (data : Slice U8)
+def Wasm2.callCore (st : code.BodyState) (data : Slice U8)
     (env : module.Env) (indirect : Bool) :
     Result (core.result.Result Unit error.OpError × code.BodyState) := do
   if indirect then
@@ -92,8 +92,8 @@ def MultiValue.callCore (st : code.BodyState) (data : Slice U8)
 
 theorem code.branch.eq_core (st : code.BodyState) (data : Slice U8)
     (env : module.Env) (conditional : Bool) :
-    code.branch st data env conditional = MultiValue.branchCore st data env conditional := by
-  simp only [code.branch, code.branch_info, MultiValue.branchCore,
+    code.branch st data env conditional = Wasm2.branchCore st data env conditional := by
+  simp only [code.branch, code.branch_info, Wasm2.branchCore,
     code.read_multi_value_label, Std.bind_assoc]
   congr 1
   funext x
@@ -126,17 +126,17 @@ theorem code.branch.eq_core (st : code.BodyState) (data : Slice U8)
 
 theorem code.call.eq_core (st : code.BodyState) (data : Slice U8)
     (env : module.Env) (indirect : Bool) :
-    code.call st data env indirect = MultiValue.callCore st data env indirect := by
+    code.call st data env indirect = Wasm2.callCore st data env indirect := by
   cases indirect with
   | true =>
-    simp only [code.call, MultiValue.callCore, ↓reduceIte]
+    simp only [code.call, Wasm2.callCore, ↓reduceIte]
     congr 1
     funext pair
     obtain ⟨r, out⟩ := pair
     cases r <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | false =>
-    simp only [code.call, code.call_info, code.take_index, MultiValue.callCore,
+    simp only [code.call, code.call_info, code.take_index, Wasm2.callCore,
       Bool.false_eq_true, ↓reduceIte, Std.bind_assoc]
     congr 1
     funext r

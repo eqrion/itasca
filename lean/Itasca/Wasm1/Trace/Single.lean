@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.VisitorTrace
 
 /-- An ordinary step return records its exact independently encoded callback chunk. -/
-def StepRecords {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+def StepRecords {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation) (opcode : U8) : Prop :=
   ∀ v result final v', code.step visitor st data env ctx opcode v = .ok (result, final, v') →
     ∃ observations, observe v' = observe v ++ observations ∧
@@ -21,7 +21,7 @@ theorem run_step_trace {A V : Type} (data : Slice U8) (start : Usize)
     (hrecords : Records visitor observe) (action : A → Action)
     (hbytes : ∀ s a, read = .ok (.Ok a, s) → ∃ token,
       (action a).token [] = some token ∧ (action a).opcode ≠ some 0x0E#u8 ∧
-      Wasm.At data start token s.pos)
+      Wasm1.At data start token s.pos)
     (v : V) (result : BodyResult) (final : code.OpIterState) (v' : V)
     (h : CoreVisitor.run read (fun v s a => invoke visitor v (.op s (action a))) v =
       .ok (result, final, v')) :

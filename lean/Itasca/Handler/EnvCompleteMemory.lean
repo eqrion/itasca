@@ -20,7 +20,7 @@ theorem code.read_memory_size.complete (st : code.OpIterState) (data : Slice U8)
   refine ⟨(.Ok (), s), ?_, rfl, hcs, hps, segment ++ [.Val .I32], ?_, by simp, ?_⟩
   · simp [code.read_memory_size, hzero, hmem, hpush, core.result.Result.Insts.CoreOpsTry.branch]
   · simpa [hv, List.append_assoc] using hvs
-  · exact (Frames.realizes_append_concrete _ segment [.I32] _).mpr ⟨before, hr, rfl⟩
+  · exact (Sequence.realizes_append_concrete _ segment [.I32] _).mpr ⟨before, hr, rfl⟩
 
 theorem code.read_memory_grow.complete (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (next : Usize) (hz : reader.read_byte data st.pos = .ok (.Ok (0#u8, next)))
@@ -43,7 +43,7 @@ theorem code.read_memory_grow.complete (st : code.OpIterState) (data : Slice U8)
     rest ++ [.Val .I32], ?_, by simpa using Nat.add_le_add_right hlen 1, ?_⟩
   · simp [code.read_memory_grow, hzero, hmem, hpop, hpush, core.result.Result.Insts.CoreOpsTry.branch]
   · simpa [hvs, List.append_assoc] using hv'
-  · exact (Frames.realizes_append_concrete _ rest [.I32] _).mpr ⟨before, hrest, rfl⟩
+  · exact (Sequence.realizes_append_concrete _ rest [.I32] _).mpr ⟨before, hrest, rfl⟩
 
 theorem code.read_load.complete (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (next : Usize) (arg : code.MemArg) (t : types.ValueType) (natural : U32)
@@ -65,7 +65,7 @@ theorem code.read_load.complete (st : code.OpIterState) (data : Slice U8) (env :
     rest ++ [.Val t], ?_, by simpa using Nat.add_le_add_right hlen 1, ?_⟩
   · simp [code.read_load, hd, hcheck, hpop, hpush, core.result.Result.Insts.CoreOpsTry.branch]
   · simpa [hvs, List.append_assoc] using hv'
-  · exact (Frames.realizes_append_concrete _ rest [t] _).mpr ⟨before, hrest, rfl⟩
+  · exact (Sequence.realizes_append_concrete _ rest [t] _).mpr ⟨before, hrest, rfl⟩
 
 theorem code.read_store.complete (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (next : Usize) (arg : code.MemArg) (t : types.ValueType) (natural : U32)

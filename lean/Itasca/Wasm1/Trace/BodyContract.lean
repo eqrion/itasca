@@ -9,7 +9,7 @@ namespace Itasca.VisitorTrace
 /-- Byte provenance and stopping for every ordinary returned step. -/
 def StepContract {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (bt : code.BlockType) : Prop :=
-  ∀ st (p : Wasm.Pending data env ctx bt st) v result out v',
+  ∀ st (p : Wasm1.Pending data env ctx bt st) v result out v',
     code.step visitor st data env ctx (data.val[p.start.val]'p.inbounds) v = .ok (result, out, v') →
     ∃ observations, observe v' = observe v ++ observations ∧
       StepTrace data p.start observations result out
@@ -49,7 +49,7 @@ theorem code.validate_body_with_loop.trace_of_contract {V : Type}
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (bt : code.BlockType)
     (htrace : VisitorTrace.StepContract visitor observe data env ctx bt)
     (st : code.OpIterState) (v v' : V) (result : VisitorTrace.BodyResult)
-    (hi : Wasm.State data env ctx bt st)
+    (hi : Wasm1.State data env ctx bt st)
     (h : code.validate_body_with_loop visitor data env ctx.locals ctx.results v st = .ok (result, v')) :
     ∃ observations, observe v' = observe v ++ observations ∧
       VisitorTrace.BodyTrace data st.pos observations result := by
@@ -90,7 +90,7 @@ theorem code.validate_body_with_loop.trace_of_contract {V : Type}
           cases u
           have hdefault := code.step.accepted_erase visitor {st with pos := next} out
             data env ctx data.val[st.pos.val] v w hs
-          have hprogress := (Wasm.steps code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+          have hprogress := (Wasm1.steps code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
             FullVisitor.empty_total data env ctx bt).contract
             code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor data env ctx bt st () hi hc hp next hnext
           rw [hdefault, WP.spec_ok] at hprogress
@@ -133,7 +133,7 @@ theorem code.validate_body_with.trace_of_contract {V : Type}
   · rw [if_neg hsize, code.start_function.raw_spec] at h
     simp only [bind_ok] at h
     exact code.validate_body_with_loop.trace_of_contract visitor observe data env ctx _ htrace
-      _ v v' result (Wasm.State.start data env ctx _ (by scalar_tac))
+      _ v v' result (Wasm1.State.start data env ctx _ (by scalar_tac))
       (by simpa [alloc.vec.Vec.deref] using h)
 
 end Itasca

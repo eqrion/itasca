@@ -96,13 +96,13 @@ theorem code.validate_body_with.accepted_erase {V : Type} (visitor : code.OpVisi
     (haccepted : code.validate_body_with visitor data env ctx v = .ok (.Ok (), v')) :
     code.validate_body data env ctx = .ok (.Ok ()) := by
   let bt := Body.initialBlockType ctx.results.val
-  have hsteps := Wasm.steps code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+  have hsteps := Wasm1.steps code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
     FullVisitor.empty_total data env ctx bt
   have hempty := code.validate_body_with.accepted_erase_of_contract visitor data env ctx
-    (Wasm.State data env ctx bt)
+    (Wasm1.State data env ctx bt)
     (hsteps.contract code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor data env ctx bt)
     (fun st st' opcode v v' h => code.step.accepted_erase visitor st st' data env ctx opcode v v' h)
-    (fun hsize => Wasm.State.start data env ctx bt hsize) v v' haccepted
+    (fun hsize => Wasm1.State.start data env ctx bt hsize) v v' haccepted
   simp [code.validate_body, hempty]
 
 /-- Soundness of accepted bodies needs no visitor totality premise and no prevalidated-byte profile. -/
@@ -110,7 +110,7 @@ theorem code.validate_body_with.wasm_sound {V : Type} (visitor : code.OpVisitor 
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (bt : code.BlockType)
     (hresults : ctx.results.val = Control.results bt) (v v' : V)
     (haccepted : code.validate_body_with visitor data env ctx v = .ok (.Ok (), v')) :
-    Wasm.Validated data env ctx bt :=
+    Wasm1.Validated data env ctx bt :=
   code.validate_body.wasm_sound data env ctx bt hresults
     (code.validate_body_with.accepted_erase visitor data env ctx v v' haccepted)
 

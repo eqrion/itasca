@@ -2,7 +2,7 @@ import Itasca.Wasm2.Trace.ControlRecords
 
 open Aeneas Aeneas.Std Result ControlFlow
 
-namespace Itasca.MultiValue.CallbackTrace
+namespace Itasca.Wasm2.CallbackTrace
 
 open VisitorTrace Visitor
 
@@ -138,9 +138,9 @@ theorem table_loop_records {V : Type} (visitor : code.OpVisitor V)
             · have hn' : count.val - j.val + 1 = n := by scalar_tac
               simpa [hn'] using htrace.prepend hd
 
-end Itasca.MultiValue.CallbackTrace
+end Itasca.Wasm2.CallbackTrace
 
-namespace Itasca.MultiValue.CallbackTrace
+namespace Itasca.Wasm2.CallbackTrace
 
 open VisitorTrace
 
@@ -189,7 +189,7 @@ theorem table_records {data env locals index st} (p : Pending data env locals in
       simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, Std.uncurry] at run
       obtain ⟨observations, log, trace⟩ := table_loop_records visitor observe records
         ⟨s⟩ data env hs (by simp) count 0#u32 none (by simp) v result final v' run
-      have hop : Wasm.BytesAt data p.start [0x0E#u8] st.core.pos :=
+      have hop : Wasm1.BytesAt data p.start [0x0E#u8] st.core.pos :=
         .byte data p.start st.core.pos 0x0E#u8 p.inbounds byte p.pos
       have hpos : s.pos = first := hp
       simp only [hpos] at trace
@@ -200,7 +200,7 @@ theorem table_records {data env locals index st} (p : Pending data env locals in
         exact .unfinished e ⟨st.core.pos, count, first, _, _, hop, hcount, labels, len⟩ outcomes
       | complete labels len fallback outcomes =>
         refine .complete (.table hop hcount labels len fallback ?_) ?_
-        · exact At.plain (Wasm.At.of_br_table count _ _ p.inbounds byte p.pos hcount len
+        · exact At.plain (Wasm1.At.of_br_table count _ _ p.inbounds byte p.pos hcount len
             (labels_decoded labels) fallback)
         · exact (Outcomes.single _ _).prepend outcomes
 
@@ -219,9 +219,9 @@ theorem dispatch_br_table {V : Type} (visitor : code.OpVisitor V)
   obtain ⟨r, s, w⟩ := pair
   cases r <;> simp
 
-end Itasca.MultiValue.CallbackTrace
+end Itasca.Wasm2.CallbackTrace
 
-namespace Itasca.MultiValue.CallbackTrace
+namespace Itasca.Wasm2.CallbackTrace
 
 open VisitorTrace
 
@@ -234,4 +234,4 @@ theorem step_br_table {data env locals index st} (p : Pending data env locals in
   rw [dispatch_br_table] at run
   exact table_records p visitor observe records byte v result final v' run
 
-end Itasca.MultiValue.CallbackTrace
+end Itasca.Wasm2.CallbackTrace

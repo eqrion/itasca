@@ -82,8 +82,8 @@ theorem Effect.append_layout {profile} {data origin pos first next env result be
     (h : Effect (profile := profile) data first env before id next result after)
     (hh : SectionHeader data pos id first next)
     (hl : Layout.Valid last before l profile) (ho : last < (sectionRank id).val)
-    (hs : Wasm.BytesAt data origin l.bytes pos) :
-    ∃ updated, Layout.Valid (sectionRank id).val after updated profile ∧ Wasm.BytesAt data origin updated.bytes next := by
+    (hs : Wasm1.BytesAt data origin l.bytes pos) :
+    ∃ updated, Layout.Valid (sectionRank id).val after updated profile ∧ Wasm1.BytesAt data origin updated.bytes next := by
   have hallowed := h.allowed hl.allowed
   rcases hl.future with ⟨hf1, hf2, hf3, hf4, hf5, hf6, hf7, hf8, hf9, hf10⟩
   cases h with
@@ -347,8 +347,8 @@ theorem Effect.append_layout {profile} {data origin pos first next env result be
 theorem Run.append_layout {profile} {data initial decls start initialId after afterDecls next id origin l}
     (h : Run (profile := profile) data initial decls start initialId after afterDecls next id)
     (hl : Layout.Valid initialId.val decls l profile)
-    (hs : Wasm.BytesAt data origin l.bytes start) :
-    ∃ updated, Layout.Valid id.val afterDecls updated profile ∧ Wasm.BytesAt data origin updated.bytes next := by
+    (hs : Wasm1.BytesAt data origin l.bytes start) :
+    ∃ updated, Layout.Valid id.val afterDecls updated profile ∧ Wasm1.BytesAt data origin updated.bytes next := by
   induction h with
   | nil => exact ⟨l, hl, hs⟩
   | custom _ hc ih =>
@@ -370,10 +370,10 @@ theorem Layout.Valid.encoding {profile last decls l} (h : Layout.Valid last decl
 /-- Successful section histories have the full independently encoded prefix. -/
 theorem Run.encoding {profile} {data initial start after decls next id}
     (h : Run (profile := profile) data initial {} start 0#u8 after decls next id)
-    (hh : Wasm.BytesAt data 0#usize magicVersion start) :
+    (hh : Wasm1.BytesAt data 0#usize magicVersion start) :
     At (fun decls bytes => PrefixEncoding decls bytes profile) data 0#usize decls next := by
   obtain ⟨layout, hv, hb⟩ := h.append_layout (Layout.valid_empty profile)
-    (show Wasm.BytesAt data start (Layout.bytes {}) start from Wasm.BytesAt.nil data start hh.bound)
+    (show Wasm1.BytesAt data start (Layout.bytes {}) start from Wasm1.BytesAt.nil data start hh.bound)
   exact ⟨magicVersion ++ layout.bytes, hv.encoding, hh.append hb⟩
 
 end Itasca.ModuleEnv

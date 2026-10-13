@@ -2,7 +2,7 @@ import Itasca.Handler.Sequence
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Frames
+namespace Itasca.Sequence
 
 private theorem accepts_concrete (rs : List types.ValueType) (ts : List valtype) :
     List.Forall₂ Sequence.Accepts (rs.map code.StackType.Val) ts ↔
@@ -68,4 +68,4 @@ theorem ResumePrefix.finish {C : context} {ops : List instr} {poly : Bool}
         (.instr C op inputs _ hop hC hwf) hC (by simpa [Forall] using hwf))
       hC h.wellFormed (by simpa [Forall] using hwf)
 
-end Itasca.Frames
+end Itasca.Sequence

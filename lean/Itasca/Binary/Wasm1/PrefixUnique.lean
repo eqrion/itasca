@@ -4,7 +4,7 @@ import Itasca.Handler.NumericDispatch
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Wasm
+namespace Itasca.Wasm1
 
 open ModuleBinary
 
@@ -109,7 +109,7 @@ theorem token_prefix_unique : PrefixUnique TokenEncoding := by
 theorem tokens_unique : Unique (Rep TokenEncoding) :=
   token_prefix_unique.rep_unique (by rintro _ _ ⟨op, immediate, rfl, _⟩; simp)
 
-end Itasca.Wasm
+end Itasca.Wasm1
 
 namespace Itasca.ModuleBinary
 
@@ -117,7 +117,7 @@ namespace Itasca.ModuleBinary
 host-size bounds. Neither encoding needs to be well typed. -/
 theorem BodyEncoding.unique : Unique BodyEncoding := by
   rintro xs ys bytes ⟨xt, hx, hxs⟩ ⟨yt, hy, hys⟩
-  obtain rfl := Wasm.tokens_unique hx hy
+  obtain rfl := Wasm1.tokens_unique hx hy
   exact hxs.unique hys
 
 end Itasca.ModuleBinary

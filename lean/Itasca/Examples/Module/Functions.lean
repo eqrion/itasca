@@ -4,7 +4,7 @@ import Itasca.Stream.SliceLayout
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.ModuleFunctionExamples
+namespace Itasca.Examples.ModuleFunctions
 
 open ModuleBinary ModuleEnv
 
@@ -39,7 +39,7 @@ def layout : Layout :=
     exports := [7#u8,5#u8,1#u8,1#u8,0x72#u8,0#u8,1#u8]
     start := [8#u8,1#u8,1#u8] }
 def codeBytes : List U8 := [10#u8,8#u8,1#u8,6#u8,1#u8,1#u8,0x7F#u8,0x10#u8,0#u8,0x0B#u8]
-def input : Slice U8 := ModuleExamples.bytes (magicVersion ++ layout.bytes ++ codeBytes)
+def input : Slice U8 := Examples.ModuleBasic.bytes (magicVersion ++ layout.bytes ++ codeBytes)
   (by simp [magicVersion, layout, Layout.bytes, codeBytes]; scalar_tac)
 
 private theorem ascii (b : U8) (hb : b.val ≤ 127) : NameEncoding [b] [1#u8,b] :=
@@ -119,9 +119,9 @@ theorem code_encoding : SectionEncoding 10#u8 (VecEncoding CodeEncodingWithinLim
   refine ⟨by simp [entry, Code.declared, limits.MAX_LOCALS], [6#u8], [1#u8,1#u8,0x7F#u8],
     [0x10#u8,0#u8,0x0B#u8], leb 6#u8, one ⟨[1#u8], leb 1#u8, rfl⟩, ?_, by simp [limits.MAX_FUNCTION_BYTES], rfl⟩
   refine ⟨[.plain (.CALL (.mk_uN 0)), .end_], ?_, ?_⟩
-  · exact Rep.cons (show Wasm.TokenEncoding (.plain (.CALL (.mk_uN 0))) [0x10#u8,0#u8] from
+  · exact Rep.cons (show Wasm1.TokenEncoding (.plain (.CALL (.mk_uN 0))) [0x10#u8,0#u8] from
       ⟨0x10#u8, [0#u8], rfl, .call 0#u32 (leb 0#u8)⟩)
-      (Rep.cons (show Wasm.TokenEncoding .end_ [0x0B#u8] from ⟨0x0B#u8, [], rfl, .end_⟩) Rep.nil)
+      (Rep.cons (show Wasm1.TokenEncoding .end_ [0x0B#u8] from ⟨0x0B#u8, [], rfl, .end_⟩) Rep.nil)
   · exact ⟨[.plain (.CALL (.mk_uN 0))], rfl,
       .simple .nil (.plain _ (.instr_case_10 _ (EnvTranslation.index_wf 0#u32)))⟩
 
@@ -147,13 +147,13 @@ theorem entry_typed {decls env} (hr : Ready raw 10 decls env) : CodeEntry.Typed 
 
 theorem prefix_encoding : At PrefixEncoding input 0#usize declarations 37#usize := by
   refine ⟨magicVersion ++ layout.bytes, layout_valid.encoding, ?_⟩
-  constructor <;> simp [input, ModuleExamples.bytes, alloc.vec.Vec.deref,
+  constructor <;> simp [input, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref,
     magicVersion, layout, Layout.bytes, codeBytes]
 
 theorem code_at : At (SectionEncoding 10#u8 (VecEncoding CodeEncodingWithinLimits))
     input 37#usize [entry] 47#usize := by
   refine ⟨codeBytes, code_encoding, ?_⟩
-  constructor <;> simp [input, ModuleExamples.bytes, alloc.vec.Vec.deref,
+  constructor <;> simp [input, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref,
     magicVersion, layout, Layout.bytes, codeBytes]
 
 /-- The parsed prefix has one imported and one defined function, and stops
@@ -170,14 +170,14 @@ theorem functions_accepted : ∃ decoded, module.validate_module input .Wasm1 = 
   let tail : module.Tail := ⟨alloc.vec.Vec.new _⟩
   have ht : At ModuleTail.Encoding input 47#usize raw.data (Slice.len input) := by
     refine ⟨[], ⟨[], [], ⟨[], [], .nil, .absent, rfl⟩, .nil, rfl⟩, ?_⟩
-    constructor <;> simp [input, ModuleExamples.bytes, alloc.vec.Vec.deref,
+    constructor <;> simp [input, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref,
       magicVersion, layout, Layout.bytes, codeBytes]
   obtain ⟨first, hh, _⟩ := code_at.section_split
   have hl : ModuleLayout.Layout input raw declarations 37#usize 47#usize :=
     ⟨rfl, prefix_encoding, .inl code_at, ht, .inr ⟨10#u8, first, 47#usize, hh, by decide⟩⟩
   obtain ⟨env, ha⟩ := StreamSliceExamplesSupport.accepted_layout input raw declarations
     37#usize 47#usize hl (by
-      simp [input, ModuleExamples.bytes, alloc.vec.Vec.deref,
+      simp [input, Examples.ModuleBasic.bytes, alloc.vec.Vec.deref,
         magicVersion, layout, Layout.bytes, codeBytes, limits.MAX_MODULE_BYTES])
     requirements tail rfl (by
       intro decls env hr
@@ -193,4 +193,4 @@ theorem functions_validated : ∃ decoded, module.validate_module input .Wasm1 =
   obtain ⟨decoded, ha⟩ := functions_accepted
   exact ⟨decoded, ha, module.validate_module.wasm_sound _ _ ha⟩
 
-end Itasca.ModuleFunctionExamples
+end Itasca.Examples.ModuleFunctions

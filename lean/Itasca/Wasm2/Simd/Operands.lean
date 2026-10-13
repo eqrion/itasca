@@ -3,7 +3,7 @@ import Itasca.Wasm2.Simd.Runtime
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Simd
+namespace Itasca.Wasm2.Simd
 
 def Signature.popTypes : Signature → List types.ValueType
   | .unary | .test => [.V128]
@@ -61,4 +61,4 @@ theorem signature_fixed (st : code.OpIterState) (sig : Signature) :
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, bind_ok, Std.uncurry, core.convert.FromSame.from]
   all_goals first | exact conversion_fixed .. | exact binary_fixed .. | simp
 
-end Itasca.MultiValue.Simd
+end Itasca.Wasm2.Simd

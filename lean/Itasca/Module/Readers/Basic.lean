@@ -15,7 +15,7 @@ theorem At.of_u32 {data start value next} (h : Leb128.Decoded data start value n
   exact ⟨bytes, he, hs, hl, hb⟩
 
 theorem At.byte {data start byte next}
-    (h : At ByteEncoding data start byte next) : Wasm.BytesAt data start [byte] next := by
+    (h : At ByteEncoding data start byte next) : Wasm1.BytesAt data start [byte] next := by
   obtain ⟨bytes, rfl, hs⟩ := h
   exact hs
 
@@ -55,7 +55,7 @@ theorem reader.read_byte.module_spec (data : Slice U8) (pos : Usize) :
   by_cases hb : pos.val < data.length
   · apply WP.spec_mono (reader.read_byte.spec data pos hb)
     rintro r ⟨next, rfl, hn⟩
-    exact ⟨_, rfl, Wasm.BytesAt.byte data pos next _ hb rfl hn⟩
+    exact ⟨_, rfl, Wasm1.BytesAt.byte data pos next _ hb rfl hn⟩
   · simp [reader.read_byte.eof data pos (by omega)]
 
 /-- The subtraction-based bounds check terminates for an in-bounds cursor. -/
@@ -139,7 +139,7 @@ private theorem copy_bytes_body (data : Slice U8) (last : Usize) (out : alloc.ve
 @[step]
 theorem module.copy_bytes.spec (data : Slice U8) (first last : Usize)
     (hf : first.val ≤ last.val) (hb : last.val ≤ data.length) :
-    module.copy_bytes data first last ⦃ out => Wasm.BytesAt data first out.val last ⦄ := by
+    module.copy_bytes data first last ⦃ out => Wasm1.BytesAt data first out.val last ⦄ := by
   unfold module.copy_bytes module.copy_bytes_loop
   apply loop.spec_decr_nat (fun s => last.val - s.2.val)
     (fun s => first.val ≤ s.2.val ∧ s.2.val ≤ last.val ∧

@@ -4,7 +4,7 @@ import Itasca.Stream.SplitTotal
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.StreamExamples
+namespace Itasca.Examples.Stream
 
 /-- Concrete fixtures are bounded vectors checked by the kernel. -/
 def bytes (xs : List U8) (h : xs.length ≤ Usize.max := by scalar_tac) : Slice U8 :=
@@ -175,4 +175,4 @@ theorem empty_slice_rejected : stream.validate_module_slice emptyBytes .Wasm1 =
     module.validate_env_with, hheader, hadd, core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-end Itasca.StreamExamples
+end Itasca.Examples.Stream

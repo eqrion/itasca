@@ -4,7 +4,7 @@ import Itasca.Wasm2.Invariant
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 theorem Frames.Open.branchLabels {env root st parents current}
     (h : Frames.Open env root st parents current) (hroot : root.LABELS = [])
@@ -63,7 +63,7 @@ theorem Pending.call_indirect {data env locals index st} (p : Pending data env l
   obtain ⟨idx, table, middle, hd, hdtable, hc, hb, rest, hv, ht⟩ := hr hok
   obtain ⟨typeBytes, hts, htl, htb, hte⟩ := hd
   obtain ⟨tableBytes, hss, hsl, hsb, hse⟩ := hdtable
-  have hbytes := (Wasm.BytesAt.mk hts htl htb).append (Wasm.BytesAt.mk hss hsl hsb)
+  have hbytes := (Wasm1.BytesAt.mk hts htl htb).append (Wasm1.BytesAt.mk hss hsl hsb)
   apply p.append_result C outer spine header base r.2 (.CALL_INDIRECT (.mk_uN table.val) (.mk_uN idx.val))
     p.current.ctrl.polymorphic_base rest
     (.instr_case_11 _ _ (EnvTranslation.index_wf table) (EnvTranslation.index_wf idx))
@@ -84,7 +84,7 @@ theorem Pending.branch {data env locals index st} (p : Pending data env locals i
   intro r hr hok
   obtain ⟨depth, hd, hv, hb, hc, ht⟩ := hr hok
   exact p.append_result C outer spine header base r.2 (.BR (.mk_uN depth.val)) true []
-    (.instr_case_7 _ (Core.label_wf depth))
+    (.instr_case_7 _ (Spec.label_wf depth))
     (.plain (.of_u32 depth p.inbounds hbyte p.pos (fun _ => .br depth) hd)) ht hc
     (by simpa [hb] using blocks) (by simpa using hv)
 
@@ -103,9 +103,9 @@ theorem Pending.branch_if {data env locals index st} (p : Pending data env local
   intro r hr hok
   obtain ⟨depth, hd, hc, hb, rest, hv, ht⟩ := hr hok
   apply p.append_result C outer spine header base r.2 (.BR_IF (.mk_uN depth.val))
-    p.current.ctrl.polymorphic_base rest (.instr_case_8 _ (Core.label_wf depth))
+    p.current.ctrl.polymorphic_base rest (.instr_case_8 _ (Spec.label_wf depth))
     (.plain (.of_u32 depth p.inbounds hbyte p.pos (fun _ => .brIf depth) hd))
     (by simpa [hpoly, Frames.enter] using ht) _ (by simpa [hb] using blocks) hv
   simpa [hc] using ctrls
 
-end Itasca.MultiValue
+end Itasca.Wasm2

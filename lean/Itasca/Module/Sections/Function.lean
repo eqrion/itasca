@@ -80,7 +80,7 @@ theorem module.decode_function_section_loop.spec (data : Slice U8) (env : module
           · scalar_tac
   · exact ⟨by simp, [], [], by simp,
       ⟨by cases env; rfl, by simp, by simp, .nil⟩,
-      ⟨[], .nil, Wasm.BytesAt.nil data start hstart⟩, hfuncs, hindices⟩
+      ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, hfuncs, hindices⟩
 
 @[step]
 theorem module.decode_function_section.spec (data : Slice U8) (pos : Usize) (env : module.Env)

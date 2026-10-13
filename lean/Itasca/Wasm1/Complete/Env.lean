@@ -27,7 +27,7 @@ private theorem finish {st : code.OpIterState} (f : Frame st)
 theorem localGet {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (C : context) (hc : EnvTranslation.Matches env ctx C) (idx : U32)
     (bytes : List U8) (next : Usize) (he : Leb128.Encoding bytes idx.val)
-    (hb : Wasm.BytesAt data st.pos bytes next) (front ins outs : List valtype)
+    (hb : Wasm1.BytesAt data st.pos bytes next) (front ins outs : List valtype)
     (ht : Instr_ok C (.LOCAL_GET (.mk_uN idx.val)) (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.current.polymorphic_base f.operands (front ++ ins))
     (hsize : st.vals.val.length < Usize.max) :
@@ -47,7 +47,7 @@ theorem localGet {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx :
 theorem localSet {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (C : context) (hc : EnvTranslation.Matches env ctx C) (idx : U32)
     (bytes : List U8) (next : Usize) (he : Leb128.Encoding bytes idx.val)
-    (hb : Wasm.BytesAt data st.pos bytes next) (front ins outs : List valtype)
+    (hb : Wasm1.BytesAt data st.pos bytes next) (front ins outs : List valtype)
     (ht : Instr_ok C (.LOCAL_SET (.mk_uN idx.val)) (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.current.polymorphic_base f.operands (front ++ ins)) :
     StepResult f data env ctx 0x21#u8 next (front ++ outs) := by
@@ -66,7 +66,7 @@ theorem localSet {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx :
 theorem localTee {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (C : context) (hc : EnvTranslation.Matches env ctx C) (idx : U32)
     (bytes : List U8) (next : Usize) (he : Leb128.Encoding bytes idx.val)
-    (hb : Wasm.BytesAt data st.pos bytes next) (front ins outs : List valtype)
+    (hb : Wasm1.BytesAt data st.pos bytes next) (front ins outs : List valtype)
     (ht : Instr_ok C (.LOCAL_TEE (.mk_uN idx.val)) (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.current.polymorphic_base f.operands (front ++ ins))
     (hsize : st.vals.val.length < Usize.max) :
@@ -86,7 +86,7 @@ theorem localTee {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx :
 theorem globalGet {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (C : context) (hc : EnvTranslation.Matches env ctx C) (idx : U32)
     (bytes : List U8) (next : Usize) (he : Leb128.Encoding bytes idx.val)
-    (hb : Wasm.BytesAt data st.pos bytes next) (front ins outs : List valtype)
+    (hb : Wasm1.BytesAt data st.pos bytes next) (front ins outs : List valtype)
     (ht : Instr_ok C (.GLOBAL_GET (.mk_uN idx.val)) (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.current.polymorphic_base f.operands (front ++ ins))
     (hsize : st.vals.val.length < Usize.max) :
@@ -107,7 +107,7 @@ theorem globalGet {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx 
 theorem globalSet {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (C : context) (hc : EnvTranslation.Matches env ctx C) (idx : U32)
     (bytes : List U8) (next : Usize) (he : Leb128.Encoding bytes idx.val)
-    (hb : Wasm.BytesAt data st.pos bytes next) (front ins outs : List valtype)
+    (hb : Wasm1.BytesAt data st.pos bytes next) (front ins outs : List valtype)
     (ht : Instr_ok C (.GLOBAL_SET (.mk_uN idx.val)) (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.current.polymorphic_base f.operands (front ++ ins)) :
     StepResult f data env ctx 0x24#u8 next (front ++ outs) := by
@@ -129,7 +129,7 @@ theorem globalSet {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx 
 theorem call {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (C : context) (hc : EnvTranslation.Matches env ctx C) (henv : Wasm1.Environment env)
     (idx : U32) (bytes : List U8) (next : Usize) (he : Leb128.Encoding bytes idx.val)
-    (hb : Wasm.BytesAt data st.pos bytes next) (front ins outs : List valtype)
+    (hb : Wasm1.BytesAt data st.pos bytes next) (front ins outs : List valtype)
     (ht : Instr_ok C (.CALL (.mk_uN idx.val)) (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.current.polymorphic_base f.operands (front ++ ins))
     (hsize : st.vals.val.length < Usize.max) :
@@ -155,7 +155,7 @@ theorem call {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : cod
 theorem callIndirect {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (C : context) (hc : EnvTranslation.Matches env ctx C) (henv : Wasm1.Environment env)
     (idx : U32) (bytes : List U8) (next : Usize) (he : Leb128.Encoding bytes idx.val)
-    (hb : Wasm.BytesAt data st.pos (bytes ++ [0#u8]) next) (front ins outs : List valtype)
+    (hb : Wasm1.BytesAt data st.pos (bytes ++ [0#u8]) next) (front ins outs : List valtype)
     (ht : Instr_ok C (.CALL_INDIRECT (.mk_uN 0) (.mk_uN idx.val))
       (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.current.polymorphic_base f.operands (front ++ ins))
@@ -183,7 +183,7 @@ theorem callIndirect {st} (f : Frame st) (data : Slice U8) (env : module.Env) (c
 
 theorem memorySize {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (C : context) (hc : EnvTranslation.Matches env ctx C)
-    (next : Usize) (hb : Wasm.BytesAt data st.pos [0#u8] next) (front ins outs : List valtype)
+    (next : Usize) (hb : Wasm1.BytesAt data st.pos [0#u8] next) (front ins outs : List valtype)
     (ht : Instr_ok C .MEMORY_SIZE (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.current.polymorphic_base f.operands (front ++ ins))
     (hsize : st.vals.val.length < Usize.max) :
@@ -201,7 +201,7 @@ theorem memorySize {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx
 
 theorem memoryGrow {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (C : context) (hc : EnvTranslation.Matches env ctx C)
-    (next : Usize) (hb : Wasm.BytesAt data st.pos [0#u8] next) (front ins outs : List valtype)
+    (next : Usize) (hb : Wasm1.BytesAt data st.pos [0#u8] next) (front ins outs : List valtype)
     (ht : Instr_ok C .MEMORY_GROW (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.current.polymorphic_base f.operands (front ++ ins))
     (hsize : st.vals.val.length < Usize.max) :
@@ -225,7 +225,7 @@ theorem memory {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : c
     (hrow : MemoryMeaning.opcodeMeaning opcode = some operation) (arg : code.MemArg)
     (alignment offset : List U8) (next : Usize)
     (ha : Leb128.Encoding alignment arg.align.val) (ho : Leb128.Encoding offset arg.offset.val)
-    (hb : Wasm.BytesAt data st.pos (alignment ++ offset) next) (front ins outs : List valtype)
+    (hb : Wasm1.BytesAt data st.pos (alignment ++ offset) next) (front ins outs : List valtype)
     (ht : Instr_ok C (operation.op arg) (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.current.polymorphic_base f.operands (front ++ ins))
     (hsize : st.vals.val.length < Usize.max) :

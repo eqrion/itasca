@@ -3,7 +3,7 @@ import Itasca.Handler.ScalarConst
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.WasmScalarExamples
+namespace Itasca.Examples.Wasm1Scalars
 
 private theorem public_of_loop (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (bt : code.BlockType) (result : core.result.Result Unit error.OpError)
@@ -130,7 +130,7 @@ theorem i64_body_accepted (env : module.Env) :
   exact loop_done i64Bytes env (resultContext .I64) finished hfc hfp
 
 theorem i64_body_validated (env : module.Env) :
-    Wasm.Validated i64Bytes env (resultContext .I64) (.Value .I64) :=
+    Wasm1.Validated i64Bytes env (resultContext .I64) (.Value .I64) :=
   code.validate_body.wasm_sound i64Bytes env (resultContext .I64) (.Value .I64) rfl
     (i64_body_accepted env)
 
@@ -174,7 +174,7 @@ theorem f32_body_accepted (env : module.Env) :
   exact loop_done f32Bytes env (resultContext .F32) finished hfc hfp
 
 theorem f32_body_validated (env : module.Env) :
-    Wasm.Validated f32Bytes env (resultContext .F32) (.Value .F32) :=
+    Wasm1.Validated f32Bytes env (resultContext .F32) (.Value .F32) :=
   code.validate_body.wasm_sound f32Bytes env (resultContext .F32) (.Value .F32) rfl
     (f32_body_accepted env)
 
@@ -218,7 +218,7 @@ theorem f64_body_accepted (env : module.Env) :
   exact loop_done f64Bytes env (resultContext .F64) finished hfc hfp
 
 theorem f64_body_validated (env : module.Env) :
-    Wasm.Validated f64Bytes env (resultContext .F64) (.Value .F64) :=
+    Wasm1.Validated f64Bytes env (resultContext .F64) (.Value .F64) :=
   code.validate_body.wasm_sound f64Bytes env (resultContext .F64) (.Value .F64) rfl
     (f64_body_accepted env)
 
@@ -301,4 +301,4 @@ theorem overlong_i64_body_rejected (env : module.Env) :
     (read_at overlongI64Bytes (Body.initial (.Value .I64)) 1#usize code.OP_I64_CONST (by decide) rfl
       (by simp [overlongI64Bytes, bytes, Body.initial, code.OP_I64_CONST, alloc.vec.Vec.deref])) hstep
 
-end Itasca.WasmScalarExamples
+end Itasca.Examples.Wasm1Scalars

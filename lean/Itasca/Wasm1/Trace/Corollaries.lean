@@ -9,8 +9,8 @@ namespace Itasca.VisitorTrace
 theorem AcceptedBody.project {data env ctx bt observations}
     (h : AcceptedBody data env ctx bt observations) :
     ∃ tokens ops next, VisitorTrace.project observations [] = (tokens, []) ∧
-      Wasm.Consumed data 0#usize tokens next ∧ next.val = data.length ∧
-      Wasm.BodyTokens tokens ops ∧ Wasm.FunctionTyped env ctx bt ops := by
+      Wasm1.Consumed data 0#usize tokens next ∧ next.val = data.length ∧
+      Wasm1.BodyTokens tokens ops ∧ Wasm1.FunctionTyped env ctx bt ops := by
   obtain ⟨_, tokens, ops, next, hc, hn, hb, ht⟩ := h
   exact ⟨tokens, ops, next, hc.project, hc.encoded, hn, hb, ht⟩
 
@@ -57,7 +57,7 @@ is an independently encoded instruction prefix with optional unfinished labels. 
 theorem code.validate_body_with.recorder_projection (data : Slice U8) (env : module.Env)
     (ctx : code.Context) : ∃ result observations tokens cursor pending,
     code.validate_body_with recorder data env ctx [] = .ok (result, observations) ∧
-      project observations [] = (tokens, pending) ∧ Wasm.Consumed data 0#usize tokens cursor ∧
+      project observations [] = (tokens, pending) ∧ Wasm1.Consumed data 0#usize tokens cursor ∧
       (result = .Ok () → pending = [] ∧ cursor.val = data.length) := by
   obtain ⟨result, observations, hr, ht⟩ := code.validate_body_with.recorder_total data env ctx
   obtain ⟨tokens, cursor, pending, hp, hc, hend⟩ := ht.project
@@ -70,8 +70,8 @@ theorem code.validate_body_with.recorder_projection_sound (data : Slice U8) (env
     (hresults : ctx.results.val = Control.results bt) (observations : List Observation)
     (h : code.validate_body_with recorder data env ctx [] = .ok (.Ok (), observations)) :
     AllAccepted observations ∧ ∃ tokens ops next,
-      project observations [] = (tokens, []) ∧ Wasm.Consumed data 0#usize tokens next ∧
-      next.val = data.length ∧ Wasm.BodyTokens tokens ops ∧ Wasm.FunctionTyped env ctx bt ops := by
+      project observations [] = (tokens, []) ∧ Wasm1.Consumed data 0#usize tokens next ∧
+      next.val = data.length ∧ Wasm1.BodyTokens tokens ops ∧ Wasm1.FunctionTyped env ctx bt ops := by
   obtain ⟨added, heq, ht⟩ := code.validate_body_with.trace_sound recorder id recorder_records
     data env ctx bt hresults [] observations h
   have he : observations = added := by simpa using heq
@@ -87,8 +87,8 @@ theorem code.validate_body_with.recorder_projection_complete (data : Slice U8) (
     (hbody : Wasm1.Body data env ctx bt) : ∃ observations tokens ops next,
     code.validate_body_with recorder data env ctx [] = .ok (.Ok (), observations) ∧
       AllAccepted observations ∧ project observations [] = (tokens, []) ∧
-      Wasm.Consumed data 0#usize tokens next ∧ next.val = data.length ∧
-      Wasm.BodyTokens tokens ops ∧ Wasm.FunctionTyped env ctx bt ops := by
+      Wasm1.Consumed data 0#usize tokens next ∧ next.val = data.length ∧
+      Wasm1.BodyTokens tokens ops ∧ Wasm1.FunctionTyped env ctx bt ops := by
   obtain ⟨observations, hr, ht⟩ := code.validate_body_with.recorder_complete
     data env ctx bt henv hresults hsize hbody
   obtain ⟨tokens, ops, next, hp, hc, hn, hb, htyped⟩ := ht.project

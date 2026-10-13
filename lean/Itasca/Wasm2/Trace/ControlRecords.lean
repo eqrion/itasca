@@ -56,7 +56,7 @@ theorem code.call_indirect_info.bytes (st : code.BodyState) (data : Slice U8)
 
 end Itasca
 
-namespace Itasca.MultiValue.CallbackTrace
+namespace Itasca.Wasm2.CallbackTrace
 
 open VisitorTrace
 
@@ -137,7 +137,7 @@ theorem step_else {data env locals index st} (p : Pending data env locals index 
   have pos : state.core.pos = st.core.pos := spec.2.2.2
   refine ⟨.else_, rfl, by simp [Action.opcode], ?_⟩
   apply At.of_immediate p.inbounds byte p.pos .else_
-  simpa [pos] using Wasm.BytesAt.nil data st.core.pos (by have := p.pos; have := p.inbounds; omega)
+  simpa [pos] using Wasm1.BytesAt.nil data st.core.pos (by have := p.pos; have := p.inbounds; omega)
 
 theorem step_end {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
@@ -153,7 +153,7 @@ theorem step_end {data env locals index st} (p : Pending data env locals index s
   have pos : state.core.pos = st.core.pos := spec.2.2.2
   refine ⟨.end_, rfl, by simp [Action.opcode], ?_⟩
   apply At.of_immediate p.inbounds byte p.pos .end_
-  simpa [pos] using Wasm.BytesAt.nil data st.core.pos (by have := p.pos; have := p.inbounds; omega)
+  simpa [pos] using Wasm1.BytesAt.nil data st.core.pos (by have := p.pos; have := p.inbounds; omega)
 
 theorem step_br {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
@@ -168,7 +168,7 @@ theorem step_br {data env locals index st} (p : Pending data env locals index st
   have spec := code.branch_info.bytes st data env false p.opened.shape.core p.opened.shape.aligned
   rw [hr, WP.spec_ok] at spec
   exact ⟨.plain (.BR (.mk_uN depth.val)), rfl, by simp [Action.opcode],
-    At.plain (Wasm.At.of_u32 depth p.inbounds byte p.pos (fun _ => .br depth) (spec depth types rfl))⟩
+    At.plain (Wasm1.At.of_u32 depth p.inbounds byte p.pos (fun _ => .br depth) (spec depth types rfl))⟩
 
 theorem step_br_if {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
@@ -183,7 +183,7 @@ theorem step_br_if {data env locals index st} (p : Pending data env locals index
   have spec := code.branch_info.bytes st data env true p.opened.shape.core p.opened.shape.aligned
   rw [hr, WP.spec_ok] at spec
   exact ⟨.plain (.BR_IF (.mk_uN depth.val)), rfl, by simp [Action.opcode],
-    At.plain (Wasm.At.of_u32 depth p.inbounds byte p.pos (fun _ => .brIf depth) (spec depth types rfl))⟩
+    At.plain (Wasm1.At.of_u32 depth p.inbounds byte p.pos (fun _ => .brIf depth) (spec depth types rfl))⟩
 
 theorem step_call {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
@@ -197,7 +197,7 @@ theorem step_call {data env locals index st} (p : Pending data env locals index 
   have spec := code.call_info.bytes st data env p.opened.shape.core
   rw [hr, WP.spec_ok] at spec
   exact ⟨.plain (.CALL (.mk_uN idx.val)), rfl, by simp [Action.opcode],
-    At.plain (Wasm.At.of_u32 idx p.inbounds byte p.pos (fun _ => .call idx) (spec idx rfl))⟩
+    At.plain (Wasm1.At.of_u32 idx p.inbounds byte p.pos (fun _ => .call idx) (spec idx rfl))⟩
 
 theorem step_call_indirect {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
@@ -217,6 +217,6 @@ theorem step_call_indirect {data env locals index st} (p : Pending data env loca
   exact ⟨.plain (.CALL_INDIRECT (.mk_uN table.val) (.mk_uN idx.val)), rfl,
     by simp [Action.opcode], At.of_immediate p.inbounds byte p.pos
       (.reference (.callIndirect idx table he he'))
-      ((show Wasm.BytesAt data st.core.pos typeBytes middle from ⟨hs, hl, hb⟩).append ⟨hs', hl', hb'⟩)⟩
+      ((show Wasm1.BytesAt data st.core.pos typeBytes middle from ⟨hs, hl, hb⟩).append ⟨hs', hl', hb'⟩)⟩
 
-end Itasca.MultiValue.CallbackTrace
+end Itasca.Wasm2.CallbackTrace

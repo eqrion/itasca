@@ -34,7 +34,7 @@ theorem branchIf_typed (C : context) (hC : wf_context C)
     rw [getElem!_pos _ _ (by simpa [labels] using hdepth), labels_lookup cs depth.val hdepth]
     rfl
   · exact hC
-  · exact .instr_case_8 _ (Core.label_wf depth)
+  · exact .instr_case_8 _ (Spec.label_wf depth)
 
 theorem targetTypes_length (c : code.Ctrl) : (targetTypes c).length ≤ 1 := by
   unfold targetTypes
@@ -197,8 +197,8 @@ theorem code.read_br_if.prefix (st : code.OpIterState) (data : Slice U8)
                   (.mk_functype (.mk_list (types.val.map Translate.valueType ++ [.I32]))
                     (.mk_list (types.val.map Translate.valueType))) := by
                 simpa [htypesval, htarget] using Control.branchIf_typed C hC st.ctrls.val hlabels depth hdepth
-              have htyping := (Frames.ResumePrefix.after_pop htyped htransfer).finish hC
-                (.BR_IF (.mk_uN depth.val)) types.val (.instr_case_8 _ (Core.label_wf depth)) hop
+              have htyping := (Sequence.ResumePrefix.after_pop htyped htransfer).finish hC
+                (.BR_IF (.mk_uN depth.val)) types.val (.instr_case_8 _ (Spec.label_wf depth)) hop
               rw [WP.spec_equiv_exists]
               refine ⟨(.Ok (depth, Control.targetBlockType target), s₃), ?_, ?_⟩
               · simp [code.read_br_if, hr, htypes, hr₁, hr₂, core.result.Result.Insts.CoreOpsTry.branch, hpush, code.branch_target_bt.eq]

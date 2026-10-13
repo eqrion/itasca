@@ -6,7 +6,7 @@ import Itasca.Handler.RawControl
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Wasm
+namespace Itasca.Wasm1
 
 /-- A byte interval with its exact length, bounds, and unconsumed suffix. -/
 structure BytesAt (data : Slice U8) (start : Usize) (bytes : List U8) (next : Usize) : Prop where
@@ -62,8 +62,8 @@ inductive Immediate : U8 → Token → List U8 → Prop where
       Immediate opcode (.plain (operation.op arg)) (alignment ++ offset)
   | memorySize : Immediate 0x3F#u8 (.plain .MEMORY_SIZE) [0#u8]
   | memoryGrow : Immediate 0x40#u8 (.plain .MEMORY_GROW) [0#u8]
-  | i32Const (value : I32) {bytes} : SignedLeb.Encoding bytes value.val →
-      Immediate 0x41#u8 (.plain (Core.i32Const value)) bytes
+  | i32Const (value : I32) {bytes} : SignedLeb32.Encoding bytes value.val →
+      Immediate 0x41#u8 (.plain (Spec.i32Const value)) bytes
   | i64Const (value : I64) {bytes} : SignedLeb64.Encoding bytes value.val →
       Immediate 0x42#u8 (.plain (ScalarConst.i64 value)) bytes
   | f32Const (bits : U32) {bytes} : FloatBits.Encoding 4 bytes bits.val →
@@ -148,9 +148,9 @@ theorem Consumed.append {data start middle next first rest}
   | nil _ => simpa using hfirst
   | snoc _ ha ih => simpa [List.append_assoc] using Consumed.snoc ih ha
 
-end Itasca.Wasm
+end Itasca.Wasm1
 
-namespace Itasca.Wasm
+namespace Itasca.Wasm1
 
 theorem IndicesEncoding.append {first rest bs cs}
     (hfirst : IndicesEncoding first bs) (hrest : IndicesEncoding rest cs) :
@@ -176,8 +176,8 @@ theorem At.of_u32 {data start pos next opcode token} (value : U32)
 theorem At.of_s32 {data start pos next} (value : I32)
     (hstart : start.val < data.length) (hbyte : data.val[start.val] = 0x41#u8)
     (hpos : pos.val = start.val + 1)
-    (hdecoded : SignedLeb.Decoded data pos value.val next) :
-    At data start (.plain (Core.i32Const value)) next := by
+    (hdecoded : SignedLeb32.Decoded data pos value.val next) :
+    At data start (.plain (Spec.i32Const value)) next := by
   obtain ⟨bytes, hs, hl, hb, he⟩ := hdecoded
   exact .of_immediate hstart hbyte hpos (.i32Const value he) ⟨hs, hl, hb⟩
 
@@ -235,9 +235,9 @@ theorem At.of_memory {data start pos middle next opcode} (operation : MemoryMean
   exact .of_immediate hstart hbyte hpos (.memory opcode operation arg meaning hae hoe)
     ((show BytesAt data pos alignBytes middle from ⟨has, hal, hab⟩).append ⟨hos, hol, hob⟩)
 
-end Itasca.Wasm
+end Itasca.Wasm1
 
-namespace Itasca.Wasm
+namespace Itasca.Wasm1
 
 theorem At.of_block_type {data start pos next opcode token} (bt : code.BlockType)
     (hstart : start.val < data.length) (hbyte : data.val[start.val] = opcode)
@@ -247,4 +247,4 @@ theorem At.of_block_type {data start pos next opcode token} (bt : code.BlockType
   obtain ⟨hb, hv, hn, _, hbt⟩ := hdecoded
   exact .of_byte (Control.blockByte bt) hstart hbyte hpos (himm hbt) hb hv hn
 
-end Itasca.Wasm
+end Itasca.Wasm1

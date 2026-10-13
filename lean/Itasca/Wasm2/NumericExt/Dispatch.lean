@@ -4,7 +4,7 @@ import Itasca.Visitor.Accepts
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.NumericExtensions
+namespace Itasca.Wasm2.NumericExtensions
 
 private theorem scalar_eq {ty} {a b : UScalar ty} : a = b ↔ a.val = b.val :=
   ⟨congrArg UScalar.val, UScalar.eq_of_val_eq⟩
@@ -47,9 +47,9 @@ theorem saturating_unary {opcode op} (h : saturatingMeaning opcode = some op) :
   split at h <;> simp only [Option.some.injEq, reduceCtorEq] at h <;> try contradiction
   all_goals subst op; rfl
 
-end Itasca.MultiValue.NumericExtensions
+end Itasca.Wasm2.NumericExtensions
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- The new scalar dispatcher retains the same context dependence as base instructions. -/
 theorem extended_context {V : Type} (visitor : code.OpVisitor V)
@@ -61,7 +61,7 @@ theorem extended_context {V : Type} (visitor : code.OpVisitor V)
   unfold code.step_extended
   rw [scalar_context visitor st data env ctx ctx' opcode v hscalar hlocals]
 
-end Itasca.MultiValue
+end Itasca.Wasm2
 
 namespace Itasca
 
@@ -69,13 +69,13 @@ namespace Itasca
 theorem code.step_extended.sign {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (opcode : U8) (op : Numeric.Operation) (v : V)
-    (hmap : MultiValue.NumericExtensions.signMeaning opcode = some op) :
+    (hmap : Wasm2.NumericExtensions.signMeaning opcode = some op) :
     code.step_extended visitor st data env ctx opcode v =
       CoreVisitor.run (code.read_conversion st op.input op.output)
         (fun v s (_ : Unit) => code.visit_sign_extension visitor v s opcode) v := by
-  have ht := MultiValue.NumericExtensions.sign_table opcode
+  have ht := Wasm2.NumericExtensions.sign_table opcode
   rw [hmap] at ht
-  have ho := (MultiValue.NumericExtensions.sign_properties hmap).2.1
+  have ho := (Wasm2.NumericExtensions.sign_properties hmap).2.1
   simp only [Option.map_some] at ht
   simp only [code.step_extended, ht, bind_ok]
   rw [ho]
@@ -91,17 +91,17 @@ theorem code.step_extended.sign {V : Type} (visitor : code.OpVisitor V)
 theorem code.step_extended.base {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (opcode : U8) (v : V)
-    (hmap : MultiValue.NumericExtensions.signMeaning opcode = none)
+    (hmap : Wasm2.NumericExtensions.signMeaning opcode = none)
     (hprefix : opcode ≠ code.OP_MISC_PREFIX) :
     code.step_extended visitor st data env ctx opcode v =
       code.step visitor st data env ctx opcode v := by
-  have ht := MultiValue.NumericExtensions.sign_table opcode
+  have ht := Wasm2.NumericExtensions.sign_table opcode
   simp [hmap] at ht
   simp [code.step_extended, ht, hprefix]
 
 end Itasca
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- Prefix decoding keeps the full unsigned LEB subopcode and exact reader state. -/
 def prefixedStep {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
@@ -118,7 +118,7 @@ def prefixedStep {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
       CoreVisitor.run (code.read_conversion s op.input op.output)
         (fun v s (_ : Unit) => code.visit_saturating visitor v s subopcode) v
 
-end Itasca.MultiValue
+end Itasca.Wasm2
 
 namespace Itasca
 
@@ -127,11 +127,11 @@ theorem code.step_extended.prefixed {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (v : V) :
     code.step_extended visitor st data env ctx 0xFC#u8 v =
-      MultiValue.prefixedStep visitor st data v := by
+      Wasm2.prefixedStep visitor st data v := by
   unfold code.step_extended
   have he : code.sign_extension_type 0xFC#u8 = .ok none := rfl
   rw [he]
-  simp only [bind_ok, global_simps, ↓reduceIte, MultiValue.prefixedStep]
+  simp only [bind_ok, global_simps, ↓reduceIte, Wasm2.prefixedStep]
   congr 1
   funext r
   cases r with
@@ -140,9 +140,9 @@ theorem code.step_extended.prefixed {V : Type} (visitor : code.OpVisitor V)
   | Ok pair =>
     obtain ⟨subopcode, next⟩ := pair
     simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-      MultiValue.NumericExtensions.saturating_table, Std.uncurry]
+      Wasm2.NumericExtensions.saturating_table, Std.uncurry]
     try dsimp only
-    cases hm : MultiValue.NumericExtensions.saturatingMeaning subopcode with
+    cases hm : Wasm2.NumericExtensions.saturatingMeaning subopcode with
     | none => simp [hm]
     | some op =>
       simp only [hm, Option.map_some, bind_ok, Std.uncurry]

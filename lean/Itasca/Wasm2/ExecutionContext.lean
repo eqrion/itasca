@@ -3,7 +3,7 @@ import Itasca.Wasm2.Step.Context
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- Return typing is supplied by the selected signature descriptor, so the
 semantic result context can be erased to the runtime's scalar context. -/
@@ -16,4 +16,4 @@ theorem Execution.change_context {data env ctx index st final}
     exact .cons st next last opcode pos hc hr
       ((step_context _ data env ctx ctx' index opcode hlocals).symm.trans hs) ih
 
-end Itasca.MultiValue
+end Itasca.Wasm2

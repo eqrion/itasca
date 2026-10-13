@@ -46,7 +46,7 @@ theorem code.push_frame.total (st : code.BodyState)
       s.blocks.val.length = st.blocks.val.length + 1 ⦄ := by
   apply WP.spec_mono (code.push_frame.spec st kind bt (by omega) hcap)
   rintro s ⟨hc, hv, hp, hb⟩
-  exact ⟨MultiValue.shape_push hshape kind bt hc hv, by simp [hb, hc, halign], hp, hv, by simp [hb]⟩
+  exact ⟨Wasm2.shape_push hshape kind bt hc hv, by simp [hb, hc, halign], hp, hv, by simp [hb]⟩
 
 /-- Branches preserve frame alignment and bounds for arbitrary label bytes and
 arbitrary environments. Conditional branches restore the entire signature. -/
@@ -57,7 +57,7 @@ theorem code.branch.total (st : code.BodyState) (data : Slice U8)
       Control.Shape r.2.core ∧ r.2.blocks.val.length = r.2.core.ctrls.val.length ∧
       r.2.blocks = st.blocks ∧ st.core.pos.val ≤ r.2.core.pos.val ⦄ := by
   rw [code.branch.eq_core]
-  unfold MultiValue.branchCore
+  unfold Wasm2.branchCore
   step with code.read_multi_value_label.spec st data ha as ⟨r, st1, hv, hc, hblocks, hpos, hres⟩
   have hs' : Control.Shape st1.core :=
     ⟨by simpa [hc] using hs.ordered, by simpa [hc, hv] using hs.bounded⟩
@@ -129,7 +129,7 @@ theorem code.branch_table_loop.total (st : code.BodyState) (data : Slice U8)
       cases visitor
       dsimp only at hs' ha' hb' hj hpos
       dsimp only
-      rw [MultiValue.tableBody_eq data env count stateCore (code.BodyState.mk stateCore).blocks arity j]
+      rw [Wasm2.tableBody_eq data env count stateCore (code.BodyState.mk stateCore).blocks arity j]
       apply ResultFacts.map_spec
       unfold code.branch_table_loop.body
       obtain ⟨⟨r, s⟩, hr, hv, hc, hb, hp, hread⟩ := WP.spec_imp_exists
@@ -142,8 +142,8 @@ theorem code.branch_table_loop.total (st : code.BodyState) (data : Slice U8)
       have has : s.blocks.val.length = s.core.ctrls.val.length := by simp_all
       have hbs : s.blocks = st.blocks := by simp_all
       have hprogress : st.core.pos.val ≤ s.core.pos.val := by omega
-      cases arity <;> step* by simp_all [MultiValue.tableFlow, MultiValue.tableCont, MultiValue.tableDone]
-      all_goals simp_all [MultiValue.tableFlow, MultiValue.tableCont, MultiValue.tableDone]
+      cases arity <;> step* by simp_all [Wasm2.tableFlow, Wasm2.tableCont, Wasm2.tableDone]
+      all_goals simp_all [Wasm2.tableFlow, Wasm2.tableCont, Wasm2.tableDone]
       all_goals scalar_tac
     · exact ⟨hs, ha, rfl, hi, le_refl _⟩
   unfold code.branch_table_loop
@@ -158,7 +158,7 @@ theorem code.branch_table.total (st : code.BodyState) (data : Slice U8)
       Control.Shape r.2.core ∧ r.2.blocks.val.length = r.2.core.ctrls.val.length ∧
       r.2.blocks = st.blocks ∧ st.core.pos.val ≤ r.2.core.pos.val ⦄ := by
   rw [code.branch_table.eq_core]
-  unfold MultiValue.tableCore
+  unfold Wasm2.tableCore
   step with reader.read_u32_leb.spec data st.core.pos as ⟨res, hdecoded⟩
   step
   split

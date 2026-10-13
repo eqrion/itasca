@@ -4,7 +4,7 @@ import Itasca.Binary.PrefixUnique
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 open ModuleBinary
 
@@ -63,4 +63,4 @@ theorem BulkBinary.Immediate.prefix_unique (opcode : U32) :
     obtain rfl := UScalar.eq_of_val_eq hv'
     exact ⟨rfl, rfl, rfl⟩
 
-end Itasca.MultiValue
+end Itasca.Wasm2

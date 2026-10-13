@@ -2,7 +2,7 @@ import Itasca.Binary.Wasm2.Simd
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Simd
+namespace Itasca.Wasm2.Simd
 
 theorem vectorConstant_typed (C : context) (low high : U64) (hC : wf_context C) :
     Instr_ok C (vectorConstant low high) (.mk_functype (.mk_list []) (.mk_list [.V128])) :=
@@ -58,4 +58,4 @@ theorem shuffle_declared (refs : List funcidx) (low high : U64) :
     DeclaredReferences.Instruction refs (shuffle low high) := by
   simp [shuffle, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
 
-end Itasca.MultiValue.Simd
+end Itasca.Wasm2.Simd

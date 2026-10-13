@@ -83,7 +83,7 @@ theorem module.decode_memory_section_loop.spec (data : Slice U8) (env : module.E
             exact hx.trans (Nat.le_max_right _ _)
           · scalar_tac
   · exact ⟨by simp, [], by simp, ⟨by cases env; rfl, by simp⟩,
-      ⟨[], .nil, Wasm.BytesAt.nil data start hstart⟩, by simp, hsize, Nat.le_max_left _ _⟩
+      ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, by simp, hsize, Nat.le_max_left _ _⟩
 
 @[step]
 theorem module.decode_memory_section.spec (data : Slice U8) (pos : Usize) (env : module.Env)

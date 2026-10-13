@@ -3,7 +3,7 @@ import Itasca.Wasm2.Execution
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 def Steps (data : Slice U8) (env : module.Env) (locals : alloc.vec.Vec types.ValueType)
     (ctx : code.Context) (index : U32) : Prop :=
@@ -97,4 +97,4 @@ theorem public_spec_of_steps (data : Slice U8) (env : module.Env)
         exact run.spec data env locals ⟨locals, alloc.vec.Vec.new _⟩ index hsteps
           (initial index) (State.start data env locals index ft hi (by scalar_tac))
 
-end Itasca.MultiValue
+end Itasca.Wasm2

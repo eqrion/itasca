@@ -11,7 +11,7 @@ theorem module.expect_const_type.complete (ty : types.ValueType) :
     core.cmp.PartialEq.ne.default, types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
 
 theorem module.read_expr_end.complete {data : Slice U8} {pos next : Usize}
-    (h : Wasm.BytesAt data pos [0x0B#u8] next) :
+    (h : Wasm1.BytesAt data pos [0x0B#u8] next) :
     module.read_expr_end data pos = .ok (.Ok next) := by
   simp [module.read_expr_end, h.read_byte, core.result.Result.Insts.CoreOpsTry.branch, global_simps]
 
@@ -48,7 +48,7 @@ theorem module.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
   cases he with
   | @i32 value immediate hi =>
     cases hv
-    obtain ⟨afterOp, hop, hrest⟩ := Wasm.BytesAt.split
+    obtain ⟨afterOp, hop, hrest⟩ := Wasm1.BytesAt.split
       (first := [0x41#u8]) (rest := immediate ++ [0x0B#u8]) hs
     obtain ⟨beforeEnd, himm, hend⟩ := hrest.split
     have hr := reader.read_s32_leb.complete data afterOp value beforeEnd
@@ -57,7 +57,7 @@ theorem module.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
       module.read_expr_end.complete hend, core.result.Result.Insts.CoreOpsTry.branch, global_simps]
   | @i64 value immediate hi =>
     cases hv
-    obtain ⟨afterOp, hop, hrest⟩ := Wasm.BytesAt.split
+    obtain ⟨afterOp, hop, hrest⟩ := Wasm1.BytesAt.split
       (first := [0x42#u8]) (rest := immediate ++ [0x0B#u8]) hs
     obtain ⟨beforeEnd, himm, hend⟩ := hrest.split
     have hr := reader.read_s64_leb.complete data afterOp value beforeEnd
@@ -66,7 +66,7 @@ theorem module.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
       module.read_expr_end.complete hend, core.result.Result.Insts.CoreOpsTry.branch, global_simps]
   | @f32 value immediate hi =>
     cases hv
-    obtain ⟨afterOp, hop, hrest⟩ := Wasm.BytesAt.split
+    obtain ⟨afterOp, hop, hrest⟩ := Wasm1.BytesAt.split
       (first := [0x43#u8]) (rest := immediate ++ [0x0B#u8]) hs
     obtain ⟨beforeEnd, himm, hend⟩ := hrest.split
     have hr := reader.read_f32_bits.complete data afterOp value beforeEnd
@@ -75,7 +75,7 @@ theorem module.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
       module.read_expr_end.complete hend, core.result.Result.Insts.CoreOpsTry.branch, global_simps]
   | @f64 value immediate hi =>
     cases hv
-    obtain ⟨afterOp, hop, hrest⟩ := Wasm.BytesAt.split
+    obtain ⟨afterOp, hop, hrest⟩ := Wasm1.BytesAt.split
       (first := [0x44#u8]) (rest := immediate ++ [0x0B#u8]) hs
     obtain ⟨beforeEnd, himm, hend⟩ := hrest.split
     have hr := reader.read_f64_bits.complete data afterOp value beforeEnd
@@ -85,7 +85,7 @@ theorem module.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
   | @globalGet idx immediate hi =>
     cases hv with
     | globalGet _ gt hidx hgt hn hm =>
-      obtain ⟨afterOp, hop, hrest⟩ := Wasm.BytesAt.split
+      obtain ⟨afterOp, hop, hrest⟩ := Wasm1.BytesAt.split
         (first := [0x23#u8]) (rest := immediate ++ [0x0B#u8]) hs
       obtain ⟨beforeEnd, himm, hend⟩ := hrest.split
       have hr := reader.read_u32_leb.complete data afterOp idx beforeEnd (himm.u32_decoded idx hi)
@@ -98,9 +98,9 @@ theorem module.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
     cases profile with
     | Wasm1 => exact hallowed.elim
     | Wasm2 =>
-      obtain ⟨afterOp, hop, hrest⟩ := Wasm.BytesAt.split
+      obtain ⟨afterOp, hop, hrest⟩ := Wasm1.BytesAt.split
         (first := [0xD0#u8]) (rest := [ModuleBinary.elemByte refTy, 0x0B#u8]) hs
-      obtain ⟨beforeEnd, himm, hend⟩ := Wasm.BytesAt.split
+      obtain ⟨beforeEnd, himm, hend⟩ := Wasm1.BytesAt.split
         (first := [ModuleBinary.elemByte refTy]) (rest := [0x0B#u8]) hrest
       have hr := module.decode_elem_type.complete data afterOp refTy beforeEnd
         ⟨_, rfl, himm⟩ .Wasm2 (by cases refTy <;> trivial)
@@ -115,7 +115,7 @@ theorem module.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
       cases profile with
       | Wasm1 => exact hallowed.elim
       | Wasm2 =>
-        obtain ⟨afterOp, hop, hrest⟩ := Wasm.BytesAt.split
+        obtain ⟨afterOp, hop, hrest⟩ := Wasm1.BytesAt.split
           (first := [0xD2#u8]) (rest := immediate ++ [0x0B#u8]) hs
         obtain ⟨beforeEnd, himm, hend⟩ := hrest.split
         have hr := reader.read_u32_leb.complete data afterOp idx beforeEnd (himm.u32_decoded idx hi)
@@ -128,9 +128,9 @@ theorem module.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
     cases profile with
     | Wasm1 => exact hallowed.elim
     | Wasm2 =>
-      obtain ⟨afterOp, hop, hrest⟩ := Wasm.BytesAt.split
+      obtain ⟨afterOp, hop, hrest⟩ := Wasm1.BytesAt.split
         (first := [0xFD#u8]) (rest := subBytes ++ lowBytes ++ highBytes ++ [0x0B#u8]) hs
-      have hrest' : Wasm.BytesAt data afterOp
+      have hrest' : Wasm1.BytesAt data afterOp
           (subBytes ++ (lowBytes ++ (highBytes ++ [0x0B#u8]))) next := by
         simpa [List.append_assoc] using hrest
       obtain ⟨afterSub, hsubspan, hrest⟩ := hrest'.split

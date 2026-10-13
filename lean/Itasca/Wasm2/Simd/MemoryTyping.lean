@@ -3,7 +3,7 @@ import Itasca.Binary.Wasm1.MemoryInversion
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Simd
+namespace Itasca.Wasm2.Simd
 
 theorem MemoryOperation.conditions (op : MemoryOperation) (C : context)
     (arg : code.MemArg) (lane : U8) (ins outs : List valtype)
@@ -37,4 +37,4 @@ theorem MemoryOperation.typed_runtime (op : MemoryOperation) (C : context)
   | nil => simp [he] at hmem
   | cons mt rest => simpa [he] using EnvTranslation.memType_wf mt
 
-end Itasca.MultiValue.Simd
+end Itasca.Wasm2.Simd

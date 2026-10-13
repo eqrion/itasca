@@ -6,34 +6,34 @@ namespace Itasca.Completeness
 
 /-- Execution of a typed instruction list within one concrete control frame. -/
 def Program (data : Slice U8) (env : module.Env) (ctx : code.Context)
-    (tokens : List Wasm.Token) (ops : List instr) : Prop :=
+    (tokens : List Wasm1.Token) (ops : List instr) : Prop :=
   ∀ (C : context) (st : code.OpIterState) (f : Frame st) (next : Usize)
     (input output : List valtype),
     EnvTranslation.Matches env ctx C → C.LABELS = Control.labels st.ctrls.val →
-    Wasm.Bounds data st → Wasm.Consumed data st.pos tokens next →
+    Wasm1.Bounds data st → Wasm1.Consumed data st.pos tokens next →
     Sequence.Realizes f.current.polymorphic_base f.operands input →
     Instrs_ok C ops (.mk_functype (.mk_list input) (.mk_list output)) →
     Wasm1.Instructions C ops →
-    ∃ s, Wasm.Execution data env ctx st s ∧ s.pos = next ∧ f.Output output s ∧
-      Wasm.Bounds data s
+    ∃ s, Wasm1.Execution data env ctx st s ∧ s.pos = next ∧ f.Output output s ∧
+      Wasm1.Bounds data s
 
 /-- The normalized head instruction has a primitive generated typing rule
 and a preserved prefix on its operand stack. -/
 def AtomProgram (data : Slice U8) (env : module.Env) (ctx : code.Context)
-    (tokens : List Wasm.Token) (op : instr) : Prop :=
+    (tokens : List Wasm1.Token) (op : instr) : Prop :=
   ∀ (C : context) (st : code.OpIterState) (f : Frame st) (next : Usize)
     (front input output : List valtype),
     EnvTranslation.Matches env ctx C → C.LABELS = Control.labels st.ctrls.val →
-    Wasm.Bounds data st → Wasm.Consumed data st.pos tokens next →
+    Wasm1.Bounds data st → Wasm1.Consumed data st.pos tokens next →
     Sequence.Realizes f.current.polymorphic_base f.operands (front ++ input) →
     Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output)) →
     Wasm1.Instruction C op →
-    ∃ s, Wasm.Execution data env ctx st s ∧ s.pos = next ∧
-      f.Output (front ++ output) s ∧ Wasm.Bounds data s
+    ∃ s, Wasm1.Execution data env ctx st s ∧ s.pos = next ∧
+      f.Output (front ++ output) s ∧ Wasm1.Bounds data s
 
 def SmallerPrograms (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (n : Nat) : Prop :=
-  ∀ tokens ops, tokens.length < n → Wasm.Emits tokens ops → Program data env ctx tokens ops
+  ∀ tokens ops, tokens.length < n → Wasm1.Emits tokens ops → Program data env ctx tokens ops
 
 theorem Frame.Output.transfer {st s t} {f : Frame st} {g : Frame s}
     {out : List valtype} (h : g.Output out t)
@@ -55,9 +55,9 @@ theorem Frame.Output.transfer {st s t} {f : Frame st} {g : Frame s}
 derivation uses arbitrary sequence, framing, and subsumption rules. The atom
 obligation recursively receives only strictly smaller nested bodies. -/
 theorem program_of_atoms (data : Slice U8) (env : module.Env) (ctx : code.Context)
-    (hatom : ∀ tokens op, Wasm.Atom tokens op →
+    (hatom : ∀ tokens op, Wasm1.Atom tokens op →
       SmallerPrograms data env ctx tokens.length → AtomProgram data env ctx tokens op)
-    (tokens : List Wasm.Token) (ops : List instr) (hemits : Wasm.Emits tokens ops) :
+    (tokens : List Wasm1.Token) (ops : List instr) (hemits : Wasm1.Emits tokens ops) :
     Program data env ctx tokens ops := by
   generalize hn : tokens.length = n
   induction n using Nat.strong_induction_on generalizing tokens ops with
@@ -65,14 +65,14 @@ theorem program_of_atoms (data : Slice U8) (env : module.Env) (ctx : code.Contex
     intro C st f next input output hmatch hlabels hbounds hbytes hreal htyped hprofile
     cases ops with
     | nil =>
-      have hnil := Wasm.Emits.empty_iff.mp hemits
+      have hnil := Wasm1.Emits.empty_iff.mp hemits
       subst tokens
-      have he := Wasm.Consumed.empty_eq hbytes rfl
+      have he := Wasm1.Consumed.empty_eq hbytes rfl
       subst next
       exact ⟨st, .nil st, rfl,
         f.output_self (DeclarativeComplete.empty_realizes hreal htyped), hbounds⟩
     | cons op ops =>
-      obtain ⟨first, rest, he, hfirst, hrest⟩ := Wasm.Emits.cons_iff.mp hemits
+      obtain ⟨first, rest, he, hfirst, hrest⟩ := Wasm1.Emits.cons_iff.mp hemits
       subst tokens
       have hfirst_len : first.length ≤ n := by simp only [List.length_append] at hn; omega
       have hrest_len : rest.length < n := by
@@ -80,7 +80,7 @@ theorem program_of_atoms (data : Slice U8) (env : module.Env) (ctx : code.Contex
         have hpos : 0 < first.length := List.length_pos_iff.mpr hnonempty
         simp only [List.length_append] at hn
         omega
-      obtain ⟨middle, hfirstbytes, hrestbytes⟩ := Wasm.Consumed.split hbytes
+      obtain ⟨middle, hfirstbytes, hrestbytes⟩ := Wasm1.Consumed.split hbytes
       obtain ⟨front, ins, outs, hop, hinput, htail⟩ :=
         DeclarativeComplete.head_realizes hreal htyped
       cases hprofile with
@@ -92,7 +92,7 @@ theorem program_of_atoms (data : Slice U8) (env : module.Env) (ctx : code.Contex
           hatom first op hfirst hsmaller C st f middle front ins outs hmatch hlabels
             hbounds hfirstbytes hinput hop hfirstprofile
         obtain ⟨g, hgp, hgo, hgk, hgb, hgsig, hgba, hgr⟩ := hout.next
-        have hrestbytes' : Wasm.Consumed data mid.pos rest next := by simpa [hpos] using hrestbytes
+        have hrestbytes' : Wasm1.Consumed data mid.pos rest next := by simpa [hpos] using hrestbytes
         have hlabels' : C.LABELS = Control.labels mid.ctrls.val := hlabels.trans hout.labels.symm
         obtain ⟨last, hrun', hpos', hout', hbound'⟩ :=
           ih rest.length hrest_len rest ops hrest rfl C mid g next _ _

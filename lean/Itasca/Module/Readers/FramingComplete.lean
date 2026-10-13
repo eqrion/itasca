@@ -11,7 +11,7 @@ theorem At.section_split {α : Type} {R : α → List U8 → Prop}
     ∃ first, SectionHeader data pos id first next ∧ At R data first value next := by
   obtain ⟨bytes, ⟨sizeBytes, payload, hsize, hvalue, rfl⟩, hs⟩ := h
   obtain ⟨middle, hid, hrest⟩ :=
-    (show Wasm.BytesAt data pos ([id] ++ (sizeBytes ++ payload)) next from hs).split
+    (show Wasm1.BytesAt data pos ([id] ++ (sizeBytes ++ payload)) next from hs).split
   obtain ⟨first, hcount, hbytes⟩ := hrest.split
   let count : U32 := U32.ofNatCore payload.length (by have := hsize.value_lt; scalar_tac)
   have hc : count.val = payload.length := by simp [count]
@@ -32,7 +32,7 @@ theorem module.have_bytes.complete (data : Slice U8) (pos n : Usize)
 
 /-- Copying a known byte interval recovers its exact vector, including empty intervals. -/
 theorem module.copy_bytes.complete (data : Slice U8) (first last : Usize)
-    (out : alloc.vec.Vec U8) (h : Wasm.BytesAt data first out.val last) :
+    (out : alloc.vec.Vec U8) (h : Wasm1.BytesAt data first out.val last) :
     module.copy_bytes data first last = .ok out := by
   obtain ⟨result, hr, hs⟩ := WP.spec_imp_exists
     (module.copy_bytes.spec data first last (by have := h.length; omega) h.bound)
@@ -68,7 +68,7 @@ private theorem read_at (data : Slice U8) (pos next : Usize) (byte : U8)
   simpa [he, hb] using hr
 
 theorem module.read_header.complete (data : Slice U8) (next : Usize)
-    (h : Wasm.BytesAt data 0#usize magicVersion next) :
+    (h : Wasm1.BytesAt data 0#usize magicVersion next) :
     module.read_header data = .ok (.Ok next) := by
   have hn : next = 8#usize := UScalar.eq_of_val_eq (by simpa [magicVersion] using h.length)
   subst next

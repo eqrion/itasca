@@ -100,7 +100,7 @@ theorem SoundInvariant.issue {code env start id capacity history pending pos fun
     (hmodule : issued.module_id = id) (henv : issued.env = env)
     (hbatch : issued.batch_id = nextId) (hbounded : issued.Bounded)
     (hoffset : issued.code_offset = pos) (hfirst : issued.first_func = func)
-    (hbytes : Wasm.BytesAt code pos issued.code.val finish)
+    (hbytes : Wasm1.BytesAt code pos issued.code.val finish)
     (hcount : nextFunc.val = func.val + issued.num_funcs.val)
     (hfunctions : nextFunc.val ≤ env.func_type_indices.val.length)
     (hnext : nextBatchId.val = nextId.val + 1)
@@ -252,7 +252,7 @@ private theorem resume_sound {S V : Type} (source : stream.Source S) (visitor : 
     | Ok bytes =>
       have hview := stream.read_exact.sound source state environment code.val tail hsource
         pos finish bytes (by omega) (by simpa using hfinish) hread
-      have hspan := Wasm.BytesAt.of_slice_view (by omega : pos.val ≤ finish.val)
+      have hspan := Wasm1.BytesAt.of_slice_view (by omega : pos.val ≤ finish.val)
         (by simpa using hfinish : finish.val ≤ code.length) hview.1
       simp at h
       obtain ⟨nextPending, hpush, h⟩ := ResultFacts.bind_ok_inv _ _ _ h

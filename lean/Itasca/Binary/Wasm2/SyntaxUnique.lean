@@ -1,6 +1,6 @@
 import Itasca.Binary.Wasm2.Syntax
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 namespace SyntaxDecode
 
@@ -74,4 +74,4 @@ theorem BodyTokens.unique {tokens xs ys}
   subst right
   exact hx.unique hy
 
-end Itasca.MultiValue
+end Itasca.Wasm2

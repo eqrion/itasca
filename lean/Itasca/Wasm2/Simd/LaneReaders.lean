@@ -3,7 +3,7 @@ import Itasca.Wasm2.Simd.Carry
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Simd
+namespace Itasca.Wasm2.Simd
 
 theorem carryFixed.cons {A : Type} (a : A) (st : code.OpIterState) (ty : types.ValueType)
     (rest : List types.ValueType) (output : Option types.ValueType) :
@@ -79,4 +79,4 @@ theorem LaneOperation.inputs_pop (op : LaneOperation) :
 theorem LaneOperation.outputs_pop (op : LaneOperation) :
     outputTypes (laneOutput op.runtime.1 op.replace) = op.outputs := by cases op <;> rfl
 
-end Itasca.MultiValue.Simd
+end Itasca.Wasm2.Simd

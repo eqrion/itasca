@@ -20,7 +20,7 @@ theorem At.vector {α : Type} {R : α → List U8 → Prop} {data start pos next
   obtain ⟨countBytes, hcs, hcl, hcb, hce⟩ := hc
   exact ⟨countBytes ++ bytes,
     ⟨countBytes, bytes, by simpa [hlen] using hce, hr, rfl⟩,
-    (show Wasm.BytesAt data start countBytes pos from ⟨hcs, hcl, hcb⟩).append hs⟩
+    (show Wasm1.BytesAt data start countBytes pos from ⟨hcs, hcl, hcb⟩).append hs⟩
 
 theorem At.funcType_progress {data start ty next} (h : At FuncTypeEncoding data start ty next) :
     start.val < next.val := by
@@ -115,7 +115,7 @@ theorem module.decode_type_section_loop.profile_spec (data : Slice U8) (env : mo
         · simp only [r_post, List.length_append, List.length_singleton]; omega
         · scalar_tac
   · exact ⟨by simp, [], by simp, ⟨by cases env; rfl, by simp⟩,
-      ⟨[], .nil, Wasm.BytesAt.nil data start hstart⟩, by simp, hsize⟩
+      ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, by simp, hsize⟩
 
 @[step]
 theorem module.decode_type_section.profile_spec (data : Slice U8) (pos : Usize) (env : module.Env)

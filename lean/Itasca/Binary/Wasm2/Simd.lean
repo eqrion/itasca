@@ -4,7 +4,7 @@ import Itasca.Binary.FloatBits
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Simd
+namespace Itasca.Wasm2.Simd
 
 /-- Vector constants retain all 128 immediate bits in little-endian order. -/
 def vectorConstant (low high : U64) : instr :=
@@ -102,4 +102,4 @@ theorem Immediate.wellFormed {opcode instruction bytes} (h : Immediate opcode in
   | constant low high _ _ => exact vectorConstant_wf low high
   | shuffle low high _ _ => exact shuffle_wf low high
 
-end Itasca.MultiValue.Simd
+end Itasca.Wasm2.Simd

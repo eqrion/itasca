@@ -9,7 +9,7 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.VisitorTrace
 
-theorem step_block {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_block {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_BLOCK) :
@@ -24,7 +24,7 @@ theorem step_block {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
   exact ⟨.block a, by cases a <;> rfl, by simp [Action.opcode],
     .of_block_type a p.inbounds (by simpa [global_simps] using hbyte) p.pos (.block a) hd⟩
 
-theorem step_loop {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_loop {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_LOOP) :
@@ -39,7 +39,7 @@ theorem step_loop {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
   exact ⟨.loop a, by cases a <;> rfl, by simp [Action.opcode],
     .of_block_type a p.inbounds (by simpa [global_simps] using hbyte) p.pos (.loop a) hd⟩
 
-theorem step_if {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_if {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_IF) :
@@ -56,7 +56,7 @@ theorem step_if {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
   exact ⟨.if_ a, by cases a <;> rfl, by simp [Action.opcode],
     .of_block_type a p.inbounds (by simpa [global_simps] using hbyte) p.pos (.if_ a) hd⟩
 
-theorem step_else {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_else {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_ELSE) :
@@ -66,14 +66,14 @@ theorem step_else {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
   apply run_step_trace data p.start _ visitor observe hrecords (fun a => .else_ (Control.signature a)) ?_ v result final v' h
   intro s a hr
   obtain ⟨C, outer, spine, header, base, typed, ctrls, vals⟩ := id p.opened
-  have hs := code.read_else.realizes st (p.parents.map WasmFrames.Saved.ctrl)
+  have hs := code.read_else.realizes st (p.parents.map Wasm1.Frames.Saved.ctrl)
     p.current.ctrl outer p.current.vals ctrls vals base
   rw [hr, WP.spec_ok] at hs
   have hp : s.pos = st.pos := hs.1
   exact ⟨.else_, rfl, by simp [Action.opcode],
     .no_immediate p.inbounds (by simpa [global_simps] using hbyte) (by simpa [hp] using p.pos) .else_⟩
 
-theorem step_end {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_end {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_END) :
@@ -83,14 +83,14 @@ theorem step_end {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
   apply run_step_trace data p.start _ visitor observe hrecords (fun a : code.LabelKind × code.BlockType => .end_ a.1 (Control.signature a.2)) ?_ v result final v' h
   intro s a hr
   obtain ⟨C, outer, spine, header, base, typed, ctrls, vals⟩ := id p.opened
-  have hs := code.read_end.realizes st (p.parents.map WasmFrames.Saved.ctrl)
+  have hs := code.read_end.realizes st (p.parents.map Wasm1.Frames.Saved.ctrl)
     p.current.ctrl outer p.current.vals ctrls vals base (Nat.le_of_lt p.val_capacity)
   rw [hr, WP.spec_ok] at hs
   have hp : s.pos = st.pos := hs.1
   exact ⟨.end_, rfl, by simp [Action.opcode],
     .no_immediate p.inbounds (by simpa [global_simps] using hbyte) (by simpa [hp] using p.pos) .end_⟩
 
-theorem step_br {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_br {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_BR) :
@@ -101,7 +101,7 @@ theorem step_br {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
   rintro s ⟨depth, resultBt⟩ hr
   obtain ⟨C, outer, spine, header, base, typed, ctrls, vals, hC, labels, returns⟩ :=
     p.opened.context (EnvTranslation.context_wf env ctx)
-  have hs := code.read_br.prefix st data (p.parents.map WasmFrames.Saved.ctrl)
+  have hs := code.read_br.prefix st data (p.parents.map Wasm1.Frames.Saved.ctrl)
     p.current.ctrl outer p.current.vals ctrls vals base _ hC p.current.ops typed
     (by simpa [EnvTranslation.context] using labels)
   rw [hr, WP.spec_ok] at hs
@@ -109,7 +109,7 @@ theorem step_br {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
   exact ⟨.plain (.BR (.mk_uN depth.val)), rfl, by simp [Action.opcode],
     .of_u32 depth p.inbounds (by simpa [global_simps] using hbyte) p.pos (fun _ => .br depth) hd⟩
 
-theorem step_br_if {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_br_if {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_BR_IF) :
@@ -130,7 +130,7 @@ theorem step_br_if {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
   exact ⟨.plain (.BR_IF (.mk_uN depth.val)), rfl, by simp [Action.opcode],
     .of_u32 depth p.inbounds (by simpa [global_simps] using hbyte) p.pos (fun _ => .brIf depth) hd⟩
 
-theorem step_return {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_return {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_RETURN) :
@@ -141,7 +141,7 @@ theorem step_return {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
   rintro s ⟨⟩ hr
   obtain ⟨C, outer, spine, header, base, typed, ctrls, vals, hC, labels, returns⟩ :=
     p.opened.context (EnvTranslation.context_wf env ctx)
-  have hs := code.read_return.prefix st ctx (p.parents.map WasmFrames.Saved.ctrl)
+  have hs := code.read_return.prefix st ctx (p.parents.map Wasm1.Frames.Saved.ctrl)
     p.current.ctrl outer p.current.vals ctrls vals base _ hC p.current.ops typed
     (by simpa [EnvTranslation.context] using returns)
   rw [hr, WP.spec_ok] at hs
@@ -153,7 +153,7 @@ theorem step_return {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
 /-- The table's final callback follows every vector callback and the unobserved
 default, with all validation complete. A rejecting closing callback remains in
 the complete byte chunk; any earlier failure leaves just its observed prefix. -/
-theorem step_br_table {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_br_table {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_BR_TABLE) :
@@ -163,9 +163,9 @@ theorem step_br_table {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
   obtain ⟨⟨res, s, w⟩, hr, hrun⟩ := ResultFacts.bind_ok_inv _ _ _ h
   obtain ⟨C, outer, spine, header, base, typed, ctrls, vals⟩ := id p.opened
   obtain ⟨observations, hlog, htrace⟩ := code.read_br_table.trace visitor observe hrecords
-    st data v (p.parents.map WasmFrames.Saved.ctrl) p.current.ctrl outer p.current.vals
+    st data v (p.parents.map Wasm1.Frames.Saved.ctrl) p.current.ctrl outer p.current.vals
     ctrls vals base res s w hr
-  have hopcode : Wasm.BytesAt data p.start [0x0E#u8] st.pos :=
+  have hopcode : Wasm1.BytesAt data p.start [0x0E#u8] st.pos :=
     .byte data p.start st.pos 0x0E#u8 p.inbounds (by simpa [global_simps] using hbyte) p.pos
   rcases (CoreVisitor.run.returned_iff (.ok (res, s))
       (fun v s (a : U32 × code.BlockType) => visitor.on_br_table v s a.1 (Control.resultView a.2))

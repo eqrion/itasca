@@ -3,7 +3,7 @@ import Itasca.Wasm2.FixedOperands
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- A checked metadata reader followed by a fixed stack effect. This adapter
 retains the original metadata for the instruction's explicit visitor hook. -/
@@ -33,7 +33,7 @@ def selectType (st : code.OpIterState) (data : Slice U8) :
 theorem selectType.spec (st : code.OpIterState) (data : Slice U8) :
     selectType st data ⦃ r => r.2.vals = st.vals ∧ r.2.ctrls = st.ctrls ∧
       ∀ ty, r.1 = .Ok ty → ∃ count,
-        Wasm.BytesAt data st.pos (count ++ [valueByte ty]) r.2.pos ∧ Leb128.Encoding count 1 ⦄ := by
+        Wasm1.BytesAt data st.pos (count ++ [valueByte ty]) r.2.pos ∧ Leb128.Encoding count 1 ⦄ := by
   obtain ⟨⟨r, s⟩, hr, hv, hc, hd⟩ := WP.spec_imp_exists (code.take_index.spec st data)
   dsimp only at hv hc hd
   cases r with
@@ -47,7 +47,7 @@ theorem selectType.spec (st : code.OpIterState) (data : Slice U8) :
       refine ⟨hvo.trans hv, hco.trans hc, ?_⟩
       intro ty hok
       obtain ⟨bytes, hb, hl, hn, he⟩ := hd
-      exact ⟨bytes, (show Wasm.BytesAt data st.pos bytes s.pos from ⟨hb, hl, hn⟩).append (htag ty hok), he⟩
+      exact ⟨bytes, (show Wasm1.BytesAt data st.pos bytes s.pos from ⟨hb, hl, hn⟩).append (htag ty hok), he⟩
     · simp [selectType, hr, he, hv, hc]
 
 theorem metadataOperands.empty {A : Type}
@@ -62,15 +62,15 @@ theorem metadataOperands.empty {A : Type}
       cases res <;> simp [Simd.readFixed]
     _ = decode := Std.bind_pure decode
 
-end Itasca.MultiValue
+end Itasca.Wasm2
 
 namespace Itasca
 
 /-- The extracted handler has exactly its metadata-dependent fixed operand effect. -/
 theorem code.read_ref_null.fixed (st : code.OpIterState) (data : Slice U8) :
-    code.read_ref_null st data = MultiValue.metadataOperands (code.take_reference_type st data)
+    code.read_ref_null st data = Wasm2.metadataOperands (code.take_reference_type st data)
       (fun _ => []) (fun rt => some (ModuleConstants.referenceValueType rt)) id := by
-  simp only [code.read_ref_null, MultiValue.metadataOperands]
+  simp only [code.read_ref_null, Wasm2.metadataOperands]
   congr 1
   funext pair
   obtain ⟨r, state⟩ := pair
@@ -80,7 +80,7 @@ theorem code.read_ref_null.fixed (st : code.OpIterState) (data : Slice U8) :
   | Ok a =>
     try (cases (show U32 × types.ValueType from a))
     simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-      types.ElemType.value_type.eq, MultiValue.Simd.readFixed, Std.bind_assoc, Std.uncurry]
+      types.ElemType.value_type.eq, Wasm2.Simd.readFixed, Std.bind_assoc, Std.uncurry]
     try dsimp only
     repeat' first
       | rfl
@@ -89,13 +89,13 @@ theorem code.read_ref_null.fixed (st : code.OpIterState) (data : Slice U8) :
          obtain ⟨res, state⟩ := pair
          cases res <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-           MultiValue.Simd.readFixed, Std.bind_assoc])
+           Wasm2.Simd.readFixed, Std.bind_assoc])
 
 /-- The extracted handler has exactly its metadata-dependent fixed operand effect. -/
 theorem code.read_table_get.fixed (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
-    code.read_table_get st data env = MultiValue.metadataOperands (code.take_table st data env)
+    code.read_table_get st data env = Wasm2.metadataOperands (code.take_table st data env)
       (fun _ => [.I32]) (fun a => some a.2) Prod.fst := by
-  simp only [code.read_table_get, MultiValue.metadataOperands]
+  simp only [code.read_table_get, Wasm2.metadataOperands]
   congr 1
   funext pair
   obtain ⟨r, state⟩ := pair
@@ -105,7 +105,7 @@ theorem code.read_table_get.fixed (st : code.OpIterState) (data : Slice U8) (env
   | Ok a =>
     try (cases (show U32 × types.ValueType from a))
     simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-      types.ElemType.value_type.eq, MultiValue.Simd.readFixed, Std.bind_assoc, Std.uncurry]
+      types.ElemType.value_type.eq, Wasm2.Simd.readFixed, Std.bind_assoc, Std.uncurry]
     try dsimp only
     repeat' first
       | rfl
@@ -114,13 +114,13 @@ theorem code.read_table_get.fixed (st : code.OpIterState) (data : Slice U8) (env
          obtain ⟨res, state⟩ := pair
          cases res <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-           MultiValue.Simd.readFixed, Std.bind_assoc])
+           Wasm2.Simd.readFixed, Std.bind_assoc])
 
 /-- The extracted handler has exactly its metadata-dependent fixed operand effect. -/
 theorem code.read_table_set.fixed (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
-    code.read_table_set st data env = MultiValue.metadataOperands (code.take_table st data env)
+    code.read_table_set st data env = Wasm2.metadataOperands (code.take_table st data env)
       (fun a => [a.2, .I32]) (fun _ => none) Prod.fst := by
-  simp only [code.read_table_set, MultiValue.metadataOperands]
+  simp only [code.read_table_set, Wasm2.metadataOperands]
   congr 1
   funext pair
   obtain ⟨r, state⟩ := pair
@@ -130,7 +130,7 @@ theorem code.read_table_set.fixed (st : code.OpIterState) (data : Slice U8) (env
   | Ok a =>
     try (cases (show U32 × types.ValueType from a))
     simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-      types.ElemType.value_type.eq, MultiValue.Simd.readFixed, Std.bind_assoc, Std.uncurry]
+      types.ElemType.value_type.eq, Wasm2.Simd.readFixed, Std.bind_assoc, Std.uncurry]
     try dsimp only
     repeat' first
       | rfl
@@ -139,13 +139,13 @@ theorem code.read_table_set.fixed (st : code.OpIterState) (data : Slice U8) (env
          obtain ⟨res, state⟩ := pair
          cases res <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-           MultiValue.Simd.readFixed, Std.bind_assoc])
+           Wasm2.Simd.readFixed, Std.bind_assoc])
 
 /-- The extracted handler has exactly its metadata-dependent fixed operand effect. -/
 theorem code.read_table_grow.fixed (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
-    code.read_table_grow st data env = MultiValue.metadataOperands (code.take_table st data env)
+    code.read_table_grow st data env = Wasm2.metadataOperands (code.take_table st data env)
       (fun a => [.I32, a.2]) (fun _ => some .I32) Prod.fst := by
-  simp only [code.read_table_grow, MultiValue.metadataOperands]
+  simp only [code.read_table_grow, Wasm2.metadataOperands]
   congr 1
   funext pair
   obtain ⟨r, state⟩ := pair
@@ -155,7 +155,7 @@ theorem code.read_table_grow.fixed (st : code.OpIterState) (data : Slice U8) (en
   | Ok a =>
     try (cases (show U32 × types.ValueType from a))
     simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-      types.ElemType.value_type.eq, MultiValue.Simd.readFixed, Std.bind_assoc, Std.uncurry]
+      types.ElemType.value_type.eq, Wasm2.Simd.readFixed, Std.bind_assoc, Std.uncurry]
     try dsimp only
     repeat' first
       | rfl
@@ -164,13 +164,13 @@ theorem code.read_table_grow.fixed (st : code.OpIterState) (data : Slice U8) (en
          obtain ⟨res, state⟩ := pair
          cases res <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-           MultiValue.Simd.readFixed, Std.bind_assoc])
+           Wasm2.Simd.readFixed, Std.bind_assoc])
 
 /-- The extracted handler has exactly its metadata-dependent fixed operand effect. -/
 theorem code.read_table_size.fixed (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
-    code.read_table_size st data env = MultiValue.metadataOperands (code.take_table st data env)
+    code.read_table_size st data env = Wasm2.metadataOperands (code.take_table st data env)
       (fun _ => []) (fun _ => some .I32) Prod.fst := by
-  simp only [code.read_table_size, MultiValue.metadataOperands]
+  simp only [code.read_table_size, Wasm2.metadataOperands]
   congr 1
   funext pair
   obtain ⟨r, state⟩ := pair
@@ -180,7 +180,7 @@ theorem code.read_table_size.fixed (st : code.OpIterState) (data : Slice U8) (en
   | Ok a =>
     try (cases (show U32 × types.ValueType from a))
     simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-      types.ElemType.value_type.eq, MultiValue.Simd.readFixed, Std.bind_assoc, Std.uncurry]
+      types.ElemType.value_type.eq, Wasm2.Simd.readFixed, Std.bind_assoc, Std.uncurry]
     try dsimp only
     repeat' first
       | rfl
@@ -189,13 +189,13 @@ theorem code.read_table_size.fixed (st : code.OpIterState) (data : Slice U8) (en
          obtain ⟨res, state⟩ := pair
          cases res <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-           MultiValue.Simd.readFixed, Std.bind_assoc])
+           Wasm2.Simd.readFixed, Std.bind_assoc])
 
 /-- The extracted handler has exactly its metadata-dependent fixed operand effect. -/
 theorem code.read_table_fill.fixed (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
-    code.read_table_fill st data env = MultiValue.metadataOperands (code.take_table st data env)
+    code.read_table_fill st data env = Wasm2.metadataOperands (code.take_table st data env)
       (fun a => [.I32, a.2, .I32]) (fun _ => none) Prod.fst := by
-  simp only [code.read_table_fill, MultiValue.metadataOperands]
+  simp only [code.read_table_fill, Wasm2.metadataOperands]
   congr 1
   funext pair
   obtain ⟨r, state⟩ := pair
@@ -205,7 +205,7 @@ theorem code.read_table_fill.fixed (st : code.OpIterState) (data : Slice U8) (en
   | Ok a =>
     try (cases (show U32 × types.ValueType from a))
     simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-      types.ElemType.value_type.eq, MultiValue.Simd.readFixed, Std.bind_assoc, Std.uncurry]
+      types.ElemType.value_type.eq, Wasm2.Simd.readFixed, Std.bind_assoc, Std.uncurry]
     try dsimp only
     repeat' first
       | rfl
@@ -214,20 +214,20 @@ theorem code.read_table_fill.fixed (st : code.OpIterState) (data : Slice U8) (en
          obtain ⟨res, state⟩ := pair
          cases res <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-           MultiValue.Simd.readFixed, Std.bind_assoc])
+           Wasm2.Simd.readFixed, Std.bind_assoc])
 
 theorem code.read_typed_select.fixed (st : code.OpIterState) (data : Slice U8) :
-    code.read_typed_select st data = MultiValue.metadataOperands (MultiValue.selectType st data)
+    code.read_typed_select st data = Wasm2.metadataOperands (Wasm2.selectType st data)
       (fun ty => [.I32, ty, ty]) some id := by
   obtain ⟨⟨r, state⟩, hr, _⟩ := WP.spec_imp_exists (code.take_index.spec st data)
   cases r with
-  | Err e => simp [code.read_typed_select, MultiValue.metadataOperands, MultiValue.selectType, hr,
+  | Err e => simp [code.read_typed_select, Wasm2.metadataOperands, Wasm2.selectType, hr,
       core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok count =>
     by_cases hc : count = 1#u32
     · subst count
-      simp [code.read_typed_select, MultiValue.metadataOperands, MultiValue.selectType, hr,
+      simp [code.read_typed_select, Wasm2.metadataOperands, Wasm2.selectType, hr,
         core.result.Result.Insts.CoreOpsTry.branch]
       congr 1
       funext pair
@@ -237,7 +237,7 @@ theorem code.read_typed_select.fixed (st : code.OpIterState) (data : Slice U8) :
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       | Ok ty =>
         simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-          MultiValue.Simd.readFixed, Std.bind_assoc, Std.uncurry]
+          Wasm2.Simd.readFixed, Std.bind_assoc, Std.uncurry]
         repeat' first
           | rfl
           | (congr 1
@@ -245,9 +245,9 @@ theorem code.read_typed_select.fixed (st : code.OpIterState) (data : Slice U8) :
              obtain ⟨res, state⟩ := pair
              cases res <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-               MultiValue.Simd.readFixed, Std.bind_assoc])
+               Wasm2.Simd.readFixed, Std.bind_assoc])
     · have hcv : count.val ≠ 1 := fun he => hc (UScalar.eq_of_val_eq he)
-      simp [code.read_typed_select, MultiValue.metadataOperands, MultiValue.selectType, hr, hc, hcv,
+      simp [code.read_typed_select, Wasm2.metadataOperands, Wasm2.selectType, hr, hc, hcv,
         core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- A successful null test consumes a reference (or the polymorphic bottom)
@@ -258,7 +258,7 @@ theorem code.read_ref_is_null.segment (st : code.OpIterState)
     (hsize : st.vals.val.length < Usize.max) :
     code.read_ref_is_null st ⦃ r => r.2.ctrls = st.ctrls ∧ r.2.pos = st.pos ∧
       ∃ after, r.2.vals.val = outer ++ after ∧
-        (r.1 = .Ok () → ∃ rt, MultiValue.Simd.FixedEffect (Control.polymorphic st) segment
+        (r.1 = .Ok () → ∃ rt, Wasm2.Simd.FixedEffect (Control.polymorphic st) segment
           [ModuleConstants.referenceValueType rt] (some .I32) after) ⦄ := by
   obtain ⟨⟨r, s⟩, hr, hc, hp, popped, hpv, hpop⟩ := WP.spec_imp_exists
     (code.pop_stack_type.segment st outer segment hv hb)
@@ -282,7 +282,7 @@ theorem code.read_ref_is_null.segment (st : code.OpIterState)
           .ok (.Ok (), out)) :
         code.read_ref_is_null st ⦃ r => r.2.ctrls = st.ctrls ∧ r.2.pos = st.pos ∧
           ∃ after, r.2.vals.val = outer ++ after ∧
-            (r.1 = .Ok () → ∃ rt, MultiValue.Simd.FixedEffect (Control.polymorphic st) segment
+            (r.1 = .Ok () → ∃ rt, Wasm2.Simd.FixedEffect (Control.polymorphic st) segment
               [ModuleConstants.referenceValueType rt] (some .I32) after) ⦄ := by
       obtain ⟨out, ho, hov, hoc, hop⟩ := WP.spec_imp_exists (code.push_val.spec s (.Val .I32) hcap)
       rw [hrun, ho, bind_ok, WP.spec_ok]
@@ -291,10 +291,10 @@ theorem code.read_ref_is_null.segment (st : code.OpIterState)
       intro _
       refine ⟨rt, ?_⟩
       intro ts hts
-      obtain ⟨front, hfront, rfl⟩ := (Frames.realizes_append_concrete _ _ [.I32] ts).mp hts
+      obtain ⟨front, hfront, rfl⟩ := (Sequence.realizes_append_concrete _ _ [.I32] ts).mp hts
       refine ⟨front, rfl, ?_⟩
       have hh := hpop.realizes front (valtype_reftype (Translate.referenceType rt)) ht hfront
-      cases rt <;> simpa [MultiValue.Simd.inputTypes, ModuleConstants.referenceValueType, Translate.referenceType,
+      cases rt <;> simpa [Wasm2.Simd.inputTypes, ModuleConstants.referenceValueType, Translate.referenceType,
         Translate.valueType, valtype_reftype] using hh
     cases t with
     | Bot =>

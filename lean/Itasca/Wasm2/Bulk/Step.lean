@@ -3,7 +3,7 @@ import Itasca.Wasm2.References.Step
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 theorem Pending.memory_fill {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
@@ -22,7 +22,7 @@ theorem Pending.memory_fill {data env locals index st} (p : Pending data env loc
     obtain ⟨hb, _⟩ := hd hok
     obtain ⟨prefixBytes, hp, hpl, hpb, hpe⟩ := hprefix
     exact At.of_immediate p.inbounds hbyte p.pos (.bulk 11#u32 hpe .memoryFill)
-      ((Wasm.BytesAt.mk hp hpl hpb).append hb)
+      ((Wasm1.BytesAt.mk hp hpl hpb).append hb)
   · exact fun _ => .instr_case_64
   · rintro u ⟨decoded, hrun⟩ C hC
     cases u
@@ -47,7 +47,7 @@ theorem Pending.memory_copy {data env locals index st} (p : Pending data env loc
     obtain ⟨hb, _⟩ := hd hok
     obtain ⟨prefixBytes, hp, hpl, hpb, hpe⟩ := hprefix
     exact At.of_immediate p.inbounds hbyte p.pos (.bulk 10#u32 hpe .memoryCopy)
-      ((Wasm.BytesAt.mk hp hpl hpb).append hb)
+      ((Wasm1.BytesAt.mk hp hpl hpb).append hb)
   · exact fun _ => .instr_case_65
   · rintro u ⟨decoded, hrun⟩ C hC
     cases u
@@ -72,7 +72,7 @@ theorem Pending.memory_init {data env locals index st} (p : Pending data env loc
     obtain ⟨bytes, hb, he, _⟩ := hd idx hok
     obtain ⟨prefixBytes, hp, hpl, hpb, hpe⟩ := hprefix
     exact At.of_immediate p.inbounds hbyte p.pos (.bulk 8#u32 hpe (.memoryInit idx he))
-      ((Wasm.BytesAt.mk hp hpl hpb).append hb)
+      ((Wasm1.BytesAt.mk hp hpl hpb).append hb)
   · exact fun idx => .instr_case_66 _ (EnvTranslation.index_wf idx)
   · rintro idx ⟨decoded, hrun⟩ C hC
     have hspec := memoryInitMetadata.spec {st.core with pos := next} data env
@@ -108,7 +108,7 @@ theorem Pending.table_init {data env locals index st} (p : Pending data env loca
     obtain ⟨jbs, hjs, hjl, hjb, hje⟩ := hdj
     obtain ⟨prefixBytes, hp, hpl, hpb, hpe⟩ := hprefix
     exact At.of_immediate p.inbounds hbyte p.pos (.bulk 12#u32 hpe (.tableInit i j hie hje))
-      ((Wasm.BytesAt.mk hp hpl hpb).append ((Wasm.BytesAt.mk his hil hib).append ⟨hjs, hjl, hjb⟩))
+      ((Wasm1.BytesAt.mk hp hpl hpb).append ((Wasm1.BytesAt.mk his hil hib).append ⟨hjs, hjl, hjb⟩))
   · exact fun a => .instr_case_54 _ _ (EnvTranslation.index_wf a.2) (EnvTranslation.index_wf a.1)
   · rintro ⟨i, j⟩ ⟨decoded, hrun⟩ C hC
     rw [hrun, WP.spec_ok] at hmetadata
@@ -140,7 +140,7 @@ theorem Pending.table_copy {data env locals index st} (p : Pending data env loca
     obtain ⟨jbs, hjs, hjl, hjb, hje⟩ := hdj
     obtain ⟨prefixBytes, hp, hpl, hpb, hpe⟩ := hprefix
     exact At.of_immediate p.inbounds hbyte p.pos (.bulk 14#u32 hpe (.tableCopy i j hie hje))
-      ((Wasm.BytesAt.mk hp hpl hpb).append ((Wasm.BytesAt.mk his hil hib).append ⟨hjs, hjl, hjb⟩))
+      ((Wasm1.BytesAt.mk hp hpl hpb).append ((Wasm1.BytesAt.mk his hil hib).append ⟨hjs, hjl, hjb⟩))
   · exact fun a => .instr_case_53 _ _ (EnvTranslation.index_wf a.1) (EnvTranslation.index_wf a.2)
   · rintro ⟨i, j⟩ ⟨decoded, hrun⟩ C hC
     rw [hrun, WP.spec_ok] at hmetadata
@@ -148,4 +148,4 @@ theorem Pending.table_copy {data env locals index st} (p : Pending data env loca
     simpa [Simd.inputTypes, Simd.outputTypes, Translate.valueType] using
       hC.table_copy i j env.table_types.val[i.val] env.table_types.val[j.val] hi hj rfl rfl (reference_value_injective (hjty.symm.trans hity))
 
-end Itasca.MultiValue
+end Itasca.Wasm2

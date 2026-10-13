@@ -106,7 +106,7 @@ private theorem split_after_code (data : Slice U8) (pos first last : Usize) (id 
   simp
 
 private theorem split_skip_customs {data : Slice U8} {bytes : List U8}
-    (h : CustomsEncoding bytes) {pos next : Usize} (hb : Wasm.BytesAt data pos bytes next) :
+    (h : CustomsEncoding bytes) {pos next : Usize} (hb : Wasm1.BytesAt data pos bytes next) :
     stream.find_code_region_loop data (Slice.len data) pos =
       stream.find_code_region_loop data (Slice.len data) next := by
   induction h generalizing pos with
@@ -122,7 +122,7 @@ private theorem split_skip_customs {data : Slice U8} {bytes : List U8}
 
 private theorem split_skip_chain {profile} {data : Slice U8} {raw n bytes}
     (h : ModuleEnv.Chain raw n bytes profile) {pos next : Usize}
-    (hb : Wasm.BytesAt data pos bytes next) :
+    (hb : Wasm1.BytesAt data pos bytes next) :
     stream.find_code_region_loop data (Slice.len data) pos =
       stream.find_code_region_loop data (Slice.len data) next := by
   induction h generalizing pos with

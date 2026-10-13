@@ -8,7 +8,7 @@ namespace Itasca.BrTable
 /-- Consecutive decoded labels have an independent concatenated byte encoding. -/
 theorem LabelsDecoded.bytes {data start depths next}
     (h : LabelsDecoded data start depths next) (hb : start.val ≤ data.length) :
-    ∃ bytes, Wasm.IndicesEncoding depths bytes ∧ Wasm.BytesAt data start bytes next := by
+    ∃ bytes, Wasm1.IndicesEncoding depths bytes ∧ Wasm1.BytesAt data start bytes next := by
   induction h with
   | nil => exact ⟨[], .nil, .nil data start hb⟩
   | snoc _ hd ih =>
@@ -18,7 +18,7 @@ theorem LabelsDecoded.bytes {data start depths next}
 
 end Itasca.BrTable
 
-namespace Itasca.Wasm
+namespace Itasca.Wasm1
 
 /-- A branch table's declared count, consecutive labels, and final default label
 compose to the independent Wasm byte grammar. -/
@@ -42,4 +42,4 @@ theorem At.of_table_decoded {data start pos next} (depths : List U32) (default :
   obtain ⟨count, first, last, hc, hl, hd, hf⟩ := hdecoded
   exact .of_br_table count depths default hstart hbyte hpos hc hl hd hf
 
-end Itasca.Wasm
+end Itasca.Wasm1

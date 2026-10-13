@@ -69,23 +69,23 @@ inductive LabelsAt (data : Slice U8) : Usize → List Observation → List U32 �
 separates vector entries from its default target, which has no label callback.
 Computed metadata and state snapshots remain in the observations. -/
 inductive Chunk (data : Slice U8) (start : Usize) :
-    List Observation → Wasm.Token → Usize → Prop where
-  | single (st : code.OpIterState) (action : Action) (reply : VisitResult) (token : Wasm.Token) :
+    List Observation → Wasm1.Token → Usize → Prop where
+  | single (st : code.OpIterState) (action : Action) (reply : VisitResult) (token : Wasm1.Token) :
       action.token [] = some token → action.opcode ≠ some 0x0E#u8 →
-      Wasm.At data start token st.pos →
+      Wasm1.At data start token st.pos →
       Chunk data start [⟨.op st action, reply⟩] token st.pos
   | table {pos count first labels depths last fallback st bt reply} :
-      Wasm.BytesAt data start [0x0E#u8] pos →
+      Wasm1.BytesAt data start [0x0E#u8] pos →
       Leb128.Decoded data pos count first →
       LabelsAt data first labels depths last → depths.length = count.val →
       Leb128.Decoded data last fallback st.pos →
-      Wasm.At data start
+      Wasm1.At data start
         (.plain (.BR_TABLE (depths.map (fun i => .mk_uN i.val)) (.mk_uN fallback.val))) st.pos →
       Chunk data start (labels ++ [⟨.op st (.br_table fallback bt), reply⟩])
         (.plain (.BR_TABLE (depths.map (fun i => .mk_uN i.val)) (.mk_uN fallback.val))) st.pos
 
 theorem Chunk.encoded {data start observations token next}
-    (h : Chunk data start observations token next) : Wasm.At data start token next := by
+    (h : Chunk data start observations token next) : Wasm1.At data start token next := by
   cases h <;> assumption
 
 /-- A rejected table can have observed some or all of its vector entries,
@@ -93,7 +93,7 @@ without a closing table callback. Even a label that fails target merging is
 part of this prefix, since its callback has already run. -/
 def PartialTable (data : Slice U8) (start : Usize) (observations : List Observation) : Prop :=
   ∃ pos count first depths last,
-    Wasm.BytesAt data start [0x0E#u8] pos ∧
+    Wasm1.BytesAt data start [0x0E#u8] pos ∧
     Leb128.Decoded data pos count first ∧
     LabelsAt data first observations depths last ∧ depths.length ≤ count.val
 
@@ -119,18 +119,18 @@ theorem StepTrace.accepted {data start observations st}
 
 /-- Concatenation of complete instruction chunks, independently of execution. -/
 inductive Completed (data : Slice U8) :
-    Usize → List Observation → List Wasm.Token → Usize → Prop where
+    Usize → List Observation → List Wasm1.Token → Usize → Prop where
   | nil (pos : Usize) (bound : pos.val ≤ data.length) : Completed data pos [] [] pos
   | cons {start first token middle rest tokens next} :
       Chunk data start first token middle → Completed data middle rest tokens next →
       Completed data start (first ++ rest) (token :: tokens) next
 
 theorem Completed.encoded {data start observations tokens next}
-    (h : Completed data start observations tokens next) : Wasm.Consumed data start tokens next := by
+    (h : Completed data start observations tokens next) : Wasm1.Consumed data start tokens next := by
   induction h with
   | nil pos hb => exact .nil pos hb
   | cons hc _ ih =>
-      simpa using (Wasm.Consumed.snoc (.nil _ (by have := hc.encoded.span; omega)) hc.encoded).append ih
+      simpa using (Wasm1.Consumed.snoc (.nil _ (by have := hc.encoded.span; omega)) hc.encoded).append ih
 
 /-- Whole-run byte provenance. Only the final rejected table can be partial. -/
 def BodyTrace (data : Slice U8) (start : Usize) (observations : List Observation)

@@ -1,7 +1,7 @@
 import Itasca.Wasm2.Trace.BytesReferences
 
 open Aeneas Aeneas.Std
-namespace Itasca.MultiValue.CallbackBytes
+namespace Itasca.Wasm2.CallbackBytes
 open VisitorTrace CallbackTrace
 
 theorem memory_init_bytes {data env locals index st} (p : Pending data env locals index st)
@@ -20,7 +20,7 @@ theorem memory_init_bytes {data env locals index st} (p : Pending data env local
   obtain ⟨bytes, hb, he, _⟩ := hd idx hok
   obtain ⟨prefixBytes, hp, hpl, hpb, hpe⟩ := hprefix
   exact At.of_immediate p.inbounds hbyte p.pos (.bulk 8#u32 hpe (.memoryInit idx he))
-    ((Wasm.BytesAt.mk hp hpl hpb).append hb)
+    ((Wasm1.BytesAt.mk hp hpl hpb).append hb)
 
 theorem data_drop_bytes {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
@@ -38,7 +38,7 @@ theorem data_drop_bytes {data env locals index st} (p : Pending data env locals 
   obtain ⟨bytes, hbytes, hlen, hbound, hencoding⟩ := (hd idx hok).1
   obtain ⟨prefixBytes, hp, hpl, hpb, hpe⟩ := hprefix
   exact At.of_immediate p.inbounds hbyte p.pos (.bulk 9#u32 hpe (.dataDrop idx hencoding))
-    ((Wasm.BytesAt.mk hp hpl hpb).append ⟨hbytes, hlen, hbound⟩)
+    ((Wasm1.BytesAt.mk hp hpl hpb).append ⟨hbytes, hlen, hbound⟩)
 
 theorem memory_copy_bytes {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
@@ -57,7 +57,7 @@ theorem memory_copy_bytes {data env locals index st} (p : Pending data env local
   obtain ⟨hb, _⟩ := hd hok
   obtain ⟨prefixBytes, hp, hpl, hpb, hpe⟩ := hprefix
   exact At.of_immediate p.inbounds hbyte p.pos (.bulk 10#u32 hpe .memoryCopy)
-    ((Wasm.BytesAt.mk hp hpl hpb).append hb)
+    ((Wasm1.BytesAt.mk hp hpl hpb).append hb)
 
 theorem memory_fill_bytes {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
@@ -76,7 +76,7 @@ theorem memory_fill_bytes {data env locals index st} (p : Pending data env local
   obtain ⟨hb, _⟩ := hd hok
   obtain ⟨prefixBytes, hp, hpl, hpb, hpe⟩ := hprefix
   exact At.of_immediate p.inbounds hbyte p.pos (.bulk 11#u32 hpe .memoryFill)
-    ((Wasm.BytesAt.mk hp hpl hpb).append hb)
+    ((Wasm1.BytesAt.mk hp hpl hpb).append hb)
 
 theorem table_init_bytes {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
@@ -102,7 +102,7 @@ theorem table_init_bytes {data env locals index st} (p : Pending data env locals
   obtain ⟨jbs, hjs, hjl, hjb, hje⟩ := hdj
   obtain ⟨prefixBytes, hp, hpl, hpb, hpe⟩ := hprefix
   exact At.of_immediate p.inbounds hbyte p.pos (.bulk 12#u32 hpe (.tableInit i j hie hje))
-    ((Wasm.BytesAt.mk hp hpl hpb).append ((Wasm.BytesAt.mk his hil hib).append ⟨hjs, hjl, hjb⟩))
+    ((Wasm1.BytesAt.mk hp hpl hpb).append ((Wasm1.BytesAt.mk his hil hib).append ⟨hjs, hjl, hjb⟩))
 
 theorem elem_drop_bytes {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
@@ -120,7 +120,7 @@ theorem elem_drop_bytes {data env locals index st} (p : Pending data env locals 
   obtain ⟨bytes, hbytes, hlen, hbound, hencoding⟩ := (hd idx ty hok).1
   obtain ⟨prefixBytes, hp, hpl, hpb, hpe⟩ := hprefix
   exact At.of_immediate p.inbounds hbyte p.pos (.bulk 13#u32 hpe (.elemDrop idx hencoding))
-    ((Wasm.BytesAt.mk hp hpl hpb).append ⟨hbytes, hlen, hbound⟩)
+    ((Wasm1.BytesAt.mk hp hpl hpb).append ⟨hbytes, hlen, hbound⟩)
 
 theorem table_copy_bytes {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
@@ -146,7 +146,7 @@ theorem table_copy_bytes {data env locals index st} (p : Pending data env locals
   obtain ⟨jbs, hjs, hjl, hjb, hje⟩ := hdj
   obtain ⟨prefixBytes, hp, hpl, hpb, hpe⟩ := hprefix
   exact At.of_immediate p.inbounds hbyte p.pos (.bulk 14#u32 hpe (.tableCopy i j hie hje))
-    ((Wasm.BytesAt.mk hp hpl hpb).append ((Wasm.BytesAt.mk his hil hib).append ⟨hjs, hjl, hjb⟩))
+    ((Wasm1.BytesAt.mk hp hpl hpb).append ((Wasm1.BytesAt.mk his hil hib).append ⟨hjs, hjl, hjb⟩))
 
 theorem table_grow_bytes {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
@@ -165,7 +165,7 @@ theorem table_grow_bytes {data env locals index st} (p : Pending data env locals
   obtain ⟨bytes, hbytes, hlen, hbound, hencoding⟩ := (hd idx ty hok).1
   obtain ⟨prefixBytes, hp, hpl, hpb, hpe⟩ := hprefix
   exact At.of_immediate p.inbounds hbyte p.pos (.bulk 15#u32 hpe (.tableGrow idx hencoding))
-    ((Wasm.BytesAt.mk hp hpl hpb).append ⟨hbytes, hlen, hbound⟩)
+    ((Wasm1.BytesAt.mk hp hpl hpb).append ⟨hbytes, hlen, hbound⟩)
 
 theorem table_size_bytes {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
@@ -184,7 +184,7 @@ theorem table_size_bytes {data env locals index st} (p : Pending data env locals
   obtain ⟨bytes, hbytes, hlen, hbound, hencoding⟩ := (hd idx ty hok).1
   obtain ⟨prefixBytes, hp, hpl, hpb, hpe⟩ := hprefix
   exact At.of_immediate p.inbounds hbyte p.pos (.bulk 16#u32 hpe (.tableSize idx hencoding))
-    ((Wasm.BytesAt.mk hp hpl hpb).append ⟨hbytes, hlen, hbound⟩)
+    ((Wasm1.BytesAt.mk hp hpl hpb).append ⟨hbytes, hlen, hbound⟩)
 
 theorem table_fill_bytes {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
@@ -203,7 +203,7 @@ theorem table_fill_bytes {data env locals index st} (p : Pending data env locals
   obtain ⟨bytes, hbytes, hlen, hbound, hencoding⟩ := (hd idx ty hok).1
   obtain ⟨prefixBytes, hp, hpl, hpb, hpe⟩ := hprefix
   exact At.of_immediate p.inbounds hbyte p.pos (.bulk 17#u32 hpe (.tableFill idx hencoding))
-    ((Wasm.BytesAt.mk hp hpl hpb).append ⟨hbytes, hlen, hbound⟩)
+    ((Wasm1.BytesAt.mk hp hpl hpb).append ⟨hbytes, hlen, hbound⟩)
 
 /-- Exact bulk dispatch trace includes reader rejection and callback rejection. -/
 theorem bulk {data env locals index st} (p : Pending data env locals index st)
@@ -254,4 +254,4 @@ theorem bulk {data env locals index st} (p : Pending data env locals index st)
     obtain ⟨rfl, rfl, rfl⟩ := run
     exact ⟨[], by simp, .silent _ _ (Outcomes.empty _)⟩
 
-end Itasca.MultiValue.CallbackBytes
+end Itasca.Wasm2.CallbackBytes

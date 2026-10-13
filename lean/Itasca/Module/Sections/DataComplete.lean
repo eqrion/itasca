@@ -36,7 +36,7 @@ private theorem data_active_complete {data : Slice U8} {pos next : Usize}
   obtain ⟨afterMemory, hmemory, hoffset⟩ := hbefore.split
   have hvec : At ByteVecEncoding data afterOffset init.val next := ⟨encodedInit, hi, hinit⟩
   obtain ⟨count, content, hn, hcount, encoded, hrep, hbytes⟩ := hvec.vector_split
-  have hpayload : Wasm.BytesAt data content init.val next := by simpa only [hrep.bytes] using hbytes
+  have hpayload : Wasm1.BytesAt data content init.val next := by simpa only [hrep.bytes] using hbytes
   obtain ⟨first, hflags, hindex⟩ := hmemory.split
   have hrf := hflags.read_u32 flags hf
   have hrm := module.decode_segment_index.profile_complete
@@ -98,7 +98,7 @@ private theorem data_passive_complete {data : Slice U8} {pos next : Usize}
     obtain ⟨first, hflags, hinit⟩ := hs.split
     have hvec : At ByteVecEncoding data first init.val next := ⟨_, hi, hinit⟩
     obtain ⟨count, content, hn, hcount, encoded, hrep, hbytes⟩ := hvec.vector_split
-    have hpayload : Wasm.BytesAt data content init.val next := by simpa only [hrep.bytes] using hbytes
+    have hpayload : Wasm1.BytesAt data content init.val next := by simpa only [hrep.bytes] using hbytes
     have hrf := hflags.read_u32 1#u32 hf
     have hrc := reader.read_u32_leb.complete data first count content hcount
     have hx : module.decode_data_segment data pos env .Wasm2 ⦃ r =>

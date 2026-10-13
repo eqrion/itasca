@@ -2,7 +2,7 @@ import Itasca.Wasm2.Simd.LaneReaders
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Simd
+namespace Itasca.Wasm2.Simd
 
 def constReader (st : code.OpIterState) (data : Slice U8) :
     Result (core.result.Result (U64 × U64) error.OpError × code.OpIterState) := do
@@ -133,4 +133,4 @@ theorem MemoryOperation.inputs_lane (op : MemoryOperation) (h : op.laneCount ≠
 theorem MemoryOperation.outputs_pop (op : MemoryOperation) :
     outputTypes (memoryOutput op.store) = op.outputs := by cases op <;> rfl
 
-end Itasca.MultiValue.Simd
+end Itasca.Wasm2.Simd

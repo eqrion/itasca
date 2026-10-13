@@ -83,7 +83,7 @@ theorem local_at {data start pos next count ty}
     ModuleBinary.At ModuleBinary.LocalEncoding data start (count, ty) next := by
   obtain ⟨cs, hs, hl, hb, he⟩ := hc
   obtain ⟨ts, rfl, ht⟩ := ht
-  exact ⟨cs ++ [ModuleBinary.valueByte ty], ⟨cs, he, rfl⟩, (⟨hs, hl, hb⟩ : Wasm.BytesAt data start cs pos).append ht⟩
+  exact ⟨cs ++ [ModuleBinary.valueByte ty], ⟨cs, he, rfl⟩, (⟨hs, hl, hb⟩ : Wasm1.BytesAt data start cs pos).append ht⟩
 
 end ModuleLocals
 
@@ -170,7 +170,7 @@ theorem module.decode_locals_loop.spec (data : Slice U8) (groups : U32)
                     exact hallowedType
                 · scalar_tac
   · refine ⟨le_refl _, hi, [], by simp, ?_, by simp [ModuleLocals.declared], hsize, by simp⟩
-    exact ⟨[], .nil, Wasm.BytesAt.nil data q hq⟩
+    exact ⟨[], .nil, Wasm1.BytesAt.nil data q hq⟩
 
 @[step]
 theorem module.decode_locals.spec (data : Slice U8) (pos : Usize) (profile : ValidationProfile := .Wasm1) :
@@ -205,6 +205,6 @@ theorem module.decode_locals.spec (data : Slice U8) (pos : Usize) (profile : Val
           obtain ⟨bytes, he', hs'⟩ := hb
           refine ⟨count ++ bytes, ⟨count, bytes, ?_, he', rfl⟩, ?_⟩
           · simpa using (hn ▸ he)
-          · exact (⟨hstart, hlength, hbound⟩ : Wasm.BytesAt data pos count start).append hs'
+          · exact (⟨hstart, hlength, hbound⟩ : Wasm1.BytesAt data pos count start).append hs'
 
 end Itasca

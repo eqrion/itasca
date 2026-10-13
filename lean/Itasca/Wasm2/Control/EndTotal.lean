@@ -30,7 +30,7 @@ theorem Shape.pop_ctrl {st s : code.OpIterState} (hs : Shape st)
 
 end Itasca.Control
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- The common continuation of the extracted `end_frame` branches. The
 handler proof below checks this factorization against the extracted code. -/
@@ -154,7 +154,7 @@ theorem finishFrame.total (st : code.BodyState) (env : module.Env) (isElse : Boo
         step* by first | exact hsp | simp_all
   · step* <;> simp_all
 
-end Itasca.MultiValue
+end Itasca.Wasm2
 
 namespace Itasca
 
@@ -165,7 +165,7 @@ theorem code.end_frame.total (st : code.BodyState) (env : module.Env)
     code.end_frame st env isElse ⦃ r =>
       Control.Shape r.2.core ∧ r.2.blocks.val.length = r.2.core.ctrls.val.length ∧
       r.2.blocks.val.length ≤ st.blocks.val.length ∧ r.2.core.pos = st.core.pos ⦄ := by
-  rw [MultiValue.end_frame_normalized]
+  rw [Wasm2.end_frame_normalized]
   by_cases hn : alloc.vec.Vec.len st.blocks = 0#usize
   ·
     simp only [hn, ↓reduceIte]
@@ -175,13 +175,13 @@ theorem code.end_frame.total (st : code.BodyState) (env : module.Env)
     step as ⟨bt, hbt⟩
     step as ⟨frame, hf⟩
     have hindex : i.val < st.core.ctrls.val.length := by scalar_tac
-    have finish := MultiValue.finishFrame.total st env isElse bt frame i
+    have finish := Wasm2.finishFrame.total st env isElse bt frame i
       (alloc.vec.Vec.len st.blocks) hs ha hindex
     cases isElse <;> cases hk : frame.kind <;>
       simp only [Bool.false_eq_true, ↓reduceIte]
     case false.Then =>
       simp only [signature.BlockType.params.spec, signature.BlockType.results.spec, bind_ok]
-      step with code.same_types.spec env (MultiValue.inputs bt) (MultiValue.outputs bt)
+      step with code.same_types.spec env (Wasm2.inputs bt) (Wasm2.outputs bt)
       step
       split
       · split
@@ -193,7 +193,7 @@ theorem code.end_frame.total (st : code.BodyState) (env : module.Env)
       | solve | simp_all
       | skip
     all_goals
-      simp only [MultiValue.finishFrame, signature.BlockType.results.spec,
+      simp only [Wasm2.finishFrame, signature.BlockType.results.spec,
         signature.BlockType.params.spec, alloc.vec.Vec.index_mut_slice_index,
         bind_ok, Bool.false_eq_true, ↓reduceIte] at finish ⊢
       convert finish using 1

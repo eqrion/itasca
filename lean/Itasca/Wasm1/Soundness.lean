@@ -12,10 +12,10 @@ theorem code.validate_body_with.wasm_spec {V : Type} (visitor : code.OpVisitor V
     (ctx : code.Context) (bt : code.BlockType)
     (hresults : ctx.results.val = Control.results bt) (v : V) :
     code.validate_body_with visitor data env ctx v ⦃ r =>
-      r.1 = .Ok () → Wasm.Validated data env ctx bt ⦄ := by
+      r.1 = .Ok () → Wasm1.Validated data env ctx bt ⦄ := by
   exact code.validate_body_with.of_wasm_steps visitor data env ctx bt
     (by rw [hresults]; exact Body.initialBlockType_results bt)
-    (Wasm.steps visitor hvisitor data env ctx bt) v
+    (Wasm1.steps visitor hvisitor data env ctx bt) v
 
 /-- Even an arbitrary caller-supplied result vector cannot cause the extracted
 body validator to panic or diverge, provided visitor hooks terminate. -/
@@ -26,7 +26,7 @@ theorem code.validate_body_with.wasm_total {V : Type} (visitor : code.OpVisitor 
   obtain ⟨r, hr, _⟩ := WP.spec_imp_exists
     (code.validate_body_with.of_wasm_steps visitor data env ctx
       (Body.initialBlockType ctx.results.val) rfl
-      (Wasm.steps visitor hvisitor data env ctx (Body.initialBlockType ctx.results.val)) v)
+      (Wasm1.steps visitor hvisitor data env ctx (Body.initialBlockType ctx.results.val)) v)
   exact ⟨r, hr⟩
 
 theorem code.validate_body_with.wasm_sound_of_total {V : Type} (visitor : code.OpVisitor V)
@@ -34,7 +34,7 @@ theorem code.validate_body_with.wasm_sound_of_total {V : Type} (visitor : code.O
     (ctx : code.Context) (bt : code.BlockType)
     (hresults : ctx.results.val = Control.results bt) (v v' : V)
     (haccepted : code.validate_body_with visitor data env ctx v = .ok (.Ok (), v')) :
-    Wasm.Validated data env ctx bt := by
+    Wasm1.Validated data env ctx bt := by
   have hs := code.validate_body_with.wasm_spec visitor hvisitor data env ctx bt hresults v
   simpa [haccepted] using hs
 
@@ -42,7 +42,7 @@ theorem code.validate_body_with.wasm_sound_of_total {V : Type} (visitor : code.O
 theorem code.validate_body.wasm_spec (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (bt : code.BlockType)
     (hresults : ctx.results.val = Control.results bt) :
-    code.validate_body data env ctx ⦃ r => r = .Ok () → Wasm.Validated data env ctx bt ⦄ := by
+    code.validate_body data env ctx ⦃ r => r = .Ok () → Wasm1.Validated data env ctx bt ⦄ := by
   obtain ⟨⟨r, v⟩, hr, hp⟩ := WP.spec_imp_exists
     (code.validate_body_with.wasm_spec code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       FullVisitor.empty_total data env ctx bt hresults ())
@@ -58,7 +58,7 @@ theorem code.validate_body.wasm_sound (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (bt : code.BlockType)
     (hresults : ctx.results.val = Control.results bt)
     (haccepted : code.validate_body data env ctx = .ok (.Ok ())) :
-    Wasm.Validated data env ctx bt := by
+    Wasm1.Validated data env ctx bt := by
   have hs := code.validate_body.wasm_spec data env ctx bt hresults
   simpa [haccepted] using hs
 

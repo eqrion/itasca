@@ -40,7 +40,7 @@ private theorem same_ctrls {st} (f : Frame st) (data : Slice U8) (env : module.E
 theorem Frame.step_numeric {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (opcode : U8) (op : Numeric.Operation) (next : Usize)
     (C : context) (front ins outs : List valtype)
-    (hmap : Numeric.NumericOp opcode op) (hb : Wasm.BytesAt data st.pos [] next)
+    (hmap : Numeric.NumericOp opcode op) (hb : Wasm1.BytesAt data st.pos [] next)
     (hsize : st.vals.val.length < Usize.max)
     (ht : Instr_ok C op.instruction (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.current.polymorphic_base f.operands (front ++ ins)) :
@@ -57,7 +57,7 @@ theorem Frame.step_numeric {st} (f : Frame st) (data : Slice U8) (env : module.E
 /-- Drop consumes the type supplied by its principal typing rule. -/
 theorem Frame.step_drop {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (next : Usize) (C : context) (front ins outs : List valtype)
-    (hb : Wasm.BytesAt data st.pos [] next)
+    (hb : Wasm1.BytesAt data st.pos [] next)
     (ht : Instr_ok C .DROP (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.current.polymorphic_base f.operands (front ++ ins)) :
     StepResult f data env ctx 0x1A#u8 next (front ++ outs) := by
@@ -74,7 +74,7 @@ theorem Frame.step_drop {st} (f : Frame st) (data : Slice U8) (env : module.Env)
 /-- Implicit select retains the common principal operand interpretation. -/
 theorem Frame.step_select {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (next : Usize) (C : context) (front ins outs : List valtype)
-    (hb : Wasm.BytesAt data st.pos [] next) (hsize : st.vals.val.length < Usize.max)
+    (hb : Wasm1.BytesAt data st.pos [] next) (hsize : st.vals.val.length < Usize.max)
     (ht : Instr_ok C (.SELECT none) (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.current.polymorphic_base f.operands (front ++ ins)) :
     StepResult f data env ctx 0x1B#u8 next (front ++ outs) := by
@@ -91,9 +91,9 @@ theorem Frame.step_select {st} (f : Frame st) (data : Slice U8) (env : module.En
 theorem Frame.step_i32Const {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (value : I32) (bytes : List U8) (next : Usize)
     (C : context) (front ins outs : List valtype)
-    (he : SignedLeb.Encoding bytes value.val) (hbytes : Wasm.BytesAt data st.pos bytes next)
+    (he : SignedLeb32.Encoding bytes value.val) (hbytes : Wasm1.BytesAt data st.pos bytes next)
     (hsize : st.vals.val.length < Usize.max)
-    (ht : Instr_ok C (Core.i32Const value) (.mk_functype (.mk_list ins) (.mk_list outs)))
+    (ht : Instr_ok C (Spec.i32Const value) (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.current.polymorphic_base f.operands (front ++ ins)) :
     StepResult f data env ctx 0x41#u8 next (front ++ outs) := by
   have heffect : ins = [] ∧ outs = [.I32] := by cases ht; exact ⟨rfl, rfl⟩
@@ -110,7 +110,7 @@ theorem Frame.step_i32Const {st} (f : Frame st) (data : Slice U8) (env : module.
 theorem Frame.step_i64Const {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (value : I64) (bytes : List U8) (next : Usize)
     (C : context) (front ins outs : List valtype)
-    (he : SignedLeb64.Encoding bytes value.val) (hbytes : Wasm.BytesAt data st.pos bytes next)
+    (he : SignedLeb64.Encoding bytes value.val) (hbytes : Wasm1.BytesAt data st.pos bytes next)
     (hsize : st.vals.val.length < Usize.max)
     (ht : Instr_ok C (ScalarConst.i64 value) (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.current.polymorphic_base f.operands (front ++ ins)) :
@@ -129,7 +129,7 @@ theorem Frame.step_i64Const {st} (f : Frame st) (data : Slice U8) (env : module.
 theorem Frame.step_f32Const {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (value : U32) (bytes : List U8) (next : Usize)
     (C : context) (front ins outs : List valtype)
-    (he : FloatBits.Encoding 4 bytes value.val) (hbytes : Wasm.BytesAt data st.pos bytes next)
+    (he : FloatBits.Encoding 4 bytes value.val) (hbytes : Wasm1.BytesAt data st.pos bytes next)
     (hsize : st.vals.val.length < Usize.max)
     (ht : Instr_ok C (ScalarConst.f32 value) (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.current.polymorphic_base f.operands (front ++ ins)) :
@@ -148,7 +148,7 @@ theorem Frame.step_f32Const {st} (f : Frame st) (data : Slice U8) (env : module.
 theorem Frame.step_f64Const {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (value : U64) (bytes : List U8) (next : Usize)
     (C : context) (front ins outs : List valtype)
-    (he : FloatBits.Encoding 8 bytes value.val) (hbytes : Wasm.BytesAt data st.pos bytes next)
+    (he : FloatBits.Encoding 8 bytes value.val) (hbytes : Wasm1.BytesAt data st.pos bytes next)
     (hsize : st.vals.val.length < Usize.max)
     (ht : Instr_ok C (ScalarConst.f64 value) (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.current.polymorphic_base f.operands (front ++ ins)) :

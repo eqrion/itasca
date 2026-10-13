@@ -3,7 +3,7 @@ import Itasca.Support.EnvTranslation
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 def inputs : signature.BlockType → signature.ResultType
   | .TypeIndex i => .Type i .Params
@@ -56,16 +56,16 @@ theorem blockType_ok (env : module.Env) (C : context) (hC : wf_context C)
       · exact blockType_wf (.TypeIndex i)
     · simp [inputs, resolve, List.getElem?_eq_none (by omega : env.types.val.length ≤ i.val)] at hi
 
-end Itasca.MultiValue
+end Itasca.Wasm2
 
 namespace Itasca
 
 @[simp]
 theorem signature.BlockType.params.spec (bt : signature.BlockType) :
-    signature.BlockType.params bt = .ok (MultiValue.inputs bt) := by cases bt <;> rfl
+    signature.BlockType.params bt = .ok (Wasm2.inputs bt) := by cases bt <;> rfl
 
 @[simp]
 theorem signature.BlockType.results.spec (bt : signature.BlockType) :
-    signature.BlockType.results bt = .ok (MultiValue.outputs bt) := by cases bt <;> rfl
+    signature.BlockType.results bt = .ok (Wasm2.outputs bt) := by cases bt <;> rfl
 
 end Itasca

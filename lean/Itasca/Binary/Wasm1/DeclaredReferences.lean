@@ -3,7 +3,7 @@ import Itasca.Spec.DeclaredReferences
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Wasm
+namespace Itasca.Wasm1
 
 /-- Only reference instructions carry declaration obligations in a flat stream. -/
 def Token.Declared (refs : List funcidx) : Token → Prop
@@ -49,7 +49,7 @@ theorem Immediate.declared {opcode token bytes} (hi : Immediate opcode token byt
       DeclaredReferences.instructionIndices, MemoryMeaning.fullLoad, MemoryMeaning.packedLoad,
       MemoryMeaning.fullStore, MemoryMeaning.packedStore]
   | _ => simp [Token.Declared, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices,
-      Core.i32Const, ScalarConst.i64, ScalarConst.f32, ScalarConst.f64]
+      Spec.i32Const, ScalarConst.i64, ScalarConst.f32, ScalarConst.f64]
 
 theorem At.declared {data start token next} (h : At data start token next) (refs : List funcidx) :
     token.Declared refs := by
@@ -82,4 +82,4 @@ theorem BodyEncoding.declared {data ops} (h : BodyEncoding data ops) (refs : Lis
   have hd := ((tokensDeclared_append _ _ _).mp (hc.declared refs)).1
   exact (he.declared_iff refs).mp hd
 
-end Itasca.Wasm
+end Itasca.Wasm1

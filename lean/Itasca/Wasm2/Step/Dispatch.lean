@@ -3,7 +3,7 @@ import Itasca.Binary.Leb128
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- Reference, table, bulk and SIMD dispatch do not inspect the result context. -/
 theorem wasm2_context {V : Type} (visitor : code.OpVisitor V)
@@ -27,7 +27,7 @@ def wasm2PrefixedStep {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterS
     if subopcode < 8#u32 then code.step_extended visitor st data env ctx 0xfc#u8 v
     else code.step_bulk visitor {st with pos := next} data env subopcode v
 
-end Itasca.MultiValue
+end Itasca.Wasm2
 
 namespace Itasca
 
@@ -56,8 +56,8 @@ theorem code.step_wasm2.saturating {V : Type} (visitor : code.OpVisitor V)
 theorem code.step_wasm2.prefixed {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step_wasm2 visitor st data env ctx 0xfc#u8 v =
-      MultiValue.wasm2PrefixedStep visitor st data env ctx v := by
-  simp [code.step_wasm2, MultiValue.wasm2PrefixedStep]
+      Wasm2.wasm2PrefixedStep visitor st data env ctx v := by
+  simp [code.step_wasm2, Wasm2.wasm2PrefixedStep]
   congr 1
   funext r
   cases r with
@@ -172,6 +172,6 @@ theorem code.step_wasm2.bulk {V : Type} (visitor : code.OpVisitor V)
       code.step_bulk visitor {st with pos := next} data env subopcode v := by
   rw [code.step_wasm2.prefixed]
   have hr := reader.read_u32_leb.complete data st.pos subopcode next hd
-  simp [MultiValue.wasm2PrefixedStep, hr, Nat.not_lt.mpr hs]
+  simp [Wasm2.wasm2PrefixedStep, hr, Nat.not_lt.mpr hs]
 
 end Itasca

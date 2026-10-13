@@ -5,7 +5,7 @@ import Itasca.Wasm2.NumericExt.Sound
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- Callbacks may reject, but any successful callback keeps the reader's
 independent byte and typing certificate. -/
@@ -124,4 +124,4 @@ theorem Pending.wasm2_scalar {data env locals index st} (p : Pending data env lo
   exact p.wasm2_dispatch visitor v hv ctx hlocals opcode hscalar hsize hbyte
     (fun hb => p.simd visitor v hv hsize hb)
 
-end Itasca.MultiValue
+end Itasca.Wasm2

@@ -28,7 +28,7 @@ theorem CodeAt.optional {profile data start entries finish} (h : CodeAt data sta
       rcases hstop with h | ⟨_, _, _, hh, _⟩
       · omega
       · have := hh.span; omega
-    exact ⟨[], .absent, Wasm.BytesAt.nil data start hb⟩
+    exact ⟨[], .absent, Wasm1.BytesAt.nil data start hb⟩
 
 /-- Independent byte spans arranged exactly as the greedy environment/code/tail
 parser consumes them. The raw module and all per-body limits are unchanged. -/
@@ -40,15 +40,15 @@ structure Layout (data : Slice U8) (raw : Module) (decls : ModuleEnv.Declaration
   tail : At (fun ds bs => ModuleTail.Encoding ds bs profile) data tailPos raw.data (Slice.len data)
   stop : ModuleEnv.StopAt data codePos
 
-private theorem whole (data : Slice U8) : Wasm.BytesAt data 0#usize data.val (Slice.len data) := by
+private theorem whole (data : Slice U8) : Wasm1.BytesAt data 0#usize data.val (Slice.len data) := by
   constructor <;> simp
 
 private theorem split_three {data : Slice U8} {before code tail : List U8}
     (h : data.val = before ++ code ++ tail) :
-    ∃ codePos tailPos, Wasm.BytesAt data 0#usize before codePos ∧
-      Wasm.BytesAt data codePos code tailPos ∧
-      Wasm.BytesAt data tailPos tail (Slice.len data) := by
-  have hs : Wasm.BytesAt data 0#usize (before ++ (code ++ tail)) (Slice.len data) := by
+    ∃ codePos tailPos, Wasm1.BytesAt data 0#usize before codePos ∧
+      Wasm1.BytesAt data codePos code tailPos ∧
+      Wasm1.BytesAt data tailPos tail (Slice.len data) := by
+  have hs : Wasm1.BytesAt data 0#usize (before ++ (code ++ tail)) (Slice.len data) := by
     simpa [h, List.append_assoc] using whole data
   obtain ⟨codePos, hb, hr⟩ := hs.split
   obtain ⟨tailPos, hc, ht⟩ := hr.split
@@ -92,7 +92,7 @@ theorem normalize {profile} (data : Slice U8) (raw : Module)
       refine ⟨decls, Slice.len data, Slice.len data, hr, ?_, ?_, ?_, .inl rfl⟩
       · exact ⟨_, hprefix, by simpa [hb] using whole data⟩
       · exact .inr ⟨hnoCode, rfl, .inl (by simp)⟩
-      · refine ⟨[], ?_, Wasm.BytesAt.nil data (Slice.len data) (by simp)⟩
+      · refine ⟨[], ?_, Wasm1.BytesAt.nil data (Slice.len data) (by simp)⟩
         rw [hnoData]
         exact ⟨[], [], ⟨[], [], .nil, .absent, rfl⟩, .nil, rfl⟩
     · have hprefix := hp (codeCustoms ++ dataCustoms) (ModuleTail.customs_append hcc hdc)

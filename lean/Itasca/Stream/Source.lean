@@ -237,7 +237,7 @@ theorem stream.SliceSource.callbacks_total (state : stream.SliceSource) :
 
 end Itasca
 
-namespace Itasca.Wasm
+namespace Itasca.Wasm1
 
 /-- A coherent bounded view is an exact interval in its parent region. -/
 theorem BytesAt.of_slice_view {data view : Slice U8} {first last : Usize}
@@ -274,7 +274,7 @@ theorem BytesAt.transport {data view : Slice U8} {first last pos next pos' next'
     have := hview.bound
     omega
 
-end Itasca.Wasm
+end Itasca.Wasm1
 
 namespace Itasca.Leb128
 
@@ -288,13 +288,13 @@ theorem Decoded.of_slice_view {data view : Slice U8} {first last pos next pos' n
     (hnext : next'.val = first.val + next.val) :
     Decoded data pos' value next' := by
   obtain ⟨bytes, hs, hn, hb, he⟩ := hd
-  have hspan := (Wasm.BytesAt.of_slice_view horder hbound hview).transport
-    (⟨hs, hn, hb⟩ : Wasm.BytesAt view pos bytes next) hpos hnext
+  have hspan := (Wasm1.BytesAt.of_slice_view horder hbound hview).transport
+    (⟨hs, hn, hb⟩ : Wasm1.BytesAt view pos bytes next) hpos hnext
   exact ⟨bytes, hspan.suffix, hspan.length, hspan.bound, he⟩
 
 end Itasca.Leb128
 
-namespace Itasca.Wasm
+namespace Itasca.Wasm1
 
 /-- Restrict an encoded interval to a coherent view that contains its end.
 Only the bytes of that view need to be available to the reader. -/
@@ -317,7 +317,7 @@ theorem BytesAt.restrict {data view : Slice U8} {first last pos next pos' next' 
   · have := hbytes.length
     omega
 
-end Itasca.Wasm
+end Itasca.Wasm1
 
 namespace Itasca.Leb128
 
@@ -332,8 +332,8 @@ theorem Decoded.to_slice_view {data view : Slice U8} {first last pos next pos' n
     (hwithin : next'.val ≤ last.val) :
     Decoded view pos value next := by
   obtain ⟨bytes, hs, hn, hb, he⟩ := hd
-  have hspan := (Wasm.BytesAt.of_slice_view horder hbound hview).restrict
-    (⟨hs, hn, hb⟩ : Wasm.BytesAt data pos' bytes next') hpos hnext hwithin
+  have hspan := (Wasm1.BytesAt.of_slice_view horder hbound hview).restrict
+    (⟨hs, hn, hb⟩ : Wasm1.BytesAt data pos' bytes next') hpos hnext hwithin
   exact ⟨bytes, hspan.suffix, hspan.length, hspan.bound, he⟩
 
 end Itasca.Leb128

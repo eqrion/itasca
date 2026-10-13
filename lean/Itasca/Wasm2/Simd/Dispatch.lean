@@ -3,7 +3,7 @@ import Itasca.Visitor.Basic
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.Simd
+namespace Itasca.Wasm2.Simd
 
 /-- Exact callback factorization of the SIMD prefix dispatcher. -/
 def subStep {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
@@ -51,7 +51,7 @@ def prefixStep {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
   | .Err e => .ok (.Err e, st, v)
   | .Ok (subopcode, next) => subStep visitor {st with pos := next} data env subopcode v
 
-end Itasca.MultiValue.Simd
+end Itasca.Wasm2.Simd
 
 namespace Itasca
 
@@ -75,8 +75,8 @@ macro "finish_simd_run" : tactic => `(tactic| (
 
 theorem code.step_simd.eq_runs {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (v : V) :
-    code.step_simd visitor st data env v = MultiValue.Simd.prefixStep visitor st data env v := by
-  unfold code.step_simd MultiValue.Simd.prefixStep
+    code.step_simd visitor st data env v = Wasm2.Simd.prefixStep visitor st data env v := by
+  unfold code.step_simd Wasm2.Simd.prefixStep
   congr 1
   funext r
   cases r with
@@ -84,7 +84,7 @@ theorem code.step_simd.eq_runs {V : Type} (visitor : code.OpVisitor V)
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok pair =>
     obtain ⟨subopcode, next⟩ := pair
-    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, Std.uncurry, MultiValue.Simd.subStep]
+    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, Std.uncurry, Wasm2.Simd.subStep]
     congr 1
     funext sig
     cases sig with

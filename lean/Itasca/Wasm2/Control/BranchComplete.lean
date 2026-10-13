@@ -13,8 +13,8 @@ theorem code.branch.complete (st : code.BodyState) (data : Slice U8)
     (hb : c.value_stack_base.val = outer.length)
     (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (hd : Leb128.Decoded data st.core.pos depth next)
-    (hl : MultiValue.labelAt st depth.val = some view)
-    (hts : MultiValue.resolve env view = some ts)
+    (hl : Wasm2.labelAt st depth.val = some view)
+    (hts : Wasm2.resolve env view = some ts)
     (hreal : Sequence.Realizes (Control.polymorphic st.core) segment
       (before ++ ts.map Translate.valueType)) :
     ∃ s, code.branch st data env false = .ok (.Ok (), s) ∧
@@ -29,7 +29,7 @@ theorem code.branch.complete (st : code.BodyState) (data : Slice U8)
     (code.mark_unreachable.spec popped cs c (by simpa [hc] using hctrls)
       (by simp [hvals, hb]))
   refine ⟨⟨s⟩, ?_, hc', by simp [hc', hctrls], hp'.trans hp, ?_⟩
-  · simp [code.branch.eq_core, MultiValue.branchCore, hread, hpop, hm, core.result.Result.Insts.CoreOpsTry.branch]
+  · simp [code.branch.eq_core, Wasm2.branchCore, hread, hpop, hm, core.result.Result.Insts.CoreOpsTry.branch]
   · simpa [hvals, hb] using hv'
 
 /-- A typed conditional branch restores every target operand, subject only to
@@ -40,8 +40,8 @@ theorem code.branch.conditional_complete (st : code.BodyState) (data : Slice U8)
     (hv : st.core.vals.val = outer ++ segment) (hb : (Control.base st.core).val = outer.length)
     (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (hd : Leb128.Decoded data st.core.pos depth next)
-    (hl : MultiValue.labelAt st depth.val = some view)
-    (hts : MultiValue.resolve env view = some ts)
+    (hl : Wasm2.labelAt st depth.val = some view)
+    (hts : Wasm2.resolve env view = some ts)
     (hcap : st.core.vals.val.length + ts.length ≤ Usize.max)
     (hreal : Sequence.Realizes (Control.polymorphic st.core) segment
       (before ++ (ts.map Translate.valueType ++ [.I32]))) :
@@ -68,11 +68,11 @@ theorem code.branch.conditional_complete (st : code.BodyState) (data : Slice U8)
   rw [WP.spec_equiv_exists]
   refine ⟨(.Ok (), ⟨s⟩), ?_, rfl, hc'.trans (hc.trans hcc), by simp [hc', hc, hcc],
     hp'.trans (hp.trans hpc), rest ++ ts.map code.StackType.Val, ?_, ?_, ?_⟩
-  · simp [code.branch.eq_core, MultiValue.branchCore, hread, hcond, hpop, hpush, core.result.Result.Insts.CoreOpsTry.branch]
+  · simp [code.branch.eq_core, Wasm2.branchCore, hread, hcond, hpop, hpush, core.result.Result.Insts.CoreOpsTry.branch]
   · simpa [hvals, List.append_assoc] using hv'
   · simp only [List.length_append, List.length_map]
     omega
-  · exact (Frames.realizes_append_concrete _ rest ts _).mpr
+  · exact (Sequence.realizes_append_concrete _ rest ts _).mpr
       ⟨before, by simpa [Control.polymorphic, hcc] using ht, rfl⟩
 
 end Itasca

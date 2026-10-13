@@ -16,7 +16,7 @@ theorem code.enter_info.bytes (st : code.BodyState) (data : Slice U8)
     (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (hcap : st.blocks.val.length < Usize.max) :
     code.enter_info st data env kind ⦃ r => ∀ bt, r.1 = .Ok bt →
-      MultiValue.BlockDecoded data st.core.pos bt r.2.core.pos ⦄ := by
+      Wasm2.BlockDecoded data st.core.pos bt r.2.core.pos ⦄ := by
   unfold code.enter_info
   obtain ⟨res, hr, hdecoded⟩ := WP.spec_imp_exists (signature.read_block_type.spec data st.core.pos)
   rw [hr]
@@ -119,7 +119,7 @@ theorem code.branch_info.bytes (st : code.BodyState) (data : Slice U8)
 
 end Itasca
 
-namespace Itasca.MultiValue.CallbackTrace
+namespace Itasca.Wasm2.CallbackTrace
 
 open VisitorTrace
 
@@ -163,9 +163,9 @@ theorem bodyRun.trace {A V : Type} (data : Slice U8) (start : Usize)
       .complete (.single s.core (action a) reply token ht hn hb)
         (by cases reply <;> exact Outcomes.single _ _)⟩
 
-end Itasca.MultiValue.CallbackTrace
+end Itasca.Wasm2.CallbackTrace
 
-namespace Itasca.MultiValue.CallbackTrace
+namespace Itasca.Wasm2.CallbackTrace
 
 open VisitorTrace
 
@@ -346,4 +346,4 @@ theorem dispatch_call_indirect {V : Type} (visitor : code.OpVisitor V)
   cases reply <;> simp [hookResult]
 
 
-end Itasca.MultiValue.CallbackTrace
+end Itasca.Wasm2.CallbackTrace

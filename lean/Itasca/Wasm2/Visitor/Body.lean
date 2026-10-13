@@ -37,7 +37,7 @@ encoding and generated Wasm 2.0 typing, without a callback totality premise. -/
 theorem code.validate_multi_value_body_with.wasm_sound {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32) (v v' : V)
     (h : code.validate_multi_value_body_with visitor data env ctx index v = .ok (.Ok (), v')) :
-    MultiValue.Validated data env ctx.locals index :=
+    Wasm2.Validated data env ctx.locals index :=
   code.validate_multi_value_body.wasm_sound data env ctx.locals index
     (code.validate_multi_value_body_with.accepted_erase visitor data env ctx index v v' h)
 
@@ -46,9 +46,9 @@ subject to the implementation limits and accepting callbacks. -/
 theorem code.validate_multi_value_body_with.wasm_complete {V : Type} (visitor : code.OpVisitor V)
     (ha : FullVisitor.Accepts visitor) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32)
-    (henv : MultiValue.EnvironmentWithinLimits env)
+    (henv : Wasm2.EnvironmentWithinLimits env)
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
-    (hbody : MultiValue.Validated data env ctx.locals index) (v : V) :
+    (hbody : Wasm2.Validated data env ctx.locals index) (v : V) :
     ∃ v', code.validate_multi_value_body_with visitor data env ctx index v = .ok (.Ok (), v') :=
   code.validate_multi_value_body_with.accepted_lift visitor ha data env ctx index v
     (code.validate_multi_value_body.wasm_complete data env ctx.locals index henv hsize hbody)
@@ -59,7 +59,7 @@ theorem code.validate_multi_value_body_with.wasm_spec {V : Type} (visitor : code
     (hv : FullVisitor.Total visitor) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (v : V) :
     code.validate_multi_value_body_with visitor data env ctx index v ⦃ r =>
-      r.1 = .Ok () → MultiValue.Validated data env ctx.locals index ⦄ := by
+      r.1 = .Ok () → Wasm2.Validated data env ctx.locals index ⦄ := by
   obtain ⟨⟨r, v'⟩, hr⟩ := code.validate_multi_value_body_with.wasm_total visitor hv data env ctx index v
   rw [hr, WP.spec_ok]
   intro hok

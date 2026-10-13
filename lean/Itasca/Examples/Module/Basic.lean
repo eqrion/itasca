@@ -4,7 +4,7 @@ import Itasca.Stream.SliceRejection
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.ModuleExamples
+namespace Itasca.Examples.ModuleBasic
 
 /-- Concrete fixtures use ordinary bounded vectors, with no external evaluator. -/
 def bytes (xs : List U8) (h : xs.length ≤ Usize.max := by scalar_tac) : Slice U8 :=
@@ -143,4 +143,4 @@ theorem invalid_version_rejected : module.validate_module
   simp [module.read_header, h0, h1, h2, h3, h4, h5, h6, h7,
     core.result.Result.Insts.CoreOpsTry.branch]
 
-end Itasca.ModuleExamples
+end Itasca.Examples.ModuleBasic

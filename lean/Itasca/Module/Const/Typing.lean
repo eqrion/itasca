@@ -18,7 +18,7 @@ theorem Valid.instruction_typed {env e t} (h : Valid env e t)
     Instr_ok C (instruction e) (.mk_functype (.mk_list []) (.mk_list [Translate.valueType t])) ∧
       Instr_const C (instruction e) := by
   cases h with
-  | i32 value => exact ⟨Core.i32Const_typed C hC value, .const C _ _ hC (instruction_wf (.I32 value))⟩
+  | i32 value => exact ⟨Spec.i32Const_typed C hC value, .const C _ _ hC (instruction_wf (.I32 value))⟩
   | i64 value => exact ⟨ScalarConst.i64_typed C hC value, .const C _ _ hC (instruction_wf (.I64 value))⟩
   | f32 value => exact ⟨ScalarConst.f32_typed C hC value, .const C _ _ hC (instruction_wf (.F32 value))⟩
   | f64 value => exact ⟨ScalarConst.f64_typed C hC value, .const C _ _ hC (instruction_wf (.F64 value))⟩

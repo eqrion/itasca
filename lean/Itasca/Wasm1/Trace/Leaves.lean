@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.VisitorTrace
 
-theorem step_nop {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_nop {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_NOP) :
@@ -20,7 +20,7 @@ theorem step_nop {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
   exact ⟨.plain .NOP, rfl, by simp only [Action.opcode]; decide,
     .no_immediate p.inbounds (by simpa [global_simps] using hbyte) p.pos .nop⟩
 
-theorem step_i32_const {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_i32_const {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_I32_CONST) :
@@ -32,10 +32,10 @@ theorem step_i32_const {data env ctx bt st} (p : Wasm.Pending data env ctx bt st
   have hs := code.read_i32_const.spec st data (by have := p.val_capacity; omega)
   rw [hr, WP.spec_ok] at hs
   dsimp only at hs
-  exact ⟨.plain (Core.i32Const a), rfl, by simp only [Action.opcode]; decide,
+  exact ⟨.plain (Spec.i32Const a), rfl, by simp only [Action.opcode]; decide,
     .of_s32 a p.inbounds (by simpa [global_simps] using hbyte) p.pos hs.2.1⟩
 
-theorem step_i64_const {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_i64_const {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_I64_CONST) :
@@ -50,7 +50,7 @@ theorem step_i64_const {data env ctx bt st} (p : Wasm.Pending data env ctx bt st
   exact ⟨.plain (ScalarConst.i64 a), rfl, by simp only [Action.opcode]; decide,
     .of_s64 a p.inbounds (by simpa [global_simps] using hbyte) p.pos hs.2.1⟩
 
-theorem step_f32_const {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_f32_const {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_F32_CONST) :
@@ -65,7 +65,7 @@ theorem step_f32_const {data env ctx bt st} (p : Wasm.Pending data env ctx bt st
   exact ⟨.plain (ScalarConst.f32 a), rfl, by simp only [Action.opcode]; decide,
     .of_f32 a p.inbounds (by simpa [global_simps] using hbyte) p.pos hs.2.1⟩
 
-theorem step_f64_const {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_f64_const {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_F64_CONST) :
@@ -80,7 +80,7 @@ theorem step_f64_const {data env ctx bt st} (p : Wasm.Pending data env ctx bt st
   exact ⟨.plain (ScalarConst.f64 a), rfl, by simp only [Action.opcode]; decide,
     .of_f64 a p.inbounds (by simpa [global_simps] using hbyte) p.pos hs.2.1⟩
 
-theorem step_drop {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_drop {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_DROP) :
@@ -99,7 +99,7 @@ theorem step_drop {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
     .no_immediate p.inbounds (by simpa [global_simps] using hbyte)
       (by simpa [hs.2.1] using p.pos) .drop⟩
 
-theorem step_select {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_select {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_SELECT) :
@@ -117,7 +117,7 @@ theorem step_select {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
     .no_immediate p.inbounds (by simpa [global_simps] using hbyte)
       (by simpa [hs.2.1] using p.pos) .select⟩
 
-theorem step_unreachable {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_unreachable {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_UNREACHABLE) :
@@ -129,7 +129,7 @@ theorem step_unreachable {data env ctx bt st} (p : Wasm.Pending data env ctx bt 
   intro s a hr
   obtain ⟨_, outer, _, _, base, _, ctrls, vals⟩ := p.opened
   obtain ⟨s', hm, _, _, _, hp⟩ := WP.spec_imp_exists
-    (code.mark_unreachable.spec st (p.parents.map WasmFrames.Saved.ctrl) p.current.ctrl ctrls
+    (code.mark_unreachable.spec st (p.parents.map Wasm1.Frames.Saved.ctrl) p.current.ctrl ctrls
       (by simp [vals, base]))
   have heq : s' = s := by simpa [code.read_unreachable, hm] using hr
   subst s
@@ -137,7 +137,7 @@ theorem step_unreachable {data env ctx bt st} (p : Wasm.Pending data env ctx bt 
     .no_immediate p.inbounds (by simpa [global_simps] using hbyte)
       (by simpa [hp] using p.pos) .unreachable⟩
 
-theorem step_local_get {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_local_get {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_LOCAL_GET) :
@@ -150,7 +150,7 @@ theorem step_local_get {data env ctx bt st} (p : Wasm.Pending data env ctx bt st
   have hpoly : Control.polymorphic st = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
   have hC : EnvTranslation.Matches env ctx
-      (WasmFrames.enter C p.current.form p.current.ctrl.block_type) := spine.matches.enter _
+      (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type) := spine.matches.enter _
   have hs := code.read_local_get.prefix st data env ctx outer p.current.vals vals
     (by have := p.val_capacity; omega)
     _ hC p.current.ops (by simpa [hpoly] using typed)
@@ -160,7 +160,7 @@ theorem step_local_get {data env ctx bt st} (p : Wasm.Pending data env ctx bt st
     .of_immediate p.inbounds (by simpa [global_simps] using hbyte) p.pos
       (.localGet a encoding) ⟨suffix, length, bound⟩⟩
 
-theorem step_local_set {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_local_set {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_LOCAL_SET) :
@@ -173,7 +173,7 @@ theorem step_local_set {data env ctx bt st} (p : Wasm.Pending data env ctx bt st
   have hpoly : Control.polymorphic st = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
   have hC : EnvTranslation.Matches env ctx
-      (WasmFrames.enter C p.current.form p.current.ctrl.block_type) := spine.matches.enter _
+      (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type) := spine.matches.enter _
   have hs := code.read_local_set.prefix st data env ctx outer p.current.vals vals
     (by simp [Control.base, ctrls, base])
     _ hC p.current.ops (by simpa [hpoly] using typed)
@@ -183,7 +183,7 @@ theorem step_local_set {data env ctx bt st} (p : Wasm.Pending data env ctx bt st
     .of_immediate p.inbounds (by simpa [global_simps] using hbyte) p.pos
       (.localSet a encoding) ⟨suffix, length, bound⟩⟩
 
-theorem step_local_tee {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_local_tee {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_LOCAL_TEE) :
@@ -196,7 +196,7 @@ theorem step_local_tee {data env ctx bt st} (p : Wasm.Pending data env ctx bt st
   have hpoly : Control.polymorphic st = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
   have hC : EnvTranslation.Matches env ctx
-      (WasmFrames.enter C p.current.form p.current.ctrl.block_type) := spine.matches.enter _
+      (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type) := spine.matches.enter _
   have hs := code.read_local_tee.prefix st data env ctx outer p.current.vals vals
     (by simp [Control.base, ctrls, base])
     (by have := p.val_capacity; omega)
@@ -207,7 +207,7 @@ theorem step_local_tee {data env ctx bt st} (p : Wasm.Pending data env ctx bt st
     .of_immediate p.inbounds (by simpa [global_simps] using hbyte) p.pos
       (.localTee a encoding) ⟨suffix, length, bound⟩⟩
 
-theorem step_global_get {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_global_get {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_GLOBAL_GET) :
@@ -220,7 +220,7 @@ theorem step_global_get {data env ctx bt st} (p : Wasm.Pending data env ctx bt s
   have hpoly : Control.polymorphic st = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
   have hC : EnvTranslation.Matches env ctx
-      (WasmFrames.enter C p.current.form p.current.ctrl.block_type) := spine.matches.enter _
+      (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type) := spine.matches.enter _
   have hs := code.read_global_get.prefix st data env ctx outer p.current.vals vals
     (by have := p.val_capacity; omega)
     _ hC p.current.ops (by simpa [hpoly] using typed)
@@ -230,7 +230,7 @@ theorem step_global_get {data env ctx bt st} (p : Wasm.Pending data env ctx bt s
     .of_immediate p.inbounds (by simpa [global_simps] using hbyte) p.pos
       (.globalGet a encoding) ⟨suffix, length, bound⟩⟩
 
-theorem step_global_set {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_global_set {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_GLOBAL_SET) :
@@ -243,7 +243,7 @@ theorem step_global_set {data env ctx bt st} (p : Wasm.Pending data env ctx bt s
   have hpoly : Control.polymorphic st = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
   have hC : EnvTranslation.Matches env ctx
-      (WasmFrames.enter C p.current.form p.current.ctrl.block_type) := spine.matches.enter _
+      (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type) := spine.matches.enter _
   have hs := code.read_global_set.prefix st data env ctx outer p.current.vals vals
     (by simp [Control.base, ctrls, base])
     _ hC p.current.ops (by simpa [hpoly] using typed)
@@ -253,7 +253,7 @@ theorem step_global_set {data env ctx bt st} (p : Wasm.Pending data env ctx bt s
     .of_immediate p.inbounds (by simpa [global_simps] using hbyte) p.pos
       (.globalSet a encoding) ⟨suffix, length, bound⟩⟩
 
-theorem step_call {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_call {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_CALL) :
@@ -266,7 +266,7 @@ theorem step_call {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
   have hpoly : Control.polymorphic st = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
   have hC : EnvTranslation.Matches env ctx
-      (WasmFrames.enter C p.current.form p.current.ctrl.block_type) := spine.matches.enter _
+      (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type) := spine.matches.enter _
   have hs := code.read_call.prefix st data env ctx outer p.current.vals vals
     (by simp [Control.base, ctrls, base])
     (by have := p.val_capacity; omega)
@@ -277,7 +277,7 @@ theorem step_call {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
     .of_immediate p.inbounds (by simpa [global_simps] using hbyte) p.pos
       (.call a encoding) ⟨suffix, length, bound⟩⟩
 
-theorem step_call_indirect {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_call_indirect {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_CALL_INDIRECT) :
@@ -290,7 +290,7 @@ theorem step_call_indirect {data env ctx bt st} (p : Wasm.Pending data env ctx b
   have hpoly : Control.polymorphic st = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
   have hC : EnvTranslation.Matches env ctx
-      (WasmFrames.enter C p.current.form p.current.ctrl.block_type) := spine.matches.enter _
+      (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type) := spine.matches.enter _
   have hs := code.read_call_indirect.prefix st data env ctx outer p.current.vals vals
     (by simp [Control.base, ctrls, base]) (by have := p.val_capacity; omega)
     _ hC p.current.ops (by simpa [hpoly] using typed)
@@ -300,7 +300,7 @@ theorem step_call_indirect {data env ctx bt st} (p : Wasm.Pending data env ctx b
     by simp only [Action.opcode]; decide,
     .of_index_zero a p.inbounds (by simpa [global_simps] using hbyte) p.pos hd hm hz hn⟩
 
-theorem step_memory_size {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_memory_size {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_MEMORY_SIZE) :
@@ -314,7 +314,7 @@ theorem step_memory_size {data env ctx bt st} (p : Wasm.Pending data env ctx bt 
   have hpoly : Control.polymorphic st = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
   have hC : EnvTranslation.Matches env ctx
-      (WasmFrames.enter C p.current.form p.current.ctrl.block_type) := spine.matches.enter _
+      (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type) := spine.matches.enter _
   have hs := code.read_memory_size.prefix st data env ctx outer p.current.vals vals
     (by have := p.val_capacity; omega)
     _ hC p.current.ops (by simpa [hpoly] using typed)
@@ -323,7 +323,7 @@ theorem step_memory_size {data env ctx bt st} (p : Wasm.Pending data env ctx bt 
   exact ⟨.plain .MEMORY_SIZE, rfl, by simp only [Action.opcode]; decide,
     .of_byte 0#u8 p.inbounds (by simpa [global_simps] using hbyte) p.pos .memorySize hb hv hn⟩
 
-theorem step_memory_grow {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_memory_grow {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_MEMORY_GROW) :
@@ -337,7 +337,7 @@ theorem step_memory_grow {data env ctx bt st} (p : Wasm.Pending data env ctx bt 
   have hpoly : Control.polymorphic st = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
   have hC : EnvTranslation.Matches env ctx
-      (WasmFrames.enter C p.current.form p.current.ctrl.block_type) := spine.matches.enter _
+      (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type) := spine.matches.enter _
   have hs := code.read_memory_grow.prefix st data env ctx outer p.current.vals vals
     (by simp [Control.base, ctrls, base])
     (by have := p.val_capacity; omega)
@@ -347,7 +347,7 @@ theorem step_memory_grow {data env ctx bt st} (p : Wasm.Pending data env ctx bt 
   exact ⟨.plain .MEMORY_GROW, rfl, by simp only [Action.opcode]; decide,
     .of_byte 0#u8 p.inbounds (by simpa [global_simps] using hbyte) p.pos .memoryGrow hb hv hn⟩
 
-theorem step_numeric {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_numeric {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe) (opcode : U8) (operation : Numeric.Operation)
     (hbyte : data.val[p.start.val]'p.inbounds = opcode)
@@ -372,7 +372,7 @@ theorem step_numeric {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
   have hb := Numeric.NumericOp.bounds hrow
   omega
 
-theorem step_memory {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
+theorem step_memory {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe) (opcode : U8) (operation : MemoryMeaning.Operation)
     (hbyte : data.val[p.start.val]'p.inbounds = opcode)
@@ -388,12 +388,12 @@ theorem step_memory {data env ctx bt st} (p : Wasm.Pending data env ctx bt st)
   have hpoly : Control.polymorphic st = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
   have hC : EnvTranslation.Matches env ctx
-      (WasmFrames.enter C p.current.form p.current.ctrl.block_type) := spine.matches.enter _
+      (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type) := spine.matches.enter _
   have hs :
       (if operation.store then code.read_store st data env operation.ty operation.naturalAlign
         else code.read_load st data env operation.ty operation.naturalAlign) ⦃
         EnvOps.MemoryPost data st outer p.current.vals
-          (WasmFrames.enter C p.current.form p.current.ctrl.block_type) p.current.ops operation.op ⦄ := by
+          (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type) p.current.ops operation.op ⦄ := by
     cases hstore : operation.store with
     | false =>
       simpa only [hstore, Bool.false_eq_true, ↓reduceIte] using

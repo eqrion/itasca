@@ -4,7 +4,7 @@ import Itasca.Handler.EnvMemory
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 open Sequence
 
@@ -31,11 +31,11 @@ theorem TypedPrefix.unreachable {C : context} {inputs : List valtype} {ops : Lis
 theorem TypedPrefix.i32Const {C : context} {inputs : List valtype} {ops : List instr} {poly : Bool}
     {vals : List code.StackType} (h : TypedPrefix C inputs ops poly vals)
     (hC : wf_context C) (value : I32) :
-    TypedPrefix C inputs (ops ++ [Core.i32Const value]) poly (vals ++ [.Val .I32]) := by
-  apply h.append hC _ (Core.i32Const_wf value)
+    TypedPrefix C inputs (ops ++ [Spec.i32Const value]) poly (vals ++ [.Val .I32]) := by
+  apply h.append hC _ (Spec.i32Const_wf value)
   intro out hout
   obtain ⟨before, rfl, hb⟩ := Realizes.snoc_val .I32 hout
-  exact ⟨before, hb, Core.i32Const_framed C hC value before⟩
+  exact ⟨before, hb, Spec.i32Const_framed C hC value before⟩
 
 theorem TypedPrefix.i64Const {C : context} {inputs : List valtype} {ops : List instr} {poly : Bool}
     {vals : List code.StackType} (h : TypedPrefix C inputs ops poly vals)
@@ -68,17 +68,17 @@ theorem ResumePrefix.of_prefix {C inputs ops poly vals}
     (h : TypedPrefix C inputs ops poly vals) : ResumePrefix C inputs ops poly vals [] :=
   ⟨h.wellFormed, fun ts ht => by simpa using h.typed ts ht⟩
 
-end Itasca.MultiValue
+end Itasca.Wasm2
 
 namespace Itasca.StackSemantics
 
 theorem NumericEffect.multi_prefix {initial : List valtype} {poly before inputs output after}
     (h : NumericEffect poly before inputs output after)
     (C : context) (hC : wf_context C) (ops : List instr) (op : instr)
-    (htyped : MultiValue.TypedPrefix C initial ops poly before) (hwf : wf_instr op)
+    (htyped : Wasm2.TypedPrefix C initial ops poly before) (hwf : wf_instr op)
     (hop : Instr_ok C op (.mk_functype (.mk_list (inputs.map Translate.valueType))
       (.mk_list [Translate.valueType output]))) :
-    MultiValue.TypedPrefix C initial (ops ++ [op]) poly after := by
+    Wasm2.TypedPrefix C initial (ops ++ [op]) poly after := by
   obtain ⟨rest, rfl, htransfer⟩ := h
   apply htyped.append hC op hwf
   intro out hout
@@ -90,8 +90,8 @@ theorem NumericEffect.multi_prefix {initial : List valtype} {poly before inputs 
 
 theorem Popped.multi_prefix_drop {initial : List valtype} {poly before t after} (h : Popped poly before t after)
     (C : context) (hC : wf_context C) (ops : List instr)
-    (htyped : MultiValue.TypedPrefix C initial ops poly before) :
-    MultiValue.TypedPrefix C initial (ops ++ [.DROP]) poly after := by
+    (htyped : Wasm2.TypedPrefix C initial ops poly before) :
+    Wasm2.TypedPrefix C initial (ops ++ [.DROP]) poly after := by
   apply htyped.append hC .DROP .instr_case_2
   intro out hout
   let u := match t with | .Val vt => Translate.valueType vt | .Bot => valtype.I32
@@ -103,8 +103,8 @@ theorem Popped.multi_prefix_drop {initial : List valtype} {poly before t after} 
 
 theorem SelectEffect.multi_prefix {initial : List valtype} {poly before t after} (h : SelectEffect poly before t after)
     (C : context) (hC : wf_context C) (ops : List instr)
-    (htyped : MultiValue.TypedPrefix C initial ops poly before) :
-    MultiValue.TypedPrefix C initial (ops ++ [.SELECT none]) poly after := by
+    (htyped : Wasm2.TypedPrefix C initial ops poly before) :
+    Wasm2.TypedPrefix C initial (ops ++ [.SELECT none]) poly after := by
   obtain ⟨hselect, rest, rfl, htransfer⟩ := h
   apply htyped.append hC (.SELECT none) (.instr_case_3 _)
   intro out hout
@@ -124,7 +124,7 @@ namespace Itasca
 theorem code.step_numeric.multi_prefix {inputs : List valtype} {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (opcode : U8) (op : Numeric.Operation)
     (outer segment : List code.StackType) (v : V) (C : context) (hC : wf_context C)
-    (ops : List instr) (htyped : MultiValue.TypedPrefix C inputs ops (Control.polymorphic st) segment)
+    (ops : List instr) (htyped : Wasm2.TypedPrefix C inputs ops (Control.polymorphic st) segment)
     (hmap : Numeric.NumericOp opcode op)
     (hvals : st.vals.val = outer ++ segment)
     (hbase : (Control.base st).val = outer.length)
@@ -133,7 +133,7 @@ theorem code.step_numeric.multi_prefix {inputs : List valtype} {V : Type} (visit
     code.step_numeric visitor st opcode v ⦃ r =>
       r.2.1.ctrls = st.ctrls ∧ r.2.1.pos = st.pos ∧
       ∃ after, r.2.1.vals.val = outer ++ after ∧ after.length ≤ segment.length + 1 ∧
-        (r.1 = .Ok () → MultiValue.TypedPrefix C inputs (ops ++ [op.instruction])
+        (r.1 = .Ok () → Wasm2.TypedPrefix C inputs (ops ++ [op.instruction])
           (Control.polymorphic st) after) ⦄ := by
   rw [code.step_numeric.dispatch visitor st opcode op v hmap]
   obtain ⟨⟨res, s⟩, hr, hc, hp, after, hv, hlen, hout⟩ :=
@@ -163,7 +163,7 @@ theorem code.step.numeric_multi_prefix {inputs : List valtype} {V : Type} (visit
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (opcode : U8) (op : Numeric.Operation)
     (outer segment : List code.StackType) (v : V) (C : context) (hC : wf_context C)
-    (ops : List instr) (htyped : MultiValue.TypedPrefix C inputs ops (Control.polymorphic st) segment)
+    (ops : List instr) (htyped : Wasm2.TypedPrefix C inputs ops (Control.polymorphic st) segment)
     (hmap : Numeric.NumericOp opcode op)
     (hvals : st.vals.val = outer ++ segment)
     (hbase : (Control.base st).val = outer.length)
@@ -172,7 +172,7 @@ theorem code.step.numeric_multi_prefix {inputs : List valtype} {V : Type} (visit
     code.step visitor st data env ctx opcode v ⦃ r =>
       r.2.1.ctrls = st.ctrls ∧ r.2.1.pos = st.pos ∧
       ∃ after, r.2.1.vals.val = outer ++ after ∧ after.length ≤ segment.length + 1 ∧
-        (r.1 = .Ok () → MultiValue.TypedPrefix C inputs (ops ++ [op.instruction])
+        (r.1 = .Ok () → Wasm2.TypedPrefix C inputs (ops ++ [op.instruction])
           (Control.polymorphic st) after) ⦄ := by
   rw [code.step.numeric_dispatch visitor st data env ctx opcode v hmap.bounds.1]
   exact code.step_numeric.multi_prefix visitor st opcode op outer segment v C hC ops htyped
@@ -181,7 +181,7 @@ theorem code.step.numeric_multi_prefix {inputs : List valtype} {V : Type} (visit
 theorem code.step_select.multi_prefix {inputs : List valtype} {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (outer segment : List code.StackType) (v : V) (C : context) (hC : wf_context C)
-    (ops : List instr) (htyped : MultiValue.TypedPrefix C inputs ops (Control.polymorphic st) segment)
+    (ops : List instr) (htyped : Wasm2.TypedPrefix C inputs ops (Control.polymorphic st) segment)
     (hvals : st.vals.val = outer ++ segment)
     (hbase : (Control.base st).val = outer.length)
     (hsize : st.vals.val.length < Usize.max)
@@ -189,7 +189,7 @@ theorem code.step_select.multi_prefix {inputs : List valtype} {V : Type} (visito
     code.step visitor st data env ctx code.OP_SELECT v ⦃ r =>
       r.2.1.ctrls = st.ctrls ∧ r.2.1.pos = st.pos ∧
       ∃ after, r.2.1.vals.val = outer ++ after ∧ after.length ≤ segment.length + 1 ∧
-        (r.1 = .Ok () → MultiValue.TypedPrefix C inputs (ops ++ [.SELECT none])
+        (r.1 = .Ok () → Wasm2.TypedPrefix C inputs (ops ++ [.SELECT none])
           (Control.polymorphic st) after) ⦄ := by
   rw [code.step_select.dispatch]
   obtain ⟨⟨res, s⟩, hr, hc, hp, after, hv, hlen, hout⟩ :=

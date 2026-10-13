@@ -2,7 +2,7 @@ import Aeneas
 import «wasm2.0»
 import Itasca.Spec.DeclaredReferences
 
-namespace Itasca.MultiValue.Simd
+namespace Itasca.Wasm2.Simd
 
 /-! Independent Core 2.0 SIMD meanings. These tables are specification data;
 none of the instruction identities or typing rules depend on validator code. -/
@@ -2449,4 +2449,4 @@ theorem pure_bound {opcode op} (hmap : pureMeaning opcode = some op) : opcode < 
   · contradiction
   · omega
 
-end Itasca.MultiValue.Simd
+end Itasca.Wasm2.Simd

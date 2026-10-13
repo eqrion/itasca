@@ -2,7 +2,7 @@ import Itasca.Wasm2.Control.EndComplete
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 private theorem empty_spine_form {env root parents C outer form ins}
     (h : Frames.Spine env root parents C outer form ins) (he : parents = []) : form = .body := by
@@ -68,4 +68,4 @@ theorem Pending.end_after {data env locals index st} (p : Pending data env local
     · simpa [Frames.bodyType_else] using p.bodyType
     · simp [hb]
 
-end Itasca.MultiValue
+end Itasca.Wasm2

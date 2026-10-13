@@ -4,7 +4,7 @@ import Itasca.Binary.Wasm2.EncodingComplete
 
 open Aeneas Aeneas.Std Result
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- Successful prefixes of the real byte reader and opcode dispatch. This is
 proof infrastructure; public completeness starts from independent typing. -/
@@ -98,4 +98,4 @@ theorem Execution.public {data env locals index ft final}
       change run data env ⟨locals, alloc.vec.Vec.new _⟩ index (initial index) ⦃ r => r = .Ok () ⦄
       simp [hloop]
 
-end Itasca.MultiValue
+end Itasca.Wasm2

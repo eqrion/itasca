@@ -15,7 +15,7 @@ def PostWith (profile : ValidationProfile) (data : Slice U8) : core.result.Resul
   | .Err _ => True
   | .Ok (env, next) => ∃ initial start decls last,
       module.Env.new = .ok initial ∧
-      Wasm.BytesAt data 0#usize ModuleBinary.magicVersion start ∧
+      Wasm1.BytesAt data 0#usize ModuleBinary.magicVersion start ∧
       Run (profile := profile) data initial {} start 0#u8 env decls next last ∧ Bounded env next.val
 
 abbrev LoopPost (data : Slice U8) (initial : module.Env) (decls : Declarations)

@@ -3,7 +3,7 @@ import Itasca.Binary.Wasm1.Encoding
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue.BulkBinary
+namespace Itasca.Wasm2.BulkBinary
 
 /-- Core 2.0 bulk-memory and table immediates after their 0xfc subopcode.
 Memory indices are reserved literal zero bytes in this version. -/
@@ -50,4 +50,4 @@ theorem Immediate.subopcode_range {subopcode op bytes} (h : Immediate subopcode 
     8 ≤ subopcode.val ∧ subopcode.val ≤ 17 := by
   cases h <;> decide
 
-end Itasca.MultiValue.BulkBinary
+end Itasca.Wasm2.BulkBinary

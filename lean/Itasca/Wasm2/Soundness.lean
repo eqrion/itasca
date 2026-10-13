@@ -7,7 +7,7 @@ import Itasca.Wasm2.Control.Return
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.MultiValue
+namespace Itasca.Wasm2
 
 /-- Every opcode preserves semantic control and exact byte provenance on
 success. Reserved opcodes and malformed immediates need no input premise. -/
@@ -35,7 +35,7 @@ theorem steps (data : Slice U8) (env : module.Env) (locals : alloc.vec.Vec types
     · simpa [step] using p.call hbyte
     · simpa [step] using p.call_indirect hbyte
 
-end Itasca.MultiValue
+end Itasca.Wasm2
 
 namespace Itasca
 
@@ -44,14 +44,14 @@ binary grammar and generated Wasm 2.0 typing, on arbitrary bytes and contexts. -
 theorem code.validate_multi_value_body.wasm_spec (data : Slice U8) (env : module.Env)
     (locals : alloc.vec.Vec types.ValueType) (index : U32) :
     code.validate_multi_value_body data env locals index ⦃ r =>
-      r = .Ok () → MultiValue.Validated data env locals index ⦄ :=
-  MultiValue.public_spec_of_steps data env locals index
-    (MultiValue.steps data env locals ⟨locals, alloc.vec.Vec.new _⟩ index rfl)
+      r = .Ok () → Wasm2.Validated data env locals index ⦄ :=
+  Wasm2.public_spec_of_steps data env locals index
+    (Wasm2.steps data env locals ⟨locals, alloc.vec.Vec.new _⟩ index rfl)
 
 theorem code.validate_multi_value_body.wasm_sound (data : Slice U8) (env : module.Env)
     (locals : alloc.vec.Vec types.ValueType) (index : U32)
     (haccepted : code.validate_multi_value_body data env locals index = .ok (.Ok ())) :
-    MultiValue.Validated data env locals index := by
+    Wasm2.Validated data env locals index := by
   have hs := code.validate_multi_value_body.wasm_spec data env locals index
   simpa [haccepted] using hs
 

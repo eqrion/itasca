@@ -4,7 +4,7 @@ import Itasca.Handler.EnvDispatch
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Wasm
+namespace Itasca.Wasm1
 
 
 private theorem run_after {A V : Type} {data env ctx bt st}
@@ -22,17 +22,17 @@ private theorem run_after {A V : Type} {data env ctx bt st}
 
 private theorem Pending.index_post_after {data env ctx bt st} (p : Pending data env ctx bt st)
     (C : context) (outer : List code.StackType)
-    (spine : WasmFrames.Spine (EnvTranslation.context env ctx) p.parents C outer p.current.form)
-    (header : WasmFrames.Header C p.current)
+    (spine : Wasm1.Frames.Spine (EnvTranslation.context env ctx) p.parents C outer p.current.form)
+    (header : Wasm1.Frames.Header C p.current)
     (base : p.current.ctrl.value_stack_base.val = outer.length)
-    (ctrls : st.ctrls.val = p.parents.map WasmFrames.Saved.ctrl ++ [p.current.ctrl])
+    (ctrls : st.ctrls.val = p.parents.map Wasm1.Frames.Saved.ctrl ++ [p.current.ctrl])
     (vals : st.vals.val = outer ++ p.current.vals)
     (opcode : U8) (op : U32 → instr) (hbyte : data.val[p.start.val]'p.inbounds = opcode)
     (hwf : ∀ idx, wf_instr (op idx))
     (himm : ∀ idx bytes, Leb128.Encoding bytes idx.val → Immediate opcode (.plain (op idx)) bytes)
     (r : core.result.Result U32 error.OpError × code.OpIterState)
     (hpost : EnvOps.IndexPost data st outer p.current.vals
-      (WasmFrames.enter C p.current.form p.current.ctrl.block_type) p.current.ops op r)
+      (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type) p.current.ops op r)
     (idx : U32) (hr : r.1 = .Ok idx)
     (hprofile : ∀ C idx, Wasm1.Instruction C (op idx) := by intro C idx; exact .leaf _ _ (by trivial)) : p.After r.2 := by
   obtain ⟨hd, hc, rest, hv, hl, ht⟩ := hpost idx hr
@@ -51,7 +51,7 @@ theorem Pending.step_local_get {data env ctx bt st} (p : Pending data env ctx bt
   obtain ⟨C, outer, spine, header, base, typed, ctrls, vals⟩ := id p.opened
   have hpoly : Control.polymorphic st = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
-  have hC : EnvTranslation.Matches env ctx (WasmFrames.enter C p.current.form p.current.ctrl.block_type) :=
+  have hC : EnvTranslation.Matches env ctx (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type) :=
     spine.matches.enter _
   rw [code.step_local_get.dispatch]
   apply run_after p _ _ v _ (hvisitor.on_local_get v)
@@ -69,7 +69,7 @@ theorem Pending.step_local_set {data env ctx bt st} (p : Pending data env ctx bt
   obtain ⟨C, outer, spine, header, base, typed, ctrls, vals⟩ := id p.opened
   have hpoly : Control.polymorphic st = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
-  have hC : EnvTranslation.Matches env ctx (WasmFrames.enter C p.current.form p.current.ctrl.block_type) :=
+  have hC : EnvTranslation.Matches env ctx (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type) :=
     spine.matches.enter _
   rw [code.step_local_set.dispatch]
   apply run_after p _ _ v _ (hvisitor.on_local_set v)
@@ -87,7 +87,7 @@ theorem Pending.step_local_tee {data env ctx bt st} (p : Pending data env ctx bt
   obtain ⟨C, outer, spine, header, base, typed, ctrls, vals⟩ := id p.opened
   have hpoly : Control.polymorphic st = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
-  have hC : EnvTranslation.Matches env ctx (WasmFrames.enter C p.current.form p.current.ctrl.block_type) :=
+  have hC : EnvTranslation.Matches env ctx (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type) :=
     spine.matches.enter _
   rw [code.step_local_tee.dispatch]
   apply run_after p _ _ v _ (hvisitor.on_local_tee v)
@@ -106,7 +106,7 @@ theorem Pending.step_global_get {data env ctx bt st} (p : Pending data env ctx b
   obtain ⟨C, outer, spine, header, base, typed, ctrls, vals⟩ := id p.opened
   have hpoly : Control.polymorphic st = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
-  have hC : EnvTranslation.Matches env ctx (WasmFrames.enter C p.current.form p.current.ctrl.block_type) :=
+  have hC : EnvTranslation.Matches env ctx (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type) :=
     spine.matches.enter _
   rw [code.step_global_get.dispatch]
   apply run_after p _ _ v _ (hvisitor.on_global_get v)
@@ -124,7 +124,7 @@ theorem Pending.step_global_set {data env ctx bt st} (p : Pending data env ctx b
   obtain ⟨C, outer, spine, header, base, typed, ctrls, vals⟩ := id p.opened
   have hpoly : Control.polymorphic st = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
-  have hC : EnvTranslation.Matches env ctx (WasmFrames.enter C p.current.form p.current.ctrl.block_type) :=
+  have hC : EnvTranslation.Matches env ctx (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type) :=
     spine.matches.enter _
   rw [code.step_global_set.dispatch]
   apply run_after p _ _ v _ (hvisitor.on_global_set v)
@@ -142,7 +142,7 @@ theorem Pending.step_call {data env ctx bt st} (p : Pending data env ctx bt st)
   obtain ⟨C, outer, spine, header, base, typed, ctrls, vals⟩ := id p.opened
   have hpoly : Control.polymorphic st = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
-  have hC : EnvTranslation.Matches env ctx (WasmFrames.enter C p.current.form p.current.ctrl.block_type) :=
+  have hC : EnvTranslation.Matches env ctx (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type) :=
     spine.matches.enter _
   rw [code.step_call.dispatch]
   apply run_after p _ _ v _ (hvisitor.on_call v)
@@ -161,7 +161,7 @@ theorem Pending.step_call_indirect {data env ctx bt st} (p : Pending data env ct
   obtain ⟨C, outer, spine, header, base, typed, ctrls, vals⟩ := id p.opened
   have hpoly : Control.polymorphic st = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
-  have hC : EnvTranslation.Matches env ctx (WasmFrames.enter C p.current.form p.current.ctrl.block_type) :=
+  have hC : EnvTranslation.Matches env ctx (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type) :=
     spine.matches.enter _
   rw [code.step_call_indirect.dispatch]
   apply run_after p _ _ v _ (fun s idx => hvisitor.on_call_indirect v s idx 0#u32)
@@ -182,16 +182,16 @@ theorem Pending.step_call_indirect {data env ctx bt st} (p : Pending data env ct
 
 private theorem Pending.reserved_post_after {data env ctx bt st} (p : Pending data env ctx bt st)
     (C : context) (outer : List code.StackType)
-    (spine : WasmFrames.Spine (EnvTranslation.context env ctx) p.parents C outer p.current.form)
-    (header : WasmFrames.Header C p.current)
+    (spine : Wasm1.Frames.Spine (EnvTranslation.context env ctx) p.parents C outer p.current.form)
+    (header : Wasm1.Frames.Header C p.current)
     (base : p.current.ctrl.value_stack_base.val = outer.length)
-    (ctrls : st.ctrls.val = p.parents.map WasmFrames.Saved.ctrl ++ [p.current.ctrl])
+    (ctrls : st.ctrls.val = p.parents.map Wasm1.Frames.Saved.ctrl ++ [p.current.ctrl])
     (vals : st.vals.val = outer ++ p.current.vals)
     (opcode : U8) (op : instr) (hbyte : data.val[p.start.val]'p.inbounds = opcode)
     (hwf : wf_instr op) (himm : Immediate opcode (.plain op) [0#u8])
     (r : core.result.Result Unit error.OpError × code.OpIterState)
     (hpost : EnvOps.ReservedPost data st outer p.current.vals
-      (WasmFrames.enter C p.current.form p.current.ctrl.block_type) p.current.ops op r)
+      (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type) p.current.ops op r)
     (hr : r.1 = .Ok ())
     (hprofile : ∀ C, Wasm1.Instruction C op := by intro C; exact .leaf _ _ (by trivial)) : p.After r.2 := by
   obtain ⟨⟨hp, hz, hn⟩, hc, rest, hv, hl, ht⟩ := hpost hr
@@ -210,7 +210,7 @@ theorem Pending.step_memory_size {data env ctx bt st} (p : Pending data env ctx 
   obtain ⟨C, outer, spine, header, base, typed, ctrls, vals⟩ := id p.opened
   have hpoly : Control.polymorphic st = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
-  have hC : EnvTranslation.Matches env ctx (WasmFrames.enter C p.current.form p.current.ctrl.block_type) :=
+  have hC : EnvTranslation.Matches env ctx (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type) :=
     spine.matches.enter _
   rw [code.step_memory_size.dispatch]
   apply run_after p _ _ v _ (fun s _ => hvisitor.on_memory_size v s)
@@ -228,7 +228,7 @@ theorem Pending.step_memory_grow {data env ctx bt st} (p : Pending data env ctx 
   obtain ⟨C, outer, spine, header, base, typed, ctrls, vals⟩ := id p.opened
   have hpoly : Control.polymorphic st = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
-  have hC : EnvTranslation.Matches env ctx (WasmFrames.enter C p.current.form p.current.ctrl.block_type) :=
+  have hC : EnvTranslation.Matches env ctx (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type) :=
     spine.matches.enter _
   rw [code.step_memory_grow.dispatch]
   apply run_after p _ _ v _ (fun s _ => hvisitor.on_memory_grow v s)
@@ -249,13 +249,13 @@ theorem Pending.step_memory {data env ctx bt st} (p : Pending data env ctx bt st
   obtain ⟨C, outer, spine, header, base, typed, ctrls, vals⟩ := id p.opened
   have hpoly : Control.polymorphic st = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
-  have hC : EnvTranslation.Matches env ctx (WasmFrames.enter C p.current.form p.current.ctrl.block_type) :=
+  have hC : EnvTranslation.Matches env ctx (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type) :=
     spine.matches.enter _
   have hb : (Control.base st).val = outer.length := by simpa [Control.base, ctrls] using base
   have hread : (if operation.store then code.read_store st data env operation.ty operation.naturalAlign
       else code.read_load st data env operation.ty operation.naturalAlign) ⦃
         EnvOps.MemoryPost data st outer p.current.vals
-          (WasmFrames.enter C p.current.form p.current.ctrl.block_type) p.current.ops operation.op ⦄ := by
+          (Wasm1.Frames.enter C p.current.form p.current.ctrl.block_type) p.current.ops operation.op ⦄ := by
     cases hs : operation.store with
     | false =>
         simp only [Bool.false_eq_true, ↓reduceIte]
@@ -281,4 +281,4 @@ theorem Pending.step_memory {data env ctx bt st} (p : Pending data env ctx bt st
       ((show BytesAt data st.pos alignment middle from ⟨ha, hna, hba⟩).append ⟨ho, hno, hbo⟩)
   · simp [hc, ctrls]
 
-end Itasca.Wasm
+end Itasca.Wasm1

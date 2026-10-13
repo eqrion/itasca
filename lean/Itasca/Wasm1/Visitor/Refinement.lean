@@ -121,12 +121,12 @@ theorem code.validate_body_with.refines {V W : Type}
     (h : code.validate_body_with visitor data env ctx v = .ok (res, v')) :
     ∃ w', code.validate_body_with replacement data env ctx w = .ok (res, w') ∧ related v' w' := by
   let bt := Body.initialBlockType ctx.results.val
-  have hsteps := Wasm.steps code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+  have hsteps := Wasm1.steps code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
     FullVisitor.empty_total data env ctx bt
   exact code.validate_body_with.refines_of_contract visitor replacement related hrefines
-    data env ctx (Wasm.State data env ctx bt)
+    data env ctx (Wasm1.State data env ctx bt)
     (hsteps.contract code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor data env ctx bt)
-    (fun hsize => Wasm.State.start data env ctx bt hsize) v w hrelated res v' h
+    (fun hsize => Wasm1.State.start data env ctx bt hsize) v w hrelated res v' h
 
 /-- Recording an arbitrary visitor preserves every ordinary public outcome and
 its underlying final visitor state, appending an observation suffix. -/

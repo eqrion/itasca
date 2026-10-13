@@ -8,7 +8,7 @@ set_option maxHeartbeats 2000000
 namespace Itasca
 
 attribute [local step] code.pop_with_type.total code.pop_stack_type.total
-  code.push_val.shape_total MultiValue.ScalarReaders.reserved_zero module.Env.declares_function.spec
+  code.push_val.shape_total Wasm2.ScalarReaders.reserved_zero module.Env.declares_function.spec
 
 /-- Index parsing preserves operand capacity as well as frame structure. -/
 @[step] theorem code.take_index.total (st : code.OpIterState) (data : Slice U8)

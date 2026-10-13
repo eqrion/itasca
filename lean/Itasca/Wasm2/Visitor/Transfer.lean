@@ -6,7 +6,7 @@ import Itasca.Wasm2.Completeness
 
 open Aeneas Aeneas.Std Result ControlFlow
 
-namespace Itasca.MultiValue.Visitor
+namespace Itasca.Wasm2.Visitor
 
 def bodyObserve {V : Type} :
     ControlFlow (V × code.BodyState) (core.result.Result Unit error.OpError × V) →
@@ -78,11 +78,11 @@ theorem body.transfer {V W : Type} (visitor : code.OpVisitor V)
           hlocals index opcode { core := { st.core with pos } } s v w v' hs
         exact ⟨.cont (w', s), by simp [hw, core.result.Result.Insts.CoreOpsTry.branch], rfl⟩
 
-end Itasca.MultiValue.Visitor
+end Itasca.Wasm2.Visitor
 
 namespace Itasca
 
-open MultiValue.Visitor
+open Wasm2.Visitor
 
 /-- Visitor replacement preserves an accepted body loop. Structural progress is
 obtained from the accepting replacement, so the source needs no totality premise. -/
@@ -116,7 +116,7 @@ theorem code.validate_multi_value_body_with_loop.accepted_transfer {V W : Type}
       obtain ⟨rfl, rfl⟩ := ht
       obtain ⟨cf, hw, ho⟩ := body.transfer visitor replacement ha data env ctx ctx' hlocals
         index st v w _ hb rfl
-      simp only [MultiValue.Visitor.body, code.validate_multi_value_body_with_loop.body] at hw
+      simp only [Wasm2.Visitor.body, code.validate_multi_value_body_with_loop.body] at hw
       rw [hw]
       cases cf with
       | cont p => simp [bodyObserve] at ho
@@ -131,7 +131,7 @@ theorem code.validate_multi_value_body_with_loop.accepted_transfer {V W : Type}
         index st v w _ hb trivial
       have hp := code.validate_multi_value_body_with_loop.body_total replacement ha.toTotal
         data env ctx' index st w hdata hs halign hbound
-      simp only [MultiValue.Visitor.body, code.validate_multi_value_body_with_loop.body] at hw
+      simp only [Wasm2.Visitor.body, code.validate_multi_value_body_with_loop.body] at hw
       simp only [code.validate_multi_value_body_with_loop.body] at hp
       rw [hw, WP.spec_ok] at hp
       rw [hw]
