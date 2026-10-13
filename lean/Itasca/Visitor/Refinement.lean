@@ -1,16 +1,28 @@
 import Itasca.Visitor.RunTrace
 
+/-!
+# Callback refinement
+
+`VisitorTrace.Refines` relates two visitors when every normally returning callback of one is
+matched by the other with the same reply and a related state. `instrument_refines` and
+`instrument_refines_back` show that the recording wrapper `instrument` refines and is refined by
+the wrapped visitor, and `CoreVisitor.run.refines` lifts a refinement through one instruction
+step. Covers both profiles.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.VisitorTrace
 
-/-- Every ordinary callback return can be reproduced with its exact outcome and
-related visitor state. This is conditional and requires no termination premise. -/
+/-- Every callback of `visitor` that returns normally is matched by a callback of `replacement`
+with the same reply and a related state. No termination of either visitor is assumed. -/
 def Refines {V W : Type} (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) : Prop :=
   ∀ v w event reply v', related v w → invoke visitor v event = .ok (reply, v') →
     ∃ w', invoke replacement w event = .ok (reply, w') ∧ related v' w'
 
+/-- `instrument visitor` refines `visitor`. A state of `visitor` relates to an instrumented state
+with the same first component and a log that extends `initial`. -/
 theorem instrument_refines {V : Type} (visitor : code.OpVisitor V)
     (initial : List Observation) :
     Refines visitor (instrument visitor)
@@ -19,6 +31,7 @@ theorem instrument_refines {V : Type} (visitor : code.OpVisitor V)
   exact ⟨(v', initial ++ added ++ [⟨event, reply⟩]), by simp [h],
     rfl, added ++ [⟨event, reply⟩], by simp⟩
 
+/-- `visitor` refines `instrument visitor`, with states related by the first component. -/
 theorem instrument_refines_back {V : Type} (visitor : code.OpVisitor V) :
     Refines (instrument visitor) visitor (fun w v => w.1 = v) := by
   rintro ⟨v, log⟩ w event reply ⟨v', log'⟩ rfl h
@@ -31,7 +44,8 @@ namespace Itasca.CoreVisitor
 
 open VisitorTrace
 
-/-- Hook refinement lifts through handler failure and callback acceptance or rejection. -/
+/-- A refinement of hooks lifts to `CoreVisitor.run`, whether the reader fails or the hook accepts
+or rejects. -/
 theorem run.refines {A V W : Type}
     (read : Result (core.result.Result A error.OpError × code.OpIterState))
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)

@@ -1,17 +1,29 @@
 import Itasca.Visitor.EventMeaning
 import Itasca.Binary.Wasm1.Encoding
 
+/-!
+# Callback traces and byte provenance
+
+Describes callback traces without mentioning the extracted code. `Chunk` is the callbacks of one
+decoded instruction, `Completed` a run of chunks, `PartialTable` an unfinished `br_table`, and
+`BodyTrace` a whole body. Each relates the observations to `Wasm1.Token` lists and the bytes they
+encode, and `Outcomes` relates them to the validator result. `BodyTrace.accepted` states that an
+accepted body consumes all its input. Covers the Wasm 1.0 body.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.VisitorTrace
 
+/-- The result of validating an instruction or a body. -/
 abbrev BodyResult := core.result.Result Unit error.OpError
 
-/-- Ordinary callback results are converted without changing their error. -/
+/-- Converts a callback reply to a validator result: a rejection becomes `OpError.Visitor`. -/
 def outcome : VisitResult → BodyResult
   | .Ok () => .Ok ()
   | .Err e => .Err (.Visitor e)
 
+/-- Every observation in the list was accepted. -/
 def AllAccepted (observations : List Observation) : Prop :=
   ∀ observation ∈ observations, observation.outcome = .Ok ()
 
@@ -20,8 +32,9 @@ theorem AllAccepted.append {xs ys} (hx : AllAccepted xs) (hy : AllAccepted ys) :
   intro o ho
   exact (List.mem_append.mp ho).elim (hx o) (hy o)
 
-/-- A rejecting callback is the last observation and matches the returned
-visitor error. Successful calls contain only accepting callbacks. -/
+/-- The observations are consistent with a result. A success has only accepted callbacks. A visitor
+error is either the reply of a rejecting last callback that follows accepted ones, or follows only
+accepted callbacks. Any other error follows only accepted callbacks. -/
 def Outcomes (observations : List Observation) : BodyResult → Prop
   | .Ok () => AllAccepted observations
   | .Err (.Visitor e) => AllAccepted observations ∨ ∃ before event,
@@ -55,8 +68,8 @@ theorem Outcomes.prepend {before observations result}
       obtain ⟨xs, event, rfl, hb⟩ := h
       exact Or.inr ⟨before ++ xs, event, by simp [List.append_assoc], hp.append hb⟩
 
-/-- Raw vector depths, in callback order, with each callback's precise cursor.
-No reader or implementation dispatcher appears in this relation. -/
+/-- The observations of the `br_table` vector entries, with their label depths in order and the
+byte cursor after each entry. The relation is defined by the binary encoding alone. -/
 inductive LabelsAt (data : Slice U8) : Usize → List Observation → List U32 → Usize → Prop where
   | nil (pos : Usize) : LabelsAt data pos [] [] pos
   | cons {pos depth st reply observations depths last} :
@@ -65,9 +78,8 @@ inductive LabelsAt (data : Slice U8) : Usize → List Observation → List U32 �
       LabelsAt data pos (⟨.op st (.br_table_label depth), reply⟩ :: observations)
         (depth :: depths) last
 
-/-- Exactly the callbacks for one fully decoded instruction. The table case
-separates vector entries from its default target, which has no label callback.
-Computed metadata and state snapshots remain in the observations. -/
+/-- The callbacks of one fully decoded instruction with its token. A `br_table` has one label
+callback per vector entry and a closing callback, and none for its default target. -/
 inductive Chunk (data : Slice U8) (start : Usize) :
     List Observation → Wasm1.Token → Usize → Prop where
   | single (st : code.OpIterState) (action : Action) (reply : VisitResult) (token : Wasm1.Token) :
@@ -84,20 +96,21 @@ inductive Chunk (data : Slice U8) (start : Usize) :
       Chunk data start (labels ++ [⟨.op st (.br_table fallback bt), reply⟩])
         (.plain (.BR_TABLE (depths.map (fun i => .mk_uN i.val)) (.mk_uN fallback.val))) st.pos
 
+/-- A chunk's bytes encode its token. -/
 theorem Chunk.encoded {data start observations token next}
     (h : Chunk data start observations token next) : Wasm1.At data start token next := by
   cases h <;> assumption
 
-/-- A rejected table can have observed some or all of its vector entries,
-without a closing table callback. Even a label that fails target merging is
-part of this prefix, since its callback has already run. -/
+/-- The callbacks of a `br_table` that stopped before its closing callback. They cover some or all
+of the vector entries, including an entry whose target merge failed after its callback ran. -/
 def PartialTable (data : Slice U8) (start : Usize) (observations : List Observation) : Prop :=
   ∃ pos count first depths last,
     Wasm1.BytesAt data start [0x0E#u8] pos ∧
     Leb128.Decoded data pos count first ∧
     LabelsAt data first observations depths last ∧ depths.length ≤ count.val
 
-/-- One actual step's callback trace, including ordinary failure. -/
+/-- The callbacks of one step that returns normally. The step either failed silently, completed an
+instruction, or stopped inside a `br_table`. -/
 inductive StepTrace (data : Slice U8) (start : Usize) :
     List Observation → BodyResult → code.OpIterState → Prop where
   | silent (e : error.OpError) (st : code.OpIterState) : Outcomes [] (.Err e) →
@@ -107,17 +120,19 @@ inductive StepTrace (data : Slice U8) (start : Usize) :
   | unfinished {observations st} (e : error.OpError) : PartialTable data start observations →
       Outcomes observations (.Err e) → StepTrace data start observations (.Err e) st
 
+/-- The callbacks of a step match its result. -/
 theorem StepTrace.outcomes {data start observations result st}
     (h : StepTrace data start observations result st) : Outcomes observations result := by
   cases h <;> assumption
 
+/-- An accepted step completed an instruction. -/
 theorem StepTrace.accepted {data start observations st}
     (h : StepTrace data start observations (.Ok ()) st) :
     ∃ token, Chunk data start observations token st.pos := by
   cases h with
   | complete hc _ => exact ⟨_, hc⟩
 
-/-- Concatenation of complete instruction chunks, independently of execution. -/
+/-- Consecutive complete instruction chunks with their tokens. -/
 inductive Completed (data : Slice U8) :
     Usize → List Observation → List Wasm1.Token → Usize → Prop where
   | nil (pos : Usize) (bound : pos.val ≤ data.length) : Completed data pos [] [] pos
@@ -125,6 +140,7 @@ inductive Completed (data : Slice U8) :
       Chunk data start first token middle → Completed data middle rest tokens next →
       Completed data start (first ++ rest) (token :: tokens) next
 
+/-- Completed chunks encode their token list. -/
 theorem Completed.encoded {data start observations tokens next}
     (h : Completed data start observations tokens next) : Wasm1.Consumed data start tokens next := by
   induction h with
@@ -132,7 +148,8 @@ theorem Completed.encoded {data start observations tokens next}
   | cons hc _ ih =>
       simpa using (Wasm1.Consumed.snoc (.nil _ (by have := hc.encoded.span; omega)) hc.encoded).append ih
 
-/-- Whole-run byte provenance. Only the final rejected table can be partial. -/
+/-- The callbacks of a whole body run: completed chunks, then possibly one partial `br_table`. An
+accepted run consumes all of the input and has no partial table. -/
 def BodyTrace (data : Slice U8) (start : Usize) (observations : List Observation)
     (result : BodyResult) : Prop :=
   Outcomes observations result ∧ ∃ complete tokens cursor tail,
@@ -140,6 +157,7 @@ def BodyTrace (data : Slice U8) (start : Usize) (observations : List Observation
     (tail = [] ∨ PartialTable data cursor tail) ∧
     (result = .Ok () → tail = [] ∧ cursor.val = data.length)
 
+/-- An accepted body run has only accepted callbacks and consumes the entire input. -/
 theorem BodyTrace.accepted {data start observations}
     (h : BodyTrace data start observations (.Ok ())) :
     AllAccepted observations ∧ ∃ tokens cursor,

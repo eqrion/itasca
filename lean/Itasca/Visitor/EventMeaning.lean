@@ -2,11 +2,22 @@ import Itasca.Binary.Wasm2.Simd
 import Itasca.Visitor.Events
 import Itasca.Binary.Wasm1.Encoding
 
+/-!
+# Meaning of visitor callbacks
+
+Assigns each callback of `Events` its opcode bytes and its specification instruction without
+reference to the extracted dispatch. `NumericHook.opcode`, `MemoryHook.opcode` and
+`ExtendedNumericHook.encoding` give the binary coordinates, `*.instruction` the SpecTec
+instruction, and `Action.token` the flat `Wasm1.Token` a completed callback stands for. Covers the
+callbacks of both profiles.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.VisitorTrace
 
-/-- Wasm opcode literals, assigned to hook mnemonics independently of extracted dispatch. -/
+/-- The opcode byte of each numeric callback, written as literals independent of the extracted
+dispatch. -/
 def NumericHook.opcode : NumericHook → U8
   | .i32_eqz => 0x45#u8
   | .i32_eq => 0x46#u8
@@ -258,7 +269,7 @@ def NumericHook.instruction : NumericHook → instr
   | .f32_reinterpret_i32 => .CVTOP .F32 .I32 (.mk_cvtop___1 .I32 .F32 (.REINTERPRET))
   | .f64_reinterpret_i64 => .CVTOP .F64 .I64 (.mk_cvtop___1 .I64 .F64 (.REINTERPRET))
 
-/-- The inverse mnemonic table uses only the independent Wasm opcode literals. -/
+/-- The numeric callback for an opcode byte, or `none` if the byte is not a numeric opcode. -/
 def NumericHook.ofOpcode (opcode : U8) : Option NumericHook :=
   match opcode.val with
   | 0x45 => some .i32_eqz
@@ -386,7 +397,8 @@ def NumericHook.ofOpcode (opcode : U8) : Option NumericHook :=
   | 0xBF => some .f64_reinterpret_i64
   | _ => none
 
-/-- Wasm memory opcode literals, assigned independently of extracted dispatch. -/
+/-- The opcode byte of each memory load or store callback, written as literals independent of the
+extracted dispatch. -/
 def MemoryHook.opcode : MemoryHook → U8
   | .i32_load => 0x28#u8
   | .i64_load => 0x29#u8
@@ -438,6 +450,7 @@ def MemoryHook.instruction : MemoryHook → code.MemArg → instr
   | .i64_store16, arg => .STORE .I64 (some (.mk_sz 16)) (MemoryMeaning.memArg arg)
   | .i64_store32, arg => .STORE .I64 (some (.mk_sz 32)) (MemoryMeaning.memArg arg)
 
+/-- The memory callback for an opcode byte, or `none` if the byte is not a load or store. -/
 def MemoryHook.ofOpcode (opcode : U8) : Option MemoryHook :=
   match opcode.val with
   | 0x28 => some .i32_load
@@ -465,7 +478,7 @@ def MemoryHook.ofOpcode (opcode : U8) : Option MemoryHook :=
   | 0x3E => some .i64_store32
   | _ => none
 
-/-- Specification meanings of the scalar extension callbacks. -/
+/-- The specification instruction denoted by each Wasm 2.0 scalar callback. -/
 def ExtendedNumericHook.instruction : ExtendedNumericHook → instr
   | .i32_extend8_s => .UNOP .I32 (.mk_unop__0 .I32 (.EXTEND 8))
   | .i32_extend16_s => .UNOP .I32 (.mk_unop__0 .I32 (.EXTEND 16))
@@ -481,6 +494,8 @@ def ExtendedNumericHook.instruction : ExtendedNumericHook → instr
   | .i64_trunc_sat_f64_s => .CVTOP .I64 .F64 (.mk_cvtop___2 .F64 .I64 (.TRUNC_SAT .S))
   | .i64_trunc_sat_f64_u => .CVTOP .I64 .F64 (.mk_cvtop___2 .F64 .I64 (.TRUNC_SAT .U))
 
+/-- The first opcode byte of each Wasm 2.0 scalar callback: `0xC0` to `0xC4` for sign extension,
+`0xFC` for saturating truncation. -/
 def ExtendedNumericHook.opcode : ExtendedNumericHook → U8
   | .i32_extend8_s => 0xC0#u8
   | .i32_extend16_s => 0xC1#u8
@@ -496,7 +511,7 @@ def ExtendedNumericHook.opcode : ExtendedNumericHook → U8
   | .i64_trunc_sat_f64_s => 0xFC#u8
   | .i64_trunc_sat_f64_u => 0xFC#u8
 
-/-- Full opcode coordinates of a scalar extension callback. -/
+/-- The opcode byte of a Wasm 2.0 scalar callback with its `0xFC` sub-opcode, if it has one. -/
 def ExtendedNumericHook.encoding : ExtendedNumericHook → U8 × Option U32
   | .i32_extend8_s => (0xC0#u8, none)
   | .i32_extend16_s => (0xC1#u8, none)
@@ -512,8 +527,8 @@ def ExtendedNumericHook.encoding : ExtendedNumericHook → U8 × Option U32
   | .i64_trunc_sat_f64_s => (0xFC#u8, some 6#u32)
   | .i64_trunc_sat_f64_u => (0xFC#u8, some 7#u32)
 
-/-- Recover the flat specification token represented by a completed callback.
-A table-label callback contributes only to the pending label vector. -/
+/-- The flat specification token that a completed callback stands for, given the `br_table` labels
+observed so far. A table-label callback has no token of its own. -/
 def Action.token (action : Action) (pending : List U32) : Option Wasm1.Token :=
   match action with
   | .unreachable => some (.plain .UNREACHABLE)
@@ -578,7 +593,7 @@ def Action.token (action : Action) (pending : List U32) : Option Wasm1.Token :=
   | .simd_shuffle low high => some (.plain (Wasm2.Simd.shuffle low high))
   | .memory hook arg => some (.plain (hook.instruction arg))
 
-/-- The opcode represented by a hook; vector-entry hooks have no separate opcode. -/
+/-- The opcode byte of a callback. The `br_table` label callback has none. -/
 def Action.opcode : Action → Option U8
   | .unreachable => some 0x00#u8
   | .nop => some 0x01#u8

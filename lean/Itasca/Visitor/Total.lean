@@ -1,11 +1,20 @@
 import Itasca.Visitor.Basic
 import Mathlib.Tactic.IntervalCases
 
+/-!
+# Total visitors
+
+`FullVisitor.Total` states that every hook of a `code.OpVisitor` returns normally, whether it
+accepts or rejects. `Total.toCore` restricts it to `CoreVisitor.Total`, and `Total.visit_numeric`
+and `Total.visit_memory` show the numeric and memory dispatch functions return normally. Covers
+the hooks of both profiles.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.FullVisitor
 
-/-- Every body visitor hook terminates, while retaining the ability to reject. -/
+/-- Every hook of a body visitor returns normally. A hook may still reject. -/
 structure Total {V : Type} (visitor : code.OpVisitor V) : Prop where
   on_function_start : ∀ (v : V) (a1 : _root_.Itasca.code.Context) (a2 : Std.U32) (a3 : Std.Usize) (a4 : Std.Usize), ∃ res v', visitor.on_function_start v a1 a2 a3 a4 = .ok (res, v')
   on_unreachable : ∀ (v : V) (a1 : _root_.Itasca.code.OpIterState), ∃ res v', visitor.on_unreachable v a1 = .ok (res, v')
@@ -217,16 +226,18 @@ structure Total {V : Type} (visitor : code.OpVisitor V) : Prop where
   on_simd_const : ∀ (v : V) (a1 : code.OpIterState) (a2 : Std.U64) (a3 : Std.U64), ∃ res v', visitor.on_simd_const v a1 a2 a3 = .ok (res, v')
   on_simd_shuffle : ∀ (v : V) (a1 : code.OpIterState) (a2 : Std.U64) (a3 : Std.U64), ∃ res v', visitor.on_simd_shuffle v a1 a2 a3 = .ok (res, v')
 
+/-- The empty visitor is total. -/
 theorem empty_total : Total code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor := by
   constructor <;> intros <;> exact ⟨.Ok (), _, rfl⟩
 
+/-- A total visitor is total on the core instruction subset. -/
 theorem Total.toCore {V : Type} {visitor : code.OpVisitor V} (h : Total visitor) :
     CoreVisitor.Total visitor :=
   ⟨h.on_nop, h.on_unreachable, h.on_i32_const, h.on_i32_add, h.on_drop,
     h.on_block, h.on_loop, h.on_if, h.on_else, h.on_end, h.on_br, h.on_br_if, h.on_return⟩
 
 set_option maxHeartbeats 4000000 in
-/-- Numeric dispatch invokes only one of the explicitly total hooks. -/
+/-- `code.visit_numeric` returns normally for a total visitor. -/
 theorem Total.visit_numeric {V : Type} {visitor : code.OpVisitor V} (h : Total visitor)
     (v : V) (st : code.OpIterState) (opcode : U8) :
     ∃ res v', code.visit_numeric visitor v st opcode = .ok (res, v') := by
@@ -358,7 +369,7 @@ theorem Total.visit_numeric {V : Type} {visitor : code.OpVisitor V} (h : Total v
   case «191» => exact h.on_f64_reinterpret_i64 v st
   all_goals exact ⟨.Ok (), v, rfl⟩
 
-/-- Memory dispatch invokes only one of the explicitly total hooks. -/
+/-- `code.visit_memory` returns normally for a total visitor. -/
 theorem Total.visit_memory {V : Type} {visitor : code.OpVisitor V} (h : Total visitor)
     (v : V) (st : code.OpIterState) (opcode : U8) (memarg : code.MemArg) :
     ∃ res v', code.visit_memory visitor v st opcode memarg = .ok (res, v') := by

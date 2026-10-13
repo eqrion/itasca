@@ -2,11 +2,19 @@ import Itasca.Support.Result
 import Itasca.Handler.BrTable
 import Itasca.Visitor.Erasure
 
+/-!
+# Erasing the visitor from the `br_table` reader
+
+`code.read_br_table.accepted_erasure` shows that an accepted `code.read_br_table` run also succeeds
+with `code.EmptyOpVisitor` and gives the same result and state. The induction over the label loop
+`code.read_table_labels_loop` is in `code.read_table_labels_loop.accepted_erasure`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- Successful label iteration can erase its visitor without assuming that the visitor always terminates. -/
+/-- An accepted label loop also succeeds with the empty visitor, with the same result and state. -/
 theorem code.read_table_labels_loop.accepted_erasure {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (count : U32) (v : V)
     (expect : Option code.BlockType) (i : U32) (hi : i.val ≤ count.val)
@@ -59,7 +67,7 @@ theorem code.read_table_labels_loop.accepted_erasure {V : Type} (visitor : code.
               code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor, code.OpVisitor.on_br_table_label.default,
               code.visit, core.result.Result.Insts.CoreOpsTry.branch] using hrec
 
-/-- The public label reader starts the erasure induction at counter zero. -/
+/-- An accepted `code.read_table_labels` also succeeds with the empty visitor. -/
 theorem code.read_table_labels.accepted_erasure {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (count : U32) (v : V)
     (result : Option code.BlockType) (st' : code.OpIterState) (v' : V)
@@ -73,7 +81,7 @@ end Itasca
 
 namespace Itasca
 
-/-- Accepting branch-table validation is independent of its label visitor. -/
+/-- An accepted `code.read_br_table` also succeeds with the empty visitor. -/
 theorem code.read_br_table.accepted_erasure {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (v : V)
     (result : U32 × code.BlockType) (st' : code.OpIterState) (v' : V)

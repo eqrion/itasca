@@ -4,11 +4,20 @@ import Itasca.Visitor.Accepts
 import Itasca.Visitor.StepErasure
 import Itasca.Wasm1.Complete.Execution
 
+/-!
+# Lifting an accepted step to an accepting visitor
+
+The converse of `Visitor/StepErasure`. `code.step.accepted_lift` shows that if `code.step` accepts
+with `code.EmptyOpVisitor`, it also accepts, at the same validator state, with any visitor
+satisfying `FullVisitor.Accepts`. The `br_table` label loop is lifted in
+`code.read_table_labels_loop.accepted_lift`. Covers the Wasm 1.0 step `code.step`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.CoreVisitor
 
-/-- A successful handler can be replayed through any accepting replacement hook. -/
+/-- An accepted `CoreVisitor.run` can be replayed with any hook that accepts the reader output. -/
 theorem run.accepted_lift {A V W : Type}
     (read : Result (core.result.Result A error.OpError × code.OpIterState))
     (hook : V → code.OpIterState → A → Result (core.result.Result Unit error.VisitError × V))
@@ -82,6 +91,8 @@ theorem code.read_table_labels_loop.accepted_lift {V : Type} (visitor : code.OpV
           simpa [code.read_table_labels_loop, code.read_table_labels_loop.body, code.visit,
             core.result.Result.Insts.CoreOpsTry.branch] using hrec
 
+/-- The public label reader accepts with any accepting visitor whenever it does with the empty
+visitor. -/
 theorem code.read_table_labels.accepted_lift {V : Type} (visitor : code.OpVisitor V)
     (haccept : FullVisitor.Accepts visitor)
     (st : code.OpIterState) (data : Slice U8) (count : U32) (v : V)
@@ -96,7 +107,8 @@ end Itasca
 
 namespace Itasca
 
-/-- Internal branch-table callbacks preserve every successful validator result. -/
+/-- `code.read_br_table` accepts with any accepting visitor whenever it does with the empty visitor,
+with the same result and state. -/
 theorem code.read_br_table.accepted_lift {V : Type} (visitor : code.OpVisitor V)
     (haccept : FullVisitor.Accepts visitor)
     (st : code.OpIterState) (data : Slice U8) (v : V)
@@ -172,6 +184,8 @@ end Itasca
 
 namespace Itasca
 
+/-- `code.step_numeric` accepts with any accepting visitor whenever it does with the empty visitor,
+at the same state. -/
 theorem code.step_numeric.accepted_lift {V : Type} (visitor : code.OpVisitor V)
     (haccept : FullVisitor.Accepts visitor)
     (st st' : code.OpIterState) (opcode : U8) (v : V)
@@ -186,7 +200,8 @@ theorem code.step_numeric.accepted_lift {V : Type} (visitor : code.OpVisitor V)
     exact CoreVisitor.run.accepted_lift _ _ _ () v st' () h
       (fun _ => haccept.visit_numeric v st' opcode)
 
-/-- The table's internal accepting label hooks precede its final accepting hook. -/
+/-- The `br_table` step accepts with any accepting visitor whenever it does with the empty visitor,
+at the same state. -/
 theorem code.step_br_table.accepted_lift {V : Type} (visitor : code.OpVisitor V)
     (haccept : FullVisitor.Accepts visitor)
     (st st' : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V)
@@ -211,8 +226,8 @@ theorem code.step_br_table.accepted_lift {V : Type} (visitor : code.OpVisitor V)
   simp [hlift, CoreVisitor.run, hv, code.visit, core.result.Result.Insts.CoreOpsTry.branch]
 
 set_option maxHeartbeats 1000000 in
-/-- Successful validation transfers to any visitor whose hooks always accept,
-with precisely the same validator state and an unconstrained new visitor state. -/
+/-- If `code.step` accepts with the empty visitor, it accepts at the same state with any visitor
+whose hooks all accept. The resulting visitor state is unconstrained. -/
 theorem code.step.accepted_lift {V : Type} (visitor : code.OpVisitor V)
     (haccept : FullVisitor.Accepts visitor)
     (st st' : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)

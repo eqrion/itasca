@@ -1,10 +1,19 @@
 import Itasca.Generated.Types
 
+/-!
+# Visitor events
+
+Defines `Event`, the data of one `code.OpVisitor` callback, and `Observation`, a callback paired
+with its result. `invoke` calls the hook an event names, and `ofHandler` builds a visitor from a
+single event handler. `invoke_ofHandler` shows the two are inverse. Covers the hooks of both
+profiles.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.VisitorTrace
 
-/-- A callback result retains ordinary visitor rejection. -/
+/-- The result of a visitor callback: acceptance, or a rejection with a visitor error. -/
 abbrev VisitResult := core.result.Result Unit error.VisitError
 
 /-- Numeric callback identities, named by their API mnemonics. -/
@@ -161,7 +170,7 @@ inductive MemoryHook where
   | i64_store32
   deriving DecidableEq
 
-/-- Scalar Wasm 2.0 callback identities. -/
+/-- Wasm 2.0 scalar callback identities: sign extension and saturating truncation. -/
 inductive ExtendedNumericHook where
   | i32_extend8_s
   | i32_extend16_s
@@ -178,7 +187,7 @@ inductive ExtendedNumericHook where
   | i64_trunc_sat_f64_u
   deriving DecidableEq
 
-/-- Exact instruction-hook arguments. Floating constants retain every input bit. -/
+/-- The arguments of an instruction hook. Floating-point constants keep every input bit. -/
 inductive Action where
   | unreachable
   | nop
@@ -233,7 +242,7 @@ inductive Action where
   | simd_shuffle : U64 → U64 → Action
   | memory : MemoryHook → code.MemArg → Action
 
-/-- Every callback argument, including the validator state observed by a hook. -/
+/-- All arguments of a callback, including the validator state the hook observes. -/
 inductive Event where
   | functionStart : code.Context → U32 → Usize → Usize → Event
   | op : code.OpIterState → Action → Event
@@ -243,7 +252,7 @@ structure Observation where
   event : Event
   outcome : VisitResult
 
-/-- Invoke the uniquely named callback represented by an event. -/
+/-- Calls the hook that an event names. -/
 def invoke {V : Type} (visitor : code.OpVisitor V) (v : V) :
     Event → Result (VisitResult × V)
   | .functionStart ctx typeidx bodybegin bodyend =>
@@ -465,7 +474,7 @@ def invoke {V : Type} (visitor : code.OpVisitor V) (v : V) :
       | .i64_store16 => visitor.on_i64_store16 v st arg
       | .i64_store32 => visitor.on_i64_store32 v st arg
 
-/-- Build all hooks from one event handler, with hook identities fixed by field names. -/
+/-- Builds a visitor whose every hook forwards its event to one handler. -/
 def ofHandler {V : Type} (handler : V → Event → Result (VisitResult × V)) :
     code.OpVisitor V where
   on_function_start v ctx typeidx bodybegin bodyend :=
@@ -680,7 +689,7 @@ def ofHandler {V : Type} (handler : V → Event → Result (VisitResult × V)) :
   on_simd_const v st a0 a1 := handler v (.op st (.simd_const a0 a1))
   on_simd_shuffle v st a0 a1 := handler v (.op st (.simd_shuffle a0 a1))
 
-/-- Event dispatch and handler construction are exact inverses. -/
+/-- Invoking a visitor built by `ofHandler` runs the handler on the event. -/
 @[simp] theorem invoke_ofHandler {V : Type}
     (handler : V → Event → Result (VisitResult × V)) (v : V) (event : Event) :
     invoke (ofHandler handler) v event = handler v event := by

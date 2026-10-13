@@ -6,12 +6,22 @@ import Itasca.Handler.NumericDispatch
 import Itasca.Handler.Select
 import Itasca.Handler.EnvDispatch
 
+/-!
+# Erasing the visitor from an accepted step
+
+`code.step.accepted_erase` shows that if `code.step` accepts an instruction with any visitor, it
+accepts it with `code.EmptyOpVisitor` and reaches the same validator state. The proof dispatches
+on the opcode using `Visitor/Dispatch`, and handles `br_table` and its nested label hooks through
+`Visitor/BrTableErasure`. Covers the Wasm 1.0 step `code.step`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.VisitorErasure
 
 set_option maxRecDepth 4096 in
 set_option maxHeartbeats 1000000 in
+/-- The empty visitor accepts every numeric opcode. -/
 theorem visit_numeric_empty (st : code.OpIterState) (opcode : U8) :
     code.visit_numeric code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor () st opcode =
       .ok (.Ok (), ()) := by
@@ -21,6 +31,7 @@ theorem visit_numeric_empty (st : code.OpIterState) (opcode : U8) :
 
 set_option maxRecDepth 4096 in
 set_option maxHeartbeats 1000000 in
+/-- The empty visitor accepts every load and store opcode. -/
 theorem visit_memory_empty (st : code.OpIterState) (opcode : U8) (arg : code.MemArg) :
     code.visit_memory code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor () st opcode arg =
       .ok (.Ok (), ()) := by
@@ -33,7 +44,7 @@ end Itasca.VisitorErasure
 
 namespace Itasca
 
-/-- Numeric acceptance is independent of the visitor's termination on other calls. -/
+/-- An accepted `code.step_numeric` run also succeeds, at the same state, with the empty visitor. -/
 theorem code.step_numeric.accepted_erase {V : Type} (visitor : code.OpVisitor V)
     (st st' : code.OpIterState) (opcode : U8) (v v' : V)
     (h : code.step_numeric visitor st opcode v = .ok (.Ok (), st', v')) :
@@ -47,7 +58,8 @@ theorem code.step_numeric.accepted_erase {V : Type} (visitor : code.OpVisitor V)
     exact CoreVisitor.run.accepted_transfer _ _ _ v () () st' v' h
       (fun _ => VisitorErasure.visit_numeric_empty st' opcode)
 
-/-- Internal BR_TABLE callbacks are erased by the handler premise; its final callback is erased here. -/
+/-- An accepted `br_table` step succeeds with the empty visitor, given that its label reader does.
+The final `on_br_table` hook is erased here. -/
 theorem code.step_br_table.accepted_erase_of_read {V : Type} (visitor : code.OpVisitor V)
     (st st' : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v v' : V)
     (hread : ∀ args s w, code.read_br_table visitor st data v = .ok (.Ok args, s, w) →
@@ -76,7 +88,8 @@ theorem code.step_br_table.accepted_erase_of_read {V : Type} (visitor : code.OpV
         core.result.Result.Insts.CoreOpsTry.branch]
 
 set_option maxHeartbeats 1000000 in
-/-- Every accepted instruction transfers to the empty visitor; the only nested visitor calls are in BR_TABLE. -/
+/-- An accepted step of any instruction succeeds with the empty visitor, given that the label
+reader of `br_table` does. Only `br_table` calls hooks inside its reader. -/
 theorem code.step.accepted_erase_of_br_table {V : Type} (visitor : code.OpVisitor V)
     (st st' : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (opcode : U8) (v v' : V)
@@ -233,7 +246,7 @@ theorem code.step.accepted_erase_of_br_table {V : Type} (visitor : code.OpVisito
     rw [OpDispatch.memory_fallback _ st data env opcode () hm h_memory_size h_memory_grow]
     exact code.step_numeric.accepted_erase visitor st st' opcode v v' h
 
-/-- Acceptance of any extracted instruction implies acceptance with callbacks erased, at exactly the same state. -/
+/-- An accepted `code.step` run also succeeds, at the same state, with the empty visitor. -/
 theorem code.step.accepted_erase {V : Type} (visitor : code.OpVisitor V)
     (st st' : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (opcode : U8) (v v' : V)

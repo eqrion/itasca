@@ -1,5 +1,15 @@
 import Itasca.Visitor.TraceBytes
 
+/-!
+# Properties of callback traces
+
+Shows that the traces of `Visitor/TraceBytes` contain only instruction callbacks, so they never
+include `functionStart`, and that `VisitorTrace.project` recovers their `Wasm1.Token` list from
+the observations. `BodyTrace.project` states that a body trace projects to the tokens of the
+consumed bytes, with no pending `br_table` labels when the run is accepted. Covers the Wasm 1.0
+body.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.VisitorTrace
@@ -57,7 +67,7 @@ theorem Outcomes.rejecting {before after : List Observation} {event : Event}
       obtain ⟨ha, rfl, hb⟩ := rejection_position heq hok
       exact ⟨ha, rfl, hb⟩
 
-/-- Body traces contain instruction callbacks, with complete state snapshots. -/
+/-- Every observation is an instruction callback with its validator state, not a function start. -/
 def OnlyOps (observations : List Observation) : Prop :=
   ∀ o ∈ observations, ∃ st action, o.event = .op st action
 
@@ -73,6 +83,7 @@ theorem OnlyOps.single (st : code.OpIterState) (action : Action) (reply : VisitR
   subst o
   exact ⟨st, action, rfl⟩
 
+/-- A trace of only instruction callbacks contains no `functionStart` event. -/
 theorem OnlyOps.no_function_start {observations : List Observation} (h : OnlyOps observations)
     (ctx : code.Context) (idx : U32) (first last : Usize) :
     Event.functionStart ctx idx first last ∉ observations.map Observation.event := by
@@ -106,6 +117,7 @@ theorem PartialTable.only_ops {data start observations}
   obtain ⟨_, _, _, _, _, _, _, hl, _⟩ := h
   exact hl.only_ops
 
+/-- A body trace contains only instruction callbacks. -/
 theorem BodyTrace.only_ops {data start observations result}
     (h : BodyTrace data start observations result) : OnlyOps observations := by
   obtain ⟨_, complete, _, _, tail, rfl, hc, ht, _⟩ := h
@@ -138,21 +150,23 @@ theorem PartialTable.no_function_start {data start observations}
     Event.functionStart ctx idx first finish ∉ observations.map Observation.event :=
   h.only_ops.no_function_start ctx idx first finish
 
+/-- A body trace has no `functionStart` event. -/
 theorem BodyTrace.no_function_start {data start observations result}
     (h : BodyTrace data start observations result)
     (ctx : code.Context) (idx : U32) (first finish : Usize) :
     Event.functionStart ctx idx first finish ∉ observations.map Observation.event :=
   h.only_ops.no_function_start ctx idx first finish
 
-/-- Raw labels accumulate until the closing table callback. -/
+/-- The pending `br_table` labels after a callback: a label callback adds one, the closing table
+callback clears them. -/
 def Action.nextPending (action : Action) (pending : List U32) : List U32 :=
   match action with
   | .br_table_label depth => pending ++ [depth]
   | .br_table _ _ => []
   | _ => pending
 
-/-- Recover flat instruction tokens and any unfinished table labels from callbacks.
-The outcome is retained in the original trace but does not change what was observed. -/
+/-- Reconstructs the flat token list and the pending `br_table` labels from a trace. Replies do not
+affect the result. -/
 def project : List Observation → List U32 → List Wasm1.Token × List U32
   | [], pending => ([], pending)
   | observation :: rest, pending =>
@@ -162,6 +176,7 @@ def project : List Observation → List U32 → List Wasm1.Token × List U32
       let next := project rest (action.nextPending pending)
       ((action.token pending).toList ++ next.1, next.2)
 
+/-- `project` of a concatenation threads the pending labels through. -/
 theorem project_append (first rest : List Observation) (pending : List U32) :
     project (first ++ rest) pending =
       ((project first pending).1 ++ (project rest (project first pending).2).1,
@@ -173,6 +188,7 @@ theorem project_append (first rest : List Observation) (pending : List U32) :
     | functionStart ctx idx first last => simp [project, he, ih]
     | op st action => simp [project, he, ih, List.append_assoc]
 
+/-- A label sequence projects to no tokens and appends its depths to the pending labels. -/
 theorem LabelsAt.project {data pos observations depths last}
     (h : LabelsAt data pos observations depths last) (pending : List U32) :
     project observations pending = ([], pending ++ depths) := by
@@ -186,7 +202,7 @@ private theorem Action.nextPending_nil_of_token {action : Action} {token : Wasm1
   cases action <;> try rfl
   simp [Action.token] at h
 
-/-- Every complete callback chunk reconstructs its exact token and closes pending labels. -/
+/-- A chunk projects to its token and leaves no pending labels. -/
 theorem Chunk.project {data start observations token next}
     (h : Chunk data start observations token next) : project observations [] = ([token], []) := by
   cases h with
@@ -196,7 +212,7 @@ theorem Chunk.project {data start observations token next}
     rw [project_append, hl.project]
     simp [VisitorTrace.project, Action.token, Action.nextPending]
 
-/-- Completed callbacks reconstruct exactly the independently byte-encoded token list. -/
+/-- Completed chunks project to their token list and leave no pending labels. -/
 theorem Completed.project {data start observations tokens next}
     (h : Completed data start observations tokens next) : project observations [] = (tokens, []) := by
   induction h with
@@ -205,15 +221,15 @@ theorem Completed.project {data start observations tokens next}
     rw [project_append, hc.project]
     simp [ih]
 
-/-- An unfinished table contributes only its raw label vector, with no completed token. -/
+/-- An unfinished `br_table` projects to no tokens and its pending label depths. -/
 theorem PartialTable.project {data start observations}
     (h : PartialTable data start observations) :
     ∃ depths, project observations [] = ([], depths) := by
   obtain ⟨_, _, _, depths, _, _, _, hl, _⟩ := h
   exact ⟨depths, by simpa using hl.project []⟩
 
-/-- A body trace projects to its complete byte prefix and optional pending labels.
-Acceptance consumes the complete input and leaves no pending table. -/
+/-- A body trace projects to the tokens of a consumed byte prefix plus any pending labels. An
+accepted body consumes the whole input and has no pending labels. -/
 theorem BodyTrace.project {data start observations result}
     (h : BodyTrace data start observations result) :
     ∃ tokens cursor pending, project observations [] = (tokens, pending) ∧

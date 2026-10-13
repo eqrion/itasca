@@ -3,6 +3,15 @@ import Itasca.Visitor.Dispatch
 import Itasca.Visitor.BrTableRefinement
 import Itasca.Visitor.EventDispatch
 
+/-!
+# Refinement of an instruction step
+
+`code.step.refines` lifts a `VisitorTrace.Refines` relation between two visitors to the whole
+extracted `code.step`. `code.step.instrument_forward` and `code.step.instrument_backward` specialise
+it to the recording wrapper `instrument`, so a step can be run with or without recording and
+return the same result and validator state. Covers the Wasm 1.0 step `code.step`.
+-/
+
 open Aeneas Aeneas.Std
 
 
@@ -11,7 +20,8 @@ namespace Itasca
 
 open VisitorTrace
 
-/-- Branch-table refinement includes every internal label hook and its final hook. -/
+/-- A refinement of hooks lifts to the `br_table` step, through its label hooks and its final
+hook. -/
 theorem code.step_br_table.refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
@@ -30,8 +40,8 @@ theorem code.step_br_table.refines {V W : Type}
   exact CoreVisitor.run.refines (.ok (args, s)) visitor replacement related hrefines
     (fun st a => .op st (.br_table a.1 (Control.resultView a.2))) v1 w1 hr1 res st' v' hh
 
-/-- Hook refinement preserves every ordinary result of the actual full dispatcher,
-with identical validator state, including rejection and malformed instructions. -/
+/-- A refinement of hooks lifts to `code.step` for every opcode. Every normal return, including
+rejections and malformed instructions, is reproduced with the same result and validator state. -/
 theorem code.step.refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
@@ -199,7 +209,8 @@ theorem code.step.refines {V W : Type}
       obtain ⟨rfl, rfl, rfl⟩ := h
       exact ⟨w, rfl, hrelated⟩
 
-/-- Instrumentation preserves validator success and every ordinary validation error. -/
+/-- Instrumenting the visitor preserves every normal return of `code.step`, including validation
+errors, and appends observations to the log. -/
 theorem code.step.instrument_forward {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (opcode : U8) (v : V) (log : List Observation)
@@ -215,7 +226,8 @@ theorem code.step.instrument_forward {V : Type} (visitor : code.OpVisitor V)
   subst log'
   exact ⟨added, hw⟩
 
-/-- Erasing the recording wrapper preserves errors as well as successful executions. -/
+/-- A normal return of `code.step` with an instrumented visitor is also a normal return with the
+wrapped visitor. -/
 theorem code.step.instrument_backward {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (opcode : U8) (v : V) (log : List Observation)

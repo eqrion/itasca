@@ -1,11 +1,22 @@
 import Itasca.Support.LiteralDispatch
 import Itasca.Handler.Control
 
+/-!
+# Core visitor steps
+
+`CoreVisitor.Total` states that the hooks of the core instruction subset return normally.
+`CoreVisitor.run` models the shape of an extracted `code.step` case, a reader followed by a hook,
+and `run.spec` carries a reader postcondition through it. The `code.step_*.of_read` theorems
+specialise this to individual opcodes. The core subset is `nop`, `unreachable`, `i32.const`,
+`i32.add`, `drop` and the control instructions `block`, `loop`, `if`, `else`, `end`, `br`,
+`br_if` and `return`. Covers the Wasm 1.0 step `code.step`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.CoreVisitor
 
-/-- Termination of the hooks used by the core instruction subset; hooks may reject. -/
+/-- The hooks used by the core instruction subset return normally. A hook may still reject. -/
 structure Total {V : Type} (visitor : code.OpVisitor V) : Prop where
   nop : ∀ v st, ∃ res v', visitor.on_nop v st = .ok (res, v')
   unreachable : ∀ v st, ∃ res v', visitor.on_unreachable v st = .ok (res, v')
@@ -21,10 +32,12 @@ structure Total {V : Type} (visitor : code.OpVisitor V) : Prop where
   brIf : ∀ v st depth bt, ∃ res v', visitor.on_br_if v st depth bt = .ok (res, v')
   return_ : ∀ v st, ∃ res v', visitor.on_return v st = .ok (res, v')
 
+/-- The empty visitor is total on the core instruction subset. -/
 theorem empty_total : Total code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor := by
   constructor <;> intros <;> exact ⟨.Ok (), _, rfl⟩
 
-/-- Shared operational shape of decode/validate followed by a visitor hook. -/
+/-- The shape of an extracted instruction step: run a reader, then call a visitor hook on its
+output. A reader error skips the hook, and a hook rejection becomes an `OpError.Visitor`. -/
 def run {A V : Type}
     (read : Result (core.result.Result A error.OpError × code.OpIterState))
     (hook : V → code.OpIterState → A → Result (core.result.Result Unit error.VisitError × V))
@@ -47,7 +60,8 @@ def run {A V : Type}
       Unit (core.convert.FromSame error.OpError) residual
     .ok (r, st, v)
 
-/-- Hook rejection preserves the handler's state guarantee and becomes an ordinary OpError. -/
+/-- A reader postcondition on the state carries through `run` for a total hook, including when the
+hook rejects. -/
 theorem run.spec {A V : Type}
     (read : Result (core.result.Result A error.OpError × code.OpIterState))
     (hook : V → code.OpIterState → A → Result (core.result.Result Unit error.VisitError × V))
@@ -90,7 +104,7 @@ private theorem block_dispatch {V : Type} (visitor : code.OpVisitor V)
   cases res <;> simp
   congr 1
 
-/-- Lift the handler's totality and successful result through the exact block dispatch and visitor. -/
+/-- Lifts a `code.read_block` postcondition to `code.step` at `OP_BLOCK` for a total visitor. -/
 theorem code.step_block.of_read {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V)
     (Q : code.OpIterState → Prop) (P : code.BlockType → code.OpIterState → Prop)
@@ -113,7 +127,7 @@ private theorem loop_dispatch {V : Type} (visitor : code.OpVisitor V)
   cases res <;> simp
   congr 1
 
-/-- Lift the handler's totality and successful result through the exact loop dispatch and visitor. -/
+/-- Lifts a `code.read_loop` postcondition to `code.step` at `OP_LOOP` for a total visitor. -/
 theorem code.step_loop.of_read {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V)
     (Q : code.OpIterState → Prop) (P : code.BlockType → code.OpIterState → Prop)
@@ -136,7 +150,7 @@ private theorem if_dispatch {V : Type} (visitor : code.OpVisitor V)
   cases res <;> simp
   congr 1
 
-/-- Lift the handler's totality and successful result through the exact if dispatch and visitor. -/
+/-- Lifts a `code.read_if` postcondition to `code.step` at `OP_IF` for a total visitor. -/
 theorem code.step_if.of_read {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V)
     (Q : code.OpIterState → Prop) (P : code.BlockType → code.OpIterState → Prop)
@@ -159,7 +173,7 @@ private theorem else_dispatch {V : Type} (visitor : code.OpVisitor V)
   cases res <;> simp
   congr 1
 
-/-- Lift the handler's totality and successful result through the exact else dispatch and visitor. -/
+/-- Lifts a `code.read_else` postcondition to `code.step` at `OP_ELSE` for a total visitor. -/
 theorem code.step_else.of_read {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V)
     (Q : code.OpIterState → Prop) (P : code.BlockType → code.OpIterState → Prop)
@@ -182,7 +196,7 @@ private theorem end_dispatch {V : Type} (visitor : code.OpVisitor V)
   cases res <;> simp
   congr 1
 
-/-- Lift the handler's totality and successful result through the exact end dispatch and visitor. -/
+/-- Lifts a `code.read_end` postcondition to `code.step` at `OP_END` for a total visitor. -/
 theorem code.step_end.of_read {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V)
     (Q : code.OpIterState → Prop) (P : code.LabelKind × code.BlockType → code.OpIterState → Prop)
@@ -205,7 +219,7 @@ private theorem br_dispatch {V : Type} (visitor : code.OpVisitor V)
   cases res <;> simp
   congr 1
 
-/-- Lift the handler's totality and successful result through the exact br dispatch and visitor. -/
+/-- Lifts a `code.read_br` postcondition to `code.step` at `OP_BR` for a total visitor. -/
 theorem code.step_br.of_read {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V)
     (Q : code.OpIterState → Prop) (P : U32 × code.BlockType → code.OpIterState → Prop)
@@ -228,7 +242,7 @@ private theorem br_if_dispatch {V : Type} (visitor : code.OpVisitor V)
   cases res <;> simp
   congr 1
 
-/-- Lift the handler's totality and successful result through the exact br_if dispatch and visitor. -/
+/-- Lifts a `code.read_br_if` postcondition to `code.step` at `OP_BR_IF` for a total visitor. -/
 theorem code.step_br_if.of_read {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V)
     (Q : code.OpIterState → Prop) (P : U32 × code.BlockType → code.OpIterState → Prop)
@@ -251,7 +265,7 @@ private theorem return_dispatch {V : Type} (visitor : code.OpVisitor V)
   cases res <;> simp
   congr 1
 
-/-- Lift the handler's totality and successful result through the exact return dispatch and visitor. -/
+/-- Lifts a `code.read_return` postcondition to `code.step` at `OP_RETURN` for a total visitor. -/
 theorem code.step_return.of_read {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V)
     (Q : code.OpIterState → Prop) (P : Unit → code.OpIterState → Prop)
@@ -274,7 +288,8 @@ private theorem i32_const_dispatch {V : Type} (visitor : code.OpVisitor V)
   cases res <;> simp
   congr 1
 
-/-- Lift the handler's totality and successful result through the exact i32_const dispatch and visitor. -/
+/-- Lifts a `code.read_i32_const` postcondition to `code.step` at `OP_I32_CONST`
+for a total visitor. -/
 theorem code.step_i32_const.of_read {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V)
     (Q : code.OpIterState → Prop) (P : I32 → code.OpIterState → Prop)
@@ -297,7 +312,7 @@ private theorem drop_dispatch {V : Type} (visitor : code.OpVisitor V)
   cases res <;> simp
   congr 1
 
-/-- Lift the handler's totality and successful result through drop and its visitor. -/
+/-- Lifts a `code.read_drop` postcondition to `code.step` at `OP_DROP` for a total visitor. -/
 theorem code.step_drop.of_read {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V)
     (Q : code.OpIterState → Prop) (P : code.StackType → code.OpIterState → Prop)
@@ -320,7 +335,8 @@ private theorem unreachable_dispatch {V : Type} (visitor : code.OpVisitor V)
   cases res <;> simp
   congr 1
 
-/-- Lift the handler's totality and successful result through unreachable and its visitor. -/
+/-- Lifts a `code.read_unreachable` postcondition to `code.step` at `OP_UNREACHABLE`
+for a total visitor. -/
 theorem code.step_unreachable.of_read {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V)
     (Q : code.OpIterState → Prop) (P : Unit → code.OpIterState → Prop)
@@ -343,7 +359,7 @@ private theorem i32_add_dispatch {V : Type} (visitor : code.OpVisitor V)
   cases res <;> simp
   congr 1
 
-/-- Lift the handler's totality and successful result through i32_add and its visitor. -/
+/-- Lifts a `code.read_binary` postcondition to `code.step` at `OP_I32_ADD` for a total visitor. -/
 theorem code.step_i32_add.of_read {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V)
     (Q : code.OpIterState → Prop) (P : Unit → code.OpIterState → Prop)
@@ -354,7 +370,8 @@ theorem code.step_i32_add.of_read {V : Type} (visitor : code.OpVisitor V)
   rw [i32_add_dispatch]
   exact CoreVisitor.run.spec _ _ v Q P hread ((fun s _ => hvisitor.i32Add v s))
 
-/-- NOP is total for a total hook and preserves all validator state even on hook rejection. -/
+/-- `code.step` at `OP_NOP` leaves the validator state unchanged for a total visitor, even when the
+hook rejects. -/
 theorem code.step_nop.total {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V)
     (hvisitor : CoreVisitor.Total visitor) :

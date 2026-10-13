@@ -3,17 +3,28 @@ import Itasca.Visitor.Events
 import Itasca.Visitor.Accepts
 import Itasca.Visitor.Erasure
 
+/-!
+# Recording visitors
+
+`VisitorTrace.Records` says a visitor appends each callback and its reply to an observable log.
+`instrument` wraps any visitor with such a log, `recorder` accepts everything and `rejectAt`
+rejects one chosen callback. `total_of_invoke` and `accepts_of_invoke` reduce `FullVisitor.Total`
+and `FullVisitor.Accepts` to a statement about `invoke`, and `instrument_total` and
+`instrument_accepts` show instrumentation preserves them. Covers the hooks of both profiles.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.VisitorTrace
 
-/-- Every returned callback appends exactly its event and outcome, including rejection. -/
+/-- Every callback of the visitor that returns normally appends exactly its event and reply to the
+observed log, including a rejection. -/
 def Records {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) : Prop :=
   ∀ v event reply v', invoke visitor v event = .ok (reply, v') →
     observe v' = observe v ++ [⟨event, reply⟩]
 
-/-- Add a returned callback to a log, preserving the wrapped visitor's result and state. -/
+/-- Appends a callback's event and reply to a log, keeping the wrapped visitor's reply and state. -/
 def record {V : Type} (log : List Observation) (event : Event)
     (action : Result (VisitResult × V)) : Result (VisitResult × (V × List Observation)) := do
   let (reply, v') ← action
@@ -39,7 +50,8 @@ theorem record_ok_iff {V : Type} (log : List Observation) (event : Event)
   · rintro ⟨h, rfl⟩
     simp [h]
 
-/-- Instrument an arbitrary visitor; the underlying visitor still decides every outcome. -/
+/-- Wraps a visitor so that it also logs every callback with its reply. The wrapped visitor still
+decides every reply. -/
 def instrument {V : Type} (visitor : code.OpVisitor V) :
     code.OpVisitor (V × List Observation) :=
   ofHandler fun state event => record state.2 event (invoke visitor state.1 event)
@@ -49,11 +61,13 @@ def instrument {V : Type} (visitor : code.OpVisitor V) :
     invoke (instrument visitor) (v, log) event = record log event (invoke visitor v event) := by
   simp [instrument]
 
+/-- The log of an instrumented visitor records every callback. -/
 theorem instrument_records {V : Type} (visitor : code.OpVisitor V) :
     Records (instrument visitor) Prod.snd := by
   rintro ⟨v, log⟩ event reply ⟨v', log'⟩ h
   exact ((record_ok_iff log event _ reply v' log').mp (by simpa using h)).2
 
+/-- Every event can be invoked on a total visitor. -/
 theorem total_invoke {V : Type} {visitor : code.OpVisitor V}
     (h : FullVisitor.Total visitor) (v : V) (event : Event) :
     ∃ reply v', invoke visitor v event = .ok (reply, v') := by
@@ -276,6 +290,7 @@ theorem total_invoke {V : Type} {visitor : code.OpVisitor V}
       | i64_store16 => exact h.on_i64_store16 v st arg
       | i64_store32 => exact h.on_i64_store32 v st arg
 
+/-- Every event can be invoked on an accepting visitor, and the reply is `.Ok ()`. -/
 theorem accepts_invoke {V : Type} {visitor : code.OpVisitor V}
     (h : FullVisitor.Accepts visitor) (v : V) (event : Event) :
     ∃ v', invoke visitor v event = .ok (.Ok (), v') := by
@@ -498,6 +513,7 @@ theorem accepts_invoke {V : Type} {visitor : code.OpVisitor V}
       | i64_store16 => exact h.on_i64_store16 v st arg
       | i64_store32 => exact h.on_i64_store32 v st arg
 
+/-- A visitor whose events can all be invoked is total. -/
 theorem total_of_invoke {V : Type} (visitor : code.OpVisitor V)
     (h : ∀ v event, ∃ reply v', invoke visitor v event = .ok (reply, v')) : FullVisitor.Total visitor where
   on_function_start v ctx typeidx bodybegin bodyend := h v (.functionStart ctx typeidx bodybegin bodyend)
@@ -710,6 +726,7 @@ theorem total_of_invoke {V : Type} (visitor : code.OpVisitor V)
   on_simd_const v st a0 a1 := h v (.op st (.simd_const a0 a1))
   on_simd_shuffle v st a0 a1 := h v (.op st (.simd_shuffle a0 a1))
 
+/-- A visitor whose events are all accepted is accepting. -/
 theorem accepts_of_invoke {V : Type} (visitor : code.OpVisitor V)
     (h : ∀ v event, ∃ v', invoke visitor v event = .ok (.Ok (), v')) : FullVisitor.Accepts visitor where
   on_function_start v ctx typeidx bodybegin bodyend := h v (.functionStart ctx typeidx bodybegin bodyend)
@@ -922,6 +939,7 @@ theorem accepts_of_invoke {V : Type} (visitor : code.OpVisitor V)
   on_simd_const v st a0 a1 := h v (.op st (.simd_const a0 a1))
   on_simd_shuffle v st a0 a1 := h v (.op st (.simd_shuffle a0 a1))
 
+/-- Instrumenting a total visitor gives a total visitor. -/
 theorem instrument_total {V : Type} {visitor : code.OpVisitor V}
     (h : FullVisitor.Total visitor) : FullVisitor.Total (instrument visitor) := by
   apply total_of_invoke
@@ -929,6 +947,7 @@ theorem instrument_total {V : Type} {visitor : code.OpVisitor V}
   obtain ⟨reply, v', hv⟩ := total_invoke h v event
   exact ⟨reply, (v', log ++ [⟨event, reply⟩]), by simp [hv]⟩
 
+/-- Instrumenting an accepting visitor gives an accepting visitor. -/
 theorem instrument_accepts {V : Type} {visitor : code.OpVisitor V}
     (h : FullVisitor.Accepts visitor) : FullVisitor.Accepts (instrument visitor) := by
   apply accepts_of_invoke
@@ -936,31 +955,35 @@ theorem instrument_accepts {V : Type} {visitor : code.OpVisitor V}
   obtain ⟨v', hv⟩ := accepts_invoke h v event
   exact ⟨(v', log ++ [⟨event, .Ok ()⟩]), by simp [hv]⟩
 
-/-- A recorder that always accepts. -/
+/-- A visitor whose state is the log of its callbacks and which accepts every callback. -/
 def recorder : code.OpVisitor (List Observation) :=
   ofHandler fun log event => .ok (.Ok (), log ++ [⟨event, .Ok ()⟩])
 
+/-- `recorder` records every callback. -/
 theorem recorder_records : Records recorder id := by
   intro log event reply log' h
   simp [recorder] at h
   rcases h with ⟨rfl, rfl⟩
   rfl
 
+/-- `recorder` accepts. -/
 theorem recorder_accepts : FullVisitor.Accepts recorder := by
   apply accepts_of_invoke
   intro log event
   exact ⟨log ++ [⟨event, .Ok ()⟩], by simp [recorder]⟩
 
+/-- `recorder` is total. -/
 theorem recorder_total : FullVisitor.Total recorder :=
   recorder_accepts.toTotal
 
-/-- A deterministic recorder that rejects precisely at the requested zero-based
-callback index. The rejecting callback itself remains in the trace. -/
+/-- A recorder that rejects exactly the callback at the given zero-based index and accepts all
+others. The rejected callback is in the log. -/
 def rejectAt (index : Nat) (err : error.VisitError) : code.OpVisitor (List Observation) :=
   ofHandler fun log event =>
     let reply : VisitResult := if log.length = index then .Err err else .Ok ()
     .ok (reply, log ++ [⟨event, reply⟩])
 
+/-- `rejectAt` records every callback. -/
 theorem rejectAt_records (index : Nat) (err : error.VisitError) :
     Records (rejectAt index err) id := by
   intro log event reply log' h
@@ -968,6 +991,7 @@ theorem rejectAt_records (index : Nat) (err : error.VisitError) :
   obtain ⟨rfl, rfl⟩ := h
   rfl
 
+/-- `rejectAt` is total. -/
 theorem rejectAt_total (index : Nat) (err : error.VisitError) :
     FullVisitor.Total (rejectAt index err) := by
   apply total_of_invoke

@@ -1,10 +1,19 @@
 import Itasca.Visitor.Total
 
+/-!
+# Accepting visitors
+
+`FullVisitor.Accepts` states that every hook of a `code.OpVisitor` returns normally with `.Ok ()`.
+It is the premise under which a visitor leaves validation unchanged. `Accepts.toTotal` weakens it
+to `FullVisitor.Total`, and `Accepts.visit_numeric` and `Accepts.visit_memory` cover the numeric
+and memory dispatch functions. Covers the hooks of both profiles.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.FullVisitor
 
-/-- Every actual hook terminates successfully. Visitor state may change freely. -/
+/-- Every hook of a body visitor returns normally and accepts. The visitor state may change. -/
 structure Accepts {V : Type} (visitor : code.OpVisitor V) : Prop where
   on_function_start : ∀ (v : V) (a1 : _root_.Itasca.code.Context) (a2 : Std.U32) (a3 : Std.Usize) (a4 : Std.Usize), ∃ v', visitor.on_function_start v a1 a2 a3 a4 = .ok (.Ok (), v')
   on_unreachable : ∀ (v : V) (a1 : _root_.Itasca.code.OpIterState), ∃ v', visitor.on_unreachable v a1 = .ok (.Ok (), v')
@@ -216,9 +225,11 @@ structure Accepts {V : Type} (visitor : code.OpVisitor V) : Prop where
   on_simd_const : ∀ (v : V) (a1 : code.OpIterState) (a2 : Std.U64) (a3 : Std.U64), ∃ v', visitor.on_simd_const v a1 a2 a3 = .ok (.Ok (), v')
   on_simd_shuffle : ∀ (v : V) (a1 : code.OpIterState) (a2 : Std.U64) (a3 : Std.U64), ∃ v', visitor.on_simd_shuffle v a1 a2 a3 = .ok (.Ok (), v')
 
+/-- The empty visitor accepts. -/
 theorem empty_accepts : Accepts code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor := by
   constructor <;> intros <;> exact ⟨_, rfl⟩
 
+/-- An accepting visitor is total. -/
 theorem Accepts.toTotal {V : Type} {visitor : code.OpVisitor V} (h : Accepts visitor) :
     Total visitor := by
   constructor
@@ -851,7 +862,7 @@ theorem Accepts.toTotal {V : Type} {visitor : code.OpVisitor V} (h : Accepts vis
     exact ⟨.Ok (), v', hv⟩
 
 set_option maxHeartbeats 4000000 in
-/-- Numeric dispatch invokes only one of the explicitly total hooks. -/
+/-- `code.visit_numeric` returns normally and accepts for an accepting visitor. -/
 theorem Accepts.visit_numeric {V : Type} {visitor : code.OpVisitor V} (h : Accepts visitor)
     (v : V) (st : code.OpIterState) (opcode : U8) :
     ∃ v', code.visit_numeric visitor v st opcode = .ok (.Ok (), v') := by
@@ -983,7 +994,7 @@ theorem Accepts.visit_numeric {V : Type} {visitor : code.OpVisitor V} (h : Accep
   case «191» => exact h.on_f64_reinterpret_i64 v st
   all_goals exact ⟨v, rfl⟩
 
-/-- Memory dispatch invokes only one of the explicitly total hooks. -/
+/-- `code.visit_memory` returns normally and accepts for an accepting visitor. -/
 theorem Accepts.visit_memory {V : Type} {visitor : code.OpVisitor V} (h : Accepts visitor)
     (v : V) (st : code.OpIterState) (opcode : U8) (memarg : code.MemArg) :
     ∃ v', code.visit_memory visitor v st opcode memarg = .ok (.Ok (), v') := by

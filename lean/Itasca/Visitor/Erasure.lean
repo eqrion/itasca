@@ -1,6 +1,14 @@
 import Itasca.Support.Result
 import Itasca.Visitor.Basic
 
+/-!
+# Erasing hooks from a run
+
+`CoreVisitor.run.accepted` extracts the reader output and the accepting hook call from an accepted
+`CoreVisitor.run`. `run.accepted_transfer` replays the run with another hook that accepts the same
+outputs, which is how the later erasure theorems replace a visitor by `code.EmptyOpVisitor`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.VisitorErasure
@@ -11,7 +19,7 @@ end Itasca.VisitorErasure
 
 namespace Itasca.CoreVisitor
 
-/-- Acceptance exposes the same successful handler state and hook call, without assuming hook termination. -/
+/-- An accepted run exposes the reader output and the accepting hook call that produced it. -/
 theorem run.accepted {A V : Type}
     (read : Result (core.result.Result A error.OpError × code.OpIterState))
     (hook : V → code.OpIterState → A → Result (core.result.Result Unit error.VisitError × V))
@@ -36,7 +44,8 @@ theorem run.accepted {A V : Type}
       obtain ⟨rfl, rfl⟩ := hout
       exact ⟨a, hr, hv⟩
 
-/-- Any accepting execution transfers to a replacement hook that accepts this same validated handler output. -/
+/-- An accepted run carries over to any hook that accepts the same reader outputs at the same
+state. -/
 theorem run.accepted_transfer {A V W : Type}
     (read : Result (core.result.Result A error.OpError × code.OpIterState))
     (hook : V → code.OpIterState → A → Result (core.result.Result Unit error.VisitError × V))

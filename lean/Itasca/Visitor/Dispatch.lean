@@ -2,10 +2,20 @@ import Itasca.Visitor.Basic
 import Itasca.Binary.Wasm1.MemoryMeaning
 import Mathlib.Tactic.IntervalCases
 
+/-!
+# Step dispatch for control and constant instructions
+
+For each control and constant opcode, `OpDispatch.dispatch_*` rewrites `code.step` at that opcode
+to `CoreVisitor.run` of the instruction's reader and its visitor hook. `memory_fallback` shows
+`code.step_memory` falls through to `code.step_numeric` for opcodes outside the memory table.
+Covers the Wasm 1.0 step `code.step`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.OpDispatch
 
+/-- `code.step` on `code.OP_BLOCK` runs `code.read_block` and then calls the `on_block` hook. -/
 theorem dispatch_block {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_BLOCK v =
@@ -19,6 +29,7 @@ theorem dispatch_block {V : Type} (visitor : code.OpVisitor V)
   congr 1
 
 
+/-- `code.step` on `code.OP_LOOP` runs `code.read_loop` and then calls the `on_loop` hook. -/
 theorem dispatch_loop {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_LOOP v =
@@ -32,6 +43,7 @@ theorem dispatch_loop {V : Type} (visitor : code.OpVisitor V)
   congr 1
 
 
+/-- `code.step` on `code.OP_IF` runs `code.read_if` and then calls the `on_if` hook. -/
 theorem dispatch_if {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_IF v =
@@ -45,6 +57,7 @@ theorem dispatch_if {V : Type} (visitor : code.OpVisitor V)
   congr 1
 
 
+/-- `code.step` on `code.OP_ELSE` runs `code.read_else` and then calls the `on_else` hook. -/
 theorem dispatch_else {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_ELSE v =
@@ -58,6 +71,7 @@ theorem dispatch_else {V : Type} (visitor : code.OpVisitor V)
   congr 1
 
 
+/-- `code.step` on `code.OP_END` runs `code.read_end` and then calls the `on_end` hook. -/
 theorem dispatch_end {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_END v =
@@ -71,6 +85,7 @@ theorem dispatch_end {V : Type} (visitor : code.OpVisitor V)
   congr 1
 
 
+/-- `code.step` on `code.OP_BR` runs `code.read_br` and then calls the `on_br` hook. -/
 theorem dispatch_br {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_BR v =
@@ -84,6 +99,7 @@ theorem dispatch_br {V : Type} (visitor : code.OpVisitor V)
   congr 1
 
 
+/-- `code.step` on `code.OP_BR_IF` runs `code.read_br_if` and then calls the `on_br_if` hook. -/
 theorem dispatch_br_if {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_BR_IF v =
@@ -97,6 +113,7 @@ theorem dispatch_br_if {V : Type} (visitor : code.OpVisitor V)
   congr 1
 
 
+/-- `code.step` on `code.OP_RETURN` runs `code.read_return` and then calls the `on_return` hook. -/
 theorem dispatch_return {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_RETURN v =
@@ -110,6 +127,8 @@ theorem dispatch_return {V : Type} (visitor : code.OpVisitor V)
   congr 1
 
 
+/-- `code.step` on `code.OP_I32_CONST` runs `code.read_i32_const` and then calls the `on_i32_const`
+hook. -/
 theorem dispatch_i32_const {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_I32_CONST v =
@@ -123,6 +142,7 @@ theorem dispatch_i32_const {V : Type} (visitor : code.OpVisitor V)
   congr 1
 
 
+/-- `code.step` on `code.OP_DROP` runs `code.read_drop` and then calls the `on_drop` hook. -/
 theorem dispatch_drop {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_DROP v =
@@ -136,6 +156,8 @@ theorem dispatch_drop {V : Type} (visitor : code.OpVisitor V)
   congr 1
 
 
+/-- `code.step` on `code.OP_UNREACHABLE` runs `code.read_unreachable` and then calls the
+`on_unreachable` hook. -/
 theorem dispatch_unreachable {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_UNREACHABLE v =
@@ -149,6 +171,8 @@ theorem dispatch_unreachable {V : Type} (visitor : code.OpVisitor V)
   congr 1
 
 
+/-- `code.step` on `code.OP_I64_CONST` runs `code.read_i64_const` and then calls the `on_i64_const`
+hook. -/
 theorem dispatch_i64_const {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_I64_CONST v =
@@ -162,6 +186,8 @@ theorem dispatch_i64_const {V : Type} (visitor : code.OpVisitor V)
   congr 1
 
 
+/-- `code.step` on `code.OP_F32_CONST` runs `code.read_f32_const` and then calls the `on_f32_const`
+hook. -/
 theorem dispatch_f32_const {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_F32_CONST v =
@@ -175,6 +201,8 @@ theorem dispatch_f32_const {V : Type} (visitor : code.OpVisitor V)
   congr 1
 
 
+/-- `code.step` on `code.OP_F64_CONST` runs `code.read_f64_const` and then calls the `on_f64_const`
+hook. -/
 theorem dispatch_f64_const {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_F64_CONST v =
@@ -187,6 +215,7 @@ theorem dispatch_f64_const {V : Type} (visitor : code.OpVisitor V)
   cases res <;> simp
   congr 1
 
+/-- `code.step` on `code.OP_NOP` reads no immediates and calls the `on_nop` hook. -/
 theorem dispatch_nop {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_NOP v =
@@ -197,6 +226,8 @@ theorem dispatch_nop {V : Type} (visitor : code.OpVisitor V)
 
 set_option maxRecDepth 4096 in
 set_option maxHeartbeats 1000000 in
+/-- `code.step_memory` behaves as `code.step_numeric` on an opcode that is neither a load or store
+nor `memory.size` or `memory.grow`. -/
 theorem memory_fallback {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (opcode : U8) (v : V)
     (hm : MemoryMeaning.opcodeMeaning opcode = none)

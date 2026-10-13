@@ -2,6 +2,16 @@ import Itasca.Binary.Wasm2.NumericExtensions
 import Itasca.Visitor.EventMeaning
 import Mathlib.Tactic.IntervalCases
 
+/-!
+# Callback tables against extracted dispatch
+
+Connects the callback tables of `Visitor/EventMeaning` to the binary opcode meaning tables and to
+the extracted `code.visit_numeric`, `code.visit_memory`, `code.visit_sign_extension` and
+`code.visit_saturating`. `visit_numeric` and `visit_memory` show the extracted dispatch calls
+exactly the hook that `ofOpcode` names, and `ExtendedNumericHook.meaning` ties the Wasm 2.0 scalar
+callbacks to their binary rows.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.VisitorTrace
@@ -20,7 +30,7 @@ theorem NumericHook.opcode_meaning (hook : NumericHook) :
       some hook.instruction := by
   cases hook <;> rfl
 
-/-- Memory callback mnemonics retain load/store width, signedness, alignment and offset. -/
+/-- A memory callback with a memarg denotes the instruction of its binary opcode row. -/
 theorem MemoryHook.opcode_meaning (hook : MemoryHook) (arg : code.MemArg) :
     (MemoryMeaning.opcodeMeaning hook.opcode).map (fun op => op.op arg) =
       some (hook.instruction arg) := by
@@ -93,7 +103,8 @@ theorem MemoryHook.of_meaning {opcode : U8} {operation : MemoryMeaning.Operation
 
 set_option maxRecDepth 4096 in
 set_option maxHeartbeats 1000000 in
-/-- Exhaustive agreement of actual numeric dispatch with independently named callbacks. -/
+/-- The extracted `code.visit_numeric` calls the numeric hook that the opcode names, and does
+nothing for an opcode outside the table. -/
 theorem visit_numeric {V : Type} (visitor : code.OpVisitor V) (v : V)
     (st : code.OpIterState) (opcode : U8) :
     code.visit_numeric visitor v st opcode =
@@ -106,7 +117,8 @@ theorem visit_numeric {V : Type} (visitor : code.OpVisitor V) (v : V)
 
 set_option maxRecDepth 4096 in
 set_option maxHeartbeats 1000000 in
-/-- Exhaustive agreement of actual memory dispatch with independently named callbacks. -/
+/-- The extracted `code.visit_memory` calls the memory hook that the opcode names, and does
+nothing for an opcode outside the table. -/
 theorem visit_memory {V : Type} (visitor : code.OpVisitor V) (v : V)
     (st : code.OpIterState) (opcode : U8) (arg : code.MemArg) :
     code.visit_memory visitor v st opcode arg =
@@ -133,7 +145,7 @@ end Itasca.VisitorTrace
 
 namespace Itasca.VisitorTrace
 
-/-- Every scalar-extension callback names exactly its independently specified instruction. -/
+/-- Each Wasm 2.0 scalar callback denotes the instruction of its binary row. -/
 theorem ExtendedNumericHook.meaning (hook : ExtendedNumericHook) :
     match hook.encoding.2 with
     | none => ∃ operation,
@@ -144,7 +156,8 @@ theorem ExtendedNumericHook.meaning (hook : ExtendedNumericHook) :
         operation.instruction = hook.instruction := by
   cases hook <;> exact ⟨_, rfl, rfl⟩
 
-/-- Extracted extension dispatch invokes the independently named callback. -/
+/-- The extracted sign-extension and saturating-truncation dispatch calls the callback that
+`ExtendedNumericHook.encoding` names. -/
 theorem ExtendedNumericHook.dispatch {V : Type} (visitor : code.OpVisitor V)
     (v : V) (st : code.OpIterState) (hook : ExtendedNumericHook) :
     (match hook.encoding.2 with

@@ -1,11 +1,20 @@
 import Itasca.Support.Result
 import Itasca.Visitor.Recording
 
+/-!
+# One instruction step with a recording visitor
+
+`CoreVisitor.run.returned_iff` characterises every normal return of `CoreVisitor.run`: the reader
+failed before any hook, or the hook was called once. `run.recorded` reads off the observations a
+recording visitor adds, and `run.instrument_forward` and `run.instrument_backward` relate a run
+with and without the `instrument` wrapper. Covers both profiles.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.VisitorTrace
 
-/-- The validator reports a rejecting callback as an ordinary visitor error. -/
+/-- The validator error for a callback reply: a rejection becomes `OpError.Visitor`. -/
 def hookResult : VisitResult → core.result.Result Unit error.OpError
   | .Ok _ => .Ok ()
   | .Err e => .Err (.Visitor e)
@@ -16,8 +25,8 @@ namespace Itasca.CoreVisitor
 
 open VisitorTrace
 
-/-- Every ordinary returned run either failed before its hook, or called the hook once.
-The second alternative retains rejection and the state delivered to the hook. -/
+/-- A run that returns normally either failed in its reader and made no hook call, or called its
+hook once at the state the reader produced. -/
 theorem run.returned_iff {A V : Type}
     (read : Result (core.result.Result A error.OpError × code.OpIterState))
     (hook : V → code.OpIterState → A → Result (VisitResult × V))
@@ -56,8 +65,8 @@ theorem run.returned_iff {A V : Type}
         core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-/-- A recording visitor's ordinary run records nothing on handler failure, and
-records exactly the named callback and its outcome after handler success. -/
+/-- With a recording visitor, a run that returns normally records nothing when the reader fails and
+exactly one observation, the event and its reply, when the reader succeeds. -/
 theorem run.recorded {A V : Type}
     (read : Result (core.result.Result A error.OpError × code.OpIterState))
     (visitor : code.OpVisitor V) (observe : V → List Observation)
@@ -72,8 +81,8 @@ theorem run.recorded {A V : Type}
   · exact Or.inl ⟨err, hr, he, rfl⟩
   · exact Or.inr ⟨a, reply, hr, he, hrecords v (event st' a) reply v' hv⟩
 
-/-- Adding instrumentation preserves every ordinary return, including validator
-and callback rejection. The added log has zero or one observation. -/
+/-- Instrumenting the visitor preserves every normal return of a run, including validator and
+callback rejections, and adds at most one observation. -/
 theorem run.instrument_forward {A V : Type}
     (read : Result (core.result.Result A error.OpError × code.OpIterState))
     (visitor : code.OpVisitor V) (event : code.OpIterState → A → Event)
@@ -92,8 +101,8 @@ theorem run.instrument_forward {A V : Type}
     apply (run.returned_iff _ _ _ _ _ _).mpr
     exact Or.inr ⟨a, reply, hr, by simp [hv], rfl⟩
 
-/-- Removing instrumentation preserves every ordinary returned result and both
-underlying states; no hook termination hypothesis is needed. -/
+/-- A run of an instrumented visitor that returns normally gives the same result and states for the
+wrapped visitor, and adds at most one observation. -/
 theorem run.instrument_backward {A V : Type}
     (read : Result (core.result.Result A error.OpError × code.OpIterState))
     (visitor : code.OpVisitor V) (event : code.OpIterState → A → Event)

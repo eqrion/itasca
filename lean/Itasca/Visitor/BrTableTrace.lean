@@ -6,12 +6,23 @@ import Itasca.Visitor.TraceBytes
 import Itasca.Visitor.Recording
 import Itasca.Handler.BrTable
 
+/-!
+# Callback traces of the `br_table` reader
+
+Describes the callbacks of `code.read_br_table` and its loop `code.read_table_labels_loop` without
+mentioning the extracted code. `LabelRun` is the loop's callback protocol, `LabelPrefix` the
+labels observed so far, and `TableResult` the outcome for the whole reader.
+`code.read_br_table.trace` proves that every normal return of the extracted reader satisfies it,
+given a visitor that records its callbacks.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.VisitorTrace
 
-/-- A bounded label's independent bytes and the unchanged stacks visible to
-its callback. The callback observes the cursor after the complete label. -/
+/-- A label read for `br_table`: the label's depth is decoded from the bytes and is in range, the
+target is the control entry it names, and the stacks are unchanged. The callback sees the cursor
+after the complete label. -/
 structure LabelRead (data : Slice U8) (st : code.OpIterState) (depth : U32)
     (target : code.Ctrl) (next : code.OpIterState) : Prop where
   vals : next.vals = st.vals
@@ -20,8 +31,8 @@ structure LabelRead (data : Slice U8) (st : code.OpIterState) (depth : U32)
   bound : depth.val < st.ctrls.val.length
   target_eq : target = st.ctrls.val[st.ctrls.val.length - 1 - depth.val]'(by have := bound; omega)
 
-/-- A failed label lookup makes no callback. Unknown labels consume their
-complete immediate; malformed LEBs leave the public state cursor unchanged. -/
+/-- A failed label read makes no callback. A malformed LEB leaves the cursor unchanged, and an
+out-of-range depth consumes its whole immediate and fails with `UnknownLabel`. -/
 def LabelFailure (data : Slice U8) (st : code.OpIterState) (error : error.OpError)
     (next : code.OpIterState) : Prop :=
   next.vals = st.vals ∧ next.ctrls = st.ctrls ∧
@@ -29,9 +40,9 @@ def LabelFailure (data : Slice U8) (st : code.OpIterState) (error : error.OpErro
       (error = .UnknownLabel ∧ ∃ depth, Leb128.Decoded data st.pos depth next.pos ∧
         st.ctrls.val.length ≤ depth.val))
 
-/-- Declarative label-vector protocol. The observations include the final
-rejected hook, and include an accepted hook before a target merge fails.
-No constructor mentions an implementation reader or dispatcher. -/
+/-- The callbacks of the `br_table` label loop, defined from the binary encoding alone. The
+observations include a final rejecting hook, and an accepting hook that precedes a failed target
+merge. -/
 inductive LabelRun (data : Slice U8) (count : Nat) :
     code.OpIterState → Nat → Option code.BlockType → List Observation →
       core.result.Result (Option code.BlockType) error.OpError → code.OpIterState → Prop where
@@ -52,8 +63,8 @@ inductive LabelRun (data : Slice U8) (count : Nat) :
       LabelRun data count next (i + 1) (some (Control.targetBlockType target)) observations result final →
       LabelRun data count st i expect (⟨.op next (.br_table_label depth), .Ok ()⟩ :: observations) result final
 
-/-- Byte provenance of precisely the observed labels, with one state snapshot
-per callback. The last observation may reject, or precede a failing merge. -/
+/-- The labels observed so far, with their depths and one state snapshot per callback. The last
+observation may reject or precede a failed target merge. -/
 inductive LabelPrefix (data : Slice U8) : code.OpIterState →
     List Observation → List U32 → code.OpIterState → Prop where
   | nil (st : code.OpIterState) : LabelPrefix data st [] [] st
@@ -85,8 +96,8 @@ theorem LabelPrefix.labelsAt {data st observations depths final}
   | nil => exact .nil _
   | cons outcome hread _ ih => exact .cons hread.decoded ih
 
-/-- Every observed label is in range, including the one immediately before
-an accepted callback's target-type mismatch. -/
+/-- Every observed label depth is in range, including the one whose accepted callback precedes a
+target type mismatch. -/
 theorem LabelPrefix.bounded {data st observations depths final}
     (h : LabelPrefix data st observations depths final) :
     ∀ depth ∈ depths, depth.val < st.ctrls.val.length := by
@@ -98,7 +109,7 @@ theorem LabelPrefix.bounded {data st observations depths final}
       · exact hread.bound
       · simpa [hread.ctrls] using ih d hd
 
-/-- The event list is always a decoded, bounded vector prefix. A later bad
+/-- The callbacks of a label loop are always a decoded, in-range prefix of the vector. A later bad
 label may move the final cursor without adding an observation. -/
 theorem LabelRun.prefix {data count st i expect observations result final}
     (h : LabelRun data count st i expect observations result final) :
@@ -113,6 +124,7 @@ theorem LabelRun.prefix {data count st i expect observations result final}
       obtain ⟨depths, last, hp, hc⟩ := ih
       exact ⟨_ :: depths, last, .cons (.Ok ()) hr hp, by simp only [List.length_cons]; omega⟩
 
+/-- An accepted label loop observed all of its labels, and every callback accepted. -/
 theorem LabelRun.accepted {data count st i expect observations result final}
     (h : LabelRun data count st i expect observations (.Ok result) final) :
     ∃ depths, LabelPrefix data st observations depths final ∧
@@ -128,6 +140,7 @@ theorem LabelRun.accepted {data count st i expect observations result final}
       exact ⟨_ :: depths, .cons (.Ok ()) hr hp, by simp only [List.length_cons]; omega,
         by simpa using ho⟩
 
+/-- The callbacks of a label loop are consistent with its result. -/
 theorem LabelRun.outcomes {data count st i expect observations result final}
     (h : LabelRun data count st i expect observations result final) :
     Outcomes observations (match result with | .Ok _ => .Ok () | .Err e => .Err e) := by
@@ -140,16 +153,16 @@ theorem LabelRun.outcomes {data count st i expect observations result final}
       cases result <;> exact ih.prepend (before := [⟨.op next (.br_table_label depth), .Ok ()⟩])
         (by simp [AllAccepted])
 
-/-- Provenance of an unfinished table's callbacks, beginning after its opcode.
-Only observed vector entries appear here; the default label is never a hook. -/
+/-- The callbacks of an unfinished `br_table`, starting after its opcode. Only vector entries
+appear, since the default label has no hook. -/
 def TablePrefix (data : Slice U8) (st : code.OpIterState)
     (observations : List Observation) : Prop :=
   ∃ count first depths last, Leb128.Decoded data st.pos count first ∧
     LabelPrefix data { st with pos := first } observations depths last ∧
     depths.length ≤ count.val
 
-/-- The complete vector and default immediate associated with an accepted
-table handler. The closing callback is emitted separately by the dispatcher. -/
+/-- The callbacks of an accepted `code.read_br_table`: the complete vector, then the default label.
+The closing `br_table` callback is made by the step, not the reader. -/
 def TableAccepted (data : Slice U8) (st : code.OpIterState)
     (observations : List Observation) (fallback : U32) (final : code.OpIterState) : Prop :=
   ∃ count first depths last, Leb128.Decoded data st.pos count first ∧
@@ -157,6 +170,8 @@ def TableAccepted (data : Slice U8) (st : code.OpIterState)
     depths.length = count.val ∧ Leb128.Decoded data last.pos fallback final.pos ∧
     AllAccepted observations
 
+/-- The callbacks of `code.read_br_table` for each result: an error follows no callbacks or an
+unfinished table, and a success is a complete accepted table. -/
 def TableResult (data : Slice U8) (st : code.OpIterState) (observations : List Observation)
     (result : core.result.Result (U32 × code.BlockType) error.OpError)
     (final : code.OpIterState) : Prop :=
@@ -186,9 +201,8 @@ end Itasca.VisitorTrace
 
 namespace Itasca
 
-/-- Every ordinary return of the actual label loop has the independent trace
-protocol above. The recording premise covers rejecting hooks as well as
-accepting hooks, and no global visitor termination premise is required. -/
+/-- Every normal return of `code.read_table_labels_loop` has a `LabelRun` trace. The recording
+premise covers rejecting and accepting hooks, and no totality of the visitor is assumed. -/
 theorem code.read_table_labels_loop.trace {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List VisitorTrace.Observation)
     (records : ∀ v s depth reply v', visitor.on_br_table_label v s depth = .ok (reply, v') →
@@ -265,7 +279,8 @@ theorem code.read_table_labels_loop.trace {V : Type} (visitor : code.OpVisitor V
                 (by simpa [hbtval] using hcompatible)
               simpa [hbtval, show j.val = i.val + 1 by scalar_tac] using hrun
 
-/-- The public vector reader starts with counter zero and no expected target. -/
+/-- `code.read_table_labels` starts the label loop at index zero with no expected target, and
+has the same trace. -/
 theorem code.read_table_labels.trace {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List VisitorTrace.Observation)
     (records : ∀ v s depth reply v', visitor.on_br_table_label v s depth = .ok (reply, v') →
@@ -279,9 +294,9 @@ theorem code.read_table_labels.trace {V : Type} (visitor : code.OpVisitor V)
   code.read_table_labels_loop.trace visitor observe records st data count 0#u32 v none
     (by scalar_tac) result final v' h
 
-/-- Every ordinary table-handler return has exactly its observed label prefix.
-On success all vector labels and the unobserved default have independent byte
-provenance. This also records callbacks preceding later validation failures. -/
+/-- Every normal return of `code.read_br_table` has a `TableResult` trace. On success the vector
+labels and the default label are decoded from the bytes, and callbacks that precede a later
+validation failure are recorded. -/
 theorem code.read_br_table.trace {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List VisitorTrace.Observation) (records : VisitorTrace.Records visitor observe)
     (st : code.OpIterState) (data : Slice U8) (v : V)

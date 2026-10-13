@@ -2,14 +2,22 @@ import Itasca.Support.Result
 import Itasca.Visitor.Refinement
 import Itasca.Handler.BrTable
 
+/-!
+# Refinement of the `br_table` reader
+
+Lifts a `VisitorTrace.Refines` relation between visitors to the label loop
+`code.read_table_labels_loop`, the label reader `code.read_table_labels` and the full
+`code.read_br_table`, so results and validator state agree on every normal return.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
 open VisitorTrace
 
-/-- Callback refinement preserves the entire branch-table label loop, including
-rejection before merging the just-observed target. -/
+/-- A refinement of hooks lifts to the `br_table` label loop, including a rejection by the hook
+before the observed target is merged. -/
 theorem code.read_table_labels_loop.refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
@@ -80,6 +88,7 @@ theorem code.read_table_labels_loop.refines {V W : Type}
             simpa [code.read_table_labels_loop, code.read_table_labels_loop.body,
               code.visit, core.result.Result.Insts.CoreOpsTry.branch] using hrec
 
+/-- A refinement of hooks lifts to the public label reader `code.read_table_labels`. -/
 theorem code.read_table_labels.refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
@@ -92,8 +101,8 @@ theorem code.read_table_labels.refines {V W : Type}
   code.read_table_labels_loop.refines visitor replacement related hrefines st data count v w
     hrelated none 0#u32 (by scalar_tac) res st' v' h
 
-/-- The remaining branch-table handler silently preserves the related visitor
-states after its internal label callbacks, on every ordinary result. -/
+/-- A refinement of hooks lifts to `code.read_br_table` on every normal return. Only the label
+hooks are called, and the related states carry through. -/
 theorem code.read_br_table.refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
