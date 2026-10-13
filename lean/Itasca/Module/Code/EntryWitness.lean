@@ -1,12 +1,21 @@
 import Itasca.Module.Code.Entry
 import Itasca.Support.Result
 
+/-!
+# Code entry witnesses
+
+`module.validate_code_entry_with.witness_profile` extracts a `CodeEntry.Witness` from any
+successful call of `module.validate_code_entry_with`, for either profile. The witness records the
+actual visitor calls and parser results. Other executions of the visitor need not terminate.
+`module.validate_code_entry_with.witness` is the Wasm 1.0 form.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- An accepted entry retains its original visitor calls and exact parser
-witnesses. Other executions of the visitor need not terminate. -/
+/-- A successful `module.validate_code_entry_with` call gives a `CodeEntry.Witness` of its visitor
+calls and parser results. Other executions of the visitor need not terminate. -/
 theorem module.validate_code_entry_with.witness_profile {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (pos : Usize) (env : module.Env) (index finish : Usize)
     (v v' : V) (hbound : CodeEntry.Bounds env) (profile : ValidationProfile)
@@ -114,7 +123,7 @@ theorem module.validate_code_entry_with.witness_profile {V : Type} (visitor : co
               · simpa [alloc.vec.Vec.deref] using hresultsval
               · exact ModuleBinary.slice_bytes (by omega) (by scalar_tac) hbodyval
 
-/-- Compatibility specialization of the profile-independent entry witness. -/
+/-- `module.validate_code_entry_with.witness_profile` for Wasm 1.0. -/
 theorem module.validate_code_entry_with.witness {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (pos : Usize) (env : module.Env) (index finish : Usize)
     (v v' : V) (hbound : CodeEntry.Bounds env)

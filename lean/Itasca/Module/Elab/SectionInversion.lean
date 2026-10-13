@@ -1,9 +1,20 @@
 import Itasca.Module.Const.Inversion
 
+/-!
+# Inversion of section typing
+
+Recovers the semantic requirements of each declaration section from the generated typing
+judgments. `limits_valid_of_typing`, `global_valid_of_typing`, `export_resolves_of_typing`,
+`start_valid_of_typing`, `data_valid_of_typing` and `element_valid_raw_of_typing` turn `Limits_ok`,
+`Global_ok`, `Export_ok`, `Start_ok`, `Data_ok` and `Elem_ok` into the validity statements used by
+`ModuleEnv.Requirements`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleElaboration
 
+/-- Inversion of `Limits_ok`: the minimum and any maximum are within the bound and ordered. -/
 theorem limits_constraints {lim : limits} {bound : Nat} (h : Limits_ok lim bound) :
     match lim with
     | .mk_limits minimum maximum => proj_uN_0 minimum ≤ bound ∧
@@ -12,23 +23,27 @@ theorem limits_constraints {lim : limits} {bound : Nat} (h : Limits_ok lim bound
   | mk_Limits_ok n maximum bound hn hm hw =>
     cases maximum <;> simpa [OMap, Forall, proj_uN_0] using And.intro hn hm
 
+/-- Typed limits are valid in the byte-level sense. -/
 theorem limits_valid_of_typing {lim : types.Limits} {bound : Nat}
     (h : Limits_ok (EnvTranslation.limitsType lim) bound) : ModuleTranslation.LimitsValid lim bound := by
   have hc := limits_constraints h
   simpa [EnvTranslation.limitsType, proj_uN_0, ModuleTranslation.LimitsValid] using hc
 
+/-- A typed table type has valid limits for the table size bound. -/
 theorem table_valid_of_typing {tt : types.TableType}
     (h : Tabletype_ok (EnvTranslation.tableType tt)) :
     ModuleTranslation.LimitsValid tt.limits (2 ^ 32 - 1) := by
   cases h with
   | mk_Tabletype_ok _ _ h _ => simpa using limits_valid_of_typing h
 
+/-- A typed memory type has valid limits for the memory page bound. -/
 theorem memory_valid_of_typing {mt : types.MemType}
     (h : Memtype_ok (EnvTranslation.memType mt)) :
     ModuleTranslation.LimitsValid mt.limits (2 ^ 16) := by
   cases h with
   | mk_Memtype_ok _ h _ => exact limits_valid_of_typing h
 
+/-- A typed global has a typed constant initializer of its value type. -/
 theorem global_expr_typed {C : context} {g : module.Global}
     (h : Global_ok C (ModuleConstants.global g) (Translate.globalType g.gtype)) :
     Expr_ok_const C (ModuleConstants.expression g.init) (Translate.valueType g.gtype.valtype) := by
@@ -37,6 +52,7 @@ theorem global_expr_typed {C : context} {g : module.Global}
   have hety : Translate.valueType g.gtype.valtype = t := (globaltype.mk_globaltype.inj he).2
   simpa [hety] using ht
 
+/-- A typed global has a valid initializer in the environment. -/
 theorem global_valid_of_typing {env : module.Env} {C : context} {g : module.Global}
     (hg : ModuleConstants.GlobalContext env C)
     (hf : ModuleConstants.FunctionContext env C)
@@ -44,6 +60,7 @@ theorem global_valid_of_typing {env : module.Env} {C : context} {g : module.Glob
     ModuleConstants.Valid env g.init g.gtype.valtype :=
   ModuleConstants.valid_of_typing hg hf (global_expr_typed h)
 
+/-- A typed export resolves in the environment to an external type that translates to its typing. -/
 theorem export_resolves_of_typing {env : module.Env} {C : context} {entry : module.Export} {xt}
     (hc : CodeEntry.ModuleContext env C)
     (h : Export_ok C (exportDecl (ModuleEnv.rawExport entry)) xt) :
@@ -99,6 +116,7 @@ theorem export_resolves_of_typing {env : module.Env} {C : context} {entry : modu
         rw [hc.globals, getElem!_pos _ _ (by simpa using hb), List.getElem_map] at he
         exact he
 
+/-- Inversion of `Start_ok`: the start function exists and has type `[] -> []`. -/
 theorem start_signature {C : context} {s : _root_.start} (h : Start_ok C s) :
     match s with
     | .START idx => proj_uN_0 idx < C.FUNCS.length ∧
@@ -106,6 +124,7 @@ theorem start_signature {C : context} {s : _root_.start} (h : Start_ok C s) :
   cases h
   exact ⟨by assumption, by assumption⟩
 
+/-- A typed start function is a function of the environment with no parameters or results. -/
 theorem start_valid_of_typing {env : module.Env} {C : context} {idx : U32}
     (hc : CodeEntry.ModuleContext env C) (h : Start_ok C (start idx)) :
     ∃ hi : idx.val < env.func_types.val.length,
@@ -117,6 +136,7 @@ theorem start_valid_of_typing {env : module.Env} {C : context} {idx : U32}
   obtain ⟨hp, hr⟩ := functype.mk_functype.inj he
   exact ⟨hb, List.map_eq_nil_iff.mp (list.mk_list.inj hp), List.map_eq_nil_iff.mp (list.mk_list.inj hr)⟩
 
+/-- Inversion of `Datamode_ok`: an active segment uses memory `0` with a constant `i32` offset. -/
 theorem datamode_active_properties {C : context} {mode : datamode} (h : Datamode_ok C mode) :
     match mode with
     | .ACTIVE idx expr => idx = .mk_uN 0 ∧ 0 < C.MEMS.length ∧ Expr_ok_const C expr .I32
@@ -125,9 +145,11 @@ theorem datamode_active_properties {C : context} {mode : datamode} (h : Datamode
   · exact ⟨rfl, by assumption, by assumption⟩
   · trivial
 
+/-- A typed data segment has a typed mode. -/
 theorem data_mode_typed {C : context} {d : _root_.data} (h : Data_ok C d) :
     match d with | .DATA _ mode => Datamode_ok C mode := by cases h; assumption
 
+/-- A typed data segment is valid in the environment. -/
 theorem data_valid_of_typing {env : module.Env} {C : context} {entry : module.Data}
     (hg : ModuleConstants.GlobalContext env C)
     (hf : ModuleConstants.FunctionContext env C)
@@ -144,6 +166,7 @@ theorem data_valid_of_typing {env : module.Env} {C : context} {entry : module.Da
       (And.intro (show idx.val < env.mem_types.val.length by simpa [hm, hidx] using hn)
         (ModuleConstants.valid_of_typing hg hf ht))
 
+/-- Inversion of `Elemmode_ok`: an active segment names a table with a constant `i32` offset. -/
 theorem elemmode_active_properties {C : context} {mode : elemmode} {rt}
     (h : Elemmode_ok C mode rt) :
     match mode with
@@ -154,6 +177,8 @@ theorem elemmode_active_properties {C : context} {mode : elemmode} {rt}
   · trivial
   · trivial
 
+/-- Inversion of `Elem_ok`: the initializers are constant expressions of the reference type and
+the mode is typed. -/
 theorem element_parts {C : context} {e : elem} {rt} (h : Elem_ok C e rt) :
     match e with
     | .ELEM _ exprs mode => Forall (fun expr => Expr_ok_const C expr (valtype_reftype rt)) exprs ∧
@@ -161,6 +186,7 @@ theorem element_parts {C : context} {e : elem} {rt} (h : Elem_ok C e rt) :
   cases h
   exact ⟨by assumption, by assumption⟩
 
+/-- A constant `ref.func idx` expression has `idx` in the function space. -/
 theorem ref_func_index {C : context} {idx : U32} {ty}
     (h : Expr_ok_const C [instr.REF_FUNC (.mk_uN idx.val)] ty) : idx.val < C.FUNCS.length := by
   have hs : Instrs_ok C [instr.REF_FUNC (.mk_uN idx.val)] (.mk_functype (.mk_list []) (.mk_list [ty])) := by
@@ -172,6 +198,7 @@ theorem ref_func_index {C : context} {idx : U32} {ty}
   cases hp
   assumption
 
+/-- A typed raw element segment satisfies the element validity requirement. -/
 theorem element_valid_raw_of_typing {env : module.Env} {C : context} {entry : ModuleBinary.Element}
     (hg : ModuleConstants.GlobalContext env C)
     (hf : ModuleConstants.FunctionContext env C)

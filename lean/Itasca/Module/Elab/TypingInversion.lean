@@ -1,9 +1,20 @@
 import Itasca.Module.Elab.Metadata
 
+/-!
+# Inversion of `Module_ok`
+
+`sections_of_typing` recovers `SectionsTyped`, the canonical typing of every section, from
+`Module_ok` of an elaborated module. The contexts are computed from the raw module alone
+(`contextOf`, `initializerContextOf`), so the result does not depend on any validator output.
+`function_type_of_typing` and `function_lists_of_typing` identify the function types of typed code
+entries.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleElaboration
 
+/-- The generated `Forall₂` of a list pair gives `List.Forall₂` when the lengths agree. -/
 theorem forall₂_of_generated {α β : Type} {R : α → β → Prop} {xs ys}
     (hn : xs.length = ys.length) (h : Forall₂ R xs ys) : List.Forall₂ R xs ys :=
   List.forall₂_iff_zip.mpr ⟨hn, fun {_ _} hm => h _ hm⟩
@@ -22,13 +33,15 @@ theorem eq_map_right {α β γ : Type} {R : α → β → Prop} {xs : List γ} {
     (hg : ∀ a b, R (f a) b → b = g a) : ys = xs.map g :=
   eq_map_left h.flip (fun b a hp => hg a b hp)
 
+/-- The initializer context computed from the raw module: its imported globals only, and no
+segment spaces. -/
 def initializerContextOf (raw : ModuleBinary.Module) : context :=
   { contextOf raw with
     GLOBALS := ModuleTranslation.globals (raw.imports.map (fun e => importType raw.types e.desc))
     ELEMS := [], DATAS := [] }
 
-/-- Canonical section judgments recovered from generated module typing. The
-contexts are calculated from the independent raw module, not parser output. -/
+/-- The canonical section judgments recovered from generated module typing. The contexts are
+computed from the independent raw module and not from parser output. -/
 structure SectionsTyped (raw : ModuleBinary.Module) : Prop where
   imports : ∀ e ∈ raw.imports, Externtype_ok (importType raw.types e.desc)
   globals : ∀ g ∈ raw.globals,
@@ -44,11 +57,13 @@ structure SectionsTyped (raw : ModuleBinary.Module) : Prop where
   start : ∀ idx, raw.start = some idx → Start_ok (contextOf raw) (start idx)
   exports : ∀ e ∈ raw.exports, ∃ xt, Export_ok (contextOf raw) (exportDecl e) xt
 
+/-- Inversion of `Func_ok`: the type index is in range. -/
 theorem func_index_bound {C : context} {f ft} (h : Func_ok C f ft) :
     match f with | .FUNC idx _ _ => proj_uN_0 idx < C.TYPES.length := by
   cases h
   assumption
 
+/-- Inversion of `Func_ok`: the function type is the context's type at the type index. -/
 theorem func_type_lookup {C : context} {f ft} (h : Func_ok C f ft) :
     match f with | .FUNC idx _ _ => ft = C.TYPES[proj_uN_0 idx]! := by
   cases h
@@ -56,6 +71,7 @@ theorem func_type_lookup {C : context} {f ft} (h : Func_ok C f ft) :
   symm
   assumption
 
+/-- A typed code entry in a context with translated types has the type given by `functionType`. -/
 theorem function_type_of_typing {C : context} {ts : List types.FuncType} {idx entry ft}
     (h : Func_ok C (CodeEntry.function idx entry) ft)
     (hC : C.TYPES = ts.map EnvTranslation.funcType) : ft = functionType ts idx := by
@@ -67,6 +83,8 @@ theorem function_type_of_typing {C : context} {ts : List types.FuncType} {idx en
   rw [hC, getElem!_pos _ _ (by simpa using hidx), List.getElem_map] at he
   exact he
 
+/-- Typed functions in a context with translated types determine the function types of their type
+indices, and each entry is typed at its own type. -/
 theorem function_lists_of_typing {C : context} {ts : List types.FuncType} {indices codes fts}
     (hn : indices.length = codes.length)
     (h : List.Forall₂ (fun ft f => Func_ok C f ft) fts (List.zipWith CodeEntry.function indices codes))
@@ -88,6 +106,7 @@ theorem function_lists_of_typing {C : context} {ts : List types.FuncType} {indic
         have he := function_type_of_typing hp hC
         exact ⟨by simp [he, heq], .cons (he ▸ hp) hrest⟩
 
+/-- `Module_ok` of an elaborated module gives `SectionsTyped` for the raw module. -/
 theorem sections_of_typing {raw : ModuleBinary.Module}
     (he : Elaborates raw (moduleOf raw)) (h : Module_ok (moduleOf raw)) : SectionsTyped raw := by
   unfold moduleOf at h

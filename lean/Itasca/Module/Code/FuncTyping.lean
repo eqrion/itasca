@@ -2,10 +2,21 @@ import Itasca.Module.Code.BodyContextComplete
 import Itasca.Module.Elab.Profile
 import Itasca.Module.Elab.TypingInversion
 
+/-!
+# Code entry typing from function typing
+
+The converse of `CodeEntry.typed_func_ok`. `function_body` inverts the generated `Func_ok`, and
+`Typed.of_func_ok` builds a `Typed` certificate for a code entry from `Func_ok` in a module
+context, using the profile's function restrictions and declared references. A body that uses no
+data index may have a data space unrelated to the environment's.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.CodeEntry
 
+/-- Inversion of `Func_ok`: the locals are the declared locals, and the body is a typed expression
+in the local context prepended to `C`. -/
 theorem function_body {C : context} {f ft} (h : Func_ok C f ft) :
     match f with
     | .FUNC _ locals body => ∃ declared params results,
@@ -17,6 +28,9 @@ theorem function_body {C : context} {f ft} (h : Func_ok C f ft) :
   cases h
   exact ⟨_, _, _, rfl, rfl, by assumption⟩
 
+/-- Generated function typing of a code entry in a module context gives a `Typed` certificate.
+The context's element space must be the environment's, and its data space must be the
+environment's unless the body uses no data index. -/
 theorem Typed.of_func_ok {profile} {env : module.Env} {C : context} {idx : U32}
     {entry : ModuleBinary.Code} {ft : functype}
     (hc : ModuleContext env C)

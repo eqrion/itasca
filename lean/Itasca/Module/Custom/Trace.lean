@@ -3,6 +3,16 @@ import Itasca.Module.Custom.TraceDefs
 import Itasca.Module.Custom.Visitor
 import Itasca.Module.Custom.Invariant
 
+/-!
+# Custom section traces
+
+For a visitor that records its custom section callbacks (`RecordsCustom`), every accepted run of
+`module.validate_env_with` and `module.validate_tail_with` produces a custom section event stream
+described by `SectionTrace` (`module.validate_env_with.accepted_trace` and
+`module.validate_tail_with.accepted_trace`). `customRecorder` is a concrete recording visitor that
+accepts every callback.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
@@ -11,8 +21,8 @@ variable {profile : ValidationProfile}
 
 open ModuleTrace
 
-/-- An accepted environment walk reports each custom section exactly where
-its independently decoded header and UTF-8 name place its payload. -/
+/-- A successful run of the environment loop reports each custom section exactly where its
+independently decoded header and UTF-8 name place its payload. -/
 theorem module.validate_env_with_loop.accepted_trace {V : Type}
     (visitor : module.ModuleVisitor V) (observe : V → List Event)
     (hrecords : RecordsCustom visitor observe) (data : Slice U8)
@@ -107,8 +117,8 @@ theorem module.validate_env_with_loop.accepted_trace {V : Type}
                     · have hne : consumed.val ≠ last.val := fun h => he (UScalar.eq_of_val_eq h)
                       simp [hne] at ht
 
-/-- Accepted public environment parsing has an exact custom callback stream
-from the checked magic/version header to its first code/data boundary. -/
+/-- A successful `module.validate_env_with` run has an exact custom callback stream from the checked
+module header to the first code or data section boundary. -/
 theorem module.validate_env_with.accepted_trace {V : Type}
     (visitor : module.ModuleVisitor V) (observe : V → List Event)
     (hrecords : RecordsCustom visitor observe) (data : Slice U8)
@@ -128,8 +138,8 @@ theorem module.validate_env_with.accepted_trace {V : Type}
       v initial start 0#u8 result next v' hp.bound ht
     exact ⟨events, hlog, start, hp, htrace⟩
 
-/-- Custom callbacks in the tail are separated by the exact intervening data
-section, and the successful walk reaches the input's end. -/
+/-- Custom callbacks in the tail are separated by the exact intervening data section, and the
+successful walk reaches the end of the input. -/
 theorem module.validate_tail_with_loop.accepted_trace {V : Type}
     (visitor : module.ModuleVisitor V) (observe : V → List Event)
     (hrecords : RecordsCustom visitor observe) (data : Slice U8) (env : module.Env)
@@ -215,8 +225,8 @@ theorem module.validate_tail_with_loop.accepted_trace {V : Type}
                 · simp [he] at ht
           · simp [hdata] at h
 
-/-- Exact accepted custom callbacks for the public tail API. The bound excludes
-the API's deliberate immediate-success behavior for an out-of-range start. -/
+/-- A successful `module.validate_tail_with` run has an exact custom callback stream. The bound on
+`pos` excludes the immediate success of the API for an out-of-range start. -/
 theorem module.validate_tail_with.accepted_trace {V : Type}
     (visitor : module.ModuleVisitor V) (observe : V → List Event)
     (hrecords : RecordsCustom visitor observe) (data : Slice U8) (pos : Usize) (env : module.Env)
@@ -232,14 +242,16 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleTrace
 
-/-- A concrete accepting recorder for all custom-section arguments. -/
+/-- A visitor that accepts every custom section callback and records its argument. -/
 def customRecorder : module.ModuleVisitor (List Event) where
   on_custom_section events chunk := .ok (.Ok (), events ++ [.custom chunk])
 
+/-- `customRecorder` records its callbacks. -/
 theorem customRecorder_records : RecordsCustom customRecorder id := by
   intro v chunk v' h
   simpa [customRecorder, Eq.comm] using h
 
+/-- `customRecorder` accepts every callback. -/
 theorem customRecorder_accepts : ModuleTail.HooksAccept customRecorder := by
   intro events chunk
   exact ⟨events ++ [.custom chunk], rfl⟩

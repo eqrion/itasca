@@ -1,10 +1,21 @@
 import Itasca.Module.Const.Syntax
 import Itasca.Module.Readers.Basic
 
+/-!
+# Constant expression parser
+
+`module.decode_const_expr.spec` states that an accepted initializer is an exact `ConstEncoding`
+span of the independent grammar and is `Valid` at the expected type. `allowed_spec` adds the
+profile's `ConstAllowed` guard. The helpers `module.expect_const_type`, `module.const_global` and
+`module.read_expr_end` have their own specs. Completeness is in `Module/Const/ParserComplete`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
+/-- `module.expect_const_type` accepts exactly equal types and otherwise returns
+`InvalidConstExpr`. -/
 @[step]
 theorem module.expect_const_type.spec (actual expected : types.ValueType) :
     module.expect_const_type actual expected ⦃ r =>
@@ -15,6 +26,7 @@ theorem module.expect_const_type.spec (actual expected : types.ValueType) :
     simp [module.expect_const_type, core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
       types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
 
+/-- `module.const_global` returns the type of an in-range imported immutable global. -/
 @[step]
 theorem module.const_global.spec (env : module.Env) (idx : U32) :
     module.const_global env idx ⦃ r =>
@@ -38,6 +50,7 @@ theorem module.const_global.spec (env : module.Env) (idx : U32) :
       have hi : i.val = idx.val := by scalar_tac
       simpa [hi] using gt_post.symm
 
+/-- An accepted `module.read_expr_end` consumed the single byte `0x0b`. -/
 @[step]
 theorem module.read_expr_end.spec (data : Slice U8) (pos : Usize) :
     module.read_expr_end data pos ⦃ r =>
@@ -61,6 +74,8 @@ end Itasca
 
 namespace Itasca.ModuleConstants
 
+/-- The parser postcondition: an error carries no guarantee, and a success is a `ConstEncoding`
+span whose expression is `Valid` at the expected type. -/
 def Post (data : Slice U8) (pos : Usize) (env : module.Env)
     (expected : types.ValueType) :
     core.result.Result (types.ConstExpr × Usize) error.Error → Prop
@@ -108,7 +123,7 @@ end Itasca.ModuleConstants
 
 namespace Itasca
 
-/-- Decoding proves an exact independent constant encoding and initializer validity. -/
+/-- `module.decode_const_expr` satisfies `ModuleConstants.Post`. -/
 @[step]
 theorem module.decode_const_expr.spec (data : Slice U8) (pos : Usize)
     (env : module.Env) (expected : types.ValueType) (profile : ValidationProfile) :
@@ -412,7 +427,7 @@ private theorem module.decode_const_expr.allowed_only_spec (data : Slice U8) (po
           | step
           | split
 
-/-- The profile guards accompany exact bytes and generated initializer validity. -/
+/-- `module.decode_const_expr.spec` plus `ConstAllowed` for the returned expression. -/
 theorem module.decode_const_expr.allowed_spec (data : Slice U8) (pos : Usize)
     (env : module.Env) (expected : types.ValueType) (profile : ValidationProfile) :
     module.decode_const_expr data pos env expected profile ⦃ r =>

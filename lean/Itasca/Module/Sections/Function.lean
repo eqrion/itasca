@@ -1,9 +1,19 @@
 import Itasca.Module.Sections.Type
 
+/-!
+# Function section parser
+
+Soundness of `module.decode_function_section` and its loop. `FunctionsAdded` says the environment
+gains the decoded type indices and the signatures they resolve to, in order. The decoded span is
+a `VecEncoding IndexEncoding`. Completeness is in `Module/Sections/FunctionComplete`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleSections
 
+/-- `result` is `env` with `indices` appended to the function type indices and the resolved
+`signatures` appended to the function types, and nothing else changed. -/
 def FunctionsAdded (env result : module.Env) (indices : List U32)
     (signatures : List types.FuncType) : Prop :=
   result = { env with func_type_indices := result.func_type_indices, func_types := result.func_types } ∧
@@ -17,6 +27,7 @@ namespace Itasca
 
 open ModuleBinary ModuleSections
 
+/-- The function loop adds `count` indices forming a `Rep IndexEncoding` span. -/
 @[step]
 theorem module.decode_function_section_loop.spec (data : Slice U8) (env : module.Env)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
@@ -82,6 +93,8 @@ theorem module.decode_function_section_loop.spec (data : Slice U8) (env : module
       ⟨by cases env; rfl, by simp, by simp, .nil⟩,
       ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, hfuncs, hindices⟩
 
+/-- `module.decode_function_section` adds the indices of a `VecEncoding IndexEncoding` span with
+their resolved signatures. -/
 @[step]
 theorem module.decode_function_section.spec (data : Slice U8) (pos : Usize) (env : module.Env)
     (hfuncs : env.func_types.val.length ≤ pos.val)

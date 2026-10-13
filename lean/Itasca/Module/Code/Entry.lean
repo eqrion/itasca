@@ -4,18 +4,29 @@ import Itasca.Module.Code.Encoding
 import Itasca.Wasm1.ProfileSoundness
 import Itasca.Profile.BodyExecution
 
+/-!
+# Code entry validation
+
+Soundness of `module.validate_code_entry` and `module.validate_code_entry_with`. For any visitor
+with total callbacks they terminate, and `module.validate_code_entry_with.pipeline_of_body_total`
+decomposes a successful call into a `CodeEntry.Witness`. `Witness.validated` discharges the body
+call with the body soundness theorem to give `CodeEntry.Validated`, an independent `CodeEncoding`
+and a `Typed` certificate. `module.validate_code_entry.spec` is the resulting Wasm 1.0 statement.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.CodeEntry
 
-/-- The environment decoder supplies this modest allocation bound. A body
-validator accepts arbitrary environments, but parameter/local concatenation
-cannot be total for a caller-fabricated vector already at machine capacity. -/
+/-- Parameters plus the maximum local count fit in a `Usize` for every function type. The
+environment decoder supplies this. The validator accepts arbitrary environments, but concatenating
+parameters and locals cannot be total for a caller-built vector already at machine capacity. -/
 def Bounds (env : module.Env) : Prop :=
   ∀ ft ∈ env.types.val, ft.params.val.length + limits.MAX_LOCALS.val ≤ Usize.max
 
-/-- Exact witnesses retained from the real entry pipeline, including the
-function-start callback and the slice-relative body invocation. -/
+/-- The data of a successful run of the entry validator at `index`, from `start` to `finish`. It
+records the size header, the locals bytes and bound, the context handed to the visitor, the
+function-start callback and the body validation on the body slice. -/
 structure Witness {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
     (env : module.Env) (index start finish : Usize) (v v' : V)
     (profile : ValidationProfile := .Wasm1) where
@@ -44,14 +55,16 @@ structure Witness {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
   function_start : visitor.on_function_start v ctx typeIdx bodyStart finish = .ok (.Ok (), startedState)
   body_accepted : runBody visitor profile body env ctx typeIdx startedState = .ok (.Ok (), v')
 
-/-- The result used by code-section composition contains independent bytes and
-full generated body typing, with no validation-call premise. -/
+/-- Entry `index` of the code section has an independent `CodeEncoding` from `start` to `finish`
+and a `Typed` certificate within the local bound. This is the form used for code-section
+composition and has no validation-call premise. -/
 def Validated (data : Slice U8) (env : module.Env) (index start finish : Usize) : Prop :=
   ∃ entry, ModuleBinary.At ModuleBinary.CodeEncoding data start entry finish ∧
     ∃ hi : index.val < env.func_type_indices.val.length,
       Typed env env.func_type_indices.val[index.val] entry ∧
       entry.declared.length ≤ limits.MAX_LOCALS.val
 
+/-- A result list of length at most one is the results of some block type. -/
 theorem blockType_of_length (results : List types.ValueType) (h : results.length ≤ 1) :
     ∃ bt, results = Control.results bt := by
   cases results with
@@ -61,8 +74,8 @@ theorem blockType_of_length (results : List types.ValueType) (h : results.length
     | nil => exact ⟨.Value t, rfl⟩
     | cons t' rest => simp at h
 
-/-- Discharge the body call using the public body soundness theorem and retain
-the same instruction tree in the entry's byte encoding and typing certificate. -/
+/-- A `Witness` gives a `Validated` entry. The body soundness theorem discharges the body call, and
+the same instruction tree appears in the entry's byte encoding and typing certificate. -/
 theorem Witness.validated {V : Type} {visitor : code.OpVisitor V} {data env index start finish v v'}
     (w : Witness visitor data env index start finish v v')
     (hresults : ∀ ft ∈ env.types.val, ft.results.val.length ≤ 1) :
@@ -87,6 +100,7 @@ theorem Witness.validated {V : Type} {visitor : code.OpVisitor V} {data env inde
     rw [body_context w.context_locals w.context_results hbt] at hprofile
     exact hprofile
 
+/-- Parameter counts bounded by the maximum module size give `Bounds`. -/
 theorem Bounds.of_module_bound (env : module.Env)
     (h : ∀ ft ∈ env.types.val, ft.params.val.length ≤ limits.MAX_MODULE_BYTES.val) : Bounds env := by
   intro ft hm
@@ -98,8 +112,8 @@ theorem Bounds.of_module_bound (env : module.Env)
 
 end CodeEntry
 
-/-- Totality and exact successful-call decomposition of the extracted entry
-validator. Rejecting callbacks remain ordinary module errors. -/
+/-- Given a body operation that terminates, `module.validate_code_entry_with` terminates and each
+successful call has a `CodeEntry.Witness`. Rejecting callbacks are ordinary module errors. -/
 theorem module.validate_code_entry_with.pipeline_of_body_total {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (data : Slice U8) (pos : Usize)
     (env : module.Env) (index : Usize) (v : V) (hbound : CodeEntry.Bounds env)
@@ -204,8 +218,8 @@ theorem module.validate_code_entry_with.pipeline_of_body_total {V : Type} (visit
                               · simpa [alloc.vec.Vec.deref] using v2_post
                               · exact ModuleBinary.slice_bytes (by scalar_tac) (by scalar_tac) s3_post
 
-/-- The established Wasm 1.0 contract is a specialization of the shared entry
-pipeline. Only the body operation depends on the selected profile. -/
+/-- `module.validate_code_entry_with.pipeline_of_body_total` for Wasm 1.0. Only the body operation
+depends on the selected profile. -/
 theorem module.validate_code_entry_with.pipeline {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (data : Slice U8) (pos : Usize)
     (env : module.Env) (index : Usize) (v : V) (hbound : CodeEntry.Bounds env) :
@@ -214,6 +228,7 @@ theorem module.validate_code_entry_with.pipeline {V : Type} (visitor : code.OpVi
   module.validate_code_entry_with.pipeline_of_body_total visitor hvisitor data pos env index v hbound
     .Wasm1 (fun body ctx _ started => code.validate_body_with.wasm_total visitor hvisitor body env ctx started)
 
+/-- A successful Wasm 1.0 `module.validate_code_entry_with` call yields a `Validated` entry. -/
 theorem module.validate_code_entry_with.spec {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (data : Slice U8) (pos : Usize)
     (env : module.Env) (index : Usize) (v : V) (hbound : CodeEntry.Bounds env)
@@ -225,6 +240,7 @@ theorem module.validate_code_entry_with.spec {V : Type} (visitor : code.OpVisito
   obtain ⟨w⟩ := h finish he
   exact w.validated hresults
 
+/-- Wasm 1.0 `module.validate_code_entry_with` terminates. -/
 theorem module.validate_code_entry_with.total {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (data : Slice U8) (pos : Usize)
     (env : module.Env) (index : Usize) (v : V) (hbound : CodeEntry.Bounds env) :
@@ -233,6 +249,7 @@ theorem module.validate_code_entry_with.total {V : Type} (visitor : code.OpVisit
     (module.validate_code_entry_with.pipeline visitor hvisitor data pos env index v hbound)
   exact ⟨r, hr⟩
 
+/-- A successful Wasm 1.0 `module.validate_code_entry` call yields a `Validated` entry. -/
 theorem module.validate_code_entry.spec (data : Slice U8) (pos : Usize)
     (env : module.Env) (index : Usize) (hbound : CodeEntry.Bounds env)
     (hresults : ∀ ft ∈ env.types.val, ft.results.val.length ≤ 1) :
@@ -242,6 +259,7 @@ theorem module.validate_code_entry.spec (data : Slice U8) (pos : Usize)
     code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_total data pos env index () hbound hresults)
   simpa [module.validate_code_entry, hr] using hp
 
+/-- Wasm 1.0 `module.validate_code_entry` terminates. -/
 theorem module.validate_code_entry.total (data : Slice U8) (pos : Usize)
     (env : module.Env) (index : Usize) (hbound : CodeEntry.Bounds env) :
     ∃ r, module.validate_code_entry data pos env index .Wasm1 = .ok r := by

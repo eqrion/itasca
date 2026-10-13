@@ -1,36 +1,53 @@
 import Itasca.Module.Const.Syntax
 import Itasca.Spec.DeclaredReferences
 
+/-!
+# Declared function references
+
+The environment's `declared_funcs` cache lists the function indices mentioned by `ref.func`
+initializers, function exports and element segments. `Coherent` ties the cache to `collected`, the
+list computed from the environment's globals, exports and elements.
+`module.declare_initializer.spec` and `module.Env.declares_function.spec` specify the cache update
+and lookup.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleReferences
 
-/-- The declaration contributed by one accepted initializer. -/
+/-- The function indices declared by one constant expression. -/
 def initializer : types.ConstExpr → List U32
   | .RefFunc index => [index]
   | _ => []
 
+/-- The function indices declared by a global's initializer. -/
 def global (entry : module.Global) : List U32 := initializer entry.init
 
+/-- The function index declared by an export, if it exports a function. -/
 def exportIndices (entry : module.Export) : List U32 :=
   match entry.desc with
   | .Func index => [index]
   | _ => []
 
+/-- The function indices declared by an element segment's initializers. -/
 def element (entry : module.Element) : List U32 := entry.init.val.flatMap initializer
 
-/-- Parsing order is globals, exports, then elements. Membership is the only
-observable property of this cache; repeated declarations are retained. -/
+/-- The declared function indices in parsing order: globals, then exports, then elements. Only
+membership is observable, and repeated declarations appear as duplicates. -/
 def collected (env : module.Env) : List U32 :=
   env.globals.val.flatMap global ++ env.exports.val.flatMap exportIndices ++
     env.elements.val.flatMap element
 
+/-- The environment's `declared_funcs` cache equals `collected`. -/
 def Coherent (env : module.Env) : Prop := env.declared_funcs.val = collected env
 
+/-- `after` differs from `before` only by `declared_funcs` growing by `references`. -/
 def Added (before after : module.Env) (references : List U32) : Prop :=
   after = { before with declared_funcs := after.declared_funcs } ∧
   after.declared_funcs.val = before.declared_funcs.val ++ references
 
+/-- The declared indices of a constant expression match those the SpecTec reference collector finds
+in its instruction form. -/
 theorem initializer_indices (value : types.ConstExpr) :
     DeclaredReferences.instructionsIndices true (ModuleConstants.expression value) =
       (initializer value).map (fun index => uN.mk_uN index.val) := by
@@ -42,6 +59,7 @@ end Itasca.ModuleReferences
 
 namespace Itasca
 
+/-- `module.declare_initializer` appends the initializer's function indices to `declared_funcs`. -/
 @[step]
 theorem module.declare_initializer.spec (env : module.Env) (init : types.ConstExpr)
     (hbound : env.declared_funcs.val.length < Usize.max) :
@@ -52,7 +70,7 @@ theorem module.declare_initializer.spec (env : module.Env) (init : types.ConstEx
   step
   simp [*]
 
-/-- The runtime declaration lookup terminates and computes list membership. -/
+/-- `module.Env.declares_function` terminates and computes membership in `declared_funcs`. -/
 @[step]
 theorem module.Env.declares_function.spec (env : module.Env) (index : U32) :
     module.Env.declares_function env index ⦃ result =>
@@ -83,6 +101,7 @@ theorem module.Env.declares_function.spec (env : module.Env) (index : U32) :
         simpa [i2_post, heq] using ‹¬i2 = index›
   · exact ⟨by simp, by simp⟩
 
+/-- `module.Env.declares_function` returns exactly whether the index is in `declared_funcs`. -/
 theorem module.Env.declares_function.eq (env : module.Env) (index : U32) :
     module.Env.declares_function env index = .ok (decide (index ∈ env.declared_funcs.val)) := by
   obtain ⟨result, hresult, hspec⟩ := WP.spec_imp_exists

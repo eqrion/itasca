@@ -1,12 +1,22 @@
 import Itasca.Module.Readers.Copies
 import Itasca.Module.Readers.Basic
 
+/-!
+# Local declarations
+
+Specifications of the extracted local-variable code used by `module.validate_code_entry_with`.
+`module.decode_locals.spec` shows `module.decode_locals` decodes grouped local declarations into
+`ModuleLocals.declared` within `limits.MAX_LOCALS`, with the independent `LocalEncoding` byte
+provenance. `module.build_func_locals.spec` shows the function's locals are the parameters
+followed by the declared locals, and `module.push_locals.spec` is the replication helper.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- Parameters precede the decoded locals; the explicit bound excludes the
-allocation overflow possible in a caller-constructed oversized environment. -/
+/-- `module.build_func_locals` returns the parameters followed by the declared locals. The size
+bound excludes the allocation overflow possible in a caller-built oversized environment. -/
 @[step]
 theorem module.build_func_locals.spec (params declared : Slice types.ValueType)
     (hsize : params.val.length + declared.val.length ≤ Usize.max) :
@@ -20,6 +30,7 @@ theorem module.build_func_locals.spec (params declared : Slice types.ValueType)
     List.drop_zero, heq] using
     module.copy_value_types_loop.spec declared out 0#usize (by simp) (by simpa [heq] using hsize)
 
+/-- The loop of `module.push_locals` appends the remaining `count - i` copies of `ty`. -/
 @[step]
 theorem module.push_locals_loop.spec (out : alloc.vec.Vec types.ValueType)
     (count : U32) (ty : types.ValueType) (i : U32)
@@ -55,6 +66,7 @@ theorem module.push_locals_loop.spec (out : alloc.vec.Vec types.ValueType)
       simp [List.append_assoc]
   · exact ⟨hi, rfl, hsize⟩
 
+/-- `module.push_locals` appends `count` copies of `ty`. -/
 @[step]
 theorem module.push_locals.spec (out : alloc.vec.Vec types.ValueType)
     (count : U32) (ty : types.ValueType)
@@ -66,6 +78,7 @@ theorem module.push_locals.spec (out : alloc.vec.Vec types.ValueType)
 
 namespace ModuleLocals
 
+/-- The expansion of grouped local declarations into one type per local. -/
 def declared (groups : List (U32 × types.ValueType)) : List types.ValueType :=
   groups.flatMap (fun (count, ty) => List.replicate count.val ty)
 
@@ -87,6 +100,8 @@ theorem local_at {data start pos next count ty}
 
 end ModuleLocals
 
+/-- The loop of `module.decode_locals` decodes the remaining `groups - i` local groups, extends the
+output by their expansion, and keeps it within `limits.MAX_LOCALS`. -/
 @[step]
 theorem module.decode_locals_loop.spec (data : Slice U8) (groups : U32)
     (out : alloc.vec.Vec types.ValueType) (q : Usize) (i : U32)
@@ -172,6 +187,8 @@ theorem module.decode_locals_loop.spec (data : Slice U8) (groups : U32)
   · refine ⟨le_refl _, hi, [], by simp, ?_, by simp [ModuleLocals.declared], hsize, by simp⟩
     exact ⟨[], .nil, Wasm1.BytesAt.nil data q hq⟩
 
+/-- `module.decode_locals` terminates, and on success returns the expansion of independently
+encoded local groups within `limits.MAX_LOCALS` whose types the profile allows. -/
 @[step]
 theorem module.decode_locals.spec (data : Slice U8) (pos : Usize) (profile : ValidationProfile := .Wasm1) :
     module.decode_locals data pos profile ⦃ r => match r with

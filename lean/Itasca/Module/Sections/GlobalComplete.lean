@@ -2,10 +2,19 @@ import Itasca.Module.Sections.Global
 import Itasca.Module.Readers.TypesComplete
 import Itasca.Module.Const.ParserComplete
 
+/-!
+# Completeness of the global section parser
+
+`module.decode_global_section.complete`: an independently encoded vector of globals with valid
+initializers and profile-allowed value types is accepted, and the environment gains those globals
+(`GlobalsAdded`). Soundness is in `Module/Sections/Global`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleBinary
 
+/-- A global encoding splits into its type and initializer spans. -/
 theorem At.global_split {data pos entry next} (h : At GlobalEncoding data pos entry next) :
     ∃ middle, At GlobalTypeEncoding data pos entry.gtype middle ∧
       At ConstEncoding data middle entry.init next := by
@@ -13,6 +22,7 @@ theorem At.global_split {data pos entry next} (h : At GlobalEncoding data pos en
   obtain ⟨middle, hfirst, hrest⟩ := hs.split
   exact ⟨middle, ⟨_, hg, hfirst⟩, ⟨_, hi, hrest⟩⟩
 
+/-- A global type encoding consumes at least one byte. -/
 theorem At.globalType_progress {data pos ty next} (h : At GlobalTypeEncoding data pos ty next) :
     pos.val < next.val := by
   obtain ⟨bytes, rfl, hs⟩ := h
@@ -26,6 +36,7 @@ namespace Itasca
 
 open ModuleBinary ModuleSections
 
+/-- The global loop accepts the remaining valid globals of a repetition span and adds them. -/
 theorem module.decode_global_section_loop.complete
     (data : Slice U8) (env : module.Env) (profile : ValidationProfile) (count : U32) (pos : Usize) (i : U32)
     (added : List module.Global) (next : Usize)
@@ -90,6 +101,7 @@ theorem module.decode_global_section_loop.complete
       · simpa [updated, htypes, List.append_assoc] using hadded.2.2.1
       · simpa [updated, hdeclared.2, ModuleReferences.global, List.append_assoc] using hadded.2.2.2
 
+/-- `module.decode_global_section` accepts a vector span of valid globals and adds them. -/
 theorem module.decode_global_section.complete (data : Slice U8) (pos : Usize)
     (env : module.Env) (profile : ValidationProfile) (added : List module.Global) (next : Usize)
     (hb : At (VecEncoding GlobalEncoding) data pos added next)

@@ -1,21 +1,33 @@
 import Itasca.Support.EnvTranslation
 
+/-!
+# Import projections and validity translation
+
+`funcs`, `globals`, `tables` and `mems` project the function, global, table and memory types out of
+a list of external types, matching the generated `fun_funcsxt`, `fun_globalsxt`, `fun_tablesxt` and
+`fun_memsxt` relations (`funcs_spec` and `funcs_unique` and their analogues). `LimitsValid` and the
+`_valid` theorems turn byte-level limit checks into the generated `Limits_ok`, `Tabletype_ok`,
+`Memtype_ok` and `Functype_ok`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleTranslation
 
-/-- Canonical projections preserve import order and discard only other kinds. -/
+/-- The function types among the external types, in order. -/
 def funcs : List externtype → List functype
   | [] => []
   | .FUNC t :: rest => t :: funcs rest
   | _ :: rest => funcs rest
 
+/-- `funcs` distributes over append. -/
 @[simp] theorem funcs_append (xs ys : List externtype) :
     funcs (xs ++ ys) = funcs xs ++ funcs ys := by
   induction xs with
   | nil => rfl
   | cons x xs ih => cases x <;> simp [funcs, ih]
 
+/-- `funcs` satisfies the generated `fun_funcsxt` relation. -/
 theorem funcs_spec (xs : List externtype) : fun_funcsxt xs (funcs xs) := by
   induction xs with
   | nil => exact .fun_funcsxt_case_0
@@ -26,20 +38,24 @@ theorem funcs_spec (xs : List externtype) : fun_funcsxt xs (funcs xs) := by
       | TABLE t => exact .fun_funcsxt_case_3 t xs _ ih
       | MEM t => exact .fun_funcsxt_case_4 t xs _ ih
 
+/-- The generated `fun_funcsxt` relation determines `funcs`. -/
 theorem funcs_unique {xs result} (h : fun_funcsxt xs result) : result = funcs xs := by
   induction h <;> simp_all [funcs]
 
+/-- The global types among the external types, in order. -/
 def globals : List externtype → List globaltype
   | [] => []
   | .GLOBAL t :: rest => t :: globals rest
   | _ :: rest => globals rest
 
+/-- `globals` distributes over append. -/
 @[simp] theorem globals_append (xs ys : List externtype) :
     globals (xs ++ ys) = globals xs ++ globals ys := by
   induction xs with
   | nil => rfl
   | cons x xs ih => cases x <;> simp [globals, ih]
 
+/-- `globals` satisfies the generated `fun_globalsxt` relation. -/
 theorem globals_spec (xs : List externtype) : fun_globalsxt xs (globals xs) := by
   induction xs with
   | nil => exact .fun_globalsxt_case_0
@@ -50,20 +66,24 @@ theorem globals_spec (xs : List externtype) : fun_globalsxt xs (globals xs) := b
       | TABLE t => exact .fun_globalsxt_case_3 t xs _ ih
       | MEM t => exact .fun_globalsxt_case_4 t xs _ ih
 
+/-- The generated `fun_globalsxt` relation determines `globals`. -/
 theorem globals_unique {xs result} (h : fun_globalsxt xs result) : result = globals xs := by
   induction h <;> simp_all [globals]
 
+/-- The table types among the external types, in order. -/
 def tables : List externtype → List tabletype
   | [] => []
   | .TABLE t :: rest => t :: tables rest
   | _ :: rest => tables rest
 
+/-- `tables` distributes over append. -/
 @[simp] theorem tables_append (xs ys : List externtype) :
     tables (xs ++ ys) = tables xs ++ tables ys := by
   induction xs with
   | nil => rfl
   | cons x xs ih => cases x <;> simp [tables, ih]
 
+/-- `tables` satisfies the generated `fun_tablesxt` relation. -/
 theorem tables_spec (xs : List externtype) : fun_tablesxt xs (tables xs) := by
   induction xs with
   | nil => exact .fun_tablesxt_case_0
@@ -74,20 +94,24 @@ theorem tables_spec (xs : List externtype) : fun_tablesxt xs (tables xs) := by
       | GLOBAL t => exact .fun_tablesxt_case_3 t xs _ ih
       | MEM t => exact .fun_tablesxt_case_4 t xs _ ih
 
+/-- The generated `fun_tablesxt` relation determines `tables`. -/
 theorem tables_unique {xs result} (h : fun_tablesxt xs result) : result = tables xs := by
   induction h <;> simp_all [tables]
 
+/-- The memory types among the external types, in order. -/
 def mems : List externtype → List memtype
   | [] => []
   | .MEM t :: rest => t :: mems rest
   | _ :: rest => mems rest
 
+/-- `mems` distributes over append. -/
 @[simp] theorem mems_append (xs ys : List externtype) :
     mems (xs ++ ys) = mems xs ++ mems ys := by
   induction xs with
   | nil => rfl
   | cons x xs ih => cases x <;> simp [mems, ih]
 
+/-- `mems` satisfies the generated `fun_memsxt` relation. -/
 theorem mems_spec (xs : List externtype) : fun_memsxt xs (mems xs) := by
   induction xs with
   | nil => exact .fun_memsxt_case_0
@@ -98,13 +122,16 @@ theorem mems_spec (xs : List externtype) : fun_memsxt xs (mems xs) := by
       | GLOBAL t => exact .fun_memsxt_case_3 t xs _ ih
       | TABLE t => exact .fun_memsxt_case_4 t xs _ ih
 
+/-- The generated `fun_memsxt` relation determines `mems`. -/
 theorem mems_unique {xs result} (h : fun_memsxt xs result) : result = mems xs := by
   induction h <;> simp_all [mems]
 
-/-- Byte-level limit checks translate to the generated declarative rule. -/
+/-- The limits' minimum and any maximum are ordered and within `bound`. This is the byte-level check
+that corresponds to the generated `Limits_ok`. -/
 def LimitsValid (lim : types.Limits) (bound : Nat) : Prop :=
   lim.min.val ≤ bound ∧ ∀ maximum ∈ lim.max, lim.min.val ≤ maximum.val ∧ maximum.val ≤ bound
 
+/-- Valid limits are typed by the generated `Limits_ok`. -/
 theorem limits_valid (lim : types.Limits) (bound : Nat) (h : LimitsValid lim bound) :
     Limits_ok (EnvTranslation.limitsType lim) bound := by
   have hw := EnvTranslation.limitsType_wf lim
@@ -117,9 +144,11 @@ theorem limits_valid (lim : types.Limits) (bound : Nat) (h : LimitsValid lim bou
       exact .mk_Limits_ok minimum.val (some maximum.val) bound h.1
         (by simpa [Forall] using h.2 maximum (by simp)) hw
 
+/-- Every translated function type is valid. -/
 theorem funcType_valid (ft : types.FuncType) : Functype_ok (EnvTranslation.funcType ft) :=
   .mk_Functype_ok _ _
 
+/-- A table type with valid limits is typed by `Tabletype_ok`. -/
 theorem tableType_valid (tt : types.TableType)
     (h : LimitsValid tt.limits (2 ^ 32 - 1)) :
     Tabletype_ok (EnvTranslation.tableType tt) := by
@@ -127,6 +156,7 @@ theorem tableType_valid (tt : types.TableType)
   · exact limits_valid tt.limits _ h
   · exact EnvTranslation.tableType_wf tt
 
+/-- A memory type with valid limits is typed by `Memtype_ok`. -/
 theorem memType_valid (mt : types.MemType)
     (h : LimitsValid mt.limits (2 ^ 16)) :
     Memtype_ok (EnvTranslation.memType mt) :=

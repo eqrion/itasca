@@ -1,21 +1,33 @@
 import Itasca.Module.Env.Parser
 import Itasca.Support.Result
 
+/-!
+# Custom section hooks across visitors
+
+A successful run of the environment or tail parser with one visitor carries over to any visitor
+whose custom section hooks always accept (`HooksAccept`). `accepted_transfer` states this for
+`module.validate_env_with` and `module.validate_tail_with` and their loops. `accepted_erase` and
+`accepted_lift` relate them to the default parsers `module.validate_env` and
+`module.validate_tail`. Hooks cannot change the environment, cursor or tail that is returned.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleTail
 
-/-- Custom-section hooks always return normally and accept. -/
+/-- The custom section hooks always return normally and accept. -/
 def HooksAccept {V : Type} (visitor : module.ModuleVisitor V) : Prop :=
   ∀ (v : V) (chunk : types.CustomSection),
     ∃ v', visitor.on_custom_section v chunk = .ok (.Ok (), v')
 
+/-- Accepting hooks are total. -/
 theorem HooksAccept.total {V : Type} {visitor : module.ModuleVisitor V}
     (h : HooksAccept visitor) : HooksTotal visitor := by
   intro v chunk
   obtain ⟨v', hv⟩ := h v chunk
   exact ⟨(.Ok (), v'), hv⟩
 
+/-- The empty module visitor accepts every custom section. -/
 theorem empty_hooks_accept : HooksAccept module.EmptyModuleVisitor.Insts.ItascaModuleModuleVisitor := by
   intro v chunk
   exact ⟨v, rfl⟩
@@ -26,6 +38,8 @@ namespace Itasca
 
 variable {profile : ValidationProfile}
 
+/-- A successful run of the environment loop with one visitor gives a successful run with the same
+result for any accepting visitor. -/
 theorem module.validate_env_with_loop.accepted_transfer {V W : Type}
     (visitor : module.ModuleVisitor V) (replacement : module.ModuleVisitor W)
     (haccept : ModuleTail.HooksAccept replacement) (data : Slice U8)
@@ -119,6 +133,7 @@ theorem module.validate_env_with_loop.accepted_transfer {V W : Type}
                     · have hne : consumed.val ≠ last.val := fun h => he (UScalar.eq_of_val_eq h)
                       simp [hne] at ht
 
+/-- A successful `module.validate_env_with` run transfers to any accepting visitor. -/
 theorem module.validate_env_with.accepted_transfer {V W : Type}
     (visitor : module.ModuleVisitor V) (replacement : module.ModuleVisitor W)
     (haccept : ModuleTail.HooksAccept replacement) (data : Slice U8)
@@ -141,8 +156,8 @@ theorem module.validate_env_with.accepted_transfer {V W : Type}
     exact module.validate_env_with_loop.accepted_transfer visitor replacement haccept data
       v w initial start 0#u8 result next v' ht
 
-/-- Successful visiting parsing has exactly the default parser's environment
-and cursor, with no assumption about any other callback execution. -/
+/-- A successful `module.validate_env_with` run gives the same environment and cursor as
+`module.validate_env`, with no assumption about any other hook execution. -/
 theorem module.validate_env_with.accepted_erase {V : Type}
     (visitor : module.ModuleVisitor V) (data : Slice U8) (v : V)
     (result : module.Env) (next : Usize) (v' : V)
@@ -153,6 +168,7 @@ theorem module.validate_env_with.accepted_erase {V : Type}
     data v () result next v' h
   simp [module.validate_env, hw]
 
+/-- A successful `module.validate_env` run lifts to any visitor with accepting hooks. -/
 theorem module.validate_env_with.accepted_lift {V : Type}
     (visitor : module.ModuleVisitor V) (haccept : ModuleTail.HooksAccept visitor)
     (data : Slice U8) (v : V) (result : module.Env) (next : Usize)
@@ -166,6 +182,8 @@ theorem module.validate_env_with.accepted_lift {V : Type}
     module.EmptyModuleVisitor.Insts.ItascaModuleModuleVisitor visitor haccept data
     () v result next w hr
 
+/-- A successful run of the tail loop with one visitor gives a successful run with the same result
+for any accepting visitor. -/
 theorem module.validate_tail_with_loop.accepted_transfer {V W : Type}
     (visitor : module.ModuleVisitor V) (replacement : module.ModuleVisitor W)
     (haccept : ModuleTail.HooksAccept replacement) (data : Slice U8) (env : module.Env)
@@ -257,6 +275,7 @@ theorem module.validate_tail_with_loop.accepted_transfer {V W : Type}
                 · simp [he] at ht
           · simp [hdata] at h
 
+/-- A successful `module.validate_tail_with` run transfers to any accepting visitor. -/
 theorem module.validate_tail_with.accepted_transfer {V W : Type}
     (visitor : module.ModuleVisitor V) (replacement : module.ModuleVisitor W)
     (haccept : ModuleTail.HooksAccept replacement) (data : Slice U8) (start : Usize)
@@ -266,8 +285,8 @@ theorem module.validate_tail_with.accepted_transfer {V W : Type}
   module.validate_tail_with_loop.accepted_transfer visitor replacement haccept data env
     v w (alloc.vec.Vec.new _) start false result v' h
 
-/-- Custom hooks cannot change an accepted data tail, and erasing them needs
-no termination premise for the source visitor. -/
+/-- Custom hooks cannot change an accepted data tail, and erasing them needs no termination premise
+for the source visitor. -/
 theorem module.validate_tail_with.accepted_erase {V : Type}
     (visitor : module.ModuleVisitor V) (data : Slice U8) (start : Usize) (env : module.Env)
     (v : V) (result : module.Tail) (v' : V)
@@ -278,6 +297,7 @@ theorem module.validate_tail_with.accepted_erase {V : Type}
     data start env v () result v' h
   simp [module.validate_tail, hw]
 
+/-- A successful `module.validate_tail` run lifts to any visitor with accepting hooks. -/
 theorem module.validate_tail_with.accepted_lift {V : Type}
     (visitor : module.ModuleVisitor V) (haccept : ModuleTail.HooksAccept visitor)
     (data : Slice U8) (start : Usize) (env : module.Env) (v : V) (result : module.Tail)

@@ -4,12 +4,24 @@ import Itasca.Module.Sections.Imports
 import Itasca.Module.Sections.Global
 import Itasca.Module.Readers.SegmentIndex
 
+/-!
+# Element section parser
+
+Soundness of `module.decode_element_section`, its loop and `module.decode_func_indices`.
+`ElementsAdded` says the environment gains the decoded elements and their function references. The
+span is a `VecEncoding (ElementEncodingFor profile)` and every element is `ElementValid`. The
+`element_encoded` lemmas build element encodings from their parts. Completeness is in
+`Module/Sections/ElementComplete`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
 open ModuleBinary ModuleSections
 
+/-- The index loop returns `count` function indices, all in range, forming a `Rep IndexEncoding`
+span. -/
 @[step]
 theorem module.decode_func_indices_loop.spec (data : Slice U8) (env : module.Env)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length) :
@@ -60,6 +72,8 @@ theorem module.decode_func_indices_loop.spec (data : Slice U8) (env : module.Env
           · scalar_tac
   · exact ⟨by simp, by simp, ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, by simp⟩
 
+/-- `module.decode_func_indices` returns the in-range function indices of a
+`VecEncoding IndexEncoding` span. -/
 @[step]
 theorem module.decode_func_indices.spec (data : Slice U8) (pos : Usize) (env : module.Env) :
     module.decode_func_indices data pos env ⦃ r => match r with
@@ -88,13 +102,17 @@ end Itasca
 
 namespace Itasca.ModuleSections
 
+/-- `result` is `env` with the elements `added` appended and their function references appended to
+the declared functions. Nothing else changes. -/
 def ElementsAdded (env result : module.Env) (added : List module.Element) : Prop :=
   result = { env with elements := result.elements, declared_funcs := result.declared_funcs } ∧
   result.elements.val = env.elements.val ++ added ∧
   result.declared_funcs.val = env.declared_funcs.val ++ added.flatMap ModuleReferences.element
 
+/-- An element is valid in the environment: its table, offset and initializers are valid. -/
 abbrev ElementValid := ModuleSegments.elementValid
 
+/-- A table index, an offset and a function index vector form a Wasm 1.0 element encoding. -/
 theorem element_encoded {data start p1 p2 next tableIdx offset init}
     (ht : Leb128.Decoded data start tableIdx p1)
     (ho : ModuleBinary.At ModuleBinary.ConstEncoding data p1 offset p2)
@@ -105,6 +123,8 @@ theorem element_encoded {data start p1 p2 next tableIdx offset init}
   obtain ⟨ib, hi, his⟩ := hi
   exact ⟨tb ++ ob ++ ib, ⟨tableIdx, offset, init, tb, ob, ib, rfl, ht, ho, hi, rfl⟩, (hs.append hos).append his⟩
 
+/-- A flag word, the profile's table index encoding, an offset, an element kind and a function
+index vector form an `ElementEncodingFor profile` entry. -/
 theorem element_profile_encoded {profile data start first p1 p2 p3 next flags tableIdx explicit offset init}
     (hf : Leb128.Decoded data start flags first)
     (ht : ModuleBinary.At (fun pair => ModuleBinary.SegmentIndexEncoding profile flags pair.1 pair.2)
@@ -143,6 +163,7 @@ private theorem element_valid_caches {env result entry}
   · intro value hv
     exact (hi value hv).same_caches hf hg hn
 
+/-- The element loop adds `count` elements forming a `Rep` span, each `ElementValid`. -/
 @[step]
 theorem module.decode_element_section_loop.profile_spec (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
@@ -210,6 +231,8 @@ theorem module.decode_element_section_loop.profile_spec (data : Slice U8) (env :
   · exact ⟨by simp, [], by simp, ⟨by cases env; rfl, by simp, by simp⟩,
       ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, by simp, hsize, hrefs⟩
 
+/-- `module.decode_element_section` adds the elements of a `VecEncoding` span, each
+`ElementValid`. -/
 @[step]
 theorem module.decode_element_section.profile_spec (data : Slice U8) (pos : Usize) (env : module.Env) (profile : ValidationProfile)
     (hsize : env.elements.val.length ≤ pos.val) (hrefs : env.declared_funcs.val.length ≤ pos.val) :
@@ -237,6 +260,7 @@ theorem module.decode_element_section.profile_spec (data : Slice U8) (pos : Usiz
       obtain ⟨added, hlen, henv, hb, ht, hsize, hrefs⟩ := hp
       exact ⟨added, henv, At.vector hc hb (by simpa using hlen), ht, hsize, hrefs⟩
 
+/-- Wasm 1.0 form of `module.decode_element_section_loop.profile_spec`. -/
 @[step]
 theorem module.decode_element_section_loop.spec (data : Slice U8) (env : module.Env)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
@@ -249,6 +273,7 @@ theorem module.decode_element_section_loop.spec (data : Slice U8) (env : module.
       | .Err _ => True ⦄ := by
   exact module.decode_element_section_loop.profile_spec data env .Wasm1 count start hstart hsize hrefs
 
+/-- Wasm 1.0 form of `module.decode_element_section.profile_spec`. -/
 @[step]
 theorem module.decode_element_section.spec (data : Slice U8) (pos : Usize) (env : module.Env)
     (hsize : env.elements.val.length ≤ pos.val) (hrefs : env.declared_funcs.val.length ≤ pos.val) :

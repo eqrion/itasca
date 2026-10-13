@@ -4,12 +4,21 @@ import Itasca.Module.Sections.Imports
 import Itasca.Module.Readers.NamesComplete
 import Itasca.Module.Readers.TypesComplete
 
+/-!
+# Completeness of the import section parser
+
+`module.decode_import_section.complete`: an independently encoded vector of imports that are
+`ImportsValid` in the environment and allowed by the profile is accepted, and the environment
+gains the corresponding entries (`ImportsAdded`). Soundness is in `Module/Sections/Imports`.
+-/
+
 open Aeneas Aeneas.Std
 
 
 
 namespace Itasca.ModuleSections
 
+/-- Import additions compose. -/
 theorem ImportsAdded.trans {profile} {env middle result first rest}
     (h : ImportsAdded env first middle profile) (h' : ImportsAdded middle rest result profile) :
     ImportsAdded env (first ++ rest) result profile := by
@@ -23,8 +32,8 @@ namespace Itasca
 
 open ModuleBinary ModuleSections
 
-/-- Independently encoded, well-typed import names and descriptors make the
-actual decoder append exactly that import and its resolved cache entry. -/
+/-- `module.decode_import` accepts a valid, allowed `ImportEncoding` span and adds that import and
+its cache entry to the environment. -/
 theorem module.decode_import.complete (data : Slice U8) (pos : Usize)
     (env : module.Env) (profile : ValidationProfile) (entry : ModuleBinary.Import) (next : Usize)
     (hb : At ImportEncoding data pos entry next)
@@ -126,6 +135,7 @@ theorem module.decode_import.complete (data : Slice U8) (pos : Usize)
     · simp_all [ModuleEnv.rawImport, actual]
 
 
+/-- The import loop accepts the remaining valid, allowed imports of a repetition span. -/
 theorem module.decode_import_section_loop.complete
     (data : Slice U8) (env : module.Env) (profile : ValidationProfile) (count : U32) (pos : Usize) (i : U32)
     (entries : List ModuleBinary.Import) (next : Usize)
@@ -166,6 +176,7 @@ theorem module.decode_import_section_loop.complete
         core.result.Result.Insts.CoreOpsTry.branch] using hloop
     · simpa using (ImportsAdded.snoc ImportsAdded.nil hadded).trans hhistory
 
+/-- `module.decode_import_section` accepts a vector span of valid, allowed imports. -/
 theorem module.decode_import_section.complete (data : Slice U8) (pos : Usize)
     (env : module.Env) (profile : ValidationProfile) (entries : List ModuleBinary.Import) (next : Usize)
     (hb : At (VecEncoding ImportEncoding) data pos entries next)

@@ -2,32 +2,47 @@ import Itasca.Module.Elab.Declared
 import Itasca.Wasm1.ProfileSyntax
 import Mathlib.Data.List.Nodup
 
+/-!
+# Module-level profile
+
+`Profile` collects the explicit conditions on a raw module under a `ValidationProfile` that the
+generated 2.0 judgment does not express: `ModuleConditions`, the profile restrictions on each
+function body (`FunctionProfile`), and declared function references. The theorem `profile`
+derives it for a valid cached environment with typed code entries, and `elaborates` shows such a
+module elaborates with in-bounds type references.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleElaboration
 
-/-- Only labels matter to the Wasm 1.0 instruction profile. Its initial
-function label is obtained from the raw module's own type declaration. -/
+/-- The context used for the profile's instruction restrictions. Only labels matter, and the
+initial function label comes from the function's result types in the raw module's type
+declaration. -/
 def profileContext (results : List types.ValueType) : context :=
   ⟨[], [], [], [], [], [], [], [], [.mk_list (results.map Translate.valueType)], none⟩
 
+/-- The body of a code entry with type index `idx` satisfies the profile's instruction
+restrictions, with `idx` in range of the type list. -/
 def FunctionProfile (types : List types.FuncType) (idx : U32) (entry : ModuleBinary.Code)
     (validationProfile : ValidationProfile := .Wasm1) : Prop :=
   ∃ hi : idx.val < types.length,
     Itasca.Profile.Instructions validationProfile (profileContext types[idx.val].results.val) entry.body
 
-/-- The explicit version-specific conditions supplement the generated 2.0
-judgment. Neither these conditions nor elaboration mention validator calls. -/
+/-- The explicit profile-specific conditions that supplement the generated 2.0 judgment. Neither
+these conditions nor elaboration mention validator calls. -/
 structure Profile (raw : ModuleBinary.Module) (validationProfile : ValidationProfile := .Wasm1) : Prop
     extends ModuleConditions raw validationProfile where
   bodies : List.Forall₂ (fun idx entry => FunctionProfile raw.types idx entry validationProfile) raw.functions raw.codes
   declared : DeclaredReferences.Module (moduleOf raw)
 
+/-- A `Typed` code entry satisfies its `FunctionProfile`. -/
 theorem typed_profile {env idx entry} {validationProfile : ValidationProfile}
     (h : CodeEntry.Typed env idx entry validationProfile) :
     FunctionProfile env.types.val idx entry validationProfile :=
   ⟨h.type_lt, h.profile.congr_labels _ rfl⟩
 
+/-- Pointwise `Typed` code entries satisfy their `FunctionProfile`s. -/
 theorem code_profiles {env indices codes} {validationProfile : ValidationProfile}
     (h : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry validationProfile) indices codes) :
     List.Forall₂ (fun idx entry => FunctionProfile env.types.val idx entry validationProfile) indices codes := by
@@ -35,6 +50,7 @@ theorem code_profiles {env indices codes} {validationProfile : ValidationProfile
   | nil => exact .nil
   | cons hp _ ih => exact .cons (typed_profile hp) ih
 
+/-- Distinct export byte names in a valid environment have distinct decoded names. -/
 theorem export_names_distinct {env : module.Env} {validationProfile : ValidationProfile} (hv : ModuleEnv.Valid env validationProfile) :
     (env.exports.val.map (fun e => ModuleBinary.nameOfBytes e.name.val)).Nodup := by
   have h := hv.distinctExports.map_on (f := ModuleBinary.nameOfBytes) ?_
@@ -44,6 +60,8 @@ theorem export_names_distinct {env : module.Env} {validationProfile : Validation
     obtain ⟨ey, hey, rfl⟩ := List.mem_map.mp hy
     exact (hv.exportNames ex hex).nameOfBytes_injective (hv.exportNames ey hey) he
 
+/-- A valid cached environment with typed code entries gives the module-level `Profile` of the
+module it describes. -/
 theorem profile {env tables memories codes segments}
     (hc : ModuleEnv.Cache env tables memories) {validationProfile : ValidationProfile} (hv : ModuleEnv.Valid env validationProfile)
     (hcodes : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry validationProfile) env.func_type_indices.val codes) :
@@ -76,6 +94,8 @@ theorem profile {env tables memories codes segments}
     intro f hf
     exact (hall f hf).mono (ModuleReferences.coherent_declared hv.references)
 
+/-- A cached environment with typed code entries elaborates its module with in-bounds type
+references and matching code counts. -/
 theorem elaborates {env tables memories codes segments} {validationProfile : ValidationProfile}
     (hc : ModuleEnv.Cache env tables memories)
     (hcodes : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry validationProfile) env.func_type_indices.val codes) :

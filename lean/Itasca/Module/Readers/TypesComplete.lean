@@ -1,10 +1,21 @@
 import Itasca.Module.Readers.BasicComplete
 
+/-!
+# Completeness of the type readers
+
+Acceptance (`.complete`) of `limits.validate_limits`, `module.decode_limits`,
+`module.decode_mem_type`, `module.decode_table_type`, `module.decode_global_type`,
+`module.decode_value_types` and `module.decode_func_type` from independent encodings that satisfy
+the limit bounds and the profile's allowed types and signature restrictions. Soundness is in
+`Module/Readers/Types`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 open ModuleBinary
 
+/-- `limits.validate_limits` accepts limits satisfying `LimitsValid`. -/
 theorem limits.validate_limits.complete (lim : types.Limits) (bound : U32)
     (h : LimitsValid lim bound) : limits.validate_limits lim bound = .ok (.Ok ()) := by
   obtain ⟨hmin, hmax⟩ := h
@@ -19,6 +30,7 @@ theorem limits.validate_limits.complete (lim : types.Limits) (bound : U32)
       have hlo' : ¬lim.min > maximum := by scalar_tac
       simp [hhi', hlo']
 
+/-- `module.decode_limits` accepts a `LimitsEncoding` span. -/
 theorem module.decode_limits.complete (data : Slice U8) (pos : Usize)
     (lim : types.Limits) (next : Usize) (h : At LimitsEncoding data pos lim next) :
     module.decode_limits data pos = .ok (.Ok (lim, next)) := by
@@ -34,6 +46,8 @@ theorem module.decode_limits.complete (data : Slice U8) (pos : Usize)
       simp [module.decode_limits, htag.read_byte, hl.read_u32 minimum hlo,
         hh.read_u32 maximum hhi, core.result.Result.Insts.CoreOpsTry.branch]
 
+/-- `module.decode_global_type` accepts a `GlobalTypeEncoding` span whose value type the profile
+allows. -/
 theorem module.decode_global_type.complete (data : Slice U8) (pos : Usize)
     (ty : types.GlobalType) (next : Usize) (h : At GlobalTypeEncoding data pos ty next)
     (profile : ValidationProfile) (hallowed : ValueTypeAllowed profile ty.valtype) :
@@ -48,6 +62,8 @@ theorem module.decode_global_type.complete (data : Slice U8) (pos : Usize)
       cases mutability <;> simp [module.decode_global_type, hv, hm, mutByte,
         core.result.Result.Insts.CoreOpsTry.branch]
 
+/-- `module.decode_mem_type` accepts a `MemTypeEncoding` span with limits within
+`limits.MAX_MEMORY_PAGES`. -/
 theorem module.decode_mem_type.complete (data : Slice U8) (pos : Usize)
     (ty : types.MemType) (next : Usize) (h : At MemTypeEncoding data pos ty next)
     (hv : LimitsValid ty.limits limits.MAX_MEMORY_PAGES) :
@@ -57,6 +73,8 @@ theorem module.decode_mem_type.complete (data : Slice U8) (pos : Usize)
   cases ty
   simp [module.decode_mem_type, hr, hc, core.result.Result.Insts.CoreOpsTry.branch]
 
+/-- `module.decode_table_type` accepts a `TableTypeEncoding` span with limits within
+`limits.MAX_TABLE_ELEMS` and an element type the profile allows. -/
 theorem module.decode_table_type.complete (data : Slice U8) (pos : Usize)
     (ty : types.TableType) (next : Usize) (h : At TableTypeEncoding data pos ty next)
     (hv : LimitsValid ty.limits limits.MAX_TABLE_ELEMS)
@@ -71,8 +89,8 @@ theorem module.decode_table_type.complete (data : Slice U8) (pos : Usize)
   simp [module.decode_table_type, ht, hr, hc, core.result.Result.Insts.CoreOpsTry.branch]
 
 
-/-- The counted reader accepts an independently encoded suffix while preserving
-an arbitrary already accumulated prefix. -/
+/-- The counted loop accepts an encoded suffix of value types and appends them to the accumulated
+`out`, provided the remaining count and capacity fit. -/
 theorem module.decode_value_types_loop0.complete (data : Slice U8) (count : U32)
     (out : alloc.vec.Vec types.ValueType) (pos : Usize) (i : U32)
     (values : List types.ValueType) (next : Usize)
@@ -114,6 +132,7 @@ theorem module.decode_value_types_loop0.complete (data : Slice U8) (count : U32)
       rw [hbody]
       simpa only [bind_ok] using hloop
 
+/-- `module.decode_value_types` without a bound accepts a vector span of allowed value types. -/
 theorem module.decode_value_types.complete (data : Slice U8) (pos : Usize)
     (values : alloc.vec.Vec types.ValueType) (next : Usize)
     (h : At (VecEncoding ValueTypeEncoding) data pos values.val next)
@@ -127,6 +146,8 @@ theorem module.decode_value_types.complete (data : Slice U8) (pos : Usize)
   have heq : final = values := alloc.vec.Vec.ext _ _ (by simpa using he)
   simp [module.decode_value_types, hr, hf, heq, core.result.Result.Insts.CoreOpsTry.branch]
 
+/-- `module.decode_value_types` accepts a vector span of allowed value types that respects the
+length bound, if any. -/
 theorem module.decode_value_types.profile_complete (data : Slice U8) (pos : Usize)
     (values : alloc.vec.Vec types.ValueType) (next : Usize)
     (bound : Option (Usize × error.OpError))
@@ -150,6 +171,8 @@ theorem module.decode_value_types.profile_complete (data : Slice U8) (pos : Usiz
       simp [module.decode_value_types, hr, hf, heq, core.result.Result.Insts.CoreOpsTry.branch,
         lift, hfits, module.decode_value_types_loop1.eq_loop0]
 
+/-- Under Wasm 1.0, `module.decode_func_type` accepts a `FuncTypeEncoding` span with at most one
+result and allowed value types. -/
 theorem module.decode_func_type.complete (data : Slice U8) (pos : Usize)
     (ty : types.FuncType) (next : Usize) (h : At FuncTypeEncoding data pos ty next)
     (hresults : ty.results.val.length ≤ 1)
@@ -169,6 +192,8 @@ theorem module.decode_func_type.complete (data : Slice U8) (pos : Usize)
   simp [module.decode_func_type, htag.read_byte, hp', hr', limits.MAX_RESULTS, hresults,
     core.result.Result.Insts.CoreOpsTry.branch]
 
+/-- `module.decode_func_type` accepts a `FuncTypeEncoding` span that satisfies the profile's
+signature restriction, the signature cap and the allowed value types. -/
 theorem module.decode_func_type.profile_complete (data : Slice U8) (pos : Usize)
     (ty : types.FuncType) (next : Usize) (profile : ValidationProfile)
     (h : At FuncTypeEncoding data pos ty next)

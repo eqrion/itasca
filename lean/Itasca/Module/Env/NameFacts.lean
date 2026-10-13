@@ -1,11 +1,19 @@
 import Itasca.Module.Env.Declarations
 import Itasca.Binary.UnicodeUnique
 
+/-!
+# Name facts from the prefix grammar
+
+Consequences of `PrefixEncoding` for import and export names: every member of an encoded vector has
+its own byte encoding (`VecEncoding.member`), and import and export names are well-formed Unicode
+names (`PrefixEncoding.import_names_wf`, `PrefixEncoding.export_names_wf`).
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleBinary
 
-/-- Every vector member retains its own independent byte-format witness. -/
+/-- Every member of a related list has its own byte-format witness. -/
 theorem Rep.member {α : Type} {R : α → List U8 → Prop} {values bytes}
     (h : Rep R values bytes) {value} (hm : value ∈ values) : ∃ bs, R value bs := by
   induction h with
@@ -46,8 +54,7 @@ namespace Itasca.ModuleEnv
 
 open ModuleBinary
 
-/-- The prefix grammar supplies the Unicode-name size bounds as well as scalar
-validity, without adding assumptions about nested runtime vector lengths. -/
+/-- Import module and field names in an encoded prefix are well-formed Unicode names. -/
 theorem PrefixEncoding.import_names_wf {decls bytes profile} (h : PrefixEncoding decls bytes profile) :
     ∀ entry ∈ decls.imports,
       wf_name (nameOfBytes entry.moduleName) ∧ wf_name (nameOfBytes entry.name) := by
@@ -56,6 +63,7 @@ theorem PrefixEncoding.import_names_wf {decls bytes profile} (h : PrefixEncoding
   obtain ⟨bs, he⟩ := hi.member hm
   exact he.names_wf
 
+/-- Export names in an encoded prefix are well-formed Unicode names. -/
 theorem PrefixEncoding.export_names_wf {decls bytes profile} (h : PrefixEncoding decls bytes profile) :
     ∀ entry ∈ decls.exports, wf_name (nameOfBytes entry.name) := by
   obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, he, _⟩ := h

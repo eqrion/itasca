@@ -1,12 +1,20 @@
 import Itasca.Module.Elab.SegmentSyntax
 import Itasca.Module.Const.Typing
 
+/-!
+# Segment typing
+
+`ModuleSegments.elementValid.typed` and `ModuleData.Valid.typed` show valid element and data
+segments have the generated judgments `Elem_ok` and `Data_ok` in any well-formed context that
+agrees with the environment on the relevant index spaces.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleSegments
 
-/-- Every mode uses the element type actually recorded in metadata. Initializer
-references are checked in the complete function space. -/
+/-- A valid element segment is typed with the element type recorded in its metadata, in every mode.
+Initializer references are checked in the complete function space. -/
 theorem elementValid.typed {env : module.Env} {entry : module.Element}
     (h : elementValid env entry) (C : context) (hC : wf_context C)
     (hglobals : ModuleConstants.GlobalContext env C)
@@ -58,7 +66,8 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleData
 
-/-- Both supported profiles retain one memory; passive segments need no memory. -/
+/-- A valid data segment is typed. Both profiles allow at most one memory, and passive segments
+need no memory. -/
 theorem Valid.typed {env : module.Env} {segment : module.Data} (h : Valid env segment)
     (hmems : env.mem_types.val.length ≤ 1) (C : context) (hC : wf_context C)
     (hglobals : ModuleConstants.GlobalContext env C)

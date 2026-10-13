@@ -1,12 +1,22 @@
 import Itasca.Module.Sections.Type
 import Itasca.Module.Readers.TypesComplete
 
+/-!
+# Completeness of the type section parser
+
+`module.decode_type_section.profile_complete` (and the Wasm 1.0 `.complete`): an independently
+encoded vector of signatures that satisfy the profile restrictions, caps and allowed value types
+is accepted, and the environment gains exactly those signatures (`TypesAdded`). The loop versions
+carry a count and the signatures remaining. Soundness is in `Module/Sections/Type`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
 open ModuleBinary ModuleSections
 
+/-- The type loop accepts the remaining signatures of a repetition span and adds them. -/
 theorem module.decode_type_section_loop.profile_complete
     (data : Slice U8) (env : module.Env) (profile : ValidationProfile) (count : U32) (pos : Usize) (i : U32)
     (types : List types.FuncType) (next : Usize)
@@ -52,6 +62,7 @@ theorem module.decode_type_section_loop.profile_complete
       · rw [hadded.1]
       · simpa [updated, htypes, List.append_assoc] using hadded.2
 
+/-- `module.decode_type_section` accepts a vector span of admissible signatures and adds them. -/
 theorem module.decode_type_section.profile_complete (data : Slice U8) (pos : Usize)
     (env : module.Env) (profile : ValidationProfile) (types : List types.FuncType) (next : Usize)
     (hb : At (VecEncoding FuncTypeEncoding) data pos types next)
@@ -69,6 +80,7 @@ theorem module.decode_type_section.profile_complete (data : Slice U8) (pos : Usi
     core.result.Result.Insts.CoreOpsTry.branch, hr]
 
 
+/-- Wasm 1.0 form of `module.decode_type_section_loop.profile_complete`. -/
 theorem module.decode_type_section_loop.complete
     (data : Slice U8) (env : module.Env) (count : U32) (pos : Usize) (i : U32)
     (types : List types.FuncType) (next : Usize)
@@ -82,6 +94,7 @@ theorem module.decode_type_section_loop.complete
   exact module.decode_type_section_loop.profile_complete data env .Wasm1 count pos i types next
     hb hc (by simpa [Profile.FuncType, Profile.FuncTypeWithinLimits] using ht) hallowed hsize
 
+/-- Wasm 1.0 form of `module.decode_type_section.profile_complete`. -/
 theorem module.decode_type_section.complete (data : Slice U8) (pos : Usize)
     (env : module.Env) (types : List types.FuncType) (next : Usize)
     (hb : At (VecEncoding FuncTypeEncoding) data pos types next)

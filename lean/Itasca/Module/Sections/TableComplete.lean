@@ -1,12 +1,22 @@
 import Itasca.Module.Sections.Table
 import Itasca.Module.Readers.TypesComplete
 
+/-!
+# Completeness of the table section parser
+
+`module.decode_table_section.complete`: an independently encoded vector of table types with
+limits within the table cap and profile-allowed element types is accepted, and the environment
+gains those tables (`TablesAdded`). Wasm 1.0 additionally needs at most one table in total.
+Soundness is in `Module/Sections/Table`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
 open ModuleBinary ModuleSections
 
+/-- The table loop accepts the remaining valid table types of a repetition span and adds them. -/
 theorem module.decode_table_section_loop.complete
     (data : Slice U8) (env : module.Env) (profile : ValidationProfile) (count : U32) (pos : Usize) (i : U32)
     (added : List types.TableType) (next : Usize)
@@ -61,6 +71,7 @@ theorem module.decode_table_section_loop.complete
       · rw [hadded.1]
       · simpa [updated, htypes, List.append_assoc] using hadded.2
 
+/-- `module.decode_table_section` accepts a vector span of valid table types and adds them. -/
 theorem module.decode_table_section.complete (data : Slice U8) (pos : Usize)
     (env : module.Env) (profile : ValidationProfile) (added : List types.TableType) (next : Usize)
     (hb : At (VecEncoding TableTypeEncoding) data pos added next)

@@ -2,13 +2,22 @@ import Itasca.Support.Result
 import Itasca.Module.Code.Entry
 import Itasca.Wasm1.Visitor.Lift
 
+/-!
+# Code entry validation across visitors (Wasm 1.0)
+
+A successful `module.validate_code_entry_with` call for one visitor carries over to any visitor
+whose callbacks always accept (`accepted_transfer`), including the empty visitor used by
+`module.validate_code_entry` (`accepted_erase`, `accepted_lift`, `accepted_iff`).
+`wasm_sound` concludes `CodeEntry.Validated` for any accepting visitor.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- Successful entry validation transfers to any always-accepting operator
-visitor, including the function-start callback before the body. No environment,
-size, syntax, or termination premise is imposed on the source visitor. -/
+/-- A successful Wasm 1.0 `module.validate_code_entry_with` call transfers to any always-accepting
+visitor, including the function-start callback before the body. The source visitor has no
+environment, size, syntax or termination premise. -/
 theorem module.validate_code_entry_with.accepted_transfer {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (haccept : FullVisitor.Accepts replacement)
@@ -102,8 +111,9 @@ theorem module.validate_code_entry_with.accepted_transfer {V W : Type}
               (code.validate_body_with.accepted_erase visitor body env ⟨locals, results⟩ started ended hrun)
             exact ⟨ended', by simp [hrun', he.1]⟩
 
-/-- A compiler's accepted visiting entry certifies the default entry validator,
-without requiring its other callback runs to terminate. -/
+/-- A successful `module.validate_code_entry_with` call for any visitor implies
+`module.validate_code_entry` accepts the same entry, without requiring other callback runs to
+terminate. -/
 theorem module.validate_code_entry_with.accepted_erase {V : Type}
     (visitor : code.OpVisitor V) (data : Slice U8) (pos : Usize) (env : module.Env)
     (index finish : Usize) (v v' : V)
@@ -113,7 +123,7 @@ theorem module.validate_code_entry_with.accepted_erase {V : Type}
     code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_accepts data pos env index finish v v' () h
   simp [module.validate_code_entry, hw]
 
-/-- Accepting callbacks preserve every successful default entry validation. -/
+/-- A successful `module.validate_code_entry` call lifts to any visitor with accepting callbacks. -/
 theorem module.validate_code_entry_with.accepted_lift {V : Type}
     (visitor : code.OpVisitor V) (haccept : FullVisitor.Accepts visitor)
     (data : Slice U8) (pos : Usize) (env : module.Env) (index finish : Usize) (v : V)
@@ -126,6 +136,8 @@ theorem module.validate_code_entry_with.accepted_lift {V : Type}
   exact module.validate_code_entry_with.accepted_transfer
     code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor visitor haccept data pos env index finish () () v hr
 
+/-- For an accepting visitor, `module.validate_code_entry_with` accepts an entry exactly when
+`module.validate_code_entry` does. -/
 theorem module.validate_code_entry_with.accepted_iff {V : Type}
     (visitor : code.OpVisitor V) (haccept : FullVisitor.Accepts visitor)
     (data : Slice U8) (pos : Usize) (env : module.Env) (index finish : Usize) (v : V) :
@@ -136,8 +148,8 @@ theorem module.validate_code_entry_with.accepted_iff {V : Type}
     exact module.validate_code_entry_with.accepted_erase visitor data pos env index finish v v' h
   · exact module.validate_code_entry_with.accepted_lift visitor haccept data pos env index finish v
 
-/-- Accepted visiting entries carry the same independent binary and Wasm 1.0
-body certificate as default entries, without a visitor-totality premise. -/
+/-- A successful Wasm 1.0 `module.validate_code_entry_with` call gives the same independent binary
+and body certificate as the default validator, without a visitor-totality premise. -/
 theorem module.validate_code_entry_with.wasm_sound {V : Type}
     (visitor : code.OpVisitor V) (data : Slice U8) (pos : Usize) (env : module.Env)
     (index finish : Usize) (v v' : V) (hbound : CodeEntry.Bounds env)

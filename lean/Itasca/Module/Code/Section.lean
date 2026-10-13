@@ -2,21 +2,34 @@ import Itasca.Module.Code.Context
 import Itasca.Profile.CodeEntry
 import Itasca.Module.Readers.FramingComplete
 
+/-!
+# Code section structure
+
+Declarative notions for the code section. `Extent` is the size framing of one entry, `Section` is
+the section header and entry count, and `EntriesTyped` says the entries are `CodeEntry.Typed`
+against the defined functions in order. `Validated` is the independent encoding of the section
+together with the typing of every entry. `EntriesTyped.append` and `entries_at_append` compose
+adjacent batches, and `Section.encoding` assembles the section encoding.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleCode
 
-/-- Entry framing is independent of local declarations and body validation. -/
+/-- The entry at `start` has content starting at `content` and ending at `finish` within the data.
+Entry framing is independent of local declarations and body validation. -/
 def Extent (data : Slice U8) (start content finish : Usize) : Prop :=
   ∃ size, Leb128.Decoded data start size content ∧
     finish.val = content.val + size.val ∧ finish.val ≤ data.length
 
+/-- An `Extent` is ordered and lies within the data. -/
 theorem Extent.span {data start content finish} (h : Extent data start content finish) :
     start.val < content.val ∧ content.val ≤ finish.val ∧ finish.val ≤ data.length := by
   obtain ⟨size, hs, hn, hb⟩ := h
   have := hs.span
   omega
 
+/-- A LEB128 size decoded at a position is unique, together with its end. -/
 theorem decoded_unique {data start x y next last}
     (hx : Leb128.Decoded data start x next) (hy : Leb128.Decoded data start y last) :
     x = y ∧ next = last := by
@@ -24,33 +37,40 @@ theorem decoded_unique {data start x y next last}
     (reader.read_u32_leb.complete data start y last hy)
   simpa using h
 
-/-- Semantic code-header fields, independent of the legacy reader record. -/
+/-- The fields of a code section header: the entry count, the position of the first entry and the
+end of the section. -/
 structure Header where
   count : U32
   entries : Usize
   «end» : Usize
 
+/-- The header `cs` is the code section header at `start`, with an entry count equal to the number
+of defined functions. -/
 def Section (data : Slice U8) (start : Usize) (env : module.Env) (cs : Header) : Prop :=
   ∃ content, ModuleBinary.SectionHeader data start 10#u8 content cs.end ∧
     Leb128.Decoded data content cs.count cs.entries ∧
     cs.count.val = env.func_type_indices.val.length
 
+/-- The code entry is typed against the `i`-th defined function and has a declared local count
+within `limits.MAX_LOCALS`. -/
 def EntryAt (env : module.Env) (i : Nat) (entry : ModuleBinary.Code)
     (profile : ValidationProfile := .Wasm1) : Prop :=
   ∃ hi : i < env.func_type_indices.val.length,
     CodeEntry.Typed env env.func_type_indices.val[i] entry profile ∧
     entry.declared.length ≤ limits.MAX_LOCALS.val
 
+/-- The entries are `EntryAt` the defined functions in order, starting at function index `i`. -/
 inductive EntriesTypedFor (profile : ValidationProfile) (env : module.Env) : Nat → List ModuleBinary.Code → Prop where
   | nil (i : Nat) : EntriesTypedFor profile env i []
   | cons {i entry entries} : EntryAt (profile := profile) env i entry →
       EntriesTypedFor profile env (i + 1) entries → EntriesTypedFor profile env i (entry :: entries)
 
-/-- The profile parameter selects the instruction restrictions of each entry;
-legacy callers retain the established Wasm 1.0 specialization. -/
+/-- `EntriesTypedFor` with `profile` defaulting to Wasm 1.0. The profile selects the instruction
+restrictions of each entry. -/
 abbrev EntriesTyped (env : module.Env) (i : Nat) (entries : List ModuleBinary.Code)
     (profile : ValidationProfile := .Wasm1) : Prop := EntriesTypedFor profile env i entries
 
+/-- Typed entries extend by one more entry at the next function index. -/
 theorem EntriesTyped.snoc {env i entries entry} {profile : ValidationProfile}
     (h : EntriesTyped (profile := profile) env i entries) (he : EntryAt (profile := profile) env (i + entries.length) entry) :
     EntriesTyped (profile := profile) env i (entries ++ [entry]) := by
@@ -59,6 +79,7 @@ theorem EntriesTyped.snoc {env i entries entry} {profile : ValidationProfile}
   | @cons i first rest hfirst hrest ih =>
     exact .cons hfirst (ih (by simpa [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using he))
 
+/-- An entry repetition extends by one more entry at its end position. -/
 theorem entries_at_snoc {data start pos next entries entry} {R : ModuleBinary.Code → List U8 → Prop}
     (hp : ModuleBinary.At (ModuleBinary.Rep R) data start entries pos)
     (he : ModuleBinary.At R data pos entry next) :
@@ -67,6 +88,8 @@ theorem entries_at_snoc {data start pos next entries entry} {R : ModuleBinary.Co
   obtain ⟨cs, hc, ht⟩ := he
   exact ⟨bs ++ cs, hb.snoc hc, hs.append ht⟩
 
+/-- Typed entries covering all remaining functions are pointwise `CodeEntry.Typed` against the
+function type indices from `i`. -/
 theorem EntriesTyped.forall₂ {env i entries} {profile : ValidationProfile}
     (h : EntriesTyped (profile := profile) env i entries) (hn : i + entries.length = env.func_type_indices.val.length) :
     List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry profile) (env.func_type_indices.val.drop i) entries := by
@@ -98,14 +121,19 @@ theorem entries_at_append {data start middle finish first second} {R : ModuleBin
   obtain ⟨cs, hc, ht⟩ := hsecond
   exact ⟨bs ++ cs, hb.append hc, hs.append ht⟩
 
+/-- The independent encoding of the code section, which may be absent, for `profile`. -/
 def Encoding (profile : ValidationProfile := .Wasm1) := ModuleBinary.OptionalSectionEncoding 10#u8
   (ModuleBinary.VecEncoding (Profile.CodeEncoding profile)) []
 
+/-- The code section from `start` to `finish` has an independent encoding with one entry per
+defined function, and every entry is typed. -/
 def Validated (data : Slice U8) (start : Usize) (env : module.Env) (finish : Usize)
     (profile : ValidationProfile := .Wasm1) : Prop :=
   ∃ entries, ModuleBinary.At (Encoding (profile := profile)) data start entries finish ∧
     entries.length = env.func_type_indices.val.length ∧ EntriesTyped (profile := profile) env 0 entries
 
+/-- A validated code section is a padded section encoding whose entries are typed against the
+function type indices. -/
 theorem Validated.padded {data start env finish} {profile : ValidationProfile} (h : Validated (profile := profile) data start env finish) :
     ∃ entries, ModuleBinary.At
       (ModuleBinary.PaddedEncoding 10#u8 (ModuleBinary.VecEncoding (Profile.CodeEncoding profile)) [])
@@ -115,6 +143,8 @@ theorem Validated.padded {data start env finish} {profile : ValidationProfile} (
   exact ⟨entries, ⟨bytes, ⟨[], bytes, .nil, he, rfl⟩, hb⟩,
     by simpa using ht.forall₂ (by simpa using hn)⟩
 
+/-- A section header and an independent entry repetition with the right count give the section
+`Encoding`. -/
 theorem Section.encoding {data start env cs entries} {profile : ValidationProfile}
     (h : Section data start env cs)
     (hb : ModuleBinary.At (ModuleBinary.Rep (Profile.CodeEncoding profile)) data cs.entries entries cs.end)
@@ -136,9 +166,9 @@ theorem Section.encoding {data start env cs entries} {profile : ValidationProfil
   · simpa using hid.byte.append
       ((⟨hs, hslen, hsbound⟩ : Wasm1.BytesAt data afterId sizeBytes content).append payload)
 
-/-- An absent code section is justified by EOF or a complete non-code header.
-The header premise matters because the implementation checks its extent before
-examining its section ID. -/
+/-- A code section may be absent at `pos` when the input ends there or a complete non-code header
+follows. The header must be complete because the implementation checks its extent before examining
+its section id. -/
 def AbsentAt (data : Slice U8) (pos : Usize) : Prop :=
   pos.val = data.length ∨
     ∃ id first last, ModuleBinary.SectionHeader data pos id first last ∧ id ≠ 10#u8
@@ -151,6 +181,7 @@ end Itasca.ModuleCode
 
 namespace Itasca.ModuleBinary
 
+/-- An independently encoded code entry has an `Extent`. -/
 theorem At.code_extent {data pos entry next} {profile : ValidationProfile}
     (h : At (Profile.CodeEncoding profile) data pos entry next) :
     ∃ first, ModuleCode.Extent data pos first next := by

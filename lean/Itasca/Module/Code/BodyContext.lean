@@ -1,20 +1,31 @@
 import Itasca.Spec.TypingInversion
 import Itasca.Wasm1.Profile
 
+/-!
+# Body typing under extended segment spaces
+
+A body typed in a context with short element and data spaces stays typed when those spaces are
+extended. `instrs_extend` shows `Instrs_ok` is preserved by prefix extension of the segment spaces,
+and `instrs_transport` and `expr_transport` move a body typing between contexts that agree on every
+other field. These results apply to the generated typing rules, so they hold for both profiles.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.BodyContext
 
-/-- Install the segment declarations unavailable when the function-body API is
-called. All fields used by Wasm 1.0 body instructions remain unchanged. -/
+/-- The context `C` with its element and data segment spaces replaced and every other field
+unchanged. -/
 def segments (C : context) (elems : List elemtype) (datas : List datatype) : context :=
   { C with ELEMS := elems, DATAS := datas }
 
+/-- Replacing the segment spaces keeps a context well formed. -/
 theorem segments_wf {C : context} (h : wf_context C)
     (elems : List elemtype) (datas : List datatype) : wf_context (segments C elems datas) := by
   cases h
   constructor <;> assumption
 
+/-- Block type typing does not depend on the segment spaces. -/
 theorem blocktype_segments {C : context} {bt : blocktype} {ft : functype}
     (h : Blocktype_ok C bt ft) (elems : List elemtype) (datas : List datatype) :
     Blocktype_ok (segments C elems datas) bt ft := by
@@ -29,8 +40,8 @@ private theorem prefix_index {α : Type} [Inhabited α] {xs ys : List α}
   have hj := Nat.lt_of_lt_of_le hi h.length_le
   exact ⟨hj, by rw [getElem!_pos ys i hj, getElem!_pos xs i hi]; exact (h.getElem hi).symm⟩
 
-/-- Extending segment index spaces preserves every existing index and its type.
-The proof traverses the generated mutually inductive typing derivation. -/
+/-- Extending the segment index spaces by prefix extension preserves instruction sequence typing,
+since every existing index keeps its type. -/
 theorem instrs_extend {C : context} {ops : List instr} {ft : functype}
     (h : Instrs_ok C ops ft) :
     ∀ elems datas, C.ELEMS.IsPrefix elems → C.DATAS.IsPrefix datas →
@@ -443,8 +454,7 @@ theorem instrs_segments {C : context} {ops : List instr} {ft : functype}
     Instrs_ok (segments C elems datas) ops ft :=
   instrs_extend h elems datas (by simp [he]) (by simp [hd])
 
-/-- Static context agreement permits a body's segment spaces to be enlarged
-without changing the meaning of any existing index or label. -/
+/-- Two contexts agree on every field except the element and data segment spaces. -/
 structure SameCore (C D : context) : Prop where
   types : C.TYPES = D.TYPES
   funcs : C.FUNCS = D.FUNCS
@@ -455,6 +465,7 @@ structure SameCore (C D : context) : Prop where
   labels : C.LABELS = D.LABELS
   ret : C.RETURN = D.RETURN
 
+/-- A context that agrees with `C` outside the segment spaces is `C` with those spaces replaced. -/
 theorem SameCore.eq_segments {C D : context} (h : SameCore C D) :
     D = segments C D.ELEMS D.DATAS := by
   cases C
@@ -462,18 +473,23 @@ theorem SameCore.eq_segments {C D : context} (h : SameCore C D) :
   cases h
   simp_all [segments]
 
+/-- A body typing moves to a context that agrees outside the segment spaces and has prefix-extended
+segment spaces. -/
 theorem instrs_transport_extend {C D : context} {ops : List instr} {ft : functype}
     (h : Instrs_ok C ops ft) (he : C.ELEMS.IsPrefix D.ELEMS)
     (hd : C.DATAS.IsPrefix D.DATAS) (hc : SameCore C D) : Instrs_ok D ops ft := by
   rw [hc.eq_segments]
   exact instrs_extend h _ _ he hd
 
+/-- A body typing in a context with empty segment spaces moves to any context that agrees outside
+the segment spaces. -/
 theorem instrs_transport {C D : context} {ops : List instr} {ft : functype}
     (h : Instrs_ok C ops ft) (he : C.ELEMS = []) (hd : C.DATAS = [])
     (hc : SameCore C D) : Instrs_ok D ops ft := by
   rw [hc.eq_segments]
   exact instrs_segments h _ _ he hd
 
+/-- `instrs_transport` for typed expressions. -/
 theorem expr_transport {C D : context} {ops : expr} {rt : resulttype}
     (h : Expr_ok C ops rt) (he : C.ELEMS = []) (hd : C.DATAS = [])
     (hc : SameCore C D) : Expr_ok D ops rt := by

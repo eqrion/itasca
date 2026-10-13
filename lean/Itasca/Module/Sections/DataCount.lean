@@ -1,10 +1,19 @@
 import Itasca.Module.Readers.BasicComplete
 
+/-!
+# Section order and data count section
+
+`ModuleBinary.sectionRank` is the Wasm 2.0 section order, and `module.section_order` computes it
+and rejects ids outside `1` to `12` (spec and `.complete`). `module.decode_data_count` reads the
+data count section, which only Wasm 2.0 accepts, and records the count in the environment.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleBinary
 
-/-- Core 2.0 places data-count before code and data. Custom sections have no rank. -/
+/-- The position of a section id in the Wasm 2.0 order, which places the data count section (`12`)
+before code (`10`) and data (`11`). Custom sections have no rank. -/
 def sectionRank (id : U8) : U8 :=
   match id.val with
   | 12 => 10#u8
@@ -12,6 +21,7 @@ def sectionRank (id : U8) : U8 :=
   | 11 => 12#u8
   | _ => id
 
+/-- Ranks `1` to `10` belong to the ids `1` to `9` and `12`. -/
 theorem sectionRank_prefix {id : U8} (hlo : 1 ≤ (sectionRank id).val)
     (hhi : (sectionRank id).val ≤ 10) :
     id.val = 1 ∨ id.val = 2 ∨ id.val = 3 ∨ id.val = 4 ∨ id.val = 5 ∨
@@ -30,6 +40,7 @@ theorem sectionRank_prefix {id : U8} (hlo : 1 ≤ (sectionRank id).val)
   rw [he] at hlo hhi
   omega
 
+/-- Ids below `10` are their own rank. -/
 theorem sectionRank_early {id : U8} (h : id.val < 10) : sectionRank id = id := by
   have h12 : id.val ≠ 12 := by omega
   have h10 : id.val ≠ 10 := by omega
@@ -40,6 +51,7 @@ end Itasca.ModuleBinary
 
 namespace Itasca
 
+/-- `module.section_order` returns the rank of an id from `1` to `12` and rejects other ids. -/
 @[step]
 theorem module.section_order.spec (id : U8) :
     module.section_order id ⦃ result => match result with
@@ -53,6 +65,7 @@ theorem module.section_order.spec (id : U8) :
   all_goals simp_all [ModuleBinary.sectionRank, global_simps]
   all_goals first | omega | (split <;> simp_all; omega)
 
+/-- `module.section_order` accepts every id from `1` to `12`. -/
 theorem module.section_order.complete (id : U8) (hlo : 1 ≤ id.val) (hhi : id.val ≤ 12) :
     module.section_order id = .ok (.Ok (ModuleBinary.sectionRank id)) := by
   obtain ⟨result, hr, hp⟩ := WP.spec_imp_exists (module.section_order.spec id)
@@ -60,7 +73,8 @@ theorem module.section_order.complete (id : U8) (hlo : 1 ≤ id.val) (hhi : id.v
   | Err e => rcases hp with hz | hh <;> omega
   | Ok rank => simpa only [hp.1] using hr
 
-/-- A successful count section changes only the declared data count. -/
+/-- An accepted `module.decode_data_count` reads a `u32` count, sets only `data_count`, and
+happens under Wasm 2.0. -/
 @[step]
 theorem module.decode_data_count.spec (data : Slice U8) (pos : Usize) (env : module.Env)
     (profile : ValidationProfile) :
@@ -85,6 +99,7 @@ theorem module.decode_data_count.spec (data : Slice U8) (pos : Usize) (env : mod
       obtain ⟨bytes, hs, hl, hb, he⟩ := hd
       exact ⟨count, ⟨bytes, ⟨count, rfl, he⟩, hs, hl, hb⟩, rfl, trivial⟩
 
+/-- Under Wasm 2.0, `module.decode_data_count` accepts a count span and sets `data_count`. -/
 theorem module.decode_data_count.complete (data : Slice U8) (pos : Usize) (env : module.Env)
     (count : U32) (next : Usize)
     (hb : ModuleBinary.At ModuleBinary.StartEncoding data pos (some count) next) :

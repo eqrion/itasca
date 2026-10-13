@@ -1,12 +1,20 @@
 import Itasca.Module.Readers.Utf8
 
+/-!
+# Name and custom section readers
+
+`module.decode_name.spec`: an accepted name is a length-prefixed byte vector of valid UTF-8.
+`module.decode_custom_section.spec`: the name lies within the section and the rest of the payload
+is an uninterpreted interval. Completeness is in `Module/Readers/NamesComplete`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
 open ModuleBinary
 
-/-- Name parsing preserves the exact bytes and proves strict UTF-8 validity. -/
+/-- An accepted name is a `NameEncoding` span and its bytes are returned unchanged. -/
 @[step]
 theorem module.decode_name.spec (data : Slice U8) (start : Usize) :
     module.decode_name data start ⦃ r => match r with
@@ -44,8 +52,8 @@ theorem module.decode_name.spec (data : Slice U8) (start : Usize) :
               · exact ByteVecEncoding.iff.mpr ⟨countBytes, by simpa [hlength] using he, rfl⟩
               · exact (show Wasm1.BytesAt data start countBytes pos from ⟨hs, hl, hb⟩).append bytes_post
 
-/-- The checked custom-section name fits in the section; payload bytes remain
-uninterpreted, and the public metadata identifies their exact interval. -/
+/-- The custom section name is a `NameEncoding` span within the section. The returned metadata
+gives the name length and the payload interval from the end of the name to `last`. -/
 @[step]
 theorem module.decode_custom_section.spec (data : Slice U8) (start last : Usize) :
     module.decode_custom_section data start last ⦃ r => match r with

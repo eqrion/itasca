@@ -2,6 +2,14 @@ import Itasca.Module.Const.ParserComplete
 import Itasca.Module.Readers.FramingComplete
 import Itasca.Module.Sections.Data
 
+/-!
+# Completeness of the data section parser
+
+`module.decode_data_section.profile_complete` (and the Wasm 1.0 `.complete`): an independently
+encoded vector of `ModuleData.Valid` segments is accepted and returned unchanged. The segment
+lemmas split active and passive encodings. Soundness is in `Module/Sections/Data`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
@@ -118,6 +126,7 @@ private theorem data_passive_complete {data : Slice U8} {pos next : Usize}
     obtain ⟨r, hr, rfl⟩ := WP.spec_imp_exists hx
     exact hr
 
+/-- `module.decode_data_segment` accepts a `DataEncodingFor profile` span of a valid segment. -/
 theorem module.decode_data_segment.profile_complete {data : Slice U8} {pos next : Usize}
     {env : module.Env} (segment : module.Data) (profile : ValidationProfile)
     (hb : At (DataEncodingFor profile) data pos (ModuleData.raw segment) next)
@@ -133,6 +142,8 @@ theorem module.decode_data_segment.profile_complete {data : Slice U8} {pos next 
       obtain ⟨bytes, ⟨idx, offset, mb, ob, ib, he, _⟩, hs⟩ := hb
       cases he
 
+/-- The data loop accepts the remaining valid segments of a repetition span and appends them to
+`out`. -/
 theorem module.decode_data_section_loop.profile_complete (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
     (count : U32) (out : alloc.vec.Vec module.Data) (pos : Usize) (i : U32)
     (segments : List module.Data) (next : Usize)
@@ -168,6 +179,7 @@ theorem module.decode_data_section_loop.profile_complete (data : Slice U8) (env 
       core.result.Result.Insts.CoreOpsTry.branch]
     exact hloop
 
+/-- `module.decode_data_section` accepts a vector span of valid segments. -/
 theorem module.decode_data_section.profile_complete (data : Slice U8) (pos : Usize) (env : module.Env) (profile : ValidationProfile)
     (segments : alloc.vec.Vec module.Data) (next : Usize)
     (hb : At (VecEncoding (DataEncodingFor profile)) data pos (segments.val.map ModuleData.raw) next)
@@ -181,6 +193,7 @@ theorem module.decode_data_section.profile_complete (data : Slice U8) (pos : Usi
   simp [module.decode_data_section, reader.read_u32_leb.complete data pos count first hc,
     hr, heq, core.result.Result.Insts.CoreOpsTry.branch]
 
+/-- Wasm 1.0 form of `module.decode_data_segment.profile_complete`. -/
 theorem module.decode_data_segment.complete {data : Slice U8} {pos next : Usize}
     {env : module.Env} (segment : module.Data)
     (hb : At DataEncoding data pos (ModuleData.raw segment) next)
@@ -188,6 +201,7 @@ theorem module.decode_data_segment.complete {data : Slice U8} {pos next : Usize}
     module.decode_data_segment data pos env .Wasm1 = .ok (.Ok (segment, next)) := by
   exact module.decode_data_segment.profile_complete segment .Wasm1 hb hv
 
+/-- Wasm 1.0 form of `module.decode_data_section_loop.profile_complete`. -/
 theorem module.decode_data_section_loop.complete (data : Slice U8) (env : module.Env)
     (count : U32) (out : alloc.vec.Vec module.Data) (pos : Usize) (i : U32)
     (segments : List module.Data) (next : Usize)
@@ -198,6 +212,7 @@ theorem module.decode_data_section_loop.complete (data : Slice U8) (env : module
       result.val = out.val ++ segments := by
   exact module.decode_data_section_loop.profile_complete data env .Wasm1 count out pos i segments next hb hc hlen hv
 
+/-- Wasm 1.0 form of `module.decode_data_section.profile_complete`. -/
 theorem module.decode_data_section.complete (data : Slice U8) (pos : Usize) (env : module.Env)
     (segments : alloc.vec.Vec module.Data) (next : Usize)
     (hb : At (VecEncoding DataEncoding) data pos (segments.val.map ModuleData.raw) next)

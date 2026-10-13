@@ -1,13 +1,22 @@
 import Itasca.Module.Env.Parser
 
+/-!
+# Byte layout of accepted environments
+
+`Run.encoding` shows that every successful run of the section loop consumes exactly a
+`PrefixEncoding` of the resulting declarations. The proof tracks a `Layout`, which assigns the bytes
+read so far to the declaration slots, and extends it section by section with `Effect.append_layout`
+and `Run.append_layout`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleEnv
 
 open ModuleBinary
 
-/-- Byte chunks assign each custom section to the next declaration slot, or to
-    the trailing custom suffix. Future slots are still empty. -/
+/-- Byte chunks for each declaration slot. Custom sections are attached to the slot that follows
+them, and `customs` holds those not yet attached. Slots after the last section seen are empty. -/
 structure Layout where
   types : List U8 := []
   imports : List U8 := []
@@ -21,9 +30,11 @@ structure Layout where
   dataCount : List U8 := []
   customs : List U8 := []
 
+/-- The concatenation of all chunks in section order. -/
 def Layout.bytes (l : Layout) : List U8 :=
   l.types ++ l.imports ++ l.functions ++ l.tables ++ l.memories ++ l.globals ++ l.exports ++ l.start ++ l.elements ++ l.dataCount ++ l.customs
 
+/-- Slots ranked after `last` have no bytes. -/
 def Layout.Future (last : Nat) (l : Layout) : Prop :=
   (last < 1 → l.types = []) ∧
   (last < 2 → l.imports = []) ∧
@@ -36,6 +47,8 @@ def Layout.Future (last : Nat) (l : Layout) : Prop :=
   (last < 9 → l.elements = []) ∧
   (last < 10 → l.dataCount = [])
 
+/-- Each chunk of `l` is the canonical padded encoding of the matching slot of `decls`, the
+trailing customs are well formed, and slots after `last` are empty. -/
 structure Layout.Valid (last : Nat) (decls : Declarations) (l : Layout)
     (profile : ValidationProfile := .Wasm1) : Prop where
   types : PaddedEncoding 1#u8 (VecEncoding FuncTypeEncoding) [] decls.types l.types
@@ -52,6 +65,7 @@ structure Layout.Valid (last : Nat) (decls : Declarations) (l : Layout)
   future : l.Future last
   allowed : ModuleTypesAllowed profile (decls.module [] [])
 
+/-- The empty layout encodes the empty declarations. -/
 theorem Layout.valid_empty (profile : ValidationProfile := .Wasm1) :
     Layout.Valid 0 ({} : Declarations) ({} : Layout) profile := by
   constructor
@@ -78,6 +92,8 @@ theorem Layout.Valid.custom {profile last decls l bytes} (h : Layout.Valid last 
     h.exports, h.start, h.elements, h.dataCount,
     by simpa using ModuleTail.customs_append h.customs (.cons hc .nil), h.future, h.allowed⟩
 
+/-- A section effect extends a valid layout, whose bytes end at the section header, to a valid
+layout ending at the end of the section. -/
 theorem Effect.append_layout {profile} {data origin pos first next env result before after id last l}
     (h : Effect (profile := profile) data first env before id next result after)
     (hh : SectionHeader data pos id first next)
@@ -344,6 +360,8 @@ theorem Effect.append_layout {profile} {data origin pos first next env result be
     · convert hs.append hbytes using 1
       simp [Layout.bytes, hz10, List.append_assoc]
 
+/-- A run of the section loop extends a valid layout to a valid layout of the final declarations
+that ends where the run ends. -/
 theorem Run.append_layout {profile} {data initial decls start initialId after afterDecls next id origin l}
     (h : Run (profile := profile) data initial decls start initialId after afterDecls next id)
     (hl : Layout.Valid initialId.val decls l profile)
@@ -360,6 +378,7 @@ theorem Run.append_layout {profile} {data initial decls start initialId after af
     obtain ⟨current, hv, hb⟩ := ih hl
     exact he.append_layout hh hv ho hb
 
+/-- A valid layout is a `PrefixEncoding` of its declarations after the module header. -/
 theorem Layout.Valid.encoding {profile last decls l} (h : Layout.Valid last decls l profile) :
     PrefixEncoding decls (magicVersion ++ l.bytes) profile := by
   exact ⟨l.types, l.imports, l.functions, l.tables, l.memories, l.globals, l.exports,
@@ -367,7 +386,8 @@ theorem Layout.Valid.encoding {profile last decls l} (h : Layout.Valid last decl
     h.memories, h.globals, h.exports, h.start, h.elements, h.dataCount, h.customs,
     by simp only [Layout.bytes, List.append_assoc], h.allowed⟩
 
-/-- Successful section histories have the full independently encoded prefix. -/
+/-- A run from the end of the module header consumes exactly the independent encoding of the
+resulting declarations. -/
 theorem Run.encoding {profile} {data initial start after decls next id}
     (h : Run (profile := profile) data initial {} start 0#u8 after decls next id)
     (hh : Wasm1.BytesAt data 0#usize magicVersion start) :

@@ -2,19 +2,33 @@ import Itasca.Module.Const.Parser
 import Itasca.Module.Env.References
 import Itasca.Module.Elab.SegmentSyntax
 
+/-!
+# Element initializer parsers
+
+Soundness of `module.decode_element_initializer` and `module.decode_element_initializers`, which
+read the initializers of an element segment either as function indices (`ref.func`) or as full
+constant expressions. `InitializerEncoding` is the independent grammar of one initializer.
+Accepted values are `ModuleConstants.Valid` at the segment's reference type, and the declared
+function references grow by exactly those of the initializers (`ModuleReferences.Added`).
+Completeness is in `Module/Sections/ElementInitComplete`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleElements
 
-/-- Index vectors abbreviate `ref.func`; expression vectors encode the entire
-constant expression, including its terminating `end`. -/
+/-- One initializer: either a function index standing for `ref.func`, or, when `expressions` is
+set, a whole constant expression including its terminating `end`. -/
 def InitializerEncoding (expressions : Bool) (value : types.ConstExpr) (bytes : List U8) : Prop :=
   if expressions then ModuleBinary.ConstEncoding value bytes
   else ∃ index, value = .RefFunc index ∧ ModuleBinary.IndexEncoding index bytes
 
+/-- The value type of an initializer: the element type for expressions, and `funcref` for
+function indices. -/
 def initializerType (elem : types.ElemType) (expressions : Bool) : types.ValueType :=
   if expressions then ModuleConstants.referenceValueType elem else .FuncRef
 
+/-- An initializer encoding consumes at least one byte. -/
 theorem InitializerEncoding.nonempty {expressions value bytes}
     (h : InitializerEncoding expressions value bytes) : 0 < bytes.length := by
   cases expressions with
@@ -27,6 +41,7 @@ end Itasca.ModuleElements
 
 namespace Itasca.ModuleConstants
 
+/-- Constant validity depends only on the function types, global types and imported global count. -/
 theorem Valid.same_caches {env result value ty} (h : Valid env value ty)
     (hf : result.func_types = env.func_types)
     (hg : result.global_types = env.global_types)
@@ -47,10 +62,12 @@ end Itasca.ModuleConstants
 
 namespace Itasca.ModuleReferences
 
+/-- Validity after adding declared references implies validity before. -/
 theorem Added.valid_before {before after refs value ty} (h : Added before after refs)
     (hv : ModuleConstants.Valid after value ty) : ModuleConstants.Valid before value ty := by
   apply hv.same_caches <;> rw [h.1]
 
+/-- Reference additions compose. -/
 theorem Added.trans {before middle after xs ys} (h : Added before middle xs)
     (h' : Added middle after ys) : Added before after (xs ++ ys) := by
   constructor
@@ -61,6 +78,8 @@ end Itasca.ModuleReferences
 
 namespace Itasca
 
+/-- An accepted `module.decode_element_initializer` is an `InitializerEncoding` span whose value is
+`Valid` at `initializerType`. -/
 @[step]
 theorem module.decode_element_initializer.spec (data : Slice U8) (pos : Usize)
     (env : module.Env) (elem : types.ElemType) (expressions : Bool) (profile : ValidationProfile) :
@@ -96,7 +115,8 @@ theorem module.decode_element_initializer.spec (data : Slice U8) (pos : Usize)
         obtain ⟨bytes, he, hs⟩ := ModuleBinary.At.of_u32 hb
         exact ⟨⟨bytes, ⟨idx, rfl, he⟩, hs⟩, .refFunc idx hi⟩
 
-/-- The dedicated initializer loop extends only the function declaration cache. -/
+/-- The initializer loop returns `count` initializers forming a `Rep` span, all valid, and extends
+only the declared functions, by their references. -/
 theorem module.decode_element_initializers_loop.spec (data : Slice U8) (env : module.Env)
     (elem : types.ElemType) (expressions : Bool) (profile : ValidationProfile)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
@@ -169,8 +189,8 @@ theorem module.decode_element_initializers_loop.spec (data : Slice U8) (env : mo
   · exact ⟨by simp, by simp, ⟨rfl, by simp⟩,
       ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, by simp, hrefs⟩
 
-/-- Vector decoding relates the returned expressions and declaration cache to
-one exact independent initializer vector. -/
+/-- `module.decode_element_initializers` returns the initializers of a `VecEncoding` span, all
+valid, and extends only the declared functions, by their references. -/
 theorem module.decode_element_initializers.spec (data : Slice U8) (pos : Usize)
     (env : module.Env) (elem : types.ElemType) (expressions : Bool) (profile : ValidationProfile)
     (hrefs : env.declared_funcs.val.length ≤ pos.val) :

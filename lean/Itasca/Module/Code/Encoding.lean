@@ -1,12 +1,21 @@
 import Itasca.Module.Code.Locals
 import Itasca.Binary.Wasm1.EncodingComplete
 
+/-!
+# Code entry encodings from byte provenance
+
+Conversions between the streaming byte provenance used by the extracted code-entry reader
+(`Wasm1.Consumed`, `Wasm1.BytesAt`, `Wasm1.BodyEncoding`) and the independent module grammar
+(`At`, `Rep`, `BodyEncoding`, `CodeEncoding`). `codeEncoding_of_parts` assembles a `CodeEncoding`
+of the interval a parser returns from its size, locals and body.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleBinary
 
-/-- The body's streaming provenance concatenates to the module grammar's
-independent repetition relation. -/
+/-- The streaming token provenance of a body is an `At (Rep Wasm1.TokenEncoding)` of the module
+grammar. -/
 theorem consumed_rep {data start tokens next}
     (h : Wasm1.Consumed data start tokens next) :
     At (Rep Wasm1.TokenEncoding) data start tokens next := by
@@ -17,6 +26,7 @@ theorem consumed_rep {data start tokens next}
     obtain ⟨cs, hc, hp⟩ := ht
     exact ⟨bs ++ cs, he.snoc hc, hs.append hp⟩
 
+/-- Streaming body provenance gives the module grammar's `BodyEncoding` of the slice bytes. -/
 theorem bodyEncoding_of_body {data ops} (h : Wasm1.BodyEncoding data ops) :
     BodyEncoding ops data.val := by
   obtain ⟨tokens, next, hs, hn, ht⟩ := h
@@ -24,7 +34,8 @@ theorem bodyEncoding_of_body {data ops} (h : Wasm1.BodyEncoding data ops) :
   have heq : data.val = bytes := by simpa [hn] using hb.suffix
   exact ⟨tokens, heq.symm ▸ he, ht⟩
 
-/-- A successful slice operation preserves the precise parent-buffer interval. -/
+/-- A slice taken from `first` to `last` holds exactly the parent buffer's bytes in that
+interval. -/
 theorem slice_bytes {data : Slice U8} {first last : Usize} {body : Slice U8}
     (hfirst : first.val ≤ last.val) (hlast : last.val ≤ data.length)
     (hbody : body.val = data.val.slice first.val last.val) :
@@ -38,8 +49,8 @@ theorem slice_bytes {data : Slice U8} {first last : Usize} {body : Slice U8}
     simp only [Slice.length] at hlast
     omega
 
-/-- Combine the declared size, grouped locals, and complete body bytes into
-one code-entry encoding of exactly the interval returned by the parser. -/
+/-- The declared size, grouped locals and complete body bytes combine into one `CodeEncoding` of
+exactly the interval the parser returns. -/
 theorem codeEncoding_of_parts {data start content localEnd last size groups body ops}
     (hsize : Leb128.Decoded data start size content)
     (hlength : last.val = content.val + size.val)
@@ -59,6 +70,7 @@ theorem codeEncoding_of_parts {data start content localEnd last size groups body
   · exact ((⟨hh, hn, hb⟩ : Wasm1.BytesAt data start header content).append hls).append hbodybytes
 
 
+/-- A token repetition with matching bytes gives streaming provenance. -/
 theorem rep_consumed {data start next tokens bytes}
     (he : Rep Wasm1.TokenEncoding tokens bytes) (hs : Wasm1.BytesAt data start bytes next) :
     Wasm1.Consumed data start tokens next := by
@@ -71,6 +83,7 @@ theorem rep_consumed {data start next tokens bytes}
     obtain ⟨middle, hfirst, hrest⟩ := hs.split
     exact Wasm1.Consumed.cons_iff.mpr ⟨middle, ⟨_, ht, hfirst⟩, ih hrest⟩
 
+/-- The module grammar's `BodyEncoding` of a slice gives streaming body provenance. -/
 theorem body_of_bodyEncoding {data : Slice U8} {ops}
     (he : BodyEncoding ops data.val) : Wasm1.BodyEncoding data ops := by
   obtain ⟨tokens, ht, hb⟩ := he

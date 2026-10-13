@@ -2,15 +2,25 @@ import Itasca.Module.Elab.Metadata
 import Itasca.Module.Composition
 import Itasca.Profile.CodeEntry
 
+/-!
+# Assembling `ModuleSound.Validated`
+
+Defines `Validated`, the soundness certificate of an accepted module, and assembles it from the
+decoded regions. `assembled` takes the environment, code and tail spans of one input slice, and
+`assembled_regions` takes byte lists that tile the input. Both use the byte composition from
+`Module/Composition` and the elaboration and typing results from `Module/Elab`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleSound
 
 open ModuleElaboration
 
-/-- One independent decoded module accounts for every byte, the returned
-declarations and data, generated SpecTec typing, the selected profile restrictions,
-and the results of both public external-type accessors. -/
+/-- A raw module from the independent grammar that encodes exactly `data` under the profile's
+code encoding, elaborates to `moduleOf raw`, matches the returned environment and tail, satisfies
+the generated `Module_ok`, meets the profile restrictions, and has the types returned by the
+public external-type accessors. -/
 def Validated (data : Slice U8) (decoded : module.Module)
     (validationProfile : ValidationProfile := .Wasm1) : Prop :=
   ∃ raw, ModuleBinary.ModuleEncodingWith (Itasca.Profile.CodeEncoding validationProfile) raw data.val validationProfile ∧
@@ -64,8 +74,8 @@ private theorem assembly_guards {profile env decls codes} {segments : List modul
     | none => exact hg.2 he
     | some count => simpa using hc count he
 
-/-- The three decoded byte regions and their semantic invariants suffice for
-whole-module soundness. All witnesses concern the same AST and environment. -/
+/-- The environment, code and tail spans of `data`, with their semantic invariants, give
+`Validated` for the decoded module. All witnesses concern the same raw module and environment. -/
 theorem assembled {validationProfile : ValidationProfile} {data : Slice U8} {env : module.Env} {tail : module.Tail}
     {decls : ModuleEnv.Declarations} {codes codePos tailPos}
     (henv : ModuleBinary.At (fun decls bytes => ModuleEnv.PrefixEncoding decls bytes validationProfile) data 0#usize decls codePos)
@@ -96,8 +106,9 @@ theorem assembled {validationProfile : ValidationProfile} {data : Slice U8} {env
   have hg := assembly_guards hrep hp.allowed hcodes hsegments hdataCount
   exact ModuleComposition.whole_bytes ⟨preBytes, hp, hspan⟩ hcode htail hg.1 hg.2
 
-/-- Composition of independently framed regions needs exact byte tiling, not a
-shared allocation. Every semantic witness still belongs to one raw module. -/
+/-- Like `assembled`, from byte lists that tile `data` exactly as `before ++ codeBytes ++
+tailBytes` instead of spans of one slice. Every semantic witness still belongs to one raw
+module. -/
 theorem assembled_regions {validationProfile : ValidationProfile} {data : Slice U8} {env : module.Env} {tail : module.Tail}
     {decls : ModuleEnv.Declarations} {codes before codeBytes tailBytes}
     (hbytes : data.val = before ++ codeBytes ++ tailBytes)

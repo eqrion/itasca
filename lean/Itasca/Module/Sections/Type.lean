@@ -1,10 +1,21 @@
 import Itasca.Module.Env.Basic
 import Itasca.Module.Readers.Types
 
+/-!
+# Type section parser
+
+Soundness of `module.decode_type_section` and its loop. `TypesAdded` says the environment gains
+exactly the decoded signatures. The `profile_spec` forms give a `VecEncoding FuncTypeEncoding`
+span whose signatures satisfy the profile restrictions, caps and allowed value types, and the
+Wasm 1.0 forms give the single-result bound. `module.check_table_count` enforces the Wasm 1.0
+limit of one table. Completeness is in `Module/Sections/TypeComplete`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleBinary
 
+/-- A repetition span extends by one element at its end. -/
 theorem At.snoc {α : Type} {R : α → List U8 → Prop} {data start pos next values value}
     (h : At (Rep R) data start values pos) (h' : At R data pos value next) :
     At (Rep R) data start (values ++ [value]) next := by
@@ -12,6 +23,7 @@ theorem At.snoc {α : Type} {R : α → List U8 → Prop} {data start pos next v
   obtain ⟨last, he, ht⟩ := h'
   exact ⟨bytes ++ last, hr.snoc he, hs.append ht⟩
 
+/-- A decoded count, a repetition of that many elements and their span form a `VecEncoding`. -/
 theorem At.vector {α : Type} {R : α → List U8 → Prop} {data start pos next count values}
     (hc : Leb128.Decoded data start count pos)
     (he : At (Rep R) data pos values next) (hlen : values.length = count.val) :
@@ -22,6 +34,7 @@ theorem At.vector {α : Type} {R : α → List U8 → Prop} {data start pos next
     ⟨countBytes, bytes, by simpa [hlen] using hce, hr, rfl⟩,
     (show Wasm1.BytesAt data start countBytes pos from ⟨hcs, hcl, hcb⟩).append hs⟩
 
+/-- A function type encoding consumes at least one byte. -/
 theorem At.funcType_progress {data start ty next} (h : At FuncTypeEncoding data start ty next) :
     start.val < next.val := by
   obtain ⟨bytes, ⟨params, results, _, _, rfl⟩, hs⟩ := h
@@ -33,6 +46,8 @@ end Itasca.ModuleBinary
 
 namespace Itasca.ModuleSections
 
+/-- `result` is `env` with the signatures `added` appended to its type table and nothing else
+changed. -/
 def TypesAdded (env result : module.Env) (added : List types.FuncType) : Prop :=
   result = { env with types := result.types } ∧ result.types.val = env.types.val ++ added
 
@@ -42,6 +57,8 @@ namespace Itasca
 
 open ModuleBinary ModuleSections
 
+/-- `module.check_table_count` rejects exactly when the profile is Wasm 1.0 and there is more than
+one table. -/
 @[step]
 theorem module.check_table_count.spec (env : module.Env) (profile : ValidationProfile) :
     module.check_table_count env profile ⦃ result => match result with
@@ -53,6 +70,7 @@ theorem module.check_table_count.spec (env : module.Env) (profile : ValidationPr
     simp only [module.check_table_count]
     split <;> simp_all [global_simps]
 
+/-- `module.check_table_count` accepts when the Wasm 1.0 table limit holds. -/
 theorem module.check_table_count.complete (env : module.Env) (profile : ValidationProfile)
     (h : profile = .Wasm1 → env.table_types.val.length ≤ 1) :
     module.check_table_count env profile = .ok (.Ok ()) := by
@@ -62,6 +80,8 @@ theorem module.check_table_count.complete (env : module.Env) (profile : Validati
     have hb := h rfl
     simp [module.check_table_count, limits.MAX_TABLES, global_simps, show ¬1 < env.table_types.val.length by omega]
 
+/-- The type loop adds `count` signatures forming a `Rep FuncTypeEncoding` span. Each satisfies the
+profile restrictions, caps and allowed value types. -/
 @[step]
 theorem module.decode_type_section_loop.profile_spec (data : Slice U8) (env : module.Env)
     (profile : ValidationProfile) (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
@@ -117,6 +137,8 @@ theorem module.decode_type_section_loop.profile_spec (data : Slice U8) (env : mo
   · exact ⟨by simp, [], by simp, ⟨by cases env; rfl, by simp⟩,
       ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, by simp, hsize⟩
 
+/-- `module.decode_type_section` adds the signatures of a `VecEncoding FuncTypeEncoding` span, each
+satisfying the profile restrictions, caps and allowed value types. -/
 @[step]
 theorem module.decode_type_section.profile_spec (data : Slice U8) (pos : Usize) (env : module.Env)
     (profile : ValidationProfile) (hsize : env.types.val.length ≤ pos.val) :
@@ -145,6 +167,8 @@ theorem module.decode_type_section.profile_spec (data : Slice U8) (pos : Usize) 
       exact ⟨added, henv, At.vector hc hb hlen, by simpa only [and_assoc, List.mem_append] using ht, hsize⟩
 
 
+/-- Wasm 1.0 form of `module.decode_type_section_loop.profile_spec` with the single-result
+bound. -/
 @[step]
 theorem module.decode_type_section_loop.spec (data : Slice U8) (env : module.Env)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
@@ -163,6 +187,7 @@ theorem module.decode_type_section_loop.spec (data : Slice U8) (env : module.Env
     obtain ⟨added, hlen, henv, hb, ht, hsize⟩ := hp
     exact ⟨added, hlen, henv, hb, fun ft hm => (ht ft hm).1.1, hsize⟩
 
+/-- Wasm 1.0 form of `module.decode_type_section.profile_spec` with the single-result bound. -/
 @[step]
 theorem module.decode_type_section.spec (data : Slice U8) (pos : Usize) (env : module.Env)
     (hsize : env.types.val.length ≤ pos.val) :

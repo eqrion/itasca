@@ -1,11 +1,21 @@
 import Itasca.Module.Env.Run
 import Itasca.Module.Env.NameFacts
 
+/-!
+# Preservation along section runs
+
+`Effect.represents` and `Run.represents` show that decoding sections keeps `Represents` between
+the environment and the ghost declarations. `Effect.signatureBounded` and `Run.signatureBounded`
+keep the signature bounds. `module.Env.new.profile_declarations` shows that the empty environment
+starts all of these invariants, and `ImportsAdded.represents` covers the import section.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- The extracted initial environment represents the empty declaration prefix. -/
+/-- The extracted initial environment represents the empty declaration prefix, is valid and
+bounded, and has phase `0`. -/
 theorem module.Env.new.profile_declarations (profile : ValidationProfile) : module.Env.new ⦃ env =>
     ModuleEnv.Represents env {} ∧ ModuleEnv.Valid env profile ∧
     ModuleEnv.SignatureBounded env 0 ∧ ModuleEnv.Bounded env 0 ∧ ModuleEnv.Phase 0 {} ⦄ := by
@@ -20,6 +30,7 @@ theorem module.Env.new.profile_declarations (profile : ValidationProfile) : modu
   · constructor <;> simp
   · simp [ModuleEnv.Phase]
 
+/-- `module.Env.new.profile_declarations` for Wasm 1.0. -/
 theorem module.Env.new.declarations : module.Env.new ⦃ env =>
     ModuleEnv.Represents env {} ∧ ModuleEnv.Valid env ∧
     ModuleEnv.SignatureBounded env 0 ∧ ModuleEnv.Bounded env 0 ∧ ModuleEnv.Phase 0 {} ⦄ :=
@@ -53,6 +64,8 @@ theorem ImportsAdded.types {profile} {env entries result} (h : ImportsAdded env 
 
 open ModuleEnv
 
+/-- Adding one import appends it to the declared imports and keeps the environment representing
+the declarations, provided no functions, globals, tables or memories are declared yet. -/
 theorem ImportAdded.represents {profile} {env result entry decls}
     (h : ImportAdded env result entry profile) (hr : Represents env decls)
     (hf : decls.functions = []) (hg : decls.globals = [])
@@ -111,7 +124,8 @@ theorem ImportAdded.represents {profile} {env result entry decls}
       · simpa [importedTables, hi, he] using hr.cache.tables
       · simpa [importedMems, hi, he] using hr.cache.memories
 
-
+/-- Adding a vector of imports appends them to the declared imports and keeps the environment
+representing the declarations. -/
 theorem ImportsAdded.represents {profile} {env result entries decls}
     (h : ImportsAdded env entries result profile) (hr : Represents env decls)
     (hf : decls.functions = []) (hg : decls.globals = [])
@@ -130,8 +144,8 @@ namespace Itasca.ModuleEnv
 
 open ModuleBinary ModuleSections
 
-/-- Every section preserves the bound on nested parameter vectors; newly
-declared signatures obtain their bound from their own independent byte span. -/
+/-- Every section preserves the bound on nested parameter vectors. Newly declared signatures obtain
+their bound from their own byte span. -/
 theorem Effect.signatureBounded {profile} {data pos env before id next result after}
     (h : Effect (profile := profile) data pos env before id next result after) (hs : SignatureBounded env pos.val) :
     SignatureBounded result next.val := by
@@ -169,8 +183,8 @@ theorem Effect.signatureBounded {profile} {data pos env before id next result af
   | dataCount hp he hb => simpa only [SignatureBounded, he] using hm
 
 
-/-- An ordered section update preserves the exact relationship between raw
-section declarations and the merged runtime index-space caches. -/
+/-- A section update in increasing section order keeps the environment representing the
+declarations, including the merged index-space caches. -/
 theorem Effect.represents {profile} {data pos env before id next result after last}
     (h : Effect (profile := profile) data pos env before id next result after) (hr : Represents env before)
     (hp : Phase last before) (horder : last < (sectionRank id).val) : Represents result after := by
@@ -286,6 +300,7 @@ theorem Effect.represents {profile} {data pos env before id next result after la
       hr.cache.numGlobals, hr.cache.tables, hr.cache.memories⟩⟩
 
 
+/-- A run of sections keeps the environment representing the declarations. -/
 theorem Run.represents {profile} {data initial decls start initialId after afterDecls next id}
     (h : Run (profile := profile) data initial decls start initialId after afterDecls next id)
     (hr : Represents initial decls) (hp : Phase initialId.val decls) :
@@ -295,6 +310,7 @@ theorem Run.represents {profile} {data initial decls start initialId after after
   | custom _ _ ih => exact ih
   | step previous horder hh he ih => exact he.represents ih (previous.phase hp) horder
 
+/-- A run of sections keeps the signature bound. -/
 theorem Run.signatureBounded {profile} {data initial decls start initialId after afterDecls next id}
     (h : Run (profile := profile) data initial decls start initialId after afterDecls next id)
     (hs : SignatureBounded initial start.val) : SignatureBounded after next.val := by

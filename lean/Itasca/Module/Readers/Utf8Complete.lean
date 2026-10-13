@@ -1,12 +1,21 @@
 import Itasca.Module.Readers.FramingComplete
 import Itasca.Module.Readers.Utf8
 
+/-!
+# Completeness of UTF-8 validation
+
+`module.validate_utf8.complete`: the scanner accepts every independent `Utf8` byte string, through
+`module.utf8_sequence_len.complete` and `module.validate_utf8_loop.complete`. Soundness is in
+`Module/Readers/Utf8`.
+-/
+
 open Aeneas Aeneas.Std
 
 set_option maxHeartbeats 1600000
 
 namespace Itasca.Wasm1
 
+/-- Indexing a `BytesAt` span reads the corresponding input byte. -/
 theorem BytesAt.get {data start bytes next} (h : BytesAt data start bytes next)
     (i : Nat) (hi : i < bytes.length) :
     data.val[start.val + i]'(by have := h.length; have := h.bound; scalar_tac) = bytes[i] := by
@@ -31,6 +40,7 @@ open ModuleBinary
   unfold module.utf8_cont
   step*
 
+/-- `module.utf8_sequence_len` accepts one canonical UTF-8 character and returns its length. -/
 theorem module.utf8_sequence_len.complete (data : Slice U8) (pos next : Usize)
     (encoded : List U8) (hc : Utf8Char encoded) (hb : Wasm1.BytesAt data pos encoded next) :
     ∃ count, module.utf8_sequence_len data pos = .ok (.Ok count) ∧ count.val = encoded.length := by
@@ -109,7 +119,7 @@ theorem module.utf8_sequence_len.complete (data : Slice U8) (pos next : Usize)
   exact ⟨count, hr, hc⟩
 
 
-/-- The scanner accepts a complete independently valid UTF-8 suffix. -/
+/-- The scan loop accepts a valid UTF-8 suffix that runs to the end of the input. -/
 theorem module.validate_utf8_loop.complete (data : Slice U8) (pos : Usize)
     (encoded : List U8) (hc : Utf8 encoded)
     (hb : Wasm1.BytesAt data pos encoded (Slice.len data)) :
@@ -142,8 +152,8 @@ theorem module.validate_utf8_loop.complete (data : Slice U8) (pos : Usize)
       simp only [hbody, bind_ok]
       exact hloop
 
-/-- Strict independent UTF-8 validity suffices for actual scanner acceptance,
-including every Unicode scalar through U+10FFFF. -/
+/-- `module.validate_utf8` accepts every `Utf8` byte string, including all Unicode scalar values
+through U+10FFFF. -/
 theorem module.validate_utf8.complete (data : Slice U8) (h : Utf8 data.val) :
     module.validate_utf8 data = .ok (.Ok ()) := by
   apply module.validate_utf8_loop.complete data 0#usize data.val h

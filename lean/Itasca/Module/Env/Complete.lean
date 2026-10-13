@@ -2,14 +2,23 @@ import Itasca.Module.Env.Replay
 import Itasca.Module.Env.Chain
 import Itasca.Module.Env.DispatchComplete
 
+/-!
+# Completeness of the environment parser
+
+`module.validate_env.profile_complete` shows that an independently encoded declaration prefix
+meeting the declarative requirements makes `module.validate_env` succeed at the greedy boundary
+and reach a ready state. `Chain.profile_complete` is the loop induction behind it. The Wasm 1.0
+specializations are `Chain.complete` and `module.validate_env.complete`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleEnv
 
 open ModuleBinary
 
-/-- Execute the independent ordered slot grammar. Absent slots advance the
-ghost phase; only actual sections update the parser's last-seen section id. -/
+/-- The parser loop `parseLoop` accepts any `Chain` encoding. Absent slots advance the ghost
+phase, and only actual sections update the parser's last-seen section id. -/
 theorem Chain.profile_complete {profile raw n bytes} (h : Chain raw n bytes profile)
     (data : Slice U8) (env : module.Env) (decls : Declarations) (pos next : Usize) (last : U8)
     (hb : Wasm1.BytesAt data pos bytes next) (hstop : StopAt data next)
@@ -56,6 +65,7 @@ theorem Chain.profile_complete {profile raw n bytes} (h : Chain raw n bytes prof
       exact (module.validate_env_with_loop.complete_section data env updated afterCustoms payloadStart middle last id
         hh hlo (by omega) (by omega) hread).trans hrun
 
+/-- `Chain.profile_complete` for Wasm 1.0. -/
 theorem Chain.complete {raw n bytes} (h : Chain raw n bytes)
     (data : Slice U8) (env : module.Env) (decls : Declarations) (pos next : Usize) (last : U8)
     (hb : Wasm1.BytesAt data pos bytes next) (hstop : StopAt data next)
@@ -100,6 +110,7 @@ theorem module.validate_env.profile_complete (data : Slice U8) (raw : ModuleBina
   simp [module.validate_env, module.validate_env_with, hnew, hread,
     core.result.Result.Insts.CoreOpsTry.branch, hrun]
 
+/-- `module.validate_env.profile_complete` for Wasm 1.0. -/
 theorem module.validate_env.complete (data : Slice U8) (raw : ModuleBinary.Module)
     (decls : Declarations) (next : Usize)
     (hprefix : At PrefixEncoding data 0#usize decls next)

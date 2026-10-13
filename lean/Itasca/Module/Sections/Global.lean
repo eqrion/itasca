@@ -1,10 +1,20 @@
 import Itasca.Module.Sections.Type
 import Itasca.Module.Const.Parser
 
+/-!
+# Global section parser
+
+Soundness of `module.decode_global_section` and its loop. `GlobalsAdded` says the environment
+gains the decoded globals, their types and the function references their initializers declare.
+The span is a `VecEncoding GlobalEncoding` and each initializer is `ModuleConstants.Valid` at its
+global's type. Completeness is in `Module/Sections/GlobalComplete`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleConstants
 
+/-- Constant validity is preserved when globals are appended after the imported ones. -/
 theorem Valid.append_globals {env result e t} (h : Valid env e t)
     (suffix : List types.GlobalType)
     (hglobals : result.global_types.val = env.global_types.val ++ suffix)
@@ -28,12 +38,16 @@ end Itasca.ModuleConstants
 
 namespace Itasca.ModuleSections
 
+/-- `result` is `env` with the globals `added` appended to the globals and global types, and the
+function references of their initializers appended to the declared functions. Nothing else
+changes. -/
 def GlobalsAdded (env result : module.Env) (added : List module.Global) : Prop :=
   result = { env with globals := result.globals, global_types := result.global_types, declared_funcs := result.declared_funcs } ∧
   result.globals.val = env.globals.val ++ added ∧
   result.global_types.val = env.global_types.val ++ added.map module.Global.gtype ∧
   result.declared_funcs.val = env.declared_funcs.val ++ added.flatMap ModuleReferences.global
 
+/-- A global type and an initializer span in sequence form a `GlobalEncoding`. -/
 theorem global_encoded {data start pos next gt init}
     (hg : ModuleBinary.At ModuleBinary.GlobalTypeEncoding data start gt pos)
     (hi : ModuleBinary.At ModuleBinary.ConstEncoding data pos init next) :
@@ -48,6 +62,8 @@ namespace Itasca
 
 open ModuleBinary ModuleSections
 
+/-- The global loop adds `count` globals forming a `Rep GlobalEncoding` span, with valid
+initializers and allowed value types. -/
 @[step]
 theorem module.decode_global_section_loop.spec (data : Slice U8) (env : module.Env)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
@@ -137,6 +153,8 @@ theorem module.decode_global_section_loop.spec (data : Slice U8) (env : module.E
       ⟨by cases env; rfl, by simp, by simp, by simp⟩,
       ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, by simp, hglobals, htypes, hreferences⟩
 
+/-- `module.decode_global_section` adds the globals of a `VecEncoding GlobalEncoding` span, with
+valid initializers and allowed value types. -/
 @[step]
 theorem module.decode_global_section.spec (data : Slice U8) (pos : Usize) (env : module.Env)
     (hglobals : env.globals.val.length ≤ pos.val)

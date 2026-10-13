@@ -1,12 +1,20 @@
 import Itasca.Module.Readers.BasicComplete
 
+/-!
+# Segment index decoder
+
+Soundness (`profile_spec`) and acceptance (`profile_complete`) of `module.decode_segment_index`,
+which reads the optional explicit table or memory index of an active segment according to
+`SegmentIndexEncoding` for the profile.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 open ModuleBinary
 
-/-- The segment prefix decoder accounts for the optional explicit index after
-the independently decoded version-specific flag or index word. -/
+/-- `module.decode_segment_index` returns the index, next cursor and whether the index was
+explicit, with the bytes consumed matching `SegmentIndexEncoding` for the flag word. -/
 theorem module.decode_segment_index.profile_spec (data : Slice U8) (pos : Usize)
     (flags : U32) (profile : ValidationProfile) (hpos : pos.val ≤ data.length) :
     module.decode_segment_index data pos flags profile ⦃ r => match r with
@@ -45,6 +53,7 @@ theorem module.decode_segment_index.profile_spec (data : Slice U8) (pos : Usize)
           · exact (h2 rfl).elim
           · simp
 
+/-- `module.decode_segment_index` accepts any independent `SegmentIndexEncoding` span. -/
 theorem module.decode_segment_index.profile_complete {data : Slice U8} {pos next : Usize}
     {flags idx : U32} {explicit : Bool} {profile : ValidationProfile}
     (h : At (fun pair => SegmentIndexEncoding profile flags pair.1 pair.2)

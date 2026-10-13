@@ -2,11 +2,21 @@ import Itasca.Module.Sections.Imports
 import Itasca.Module.Sections.Export
 import Itasca.Module.Sections.DataCount
 
+/-!
+# Declarative requirements of the environment
+
+`SectionValid` states the semantic requirements of each declaration section against the
+environment built so far. `Ready` says all slots through a given rank are complete, and
+`Requirements` collects `SectionValid` for every section reached from a ready state. The
+requirements contain no parser execution, so completeness can start from them. `StopAt` describes
+where the greedy section scan ends.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleSections
 
-/-- Semantic requirements for one import at its current index-space prefix. -/
+/-- The semantic requirements for one import against the index spaces built so far. -/
 def ImportValid (env : module.Env) (desc : module.ImportDesc)
     (profile : ValidationProfile := .Wasm1) : Prop :=
   match desc with
@@ -17,14 +27,16 @@ def ImportValid (env : module.Env) (desc : module.ImportDesc)
       env.mem_types.val.length + 1 ≤ 1
   | .Global _ => True
 
+/-- The table types among the raw imports. -/
 def rawTables (entries : List ModuleBinary.Import) : List types.TableType :=
   entries.filterMap (fun e => match e.desc with | .Table tt => some tt | _ => none)
 
+/-- The memory types among the raw imports. -/
 def rawMemories (entries : List ModuleBinary.Import) : List types.MemType :=
   entries.filterMap (fun e => match e.desc with | .Memory mt => some mt | _ => none)
 
-/-- Import validity separates descriptor checks from the combined index-space
-cardinality restrictions, so a prefix of imports can be processed in order. -/
+/-- The imports are valid against `env`. Descriptor checks are separate from the cardinality limits
+on the merged table and memory spaces, so imports can be processed in order. -/
 structure ImportsValid (env : module.Env) (entries : List ModuleBinary.Import)
     (profile : ValidationProfile := .Wasm1) : Prop where
   descriptors : ∀ e ∈ entries, match e.desc with
@@ -35,6 +47,8 @@ structure ImportsValid (env : module.Env) (entries : List ModuleBinary.Import)
   tables : profile = .Wasm1 → env.table_types.val.length + (rawTables entries).length ≤ 1
   memories : env.mem_types.val.length + (rawMemories entries).length ≤ 1
 
+/-- A raw element segment is valid against `env`. An active segment names a table of its element
+type with a valid `i32` offset, and every initializer is a valid constant of the element type. -/
 def ElementValidRaw (env : module.Env) (entry : ModuleBinary.Element) : Prop :=
   (match entry.mode with
     | .Active idx offset => ∃ hi : idx.val < env.table_types.val.length,
@@ -42,7 +56,7 @@ def ElementValidRaw (env : module.Env) (entry : ModuleBinary.Element) : Prop :=
     | .Passive | .Declarative => True) ∧
   ∀ init ∈ entry.init, ModuleConstants.Valid env init (ModuleConstants.referenceValueType entry.elem)
 
-
+/-- The first import of a valid list is valid at the current index-space prefix. -/
 theorem ImportsValid.head {profile} {env entry entries} (h : ImportsValid env (entry :: entries) profile) :
     ImportValid env entry.desc profile := by
   have hd := h.descriptors entry (by simp)
@@ -59,6 +73,8 @@ theorem ImportsValid.head {profile} {env entry entries} (h : ImportsValid env (e
     simp [rawMemories, he] at hm
     omega
 
+/-- After the first import is added, the remaining imports are valid against the updated
+environment. -/
 theorem ImportsValid.tail {profile} {env result actual entries}
     (h : ImportsValid env (ModuleEnv.rawImport actual :: entries) profile)
     (ha : ImportAdded env result actual profile) : ImportsValid result entries profile := by
@@ -106,14 +122,14 @@ end Itasca.ModuleSections
 
 namespace Itasca.ModuleEnv
 
-/-- The greedy environment scan stops only at EOF or a fully available section
-header belonging to the code/data suffix. -/
+/-- The greedy environment scan stops only at end of input or at a complete section header for the
+code section (`10`) or data section (`11`). -/
 def StopAt (data : Slice U8) (pos : Usize) : Prop :=
   pos = Slice.len data ∨ ∃ id first last,
     ModuleBinary.SectionHeader data pos id first last ∧ (id = 10#u8 ∨ id = 11#u8)
 
-/-- All slots through `last` are complete, including omitted empty sections.
-The runtime caches retain their precise relationship to this declaration prefix. -/
+/-- All slots through rank `last` are complete in `decls`, including omitted empty sections, and
+match the raw module `raw`. The environment `env` represents `decls`. -/
 structure Ready (raw : ModuleBinary.Module) (last : Nat) (decls : Declarations)
     (env : module.Env) : Prop where
   represents : Represents env decls
@@ -129,8 +145,8 @@ structure Ready (raw : ModuleBinary.Module) (last : Nat) (decls : Declarations)
   elements : 9 ≤ last → decls.elements = raw.elements
   dataCount : 10 ≤ last → decls.dataCount = raw.dataCount
 
-/-- Pure semantic requirements of the next declaration section. Binary framing,
-UTF-8 names, and cursor/capacity bounds are supplied separately by the grammar. -/
+/-- The semantic requirements of declaration section rank `id` of `raw` against `env`. Binary
+framing, UTF-8 names, and cursor and capacity bounds come separately from the grammar. -/
 def SectionValid (raw : ModuleBinary.Module) (id : Nat) (env : module.Env)
     (profile : ValidationProfile := .Wasm1) : Prop :=
   match id with
@@ -150,8 +166,9 @@ def SectionValid (raw : ModuleBinary.Module) (id : Nat) (env : module.Env)
   | 10 => True
   | _ => True
 
-/-- Declarative assembly discharges this aggregate once. It contains no parser
-execution or successful-decoding premise. -/
+/-- Every declaration section of `raw` meets its requirements whenever the preceding slots are
+ready. Declarative assembly discharges this once, and it has no parser-execution or
+successful-decoding premise. -/
 def Requirements (raw : ModuleBinary.Module) (profile : ValidationProfile := .Wasm1) : Prop :=
   ∀ id decls env, 1 ≤ id → id ≤ 10 → Ready raw (id - 1) decls env → SectionValid raw id env profile
 

@@ -1,9 +1,19 @@
 import Itasca.Module.Elab.IndexSpaces
 
+/-!
+# Typing of lists of declarations
+
+List-level versions of the per-declaration typing results. `functions_typed` types the code entries
+as `Func_ok` and `exports_typed` types the exports. Small helpers convert between the generated
+`Forall₂` and `List.Forall₂`, and the `.wf` theorems extract well-formedness from the typing
+judgments.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleElaboration
 
+/-- `List.Forall₂` gives the generated `Forall₂`. -/
 theorem forall₂_generated {α β : Type} {R : α → β → Prop} {xs ys}
     (h : List.Forall₂ R xs ys) : Forall₂ R xs ys := by
   induction h with
@@ -29,6 +39,8 @@ theorem forall₂_right {α β : Type} {R : α → β → Prop} {xs ys}
   | nil => simp [Forall]
   | cons hr _ ih => simpa [Forall] using And.intro (hp _ _ hr) ih
 
+/-- Pointwise `Typed` code entries are typed as functions in a module context, at the function types
+of their type indices. -/
 theorem functions_typed {env indices codes} {profile : ValidationProfile}
     (h : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry profile) indices codes)
     (C : context) (hc : CodeEntry.ModuleContext env C)
@@ -41,6 +53,7 @@ theorem functions_typed {env indices codes} {profile : ValidationProfile}
     apply List.Forall₂.cons _ ih
     simpa [functionType_lookup hp.type_lt] using hp.func_ok C hc hsegments
 
+/-- Resolved exports with well-formed names are typed in a module context. -/
 theorem exports_typed {env entries xts}
     (h : List.Forall₂ (ModuleExternals.ExportResolves env) entries xts)
     (hn : ∀ entry ∈ entries, wf_name (ModuleBinary.nameOfBytes entry.name.val))

@@ -1,5 +1,14 @@
 import Itasca.Module.Sections.Type
 
+/-!
+# Function type parameter bounds
+
+A function type's parameter vector is bounded by the number of bytes that encode it. The
+`funcTypeVector_params_bound` lemmas give this for decoded type vectors, and `SignatureBounded`
+packages the bound for the types of an environment so that parameter counts stay within the
+byte cursor.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleBinary
@@ -47,6 +56,8 @@ theorem At.funcTypes_params_bound {data start types next}
   have := hs.length
   omega
 
+/-- Every function type in a decoded type vector has at most as many parameters as the end
+position of the vector. -/
 theorem At.funcTypeVector_params_bound {data start types next}
     (h : At (VecEncoding FuncTypeEncoding) data start types next) :
     ∀ ty ∈ types, ty.params.val.length ≤ next.val := by
@@ -61,7 +72,8 @@ end Itasca.ModuleBinary
 
 namespace Itasca.ModuleEnv
 
-/-- Inner signature vectors, unlike index-space caches, need their own size bound. -/
+/-- Every function type in the environment has at most `limit` parameters. Parameter vectors are
+nested inside the type list, so they need their own size bound unlike the index-space caches. -/
 def SignatureBounded (env : module.Env) (limit : Nat) : Prop :=
   ∀ ft ∈ env.types.val, ft.params.val.length ≤ limit
 
@@ -71,6 +83,8 @@ theorem SignatureBounded.mono {env limit next} (h : SignatureBounded env limit) 
   have := h ft hf
   omega
 
+/-- Appending the types decoded by a type section keeps the signature bound at the cursor after
+the section. -/
 theorem SignatureBounded.of_types_added {env result added data start next}
     (h : SignatureBounded env start.val)
     (hadd : ModuleSections.TypesAdded env result added)

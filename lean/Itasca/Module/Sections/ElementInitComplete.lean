@@ -1,11 +1,21 @@
 import Itasca.Module.Sections.ElementInit
 import Itasca.Module.Const.ParserComplete
 
+/-!
+# Completeness of the element initializer parsers
+
+`module.decode_element_initializer.complete` and `module.decode_element_initializers.complete`:
+independently encoded initializers that are `ModuleConstants.Valid` at `initializerType` and
+allowed by the profile are accepted, and the declared functions gain their references.
+Soundness is in `Module/Sections/ElementInit`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 open ModuleBinary ModuleElements
 
+/-- `module.decode_element_initializer` accepts a valid, allowed `InitializerEncoding` span. -/
 theorem module.decode_element_initializer.complete {data : Slice U8} {pos next : Usize}
     {env : module.Env} {elem : types.ElemType} {expressions : Bool} {profile : ValidationProfile}
     {value : types.ConstExpr}
@@ -31,6 +41,8 @@ theorem module.decode_element_initializer.complete {data : Slice U8} {pos next :
     obtain ⟨r, hr, rfl⟩ := WP.spec_imp_exists hx
     exact hr
 
+/-- The initializer loop accepts the remaining valid initializers of a repetition span and
+appends them to `out`. -/
 theorem module.decode_element_initializers_loop.complete
     (data : Slice U8) (env : module.Env) (elem : types.ElemType) (expressions : Bool)
     (profile : ValidationProfile) (count : U32) (pos : Usize) (out : alloc.vec.Vec types.ConstExpr) (i : U32)
@@ -84,6 +96,7 @@ theorem module.decode_element_initializers_loop.complete
     · simpa [hvalues, List.append_assoc] using hactual
     · simpa only [List.flatMap_cons] using hadded.trans htail
 
+/-- `module.decode_element_initializers` accepts a vector span of valid, allowed initializers. -/
 theorem module.decode_element_initializers.complete
     (data : Slice U8) (env : module.Env) (elem : types.ElemType) (expressions : Bool)
     (profile : ValidationProfile) (pos next : Usize) (values : List types.ConstExpr)

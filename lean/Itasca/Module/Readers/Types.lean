@@ -1,12 +1,23 @@
 import Itasca.Module.Readers.Basic
 import Itasca.Profile.Types
 
+/-!
+# Limit, memory, table, global and function type readers
+
+Soundness specs for `module.decode_limits`, `module.decode_mem_type`, `module.decode_table_type`,
+`module.decode_global_type`, `module.decode_value_types` and `module.decode_func_type`. Results
+are `At` spans of the independent grammar, together with the limit bounds. The `allowed_spec` and
+`profile_spec` forms add the profile's value-type, reference-type and signature restrictions for
+both profiles. Completeness is in `Module/Readers/TypesComplete`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
 open ModuleBinary
 
+/-- `module.decode_limits` returns a `LimitsEncoding` span. -/
 @[step]
 theorem module.decode_limits.spec (data : Slice U8) (start : Usize) :
     module.decode_limits data start ⦃ r => ParserPost LimitsEncoding data start r ⦄ := by
@@ -58,6 +69,8 @@ theorem module.decode_limits.spec (data : Slice U8) (start : Usize) :
         · simp [module.decode_limits, hr, core.result.Result.Insts.CoreOpsTry.branch, ParserPost]
           split <;> simp_all [U8.ofNat, UScalar.ofNat, UScalar.ofNatCore]
 
+/-- `module.decode_global_type` returns a `GlobalTypeEncoding` span, whatever value types the
+profile admits. -/
 @[step]
 theorem module.decode_global_type.spec (data : Slice U8) (start : Usize)
     (profile : ValidationProfile := .Wasm1) :
@@ -89,6 +102,8 @@ theorem module.decode_global_type.spec (data : Slice U8) (start : Usize)
             · simp [module.decode_global_type, ht, hr, core.result.Result.Insts.CoreOpsTry.branch, ParserPost]
               split <;> simp_all [U8.ofNat, UScalar.ofNat, UScalar.ofNatCore]
 
+/-- `module.decode_mem_type` returns a `MemTypeEncoding` span whose limits are within
+`limits.MAX_MEMORY_PAGES`. -/
 @[step]
 theorem module.decode_mem_type.spec (data : Slice U8) (start : Usize) :
     module.decode_mem_type data start ⦃ r => match r with
@@ -112,6 +127,8 @@ theorem module.decode_mem_type.spec (data : Slice U8) (start : Usize) :
           simp [module.decode_mem_type, hr, hv, core.result.Result.Insts.CoreOpsTry.branch]
           exact ⟨hd, hp rfl⟩
 
+/-- `module.decode_table_type` returns a `TableTypeEncoding` span whose limits are within
+`limits.MAX_TABLE_ELEMS`. -/
 @[step]
 theorem module.decode_table_type.spec (data : Slice U8) (start : Usize)
     (profile : ValidationProfile := .Wasm1) :
@@ -148,6 +165,7 @@ theorem module.decode_table_type.spec (data : Slice U8) (start : Usize)
 
 namespace ModuleBinary
 
+/-- A repetition span extends by one element at its end. -/
 theorem At.rep_snoc {α : Type} {R : α → List U8 → Prop} {data start pos next xs x}
     (h : At (Rep R) data start xs pos) (h' : At R data pos x next) :
     At (Rep R) data start (xs ++ [x]) next := by
@@ -157,6 +175,7 @@ theorem At.rep_snoc {α : Type} {R : α → List U8 → Prop} {data start pos ne
 
 end ModuleBinary
 
+/-- The counted loop returns `count` value types forming a `Rep ValueTypeEncoding` span. -/
 theorem module.decode_value_types_loop0.spec (data : Slice U8) (start : Usize)
     (count : U32) (hb : start.val ≤ data.length) (profile : ValidationProfile := .Wasm1) :
     module.decode_value_types_loop0 data profile count (alloc.vec.Vec.new types.ValueType) start 0#u32 ⦃ r =>
@@ -199,6 +218,7 @@ theorem module.decode_value_types_loop0.spec (data : Slice U8) (start : Usize)
             exact hrep.rep_snoc ⟨_, rfl, hs⟩
   · exact ⟨by scalar_tac, rfl, by simp, ⟨[], .nil, Wasm1.BytesAt.nil data start hb⟩⟩
 
+/-- `module.decode_value_types` without a bound returns a `VecEncoding ValueTypeEncoding` span. -/
 @[step]
 theorem module.decode_value_types.spec (data : Slice U8) (start : Usize)
     (profile : ValidationProfile := .Wasm1) :
@@ -232,7 +252,8 @@ theorem module.decode_value_types_loop1.eq_loop0 (data : Slice U8) (count : U32)
     module.decode_value_types_loop1 data profile count out pos i =
       module.decode_value_types_loop0 data profile count out pos i := rfl
 
-/-- The same independent vector grammar describes every bound selection. -/
+/-- `module.decode_value_types` returns the same vector span for every choice of length bound, and
+the result respects the bound when there is one. -/
 theorem module.decode_value_types.profile_spec (data : Slice U8) (start : Usize)
     (bound : Option (Usize × error.OpError)) (profile : ValidationProfile := .Wasm1) :
     module.decode_value_types data start bound profile ⦃ r => match r with
@@ -280,6 +301,8 @@ theorem module.decode_value_types.profile_spec (data : Slice U8) (start : Usize)
                   have hc := U32.cast_Usize_val_eq count
                   scalar_tac
 
+/-- Under Wasm 1.0, `module.decode_func_type` returns a `FuncTypeEncoding` span with at most one
+result. -/
 @[step]
 theorem module.decode_func_type.spec (data : Slice U8) (start : Usize) :
     module.decode_func_type data start .Wasm1 ⦃ r => match r with
@@ -325,8 +348,9 @@ theorem module.decode_func_type.spec (data : Slice U8) (start : Usize) :
           exact he (UScalar.eq_of_val_eq h)
         simp [module.decode_func_type, hr, hv, core.result.Result.Insts.CoreOpsTry.branch]
 
-/-- Type decoding shares its binary contract across profiles, and records
-language restrictions separately from implementation signature bounds. -/
+/-- `module.decode_func_type` returns a `FuncTypeEncoding` span in either profile. The result
+satisfies the profile's language restriction (`Profile.FuncType`) and the implementation
+signature cap (`Profile.FuncTypeWithinLimits`) as separate facts. -/
 theorem module.decode_func_type.profile_spec (data : Slice U8) (start : Usize)
     (profile : ValidationProfile) :
     module.decode_func_type data start profile ⦃ r => match r with
@@ -383,6 +407,8 @@ theorem module.decode_func_type.profile_spec (data : Slice U8) (start : Usize)
               exact he (UScalar.eq_of_val_eq h)
             simp [module.decode_func_type, hr, hv, core.result.Result.Insts.CoreOpsTry.branch]
 
+/-- `module.decode_global_type` returns a `GlobalTypeEncoding` span whose value type the profile
+allows. -/
 theorem module.decode_global_type.allowed_spec (data : Slice U8) (start : Usize)
     (profile : ValidationProfile := .Wasm1) :
     module.decode_global_type data start profile ⦃ r => match r with
@@ -416,6 +442,7 @@ theorem module.decode_global_type.allowed_spec (data : Slice U8) (start : Usize)
               split <;> simp_all [U8.ofNat, UScalar.ofNat, UScalar.ofNatCore]
 
 
+/-- `module.decode_table_type.spec` plus the profile allowing the element type. -/
 theorem module.decode_table_type.allowed_spec (data : Slice U8) (start : Usize)
     (profile : ValidationProfile := .Wasm1) :
     module.decode_table_type data start profile ⦃ r => match r with
@@ -520,7 +547,8 @@ private theorem module.decode_value_types.allowed_only_spec (data : Slice U8) (s
       · simpa [module.decode_value_types, hr, core.result.Result.Insts.CoreOpsTry.branch,
           lift, hbig, module.decode_value_types_loop1.eq_loop0, hloop] using ha
 
-/-- A vector retains both its exact byte grammar and all selected-profile types. -/
+/-- `module.decode_value_types.profile_spec` plus the profile allowing every returned value
+type. -/
 theorem module.decode_value_types.allowed_spec (data : Slice U8) (start : Usize)
     (bound : Option (Usize × error.OpError)) (profile : ValidationProfile) :
     module.decode_value_types data start bound profile ⦃ r => match r with
@@ -598,8 +626,8 @@ private theorem module.decode_func_type.allowed_only_spec (data : Slice U8) (sta
     · have htag : tag.val ≠ 96 := fun h => he (UScalar.eq_of_val_eq h)
       simp [module.decode_func_type, hr, htag, core.result.Result.Insts.CoreOpsTry.branch]
 
-/-- The type-section parser additionally retains profile restrictions on every
-parameter and result type. -/
+/-- `module.decode_func_type.profile_spec` plus the profile allowing every parameter and result
+type. -/
 theorem module.decode_func_type.allowed_spec (data : Slice U8) (start : Usize)
     (profile : ValidationProfile) :
     module.decode_func_type data start profile ⦃ r => match r with

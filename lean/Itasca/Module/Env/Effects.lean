@@ -7,15 +7,25 @@ import Itasca.Module.Sections.Element
 import Itasca.Module.Sections.Export
 import Itasca.Module.Sections.DataCount
 
+/-!
+# Per-section effects
+
+`Effect` relates one declaration section to its effect: the section's independent payload
+encoding, the checked update of the environment, and the update of the `Declarations` record.
+`Effect.allowed` and `Effect.phase` show that an effect preserves the profile's type
+restrictions and advances the section phase.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleEnv
 
 open ModuleBinary ModuleSections
 
-/-- Each section has an independent payload encoding and a checked semantic
-state update. Later-section emptiness supplies the distinction between an
-initial declaration vector and an append performed by the extracted parser. -/
+/-- Decoding the section with id `id` at `pos` takes `env` to `result` and `before` to the final
+declarations, ending at `next`. Each constructor pairs the payload encoding with the section's
+checked environment update. Emptiness of later sections distinguishes an initial declaration
+vector from an append performed by the extracted parser. -/
 inductive Effect (data : Slice U8) (pos : Usize) (env : module.Env)
     (before : Declarations) : U8 → Usize → module.Env → Declarations →
       (profile : optParam ValidationProfile .Wasm1) → Prop where
@@ -71,7 +81,7 @@ theorem Effect.id_range {profile} {data pos env before id next result after}
     (h : Effect (profile := profile) data pos env before id next result after) : 1 ≤ (sectionRank id).val ∧ (sectionRank id).val ≤ 10 := by
   cases h <;> decide
 
-/-- Decoded section transitions retain the selected profile's type guards. -/
+/-- A section effect preserves the profile's type restrictions on the declarations. -/
 theorem Effect.allowed {profile data pos env before id next result after}
     (h : Effect data pos env before id next result after profile)
     (hb : ModuleTypesAllowed profile (before.module [] [])) :
@@ -108,6 +118,7 @@ theorem Effect.allowed {profile data pos env before id next result after}
         (show ValueTypeAllowed profile .I32 from by cases profile <;> trivial)
   | dataCount => exact ⟨ht, hi, htable, hg, hc, he, hd⟩
 
+/-- A section effect in increasing section order advances the phase to that section's rank. -/
 theorem Effect.phase {profile} {data pos env before id next result after last}
     (h : Effect (profile := profile) data pos env before id next result after)
     (hp : Phase last before) (horder : last < (sectionRank id).val) : Phase (sectionRank id).val after := by

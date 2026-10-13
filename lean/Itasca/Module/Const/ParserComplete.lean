@@ -1,20 +1,32 @@
 import Itasca.Module.Const.Parser
 import Itasca.Module.Readers.BasicComplete
 
+/-!
+# Completeness of the constant expression parser
+
+`module.decode_const_expr.complete`: the parser accepts every independently encoded initializer
+that is `Valid` at the expected type and allowed by the profile. The helpers
+`module.expect_const_type`, `module.read_expr_end` and `module.const_global` have `.complete`
+lemmas. Soundness is in `Module/Const/Parser`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
+/-- `module.expect_const_type` accepts equal types. -/
 theorem module.expect_const_type.complete (ty : types.ValueType) :
     module.expect_const_type ty ty = .ok (.Ok ()) := by
   cases ty <;> simp [module.expect_const_type, core.cmp.PartialEq.ne.trait_default,
     core.cmp.PartialEq.ne.default, types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
 
+/-- `module.read_expr_end` accepts the byte `0x0b`. -/
 theorem module.read_expr_end.complete {data : Slice U8} {pos next : Usize}
     (h : Wasm1.BytesAt data pos [0x0B#u8] next) :
     module.read_expr_end data pos = .ok (.Ok next) := by
   simp [module.read_expr_end, h.read_byte, core.result.Result.Insts.CoreOpsTry.branch, global_simps]
 
+/-- `module.const_global` accepts an in-range imported immutable global. -/
 theorem module.const_global.complete (env : module.Env) (idx : U32) (wanted : types.GlobalType)
     (hi : idx.val < env.global_types.val.length) (hgt : env.global_types.val[idx.val] = wanted)
     (hn : idx.val < env.num_imported_globals.val) (hm : wanted.mutability = .Const) :
@@ -37,7 +49,7 @@ theorem module.const_global.complete (env : module.Env) (idx : U32) (wanted : ty
   obtain ⟨_, hr, rfl⟩ := WP.spec_imp_exists hs
   exact hr
 
-/-- Every independently encoded valid initializer is accepted at its exact end. -/
+/-- `module.decode_const_expr` accepts a valid, allowed `ConstEncoding` span and returns its end. -/
 theorem module.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
     {env : module.Env} {expr : types.ConstExpr} {ty : types.ValueType}
     (hb : ModuleBinary.At ModuleBinary.ConstEncoding data pos expr next)

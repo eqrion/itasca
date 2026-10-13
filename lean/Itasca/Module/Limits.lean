@@ -1,19 +1,31 @@
 import Itasca.Module.Code.Encoding
 import Itasca.Profile.CodeEntry
 
+/-!
+# Resource bounds on module encodings
+
+Strengthens the independent module grammar with the implementation caps that completeness needs:
+`CodeEncodingWithinLimits` bounds one code entry, `ModuleEncodingWithinLimits` bounds the whole
+encoding and every entry, and `ModuleSignaturesWithinLimits` bounds signature sizes. The caps
+are `limits.MAX_*` constants and are separate from language validity. The file also lifts
+relation weakening (`.imp`) through the grammar combinators.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleBinary
 
-/-- The implementation caps apply to flattened declared locals and the exact
-instruction bytes after the local-declaration vector, including the final end.
-The size prefix and locals bytes are not counted as instruction-body bytes. -/
+/-- A code entry encoding whose flattened declared locals and instruction bytes stay within
+`limits.MAX_LOCALS` and `limits.MAX_FUNCTION_BYTES`. The instruction bytes follow the locals
+vector and include the final `end`. The size prefix and locals bytes do not count toward the
+body cap. -/
 def CodeEncodingWithinLimits (entry : Code) (bytes : List U8) : Prop :=
   entry.declared.length ≤ limits.MAX_LOCALS.val ∧
   ∃ size locals body, Leb128.Encoding size (locals.length + body.length) ∧
     VecEncoding LocalEncoding entry.locals locals ∧ BodyEncoding entry.body body ∧
     body.length ≤ limits.MAX_FUNCTION_BYTES.val ∧ bytes = size ++ locals ++ body
 
+/-- Forgetting the caps leaves a plain `CodeEncoding`. -/
 theorem CodeEncodingWithinLimits.encoding {entry bytes} (h : CodeEncodingWithinLimits entry bytes) :
     CodeEncoding entry bytes := by
   obtain ⟨_, size, locals, body, hs, hl, hb, _, he⟩ := h
@@ -66,20 +78,23 @@ theorem ModuleEncodingWith.guards {profile R raw bytes}
   obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, ha, hc⟩ := h
   exact ⟨ha, hc⟩
 
-/-- This strengthens only the code entries' exact encoding witnesses. It
-retains padded LEB encodings and constrains the actual encoded body bytes. -/
+/-- A module encoding of at most `limits.MAX_MODULE_BYTES` bytes whose code entries satisfy
+`CodeEncodingWithinLimits`. Only the code entries' encoding witnesses are strengthened. Padded
+LEB encodings stay admitted, and the caps constrain the actual encoded body bytes. -/
 def ModuleEncodingWithinLimits (raw : Module) (bytes : List U8)
     (profile : ValidationProfile := .Wasm1) : Prop :=
   bytes.length ≤ limits.MAX_MODULE_BYTES.val ∧
     ModuleEncodingWith (Profile.CodeEncodingWithinLimits profile) raw bytes profile
 
+/-- Forgetting the caps leaves a `ModuleEncodingWith` the profile's plain code encoding. -/
 theorem ModuleEncodingWithinLimits.encoding {profile raw bytes}
     (h : ModuleEncodingWithinLimits raw bytes profile) :
     ModuleEncodingWith (Profile.CodeEncoding profile) raw bytes profile :=
   h.2.imp (fun _ _ hc => hc.encoding)
 
-/-- Signature allocation caps are explicit completeness conditions rather than
-language restrictions; Wasm 1.0 keeps its existing unbounded parameter behavior. -/
+/-- Every signature in the type section satisfies `Profile.FuncTypeWithinLimits`. This is an
+implementation cap on parameters and results, required for completeness only. It is trivial
+for Wasm 1.0 and bounds both counts for Wasm 2.0. -/
 def ModuleSignaturesWithinLimits (raw : Module) (profile : ValidationProfile) : Prop :=
   ∀ ft ∈ raw.types, Profile.FuncTypeWithinLimits profile ft
 

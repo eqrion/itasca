@@ -1,13 +1,21 @@
 import Itasca.Module.Env.Slots
 
+/-!
+# Ordered section chain
+
+`Chain` restates the independent prefix grammar as the ten ordered optional declaration slots
+followed by trailing custom sections, indexed by how many slots have been passed.
+`PrefixEncoding.chain` converts a `PrefixEncoding` into a `Chain` for the parser's run order.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleEnv
 
 open ModuleBinary
 
-/-- The ten ordered optional declaration slots, followed by all custom bytes
-consumed before the first code/data header. -/
+/-- The ten ordered optional declaration slots, followed by all custom bytes consumed before the
+first code or data section. -/
 inductive Chain (raw : ModuleBinary.Module) :
     Nat → List U8 → (profile : optParam ValidationProfile .Wasm1) → Prop where
   | done {profile bytes} : CustomsEncoding bytes → Chain raw 10 bytes profile
@@ -15,6 +23,8 @@ inductive Chain (raw : ModuleBinary.Module) :
       n < 10 → (sectionRank id).val = n + 1 → SlotEncoding raw id first profile → Chain raw (n + 1) rest profile →
       Chain raw n (first ++ rest) profile
 
+/-- A padded section encoding is a slot encoding when the absent value is an empty slot and
+every present payload is a valid payload for that section. -/
 theorem padded_slot {profile} {α : Type} {R : α → List U8 → Prop} {raw : ModuleBinary.Module}
     {id : U8} {value absent : α} {bytes : List U8}
     (h : PaddedEncoding id R absent value bytes)
@@ -28,8 +38,8 @@ theorem padded_slot {profile} {α : Type} {R : α → List U8 → Prop} {raw : M
     obtain ⟨size, payload, hsize, hp, rfl⟩ := hsection
     exact .inr ⟨size, payload, hsize, hpayload payload hp, rfl⟩
 
-/-- Repackage the existing independent prefix grammar for ordered execution;
-all custom-section bytes and all optional empty slots are retained. -/
+/-- A `PrefixEncoding` after the module header is a `Chain` starting at slot `0`, keeping all
+custom-section bytes and all empty slots. -/
 theorem PrefixEncoding.chain {profile} {decls : Declarations} {bytes : List U8}
     (h : PrefixEncoding decls bytes profile) (codes : List ModuleBinary.Code) (datas : List ModuleBinary.Data) :
     ∃ suffix, Chain (decls.module codes datas) 0 suffix profile ∧ bytes = magicVersion ++ suffix := by

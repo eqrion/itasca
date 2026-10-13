@@ -1,12 +1,19 @@
 import Itasca.Module.Readers.Basic
 
+/-!
+# Module header reader
+
+`module.read_header.spec`: an accepted header is the magic and version bytes at offset 0. The
+completeness counterpart is in `Module/Readers/FramingComplete`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
 open ModuleBinary
 
-/-- The public module header reader checks the exact magic and version bytes. -/
+/-- An accepted result of `module.read_header` consumes exactly the magic and version bytes. -/
 theorem module.read_header.spec (data : Slice U8) :
     module.read_header data ⦃ r => match r with
       | .Ok next => Wasm1.BytesAt data 0#usize magicVersion next

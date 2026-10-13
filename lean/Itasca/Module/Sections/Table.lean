@@ -1,9 +1,19 @@
 import Itasca.Module.Sections.Type
 
+/-!
+# Table section parser
+
+Soundness of `module.decode_table_section` and its loop. `TablesAdded` says the environment gains
+the decoded table types. The span is a `VecEncoding TableTypeEncoding`, each table has limits
+within the table cap and an element type the profile allows, and Wasm 1.0 admits at most one
+table. Completeness is in `Module/Sections/TableComplete`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleBinary
 
+/-- A table type encoding consumes at least one byte. -/
 theorem At.tableType_progress {data start ty next} (h : At TableTypeEncoding data start ty next) :
     start.val < next.val := by
   obtain ⟨bytes, he, hs⟩ := h
@@ -16,6 +26,7 @@ end Itasca.ModuleBinary
 
 namespace Itasca.ModuleSections
 
+/-- `result` is `env` with the table types `added` appended and nothing else changed. -/
 def TablesAdded (env result : module.Env) (added : List types.TableType) : Prop :=
   result = { env with table_types := result.table_types } ∧ result.table_types.val = env.table_types.val ++ added
 
@@ -25,6 +36,8 @@ namespace Itasca
 
 open ModuleBinary ModuleSections
 
+/-- The table loop adds `count` table types forming a `Rep TableTypeEncoding` span, with valid
+limits and allowed element types. -/
 @[step]
 theorem module.decode_table_section_loop.spec (data : Slice U8) (env : module.Env)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
@@ -93,6 +106,8 @@ theorem module.decode_table_section_loop.spec (data : Slice U8) (env : module.En
   · exact ⟨by simp, [], by simp, ⟨by cases env; rfl, by simp⟩,
       ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, by simp, hsize, fun _ => Nat.le_max_left _ _⟩
 
+/-- `module.decode_table_section` adds the table types of a `VecEncoding TableTypeEncoding` span,
+with valid limits and allowed element types. -/
 @[step]
 theorem module.decode_table_section.spec (data : Slice U8) (pos : Usize) (env : module.Env)
     (hsize : env.table_types.val.length ≤ pos.val)

@@ -10,14 +10,24 @@ import Itasca.Module.Sections.ImportsComplete
 import Itasca.Module.Sections.ElementComplete
 import Itasca.Module.Sections.ExportComplete
 
+/-!
+# Section dispatch completeness
+
+`module.decode_env_section.profile_complete` shows that `module.decode_env_section` accepts the
+independent encoding of any declaration section whose contents are valid, and returns the
+`Effect` that updates the declarations. `module.decode_env_section.complete` is its Wasm 1.0
+form.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
 open ModuleBinary ModuleSections ModuleEnv
 
-/-- Each ordered raw slot yields the actual dispatcher result and its exact
-semantic update. No parser execution is assumed in the premises. -/
+/-- For an independently encoded section payload with valid contents, `module.decode_env_section`
+returns success at the end of the payload together with the `Effect` of the matching slot update.
+The premises do not assume any parser execution. -/
 theorem module.decode_env_section.profile_complete (data : Slice U8) (pos : Usize) (id : U8)
     (env : module.Env) (decls : Declarations) (raw : ModuleBinary.Module) (next : Usize) (profile : ValidationProfile)
     (hlo : 1 ≤ (sectionRank id).val) (hhi : (sectionRank id).val ≤ 10)
@@ -108,6 +118,7 @@ theorem module.decode_env_section.profile_complete (data : Slice U8) (pos : Usiz
     refine ⟨{env with data_count := some idx}, by simpa [module.decode_env_section, global_simps] using hread, ?_⟩
     simpa [update, hcount, sectionRank] using (Effect.dataCount (before := decls) rfl rfl hbytes)
 
+/-- `module.decode_env_section.profile_complete` for Wasm 1.0. -/
 theorem module.decode_env_section.complete (data : Slice U8) (pos : Usize) (id : U8)
     (env : module.Env) (decls : Declarations) (raw : ModuleBinary.Module) (next : Usize)
     (hlo : 1 ≤ id.val) (hhi : id.val ≤ 9)

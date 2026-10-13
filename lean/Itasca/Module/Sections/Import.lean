@@ -2,13 +2,24 @@ import Itasca.Module.Sections.Function
 import Itasca.Module.Env.Declarations
 import Itasca.Module.Readers.Names
 
+/-!
+# Single import parser
+
+Soundness of `module.decode_import`. `ImportAdded` says that the environment gains the import
+and updates only the index space of its kind, with the limits, table count and profile guards of
+that kind. The decoded bytes are an `ImportEncoding` span and the environment stays `Bounded`.
+Completeness is in `Module/Sections/ImportsComplete`.
+-/
+
 set_option maxHeartbeats 800000
 
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleSections
 
-/-- A single import updates just its own index space, preserving declaration order. -/
+/-- `result` is `env` with `entry` appended to the imports and to the index space of its kind.
+Functions must resolve their type, tables and memories satisfy their limits and count caps,
+and tables and globals use types the profile allows. -/
 def ImportAdded (env result : module.Env) (entry : module.Import)
     (profile : ValidationProfile := .Wasm1) : Prop :=
   result.imports.val = env.imports.val ++ [entry] ∧
@@ -32,6 +43,7 @@ def ImportAdded (env result : module.Env) (entry : module.Import)
       result.mem_types.val = env.mem_types.val ++ [mt] ∧ result.mem_types.val.length ≤ 1 ∧
       ModuleTranslation.LimitsValid mt.limits (2 ^ 16)
 
+/-- A module name, an import name and a descriptor span in sequence form an `ImportEncoding`. -/
 theorem import_encoded {data start p1 p2 next moduleName nm desc}
     (hm : ModuleBinary.At ModuleBinary.NameEncoding data start moduleName p1)
     (hn : ModuleBinary.At ModuleBinary.NameEncoding data p1 nm p2)
@@ -48,6 +60,8 @@ namespace Itasca
 
 open ModuleBinary ModuleSections
 
+/-- `module.decode_import` adds one import to the environment (`ImportAdded`), the bytes are its
+`ImportEncoding` span, and the environment stays within the byte bound. -/
 @[step]
 theorem module.decode_import.spec (data : Slice U8) (pos : Usize) (env : module.Env)
     (hbound : ModuleEnv.Bounded env pos.val) (profile : ValidationProfile := .Wasm1) :

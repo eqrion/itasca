@@ -1,13 +1,22 @@
 import Itasca.Module.Env.Run
 
+/-!
+# Section dispatch soundness
+
+Specification of `module.decode_env_section`, which dispatches on a section id to the per-section
+decoders. `module.decode_env_section.profile_spec` shows that every recognized section terminates,
+preserves the `Bounded` invariant, and on success yields the `Effect` of its section. The
+completeness counterpart is in `Module/Env/DispatchComplete`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
 open ModuleBinary ModuleSections ModuleEnv
 
-/-- Every recognized declaration section terminates, preserves allocation bounds,
-and returns its exact independent byte/semantic transition on success. -/
+/-- `module.decode_env_section` terminates for every section id, preserves `Bounded`, and on
+success returns the `Effect` that relates the section's bytes to the resulting environment. -/
 @[step]
 theorem module.decode_env_section.profile_spec (data : Slice U8) (pos : Usize) (id : U8)
     (env : module.Env) (before : Declarations) (profile : ValidationProfile) (hb : Bounded env pos.val) :
@@ -122,6 +131,7 @@ theorem module.decode_env_section.profile_spec (data : Slice U8) (pos : Usize) (
       constructor <;> assumption
   · simp
 
+/-- `module.decode_env_section.profile_spec` for Wasm 1.0. -/
 @[step]
 theorem module.decode_env_section.spec (data : Slice U8) (pos : Usize) (id : U8)
     (env : module.Env) (before : Declarations) (hb : Bounded env pos.val) :

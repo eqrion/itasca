@@ -1,6 +1,16 @@
 import Itasca.Module.Env.Requirements
 import Itasca.Module.Elab.SectionInversion
 
+/-!
+# Typing contexts of ready environments
+
+Consequences of `Ready` for the environment `env` and the raw module `raw`. Once a section has been
+processed, the environment's fields equal the raw module's, and the elaborated typing contexts
+(`contextOf raw`) agree with the translated caches of `env`. `Ready.moduleContext` gives the
+code-entry module context, and `Ready.matches` shows a fully ready environment matches the returned
+metadata of the raw module.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleEnv
@@ -31,8 +41,8 @@ theorem Ready.elements_context {raw last decls env} (h : Ready raw last decls en
   rw [← h.elements_eq hn]
   simp [EnvTranslation.elementTypes, rawElement, List.map_map]
 
-/-- An encoded data count identifies the final data space. When omitted, the
-independent binary condition rules out every data-index instruction in each body. -/
+/-- An encoded data count identifies the final data space. When it is omitted, the binary condition
+rules out every data-index instruction in each body. -/
 theorem Ready.data_context {raw last decls env} (h : Ready raw last decls env) (hn : 10 ≤ last)
     (hv : ModuleBinary.DataCountValid raw) (entry : ModuleBinary.Code) (hm : entry ∈ raw.codes) :
     (contextOf raw).DATAS = EnvTranslation.dataTypes env ∨ ModuleBinary.instructionsUseData entry.body = false := by
@@ -71,6 +81,8 @@ theorem Ready.globals_context {raw last decls env} (h : Ready raw last decls env
   symm
   simpa [contextOf, h.importTypes_eq (by omega), h.globals_eq hn] using globals_cache h.represents.cache
 
+/-- Once the global section is processed, the environment is a code-entry module context for the
+elaborated typing context. -/
 theorem Ready.moduleContext {raw last decls env} (h : Ready raw last decls env) (hn : 6 ≤ last) :
     CodeEntry.ModuleContext env (contextOf raw) :=
   ⟨by simp [contextOf, h.types_eq (by omega)], h.funcs_context (by omega),
@@ -120,8 +132,8 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleEnv
 
-/-- A fully decoded declaration prefix and exact data realization preserve every
-returned field of the independent module, including the merged index spaces. -/
+/-- A fully decoded declaration prefix and a tail with the raw data segments match every returned
+field of the raw module, including the merged index spaces. -/
 theorem Ready.matches {raw : ModuleBinary.Module} {decls : Declarations} {env : module.Env}
     (h : Ready raw 10 decls env) (tail : module.Tail)
     (htail : tail.data.val.map ModuleData.raw = raw.data) :

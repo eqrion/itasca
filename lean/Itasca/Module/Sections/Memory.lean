@@ -1,9 +1,19 @@
 import Itasca.Module.Sections.Type
 
+/-!
+# Memory section parser
+
+Soundness of `module.decode_memory_section` and its loop. `MemoriesAdded` says the environment
+gains the decoded memory types. The span is a `VecEncoding MemTypeEncoding` whose limits are
+within 2^16 pages, and the environment never holds more than one memory unless it already did.
+Completeness is in `Module/Sections/MemoryComplete`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleBinary
 
+/-- A memory type encoding consumes at least one byte. -/
 theorem At.memType_progress {data start ty next} (h : At MemTypeEncoding data start ty next) :
     start.val < next.val := by
   obtain ⟨bytes, he, hs⟩ := h
@@ -15,6 +25,7 @@ end Itasca.ModuleBinary
 
 namespace Itasca.ModuleSections
 
+/-- `result` is `env` with the memory types `added` appended and nothing else changed. -/
 def MemoriesAdded (env result : module.Env) (added : List types.MemType) : Prop :=
   result = { env with mem_types := result.mem_types } ∧ result.mem_types.val = env.mem_types.val ++ added
 
@@ -24,6 +35,8 @@ namespace Itasca
 
 open ModuleBinary ModuleSections
 
+/-- The memory loop adds `count` memory types forming a `Rep MemTypeEncoding` span with valid
+limits. -/
 @[step]
 theorem module.decode_memory_section_loop.spec (data : Slice U8) (env : module.Env)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
@@ -85,6 +98,8 @@ theorem module.decode_memory_section_loop.spec (data : Slice U8) (env : module.E
   · exact ⟨by simp, [], by simp, ⟨by cases env; rfl, by simp⟩,
       ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, by simp, hsize, Nat.le_max_left _ _⟩
 
+/-- `module.decode_memory_section` adds the memory types of a `VecEncoding MemTypeEncoding` span
+with valid limits. -/
 @[step]
 theorem module.decode_memory_section.spec (data : Slice U8) (pos : Usize) (env : module.Env)
     (hsize : env.mem_types.val.length ≤ pos.val) :

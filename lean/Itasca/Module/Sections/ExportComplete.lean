@@ -2,10 +2,20 @@ import Itasca.Module.Sections.Export
 import Itasca.Module.Readers.NamesComplete
 import Mathlib.Data.List.Nodup
 
+/-!
+# Completeness of the export and start section parsers
+
+`module.decode_export_section.complete`: an independently encoded vector of exports with distinct
+names and valid descriptors is accepted, and the environment gains those exports
+(`ExportsAdded`). `module.decode_start_section.complete` accepts a start function without
+parameters or results. Soundness is in `Module/Sections/Export`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleSections
 
+/-- Export additions compose. -/
 theorem ExportsAdded.append {env middle result first rest}
     (hfirst : ExportsAdded env first middle) (hrest : ExportsAdded middle rest result) :
     ExportsAdded env (first ++ rest) result := by
@@ -18,6 +28,7 @@ end Itasca.ModuleSections
 namespace Itasca.ModuleBinary
 open ModuleSections
 
+/-- An export descriptor encoding splits into its kind byte and index. -/
 theorem At.export_desc_split {data pos desc next}
     (h : At ExportDescEncoding data pos desc next) :
     ∃ middle, At ByteEncoding data pos (descByte desc) middle ∧
@@ -29,6 +40,7 @@ theorem At.export_desc_split {data pos desc next}
       (show Wasm1.BytesAt data pos ([_] ++ indexBytes) next from hs).split
     exact ⟨middle, ⟨_, rfl, htag⟩, ⟨indexBytes, hi, hindex⟩⟩
 
+/-- An export encoding splits into its name, kind byte and index. -/
 theorem At.export_split {data pos entry next}
     (h : At ExportEncoding data pos entry next) :
     ∃ first middle, At NameEncoding data pos entry.name first ∧
@@ -45,6 +57,7 @@ end Itasca.ModuleBinary
 namespace Itasca
 open ModuleBinary ModuleSections
 
+/-- `module.export_name_taken` returns false for an unused name. -/
 theorem module.export_name_taken.fresh (env : module.Env) (nm : Slice U8)
     (h : nm.val ∉ env.exports.val.map (fun e => e.name.val)) :
     module.export_name_taken env nm = .ok false := by
@@ -53,12 +66,14 @@ theorem module.export_name_taken.fresh (env : module.Env) (nm : Slice U8)
   | false => exact hr
   | true => exact False.elim (h (ht.mp rfl))
 
+/-- `module.export_name_taken` returns true for an exported name. -/
 theorem module.export_name_taken.duplicate (env : module.Env) (nm : Slice U8)
     (h : nm.val ∈ env.exports.val.map (fun e => e.name.val)) :
     module.export_name_taken env nm = .ok true := by
   obtain ⟨taken, hr, ht⟩ := WP.spec_imp_exists (module.export_name_taken.spec env nm)
   simpa [ht.mpr h] using hr
 
+/-- `module.export_desc` accepts the kind byte and index of a valid descriptor. -/
 theorem module.export_desc.complete (env : module.Env) (desc : module.ExportDesc)
     (h : ExportDescValid env desc) :
     module.export_desc env (descByte desc) (descIndex desc) = .ok (.Ok desc) := by
@@ -71,6 +86,8 @@ theorem module.export_desc.complete (env : module.Env) (desc : module.ExportDesc
   obtain ⟨r, hr, rfl⟩ := WP.spec_imp_exists hs
   exact hr
 
+/-- `module.decode_start_section` accepts a `StartEncoding` span naming a function without
+parameters or results. -/
 theorem module.decode_start_section.complete (data : Slice U8) (pos : Usize)
     (env : module.Env) (idx : U32) (next : Usize)
     (h : At StartEncoding data pos (some idx) next)
@@ -91,8 +108,8 @@ theorem module.decode_start_section.complete (data : Slice U8) (pos : Usize)
   exact hr
 
 
-/-- Distinct names across the old prefix and remaining raw declarations ensure
-that each duplicate-name check takes the accepting branch. -/
+/-- The export loop accepts the remaining exports of a repetition span, given distinct names across
+the environment's exports and the remaining ones, and valid descriptors. -/
 theorem module.decode_export_section_loop.complete
     (data : Slice U8) (env : module.Env) (count : U32) (pos : Usize) (i : U32)
     (raw : List ModuleBinary.Export) (next : Usize)
@@ -184,6 +201,8 @@ theorem module.decode_export_section_loop.complete
             core.result.Result.Insts.CoreOpsTry.branch] using hloop
       · simpa using (ExportsAdded.snoc ExportsAdded.nil hadded).append hhistory
 
+/-- `module.decode_export_section` accepts a vector span of exports with distinct names and valid
+descriptors, starting from an environment without exports. -/
 theorem module.decode_export_section.complete (data : Slice U8) (pos : Usize)
     (env : module.Env) (raw : List ModuleBinary.Export) (next : Usize)
     (hb : At (VecEncoding ExportEncoding) data pos raw next)

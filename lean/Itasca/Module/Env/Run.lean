@@ -2,12 +2,21 @@ import Itasca.Module.Env.Effects
 import Itasca.Module.Sections.Tail
 import Itasca.Module.Readers.Header
 
+/-!
+# Ordered section runs
+
+`Run` is the history of sections decoded by the environment loop, each with its byte span and
+`Effect`, in strictly increasing section order. Custom sections may appear between them.
+`Run.phase`, `Run.span` and `Run.id_bounds` give the phase, byte-span and rank facts of a run.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleEnv
 
-/-- An ordered history of decoded sections. The judgments record bytes and
-semantic changes rather than calls to the extracted parser. -/
+/-- An ordered history of decoded sections from the initial environment and declarations to the
+final ones, ending at position `next` after a section of rank `id`. It records bytes and semantic
+changes rather than calls to the extracted parser. -/
 inductive Run (data : Slice U8) (initial : module.Env) (decls : Declarations)
     (start : Usize) (initialId : U8) : module.Env → Declarations → Usize → U8 →
       (profile : optParam ValidationProfile .Wasm1) → Prop where
@@ -23,6 +32,7 @@ inductive Run (data : Slice U8) (initial : module.Env) (decls : Declarations)
       Effect (profile := profile) data first before beforeDecls id next after afterDecls →
       Run (profile := profile) data initial decls start initialId after afterDecls next (ModuleBinary.sectionRank id)
 
+/-- A run keeps the declarations in phase, ending at the last section's rank. -/
 theorem Run.phase {profile} {data initial decls start initialId after afterDecls next id}
     (h : Run (profile := profile) data initial decls start initialId after afterDecls next id)
     (hp : Phase initialId.val decls) : Phase id.val afterDecls := by
@@ -31,6 +41,7 @@ theorem Run.phase {profile} {data initial decls start initialId after afterDecls
   | custom _ _ ih => exact ih
   | step _ horder _ he ih => exact he.phase ih horder
 
+/-- A run advances the position within the input. -/
 theorem Run.span {profile} {data initial decls start initialId after afterDecls next id}
     (h : Run (profile := profile) data initial decls start initialId after afterDecls next id)
     (hstart : start.val ≤ data.length) : start.val ≤ next.val ∧ next.val ≤ data.length := by
@@ -39,6 +50,7 @@ theorem Run.span {profile} {data initial decls start initialId after afterDecls 
   | custom _ hb ih => have := hb.span; omega
   | step _ _ hh _ ih => have := hh.span; omega
 
+/-- A run never lowers the last-seen section rank. -/
 theorem Run.id_bounds {profile} {data initial decls start initialId after afterDecls next id}
     (h : Run (profile := profile) data initial decls start initialId after afterDecls next id)
     (hstart : initialId.val ≤ 10) : initialId.val ≤ id.val ∧ id.val ≤ 10 := by

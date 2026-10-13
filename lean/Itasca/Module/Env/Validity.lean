@@ -1,6 +1,14 @@
 import Itasca.Module.Env.Effects
 import Itasca.Module.Env.NameFacts
 
+/-!
+# Validity of decoded environments
+
+`Effect.valid` shows that each section effect, applied in increasing section order, preserves
+`Valid`. The per-section steps are `ImportsAdded.valid` and `ExportsAdded.valid`, and the
+helpers `Early` and `SameCore` capture which parts of the environment a section leaves alone.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleEnv
@@ -115,7 +123,7 @@ end Itasca.ModuleSections
 
 namespace Itasca.ModuleEnv
 
-/-- Later metadata sections leave every index-space meaning unchanged. -/
+/-- Later sections leave the function, table, memory and global index spaces unchanged. -/
 structure SameCore (env result : module.Env) : Prop where
   funcs : result.func_types = env.func_types
   tables : result.table_types = env.table_types
@@ -223,8 +231,8 @@ namespace Itasca.ModuleEnv
 
 open ModuleBinary ModuleSections
 
-/-- The semantic checks carried by the ordered section history establish all
-stored environment obligations, including names, uniqueness, and initializers. -/
+/-- A section effect in increasing section order preserves `Valid`, including name well-formedness,
+export uniqueness and initializer validity. -/
 theorem Effect.valid {profile} {data pos env before id next result after last}
     (h : Effect (profile := profile) data pos env before id next result after)
     (hr : Represents env before) (hv : Valid env profile)

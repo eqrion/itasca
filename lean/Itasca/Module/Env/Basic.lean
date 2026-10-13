@@ -4,27 +4,42 @@ import Itasca.Module.Env.References
 import Itasca.Module.Env.Externals
 import Itasca.Profile.Types
 
+/-!
+# Decoded module environments
+
+Invariants of the `module.Env` built by `module.validate_env`. `Cache` says the merged index
+spaces are imports followed by definitions, `Valid` collects the semantic checks that can be
+read off the environment, and `Bounded` tracks the cursor-relative size bounds used for
+overflow-free arithmetic. `module.Env.new.spec` shows the empty environment satisfies all three.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleEnv
 
+/-- The type indices of the function imports, in import order. -/
 def importedFuncs (imports : List module.Import) : List U32 :=
   imports.filterMap fun entry => match entry.desc with | .Func idx => some idx | _ => none
 
+/-- The types of the global imports, in import order. -/
 def importedGlobals (imports : List module.Import) : List types.GlobalType :=
   imports.filterMap fun entry => match entry.desc with | .Global gt => some gt | _ => none
 
+/-- The types of the table imports, in import order. -/
 def importedTables (imports : List module.Import) : List types.TableType :=
   imports.filterMap fun entry => match entry.desc with | .Table tt => some tt | _ => none
 
+/-- The types of the memory imports, in import order. -/
 def importedMems (imports : List module.Import) : List types.MemType :=
   imports.filterMap fun entry => match entry.desc with | .Memory mt => some mt | _ => none
 
+/-- Type index `idx` is in range of `typeList` and denotes the function type `ft`. -/
 def Resolves (typeList : List types.FuncType) (idx : U32) (ft : types.FuncType) : Prop :=
   ∃ hi : idx.val < typeList.length, typeList[idx.val] = ft
 
-/-- The environment's caches preserve all imported and declared index spaces.
-The table/memory suffixes stay explicit because the runtime cache merges them. -/
+/-- The environment's merged index spaces are imports followed by definitions. The defined
+tables and memories are explicit parameters because the environment stores only the merged
+lists. -/
 structure Cache (env : module.Env) (tables : List types.TableType) (memories : List types.MemType) : Prop where
   funcs : List.Forall₂ (Resolves env.types.val)
     (importedFuncs env.imports.val ++ env.func_type_indices.val) env.func_types.val
@@ -34,8 +49,8 @@ structure Cache (env : module.Env) (tables : List types.TableType) (memories : L
   tables : env.table_types.val = importedTables env.imports.val ++ tables
   memories : env.mem_types.val = importedMems env.imports.val ++ memories
 
-/-- All semantic checks that are stored in, or derivable from, the returned
-module environment. Byte-format evidence is kept separately. -/
+/-- The semantic checks that are stored in, or derivable from, the environment under `profile`.
+Byte-format evidence is tracked separately. -/
 structure Valid (env : module.Env) (profile : ValidationProfile := .Wasm1) : Prop where
   types : ∀ ft ∈ env.types.val, Profile.FuncTypeAdmissible profile ft
   tables : ∀ tt ∈ env.table_types.val, ModuleTranslation.LimitsValid tt.limits (2 ^ 32 - 1)
@@ -53,7 +68,8 @@ structure Valid (env : module.Env) (profile : ValidationProfile := .Wasm1) : Pro
   elements : ∀ entry ∈ env.elements.val, ModuleSegments.elementValid env entry
   references : ModuleReferences.Coherent env
 
-/-- Allocation and counter arithmetic use a separate cursor accounting invariant. -/
+/-- Every list length and counter in the environment is at most the byte cursor `pos`, which
+keeps allocation and counter arithmetic within range. -/
 structure Bounded (env : module.Env) (pos : Nat) : Prop where
   types : env.types.val.length ≤ pos
   imports : env.imports.val.length ≤ pos
@@ -93,6 +109,8 @@ theorem Cache.func_arity {env tables memories} (h : Cache env tables memories)
     (ht : ∀ ft ∈ env.types.val, ft.results.val.length ≤ 1) :
     ∀ ft ∈ env.func_types.val, ft.results.val.length ≤ 1 := h.func_property ht
 
+/-- In a valid cached environment, the stored and cached function signatures are admitted by the
+profile. -/
 theorem Valid.environment {profile env tables memories} (hv : Valid env profile)
     (hc : Cache env tables memories) : Profile.Environment profile env := by
   have ht : ∀ ft ∈ env.types.val, Profile.FuncType profile ft := by
@@ -100,6 +118,8 @@ theorem Valid.environment {profile env tables memories} (hv : Valid env profile)
     exact ((Profile.funcTypeAdmissible_iff profile ft).mp (hv.types ft hm)).1
   exact ⟨ht, hc.func_property ht⟩
 
+/-- In a valid cached environment, the stored and cached signatures also respect the completeness
+limits. -/
 theorem Valid.environmentWithinLimits {profile env tables memories} (hv : Valid env profile)
     (hc : Cache env tables memories) : Profile.EnvironmentWithinLimits profile env := by
   have ht : ∀ ft ∈ env.types.val, Profile.FuncTypeWithinLimits profile ft := by
@@ -118,6 +138,7 @@ theorem Cache.import_indices {env tables memories} (h : Cache env tables memorie
   rw [he] at hr
   exact hr.1
 
+/-- Every import of a cached environment has a resolved external type. -/
 theorem Cache.imports_resolve {env tables memories} (h : Cache env tables memories) :
     ∃ xts, List.Forall₂ (ModuleExternals.ImportResolves env) env.imports.val xts := by
   have hb := h.import_indices
@@ -153,6 +174,7 @@ end Itasca.ModuleEnv
 
 namespace Itasca
 
+/-- The empty environment is cached, valid and bounded by `0`. -/
 @[step]
 theorem module.Env.new.spec : module.Env.new ⦃ env =>
     ModuleEnv.Cache env [] [] ∧ ModuleEnv.Valid env ∧ ModuleEnv.Bounded env 0 ⦄ := by

@@ -1,12 +1,21 @@
 import Itasca.Module.Readers.Utf8Complete
 import Itasca.Module.Readers.Names
 
+/-!
+# Completeness of name readers
+
+Acceptance of `module.decode_name` and `module.decode_custom_section` from independent name
+encodings (`.complete`, and `.complete_raw` for a name given as a list). Strict UTF-8 acceptance
+comes from `Module/Readers/Utf8Complete`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 open ModuleBinary
 
-/-- Name framing and byte copying preserve the UTF-8 scanner's exact reply. -/
+/-- Given a byte vector span and the UTF-8 scanner's reply on the copied name,
+`module.decode_name` returns that reply's verdict with the name and cursor. -/
 theorem module.decode_name.from_utf8 (data : Slice U8) (pos : Usize)
     (nm : alloc.vec.Vec U8) (next : Usize)
     (h : At ByteVecEncoding data pos nm.val next)
@@ -35,7 +44,7 @@ theorem module.decode_name.from_utf8 (data : Slice U8) (pos : Usize)
   exact hr
 
 
-/-- Independent name encoding suffices for the exact parser result. -/
+/-- `module.decode_name` accepts a `NameEncoding` span and returns the name and cursor. -/
 theorem module.decode_name.complete (data : Slice U8) (pos : Usize)
     (nm : alloc.vec.Vec U8) (next : Usize) (h : At NameEncoding data pos nm.val next) :
     module.decode_name data pos = .ok (.Ok (nm, next)) := by
@@ -43,6 +52,8 @@ theorem module.decode_name.complete (data : Slice U8) (pos : Usize)
   exact module.decode_name.from_utf8 data pos nm next ⟨bytes, hvec, hs⟩ (.Ok ())
     (module.validate_utf8.complete _ (by simpa [alloc.vec.Vec.deref] using hutf8))
 
+/-- `module.decode_name.complete` for a name given as a list: the returned vector has those
+bytes. -/
 theorem module.decode_name.complete_raw (data : Slice U8) (pos : Usize)
     (nm : List U8) (next : Usize) (h : At NameEncoding data pos nm next) :
     ∃ value, module.decode_name data pos = .ok (.Ok (value, next)) ∧ value.val = nm := by
@@ -54,6 +65,7 @@ theorem module.decode_name.complete_raw (data : Slice U8) (pos : Usize)
   let value := alloc.vec.Vec.from nm hsize
   exact ⟨value, module.decode_name.complete data pos value next (by simpa [value] using h), by simp [value]⟩
 
+/-- `module.decode_custom_section` accepts a name span ending before `last`. -/
 theorem module.decode_custom_section.complete (data : Slice U8) (pos next last : Usize)
     (nm : alloc.vec.Vec U8) (h : At NameEncoding data pos nm.val next)
     (hbefore : next.val ≤ last.val) :
@@ -63,6 +75,7 @@ theorem module.decode_custom_section.complete (data : Slice U8) (pos next last :
   simp [module.decode_custom_section, hread, hbefore, core.result.Result.Insts.CoreOpsTry.branch]
 
 
+/-- `module.decode_custom_section.complete` for a name given as a list. -/
 theorem module.decode_custom_section.complete_raw (data : Slice U8) (pos next last : Usize)
     (nm : List U8) (h : At NameEncoding data pos nm next) (hbefore : next.val ≤ last.val) :
     ∃ custom, module.decode_custom_section data pos last = .ok (.Ok custom) ∧

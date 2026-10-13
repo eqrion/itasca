@@ -1,12 +1,21 @@
 import Itasca.Module.Env.Requirements
 import Itasca.Module.Readers.NamesComplete
 
+/-!
+# Replaying the environment loop
+
+Equations that unfold `module.validate_env_with_loop` with the empty module visitor, abbreviated
+`ModuleEnv.parseLoop`, one step at a time. Stopping at a code or data header
+(`complete_stop`), skipping custom sections (`complete_custom`, `complete_customs`) and decoding
+a declaration section (`complete_section`) are each stated as an equation on `parseLoop`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleBinary
 
-/-- A complete independent custom section exposes both its header and exact
-name span; arbitrary remaining payload bytes are intentionally uninterpreted. -/
+/-- A custom section encoding has a section header and a name span inside it. The remaining payload
+bytes are uninterpreted. -/
 theorem At.custom_split {data pos next} (h : At (fun (_ : Unit) => CustomEncoding) data pos () next) :
     ∃ first nameEnd nm, SectionHeader data pos 0#u8 first next ∧
       At NameEncoding data first nm nameEnd ∧ nameEnd.val ≤ next.val := by
@@ -24,11 +33,14 @@ namespace Itasca
 
 open ModuleBinary ModuleEnv
 
+/-- The environment section loop run with the empty module visitor. -/
 abbrev ModuleEnv.parseLoop (data : Slice U8) (env : module.Env) (pos : Usize) (last : U8)
     (profile : ValidationProfile := .Wasm1) :=
   module.validate_env_with_loop module.EmptyModuleVisitor.Insts.ItascaModuleModuleVisitor
     data profile () env pos last
 
+/-- At end of input or at a code or data header, the loop returns the current environment and
+position. -/
 theorem module.validate_env_with_loop.complete_stop (data : Slice U8) (env : module.Env)
     (pos : Usize) (last : U8) (hstop : StopAt data pos) (profile : ValidationProfile := .Wasm1) :
     ModuleEnv.parseLoop data env pos last profile = .ok (.Ok (env, pos), ()) := by
@@ -44,6 +56,7 @@ theorem module.validate_env_with_loop.complete_stop (data : Slice U8) (env : mod
       simp [module.validate_env_with_loop.body, hmore, hr, global_simps,
         core.result.Result.Insts.CoreOpsTry.branch]
 
+/-- The loop skips one custom section. -/
 theorem module.validate_env_with_loop.complete_custom (data : Slice U8) (env : module.Env)
     (pos next : Usize) (last : U8)
     (hb : At (fun (_ : Unit) => CustomEncoding) data pos () next)
@@ -58,6 +71,7 @@ theorem module.validate_env_with_loop.complete_custom (data : Slice U8) (env : m
   simp [module.validate_env_with_loop.body, hmore, hr, hc, global_simps,
     module.ModuleVisitor.on_custom_section.default, core.result.Result.Insts.CoreOpsTry.branch]
 
+/-- The loop skips any run of custom sections. -/
 theorem module.validate_env_with_loop.complete_customs (data : Slice U8) (env : module.Env)
     (pos next : Usize) (last : U8)
     (hb : At (fun (_ : Unit) => CustomsEncoding) data pos () next)
@@ -71,6 +85,8 @@ theorem module.validate_env_with_loop.complete_customs (data : Slice U8) (env : 
     rw [module.validate_env_with_loop.complete_custom data env pos middle last ⟨_, hcustom, hfirst⟩ profile]
     exact ih middle hremaining
 
+/-- When `module.decode_env_section` succeeds on a declaration section in increasing order, the
+loop continues from the end of the section with the updated environment and last-seen rank. -/
 theorem module.validate_env_with_loop.complete_section {profile : ValidationProfile} (data : Slice U8)
     (env result : module.Env) (pos first next : Usize) (last id : U8)
     (hh : SectionHeader data pos id first next)

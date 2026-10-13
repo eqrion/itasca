@@ -1,10 +1,21 @@
 import Itasca.Module.Code.Entry
 import Itasca.Module.Code.Section
 
+/-!
+# Code entry framing
+
+Specification of `module.code_entry_extent`, which reads a code entry's declared size and returns
+the content start and entry end. `module.code_entry_extent.spec` gives `ModuleCode.Extent` on
+success, `module.code_entry_extent.complete` shows it accepts any entry with such an extent, and
+`module.code_entry_extent.frames` shows a successful `module.validate_code_entry` ends at the
+same boundary.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
+/-- `module.code_entry_extent` returns an `Extent` of the entry on success. -/
 @[step]
 theorem module.code_entry_extent.spec (data : Slice U8) (pos : Usize) :
     module.code_entry_extent data pos ⦃ r => match r with
@@ -33,8 +44,8 @@ theorem module.code_entry_extent.spec (data : Slice U8) (pos : Usize) :
           step
           exact ⟨size, hp, by scalar_tac, by scalar_tac⟩
 
-/-- Both paths read the same declared entry size, so a successful validating
-callback ends at the independently checked framing boundary. -/
+/-- Both functions read the same declared entry size, so a successful `module.validate_code_entry`
+ends at the independently checked framing boundary. -/
 theorem module.code_entry_extent.frames (data : Slice U8) (pos content finish : Usize)
     (env : module.Env) (index next : Usize) (hbound : CodeEntry.Bounds env)
     (hext : ModuleCode.Extent data pos content finish)
@@ -50,6 +61,7 @@ theorem module.code_entry_extent.frames (data : Slice U8) (pos content finish : 
   rw [← heq, ← hp] at this
   omega
 
+/-- `module.code_entry_extent` returns the content start and end of any entry with that `Extent`. -/
 theorem module.code_entry_extent.complete (data : Slice U8) (pos first next : Usize)
     (h : ModuleCode.Extent data pos first next) :
     module.code_entry_extent data pos = .ok (.Ok (first, next)) := by

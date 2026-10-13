@@ -2,12 +2,22 @@ import Itasca.Module.Sections.Tail
 import Itasca.Module.Sections.DataComplete
 import Itasca.Module.Readers.NamesComplete
 
+/-!
+# Completeness of the tail parser
+
+`module.validate_tail.complete`: an independently encoded tail running to EOF, with valid
+segments that agree with the data count, is accepted and returns those segments. The loop
+lemmas show that the empty-visitor tail loop accepts custom sections and a data section.
+Soundness is in `Module/Sections/Tail`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleTail
 
 open ModuleBinary
 
+/-- `module.decode_custom_section` accepts a `CustomEncoding` span after its header. -/
 theorem custom_decode {data : Slice U8} {pos next : Usize} {bytes : List U8}
     (he : CustomEncoding bytes) (hs : Wasm1.BytesAt data pos bytes next) :
     ∃ first custom, SectionHeader data pos 0#u8 first next ∧
@@ -21,6 +31,7 @@ theorem custom_decode {data : Slice U8} {pos next : Usize} {bytes : List U8}
     data first content next nm ⟨nameBytes, hn, hname⟩ (by have := hpayload.length; omega)
   exact ⟨first, custom, hh, hc⟩
 
+/-- The tail loop at EOF returns the accumulated segments. -/
 theorem loop_eof (data : Slice U8) (env : module.Env) (segments : alloc.vec.Vec module.Data) (seen : Bool)
     (profile : ValidationProfile := .Wasm1)
     (hcount : ∀ count, env.data_count = some count → count.val = segments.val.length) :
@@ -42,6 +53,7 @@ theorem loop_eof (data : Slice U8) (env : module.Env) (segments : alloc.vec.Vec 
   rw [loop]
   simp [hr]
 
+/-- Leading custom sections do not change the loop result. -/
 theorem customs_prefix {profile} {data : Slice U8} {env : module.Env} {segments : alloc.vec.Vec module.Data}
     {pos next : Usize} {seen : Bool} {bytes : List U8}
     (he : CustomsEncoding bytes) (hb : Wasm1.BytesAt data pos bytes next)
@@ -66,6 +78,7 @@ theorem customs_prefix {profile} {data : Slice U8} {env : module.Env} {segments 
       module.EmptyModuleVisitor.Insts.ItascaModuleModuleVisitor,
       module.ModuleVisitor.on_custom_section.default, core.result.Result.Insts.CoreOpsTry.branch] using hs
 
+/-- A leading data section of valid segments does not change the loop result. -/
 theorem data_prefix {profile} {data : Slice U8} {env : module.Env} {segments : alloc.vec.Vec module.Data}
     {pos next : Usize} (hbytes : At (SectionEncoding 11#u8 (VecEncoding (DataEncodingFor profile)))
       data pos (segments.val.map ModuleData.raw) next)
@@ -94,6 +107,7 @@ private theorem optional_cases {α : Type} {id R absent value bytes}
   | absent => exact .inl ⟨rfl, rfl⟩
   | present hs => exact .inr hs
 
+/-- The tail loop accepts a tail encoding to EOF and returns its segments. -/
 theorem loop_complete {profile} {data : Slice U8} {env : module.Env} {segments : alloc.vec.Vec module.Data}
     {pos : Usize} (hb : At (fun segments bytes => Encoding segments bytes profile) data pos (segments.val.map ModuleData.raw) (Slice.len data))
     (hv : ∀ s ∈ segments.val, ModuleData.Valid env s)
@@ -123,7 +137,8 @@ end Itasca.ModuleTail
 
 namespace Itasca
 
-/-- Complete decoding of the independent data/custom-section suffix. -/
+/-- `module.validate_tail` accepts a tail encoding to EOF with valid, count-consistent segments
+and returns them. -/
 theorem module.validate_tail.complete {profile} {data : Slice U8} {pos : Usize} {env : module.Env}
     (tail : module.Tail)
     (hb : ModuleBinary.At (fun segments bytes => ModuleTail.Encoding segments bytes profile) data pos

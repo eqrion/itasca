@@ -3,10 +3,21 @@ import Itasca.Module.Readers.Basic
 import Itasca.Module.Const.Parser
 import Itasca.Module.Readers.SegmentIndex
 
+/-!
+# Data section parser
+
+Soundness of `module.decode_data_segment`, `module.decode_data_section_loop` and
+`module.decode_data_section`. Accepted segments are spans of the independent grammar
+(`DataEncodingFor` for the profile, `DataEncoding` for Wasm 1.0) and satisfy `ModuleData.Valid`,
+which covers the memory index and the offset initializer of active segments. Passive segments
+need Wasm 2.0. Completeness is in `Module/Sections/DataComplete`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleData
 
+/-- A repetition span extends by one segment at its end. -/
 theorem at_snoc {R : ModuleBinary.Data → List U8 → Prop} {data start pos next values value}
     (h : ModuleBinary.At (ModuleBinary.Rep R) data start values pos)
     (h' : ModuleBinary.At R data pos value next) :
@@ -15,6 +26,8 @@ theorem at_snoc {R : ModuleBinary.Data → List U8 → Prop} {data start pos nex
   obtain ⟨last, he, ht⟩ := h'
   exact ⟨bytes ++ last, hr.snoc he, hs.append ht⟩
 
+/-- A memory index, an offset initializer and a counted byte string form an active
+`DataEncoding`. -/
 theorem encoded {data start p1 p2 p3 next memory offset count init}
     (hm : Leb128.Decoded data start memory p1)
     (ho : ModuleBinary.At ModuleBinary.ConstEncoding data p1 offset p2)
@@ -32,6 +45,8 @@ theorem encoded {data start p1 p2 p3 next memory offset count init}
     exact ⟨cb, by simpa [hlen] using hc, rfl⟩
   · exact (hs.append hos).append (hspan.append hi)
 
+/-- Like `encoded` for a profile: a flag word and the profile's index encoding give an active
+`DataEncodingFor profile`. -/
 theorem profile_encoded {profile data start first p1 p2 p3 next flags memory explicit offset count init}
     (hf : Leb128.Decoded data start flags first)
     (hm : ModuleBinary.At (fun pair => ModuleBinary.SegmentIndexEncoding profile flags pair.1 pair.2)
@@ -51,6 +66,7 @@ theorem profile_encoded {profile data start first p1 p2 p3 next flags memory exp
     exact ModuleBinary.ByteVecEncoding.iff.mpr ⟨cb, by simpa [hlen] using hc, rfl⟩
   · exact ((hfs.append hms).append hos).append (hspan.append hi)
 
+/-- Flag `1` followed by a counted byte string is a passive Wasm 2.0 data segment. -/
 theorem passive_encoded {data start first content next count init}
     (hf : Leb128.Decoded data start 1#u32 first)
     (hc : Leb128.Decoded data first count content)
@@ -67,7 +83,8 @@ end Itasca.ModuleData
 
 namespace Itasca
 
-/-- Data decoding proves both exact bytes and offset/index validity. -/
+/-- An accepted `module.decode_data_segment` is a `DataEncodingFor profile` span and its segment
+is `ModuleData.Valid`. -/
 @[step]
 theorem module.decode_data_segment.profile_spec (data : Slice U8) (pos : Usize) (env : module.Env) (profile : ValidationProfile) :
     module.decode_data_segment data pos env profile ⦃ r => match r with
@@ -204,6 +221,7 @@ theorem module.decode_data_segment.profile_spec (data : Slice U8) (pos : Usize) 
                     have hl := init_post.length
                     scalar_tac
 
+/-- The data loop returns `count` segments forming a `Rep` span, all valid. -/
 @[step]
 theorem module.decode_data_section_loop.profile_spec (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length) :
@@ -257,7 +275,8 @@ theorem module.decode_data_section_loop.profile_spec (data : Slice U8) (env : mo
   · refine ⟨by simp, by simp, ?_, by simp [alloc.vec.Vec.new]⟩
     exact ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩
 
-/-- The data count matches the list returned by the actual parser. -/
+/-- An accepted `module.decode_data_section` returns segments forming a `VecEncoding` span, all
+valid. -/
 @[step]
 theorem module.decode_data_section.profile_spec (data : Slice U8) (pos : Usize) (env : module.Env) (profile : ValidationProfile) :
     module.decode_data_section data pos env profile ⦃ r => match r with
@@ -290,6 +309,7 @@ theorem module.decode_data_section.profile_spec (data : Slice U8) (pos : Usize) 
       refine ⟨⟨countBytes ++ bytes, ?_, hcspan.append hs⟩, hvalid⟩
       exact ⟨countBytes, bytes, by simpa [hlen] using hce, he, rfl⟩
 
+/-- Wasm 1.0 form of `module.decode_data_segment.profile_spec`. -/
 @[step]
 theorem module.decode_data_segment.spec (data : Slice U8) (pos : Usize) (env : module.Env) :
     module.decode_data_segment data pos env .Wasm1 ⦃ r => match r with
@@ -299,6 +319,7 @@ theorem module.decode_data_segment.spec (data : Slice U8) (pos : Usize) (env : m
       | .Err _ => True ⦄ := by
   exact module.decode_data_segment.profile_spec data pos env .Wasm1
 
+/-- Wasm 1.0 form of `module.decode_data_section_loop.profile_spec`. -/
 @[step]
 theorem module.decode_data_section_loop.spec (data : Slice U8) (env : module.Env)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length) :
@@ -311,6 +332,7 @@ theorem module.decode_data_section_loop.spec (data : Slice U8) (env : module.Env
       | .Err _ => True ⦄ := by
   exact module.decode_data_section_loop.profile_spec data env .Wasm1 count start hstart
 
+/-- Wasm 1.0 form of `module.decode_data_section.profile_spec`. -/
 @[step]
 theorem module.decode_data_section.spec (data : Slice U8) (pos : Usize) (env : module.Env) :
     module.decode_data_section data pos env .Wasm1 ⦃ r => match r with

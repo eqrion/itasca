@@ -1,9 +1,21 @@
 import Itasca.Module.Env.Dispatch
 
+/-!
+# Environment parser soundness
+
+Specifications of the environment parser `module.validate_env` and its helpers
+`module.validate_env_with` and `module.validate_env_with_loop`. For arbitrary input they terminate,
+and a successful result carries the ordered `Run` of sections that produced the environment.
+`module.validate_env.profile_spec` is the main result, and the unsuffixed `.spec` theorems are its
+Wasm 1.0 instances.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleEnv
 
+/-- Postcondition of the section loop for `profile`. An accepted result comes with a `Run` from the
+initial state and a `Bounded` environment. -/
 def LoopPostWith (profile : ValidationProfile) (data : Slice U8) (initial : module.Env) (decls : Declarations)
     (start : Usize) (initialId : U8) :
     core.result.Result (module.Env × Usize) error.Error → Prop
@@ -11,6 +23,9 @@ def LoopPostWith (profile : ValidationProfile) (data : Slice U8) (initial : modu
   | .Ok (env, next) => ∃ after last, Run (profile := profile) data initial decls start initialId env after next last ∧
       Bounded env next.val
 
+/-- Postcondition of `module.validate_env` for `profile`. An accepted result comes with a fresh
+environment, the module header bytes, a `Run` of sections from the header to the returned
+position, and a `Bounded` environment. -/
 def PostWith (profile : ValidationProfile) (data : Slice U8) : core.result.Result (module.Env × Usize) error.Error → Prop
   | .Err _ => True
   | .Ok (env, next) => ∃ initial start decls last,
@@ -18,9 +33,11 @@ def PostWith (profile : ValidationProfile) (data : Slice U8) : core.result.Resul
       Wasm1.BytesAt data 0#usize ModuleBinary.magicVersion start ∧
       Run (profile := profile) data initial {} start 0#u8 env decls next last ∧ Bounded env next.val
 
+/-- `LoopPostWith` for Wasm 1.0. -/
 abbrev LoopPost (data : Slice U8) (initial : module.Env) (decls : Declarations)
     (start : Usize) (initialId : U8) := LoopPostWith .Wasm1 data initial decls start initialId
 
+/-- `PostWith` for Wasm 1.0. -/
 abbrev Post (data : Slice U8) := PostWith .Wasm1 data
 
 end Itasca.ModuleEnv
@@ -29,8 +46,8 @@ namespace Itasca
 
 open ModuleBinary ModuleEnv
 
-/-- The actual environment loop either rejects or returns the ordered section
-history. Every custom callback may reject; only ordinary termination is required. -/
+/-- The section loop either rejects or returns the ordered section history. Custom-section hooks
+may reject, and they are only required to terminate. -/
 theorem module.validate_env_with_loop.profile_spec {V : Type} (visitor : module.ModuleVisitor V)
     (htotal : ModuleTail.HooksTotal visitor) (data : Slice U8) (profile : ValidationProfile) (v : V)
     (env : module.Env) (decls : Declarations) (start : Usize) (initialId : U8)
@@ -107,7 +124,8 @@ theorem module.validate_env_with_loop.profile_spec {V : Type} (visitor : module.
                       simp [hn, LoopPostWith]
   · exact ⟨decls, .nil, hbound⟩
 
-/-- Header checking and empty initialization discharge the loop's input bounds. -/
+/-- `module.validate_env_with` reads the header, starts from the empty environment and runs the
+section loop, so its result satisfies `PostWith`. -/
 theorem module.validate_env_with.profile_spec {V : Type} (visitor : module.ModuleVisitor V)
     (htotal : ModuleTail.HooksTotal visitor) (data : Slice U8) (profile : ValidationProfile) (v : V) :
     module.validate_env_with visitor data profile v ⦃ r => ModuleEnv.PostWith profile data r.1 ⦄ := by
@@ -128,8 +146,8 @@ theorem module.validate_env_with.profile_spec {V : Type} (visitor : module.Modul
       obtain ⟨decls, last, hrun, hbound⟩ := hp
       exact ⟨initial, start, decls, last, hi, hh, hrun, hbound⟩
 
-/-- Arbitrary input bytes have an ordinary environment-parser result. Successful
-results carry the complete ordered history needed for declarative assembly. -/
+/-- Arbitrary input bytes give an ordinary result from `module.validate_env`. A successful result
+carries the complete ordered section history needed for declarative assembly. -/
 theorem module.validate_env.profile_spec (data : Slice U8) (profile : ValidationProfile) :
     module.validate_env data profile ⦃ ModuleEnv.PostWith profile data ⦄ := by
   obtain ⟨⟨r, state⟩, hr, hp⟩ := WP.spec_imp_exists
@@ -137,6 +155,7 @@ theorem module.validate_env.profile_spec (data : Slice U8) (profile : Validation
       ModuleTail.empty_hooks_total data profile ())
   simpa [module.validate_env, hr] using hp
 
+/-- `module.validate_env_with_loop.profile_spec` for Wasm 1.0. -/
 theorem module.validate_env_with_loop.spec {V : Type} (visitor : module.ModuleVisitor V)
     (htotal : ModuleTail.HooksTotal visitor) (data : Slice U8) (v : V)
     (env : module.Env) (decls : Declarations) (start : Usize) (initialId : U8)
@@ -146,11 +165,13 @@ theorem module.validate_env_with_loop.spec {V : Type} (visitor : module.ModuleVi
   exact module.validate_env_with_loop.profile_spec visitor htotal data .Wasm1 v env decls
     start initialId hstart hbound
 
+/-- `module.validate_env_with.profile_spec` for Wasm 1.0. -/
 theorem module.validate_env_with.spec {V : Type} (visitor : module.ModuleVisitor V)
     (htotal : ModuleTail.HooksTotal visitor) (data : Slice U8) (v : V) :
     module.validate_env_with visitor data .Wasm1 v ⦃ r => ModuleEnv.Post data r.1 ⦄ := by
   exact module.validate_env_with.profile_spec visitor htotal data .Wasm1 v
 
+/-- `module.validate_env.profile_spec` for Wasm 1.0. -/
 theorem module.validate_env.spec (data : Slice U8) :
     module.validate_env data .Wasm1 ⦃ ModuleEnv.Post data ⦄ := by
   exact module.validate_env.profile_spec data .Wasm1

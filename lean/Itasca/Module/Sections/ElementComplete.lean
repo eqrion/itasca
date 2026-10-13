@@ -3,6 +3,15 @@ import Itasca.Module.Sections.Element
 import Itasca.Module.Readers.BasicComplete
 import Itasca.Module.Const.ParserComplete
 
+/-!
+# Completeness of the element section parser
+
+`module.decode_element_section.profile_complete` (and the Wasm 1.0 `.complete`): an independently
+encoded vector of elements that are `ElementValidRaw` in the environment is accepted, and the
+environment gains them (`ElementsAdded`). `module.decode_func_indices.complete` covers the index
+vectors. Soundness is in `Module/Sections/Element`.
+-/
+
 open Aeneas Aeneas.Std
 
 
@@ -11,6 +20,8 @@ namespace Itasca
 
 open ModuleBinary ModuleSections
 
+/-- The index loop accepts the remaining in-range indices of a repetition span and appends them to
+`out`. -/
 theorem module.decode_func_indices_loop.complete (data : Slice U8) (env : module.Env)
     (count : U32) (out : alloc.vec.Vec U32) (pos : Usize) (i : U32)
     (indices : List U32) (next : Usize)
@@ -49,6 +60,7 @@ theorem module.decode_func_indices_loop.complete (data : Slice U8) (env : module
     simpa [module.decode_func_indices_loop.body, hmore, hread, hnidx,
       hpush, hj, core.result.Result.Insts.CoreOpsTry.branch, lift] using hloop
 
+/-- `module.decode_func_indices` accepts a vector span of in-range function indices. -/
 theorem module.decode_func_indices.complete (data : Slice U8) (pos : Usize)
     (env : module.Env) (indices : List U32) (next : Usize)
     (hb : At (VecEncoding IndexEncoding) data pos indices next)
@@ -80,6 +92,7 @@ private theorem element_raw_valid_caches {env result entry}
   · intro value hv
     exact (hi value hv).same_caches hf hg hn
 
+/-- The element loop accepts the remaining valid elements of a repetition span and adds them. -/
 theorem module.decode_element_section_loop.profile_complete
     (data : Slice U8) (env : module.Env) (profile : ValidationProfile) (count : U32) (pos : Usize) (i : U32)
     (entries : List ModuleBinary.Element) (next : Usize)
@@ -134,6 +147,7 @@ theorem module.decode_element_section_loop.profile_complete
           List.nil_append] using htail.2.1
       · simpa only [after, hadded.2, List.flatMap_cons, List.append_assoc] using htail.2.2
 
+/-- `module.decode_element_section` accepts a vector span of valid elements and adds them. -/
 theorem module.decode_element_section.profile_complete (data : Slice U8) (pos : Usize)
     (env : module.Env) (profile : ValidationProfile) (entries : List ModuleBinary.Element) (next : Usize)
     (hb : At (VecEncoding (ElementEncodingFor profile)) data pos entries next)
@@ -149,6 +163,7 @@ theorem module.decode_element_section.profile_complete (data : Slice U8) (pos : 
   simp [module.decode_element_section, reader.read_u32_leb.complete data pos count middle hcount,
     core.result.Result.Insts.CoreOpsTry.branch, hr]
 
+/-- Wasm 1.0 form of `module.decode_element_section_loop.profile_complete`. -/
 theorem module.decode_element_section_loop.complete
     (data : Slice U8) (env : module.Env) (count : U32) (pos : Usize) (i : U32)
     (entries : List ModuleBinary.Element) (next : Usize)
@@ -160,6 +175,7 @@ theorem module.decode_element_section_loop.complete
       actual.map ModuleEnv.rawElement = entries ∧ ElementsAdded env result actual := by
   exact module.decode_element_section_loop.profile_complete data env .Wasm1 count pos i entries next hb hc hv hsize hrefs
 
+/-- Wasm 1.0 form of `module.decode_element_section.profile_complete`. -/
 theorem module.decode_element_section.complete (data : Slice U8) (pos : Usize)
     (env : module.Env) (entries : List ModuleBinary.Element) (next : Usize)
     (hb : At (VecEncoding ElementEncoding) data pos entries next)

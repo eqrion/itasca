@@ -1,39 +1,58 @@
 import Itasca.Binary.Module
 
+/-!
+# Primitive module readers
+
+Soundness specs for the byte-level helpers of the module parser: `reader.read_byte`,
+`module.have_bytes`, `module.copy_bytes`, `module.read_section_header`, `limits.validate_limits`,
+`module.decode_value_type` and `module.decode_elem_type`. Each relates a successful result to the
+independent grammar through `ParserPost`, or states `SectionHeader` and `LimitsValid`. Completeness
+is in `Module/Readers/BasicComplete` and `Module/Readers/FramingComplete`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleBinary
 
+/-- A parser result is either an error, or a value and next cursor with `At R data start value
+next`. It carries no guarantee for errors. -/
 def ParserPost {α : Type} (R : α → List U8 → Prop) (data : Slice U8) (start : Usize) :
     core.result.Result (α × Usize) error.Error → Prop
   | .Ok (value, next) => At R data start value next
   | .Err _ => True
 
+/-- A decoded `u32` is an `IndexEncoding`. -/
 theorem At.of_u32 {data start value next} (h : Leb128.Decoded data start value next) :
     At IndexEncoding data start value next := by
   obtain ⟨bytes, hs, hl, hb, he⟩ := h
   exact ⟨bytes, he, hs, hl, hb⟩
 
+/-- A one-byte encoding covers exactly that byte. -/
 theorem At.byte {data start byte next}
     (h : At ByteEncoding data start byte next) : Wasm1.BytesAt data start [byte] next := by
   obtain ⟨bytes, rfl, hs⟩ := h
   exact hs
 
+/-- A byte followed by an `R` encoding is an `S` encoding when `R` extended by that byte implies
+`S`. -/
 theorem At.prepend {α : Type} {R S : α → List U8 → Prop} {data start pos next b value}
     (hb : At ByteEncoding data start b pos) (hr : At R data pos value next)
     (hR : ∀ bytes, R value bytes → S value (b :: bytes)) : At S data start value next := by
   obtain ⟨bytes, he, hs⟩ := hr
   exact ⟨b :: bytes, hR bytes he, by simpa using hb.byte.append hs⟩
 
+/-- A limits pair has `min` within `bound` and, when `max` is present, `min ≤ max ≤ bound`. -/
 def LimitsValid (lim : types.Limits) (bound : U32) : Prop :=
   lim.min.val ≤ bound.val ∧ ∀ maximum, lim.max = some maximum →
     lim.min.val ≤ maximum.val ∧ maximum.val ≤ bound.val
 
-/-- Header provenance, including the entire payload's availability. -/
+/-- A section header at `start` with id `id` and a `u32` size. The payload runs from `first` to
+`last` and lies entirely within `data`. -/
 def SectionHeader (data : Slice U8) (start : Usize) (id : U8) (first last : Usize) : Prop :=
   ∃ pos size, At ByteEncoding data start id pos ∧ Leb128.Decoded data pos size first ∧
     last.val = first.val + size.val ∧ last.val ≤ data.length
 
+/-- The payload interval of a header is ordered and within the input. -/
 theorem SectionHeader.span {data start id first last}
     (h : SectionHeader data start id first last) :
     start.val < first.val ∧ first.val ≤ last.val ∧ last.val ≤ data.length := by
@@ -47,7 +66,8 @@ end Itasca.ModuleBinary
 
 namespace Itasca
 
-/-- Total byte reading, including EOF, in a form convenient for module parsers. -/
+/-- `reader.read_byte` returns normally, and a byte read is a `ByteEncoding` span; reading at EOF
+is an error. -/
 theorem reader.read_byte.module_spec (data : Slice U8) (pos : Usize) :
     reader.read_byte data pos ⦃ r => match r with
       | .Ok (value, next) => ModuleBinary.At ModuleBinary.ByteEncoding data pos value next
@@ -68,6 +88,8 @@ theorem module.have_bytes.spec (data : Slice U8) (pos n : Usize)
   unfold module.have_bytes
   step* <;> scalar_tac
 
+/-- `module.decode_value_type` returns a value type allowed by the profile, with its exact
+encoding. -/
 @[step]
 theorem module.decode_value_type.spec (data : Slice U8) (pos : Usize)
     (profile : ValidationProfile) :
@@ -90,6 +112,8 @@ theorem module.decode_value_type.spec (data : Slice U8) (pos : Usize)
         | exact ⟨_, ⟨rfl, trivial⟩, by with_unfolding_all exact hs⟩
         | simp
 
+/-- `module.decode_elem_type` returns an element type allowed by the profile, with its exact
+encoding. -/
 @[step]
 theorem module.decode_elem_type.spec (data : Slice U8) (pos : Usize)
     (profile : ValidationProfile) :
@@ -112,6 +136,8 @@ theorem module.decode_elem_type.spec (data : Slice U8) (pos : Usize)
         | exact ⟨_, ⟨rfl, trivial⟩, by with_unfolding_all exact hs⟩
         | simp
 
+/-- `module.decode_value_type` returns a value type with its exact encoding, whatever the
+profile admits. -/
 theorem module.decode_value_type.syntax_spec (data : Slice U8) (pos : Usize)
     (profile : ValidationProfile) :
     module.decode_value_type data pos profile ⦃ r =>
@@ -163,6 +189,7 @@ theorem module.copy_bytes.spec (data : Slice U8) (first last : Usize)
       · omega
   · simp [alloc.vec.Vec.new, hf]
 
+/-- `limits.validate_limits` accepts only limits satisfying `LimitsValid`. -/
 @[step]
 theorem limits.validate_limits.spec (lim : types.Limits) (bound : U32) :
     limits.validate_limits lim bound ⦃ r => r = .Ok () → ModuleBinary.LimitsValid lim bound ⦄ := by
@@ -170,6 +197,7 @@ theorem limits.validate_limits.spec (lim : types.Limits) (bound : U32) :
   step*
   simp_all
 
+/-- `module.read_section_header` returns a `SectionHeader` for the bytes it consumed. -/
 theorem module.read_section_header.spec (data : Slice U8) (start : Usize) :
     module.read_section_header data start ⦃ r => match r with
       | .Ok (id, first, last) => ModuleBinary.SectionHeader data start id first last
@@ -204,6 +232,7 @@ theorem module.read_section_header.spec (data : Slice U8) (start : Usize) :
               step*
               exact ⟨pos, size, hp, hd, by scalar_tac, by scalar_tac⟩
 
+/-- Under Wasm 1.0 the segment flag is the index and nothing is consumed. -/
 @[simp]
 theorem module.decode_segment_index.wasm1 (data : Slice U8) (pos : Usize) (idx : U32) :
     module.decode_segment_index data pos idx .Wasm1 = .ok (.Ok (idx, pos, false)) := rfl

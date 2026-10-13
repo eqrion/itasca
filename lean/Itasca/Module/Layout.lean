@@ -7,18 +7,29 @@ import Itasca.Module.Env.Requirements
 import Itasca.Module.Env.ReadyContexts
 import Itasca.Module.Code.FuncTyping
 
+/-!
+# Byte layout of a limited module encoding
+
+Splits an independent `ModuleEncodingWithinLimits` encoding into the regions that the greedy
+environment, code and tail parsers consume. `Layout` records the spans, `normalize` produces a
+`Layout` for every limited encoding, and `CodeAt.typed` transports generated function typing to
+`CodeEntry.Typed` for the decoded environment.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleLayout
 
 open ModuleBinary
 
-/-- The code boundary retains the absence lookahead required by the actual
-parser; an empty optional byte span alone does not justify that lookahead. -/
+/-- The code section occupies `start` to `finish` with entries `entries`, or it is absent and
+`ModuleCode.AbsentAt` holds at `start`. The absence case carries the lookahead that the parser
+performs, which an empty optional byte span alone does not justify. -/
 def CodeAt (data : Slice U8) (start : Usize) (entries : List Code) (finish : Usize) (profile : ValidationProfile := .Wasm1) : Prop :=
   At (SectionEncoding 10#u8 (VecEncoding (Profile.CodeEncodingWithinLimits profile))) data start entries finish ∨
     entries = [] ∧ finish = start ∧ ModuleCode.AbsentAt data start
 
+/-- A `CodeAt` span is an optional code section. -/
 theorem CodeAt.optional {profile data start entries finish} (h : CodeAt data start entries finish profile) :
     At (OptionalSectionEncoding 10#u8 (VecEncoding (Profile.CodeEncodingWithinLimits profile)) [])
       data start entries finish := by
@@ -32,8 +43,9 @@ theorem CodeAt.optional {profile data start entries finish} (h : CodeAt data sta
       · have := hh.span; omega
     exact ⟨[], .absent, Wasm1.BytesAt.nil data start hb⟩
 
-/-- Independent byte spans arranged exactly as the greedy environment/code/tail
-parser consumes them. The raw module and all per-body limits are unchanged. -/
+/-- Independent byte spans for the environment prefix, code section and tail, arranged as the
+greedy environment, code and tail parsers consume them. `stop` says that `codePos` is a place
+where the environment scan stops (EOF, or a code or data section header). -/
 structure Layout (data : Slice U8) (raw : Module) (decls : ModuleEnv.Declarations)
     (codePos tailPos : Usize) (profile : ValidationProfile := .Wasm1) : Prop where
   raw_eq : raw = decls.module raw.codes raw.data
@@ -63,8 +75,8 @@ private theorem optional_cases {α : Type} {id R absent value bytes}
   | absent => exact .inl ⟨rfl, rfl⟩
   | present hs => exact .inr hs
 
-/-- Custom sections preceding an absent code section are consumed by the
-preceding environment scan, through the next data header or EOF. -/
+/-- Every limited module encoding has a `Layout`. Custom sections before an absent code section
+belong to the environment scan, which stops at the next data section header or at EOF. -/
 theorem normalize {profile} (data : Slice U8) (raw : Module)
     (h : ModuleEncodingWithinLimits raw data.val profile) :
     ∃ decls codePos tailPos, Layout data raw decls codePos tailPos profile := by
@@ -132,8 +144,9 @@ namespace Itasca.ModuleLayout
 
 open ModuleBinary ModuleElaboration
 
-/-- Generated function typing and the selected independent profile transport
-into the exact decoded environment; no entry-validation premise is used. -/
+/-- Generated function typing and the independent profile restrictions give `CodeEntry.Typed`
+for every code entry against the decoded environment. No premise about entry validation is
+used. -/
 theorem CodeAt.typed {profile raw decls env}
     (hr : ModuleEnv.Ready raw 10 decls env)
     (ht : SectionsTyped raw) (hp : Profile raw profile)

@@ -1,12 +1,24 @@
 import Itasca.Module.Sections.ElementInit
 import Itasca.Module.Readers.BasicComplete
 
+/-!
+# Element segment header and entry parser
+
+`ModuleElements.HeaderEncoding` is the independent grammar of the flag word and prefix of an
+element segment for each profile (the eight Wasm 2.0 forms and the Wasm 1.0 form).
+`module.decode_element_header.spec` shows an accepted header is a `HeaderEncoding` span whose
+table and offset are valid. `module.decode_element.spec` assembles a full entry: an
+`ElementEncodingFor` span that is valid, extends the declared functions by its references and
+consumes input. Completeness is in `Module/Sections/ElementHeaderComplete`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleElements
 open ModuleBinary
 
-/-- A segment header records its byte grammar independently of validation. -/
+/-- The bytes of an element segment header for a profile, mode, element type and initializer
+form (`true` for expressions). The first argument of each constructor is the flag word. -/
 inductive HeaderEncoding : ValidationProfile → module.ElementMode → types.ElemType → Bool → List U8 → Prop where
   | legacy {index offset ib ob} : IndexEncoding index ib → ConstEncoding offset ob →
       HeaderEncoding .Wasm1 (.Active index offset) .FuncRef false (ib ++ ob)
@@ -29,6 +41,8 @@ inductive HeaderEncoding : ValidationProfile → module.ElementMode → types.El
   | declarativeExpressions {elem fb} : IndexEncoding 7#u32 fb →
       HeaderEncoding .Wasm2 .Declarative elem true (fb ++ [elemByte elem])
 
+/-- An active segment names an in-range table of the segment's element type with a valid `i32`
+offset. Passive and declarative segments have no condition. -/
 def HeaderValid (env : module.Env) (mode : module.ElementMode) (elem : types.ElemType) : Prop :=
   match mode with
   | .Active index offset => ∃ hi : index.val < env.table_types.val.length,
@@ -45,6 +59,7 @@ private theorem indices_rep {values bytes}
     obtain ⟨indices, rfl, hrep⟩ := ih
     exact ⟨index :: indices, rfl, .cons hi hrep⟩
 
+/-- A vector of index initializers is a vector of function indices. -/
 theorem indices_vector {values bytes}
     (h : VecEncoding (InitializerEncoding false) values bytes) :
     ∃ indices, values = indices.map types.ConstExpr.RefFunc ∧ VecEncoding IndexEncoding indices bytes := by
@@ -52,6 +67,7 @@ theorem indices_vector {values bytes}
   obtain ⟨indices, rfl, hi⟩ := indices_rep hr
   exact ⟨indices, rfl, count, encoded, by simpa using hc, hi, rfl⟩
 
+/-- A header followed by an initializer vector is an `ElementEncodingFor` entry. -/
 theorem HeaderEncoding.append {profile mode elem expressions header init bytes}
     (h : HeaderEncoding profile mode elem expressions header)
     (hi : VecEncoding (InitializerEncoding expressions) init bytes) :
@@ -77,11 +93,13 @@ theorem HeaderEncoding.append {profile mode elem expressions header init bytes}
   | explicitExpressions hf ht ho => exact .explicitExpressions hf ht ho hi
   | declarativeExpressions hf => exact .declarativeExpressions hf hi
 
+/-- The initializer type of a header is the reference type of its element type. -/
 theorem HeaderEncoding.initializer_type {profile mode elem expressions bytes}
     (h : HeaderEncoding profile mode elem expressions bytes) :
     initializerType elem expressions = ModuleConstants.referenceValueType elem := by
   cases h <;> rfl
 
+/-- A vector of function indices is a vector of index initializers. -/
 theorem indices_vector_intro {indices bytes} (h : VecEncoding IndexEncoding indices bytes) :
     VecEncoding (InitializerEncoding false) (indices.map types.ConstExpr.RefFunc) bytes := by
   obtain ⟨count, encoded, hc, hr, rfl⟩ := h
@@ -91,6 +109,7 @@ theorem indices_vector_intro {indices bytes} (h : VecEncoding IndexEncoding indi
   | nil => exact .nil
   | cons hv hs ih => exact .cons ⟨_, rfl, hv⟩ ih
 
+/-- An `ElementEncodingFor` entry splits into a header and an initializer vector. -/
 theorem header_parts {profile entry bytes} (h : ElementEncodingFor profile entry bytes) :
     ∃ expressions header encoded, HeaderEncoding profile entry.mode entry.elem expressions header ∧
       VecEncoding (InitializerEncoding expressions) entry.init encoded ∧ bytes = header ++ encoded := by
@@ -109,6 +128,7 @@ theorem header_parts {profile entry bytes} (h : ElementEncodingFor profile entry
     | explicitExpressions hf ht ho hi => exact ⟨true, _, _, .explicitExpressions hf ht ho, hi, rfl⟩
     | declarativeExpressions hf hi => exact ⟨true, _, _, .declarativeExpressions hf, hi, rfl⟩
 
+/-- Expression initializers are allowed in every header that has them. -/
 theorem HeaderEncoding.const_allowed {profile mode elem expressions bytes}
     (h : HeaderEncoding profile mode elem expressions bytes) (value : types.ConstExpr)
     (he : expressions = true) : ConstAllowed profile value := by
@@ -119,6 +139,8 @@ end Itasca.ModuleElements
 namespace Itasca
 open ModuleBinary ModuleElements
 
+/-- An accepted `module.decode_element_header` is a `HeaderEncoding` span with a `HeaderValid`
+mode and element type. -/
 @[step]
 theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
     (env : module.Env) (profile : ValidationProfile) :
@@ -420,6 +442,8 @@ open Aeneas Aeneas.Std
 namespace Itasca
 open ModuleBinary ModuleElements
 
+/-- An accepted `module.decode_element` is an `ElementEncodingFor` span of a valid element. The
+declared functions grow by its references, and the cursor advances. -/
 @[step]
 theorem module.decode_element.spec (data : Slice U8) (pos : Usize)
     (env : module.Env) (profile : ValidationProfile)

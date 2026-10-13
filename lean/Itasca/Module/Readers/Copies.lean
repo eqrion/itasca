@@ -1,10 +1,18 @@
 import Itasca.Support.EnvTranslation
 
+/-!
+# Copying and looking up types
+
+Specs for the allocation helpers `module.copy_value_types`, `module.copy_func_type` (each returns
+a copy equal to its source) and `module.lookup_type` (the indexed type, or `UnknownType` when the
+index is out of range).
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- The allocation loop copies the remaining source in its original order. -/
+/-- The copy loop appends the remaining source elements to `out` in order. -/
 @[step]
 theorem module.copy_value_types_loop.spec (src : Slice types.ValueType)
     (out : alloc.vec.Vec types.ValueType) (i : Usize)
@@ -39,6 +47,7 @@ theorem module.copy_value_types_loop.spec (src : Slice types.ValueType)
       rw [List.drop_eq_getElem_cons hlt]
   · exact ⟨hi, rfl, hsize⟩
 
+/-- `module.copy_value_types` returns a vector equal to its source. -/
 @[step]
 theorem module.copy_value_types.spec (src : Slice types.ValueType) :
     module.copy_value_types src ⦃ copied => copied.val = src.val ⦄ := by
@@ -46,6 +55,7 @@ theorem module.copy_value_types.spec (src : Slice types.ValueType) :
     module.copy_value_types_loop.spec src (alloc.vec.Vec.new _) 0#usize
       (by simp) (by simp)
 
+/-- `module.copy_func_type` returns a function type equal to its source. -/
 @[step]
 theorem module.copy_func_type.spec (ft : types.FuncType) :
     module.copy_func_type ft ⦃ copied => copied = ft ⦄ := by
@@ -58,6 +68,8 @@ theorem module.copy_func_type.spec (ft : types.FuncType) :
   have hr' : r = ft.results := alloc.vec.Vec.ext _ _ (by simpa [alloc.vec.Vec.deref] using hrval)
   simp [hp, hr, hp', hr']
 
+/-- `module.lookup_type` returns the type at the index, or `UnknownType` exactly when the index is
+out of range. -/
 @[step]
 theorem module.lookup_type.spec (env : module.Env) (idx : U32) :
     module.lookup_type env idx ⦃ r =>

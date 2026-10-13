@@ -4,11 +4,22 @@ import Itasca.Module.Code.BodyContextComplete
 import Itasca.Profile.Instructions
 import Itasca.Spec.DeclaredReferences
 
+/-!
+# Code entry typing contexts
+
+`ModuleContext` and `SegmentContext` describe the module-level typing context a code entry is
+checked in. `bodyContext` is the context a function body is typed in, `Typed` is the declarative
+certificate for one code entry, and `typed_func_ok` and `Typed.func_ok` turn it into the generated
+`Func_ok` in the full module context. `body_context` identifies the extracted frame with
+`bodyContext`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.CodeEntry
 
-/-- The statically resolved module tables; local and label spaces are empty. -/
+/-- The context `C` has the module's types, functions, globals, tables and memories translated from
+`env`, with empty local and label spaces. -/
 structure ModuleContext (env : module.Env) (C : context) : Prop where
   types : C.TYPES = env.types.val.map EnvTranslation.funcType
   funcs : C.FUNCS = env.func_types.val.map EnvTranslation.funcType
@@ -18,12 +29,14 @@ structure ModuleContext (env : module.Env) (C : context) : Prop where
   locals : C.LOCALS = []
   labels : C.LABELS = []
 
-/-- Final segment spaces preserve every index available while validating a body.
-The data-count section supplies the body-visible data space. -/
+/-- The final element and data spaces of `C` extend those available while validating a body. The
+data count section supplies the body-visible data space. -/
 structure SegmentContext (env : module.Env) (C : context) : Prop where
   elems : (EnvTranslation.elementTypes env).IsPrefix C.ELEMS
   datas : (EnvTranslation.dataTypes env).IsPrefix C.DATAS
 
+/-- The typing context of a function body: the module's index spaces, the parameters followed by
+the declared locals, and a single label and the return type both given by the results. -/
 def bodyContext (env : module.Env) (params declared results : List types.ValueType) : context :=
   { TYPES := env.types.val.map EnvTranslation.funcType
     FUNCS := env.func_types.val.map EnvTranslation.funcType
@@ -36,11 +49,13 @@ def bodyContext (env : module.Env) (params declared results : List types.ValueTy
     LABELS := [.mk_list (results.map Translate.valueType)]
     RETURN := some (.mk_list (results.map Translate.valueType)) }
 
+/-- The type `[] -> results` that a body must have. -/
 def instructionType (ft : types.FuncType) : functype :=
   .mk_functype (.mk_list []) (.mk_list (ft.results.val.map Translate.valueType))
 
-/-- A code entry refers to the actual type table, and its body uses parameter
-locals followed by the decoded local declarations. -/
+/-- The code entry has a function type in the environment's type table. Its body is typed in
+`bodyContext` with the parameters followed by the declared locals, is admitted by the profile, uses
+allowed local types, and mentions only declared function references. -/
 structure Typed (env : module.Env) (typeIdx : U32) (entry : ModuleBinary.Code)
     (validationProfile : ValidationProfile := .Wasm1) : Prop where
   type_lt : typeIdx.val < env.types.val.length
@@ -53,15 +68,17 @@ structure Typed (env : module.Env) (typeIdx : U32) (entry : ModuleBinary.Code)
   declared : DeclaredReferences.Instructions
     (env.declared_funcs.val.map (fun idx => uN.mk_uN idx.val)) entry.body
 
+/-- The SpecTec function for a code entry with type index `typeIdx`. -/
 def function (typeIdx : U32) (entry : ModuleBinary.Code) : func :=
   .FUNC (.mk_uN typeIdx.val) (entry.declared.map (fun t => .LOCAL (Translate.valueType t))) entry.body
 
-/-- A body validated without a data-count section cannot contain a data-indexed
-instruction, regardless of control nesting or stack reachability. -/
+/-- A typed body in an environment without a data count contains no data-index instruction,
+regardless of control nesting or stack reachability. -/
 theorem Typed.no_data {env typeIdx entry profile} (h : Typed env typeIdx entry profile)
     (hcount : env.data_count = none) : ModuleBinary.instructionsUseData entry.body = false :=
   ModuleBinary.typed_no_data h.typed (by simp [bodyContext, EnvTranslation.dataTypes, hcount])
 
+/-- A module context is well formed. -/
 theorem ModuleContext.wf {env C} (h : ModuleContext env C) : wf_context C := by
   have ht := h.tables
   have hm := h.mems
@@ -78,7 +95,8 @@ theorem ModuleContext.wf {env C} (h : ModuleContext env C) : wf_context C := by
     rintro _ ⟨mt, _, rfl⟩
     exact EnvTranslation.memType_wf mt
 
-/-- Generated function typing in the full module context preserves segment indices. -/
+/-- A body typed in `bodyContext` gives the generated function typing `Func_ok` in any full module
+context `C` whose segment spaces extend those of the body. -/
 theorem typed_func_ok {env : module.Env} {typeIdx : U32} {entry : ModuleBinary.Code}
     (hindex : typeIdx.val < env.types.val.length)
     (htyped : Instrs_ok (bodyContext env env.types.val[typeIdx.val].params.val
@@ -124,15 +142,15 @@ theorem typed_func_ok {env : module.Env} {typeIdx : U32} {entry : ModuleBinary.C
     Function.comp_def, ds, ps, rs, ft, localC] using
     Func_ok.mk_Func_ok C (.mk_uN typeIdx.val) ds entry.body ps rs hi hlookup hn he hc.wf (by simpa [function, Map, ds, List.map_map, Function.comp_def] using hf) hlwf
 
-/-- The Wasm 1.0 certificate specializes the common function-typing bridge. -/
+/-- A `Typed` certificate in either profile gives `Func_ok` in the full module context. -/
 theorem Typed.func_ok {env : module.Env} {typeIdx : U32} {entry : ModuleBinary.Code}
     {profile : ValidationProfile} (h : Typed env typeIdx entry profile) (C : context) (hc : ModuleContext env C)
     (hsegments : SegmentContext env C) :
     Func_ok C (function typeIdx entry) (EnvTranslation.funcType (env.types.val[typeIdx.val]'h.type_lt)) :=
   typed_func_ok h.type_lt h.typed C hc hsegments
 
-/-- The function-body soundness result uses this same context when its locals
-and results are the vectors constructed by the code-entry validator. -/
+/-- The body frame of the extracted context is `bodyContext` when its locals and results are the
+vectors that the code-entry validator builds. -/
 theorem body_context {env : module.Env} {ctx : code.Context} {bt : code.BlockType}
     {params declared results : List types.ValueType}
     (hl : ctx.locals.val = params ++ declared) (hr : ctx.results.val = results)

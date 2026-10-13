@@ -1,28 +1,44 @@
 import Itasca.Module.Elab.ElementTyping
 import Itasca.Module.Elab.TypingLists
 
+/-!
+# Assembling `Module_ok`
+
+`typed` assembles the generated section judgments (`Type_ok`, `Import_ok`, `Global_ok`,
+`Table_ok`, `Mem_ok`, `Elem_ok`, `Data_ok`, `Func_ok`, `Start_ok`, `Export_ok`) into
+`Module_ok` of the elaborated module in one coherent module context. `fromEnv` is the raw module
+that an environment, its defined tables and memories, code entries and data segments describe.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleElaboration
 
+/-- The raw module described by an environment, its defined tables and memories, the code entries
+and the data segments. -/
 def fromEnv (env : module.Env) (tables : List types.TableType) (memories : List types.MemType)
     (codes : List ModuleBinary.Code) (segments : List module.Data) : ModuleBinary.Module :=
   ⟨env.types.val, env.imports.val.map ModuleEnv.rawImport, env.func_type_indices.val,
     tables, memories, env.globals.val, env.exports.val.map ModuleEnv.rawExport, env.start,
     env.elements.val.map ModuleEnv.rawElement, env.data_count, codes, segments.map ModuleData.raw⟩
 
+/-- If the environment represents the declarations, the declarations' raw module is `fromEnv`. -/
 theorem represents_module {env decls codes segments} (h : ModuleEnv.Represents env decls) :
     decls.module codes (segments.map ModuleData.raw) =
       fromEnv env decls.tables decls.memories codes segments := by
   simp [ModuleEnv.Declarations.module, fromEnv, h.types, h.imports, h.functions,
     h.globals, h.exports, h.start, h.elements, h.dataCount]
 
+/-- The context for import typing: only the module's types. -/
 def importContext (env : module.Env) : context :=
   ⟨env.types.val.map EnvTranslation.funcType, [], [], [], [], [], [], [], [], none⟩
 
+/-- The import context is well formed. -/
 theorem importContext_wf (env : module.Env) : wf_context (importContext env) := by
   constructor <;> simp [Forall]
 
+/-- For a cached environment, `moduleContext` is the imported spaces followed by the defined
+spaces, with the given element spaces and data count. -/
 theorem moduleContext_eq {env tables memories} (hc : ModuleEnv.Cache env tables memories)
     (es : List elemtype) (nd : Nat) :
     moduleContext env es nd =
@@ -34,6 +50,8 @@ theorem moduleContext_eq {env tables memories} (hc : ModuleEnv.Cache env tables 
         es, List.replicate nd .OK, [], [], none⟩ := by
   simp only [moduleContext, funcs_cache hc, globals_cache hc, tables_cache hc, memories_cache hc]
 
+/-- For a cached environment, `initializerContext` has the imported globals only and no local,
+label or segment spaces. -/
 theorem initializerContext_eq {env tables memories} (hc : ModuleEnv.Cache env tables memories) :
     initializerContext env =
       ⟨env.types.val.map EnvTranslation.funcType,
@@ -45,8 +63,9 @@ theorem initializerContext_eq {env tables memories} (hc : ModuleEnv.Cache env ta
   simp only [initializerContext, moduleContext, funcs_cache hc, tables_cache hc,
     memories_cache hc, hc.global_prefix, importTypes, globals_imports, List.replicate_zero]
 
-/-- Assemble all generated section judgments in one coherent module context.
-Name well-formedness is supplied by the independent byte grammar. -/
+/-- A valid cached environment with typed code entries, valid data segments and resolved exports
+has `Module_ok` for its elaborated module. All section judgments are assembled in one coherent
+module context, and name well-formedness comes from the independent byte grammar. -/
 theorem typed {env : module.Env} {tables memories codes segments xts}
     (hc : ModuleEnv.Cache env tables memories) {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile)
     (hiNames : ∀ entry ∈ env.imports.val,

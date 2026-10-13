@@ -5,14 +5,23 @@ import Itasca.Module.Code.Entry
 import Itasca.Wasm1.Visitor.Lift
 import Itasca.Profile.EntryComplete
 
+/-!
+# Code entry completeness (Wasm 1.0)
+
+`module.validate_code_entry_with.complete_spec` shows that `module.validate_code_entry_with`
+accepts a code entry given its independent encoding within the byte and local limits and a `Typed`
+certificate, for any accepting visitor. `module.validate_code_entry.complete` is the form for
+`module.validate_code_entry`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
 open ModuleBinary
 
-/-- Successful code-entry validation follows from independent exact bytes,
-declarative function typing, the Wasm 1.0 profile, and the explicit byte/local caps. -/
+/-- `module.validate_code_entry_with` accepts a Wasm 1.0 entry that has an independent encoding
+within the limits and a `Typed` certificate, ending at `next`. -/
 theorem module.validate_code_entry_with.complete_spec {V : Type} (visitor : code.OpVisitor V)
     (haccept : FullVisitor.Accepts visitor) (data : Slice U8) (pos : Usize)
     (env : module.Env) (index : Usize) (entry : Code) (next : Usize) (v : V)
@@ -31,7 +40,7 @@ theorem module.validate_code_entry_with.complete_spec {V : Type} (visitor : code
     (Profile.run.complete .Wasm1 body env ctx typeIdx ft hlookup hresults
       ⟨henv.types, henv.funcs⟩ ⟨by intros; trivial, by intros; trivial⟩ hsize hcert)
 
-
+/-- The acceptance of `module.validate_code_entry_with.complete_spec` as an equation on the call. -/
 theorem module.validate_code_entry_with.complete {V : Type} (visitor : code.OpVisitor V)
     (haccept : FullVisitor.Accepts visitor) (data : Slice U8) (pos : Usize)
     (env : module.Env) (index : Usize) (entry : Code) (next : Usize) (v : V)
@@ -46,6 +55,8 @@ theorem module.validate_code_entry_with.complete {V : Type} (visitor : code.OpVi
   dsimp only at hok
   exact ⟨v', by simpa only [hok] using hr⟩
 
+/-- `module.validate_code_entry` accepts a Wasm 1.0 entry that has an independent encoding within
+the limits and a `Typed` certificate. -/
 theorem module.validate_code_entry.complete (data : Slice U8) (pos : Usize)
     (env : module.Env) (index : Usize) (entry : Code) (next : Usize)
     (hi : index.val < env.func_type_indices.val.length)

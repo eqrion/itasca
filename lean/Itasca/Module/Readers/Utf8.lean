@@ -1,15 +1,26 @@
 import Itasca.Module.Readers.Basic
 
+/-!
+# UTF-8 validation
+
+`module.validate_utf8.spec`: an accepted byte string satisfies the independent strict `Utf8`
+predicate (canonical encodings of Unicode scalar values, including four-byte sequences). The
+helpers `module.utf8_cont` and `module.utf8_sequence_len` get their own specs. Completeness is in
+`Module/Readers/Utf8Complete`.
+-/
+
 open Aeneas Aeneas.Std
 
 set_option maxHeartbeats 1200000
 
 namespace Itasca.ModuleBinary
 
+/-- The `count` bytes at `pos` are in range and form one canonical UTF-8 character. -/
 def Utf8Sequence (bytes : Slice U8) (pos count : Usize) : Prop :=
   pos.val + count.val ≤ bytes.length ∧ 0 < count.val ∧
     Utf8Char ((bytes.val.drop pos.val).take count.val)
 
+/-- UTF-8 validity is closed under concatenation. -/
 theorem Utf8.append {first rest} (h : Utf8 first) (h' : Utf8 rest) : Utf8 (first ++ rest) := by
   induction h with
   | nil => simpa using h'
@@ -43,6 +54,7 @@ private theorem take_four (xs : List U8) (i : Nat) (hb : i + 3 < xs.length) :
   simp only [List.take_succ_cons]
   rw [take_three xs (i + 1) (by omega)]
 
+/-- An accepted `module.utf8_cont` found an in-range byte between `lo` and `hi`. -/
 @[step]
 theorem module.utf8_cont.spec (bytes : Slice U8) (pos : Usize) (lo hi : U8) :
     module.utf8_cont bytes pos lo hi ⦃ r => r = .Ok () →
@@ -50,6 +62,7 @@ theorem module.utf8_cont.spec (bytes : Slice U8) (pos : Usize) (lo hi : U8) :
   unfold module.utf8_cont
   step*
 
+/-- `module.utf8_sequence_len` returns the length of one valid UTF-8 character at `pos`. -/
 theorem module.utf8_sequence_len.spec (bytes : Slice U8) (pos : Usize)
     (hb : pos.val < bytes.length) :
     module.utf8_sequence_len bytes pos ⦃ r => match r with
@@ -77,8 +90,7 @@ theorem module.utf8_sequence_len.spec (bytes : Slice U8) (pos : Usize)
     | (rw [take_three bytes.val pos.val (by scalar_tac)]; apply Utf8Char.three <;> scalar_tac)
     | (rw [take_four bytes.val pos.val (by scalar_tac)]; apply Utf8Char.four <;> scalar_tac)
 
-/-- The complete UTF-8 walk terminates; every accepted name consists only of
-canonical Unicode scalar encodings, including all four-byte scalar values. -/
+/-- `module.validate_utf8` returns normally, and acceptance implies `Utf8`. -/
 @[step]
 theorem module.validate_utf8.spec (bytes : Slice U8) :
     module.validate_utf8 bytes ⦃ r => r = .Ok () → Utf8 bytes.val ⦄ := by

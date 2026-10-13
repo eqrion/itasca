@@ -2,11 +2,22 @@ import Itasca.Module.Readers.Copies
 import Itasca.Module.Elab.Translation
 import Mathlib.Data.List.Forall2
 
+/-!
+# Import and export types
+
+`ImportResolves` and `ExportResolves` give the declarative external type of an import or export
+by looking up the environment's index spaces. `module.import_types.resolved` and
+`module.export_types.resolved` show that the accessors `module.import_types` and
+`module.export_types` return exactly a list of types that resolves entry by entry. `externalType`
+translates an external type to SpecTec's `externtype`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleExternals
 
-/-- Index-space interpretation, independent of accessor execution. -/
+/-- The external type `xt` is what import `imp` denotes, found by index-space lookup rather than by
+running the accessor. -/
 def ImportResolves (env : module.Env) (imp : module.Import) (xt : types.ExternType) : Prop :=
   match imp.desc with
   | .Func idx => ∃ hi : idx.val < env.types.val.length, xt = .Func env.types.val[idx.val]
@@ -14,6 +25,7 @@ def ImportResolves (env : module.Env) (imp : module.Import) (xt : types.ExternTy
   | .Memory mt => xt = .Memory mt
   | .Global gt => xt = .Global gt
 
+/-- The external type `xt` is what export `exp` denotes, looked up in the merged index spaces. -/
 def ExportResolves (env : module.Env) (exp : module.Export) (xt : types.ExternType) : Prop :=
   match exp.desc with
   | .Func idx => ∃ hi : idx.val < env.func_types.val.length, xt = .Func env.func_types.val[idx.val]
@@ -21,6 +33,7 @@ def ExportResolves (env : module.Env) (exp : module.Export) (xt : types.ExternTy
   | .Memory idx => ∃ hi : idx.val < env.mem_types.val.length, xt = .Memory env.mem_types.val[idx.val]
   | .Global idx => ∃ hi : idx.val < env.global_types.val.length, xt = .Global env.global_types.val[idx.val]
 
+/-- The SpecTec external type for an extracted external type. -/
 def externalType : types.ExternType → externtype
   | .Func ft => .FUNC (EnvTranslation.funcType ft)
   | .Table tt => .TABLE (EnvTranslation.tableType tt)
@@ -43,7 +56,8 @@ private theorem lookup_type_resolved (env : module.Env) (idx : U32)
     have := hp.2
     omega
 
-/-- An independently resolved import list determines the actual accessor result. -/
+/-- The import loop of `module.import_types` returns the expected list when the imports resolve to
+it. -/
 theorem module.import_types_loop.resolved (env : module.Env) (expected : List types.ExternType)
     (hresolve : List.Forall₂ (ModuleExternals.ImportResolves env) env.imports.val expected)
     (out : alloc.vec.Vec types.ExternType) (i : Usize)
@@ -113,13 +127,15 @@ theorem module.import_types_loop.resolved (env : module.Env) (expected : List ty
         · scalar_tac
   · exact ⟨hi, hout⟩
 
+/-- `module.import_types` returns the independently resolved import types. -/
 theorem module.import_types.resolved (env : module.Env) (expected : List types.ExternType)
     (hresolve : List.Forall₂ (ModuleExternals.ImportResolves env) env.imports.val expected) :
     module.import_types env ⦃ r => ∃ result, r = .Ok result ∧ result.val = expected ⦄ := by
   simpa [module.import_types] using module.import_types_loop.resolved env expected hresolve
     (alloc.vec.Vec.new _) 0#usize (by simp) (by simp)
 
-/-- Exports resolve against the combined imported/defined index spaces. -/
+/-- The export loop of `module.export_types` returns the expected list when the exports resolve
+against the merged imported and defined index spaces. -/
 theorem module.export_types_loop.resolved (env : module.Env) (expected : List types.ExternType)
     (hresolve : List.Forall₂ (ModuleExternals.ExportResolves env) env.exports.val expected)
     (out : alloc.vec.Vec types.ExternType) (i : Usize)
@@ -157,6 +173,7 @@ theorem module.export_types_loop.resolved (env : module.Env) (expected : List ty
         simp_all [List.take_succ_eq_append_getElem hlt'] <;> omega
   · exact ⟨hi, hout⟩
 
+/-- `module.export_types` returns the independently resolved export types. -/
 theorem module.export_types.resolved (env : module.Env) (expected : List types.ExternType)
     (hresolve : List.Forall₂ (ModuleExternals.ExportResolves env) env.exports.val expected) :
     module.export_types env ⦃ r => ∃ result, r = .Ok result ∧ result.val = expected ⦄ := by

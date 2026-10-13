@@ -1,28 +1,41 @@
 import Itasca.Module.Sections.Import
 
+/-!
+# Import section parser
+
+Soundness of `module.decode_import_section` and its loop. `ImportsAdded` is the ordered sequence
+of `ImportAdded` updates, and `ImportAllowed` is the profile condition on a descriptor. The
+decoded span is a `VecEncoding ImportEncoding` of the raw imports. Completeness is in
+`Module/Sections/ImportsComplete`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleSections
 
-/-- Ordered semantic import updates, independent of the section loop. -/
+/-- `result` is `initial` after adding `entries` one at a time by `ImportAdded`. -/
 inductive ImportsAdded (initial : module.Env) : List module.Import → module.Env →
     (profile : optParam ValidationProfile .Wasm1) → Prop where
   | nil {profile} : ImportsAdded initial [] initial profile
   | snoc {profile entries before after entry} : ImportsAdded initial entries before profile →
       ImportAdded before after entry profile → ImportsAdded initial (entries ++ [entry]) after profile
 
+/-- The result's imports are the initial imports followed by the added entries. -/
 theorem ImportsAdded.imports {profile env entries result} (h : ImportsAdded env entries result profile) :
     result.imports.val = env.imports.val ++ entries := by
   induction h with
   | nil => simp
   | snoc _ hadd ih => simpa [ih, List.append_assoc] using hadd.1
 
+/-- The profile allows the descriptor's table element type or global value type. Function and
+memory descriptors are always allowed. -/
 def ImportAllowed (profile : ValidationProfile) (desc : module.ImportDesc) : Prop :=
   match desc with
   | .Func _ | .Memory _ => True
   | .Table tt => ModuleBinary.ElemTypeAllowed profile tt.elem
   | .Global gt => ModuleBinary.ValueTypeAllowed profile gt.valtype
 
+/-- An added import has a descriptor the profile allows. -/
 theorem ImportAdded.allowed {profile env result entry} (h : ImportAdded env result entry profile) :
     ImportAllowed profile entry.desc := by
   obtain ⟨_, hd⟩ := h
@@ -30,6 +43,7 @@ theorem ImportAdded.allowed {profile env result entry} (h : ImportAdded env resu
   · exact hd.2.2.2.2
   · exact hd.2.2.2
 
+/-- Every added import has a descriptor the profile allows. -/
 theorem ImportsAdded.allowed {profile env entries result} (h : ImportsAdded env entries result profile) :
     ∀ entry ∈ entries, ImportAllowed profile entry.desc := by
   induction h with
@@ -47,6 +61,7 @@ namespace Itasca
 
 open ModuleBinary ModuleSections
 
+/-- The import loop adds `count` imports forming a `Rep ImportEncoding` span. -/
 @[step]
 theorem module.decode_import_section_loop.spec (data : Slice U8) (env : module.Env)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
@@ -88,6 +103,7 @@ theorem module.decode_import_section_loop.spec (data : Slice U8) (env : module.E
   · exact ⟨by simp, [], by simp, .nil,
       ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, hbound⟩
 
+/-- `module.decode_import_section` adds the imports of a `VecEncoding ImportEncoding` span. -/
 @[step]
 theorem module.decode_import_section.spec (data : Slice U8) (pos : Usize) (env : module.Env)
     (hbound : ModuleEnv.Bounded env pos.val) (profile : ValidationProfile := .Wasm1) :

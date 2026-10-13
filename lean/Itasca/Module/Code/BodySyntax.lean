@@ -1,17 +1,26 @@
 import Itasca.Module.Env.NameFacts
 import Itasca.Profile.CodeEntry
 
+/-!
+# Segment-free Wasm 1.0 bodies
+
+`SegmentFree` holds for instructions that use no element or data segment index, including those
+nested in blocks. `Profile.BodyBytes.segmentFree` shows every Wasm 1.0 body decoded from bytes is
+segment-free, which justifies typing such bodies without module segment spaces.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.BodyContext
 
-/-- Only segment-indexed instructions are excluded here; recursive structure
-is retained so deleting module segment contexts is justified syntactically. -/
+/-- A non-structured instruction other than `table.init`, `elem.drop`, `memory.init` and
+`data.drop`, the only segment-indexed instructions. -/
 def PlainSegmentFree : instr → Prop
   | .BLOCK _ _ | .LOOP _ _ | .IFELSE _ _ _ => False
   | .TABLE_INIT _ _ | .ELEM_DROP _ | .MEMORY_INIT _ | .DATA_DROP _ => False
   | _ => True
 
+/-- The instruction, and every instruction nested in its blocks, uses no segment index. -/
 inductive SegmentFree : instr → Prop where
   | plain (op : instr) : PlainSegmentFree op → SegmentFree op
   | block (bt : blocktype) (ops : List instr) :
@@ -50,6 +59,7 @@ inductive SegmentFree : instr → Prop where
 
 set_option maxRecDepth 4096 in
 set_option maxHeartbeats 1000000 in
+/-- Every instruction decoded by `Numeric.opcodeMeaning` is segment-free. -/
 theorem numeric_segmentFree (opcode : U8) (op : Numeric.Operation)
     (hmap : Numeric.opcodeMeaning opcode = some op) : SegmentFree op.instruction := by
   unfold Numeric.opcodeMeaning at hmap
@@ -57,6 +67,7 @@ theorem numeric_segmentFree (opcode : U8) (op : Numeric.Operation)
   all_goals first | contradiction | subst op; exact .plain _ trivial
 
 set_option maxRecDepth 4096 in
+/-- Every instruction decoded by `MemoryMeaning.opcodeMeaning` is segment-free. -/
 theorem memory_segmentFree (opcode : U8) (op : MemoryMeaning.Operation)
     (hmap : MemoryMeaning.opcodeMeaning opcode = some op) (arg : code.MemArg) :
     SegmentFree (op.op arg) := by
@@ -64,6 +75,7 @@ theorem memory_segmentFree (opcode : U8) (op : MemoryMeaning.Operation)
   split at hmap <;> simp only [Option.some.injEq, reduceCtorEq] at hmap
   all_goals first | contradiction | subst op; exact .plain _ trivial
 
+/-- A Wasm 1.0 token carries no segment-indexed instruction. -/
 def TokenSegmentFree : Wasm1.Token → Prop
   | .plain op => SegmentFree op
   | _ => True
@@ -80,6 +92,7 @@ theorem token_segmentFree {token bytes} (h : Wasm1.TokenEncoding token bytes) :
   obtain ⟨_, _, _, h⟩ := h
   exact immediate_segmentFree h
 
+/-- Instructions emitted from segment-free tokens are segment-free. -/
 theorem emits_segmentFree {tokens ops} (h : Wasm1.Emits tokens ops)
     (ht : Forall TokenSegmentFree tokens) : Forall SegmentFree ops := by
   induction h with
@@ -109,6 +122,7 @@ theorem emits_segmentFree {tokens ops} (h : Wasm1.Emits tokens ops)
     simpa [Forall, or_imp, forall_and] using And.intro hp
       (SegmentFree.ifElse (Control.blockType bt) _ [] hc (by simp [Forall]))
 
+/-- An encoded Wasm 1.0 body is segment-free. -/
 theorem body_segmentFree {ops bytes} (h : ModuleBinary.BodyEncoding ops bytes) :
     Forall SegmentFree ops := by
   obtain ⟨tokens, htokens, inner, rfl, hemits⟩ := h
@@ -122,6 +136,7 @@ end Itasca.BodyContext
 
 namespace Itasca.Profile
 
+/-- A Wasm 1.0 body encoding is segment-free. -/
 theorem BodyBytes.segmentFree {ops bytes} (h : BodyBytes .Wasm1 ops bytes) :
     Forall BodyContext.SegmentFree ops :=
   BodyContext.body_segmentFree h

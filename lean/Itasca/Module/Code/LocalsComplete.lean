@@ -1,12 +1,22 @@
 import Itasca.Module.Code.Locals
 import Itasca.Module.Readers.BasicComplete
 
+/-!
+# Local declaration completeness
+
+`module.decode_locals.complete` shows that `module.decode_locals` accepts any independent
+`LocalEncoding` vector whose types the profile allows and whose expansion fits in
+`limits.MAX_LOCALS`, returning the expansion `ModuleLocals.declared`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
 open ModuleBinary
 
+/-- The loop of `module.decode_locals` accepts the remaining encoded groups and returns the
+output extended by their expansion. -/
 theorem module.decode_locals_loop.complete (data : Slice U8) (profile : ValidationProfile) (groups : U32)
     (out : alloc.vec.Vec types.ValueType) (pos : Usize) (i : U32)
     (decoded : List (U32 × types.ValueType)) (next : Usize)
@@ -62,6 +72,8 @@ theorem module.decode_locals_loop.complete (data : Slice U8) (profile : Validati
     simpa [module.decode_locals_loop, module.decode_locals_loop.body,
       core.result.Result.Insts.CoreOpsTry.branch, lift, htype, hfitval, hpush, hspace, hj] using hrec
 
+/-- `module.decode_locals` accepts an independently encoded local vector within the limit and
+returns its expansion. -/
 theorem module.decode_locals.complete (data : Slice U8) (pos : Usize) (profile : ValidationProfile)
     (groups : List (U32 × types.ValueType)) (next : Usize)
     (hbytes : At (VecEncoding LocalEncoding) data pos groups next)

@@ -1,12 +1,22 @@
 import Itasca.Support.Result
 import Itasca.Module.Custom.Visitor
 
+/-!
+# Custom section hook invariants
+
+If a visitor's `on_custom_section` hook preserves a predicate on its state (`PreservesInvariant`)
+or an observation of it (`Preserves`), every accepted run of the environment and tail parsers
+preserves it too. The theorems are `module.validate_env_with.accepted_invariant`,
+`module.validate_tail_with.accepted_invariant` and `module.validate_tail_with.accepted_preserves`.
+They speak only about the successful run.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleTail
 
-/-- A custom-section consumer may advance workers while preserving a
-provenance invariant; no fixed work observation is required. -/
+/-- The visitor's `on_custom_section` hook preserves the predicate `P` on its state across
+successful calls. Hooks may advance workers, and no fixed work observation is required. -/
 def PreservesInvariant {V : Type} (visitor : module.ModuleVisitor V) (P : V → Prop) : Prop :=
   ∀ v chunk v', visitor.on_custom_section v chunk = .ok (.Ok (), v') → P v → P v'
 
@@ -16,6 +26,7 @@ namespace Itasca
 
 variable {profile : ValidationProfile}
 
+/-- A successful run of the tail loop preserves `P` when the custom hook does. -/
 theorem module.validate_tail_with_loop.accepted_invariant {V : Type}
     (visitor : module.ModuleVisitor V) (P : V → Prop) (hp : ModuleTail.PreservesInvariant visitor P)
     (data : Slice U8) (env : module.Env) (v : V)
@@ -94,8 +105,8 @@ theorem module.validate_tail_with_loop.accepted_invariant {V : Type}
                 · simp [he] at ht
           · simp [hdata] at h
 
-/-- Accepted tail validation preserves a scheduler invariant when custom
-callbacks do. This speaks only about the actual successful run. -/
+/-- A successful `module.validate_tail_with` run preserves a scheduler invariant when the custom
+hook does. -/
 theorem module.validate_tail_with.accepted_invariant {V : Type}
     (visitor : module.ModuleVisitor V) (P : V → Prop) (hp : ModuleTail.PreservesInvariant visitor P)
     (data : Slice U8) (pos : Usize) (env : module.Env) (v : V) (result : module.Tail) (v' : V)
@@ -104,7 +115,8 @@ theorem module.validate_tail_with.accepted_invariant {V : Type}
   module.validate_tail_with_loop.accepted_invariant visitor P hp data env v
     (alloc.vec.Vec.new _) pos false result v' h
 
-/-- Environment custom callbacks preserve arbitrary scheduler provenance. -/
+/-- A successful run of the environment loop preserves any scheduler provenance `P` that the custom
+hook preserves. -/
 theorem module.validate_env_with_loop.accepted_invariant {V : Type}
     (visitor : module.ModuleVisitor V) (P : V → Prop)
     (hp : ModuleTail.PreservesInvariant visitor P) (data : Slice U8)
@@ -188,6 +200,7 @@ theorem module.validate_env_with_loop.accepted_invariant {V : Type}
                     · have hne : consumed.val ≠ last.val := fun h => he (UScalar.eq_of_val_eq h)
                       simp [hne] at ht
 
+/-- A successful `module.validate_env_with` run preserves `P` when the custom hook does. -/
 theorem module.validate_env_with.accepted_invariant {V : Type}
     (visitor : module.ModuleVisitor V) (P : V → Prop)
     (hp : ModuleTail.PreservesInvariant visitor P) (data : Slice U8)
@@ -212,8 +225,8 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleTail
 
-/-- A custom-section consumer may change its own state while preserving an
-observation, such as the work list handed to deferred compilation threads. -/
+/-- The visitor's `on_custom_section` hook may change its own state while preserving the
+observation `observe`, such as the work list handed to deferred compilation threads. -/
 def Preserves {V A : Type} (visitor : module.ModuleVisitor V) (observe : V → A) : Prop :=
   ∀ v chunk v', visitor.on_custom_section v chunk = .ok (.Ok (), v') → observe v' = observe v
 
@@ -223,6 +236,7 @@ namespace Itasca
 
 variable {profile : ValidationProfile}
 
+/-- A successful run of the tail loop preserves an observation that the custom hook preserves. -/
 theorem module.validate_tail_with_loop.accepted_preserves {V A : Type}
     (visitor : module.ModuleVisitor V) (observe : V → A) (hp : ModuleTail.Preserves visitor observe)
     (data : Slice U8) (env : module.Env) (v : V)
@@ -236,8 +250,8 @@ theorem module.validate_tail_with_loop.accepted_preserves {V A : Type}
   exact module.validate_tail_with_loop.accepted_invariant visitor _ hinvariant
     data env v segments pos seen result v' h rfl
 
-/-- Accepted tail validation preserves deferred work observations when custom
-callbacks do. This speaks only about the actual successful run. -/
+/-- A successful `module.validate_tail_with` run preserves deferred work observations when the
+custom hook does. -/
 theorem module.validate_tail_with.accepted_preserves {V A : Type}
     (visitor : module.ModuleVisitor V) (observe : V → A) (hp : ModuleTail.Preserves visitor observe)
     (data : Slice U8) (pos : Usize) (env : module.Env) (v : V) (result : module.Tail) (v' : V)

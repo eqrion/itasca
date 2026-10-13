@@ -3,11 +3,20 @@ import Itasca.Module.Const.ParserComplete
 import Itasca.Module.Sections.ElementInitComplete
 import Itasca.Module.Env.Requirements
 
+/-!
+# Completeness of the element header and entry parser
+
+`module.decode_element_header.complete` and `module.decode_element.complete`: an independently
+encoded element header or entry that is valid in the environment is accepted, and the declared
+functions gain its references. Soundness is in `Module/Sections/ElementHeader`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 open ModuleBinary ModuleElements
 
+/-- `module.decode_element_header` accepts a valid `HeaderEncoding` span. -/
 theorem module.decode_element_header.complete {data : Slice U8} {pos next : Usize}
     {env : module.Env} {profile mode elem expressions}
     (hb : At (fun value => HeaderEncoding profile value.1 value.2.1 value.2.2)
@@ -184,6 +193,8 @@ open Aeneas Aeneas.Std
 namespace Itasca
 open ModuleBinary ModuleElements ModuleSections
 
+/-- `module.decode_element` accepts an `ElementEncodingFor` span of a raw element that is valid in
+the environment. -/
 theorem module.decode_element.complete (data : Slice U8) (env : module.Env)
     (profile : ValidationProfile) (pos next : Usize) (entry : ModuleBinary.Element)
     (hb : At (ElementEncodingFor profile) data pos entry next)

@@ -2,6 +2,16 @@ import Itasca.Module.Env.Declarations
 import Itasca.Module.Sections.Type
 import Itasca.Module.Readers.Names
 
+/-!
+# Export and start section parsers
+
+Soundness of `module.decode_export_section` and `module.decode_start_section`. `ExportsAdded` says
+the environment gains the exports in order, each with a fresh name, an in-range index and the
+function references it declares. The decoded span is a `VecEncoding ExportEncoding`. An accepted
+start section names a function without parameters or results. Completeness is in
+`Module/Sections/ExportComplete`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
@@ -31,7 +41,7 @@ private theorem names_equal_loop_spec (a b : Slice U8) (i : Usize)
       rw [i4_post, List.take_succ_eq_append_getElem ha, List.take_succ_eq_append_getElem hb, heq, hbyte]
   · exact ⟨hi, hprefix⟩
 
-/-- The byte-name comparison terminates and computes actual list equality. -/
+/-- `module.names_equal` returns normally and decides equality of the byte lists. -/
 @[step]
 theorem module.names_equal.spec (a b : Slice U8) :
     module.names_equal a b ⦃ result => result = true ↔ a.val = b.val ⦄ := by
@@ -46,6 +56,7 @@ theorem module.names_equal.spec (a b : Slice U8) :
   · rename_i heq
     exact names_equal_loop_spec a b 0#usize (by scalar_tac) (by simp) (by simp)
 
+/-- `module.export_name_taken` decides whether the name is already exported. -/
 @[step]
 theorem module.export_name_taken.spec (env : module.Env) (nm : Slice U8) :
     module.export_name_taken env nm ⦃ result =>
@@ -82,6 +93,9 @@ end Itasca
 
 namespace Itasca.ModuleSections
 
+/-- `result` is `env` with `entry` appended to the exports, under a fresh name with a resolvable
+descriptor, and its function references appended to the declared functions. Nothing else
+changes. -/
 def ExportAdded (env result : module.Env) (entry : module.Export) : Prop :=
   result = { env with exports := result.exports, declared_funcs := result.declared_funcs } ∧
   result.exports.val = env.exports.val ++ [entry] ∧
@@ -89,41 +103,49 @@ def ExportAdded (env result : module.Env) (entry : module.Export) : Prop :=
   (∃ xt, ModuleExternals.ExportResolves env entry xt) ∧
   result.declared_funcs.val = env.declared_funcs.val ++ ModuleReferences.exportIndices entry
 
+/-- `result` is `initial` after adding `entries` one at a time by `ExportAdded`. -/
 inductive ExportsAdded (initial : module.Env) : List module.Export → module.Env → Prop where
   | nil : ExportsAdded initial [] initial
   | snoc {entries before after entry} : ExportsAdded initial entries before →
       ExportAdded before after entry → ExportsAdded initial (entries ++ [entry]) after
 
+/-- The result's exports are the initial exports followed by the added entries. -/
 theorem ExportsAdded.exports {env entries result} (h : ExportsAdded env entries result) :
     result.exports.val = env.exports.val ++ entries := by
   induction h with
   | nil => simp
   | snoc _ ha ih => simpa [ih, List.append_assoc] using ha.2.1
 
+/-- Adding exports changes only the exports and the declared functions. -/
 theorem ExportsAdded.unchanged {env entries result} (h : ExportsAdded env entries result) :
     result = { env with exports := result.exports, declared_funcs := result.declared_funcs } := by
   induction h with
   | nil => cases env; rfl
   | snoc _ ha ih => rw [ha.1, ih]
 
+/-- The declared functions gain the references of every added export. -/
 theorem ExportsAdded.references {env entries result} (h : ExportsAdded env entries result) :
     result.declared_funcs.val = env.declared_funcs.val ++ entries.flatMap ModuleReferences.exportIndices := by
   induction h with
   | nil => simp
   | snoc _ ha ih => simpa [ih, List.append_assoc] using ha.2.2.2.2
 
+/-- The binary kind byte of an export descriptor. -/
 def descByte : module.ExportDesc → U8
   | .Func _ => 0#u8 | .Table _ => 1#u8 | .Memory _ => 2#u8 | .Global _ => 3#u8
 
+/-- The index of an export descriptor. -/
 def descIndex : module.ExportDesc → U32
   | .Func idx | .Table idx | .Memory idx | .Global idx => idx
 
+/-- The descriptor's index is in range for its index space. -/
 def ExportDescValid (env : module.Env) : module.ExportDesc → Prop
   | .Func idx => idx.val < env.func_types.val.length
   | .Table idx => idx.val < env.table_types.val.length
   | .Memory idx => idx.val < env.mem_types.val.length
   | .Global idx => idx.val < env.global_types.val.length
 
+/-- A valid descriptor has an external type. -/
 theorem ExportDescValid.resolves {env desc} (h : ExportDescValid env desc) (nm : alloc.vec.Vec U8) :
     ∃ xt, ModuleExternals.ExportResolves env ⟨nm, desc⟩ xt := by
   cases desc with
@@ -132,6 +154,7 @@ theorem ExportDescValid.resolves {env desc} (h : ExportDescValid env desc) (nm :
   | Memory idx => exact ⟨.Memory env.mem_types.val[idx.val], h, rfl⟩
   | Global idx => exact ⟨.Global env.global_types.val[idx.val], h, rfl⟩
 
+/-- A kind byte followed by the index encoding is an `ExportDescEncoding`. -/
 theorem exportDesc_encoded (desc : module.ExportDesc) {bytes}
     (h : ModuleBinary.IndexEncoding (descIndex desc) bytes) :
     ModuleBinary.ExportDescEncoding desc (descByte desc :: bytes) := by
@@ -141,6 +164,7 @@ theorem exportDesc_encoded (desc : module.ExportDesc) {bytes}
   | Memory idx => exact .memory idx h
   | Global idx => exact .global idx h
 
+/-- A name, a kind byte and an index in sequence form an `ExportEncoding`. -/
 theorem export_encoded {data start p1 p2 next nm kind idx desc}
     (hn : ModuleBinary.At ModuleBinary.NameEncoding data start nm p1)
     (hk : ModuleBinary.At ModuleBinary.ByteEncoding data p1 kind p2)
@@ -162,6 +186,7 @@ namespace Itasca
 
 open ModuleSections
 
+/-- `module.export_desc` returns the descriptor for a kind byte and index, which is in range. -/
 @[step]
 theorem module.export_desc.spec (env : module.Env) (kind : U8) (idx : U32) :
     module.export_desc env kind idx ⦃ r => match r with
@@ -172,7 +197,8 @@ theorem module.export_desc.spec (env : module.Env) (kind : U8) (idx : U32) :
   split <;> step* <;> simp_all [descByte, descIndex, ExportDescValid]
   all_goals with_unfolding_all rfl
 
-/-- A successful start declaration names a nullary function with no result. -/
+/-- An accepted `module.decode_start_section` reads a `StartEncoding` span and records an in-range
+function without parameters or results as the start. -/
 @[step]
 theorem module.decode_start_section.spec (data : Slice U8) (start : Usize) (env : module.Env) :
     module.decode_start_section data start env ⦃ r => match r.1 with
@@ -265,6 +291,8 @@ private theorem export_step (data : Slice U8) (count : U32) (env : module.Env)
                             simp_all only [List.length_append, List.length_singleton] <;> omega
                         · scalar_tac
 
+/-- The export loop adds `count` exports forming a `Rep ExportEncoding` span, each with a fresh
+name and valid descriptor. -/
 theorem module.decode_export_section_loop.spec (data : Slice U8) (env : module.Env)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
     (hbound : ModuleEnv.Bounded env start.val) :
@@ -303,8 +331,8 @@ theorem module.decode_export_section_loop.spec (data : Slice U8) (env : module.E
           · simpa using hbytes.snoc he
   · exact ⟨by simp, [], by simp, .nil, ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, hbound⟩
 
-/-- The export section enforces fresh names and valid indices as it appends
-entries, while preserving their independent binary representations. -/
+/-- `module.decode_export_section` adds the exports of a `VecEncoding ExportEncoding` span, each
+with a fresh name and valid descriptor. -/
 @[step]
 theorem module.decode_export_section.spec (data : Slice U8) (start : Usize) (env : module.Env)
     (hbound : ModuleEnv.Bounded env start.val) :

@@ -1,5 +1,13 @@
 import Itasca.Module.Const.Syntax
 
+/-!
+# Typing of constant expressions
+
+A valid initializer is generated-typed: `Valid.instruction_typed` gives `Instr_ok` and
+`Instr_const`, `Valid.expr_ok_const` gives `Expr_ok_const`, and `global_typed` gives `Global_ok`
+for a global with a valid initializer. The converse is in `Module/Const/Inversion`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleConstants
@@ -13,6 +21,8 @@ private theorem global_lookup {env C} (hC : GlobalContext env C)
   exact ⟨by simpa using hb, by
     rw [getElem!_pos _ _ (by simpa using hb), List.getElem_map, List.getElem_take, hgt]⟩
 
+/-- A valid initializer is a constant instruction typed `[] -> [t]` under any context that agrees
+with the environment. -/
 theorem Valid.instruction_typed {env e t} (h : Valid env e t)
     (C : context) (hC : wf_context C) (hglobals : GlobalContext env C) (hfunctions : FunctionContext env C) :
     Instr_ok C (instruction e) (.mk_functype (.mk_list []) (.mk_list [Translate.valueType t])) ∧
@@ -39,6 +49,7 @@ theorem Valid.instruction_typed {env e t} (h : Valid env e t)
       (instruction_wf (.GlobalGet idx))
     simpa [Translate.globalType, hconst, Translate.mutability, proj_uN_0] using he
 
+/-- A valid initializer satisfies `Expr_ok_const` at its type. -/
 theorem Valid.expr_ok_const {env e t} (h : Valid env e t)
     (C : context) (hC : wf_context C) (hglobals : GlobalContext env C) (hfunctions : FunctionContext env C) :
     Expr_ok_const C (expression e) (Translate.valueType t) := by
@@ -48,9 +59,11 @@ theorem Valid.expr_ok_const {env e t} (h : Valid env e t)
     (.mk_Expr_const C _ (by simpa [Forall, expression] using hc) hC (expression_wf _))
     hC (expression_wf _)
 
+/-- The SpecTec global of a decoded global. -/
 def global (g : module.Global) : _root_.global :=
   .GLOBAL (Translate.globalType g.gtype) (expression g.init)
 
+/-- A global with a valid initializer satisfies `Global_ok`. -/
 theorem global_typed (env : module.Env) (g : module.Global)
     (h : Valid env g.init g.gtype.valtype) (C : context)
     (hC : wf_context C) (hglobals : GlobalContext env C) (hfunctions : FunctionContext env C) :

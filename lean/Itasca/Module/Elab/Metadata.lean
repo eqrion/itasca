@@ -1,11 +1,21 @@
 import Itasca.Module.Elab.Profile
 
+/-!
+# Returned metadata
+
+`Matches` says the environment and tail the validator returns describe exactly a raw module, and
+`AccessorTypes` says the results of `module.import_types` and `module.export_types` agree with the
+elaborated module's import types and typed exports. `contextOf` is the module context computed from
+the raw module alone, and `accessorTypes` and `matches_fromEnv` establish these properties for a
+valid cached environment.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleElaboration
 
-/-- Index spaces are derived from the independent decoded module, including
-imports in their original order, rather than from validator caches. -/
+/-- The module typing context computed from the independently decoded module. Index spaces list
+imports in import order and do not depend on validator caches. -/
 def contextOf (raw : ModuleBinary.Module) : context :=
   let imports := raw.imports.map (fun e => importType raw.types e.desc)
   ⟨raw.types.map EnvTranslation.funcType,
@@ -16,6 +26,7 @@ def contextOf (raw : ModuleBinary.Module) : context :=
     raw.elements.map (fun entry => Translate.referenceType entry.elem),
     List.replicate raw.data.length .OK, [], [], none⟩
 
+/-- For a cached environment, the raw module's own context is `moduleContext`. -/
 theorem contextOf_fromEnv {env tables memories codes segments}
     (hc : ModuleEnv.Cache env tables memories) :
     contextOf (fromEnv env tables memories codes segments) =
@@ -25,6 +36,7 @@ theorem contextOf_fromEnv {env tables memories codes segments}
     EnvTranslation.elementTypes, List.map_map, Function.comp_def]
     using moduleContext_eq hc (EnvTranslation.elementTypes env) segments.length
 
+/-- Resolved import types translate to the elaborated import types. -/
 theorem import_types_resolved {env entries xts}
     (h : List.Forall₂ (ModuleExternals.ImportResolves env) entries xts) :
     xts.map ModuleExternals.externalType = entries.map (fun e => importType env.types.val e.desc) := by
@@ -32,8 +44,9 @@ theorem import_types_resolved {env entries xts}
   | nil => rfl
   | cons hp _ ih => simp [importType_resolved hp, ih]
 
-/-- Exact successful results of both public type accessors are associated with
-the independently elaborated module. `List.Forall₂` preserves export count. -/
+/-- Both type accessors succeed on `env`, and their results match the elaborated module: the import
+types are equal, and the exports are typed by `Export_ok` pointwise, which preserves the export
+count. -/
 def AccessorTypes (env : module.Env) (raw : ModuleBinary.Module) : Prop :=
   ∃ imports exports,
     module.import_types env = .ok (.Ok imports) ∧
@@ -42,6 +55,8 @@ def AccessorTypes (env : module.Env) (raw : ModuleBinary.Module) : Prop :=
     List.Forall₂ (Export_ok (contextOf raw)) (raw.exports.map exportDecl)
       (exports.val.map ModuleExternals.externalType)
 
+/-- A valid cached environment with well-formed export names has `AccessorTypes` for the module it
+describes. -/
 theorem accessorTypes {env tables memories codes segments}
     (hc : ModuleEnv.Cache env tables memories) {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile)
     (hn : ∀ entry ∈ env.exports.val, wf_name (ModuleBinary.nameOfBytes entry.name.val)) :
@@ -56,12 +71,13 @@ theorem accessorTypes {env tables memories codes segments}
     simpa [fromEnv, List.map_map, Function.comp_def] using
       exports_typed he hn _ (moduleContext_matches env (EnvTranslation.elementTypes env) segments.length)
 
-/-- Returned declarations and data segments are exactly the independently
-decoded module's declarations; merged runtime spaces retain their cache proof. -/
+/-- The returned declarations and data segments are exactly the independently decoded module's
+declarations, and the merged index spaces satisfy `ModuleEnv.Cache`. -/
 def Matches (env : module.Env) (tail : module.Tail) (raw : ModuleBinary.Module) : Prop :=
   raw = fromEnv env raw.tables raw.memories raw.codes tail.data.val ∧
     ModuleEnv.Cache env raw.tables raw.memories
 
+/-- A cached environment and tail match the module `fromEnv` builds from them. -/
 theorem matches_fromEnv {env tables memories codes} (tail : module.Tail)
     (hc : ModuleEnv.Cache env tables memories) :
     Matches env tail (fromEnv env tables memories codes tail.data.val) := ⟨rfl, hc⟩

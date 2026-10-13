@@ -1,10 +1,19 @@
 import Itasca.Module.Env.ReadyContexts
 import Mathlib.Tactic.IntervalCases
 
+/-!
+# Requirements from typing
+
+`profile_requirements_of_typing` derives `ModuleEnv.Requirements`, the semantic requirements of
+every declaration section, from the generated typing of the sections, the module-level profile
+conditions and the signature limits. `requirements_of_typing` is the Wasm 1.0 form.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleElaboration
 
+/-- The table space translated from raw import types is the translation of `rawTables`. -/
 theorem raw_tables_projection (ts : List types.FuncType) (entries : List ModuleBinary.Import) :
     ModuleTranslation.tables (entries.map (fun e => importType ts e.desc)) =
       (ModuleSections.rawTables entries).map EnvTranslation.tableType := by
@@ -14,6 +23,7 @@ theorem raw_tables_projection (ts : List types.FuncType) (entries : List ModuleB
     simp only [ModuleSections.rawTables, importType] at ih
     cases hd : e.desc <;> simp [ModuleTranslation.tables, importType, ModuleSections.rawTables, hd, ih]
 
+/-- The memory space translated from raw import types is the translation of `rawMemories`. -/
 theorem raw_memories_projection (ts : List types.FuncType) (entries : List ModuleBinary.Import) :
     ModuleTranslation.mems (entries.map (fun e => importType ts e.desc)) =
       (ModuleSections.rawMemories entries).map EnvTranslation.memType := by
@@ -23,18 +33,20 @@ theorem raw_memories_projection (ts : List types.FuncType) (entries : List Modul
     simp only [ModuleSections.rawMemories, importType] at ih
     cases hd : e.desc <;> simp [ModuleTranslation.mems, importType, ModuleSections.rawMemories, hd, ih]
 
+/-- Limits valid in the SpecTec sense are valid in the binary sense for the same bound. -/
 theorem limits_scalar {lim : types.Limits} {bound : U32}
     (h : ModuleTranslation.LimitsValid lim bound.val) : ModuleBinary.LimitsValid lim bound := by
   obtain ⟨hlo, hhi⟩ := h
   exact ⟨hlo, fun m hm => hhi m hm⟩
 
+/-- A typed export index satisfies the export descriptor requirement of the environment. -/
 theorem external_index_valid {env : module.Env} {C : context} {desc : module.ExportDesc} {xt}
     (hc : CodeEntry.ModuleContext env C) (h : Externidx_ok C (exportIndex desc) xt) :
     ModuleSections.ExportDescValid env desc := by
   cases desc <;> cases h <;>
     simp_all [ModuleSections.ExportDescValid, hc.funcs, hc.globals, hc.tables, hc.mems, proj_uN_0]
 
-/-- Generated typing and the independent Wasm 1.0 profile discharge every
+/-- Generated typing, the module-level profile conditions and the signature limits discharge every
 semantic prerequisite of the environment parser at every declaration prefix. -/
 theorem profile_requirements_of_typing {profile : ValidationProfile} {raw : ModuleBinary.Module}
     (he : Elaborates raw (moduleOf raw)) (hs : SectionsTyped raw) (hp : ModuleConditions raw profile)
@@ -95,6 +107,7 @@ theorem profile_requirements_of_typing {profile : ValidationProfile} {raw : Modu
       (by simpa [initializerContextOf] using hr.tables_context (by decide)) (hs.elements e hm)
   · trivial
 
+/-- `profile_requirements_of_typing` for Wasm 1.0. -/
 theorem requirements_of_typing {raw : ModuleBinary.Module}
     (he : Elaborates raw (moduleOf raw)) (hs : SectionsTyped raw) (hp : Profile raw) :
     ModuleEnv.Requirements raw := by

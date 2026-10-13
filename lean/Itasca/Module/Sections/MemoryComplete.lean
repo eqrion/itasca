@@ -1,12 +1,21 @@
 import Itasca.Module.Sections.Memory
 import Itasca.Module.Readers.TypesComplete
 
+/-!
+# Completeness of the memory section parser
+
+`module.decode_memory_section.complete`: an independently encoded vector of memory types with
+limits within `limits.MAX_MEMORY_PAGES`, at most one memory in total, is accepted and the
+environment gains those memories (`MemoriesAdded`). Soundness is in `Module/Sections/Memory`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
 open ModuleBinary ModuleSections
 
+/-- The memory loop accepts the remaining valid memory types of a repetition span and adds them. -/
 theorem module.decode_memory_section_loop.complete
     (data : Slice U8) (env : module.Env) (count : U32) (pos : Usize) (i : U32)
     (added : List types.MemType) (next : Usize)
@@ -51,6 +60,7 @@ theorem module.decode_memory_section_loop.complete
       · rw [hadded.1]
       · simpa [updated, htypes, List.append_assoc] using hadded.2
 
+/-- `module.decode_memory_section` accepts a vector span of valid memory types and adds them. -/
 theorem module.decode_memory_section.complete (data : Slice U8) (pos : Usize)
     (env : module.Env) (added : List types.MemType) (next : Usize)
     (hb : At (VecEncoding MemTypeEncoding) data pos added next)

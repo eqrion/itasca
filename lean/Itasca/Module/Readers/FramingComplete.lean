@@ -1,11 +1,20 @@
 import Itasca.Module.Readers.BasicComplete
 import Itasca.Module.Readers.Header
 
+/-!
+# Completeness of section framing
+
+Acceptance (`.complete`) of `module.have_bytes`, `module.copy_bytes`, `module.read_section_header`
+and `module.read_header` from independent byte spans, and `At.section_split`, which recovers the
+header and payload spans of a complete section encoding. Soundness is in `Module/Readers/Basic` and
+`Module/Readers/Header`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleBinary
 
-/-- Reverse a complete section into its exact header and payload intervals. -/
+/-- A section encoding splits into a `SectionHeader` and the payload span. -/
 theorem At.section_split {α : Type} {R : α → List U8 → Prop}
     {data pos next id value} (h : At (SectionEncoding id R) data pos value next) :
     ∃ first, SectionHeader data pos id first next ∧ At R data first value next := by
@@ -24,6 +33,7 @@ end Itasca.ModuleBinary
 namespace Itasca
 open ModuleBinary
 
+/-- `module.have_bytes` accepts when the bytes are available. -/
 theorem module.have_bytes.complete (data : Slice U8) (pos n : Usize)
     (h : pos.val + n.val ≤ data.length) : module.have_bytes data pos n = .ok (.Ok ()) := by
   obtain ⟨r, hr, hgood, _⟩ := WP.spec_imp_exists
@@ -40,6 +50,7 @@ theorem module.copy_bytes.complete (data : Slice U8) (first last : Usize)
     (List.append_cancel_right (hs.suffix.symm.trans h.suffix))
   simpa [he] using hr
 
+/-- `module.read_section_header` accepts a `SectionHeader` span and returns its id and bounds. -/
 theorem module.read_section_header.complete (data : Slice U8) (pos : Usize)
     (id : U8) (first last : Usize) (h : SectionHeader data pos id first last) :
     module.read_section_header data pos = .ok (.Ok (id, first, last)) := by
@@ -67,6 +78,7 @@ private theorem read_at (data : Slice U8) (pos next : Usize) (byte : U8)
   have he : p = next := UScalar.eq_of_val_eq (hnext.trans hn.symm)
   simpa [he, hb] using hr
 
+/-- `module.read_header` accepts the magic and version bytes. -/
 theorem module.read_header.complete (data : Slice U8) (next : Usize)
     (h : Wasm1.BytesAt data 0#usize magicVersion next) :
     module.read_header data = .ok (.Ok next) := by

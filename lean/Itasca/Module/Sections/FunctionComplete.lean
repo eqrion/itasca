@@ -1,12 +1,22 @@
 import Itasca.Module.Sections.Function
 import Itasca.Module.Readers.BasicComplete
 
+/-!
+# Completeness of the function section parser
+
+`module.decode_function_section.complete`: an independently encoded vector of in-range type
+indices is accepted and the environment gains those indices and their signatures
+(`FunctionsAdded`). `module.lookup_type.complete` is the lookup step. Soundness is in
+`Module/Sections/Function`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
 open ModuleBinary ModuleSections
 
+/-- `module.lookup_type` returns the signature at an in-range index. -/
 theorem module.lookup_type.complete (env : module.Env) (idx : U32)
     (hi : idx.val < env.types.val.length) :
     module.lookup_type env idx = .ok (.Ok env.types.val[idx.val]) := by
@@ -15,8 +25,8 @@ theorem module.lookup_type.complete (env : module.Env) (idx : U32)
   | Err e => have := hp.2; omega
   | Ok ft => obtain ⟨_, rfl⟩ := hp; exact hr
 
-/-- The function section appends each independently decoded type index and the
-signature it names, in the same order as the raw declaration vector. -/
+/-- The function loop accepts the remaining in-range indices of a repetition span and appends each
+index with its signature, in order. -/
 theorem module.decode_function_section_loop.complete
     (data : Slice U8) (env : module.Env) (count : U32) (pos : Usize) (i : U32)
     (indices : List U32) (next : Usize)
@@ -67,6 +77,7 @@ theorem module.decode_function_section_loop.complete
       · simpa [updated, hids, List.append_assoc] using hadded.2.1
       · simpa [updated, hfuncs, List.append_assoc] using hadded.2.2.1
 
+/-- `module.decode_function_section` accepts a vector span of in-range type indices. -/
 theorem module.decode_function_section.complete (data : Slice U8) (pos : Usize)
     (env : module.Env) (indices : List U32) (next : Usize)
     (hb : At (VecEncoding IndexEncoding) data pos indices next)

@@ -1,17 +1,26 @@
 import Itasca.Binary.Module
 import Itasca.Module.Elab.Translation
 
+/-!
+# Constant expression syntax
+
+`ModuleConstants.Valid` is the validator's typing relation for constant initializers
+(`types.ConstExpr`), independent of parsing. `instruction` and `expression` translate an
+initializer to SpecTec syntax, and `GlobalContext` and `FunctionContext` tie a SpecTec `context`
+to the decoded environment. Typing against `Expr_ok_const` is in `Module/Const/Typing`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleConstants
 
-/-- The operand type corresponding to a table/reference type. -/
+/-- The operand type corresponding to a table element type. -/
 def referenceValueType : types.ElemType → types.ValueType
   | .FuncRef => .FuncRef
   | .ExternRef => .ExternRef
 
-/-- Initializer validity is independent of parser execution. A `ref.func`
-initializer declares its own reference; index bounds still have to hold. -/
+/-- The initializer has the given type in `env`. `ref.func` needs an in-range function index, and
+`global.get` needs an imported immutable global. -/
 inductive Valid (env : module.Env) : types.ConstExpr → types.ValueType → Prop where
   | i32 (value : I32) : Valid env (.I32 value) .I32
   | i64 (value : I64) : Valid env (.I64 value) .I64
@@ -27,8 +36,7 @@ inductive Valid (env : module.Env) : types.ConstExpr → types.ValueType → Pro
       (himport : idx.val < env.num_imported_globals.val)
       (hconst : gt.mutability = .Const) : Valid env (.GlobalGet idx) gt.valtype
 
-/-- A well-typed initializer cannot introduce a disallowed constant form when
-its expected operand type is admitted by the selected profile. -/
+/-- A valid initializer uses only constant forms the profile allows, when its type is allowed. -/
 theorem Valid.const_allowed {env value expected} (h : Valid env value expected)
     {profile : ValidationProfile} (ha : ModuleBinary.ValueTypeAllowed profile expected) :
     ModuleBinary.ConstAllowed profile value := by
@@ -40,7 +48,8 @@ theorem Valid.const_allowed {env value expected} (h : Valid env value expected)
     cases profile <;> cases ty <;>
       simp_all [ModuleBinary.ValueTypeAllowed, ModuleBinary.ConstAllowed, referenceValueType]
 
-/-- Initializer syntax preserves the low-to-high order of all vector bits. -/
+/-- Translates an initializer to a SpecTec instruction. `V128` combines the low and high halves in
+little-endian order. -/
 def instruction : types.ConstExpr → instr
   | .I32 value => Spec.i32Const value
   | .I64 value => ScalarConst.i64 value
@@ -51,8 +60,10 @@ def instruction : types.ConstExpr → instr
   | .RefFunc idx => .REF_FUNC (.mk_uN idx.val)
   | .GlobalGet idx => .GLOBAL_GET (.mk_uN idx.val)
 
+/-- The single-instruction SpecTec expression of an initializer. -/
 def expression (e : types.ConstExpr) : expr := [instruction e]
 
+/-- The translated instruction is well-formed. -/
 theorem instruction_wf (e : types.ConstExpr) : wf_instr (instruction e) := by
   cases e with
   | I32 value => exact Spec.i32Const_wf value
@@ -74,11 +85,11 @@ theorem instruction_wf (e : types.ConstExpr) : wf_instr (instruction e) := by
 theorem expression_wf (e : types.ConstExpr) : Forall wf_instr (expression e) := by
   simpa [expression, Forall] using instruction_wf e
 
-/-- Initializers expose the imported prefix of the global cache. -/
+/-- `C.GLOBALS` is the imported prefix of the environment's global types. -/
 def GlobalContext (env : module.Env) (C : context) : Prop :=
   C.GLOBALS = (env.global_types.val.take env.num_imported_globals.val).map Translate.globalType
 
-/-- Function reference bounds use the complete imported-and-defined function space. -/
+/-- `C.FUNCS` is the environment's function types, imported and defined. -/
 def FunctionContext (env : module.Env) (C : context) : Prop :=
   C.FUNCS = env.func_types.val.map EnvTranslation.funcType
 

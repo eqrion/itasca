@@ -1,6 +1,15 @@
 import Itasca.Binary.Module
 import Itasca.Module.Code.BodyContext
 
+/-!
+# Body typing without data-index instructions
+
+A body that contains no data-index instruction stays typed when its data space is replaced.
+`typed_no_data` shows typing in an empty data space rules out data-index instructions, and
+`instrs_transport_of_no_data` moves such a body between contexts that agree outside the segment
+spaces and share their element space. This covers modules without a data count section.
+-/
+
 namespace Itasca.ModuleBinary
 
 @[simp] theorem instructionsUseData_append (xs ys : List instr) :
@@ -9,7 +18,7 @@ namespace Itasca.ModuleBinary
   | nil => rfl
   | cons op ops ih => simp [instructionsUseData, ih, Bool.or_assoc]
 
-/-- Generated typing cannot mention a data index when its data space is empty,
+/-- Generated typing in a context with an empty data space implies no data-index instruction occurs,
 even in nested or unreachable instructions. -/
 theorem typed_no_data {C : context} {ops : List instr} {ft : functype}
     (h : Instrs_ok C ops ft) : C.DATAS = [] → instructionsUseData ops = false := by
@@ -28,8 +37,8 @@ end Itasca.ModuleBinary
 
 namespace Itasca.BodyContext
 
-/-- Syntax without data-index operations permits data contexts to be replaced,
-while retaining the complete element space used by table operations. -/
+/-- A body without data-index instructions stays typed when the data space is replaced, and keeps
+the same element space used by table operations. -/
 theorem instrs_datas_of_syntax {C : context} {ops : List instr} {ft : functype}
     (h : Instrs_ok C ops ft) :
     ∀ datas, ModuleBinary.instructionsUseData ops = false →
@@ -444,6 +453,8 @@ theorem instrs_datas_of_syntax {C : context} {ops : List instr} {ft : functype}
       | exact blocktype_segments (by assumption) _ _
       | (apply_assumption; assumption)
 
+/-- A body without data-index instructions moves to any context that agrees outside the segment
+spaces and has the same element space. -/
 theorem instrs_transport_of_no_data {C D : context} {ops : List instr} {ft : functype}
     (h : Instrs_ok C ops ft) (hs : ModuleBinary.instructionsUseData ops = false)
     (he : C.ELEMS = D.ELEMS) (hc : SameCore C D) : Instrs_ok D ops ft := by

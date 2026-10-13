@@ -1,15 +1,24 @@
 import Itasca.Module.Code.EntryWitness
 import Itasca.Wasm1.Trace.Body
 
+/-!
+# Code entry traces
+
+`CodeEntry.AcceptedTrace` ties an entry's independent code encoding, its generated typing and the
+operator stream a recording visitor observed to one instruction tree. `Witness.trace_sound` builds
+it from a `Witness`, and `module.validate_code_entry_with.trace_sound` states it for a successful
+Wasm 1.0 call of `module.validate_code_entry_with`.
+-/
+
 open Aeneas Aeneas.Std
 
 namespace Itasca.CodeEntry
 
 open VisitorTrace
 
-/-- Independent accepted-entry provenance. The exact code bytes, generated
-typing and recorded operator stream use the same instruction tree. The start
-event uses module offsets; operator states use the sliced body's offsets. -/
+/-- The observations of an accepted entry come from a function-start event followed by body
+operator events. The code bytes, generated typing and recorded operators share one instruction
+tree. The start event uses module offsets, and operator states use offsets of the sliced body. -/
 def AcceptedTrace (data : Slice U8) (env : module.Env) (index start finish : Usize)
     (observations : List Observation) : Prop :=
   ∃ (typeIdx : U32) (groups : List (U32 × types.ValueType)) (ctx : code.Context)
@@ -36,6 +45,7 @@ def AcceptedTrace (data : Slice U8) (env : module.Env) (index start finish : Usi
       ModuleBinary.At (ModuleBinary.VecEncoding ModuleBinary.LocalEncoding)
         data content groups bodyStart)
 
+/-- An accepted trace gives a `Validated` entry. -/
 theorem AcceptedTrace.validated {data env index start finish observations}
     (h : AcceptedTrace data env index start finish observations) :
     Validated data env index start finish := by
@@ -43,6 +53,7 @@ theorem AcceptedTrace.validated {data env index start finish observations}
     ⟨hi, he⟩, hbytes, htyped, hbound, _⟩ := h
   exact ⟨⟨groups, ops⟩, hbytes, hi, he ▸ htyped, hbound⟩
 
+/-- Every observation of an accepted trace is an accepted callback. -/
 theorem AcceptedTrace.all_accepted {data env index start finish observations}
     (h : AcceptedTrace data env index start finish observations) : AllAccepted observations := by
   obtain ⟨_, _, _, _, _, _, bodyObservations, _, _, _, _, _, _, _, _, _, _, rfl, ha, _⟩ := h
@@ -51,8 +62,9 @@ theorem AcceptedTrace.all_accepted {data env index start finish observations}
   · rfl
   · exact ha _ hm
 
-/-- Retain the original function-start event and align the original body log
-with the exact same syntax used for the code-entry typing certificate. -/
+/-- A `Witness` gives an `AcceptedTrace` of the observations the recording visitor added. The
+function-start event and the body log align with the syntax used for the code entry typing
+certificate. -/
 theorem Witness.trace_sound {V : Type} {visitor : code.OpVisitor V}
     {data env index start finish v v'}
     (w : Witness visitor data env index start finish v v')
@@ -102,9 +114,9 @@ end Itasca.CodeEntry
 
 namespace Itasca
 
-/-- Every accepted recording consumer receives a function-start event followed
-by exactly the independently encoded, typed operators of that same entry.
-There is no termination or acceptance hypothesis on other callback runs. -/
+/-- A recording visitor that accepts a Wasm 1.0 entry observes a function-start event followed by
+exactly the independently encoded, typed operators of that entry. There is no termination or
+acceptance hypothesis on other callback runs. -/
 theorem module.validate_code_entry_with.trace_sound {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List VisitorTrace.Observation) (hrecords : VisitorTrace.Records visitor observe)
     (data : Slice U8) (pos : Usize) (env : module.Env) (index finish : Usize)

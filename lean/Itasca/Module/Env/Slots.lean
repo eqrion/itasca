@@ -1,12 +1,22 @@
 import Itasca.Module.Env.Requirements
 
+/-!
+# Declaration slots
+
+Slot-level views of a raw module, indexed by section rank (`1` for types through `10` for data
+count). `Payload` is the encoding of a section's payload, `Empty` says the slot is empty, `update`
+fills the slot of a `Declarations` record from the raw module, and `SlotEncoding` is a slot's
+bytes with its leading custom sections. `Ready.updated` and `Ready.absent` advance `Ready` over a
+present or omitted section.
+-/
+
 open Aeneas Aeneas.Std
 
 set_option maxHeartbeats 800000
 
 namespace Itasca.ModuleEnv
 
-/-- The raw payload of each standard environment section. -/
+/-- The payload encoding of the declaration section with rank `id` of `raw`. -/
 def Payload (raw : ModuleBinary.Module) (id : Nat) (_ : Unit) (bytes : List U8)
     (profile : ValidationProfile := .Wasm1) : Prop :=
   match id with
@@ -22,6 +32,7 @@ def Payload (raw : ModuleBinary.Module) (id : Nat) (_ : Unit) (bytes : List U8)
   | 10 => profile = .Wasm2 ∧ ModuleBinary.StartEncoding raw.dataCount bytes
   | _ => False
 
+/-- The slot of rank `id` is empty in `raw`, so the section may be omitted. -/
 def Empty (raw : ModuleBinary.Module) (id : Nat) : Prop :=
   match id with
   | 1 => raw.types = []
@@ -36,6 +47,7 @@ def Empty (raw : ModuleBinary.Module) (id : Nat) : Prop :=
   | 10 => raw.dataCount = none
   | _ => False
 
+/-- `decls` with the slot of rank `id` replaced by the raw module's contents. -/
 def update (raw : ModuleBinary.Module) (id : Nat) (decls : Declarations) : Declarations :=
   match id with
   | 1 => {decls with types := raw.types}
@@ -50,7 +62,9 @@ def update (raw : ModuleBinary.Module) (id : Nat) (decls : Declarations) : Decla
   | 10 => {decls with dataCount := raw.dataCount}
   | _ => decls
 
-/-- An omitted empty section completes its slot just as a present section does. -/
+/-- The bytes of the slot with id `id`: leading custom sections followed by either a present section
+or nothing when the slot is empty. An omitted empty section completes its slot just as a present
+section does. -/
 def SlotEncoding (raw : ModuleBinary.Module) (id : U8) (bytes : List U8)
     (profile : ValidationProfile := .Wasm1) : Prop :=
   ∃ customs body, ModuleBinary.CustomsEncoding customs ∧
@@ -58,6 +72,7 @@ def SlotEncoding (raw : ModuleBinary.Module) (id : U8) (bytes : List U8)
       ModuleBinary.SectionEncoding id (fun u bytes => Payload raw (ModuleBinary.sectionRank id).val u bytes profile) () body) ∧
     bytes = customs ++ body
 
+/-- Filling slot `id` of the declarations from the raw module advances `Ready` to `id`. -/
 theorem Ready.updated {raw id decls env result} (h : Ready raw (id - 1) decls env)
     (hlo : 1 ≤ id) (hhi : id ≤ 10) (hr : Represents result (update raw id decls)) :
     Ready raw id (update raw id decls) result := by
@@ -72,6 +87,7 @@ theorem Ready.update_empty {raw id decls env} (h : Ready raw (id - 1) decls env)
   have hc : id = 1 ∨ id = 2 ∨ id = 3 ∨ id = 4 ∨ id = 5 ∨ id = 6 ∨ id = 7 ∨ id = 8 ∨ id = 9 ∨ id = 10 := by omega
   rcases hc with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;> simp_all [update, Empty, Phase]
 
+/-- Omitting an empty section advances `Ready` to `id` without changing the declarations. -/
 theorem Ready.absent {raw id decls env} (h : Ready raw (id - 1) decls env)
     (hlo : 1 ≤ id) (hhi : id ≤ 10) (he : Empty raw id) : Ready raw id decls env := by
   have heq := h.update_empty hlo hhi he
