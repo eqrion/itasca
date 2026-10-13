@@ -59,7 +59,7 @@ def Entry (profile : ValidationProfile) (data : Slice U8) (env : module.Env)
       EntryTyped profile env env.func_type_indices.val[index.val] entry ∧
       entry.declared.length ≤ limits.MAX_LOCALS.val
 
-theorem multiValue_consumed_rep {data start tokens next}
+theorem wasm2_consumed_rep {data start tokens next}
     (h : Wasm2.Consumed data start tokens next) :
     ModuleBinary.At (ModuleBinary.Rep Wasm2.TokenEncoding) data start tokens next := by
   induction h with
@@ -69,7 +69,7 @@ theorem multiValue_consumed_rep {data start tokens next}
     obtain ⟨cs, hc, hp⟩ := ht
     exact ⟨bs ++ cs, he.snoc hc, hs.append hp⟩
 
-theorem multiValue_rep_consumed {data start next tokens bytes}
+theorem wasm2_rep_consumed {data start next tokens bytes}
     (he : ModuleBinary.Rep Wasm2.TokenEncoding tokens bytes)
     (hs : Wasm1.BytesAt data start bytes next) : Wasm2.Consumed data start tokens next := by
   induction he generalizing start with
@@ -87,7 +87,7 @@ theorem BodyEncoding.bytes {profile data ops} (h : BodyEncoding profile data ops
   | Wasm1 => exact ModuleBinary.bodyEncoding_of_body h
   | Wasm2 =>
     obtain ⟨tokens, next, hs, hn, ht⟩ := h
-    obtain ⟨bytes, he, hb⟩ := multiValue_consumed_rep hs
+    obtain ⟨bytes, he, hb⟩ := wasm2_consumed_rep hs
     have heq : data.val = bytes := by simpa [hn] using hb.suffix
     exact ⟨tokens, heq.symm ▸ he, ht⟩
 
@@ -97,7 +97,7 @@ theorem BodyBytes.body {profile} {data : Slice U8} {ops}
   | Wasm1 => exact ModuleBinary.body_of_bodyEncoding h
   | Wasm2 =>
     obtain ⟨tokens, ht, hb⟩ := h
-    exact ⟨tokens, Slice.len data, multiValue_rep_consumed ht
+    exact ⟨tokens, Slice.len data, wasm2_rep_consumed ht
       ⟨by simp, by simp, by simp⟩, rfl, hb⟩
 
 /-- Framing is proved once; only the independent body grammar is selected by

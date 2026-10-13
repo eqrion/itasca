@@ -44,7 +44,7 @@ theorem Body.wasm1_iff (data : Slice U8) (env : module.Env) (ctx : code.Context)
     · change Wasm1.Instructions (functionContext env ctx.locals ft) ops
       exact hc.symm ▸ hp
 
-theorem Body.multiValue_iff (data : Slice U8) (env : module.Env)
+theorem Body.wasm2_iff (data : Slice U8) (env : module.Env)
     (locals : alloc.vec.Vec types.ValueType) (index : U32) :
     Body .Wasm2 data env locals index ↔ Wasm2.Validated data env locals index := by
   constructor
@@ -86,7 +86,7 @@ theorem run.sound (profile : ValidationProfile) (data : Slice U8) (env : module.
     exact (Body.wasm1_iff data env ctx index ft bt hi hr hb).mpr
       (code.validate_body.wasm1_sound data env ctx bt (hr.trans hb) haccepted)
   | Wasm2 =>
-    exact (Body.multiValue_iff data env ctx.locals index).mpr
+    exact (Body.wasm2_iff data env ctx.locals index).mpr
       (code.validate_multi_value_body.wasm_sound data env ctx.locals index haccepted)
 
 theorem run.complete (profile : ValidationProfile) (data : Slice U8) (env : module.Env)
@@ -119,6 +119,6 @@ theorem run.complete (profile : ValidationProfile) (data : Slice U8) (env : modu
       · simpa [FuncTypeWithinLimits, limits.MAX_MULTI_VALUE_PARAMS,
           limits.MAX_MULTI_VALUE_RESULTS] using hlimits.2
     exact code.validate_multi_value_body.wasm_complete data env ctx.locals index hcap hsize
-      ((Body.multiValue_iff data env ctx.locals index).mp hbody)
+      ((Body.wasm2_iff data env ctx.locals index).mp hbody)
 
 end Itasca.Profile
