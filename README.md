@@ -8,7 +8,10 @@ It supports the WebAssembly 1.0 and 2.0 core profiles, including
 parallel function validation and compiler callbacks. Both profiles have
 whole-module termination, soundness, and completeness proofs.
 
-There is also an execution runtime as well, but it is not covered by any proofs.
+The execution runtime has checked compilation, invocation, instantiation, API
+invariant, resource-cause, and progress theorems for both profiles. These are
+[conditional guarantees](docs/EXECUTION_VERIFICATION.md#public-theorem-map)
+under explicit platform and callback contracts.
 
 This is an experiment in AI-assisted formal verification, built extensively
 with Claude and Codex. Read [formal verification](#formal-verification) for
@@ -110,6 +113,16 @@ Handwritten Lean proofs ----------> validator guarantees
 | `validate_module` | Total, sound, and complete. |
 | `validate_streaming` | Total, if callbacks are total. Sound, if source views are coherent and if Rust field-privacy of `CodeBatch` is respected. Complete, if source views spans are correct and `poll_code_batch` eventually receives all dispatched `CodeBatch`. |
 
+The extracted execution runtime also has checked all-input compilation and
+conditional public invocation and instantiation correspondence. The
+[execution guarantees](docs/EXECUTION_VERIFICATION.md#public-theorem-map) records the
+exact theorem scope and embedder obligations. Host-capable theorems require
+allocator, floating-point, memory and callback laws, including explicit raw
+metadata and reference-preservation premises. Public invocation and instantiation
+recording, evolving-code invariant preservation and classified resource causes
+are checked under those premises. The resource accounting, callback
+obligations and forward-only source guarantee are documented explicitly.
+
 ### Trust boundary
 
 The proofs depend on:
@@ -119,3 +132,10 @@ The proofs depend on:
   4. Hand-written binary grammar.
   5. The rustc compiler.
   6. Lean's kernel and standard logical foundations.
+
+Execution additionally uses the handwritten specification extensions in
+[`lean/SpecExt`](lean/SpecExt), including an explicit host-rule weakening that
+omits post-call `Store_ok`. The native wrappers, standard allocator, native/libm
+floating-point operations, and globally issued store identities remain reviewed
+boundaries outside extraction; the generic proofs do not establish their
+platform laws. See the [Lean execution boundary](lean/README.md#execution-boundary).

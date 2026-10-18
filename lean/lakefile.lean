@@ -13,7 +13,12 @@ lean_lib SpecTecSupport where
 
 lean_lib SpecTecGenerated where
   srcDir := "SpecTec"
-  globs := #[.one `«wasm2.0»]
+  globs := #[.one `Wasm2Prefix, .one `«wasm2.0», .one `Wasm2Builtins]
 
 @[default_target]
 lean_lib Itasca
+
+-- Execution and handwritten specification extensions have independent audits.
+lean_lib SpecExt
+
+lean_lib Exec

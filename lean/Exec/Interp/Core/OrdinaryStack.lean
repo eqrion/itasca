@@ -1,0 +1,35 @@
+import Exec.Interp.StructuredMachine.CoreAdapter
+import Exec.Interp.StructuredMachine.OrdinaryStack
+import Exec.Interp.Core.StackPreservation
+import Exec.Interp.Core.Execution
+import Exec.Interp.Control.SkipStack
+import Exec.Interp.Relations.PrefixDispatch
+
+namespace Exec.Interp
+open Aeneas Aeneas.Std
+
+/-- Ordinary bytecode changes only the active source's live values and code.
+Its observed prefix law preserves all suspended frames at once. -/
+theorem CoreFrameStackRel.ordinary {M : Type} {store nextStore : runtime.store.Store M}
+    {sourceStore nextSourceStore : _root_.store}
+    {exec after : runtime.interp.Execution} {source updatedSource : Abs.AFrame} {rest : List Abs.AFrame}
+    (relation : CoreFrameStackRel store sourceStore exec (source :: rest))
+    (stores : FrameStoreMetadata store nextStore) (extension : Extend_store sourceStore nextSourceStore)
+    (raw : runtime.interp.Frame) (index : Usize) (pc : U32)
+    (last : index.val + 1 = exec.frames.length)
+    (lookup : exec.frames.val[index.val]? = some raw)
+    (binding : FrameBinding store exec raw source)
+    {compiled C targets next output pending}
+    (program : FrameProgram store raw compiled (source.locals.map Code.valueType) source.resultTypes C.FUNCS)
+    (point : CoreControlPoint nextSourceStore { raw with pc := pc } updatedSource compiled C targets next output pending)
+    (slots : FrameSlots after { raw with pc := pc } updatedSource)
+    (metadata : FrameMetadata source updatedSource)
+    (effect : { after with slots := exec.slots } =
+      { exec with frames := exec.frames.set index { raw with pc := pc } })
+    (preserved : SlotPrefix raw.base.val exec.slots.val after.slots.val) :
+    CoreFrameStackRel nextStore nextSourceStore after (updatedSource :: rest) := by
+  apply StructuredMachine.CoreAdapter.stack_iff.mpr
+  exact (StructuredMachine.CoreAdapter.stack_iff.mp relation).ordinary stores extension raw index pc last lookup
+    binding program (StructuredMachine.CoreAdapter.control_iff.mp point) slots metadata effect preserved
+
+end Exec.Interp

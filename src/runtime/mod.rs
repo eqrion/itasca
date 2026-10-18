@@ -1,29 +1,37 @@
-//! A fuel-metered rewriting interpreter for validated WebAssembly modules.
+//! Slot-based execution of validated WebAssembly modules.
 //!
-//! Execution is currently tested, not formally verified. This module is excluded
-//! from Charon extraction; the validator and its audited dependencies are unchanged.
-//! Handles belong to one store, whose objects remain alive until it is dropped.
-//! Floating-point values contain IEEE bits, and external references identify
-//! embedding-owned objects which must remain valid for the store's lifetime.
+//! Execution proofs are developed separately from the verified validator.
+//! Handles identify objects in exactly one store. Float values preserve bits.
 
 use crate::{FuncType, ValueType};
 use alloc::vec::Vec;
 
+mod bytecode;
 mod compiler;
-mod execution;
-mod numeric;
+mod instantiate;
+mod interp;
+#[cfg(not(charon))]
+mod native;
+mod operators;
+mod platform;
+mod value;
+
 mod store;
 pub use compiler::{
-    compile, compile_with_limits, CompileError, CompileLimits, CompileResource, ControlMap,
-    ExecutableModule, FunctionStats,
+    CompileError, CompileLimits, CompileResource, ControlMap, ExecutableModule, FunctionStats,
 };
-pub use execution::Execution;
-pub use store::{Instantiation, Store, StoreLimits};
+pub use interp::Execution;
+#[cfg(not(charon))]
+pub use native::{compile, compile_with_limits};
+pub use platform::{FloatOps, HostError, InterruptAction, MemoryBuffer, Platform, VecMemory};
+
+pub use store::{Store, StoreLimits};
 
 macro_rules! address {
     ($name:ident) => {
         /// An opaque address belonging to exactly one store.
-        #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+        #[derive(Clone, Copy)]
+        #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq, Hash))]
         pub struct $name {
             pub(super) store: usize,
             pub(super) index: usize,
@@ -38,7 +46,8 @@ address!(ExternAddr);
 address!(InstanceAddr);
 
 /// A typed Wasm value. Integer and floating-point payloads preserve raw bits.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy)]
+#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 pub enum Value {
     I32(u32),
     I64(u64),
@@ -72,16 +81,17 @@ impl Value {
             ValueType::ExternRef => Self::ExternRef(None),
         }
     }
-    pub(super) fn i32(self) -> Result<u32, RuntimeError> {
+    pub(super) fn i32(self) -> Result<u32, ExecError> {
         match self {
             Self::I32(v) => Ok(v),
-            _ => Err(RuntimeError::TypeMismatch),
+            _ => Err(ExecError::BadArguments),
         }
     }
 }
 
 /// A store object supplied as an import or obtained from an export.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy)]
+#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 pub enum Extern {
     Func(FuncAddr),
     Table(TableAddr),
@@ -90,7 +100,8 @@ pub enum Extern {
 }
 
 /// A WebAssembly execution trap, separate from embedding resource limits.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy)]
+#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 pub enum Trap {
     Unreachable,
     IntegerDivideByZero,
@@ -100,77 +111,61 @@ pub enum Trap {
     TableOutOfBounds,
     UninitializedElement,
     IndirectCallTypeMismatch,
+    Host,
 }
 /// An import resolution or type matching failure.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy)]
+#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 pub enum LinkError {
     MissingImport,
     IncompatibleImportType,
 }
 /// The embedding limit that stopped execution or allocation.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy)]
+#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 pub enum ResourceLimit {
     CallStack,
     Values,
     Allocation,
     Objects,
-    CostOverflow,
 }
 /// An execution, linking, resource, or host-boundary failure.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum RuntimeError {
+#[derive(Clone, Copy)]
+#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
+pub enum ExecError {
     Trap(Trap),
     Link(LinkError),
-    Resource(ResourceLimit),
-    TypeMismatch,
+    Exhausted(ResourceLimit),
+    BadArguments,
     WrongStore,
-    HostFailure,
-    InvalidState,
+    Terminated,
 }
-impl From<Trap> for RuntimeError {
+impl From<Trap> for ExecError {
     fn from(t: Trap) -> Self {
         Self::Trap(t)
     }
 }
-impl core::fmt::Display for RuntimeError {
+#[cfg(not(charon))]
+impl core::fmt::Display for ExecError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{self:?}")
     }
 }
-#[cfg(feature = "std")]
-impl std::error::Error for RuntimeError {}
+#[cfg(all(feature = "std", not(charon)))]
+impl std::error::Error for ExecError {}
 
-/// A typed host invocation. Completing it requires the originating execution.
-#[derive(Debug)]
-pub struct HostRequest {
-    pub host_id: u64,
-    pub arguments: Vec<Value>,
-    pub results: Vec<ValueType>,
+pub(crate) fn reserve<A: platform::Alloc, T>(v: &mut Vec<T>, n: usize) -> Result<(), ExecError> {
+    if A::reserve(v, n) {
+        Ok(())
+    } else {
+        Err(ExecError::Exhausted(ResourceLimit::Allocation))
+    }
 }
-
-/// A synchronous embedding handler for explicitly yielded host requests.
-///
-/// A handler may create nested executions using the supplied store. Fuel does
-/// not bound callback time; cancellation and host resources belong to the
-/// embedding. Returned values are type- and ownership-checked by the execution.
-pub trait Host {
-    fn call(&mut self, store: &mut Store, request: HostRequest)
-        -> Result<Vec<Value>, RuntimeError>;
-}
-/// The result of running until completion, a host boundary, or fuel suspension.
-#[derive(Debug)]
-pub enum Outcome {
-    Returned(Vec<Value>),
-    Suspended,
-    NeedsHostCall(HostRequest),
-    Failed(RuntimeError),
-}
-
-pub(super) fn copy_type(t: &FuncType) -> Result<FuncType, RuntimeError> {
+pub(crate) fn copy_type<A: platform::Alloc>(t: &FuncType) -> Result<FuncType, ExecError> {
     let mut params = Vec::new();
     let mut results = Vec::new();
-    reserve(&mut params, t.params.len())?;
-    reserve(&mut results, t.results.len())?;
+    reserve::<A, _>(&mut params, t.params.len())?;
+    reserve::<A, _>(&mut results, t.results.len())?;
     let mut i = 0;
     while i < t.params.len() {
         params.push(t.params[i]);
@@ -183,19 +178,14 @@ pub(super) fn copy_type(t: &FuncType) -> Result<FuncType, RuntimeError> {
     }
     Ok(FuncType { params, results })
 }
-pub(super) fn reserve<T>(v: &mut Vec<T>, n: usize) -> Result<(), RuntimeError> {
-    v.try_reserve(n)
-        .map_err(|_| RuntimeError::Resource(ResourceLimit::Allocation))
-}
-pub(super) fn range(
+pub(crate) fn range(
     start: u64,
     len: u64,
     size: usize,
     trap: Trap,
-) -> Result<core::ops::Range<usize>, RuntimeError> {
-    let end = start.checked_add(len).ok_or(RuntimeError::Trap(trap))?;
-    if end > size as u64 {
-        return Err(trap.into());
+) -> Result<core::ops::Range<usize>, ExecError> {
+    if start > size as u64 || len > size as u64 - start {
+        return Err(ExecError::Trap(trap));
     }
-    Ok(start as usize..end as usize)
+    Ok(start as usize..(start + len) as usize)
 }

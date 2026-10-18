@@ -1,0 +1,162 @@
+import Exec.Store.Initialization.PrecheckErrors
+namespace Exec.Store
+open Aeneas Aeneas.Std
+variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
+  (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
+  (allocator : runtime.platform.Alloc A)
+theorem element_range_ready_errors (law : Platform.AllocCorrect allocator)
+    (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
+    (inst : runtime.store.Instance) (segment : Itasca.module.Element)
+    (hi : store.instances.val[instIndex.val]? = some inst)
+    (helem : inst.module.module.env.elements.val[index.val]? = some segment)
+    (ready : ElementPrecheckReady store inst index segment)
+    (bindings : InitializerBindings store inst) :
+    runtime.store.instantiate.Store.element_range_for memory hooks floats allocator store platform instIndex index
+      ⦃ out => out.2.1 = store ∧ out.2.2 = platform ∧ ErrorAllowed (PrecommitError .Wasm1) out.1 ⦄ := by
+  cases mode : segment.mode with
+  | Active tableIndex offset =>
+    simp only [ElementPrecheckReady, mode] at ready
+    obtain ⟨function, code, words, addr, table, mapping, hc, compiled, resolved, ht, htable⟩ := ready
+    apply WP.spec_mono (element_range_active_errors memory hooks floats allocator law store platform instIndex index inst segment
+      tableIndex offset function code words addr table hi helem mode mapping hc compiled resolved bindings ht htable)
+    rintro ⟨result, after, host⟩ ⟨sameStore, sameHost, errors⟩
+    refine ⟨sameStore, sameHost, ?_⟩
+    cases result with
+    | Ok value => trivial
+    | Err error =>
+      rcases errors error rfl with resource | ⟨rfl, outside⟩
+      · exact resource.precommit
+      · rfl
+  | Passive =>
+    apply WP.spec_mono (element_range_inactive memory hooks floats allocator store platform instIndex index
+      inst segment hi helem (.inl mode))
+    rintro out rfl
+    exact ⟨rfl, rfl, trivial⟩
+  | Declarative =>
+    apply WP.spec_mono (element_range_inactive memory hooks floats allocator store platform instIndex index
+      inst segment hi helem (.inr mode))
+    rintro out rfl
+    exact ⟨rfl, rfl, trivial⟩
+
+theorem data_range_ready_errors (law : Platform.AllocCorrect allocator)
+    (view : M → Slice U8) (memoryLaws : Platform.MemoryLaws memory view)
+    (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
+    (inst : runtime.store.Instance) (segment : Itasca.module.Data)
+    (hi : store.instances.val[instIndex.val]? = some inst)
+    (hdata : inst.module.module.tail.data.val[index.val]? = some segment)
+    (ready : DataPrecheckReady store inst index segment)
+    (bindings : InitializerBindings store inst) :
+    runtime.store.instantiate.Store.data_range_for memory hooks floats allocator store platform instIndex index
+      ⦃ out => out.2.1 = store ∧ out.2.2 = platform ∧ ErrorAllowed (PrecommitError .Wasm1) out.1 ⦄ := by
+  cases mode : segment.mode with
+  | Active memoryIndex offset =>
+    simp only [DataPrecheckReady, mode] at ready
+    obtain ⟨function, code, words, addr, mem, mapping, hc, compiled, resolved, hm, hmemory⟩ := ready
+    apply WP.spec_mono (data_range_active_errors memory hooks floats allocator law view memoryLaws store platform instIndex index
+      inst segment memoryIndex offset function code words addr mem hi hdata mode mapping hc compiled resolved bindings hm hmemory)
+    rintro ⟨result, after, host⟩ ⟨sameStore, sameHost, errors⟩
+    refine ⟨sameStore, sameHost, ?_⟩
+    cases result with
+    | Ok value => trivial
+    | Err error =>
+      rcases errors error rfl with resource | ⟨rfl, outside⟩
+      · exact resource.precommit
+      · rfl
+  | Passive =>
+    apply WP.spec_mono (data_range_inactive memory hooks floats allocator store platform instIndex index
+      inst segment hi hdata mode)
+    rintro out rfl
+    exact ⟨rfl, rfl, trivial⟩
+
+theorem element_precheck_loop_errors (law : Platform.AllocCorrect allocator)
+    (store : runtime.store.Store M) (platform : P) (instIndex start : Usize)
+    (inst : runtime.store.Instance) (status : core.result.Result Unit runtime.ExecError)
+    (allowed : ErrorAllowed (PrecommitError .Wasm1) status)
+    (hi : store.instances.val[instIndex.val]? = some inst)
+    (bindings : InitializerBindings store inst)
+    (certificates : ∀ index : Usize, index.val < inst.module.module.env.elements.length →
+      ∃ segment, inst.module.module.env.elements.val[index.val]? = some segment ∧
+        ElementPrecheckReady store inst index segment)
+    (hstart : start.val ≤ inst.module.module.env.elements.length) :
+    runtime.store.instantiate.Store.instantiate_inner_loop10 memory hooks floats allocator store platform status start instIndex
+      ⦃ out => ∃ finalStatus, out = storeParts store platform finalStatus ∧ ErrorAllowed (PrecommitError .Wasm1) finalStatus ⦄ := by
+  unfold runtime.store.instantiate.Store.instantiate_inner_loop10
+  apply loop.spec_decr_nat (fun state => inst.module.module.env.elements.length - state.2.2.2.val)
+    (fun state => state.1 = store ∧ state.2.1 = platform ∧
+      state.2.2.2.val ≤ inst.module.module.env.elements.length ∧
+      ErrorAllowed (PrecommitError .Wasm1) state.2.2.1)
+  · rintro ⟨current, host, state, index⟩ ⟨hcurrent, hhost, hindex, hallowed⟩
+    dsimp only at hcurrent hhost hindex hallowed ⊢
+    subst current host
+    unfold runtime.store.instantiate.Store.instantiate_inner_loop10.body
+    step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
+    subst found
+    simp only [runtime.compiler.ExecutableModule.env, module.Module.env,
+      Itasca.module.Module.impl.env, module.Env.elements, Itasca.module.Env.impl.elements, bind_ok]
+    split
+    · rename_i more
+      have hmore : index.val < inst.module.module.env.elements.length := by
+        simpa [alloc.vec.Vec.deref] using more
+      cases state with
+      | Err error =>
+        simp only [core.result.Result.is_ok, bind_ok, Bool.false_eq_true, ↓reduceIte, WP.spec_ok]
+        exact ⟨_, rfl, hallowed⟩
+      | Ok unit =>
+        cases unit
+        simp only [core.result.Result.is_ok, bind_ok, ↓reduceIte]
+        obtain ⟨segment, helem, ready⟩ := certificates index hmore
+        step with element_range_ready_errors memory hooks floats allocator law store platform instIndex index
+          inst segment hi helem ready bindings as ⟨result, after, host', hs, hp, errors⟩
+        subst after host'
+        cases result <;> step as ⟨next, hnext⟩ <;> exact ⟨by omega, errors, by omega⟩
+    · simp only [WP.spec_ok]
+      exact ⟨_, rfl, hallowed⟩
+  · exact ⟨rfl, rfl, hstart, allowed⟩
+
+theorem data_precheck_loop_errors (law : Platform.AllocCorrect allocator)
+    (view : M → Slice U8) (memoryLaws : Platform.MemoryLaws memory view)
+    (store : runtime.store.Store M) (platform : P) (instIndex start : Usize)
+    (inst : runtime.store.Instance) (status : core.result.Result Unit runtime.ExecError)
+    (allowed : ErrorAllowed (PrecommitError .Wasm1) status)
+    (hi : store.instances.val[instIndex.val]? = some inst)
+    (bindings : InitializerBindings store inst)
+    (certificates : ∀ index : Usize, index.val < inst.module.module.tail.data.length →
+      ∃ segment, inst.module.module.tail.data.val[index.val]? = some segment ∧
+        DataPrecheckReady store inst index segment)
+    (hstart : start.val ≤ inst.module.module.tail.data.length) :
+    runtime.store.instantiate.Store.instantiate_inner_loop11 memory hooks floats allocator store platform status start instIndex
+      ⦃ out => ∃ finalStatus, out = storeParts store platform finalStatus ∧ ErrorAllowed (PrecommitError .Wasm1) finalStatus ⦄ := by
+  unfold runtime.store.instantiate.Store.instantiate_inner_loop11
+  apply loop.spec_decr_nat (fun state => inst.module.module.tail.data.length - state.2.2.2.val)
+    (fun state => state.1 = store ∧ state.2.1 = platform ∧
+      state.2.2.2.val ≤ inst.module.module.tail.data.length ∧
+      ErrorAllowed (PrecommitError .Wasm1) state.2.2.1)
+  · rintro ⟨current, host, state, index⟩ ⟨hcurrent, hhost, hindex, hallowed⟩
+    dsimp only at hcurrent hhost hindex hallowed ⊢
+    subst current host
+    unfold runtime.store.instantiate.Store.instantiate_inner_loop11.body
+    step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
+    subst found
+    simp only [runtime.compiler.ExecutableModule.tail, module.Module.tail,
+      Itasca.module.Module.impl.tail, bind_ok]
+    split
+    · rename_i more
+      have hmore : index.val < inst.module.module.tail.data.length := by
+        simpa [alloc.vec.Vec.deref] using more
+      cases state with
+      | Err error =>
+        simp only [core.result.Result.is_ok, bind_ok, Bool.false_eq_true, ↓reduceIte, WP.spec_ok]
+        exact ⟨_, rfl, hallowed⟩
+      | Ok unit =>
+        cases unit
+        simp only [core.result.Result.is_ok, bind_ok, ↓reduceIte]
+        obtain ⟨segment, helem, ready⟩ := certificates index hmore
+        step with data_range_ready_errors memory hooks floats allocator law view memoryLaws store platform instIndex index
+          inst segment hi helem ready bindings as ⟨result, after, host', hs, hp, errors⟩
+        subst after host'
+        cases result <;> step as ⟨next, hnext⟩ <;> exact ⟨by omega, errors, by omega⟩
+    · simp only [WP.spec_ok]
+      exact ⟨_, rfl, hallowed⟩
+  · exact ⟨rfl, rfl, hstart, allowed⟩
+
+end Exec.Store

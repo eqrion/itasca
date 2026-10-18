@@ -1,0 +1,48 @@
+import Exec.Theorems.Instantiation.StartCumulativeInfinite
+import Exec.Theorems.Instantiation.TailCumulativeCases
+namespace Exec.Theorems
+open Aeneas Aeneas.Std SpecExt
+
+theorem instantiate_tail_cumulative_infinite {M P F A : Type}
+    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
+    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
+    (correct : Platform.FloatOpsCorrect floats)
+    (law : Platform.AllocCorrect allocator)
+    (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
+    (store : runtime.store.Store M) (platform : P) (identity : runtime.InstanceAddr)
+    (inst : runtime.store.Instance) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
+    (limits : runtime.compiler.CompileLimits)
+    (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok inst.module))
+    (found : store.instances.val[identity.index.val]? = some inst)
+    (code : Store.CodeInterpretation) (certified : CertifiedCumulativeStore view code store)
+    (hostFree : CoreHostFree store)
+    (imports : Store.InitializerImports store inst) (types : Store.SegmentTypeBindings store inst)
+    (table : Interp.FunctionTable store inst (inst.module.module.env.func_types.val.map Store.decodeFuncType))
+    (divergent : Store.instantiate_tail memory hooks floats allocator identity store platform = .div) :
+    ∃ initialized index address,
+      CertifiedCumulativeStore view code initialized ∧ Store.SegmentObjectMetadata view store initialized ∧
+      runtime.instantiate.initialize_segments memory hooks floats allocator store platform identity.index =
+        .ok (.Ok (),initialized,platform) ∧
+      inst.module.module.env.start = some index ∧ inst.funcs.val[index.val]? = some address ∧
+      Store.instantiate_start memory hooks floats allocator identity address initialized platform = .div ∧
+      Spec.InfiniteSource (moduleStartConfiguration view code initialized inst index) := by
+  obtain ⟨initialized,status,initRun,certifiedAfter,extension,metadata,outcome⟩ :=
+    instantiate_tail_cumulative_cases memory hooks floats allocator view laws law store platform identity inst bytes profile limits
+      accepted found code certified imports types table
+  have frameMetadata : Interp.FrameStoreMetadata store initialized :=
+    ⟨metadata.space.identity,metadata.space.functions,metadata.space.signatures,metadata.space.instances⟩
+  rcases outcome with ⟨result,returned,identityResult,source⟩ |
+    ⟨index,address,function,signature,statusEq,start,mapped,owner,hf,hs,params,results,tailEq⟩
+  · rw [returned] at divergent
+    simp at divergent
+  · subst status
+    have afterFound : initialized.instances.val[identity.index.val]? = some inst := by
+      rw [metadata.space.instances]; exact found
+    rw [tailEq] at divergent
+    refine ⟨initialized,index,address,certifiedAfter,metadata,initRun,start,mapped,divergent,?_⟩
+    exact instantiate_start_cumulative_resolved_infinite memory hooks floats allocator correct law interrupts
+      view laws code initialized platform certifiedAfter (hostFree.frame_metadata frameMetadata)
+      identity inst afterFound index address mapped function signature owner hf hs params results divergent
+
+end Exec.Theorems

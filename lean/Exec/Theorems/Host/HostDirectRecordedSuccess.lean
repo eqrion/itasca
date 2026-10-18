@@ -1,0 +1,70 @@
+import Exec.Theorems.Host.HostDirectEventfulInvariant
+import Exec.Theorems.Composition.Recorded.RecordedEventfulHistory
+import Exec.Interp.Relations.StepRecordingLookup
+import Exec.Theorems.Host.HostEventfulReturn
+namespace Exec.Theorems
+open Aeneas Aeneas.Std SpecExt Exec.Interp
+open Exec.Interp.StructuredMachine
+theorem step_host_call_recorded_success {M P F A : Type} {emission : FunctionEmission} {allowed : instr → Prop}
+    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
+    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+    (allocation : Platform.AllocCorrect allocator)
+    (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
+    (view : M → Slice U8) (code : Store.CodeInterpretation)
+    (Inv : runtime.store.Store M → Prop)
+    (certify : ∀ s, Inv s → CertifiedSupportedStore emission allowed view code s)
+    (sound : Platform.HostSound hooks Inv (Store.decodeStore view code))
+    (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
+    (valid : Inv store)
+    (frameIndex : Usize) (raw : runtime.interp.Frame)
+    (caller : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
+    (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
+    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (index offset : U32) (after : List instr)
+    (address : runtime.FuncAddr) (function : runtime.store.Function) (host : U64)
+    (expected : List valtype)
+    (last : frameIndex.val+1=exec.frames.length)
+    (hf : exec.frames.val[frameIndex.val]?=some raw)
+    (hi : store.instances.val[raw.instance.val]?=some caller)
+    (hc : caller.module.functions.val[raw.function.val]?=some compiled)
+    (fetched : compiled.code.val[raw.pc.val]?=some (.Call index offset))
+    (addressAt : caller.funcs.val[index.val]?=some address)
+    (functionAt : store.funcs.val[address.index.val]?=some function)
+    (hostCode : function.code=.Host host)
+    (binding : FrameBinding store exec raw f) (slots : FrameSlots exec raw f)
+    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (point : FramePoint emission (Store.decodeStore view code store) raw
+      {f with code := .CALL (.mk_uN index.val)::after} compiled C targets next output)
+    (machine : Execution emission (Abs.SupportedState allowed) view code store exec
+      ⟨Store.decodeStore view code store,ambient,{f with code := .CALL (.mk_uN index.val)::after}::rest,[]⟩ expected raw.pc.val false)
+    (owned : Abs.Ownership.StatefulOwned (Store.ownershipBounds store)
+      ⟨Store.decodeStore view code store,ambient,{f with code := .CALL (.mk_uN index.val)::after}::rest,[]⟩)
+    (preserve : ∀ p args results answer,
+      hooks.call_host p store host args results=.ok answer → FrameStorePrefix store answer.2.2.1)
+    (externs : ∀ p args results answer,
+      hooks.call_host p store host args results=.ok answer → store.externs.length≤answer.2.2.1.externs.length)
+    (issued : ∀ p args results answer,
+      hooks.call_host p store host args results=.ok answer →
+      ∀ value∈answer.2.2.2.val, Store.IssuedValue answer.2.2.1 value) :
+    let before : EventfulMachine emission allowed M P view code expected :=
+      ⟨store,exec,platform,⟨Store.decodeStore view code store,ambient,{f with code:=.CALL (.mk_uN index.val)::after}::rest,[]⟩,
+        raw.pc.val,false,machine,certify store valid,owned⟩
+    runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
+      Inv out.2.2.1 ∧ (out.1=.Ok () → ∃ final : EventfulMachine emission allowed M P view code expected,
+        out=(.Ok (),final.exec,final.store,final.platform) ∧
+        RecordedEventfulTransition memory hooks floats allocator before (hostCallEvents address out) final) ⦄ := by
+  dsimp only
+  have guard : hostStepAddress exec store=some address := by
+    rw [hostStepAddress_at exec store frameIndex raw caller compiled (.Call index offset) last hf hi hc fetched]
+    exact hostInstructionAddress_direct exec store raw caller compiled index offset address function host addressAt functionAt hostCode
+  apply WP.spec_mono (step_host_call_eventful_invariant_success memory hooks floats allocator allocation interrupts view code
+    Inv certify sound exec store platform valid frameIndex raw caller compiled C targets next output ambient f rest index offset after
+    address function host expected last hf hi hc fetched addressAt functionAt hostCode binding slots program point machine owned preserve externs issued)
+  intro out result
+  refine ⟨result.1,?_⟩
+  intro success
+  obtain ⟨final,equal,edge⟩ := result.2 success
+  refine ⟨final,equal,edge,?_⟩
+  change hostCallEvents address out=stepHostEvents exec store (.Ok (),final.exec,final.store,final.platform)
+  rw [←equal]
+  simp only [stepHostEvents,guard]
+end Exec.Theorems

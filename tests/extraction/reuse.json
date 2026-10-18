@@ -1,0 +1,50 @@
+{
+  "imports": [
+    "Reuse.TypesExternal"
+  ],
+  "types": [
+    {
+      "rust": "reuse::validator::Kind",
+      "lean": "_root_.ReuseBase.validator.Kind",
+      "kind": "enum",
+      "members": [
+        [
+          "Small",
+          "Small"
+        ],
+        [
+          "Large",
+          "Large"
+        ]
+      ]
+    },
+    {
+      "rust": "reuse::validator::Token",
+      "lean": "_root_.ReuseBase.validator.Token",
+      "kind": "struct",
+      "members": [
+        [
+          "kind",
+          "kind"
+        ],
+        [
+          "value",
+          "value"
+        ]
+      ]
+    }
+  ],
+  "traits": [
+    {
+      "rust": "reuse::validator::Visitor",
+      "lean": "_root_.ReuseBase.validator.Visitor",
+      "parents": [],
+      "methods": [
+        [
+          "visit",
+          "visit"
+        ]
+      ]
+    }
+  ]
+}

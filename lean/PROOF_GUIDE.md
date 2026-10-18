@@ -56,7 +56,7 @@ These describe bytes and declarative validity without mentioning itasca. There
 is no premise that parsing succeeded or that bodies passed some other checker.
 [Module/Limits.lean](Itasca/Module/Limits.lean) defines the byte and local
 bounds; [Profile/Types.lean](Itasca/Profile/Types.lean) defines the signature
-caps. The values are listed in the [public limits table](../README.md#implementation-limits).
+caps. The values are listed in the [implementation bounds](../src/limits.rs).
 
 ## Reading Lean
 

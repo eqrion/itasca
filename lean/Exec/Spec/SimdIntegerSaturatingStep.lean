@@ -1,0 +1,22 @@
+import Exec.Spec.SimdIntegerSaturatingSource
+namespace Exec.Spec.Simd
+
+theorem integer_saturating_step (ty : Jnn) (kind : IntegerSaturating) (x y result : BitVec 128)
+    (supported : integerSaturatingSupported ty kind)
+    (packed : uN.mk_uN result.toNat = integerSaturatingResult ty kind x y) :
+    Step_pure [.VCONST .V128 (.mk_uN x.toNat),.VCONST .V128 (.mk_uN y.toNat),
+      .VBINOP (shapeOf (lanetype_Jnn ty)) (integerSaturatingSource ty kind)]
+      [.VCONST .V128 (.mk_uN result.toNat)] := by
+  apply Step_pure.vbinop_val _ _ _ _ _ (some [.mk_uN result.toNat])
+  · rw [packed]
+    exact integer_saturating_vector_relation ty kind x y
+  · change 0 < 1
+    decide
+  · simp
+  · simp
+  · exact const_wf x
+  · exact const_wf y
+  · exact .admininstr_case_26 _ _ (shapeOf_wf _) (integer_saturating_source_wf ty kind supported)
+  · exact const_wf result
+
+end Exec.Spec.Simd

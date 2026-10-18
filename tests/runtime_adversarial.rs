@@ -1,19 +1,32 @@
 //! Regressions for embedding resource failures outside specification corpora.
 use itasca::runtime::*;
 use itasca::{FuncType, ValidationProfile, ValueType};
-use std::rc::Rc;
 
-fn module(text: &str) -> Rc<ExecutableModule> {
+struct Hooks;
+impl Platform<VecMemory> for Hooks {
+    fn interrupt(&mut self) -> InterruptAction {
+        InterruptAction::Continue
+    }
+    fn call_host(
+        &mut self,
+        _: &mut Store,
+        _: u64,
+        _: &[Value],
+        _: &mut [Value],
+    ) -> Result<(), HostError> {
+        Err(HostError::Trap)
+    }
+}
+
+fn module(text: &str) -> ExecutableModule {
     let buffer = wast::parser::ParseBuffer::new(text).unwrap();
     let mut ast = wast::parser::parse::<wast::Wat>(&buffer).unwrap();
-    Rc::new(compile(&ast.encode().unwrap(), ValidationProfile::Wasm2).unwrap())
+    compile(&ast.encode().unwrap(), ValidationProfile::Wasm2).unwrap()
 }
-fn finish(store: &mut Store, code: Rc<ExecutableModule>) -> InstanceAddr {
-    let mut pending = store.instantiate(code, &[]).unwrap();
-    pending.add_fuel(1000).unwrap();
-    assert!(matches!(pending.run(store), Outcome::Returned(_)));
-    pending.instance().unwrap()
+fn finish(store: &mut Store, code: ExecutableModule) -> InstanceAddr {
+    store.instantiate(code, &[], &mut Hooks).unwrap()
 }
+
 fn function(store: &Store, instance: InstanceAddr, name: &[u8]) -> FuncAddr {
     match store.export(instance, name).unwrap().unwrap() {
         Extern::Func(f) => f,
@@ -21,12 +34,11 @@ fn function(store: &Store, instance: InstanceAddr, name: &[u8]) -> FuncAddr {
     }
 }
 fn call(store: &mut Store, f: FuncAddr) -> Vec<Value> {
-    let mut execution = Execution::new(store, f, &[]).unwrap();
-    execution.add_fuel(1000).unwrap();
-    match execution.run(store) {
-        Outcome::Returned(values) => values,
-        other => panic!("unexpected result: {other:?}"),
-    }
+    let mut values = Vec::new();
+    Execution::new()
+        .invoke(store, &mut Hooks, f, &[], &mut values)
+        .unwrap();
+    values
 }
 
 #[test]
@@ -38,8 +50,8 @@ fn prepublication_allocation_failure_releases_unissued_addresses_and_budgets() {
     });
     let failing = module("(module (func (result i32) i32.const 99) (memory 1))");
     assert!(matches!(
-        store.instantiate(failing, &[]),
-        Err(RuntimeError::Resource(ResourceLimit::Allocation))
+        store.instantiate(failing, &[], &mut Hooks),
+        Err(ExecError::Exhausted(ResourceLimit::Allocation))
     ));
     let instance = finish(
         &mut store,
@@ -64,9 +76,10 @@ fn unused_and_host_signatures_obey_total_value_budget() {
     assert!(matches!(
         store.instantiate(
             module("(module (type (func (param i32 i32 i32 i32))))"),
-            &[]
+            &[],
+            &mut Hooks
         ),
-        Err(RuntimeError::Resource(_))
+        Err(ExecError::Exhausted(_))
     ));
     assert!(matches!(
         store.define_host(
@@ -76,113 +89,21 @@ fn unused_and_host_signatures_obey_total_value_budget() {
             },
             0
         ),
-        Err(RuntimeError::Resource(_))
+        Err(ExecError::Exhausted(_))
     ));
     let shared = module("(module (type (func (param i32 i32))))");
-    finish(&mut store, Rc::clone(&shared));
+    finish(&mut store, module("(module (type (func (param i32 i32))))"));
     finish(&mut store, shared); // Canonically equal signatures share their budget.
     assert!(matches!(
-        store.instantiate(module("(module (type (func (param i64 i64))))"), &[]),
-        Err(RuntimeError::Resource(_))
+        store.instantiate(
+            module("(module (type (func (param i64 i64))))"),
+            &[],
+            &mut Hooks
+        ),
+        Err(ExecError::Exhausted(_))
     ));
     // A failed signature reservation did not consume the remaining one value.
     finish(&mut store, module("(module (type (func (result i64))))"));
-}
-
-#[test]
-fn suspended_indirect_call_resolves_current_table_and_recomputes_cost() {
-    let mut store = Store::new();
-    let instance = finish(
-        &mut store,
-        module(
-            r#"(module
-        (type $t (func (result i32)))
-        (table (export "table") 1 funcref)
-        (func $heavy (type $t) (local i32 i32 i32 i32 i32 i32 i32 i32)
-          i32.const 99)
-        (func $cheap (export "cheap") (type $t) i32.const 17)
-        (elem (i32.const 0) $heavy)
-        (func (export "indirect") (result i32) i32.const 0 call_indirect (type $t)))"#,
-        ),
-    );
-    let indirect = function(&store, instance, b"indirect");
-    let cheap = function(&store, instance, b"cheap");
-    let table = match store.export(instance, b"table").unwrap().unwrap() {
-        Extern::Table(t) => t,
-        _ => panic!("expected table"),
-    };
-    let mut execution = Execution::new(&store, indirect, &[]).unwrap();
-    execution.add_fuel(3).unwrap();
-    // Initial call and i32.const consume two; the heavy call requires nine.
-    assert!(matches!(execution.run(&mut store), Outcome::Suspended));
-    assert_eq!(execution.fuel(), 1);
-    store
-        .set_table(table, 0, Value::FuncRef(Some(cheap)))
-        .unwrap();
-    // The retained one unit now suffices for the replacement call. Its operands
-    // were preserved, and resumption does not retain the former target.
-    assert!(matches!(execution.run(&mut store), Outcome::Suspended));
-    assert_eq!(execution.fuel(), 0);
-    execution.add_fuel(3).unwrap();
-    match execution.run(&mut store) {
-        Outcome::Returned(values) => assert_eq!(values, [Value::I32(17)]),
-        other => panic!("unexpected result: {other:?}"),
-    }
-}
-
-#[test]
-fn indirect_lookup_errors_wait_for_fuel_and_are_retried_after_suspension() {
-    let code = module(
-        r#"(module
-        (type $t (func (result i32)))
-        (table (export "table") 1 funcref)
-        (func (export "good") (type $t) i32.const 17)
-        (func (export "bad") (result i64) i64.const 29)
-        (func (export "run") (param i32) (result i32)
-          local.get 0 call_indirect (type $t)))"#,
-    );
-    let offsets = code.function_source_offsets(2).unwrap();
-    let mut store = Store::new();
-    let instance = finish(&mut store, Rc::clone(&code));
-    let run = function(&store, instance, b"run");
-    let good = function(&store, instance, b"good");
-    let bad = function(&store, instance, b"bad");
-    let Extern::Table(table) = store.export(instance, b"table").unwrap().unwrap() else {
-        panic!("expected table")
-    };
-    for (index, entry, trap) in [
-        (0, None, Trap::UninitializedElement),
-        (0, Some(bad), Trap::IndirectCallTypeMismatch),
-        (1, Some(good), Trap::TableOutOfBounds),
-    ] {
-        for repair in [false, true] {
-            store.set_table(table, 0, Value::FuncRef(entry)).unwrap();
-            let mut execution = Execution::new(&store, run, &[Value::I32(index)]).unwrap();
-            // The initial call costs two, and local.get costs one.
-            execution.add_fuel(3).unwrap();
-            for _ in 0..2 {
-                assert!(matches!(execution.run(&mut store), Outcome::Suspended));
-                assert_eq!(execution.fuel(), 0);
-                assert_eq!(execution.source_offset(&store).unwrap(), Some(offsets[1]));
-            }
-            if repair && index == 0 {
-                store
-                    .set_table(table, 0, Value::FuncRef(Some(good)))
-                    .unwrap();
-                execution.add_fuel(4).unwrap();
-                match execution.run(&mut store) {
-                    Outcome::Returned(values) => assert_eq!(values, [Value::I32(17)]),
-                    other => panic!("unexpected result: {other:?}"),
-                }
-            } else {
-                execution.add_fuel(1).unwrap();
-                assert!(matches!(execution.run(&mut store),
-                    Outcome::Failed(RuntimeError::Trap(actual)) if actual == trap));
-                assert_eq!(execution.source_offset(&store).unwrap(), Some(offsets[2]));
-            }
-            assert_eq!(execution.fuel(), 0);
-        }
-    }
 }
 
 #[test]
@@ -197,16 +118,19 @@ fn provisional_failures_restore_aggregate_memory_and_table_budgets() {
     // Type + function + table + memory exhaust the object budget before the
     // global can be allocated. None of the provisional addresses can escape.
     assert!(matches!(
-        store.instantiate(failing, &[]),
-        Err(RuntimeError::Resource(ResourceLimit::Objects))
+        store.instantiate(failing, &[], &mut Hooks),
+        Err(ExecError::Exhausted(ResourceLimit::Objects))
     ));
     store
-        .define_memory(itasca::MemType {
-            limits: itasca::Limits {
-                min: 1,
-                max: Some(1),
+        .define_memory(
+            itasca::MemType {
+                limits: itasca::Limits {
+                    min: 1,
+                    max: Some(1),
+                },
             },
-        })
+            VecMemory::new_zeroed(65536).unwrap(),
+        )
         .unwrap();
     store
         .define_table(itasca::TableType {

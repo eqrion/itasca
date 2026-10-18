@@ -13,7 +13,7 @@ class Token:
     value: str
 
 
-def tokens(source: str) -> Iterator[Token]:
+def tokens(source: str, *, rust_docs: bool = False) -> Iterator[Token]:
     i = 0
     while i < len(source):
         if source[i].isspace() or source[i] == "\ufeff":
@@ -22,6 +22,7 @@ def tokens(source: str) -> Iterator[Token]:
             end = source.find("\n", i + 2)
             i = len(source) if end == -1 else end + 1
         elif source.startswith("/-", i):
+            start = i
             i += 2
             depth = 1
             while depth:
@@ -35,6 +36,14 @@ def tokens(source: str) -> Iterator[Token]:
                     i += 2
                 else:
                     i += 1
+            # Aeneas identifies opaque functions from the local crate in a
+            # generated documentation header instead of a rust_fun attribute.
+            # Preserve only that outer header when explicitly requested; text
+            # nested inside another comment or a string remains inert.
+            if rust_docs and source.startswith("/-- [", start):
+                end = source.find("]:\n", start + 5, i)
+                if end != -1 and "\n" not in source[start + 5:end]:
+                    yield Token("rust_doc", source[start + 5:end])
         elif source[i] == "«":
             end = source.find("»", i + 1)
             if end == -1:

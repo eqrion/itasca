@@ -48,6 +48,16 @@ fn source_coordinates_identify_original_opcodes_in_complete_module() {
 }
 
 #[test]
+fn frame_payload_counts_both_vector_words() {
+    let input = bytes("(module (func (param v128) (result v128) local.get 0))");
+    let module = compile(&input, ValidationProfile::Wasm2).unwrap();
+    let stats = module.function_stats(0).unwrap();
+    assert_eq!(stats.local_count, 1);
+    assert_eq!(stats.max_stack, 1);
+    assert_eq!(stats.slot_count, 4);
+}
+
+#[test]
 fn function_identity_survives_multiple_batches_and_reverse_retirement() {
     let mut text = String::from("(module (import \"m\" \"f\" (func))");
     for index in 0..6 {
@@ -64,11 +74,11 @@ fn function_identity_survives_multiple_batches_and_reverse_retirement() {
     assert_eq!(module.env().num_imported_funcs(), 1);
     for index in 0..6 {
         let stats = module.function_stats(index).unwrap();
-        assert_eq!(stats.instruction_count, 26_002);
+        assert_eq!(stats.instruction_count, 2);
         let offsets = module.function_source_offsets(index).unwrap();
-        assert_eq!(input[offsets[26_000]], 0x41);
-        assert_eq!(input[offsets[26_000] + 1], index as u8);
-        assert_eq!(offsets[26_001] + 1, stats.body_end);
+        assert_eq!(input[offsets[0]], 0x41);
+        assert_eq!(input[offsets[0] + 1], index as u8);
+        assert_eq!(offsets[1] + 1, stats.body_end);
     }
 }
 
@@ -91,11 +101,15 @@ fn compiler_budgets_reject_partial_artifacts_with_explicit_resource_errors() {
         "(module (func (param i32) (result i32)
         (block (result i32) i32.const 9 local.get 0 br_table 0 0)))",
     );
+    let compiled = compile(&input, ValidationProfile::Wasm2).unwrap();
+    // Branch copy/jump stubs count as emitted bytecode. Instantiation also
+    // retains one synthetic return even when there are no active segments.
+    let instruction_budget = compiled.function_stats(0).unwrap().instruction_count + 1;
     let enough = CompileLimits {
         max_module_bytes: input.len(),
         max_types: 1,
         max_functions: 1,
-        max_instructions: 4,
+        max_instructions: instruction_budget,
         max_branch_table_entries: 2,
         max_controls: 2,
         max_locals: 1,
@@ -125,7 +139,7 @@ fn compiler_budgets_reject_partial_artifacts_with_explicit_resource_errors() {
         ),
         (
             CompileLimits {
-                max_instructions: 3,
+                max_instructions: instruction_budget - 1,
                 ..enough
             },
             CompileResource::Instructions,
@@ -169,7 +183,7 @@ fn compiler_budgets_are_shared_across_defined_functions() {
     use itasca::runtime::{compile_with_limits, CompileError, CompileLimits, CompileResource};
     let input = bytes("(module (func nop) (func nop))");
     let limits = CompileLimits {
-        max_instructions: 3,
+        max_instructions: 2,
         ..CompileLimits::default()
     };
     assert_eq!(

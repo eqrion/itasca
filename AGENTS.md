@@ -16,9 +16,17 @@ consumer API and checked theorem premises.
   Rust comment and line-number changes also require regeneration.
 - `FunsExternal.lean` is handwritten. The generated external template is ignored
   and must never be imported by a proof.
-- `lean/SpecTec/wasm2.0.lean` is generated from pinned sources and versioned
-  patches. Change the source or generator, run `just spec-update`, and check
-  `just spec-check`; never patch the generated specification.
+- `lean/SpecTec/{Wasm2Prefix,wasm2.0,Wasm2Builtins}.lean` are generated from
+  pinned sources, versioned patches, and `lean/scripts/spec_split.py`. Change
+  source or generator, run `just spec-update`, then `just spec-check`; never
+  patch generated specification files.
+- `lean/SpecExt/` holds handwritten specification extensions. Builtins keep
+  exact generated signatures, checked by `Wasm2Builtins`. Temporary opaque
+  placeholders are permitted only by the staged audit policy; they are not
+  execution correctness proofs.
+- `lean/Exec/` has an independent audit. Validator proofs must never import
+  `Exec` or `SpecExt` directly. Execution changes must preserve the validator
+  extracted model and theorem statements.
 - Keep `lean/scripts/`: its audit-import and external-model checks are part of
   verification. Upstream trackers and archived Rocq records are not build inputs.
 
@@ -38,8 +46,8 @@ Use the documented rustdoc style and keep byte-coordinate systems explicit.
 ## Proof discipline
 
 Do not add axioms, `sorry`, `admit`, `native_decide`, unsafe proof shortcuts, or
-kernel bypasses. `Itasca.Audit` permits only `propext`, `Classical.choice`, and
-`Quot.sound`. Every new proof module must be reachable through its imports;
+kernel bypasses. `Itasca.Audit`, `SpecExt.Audit`, and `Exec.Audit` permit only `propext`, `Classical.choice`, and
+`Quot.sound`. Every new proof module must be reachable through its library's audit imports;
 run `just audit-imports` after adding or moving files. Keep `Support/`, `Spec/`,
 `Binary/`, and `Handler/` free of imports from higher layers.
 Audit proof-bearing adapter definitions as well as exported theorems.
@@ -50,7 +58,8 @@ the proof source tree. Report any trust-boundary change explicitly.
 
 ## Required checks
 
-- Handwritten Lean proofs or adapters: `just prove`.
+- Handwritten Lean proofs or adapters: `just prove`; execution or specification
+  extensions additionally require `just prove-exec`.
 - Rust or extraction inputs: `cargo test`, `cargo test --no-default-features`,
   `just extract`, `just extract-check`, and `just prove`.
 - Aeneas source patches or pins: the Rust/extraction checks plus `just regressions`.

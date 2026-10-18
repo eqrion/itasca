@@ -1,17 +1,16 @@
-//! Repeated, metered runtime comparisons; run in release mode with `--help` for options.
+//! Repeated runtime comparisons; run in release mode with `--help` for options.
 use itasca::runtime::{
-    compile, ExecutableModule, Execution, Extern, FuncAddr, Outcome, Store, Value,
+    compile, Execution, Extern, FuncAddr, HostError, InterruptAction, Platform, Store, Value,
+    VecMemory,
 };
 use itasca::ValidationProfile;
 use std::{
     fs::File,
     hint::black_box,
     io::{BufWriter, Write},
-    rc::Rc,
     time::{Duration, Instant},
 };
 
-const FUEL: u64 = 100_000_000;
 const MAX_REPEATS: usize = 1_000_000;
 
 struct Options {
@@ -273,7 +272,6 @@ fn oracle_engine(profile: ValidationProfile) -> wasmi::Engine {
     let wasm2 = profile == ValidationProfile::Wasm2;
     let mut config = wasmi::Config::default();
     config
-        .consume_fuel(true)
         .compilation_mode(wasmi::CompilationMode::Eager)
         .wasm_mutable_global(true)
         .wasm_sign_extension(wasm2)
@@ -291,64 +289,73 @@ fn oracle_engine(profile: ValidationProfile) -> wasmi::Engine {
     wasmi::Engine::new(&config)
 }
 
+struct BenchPlatform;
+impl Platform<VecMemory> for BenchPlatform {
+    fn interrupt(&mut self) -> InterruptAction {
+        InterruptAction::Continue
+    }
+    fn call_host(
+        &mut self,
+        _: &mut Store,
+        _: u64,
+        _: &[Value],
+        _: &mut [Value],
+    ) -> Result<(), HostError> {
+        Err(HostError::Trap)
+    }
+}
 fn our_instance(
-    code: &Rc<ExecutableModule>,
-    provider: Option<&Rc<ExecutableModule>>,
+    bytes: &[u8],
+    provider: Option<&[u8]>,
+    profile: ValidationProfile,
 ) -> (Store, FuncAddr) {
     let mut store = Store::new();
     let mut imports = Vec::new();
     if let Some(provider) = provider {
-        let mut pending = store.instantiate(Rc::clone(provider), &[]).unwrap();
-        pending.add_fuel(FUEL).unwrap();
-        assert!(matches!(pending.run(&mut store), Outcome::Returned(_)));
-        imports.push(
-            store
-                .export(pending.instance().unwrap(), b"inc")
-                .unwrap()
-                .unwrap(),
-        );
+        let instance = store
+            .instantiate(compile(provider, profile).unwrap(), &[], &mut BenchPlatform)
+            .unwrap();
+        imports.push(store.export(instance, b"inc").unwrap().unwrap());
     }
-    let mut pending = store.instantiate(Rc::clone(code), &imports).unwrap();
-    pending.add_fuel(FUEL).unwrap();
-    assert!(matches!(pending.run(&mut store), Outcome::Returned(_)));
-    let Some(Extern::Func(function)) = store.export(pending.instance().unwrap(), b"run").unwrap()
-    else {
+    let instance = store
+        .instantiate(
+            compile(bytes, profile).unwrap(),
+            &imports,
+            &mut BenchPlatform,
+        )
+        .unwrap();
+    let Some(Extern::Func(function)) = store.export(instance, b"run").unwrap() else {
         panic!("missing run export")
     };
     (store, function)
 }
-
 fn our_call(
     store: &mut Store,
     function: FuncAddr,
     argument: i32,
     inspect: impl FnOnce(&Execution),
 ) -> i32 {
-    let mut execution = Execution::new(store, function, &[Value::I32(argument as u32)]).unwrap();
-    execution.add_fuel(FUEL).unwrap();
-    let Outcome::Returned(values) = execution.run(store) else {
-        panic!("benchmark did not return")
-    };
-    let [Value::I32(result)] = values.as_slice() else {
-        panic!("unexpected result type")
-    };
+    let mut execution = Execution::new();
+    let result = our_reused_call(store, &mut execution, function, argument);
     inspect(&execution);
-    *result as i32
+    result
 }
-
-fn our_restarted_call(
+fn our_reused_call(
     store: &mut Store,
     execution: &mut Execution,
     function: FuncAddr,
     argument: i32,
 ) -> i32 {
+    let mut values = Vec::new();
     execution
-        .restart(store, function, &[Value::I32(argument as u32)])
+        .invoke(
+            store,
+            &mut BenchPlatform,
+            function,
+            &[Value::I32(argument as u32)],
+            &mut values,
+        )
         .unwrap();
-    execution.add_fuel(FUEL).unwrap();
-    let Outcome::Returned(values) = execution.run(store) else {
-        panic!("benchmark did not return")
-    };
     let [Value::I32(result)] = values.as_slice() else {
         panic!("unexpected result type")
     };
@@ -361,7 +368,6 @@ fn oracle_instance(
     provider: Option<&wasmi::Module>,
 ) -> (wasmi::Store<()>, wasmi::Func) {
     let mut store = wasmi::Store::new(engine, ());
-    store.set_fuel(FUEL).unwrap();
     let mut imports = Vec::new();
     if let Some(provider) = provider {
         let instance = wasmi::Instance::new(&mut store, provider, &[]).unwrap();
@@ -375,7 +381,6 @@ fn oracle_instance(
 }
 
 fn oracle_call(store: &mut wasmi::Store<()>, function: wasmi::Func, argument: i32) -> i32 {
-    store.set_fuel(FUEL).unwrap();
     let mut result = [wasmi::Val::I32(0)];
     function
         .call(store, &[wasmi::Val::I32(argument)], &mut result)
@@ -484,7 +489,7 @@ fn main() {
         .unwrap();
     }
     println!(
-        "Metered itasca vs Wasmi 2.0.0 (eager), {} samples, target {} ms/sample, {}-{}",
+        "Slot itasca vs Wasmi 2.0.0 (eager), {} samples, target {} ms/sample, {}-{}",
         options.samples,
         options.sample_time.as_millis(),
         std::env::consts::ARCH,
@@ -493,9 +498,9 @@ fn main() {
     println!(
         "Times: median [min,max] microseconds/operation. Ratio = itasca / Wasmi; lower is better."
     );
-    println!("Compile includes validation/rewrite/drop and a fresh Wasmi engine; instantiate includes fresh store/export lookup/drop;");
-    println!("execute includes dynamic invocation/fuel/result handling on reused instances; restart retains itasca frame/local storage. WAT encoding excluded.");
-    println!("For cross_instance, compile/footprint cover the consumer; instantiate includes its already-compiled provider.");
+    println!("Compile includes validation/rewrite/drop and a fresh Wasmi engine; compile_instance also creates the store and instance;");
+    println!("execute includes invocation/result handling on reused instances; reuse retains itasca frame/slot storage. WAT encoding excluded.");
+    println!("For cross_instance, compile/footprint cover the consumer; compile_instance also compiles its provider. Both engines run without fuel.");
     println!(
         "{:<18} {:<11} {:>32} {:>32} {:>8}",
         "workload", "stage", "itasca us", "Wasmi us", "ratio"
@@ -506,7 +511,7 @@ fn main() {
             .unwrap()
             .encode()
             .unwrap();
-        let code = Rc::new(compile(&bytes, case.profile).unwrap());
+        let code = compile(&bytes, case.profile).unwrap();
         let engine = oracle_engine(case.profile);
         let oracle_code = wasmi::Module::new(&engine, &bytes).unwrap();
         let provider_bytes = case.provider.as_ref().map(|text| {
@@ -516,20 +521,14 @@ fn main() {
                 .encode()
                 .unwrap()
         });
-        let provider = provider_bytes
-            .as_ref()
-            .map(|bytes| Rc::new(compile(bytes, case.profile).unwrap()));
         let oracle_provider = provider_bytes
             .as_ref()
             .map(|bytes| wasmi::Module::new(&engine, bytes).unwrap());
-        let (mut store, function) = our_instance(&code, provider.as_ref());
+        let (mut store, function) = our_instance(&bytes, provider_bytes.as_deref(), case.profile);
         let (mut oracle_store, oracle_function) =
             oracle_instance(&engine, &oracle_code, oracle_provider.as_ref());
-        let mut fuel = 0;
         for _ in 0..5 {
-            let result = our_call(&mut store, function, case.argument, |execution| {
-                fuel = FUEL - execution.fuel();
-            });
+            let result = our_call(&mut store, function, case.argument, |_| {});
             assert_eq!(result, case.expected, "{} itasca", case.name);
             assert_eq!(
                 oracle_call(&mut oracle_store, oracle_function, case.argument),
@@ -556,16 +555,21 @@ fn main() {
         measure_pair(
             &mut options,
             case,
-            "instantiate",
+            "compile_instance",
             || {
-                black_box(our_instance(&code, provider.as_ref()));
+                black_box(our_instance(
+                    &bytes,
+                    provider_bytes.as_deref(),
+                    case.profile,
+                ));
             },
             || {
-                black_box(oracle_instance(
-                    &engine,
-                    &oracle_code,
-                    oracle_provider.as_ref(),
-                ));
+                let fresh = oracle_engine(case.profile);
+                let module = wasmi::Module::new(&fresh, &bytes).unwrap();
+                let provider = provider_bytes
+                    .as_ref()
+                    .map(|b| wasmi::Module::new(&fresh, b).unwrap());
+                black_box(oracle_instance(&fresh, &module, provider.as_ref()));
             },
         );
         measure_pair(
@@ -588,16 +592,17 @@ fn main() {
                 ));
             },
         );
-        let mut reused =
-            Execution::new(&store, function, &[Value::I32(case.argument as u32)]).unwrap();
-        reused.add_fuel(FUEL).unwrap();
-        assert!(matches!(reused.run(&mut store), Outcome::Returned(_)));
+        let mut reused = Execution::new();
+        assert_eq!(
+            our_reused_call(&mut store, &mut reused, function, case.argument),
+            case.expected
+        );
         measure_pair(
             &mut options,
             case,
-            "restart",
+            "reuse",
             || {
-                black_box(our_restarted_call(
+                black_box(our_reused_call(
                     &mut store,
                     &mut reused,
                     function,
@@ -613,10 +618,9 @@ fn main() {
             },
         );
         assert_eq!(
-            our_restarted_call(&mut store, &mut reused, function, case.argument),
+            our_reused_call(&mut store, &mut reused, function, case.argument),
             case.expected
         );
-        assert_eq!(FUEL - reused.fuel(), fuel);
         // Check again after all sampling; known-result comparisons stay outside the clocks.
         assert_eq!(
             our_call(&mut store, function, case.argument, |_| {}),
@@ -632,11 +636,11 @@ fn main() {
             instructions += stats.instruction_count;
             instruction_bytes += stats.instruction_bytes;
             branch_bytes += stats.branch_table_bytes;
-            slots = slots.max(stats.local_count + stats.max_stack);
+            slots = slots.max(stats.slot_count);
             count += 1;
         }
-        println!("  footprint: source={} B, functions={count}, instructions={instructions}, bytecode={instruction_bytes} B, branch_tables={branch_bytes} B, largest_frame_payload={} B, itasca_fuel/call={fuel}",
-            bytes.len(), slots * std::mem::size_of::<Value>());
+        println!("  footprint: source={} B, functions={count}, instructions={instructions}, bytecode={instruction_bytes} B, branch_tables={branch_bytes} B, largest_frame_payload={} B, slot_size=8 B",
+            bytes.len(), slots * std::mem::size_of::<u64>());
     }
     if let Some(csv) = &mut options.csv {
         csv.flush().unwrap();

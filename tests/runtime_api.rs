@@ -2,34 +2,61 @@ use itasca::runtime::*;
 use itasca::{
     ElemType, FuncType, GlobalType, Limits, MemType, Mut, TableType, ValidationProfile, ValueType,
 };
-use std::rc::Rc;
 
-fn module(wat: &str, profile: ValidationProfile) -> Rc<ExecutableModule> {
+struct Hooks {
+    remaining: usize,
+}
+impl Hooks {
+    fn new() -> Self {
+        Self { remaining: 100_000 }
+    }
+}
+impl<M: MemoryBuffer> Platform<M> for Hooks {
+    fn interrupt(&mut self) -> InterruptAction {
+        if self.remaining == 0 {
+            InterruptAction::Terminate
+        } else {
+            self.remaining -= 1;
+            InterruptAction::Continue
+        }
+    }
+    fn call_host(
+        &mut self,
+        _: &mut Store<M>,
+        _: u64,
+        _: &[Value],
+        _: &mut [Value],
+    ) -> Result<(), HostError> {
+        Err(HostError::Trap)
+    }
+}
+fn module(wat: &str, profile: ValidationProfile) -> ExecutableModule {
     let buf = wast::parser::ParseBuffer::new(wat).unwrap();
     let mut ast = wast::parser::parse::<wast::Wat>(&buf).unwrap();
-    Rc::new(compile(&ast.encode().unwrap(), profile).unwrap())
+    compile(&ast.encode().unwrap(), profile).unwrap()
 }
 fn instance(store: &mut Store, wat: &str, imports: &[Extern]) -> InstanceAddr {
-    let mut pending = store
-        .instantiate(module(wat, ValidationProfile::Wasm2), imports)
-        .unwrap();
-    pending.add_fuel(100_000).unwrap();
-    assert!(matches!(pending.run(store), Outcome::Returned(_)));
-    pending.instance().unwrap()
+    store
+        .instantiate(
+            module(wat, ValidationProfile::Wasm2),
+            imports,
+            &mut Hooks::new(),
+        )
+        .unwrap()
 }
-fn func(store: &Store, i: InstanceAddr, name: &str) -> FuncAddr {
+fn func<M: MemoryBuffer>(store: &Store<M>, i: InstanceAddr, name: &str) -> FuncAddr {
     match store.export(i, name.as_bytes()).unwrap().unwrap() {
         Extern::Func(f) => f,
         _ => panic!("not function"),
     }
 }
+fn invoke(store: &mut Store, f: FuncAddr, args: &[Value]) -> Result<Vec<Value>, ExecError> {
+    let mut results = Vec::new();
+    Execution::new().invoke(store, &mut Hooks::new(), f, args, &mut results)?;
+    Ok(results)
+}
 fn run(store: &mut Store, f: FuncAddr, args: &[Value]) -> Vec<Value> {
-    let mut e = Execution::new(store, f, args).unwrap();
-    e.add_fuel(100_000).unwrap();
-    match e.run(store) {
-        Outcome::Returned(v) => v,
-        other => panic!("{other:?}"),
-    }
+    invoke(store, f, args).unwrap()
 }
 
 #[test]
@@ -62,127 +89,6 @@ fn cross_instance_calls_use_defining_globals_memory_and_functions() {
     assert_eq!(run(&mut store, indirect, &[]), [Value::I32(38)]);
 }
 #[test]
-fn fuel_suspends_before_bulk_effect_and_retains_insufficient_budget() {
-    let mut store = Store::new();
-    let i = instance(
-        &mut store,
-        r#"(module (memory (export "m") 1)
-      (func (export "fill") i32.const 0 i32.const 42 i32.const 128 memory.fill))"#,
-        &[],
-    );
-    let f = func(&store, i, "fill");
-    let memory = match store.export(i, b"m").unwrap().unwrap() {
-        Extern::Memory(m) => m,
-        _ => unreachable!(),
-    };
-    let mut e = Execution::new(&store, f, &[]).unwrap();
-    e.add_fuel(6).unwrap();
-    assert!(matches!(e.run(&mut store), Outcome::Suspended));
-    assert_eq!(e.fuel(), 2);
-    assert_eq!(store.memory(memory).unwrap()[0], 0);
-    assert!(matches!(e.run(&mut store), Outcome::Suspended));
-    assert_eq!(e.fuel(), 2);
-    e.add_fuel(1).unwrap();
-    assert!(matches!(e.run(&mut store), Outcome::Suspended));
-    assert_eq!(store.memory(memory).unwrap()[127], 42);
-    assert_eq!(e.fuel(), 0);
-    e.add_fuel(1).unwrap();
-    assert!(matches!(e.run(&mut store), Outcome::Returned(_)));
-    assert!(matches!(
-        e.run(&mut store),
-        Outcome::Failed(RuntimeError::InvalidState)
-    ));
-}
-#[test]
-fn host_resume_checks_types_ownership_and_is_not_replayed() {
-    let mut store = Store::new();
-    let host = store
-        .define_host(
-            FuncType {
-                params: vec![ValueType::I32],
-                results: vec![ValueType::I32],
-            },
-            5,
-        )
-        .unwrap();
-    let i = instance(
-        &mut store,
-        r#"(module (import "h" "f" (func $host (param i32) (result i32)))
-        (func (export "f") (result i32) i32.const 3 call $host i32.const 1 i32.add))"#,
-        &[Extern::Func(host)],
-    );
-    let mut e = Execution::new(&store, func(&store, i, "f"), &[]).unwrap();
-    e.add_fuel(100).unwrap();
-    match e.run(&mut store) {
-        Outcome::NeedsHostCall(r) => {
-            assert_eq!(r.host_id, 5);
-            assert_eq!(r.arguments, [Value::I32(3)]);
-        }
-        x => panic!("{x:?}"),
-    }
-    let fuel = e.fuel();
-    assert_eq!(
-        e.resume_host(&store, Ok(&[Value::I64(6)])),
-        Err(RuntimeError::TypeMismatch)
-    );
-    assert!(matches!(
-        e.run(&mut store),
-        Outcome::Failed(RuntimeError::InvalidState)
-    ));
-    assert_eq!(e.fuel(), fuel);
-    // Reenter the same store with a distinct invocation while the first is waiting.
-    let mut nested = Execution::new(&store, host, &[Value::I32(9)]).unwrap();
-    nested.add_fuel(10).unwrap();
-    assert!(matches!(nested.run(&mut store), Outcome::NeedsHostCall(_)));
-    nested.resume_host(&store, Ok(&[Value::I32(10)])).unwrap();
-    assert!(matches!(nested.run(&mut store), Outcome::Returned(_)));
-    e.resume_host(&store, Ok(&[Value::I32(6)])).unwrap();
-    assert_eq!(
-        e.resume_host(&store, Ok(&[Value::I32(7)])),
-        Err(RuntimeError::InvalidState)
-    );
-    match e.run(&mut store) {
-        Outcome::Returned(v) => assert_eq!(v, [Value::I32(7)]),
-        x => panic!("{x:?}"),
-    }
-}
-#[test]
-fn start_suspension_does_not_repeat_initialization() {
-    let mut store = Store::new();
-    let memory = store
-        .define_memory(MemType {
-            limits: Limits { min: 1, max: None },
-        })
-        .unwrap();
-    let host = store
-        .define_host(
-            FuncType {
-                params: vec![],
-                results: vec![],
-            },
-            1,
-        )
-        .unwrap();
-    let m = module(
-        r#"(module (import "h" "m" (memory 1)) (import "h" "f" (func $host))
-      (data (i32.const 0) "a") (func $start call $host i32.const 1 i32.const 2 i32.store8) (start $start))"#,
-        ValidationProfile::Wasm2,
-    );
-    let mut init = store
-        .instantiate(m, &[Extern::Memory(memory), Extern::Func(host)])
-        .unwrap();
-    assert!(init.instance().is_none());
-    assert!(matches!(init.run(&mut store), Outcome::Suspended));
-    assert_eq!(store.memory(memory).unwrap()[0], b'a');
-    store.memory_mut(memory).unwrap()[0] = b'b';
-    init.add_fuel(10).unwrap();
-    assert!(matches!(init.run(&mut store), Outcome::NeedsHostCall(_)));
-    init.resume_host(&store, Ok(&[])).unwrap();
-    assert!(matches!(init.run(&mut store), Outcome::Returned(_)));
-    assert_eq!(&store.memory(memory).unwrap()[..2], b"b\x02");
-    assert!(init.instance().is_some());
-}
-#[test]
 fn failed_segments_preserve_profile_specific_effects_and_escaped_functions() {
     let wat = r#"(module (import "h" "t" (table 1 funcref)) (import "h" "m" (memory 1))
       (global i32 (i32.const 77)) (func (result i32) global.get 0)
@@ -196,85 +102,33 @@ fn failed_segments_preserve_profile_specific_effects_and_escaped_functions() {
             })
             .unwrap();
         let memory = store
-            .define_memory(MemType {
-                limits: Limits { min: 1, max: None },
-            })
+            .define_memory(
+                MemType {
+                    limits: Limits { min: 1, max: None },
+                },
+                VecMemory::new_zeroed(65536).unwrap(),
+            )
             .unwrap();
         assert!(matches!(
             store.instantiate(
                 module(wat, profile),
-                &[Extern::Table(table), Extern::Memory(memory)]
+                &[Extern::Table(table), Extern::Memory(memory)],
+                &mut Hooks::new()
             ),
-            Err(RuntimeError::Trap(Trap::MemoryOutOfBounds))
+            Err(ExecError::Trap(Trap::MemoryOutOfBounds))
         ));
         if profile == ValidationProfile::Wasm1 {
             assert_eq!(store.memory(memory).unwrap()[0], 0);
-            assert_eq!(store.table(table).unwrap()[0], Value::FuncRef(None));
+            assert_eq!(store.table_get(table, 0).unwrap(), Value::FuncRef(None));
         } else {
             assert_eq!(store.memory(memory).unwrap()[0], b'A');
-            let f = match store.table(table).unwrap()[0] {
+            let f = match store.table_get(table, 0).unwrap() {
                 Value::FuncRef(Some(f)) => f,
                 _ => panic!(),
             };
             assert_eq!(run(&mut store, f, &[]), [Value::I32(77)]);
         }
     }
-}
-#[test]
-fn wrong_store_and_foreign_references_are_rejected() {
-    let mut a = Store::new();
-    let b = Store::new();
-    let f = a
-        .define_host(
-            FuncType {
-                params: vec![],
-                results: vec![],
-            },
-            0,
-        )
-        .unwrap();
-    assert!(matches!(
-        Execution::new(&b, f, &[]),
-        Err(RuntimeError::WrongStore)
-    ));
-    let mut e = Execution::new(&a, f, &[]).unwrap();
-    e.add_fuel(1).unwrap();
-    let mut b = b;
-    assert!(matches!(
-        e.run(&mut b),
-        Outcome::Failed(RuntimeError::WrongStore)
-    ));
-    assert!(matches!(e.run(&mut a), Outcome::NeedsHostCall(_)));
-    let ext = a.define_extern(4).unwrap();
-    assert!(matches!(
-        b.define_global(
-            GlobalType {
-                mutability: Mut::Const,
-                valtype: ValueType::ExternRef
-            },
-            Value::ExternRef(Some(ext))
-        ),
-        Err(RuntimeError::WrongStore)
-    ));
-}
-#[test]
-fn resource_limits_are_distinct_from_fuel_and_wasm_traps() {
-    let mut store = Store::with_limits(StoreLimits {
-        max_frames: 3,
-        ..Default::default()
-    });
-    let i = instance(
-        &mut store,
-        r#"(module (func $f (export "f") call $f))"#,
-        &[],
-    );
-    let mut e = Execution::new(&store, func(&store, i, "f"), &[]).unwrap();
-    assert!(matches!(e.run(&mut store), Outcome::Suspended));
-    e.add_fuel(100).unwrap();
-    assert!(matches!(
-        e.run(&mut store),
-        Outcome::Failed(RuntimeError::Resource(ResourceLimit::CallStack))
-    ));
 }
 #[test]
 fn dropped_segments_are_empty_and_zero_length_bounds_are_checked() {
@@ -295,14 +149,16 @@ fn dropped_segments_are_empty_and_zero_length_bounds_are_checked() {
         &[Value::I32(65536), Value::I32(0), Value::I32(0)]
     )
     .is_empty());
-    let mut e =
-        Execution::new(&store, init, &[Value::I32(0), Value::I32(1), Value::I32(0)]).unwrap();
-    e.add_fuel(100).unwrap();
-    assert!(matches!(
-        e.run(&mut store),
-        Outcome::Failed(RuntimeError::Trap(Trap::MemoryOutOfBounds))
-    ));
+    assert_eq!(
+        invoke(
+            &mut store,
+            init,
+            &[Value::I32(0), Value::I32(1), Value::I32(0)]
+        ),
+        Err(ExecError::Trap(Trap::MemoryOutOfBounds))
+    );
 }
+
 #[test]
 fn trap_does_not_undo_prior_memory_effects() {
     let mut store = Store::new();
@@ -313,12 +169,10 @@ fn trap_does_not_undo_prior_memory_effects() {
         &[],
     );
     let f = func(&store, i, "f");
-    let mut e = Execution::new(&store, f, &[]).unwrap();
-    e.add_fuel(100).unwrap();
-    assert!(matches!(
-        e.run(&mut store),
-        Outcome::Failed(RuntimeError::Trap(Trap::Unreachable))
-    ));
+    assert_eq!(
+        invoke(&mut store, f, &[]),
+        Err(ExecError::Trap(Trap::Unreachable))
+    );
     let m = match store.export(i, b"m").unwrap().unwrap() {
         Extern::Memory(m) => m,
         _ => panic!(),
@@ -327,118 +181,405 @@ fn trap_does_not_undo_prior_memory_effects() {
 }
 
 #[test]
-fn restart_reuses_completed_executions_and_preserves_failed_checks() {
-    let mut store = Store::new();
-    let i = instance(
-        &mut store,
-        r#"(module
-      (func (export "fresh") (param i32) (result i32 i32) (local i32)
-        local.get 1 local.get 0 local.set 1 local.get 1)
-      (func (export "trap") (param i32) (result i32)
-        local.get 0 i32.const 0 i32.div_u))"#,
-        &[],
-    );
-    let fresh = func(&store, i, "fresh");
-    let trap = func(&store, i, "trap");
-    let mut e = Execution::new(&store, fresh, &[Value::I32(7)]).unwrap();
+fn wrong_store_and_foreign_references_are_rejected() {
+    let mut a: Store = Store::new();
+    let mut b = Store::new();
+    let f = a
+        .define_host(
+            FuncType {
+                params: vec![],
+                results: vec![],
+            },
+            0,
+        )
+        .unwrap();
+    assert_eq!(invoke(&mut b, f, &[]), Err(ExecError::WrongStore));
+    let ext = a.define_extern(4).unwrap();
     assert_eq!(
-        e.restart(&store, fresh, &[Value::I32(9)]),
-        Err(RuntimeError::InvalidState)
+        b.define_global(
+            GlobalType {
+                mutability: Mut::Const,
+                valtype: ValueType::ExternRef
+            },
+            Value::ExternRef(Some(ext))
+        ),
+        Err(ExecError::WrongStore)
     );
-    assert!(matches!(e.run(&mut store), Outcome::Suspended));
-    assert_eq!(
-        e.restart(&store, fresh, &[Value::I32(9)]),
-        Err(RuntimeError::InvalidState)
-    );
-    e.add_fuel(100).unwrap();
-    let Outcome::Returned(first) = e.run(&mut store) else {
-        panic!()
-    };
-    assert_eq!(first, [Value::I32(0), Value::I32(7)]);
-    let fuel = e.fuel();
-    assert_eq!(
-        e.restart(&store, fresh, &[Value::I64(1)]),
-        Err(RuntimeError::TypeMismatch)
-    );
-    assert_eq!(e.fuel(), fuel);
-    let other = Store::new();
-    assert_eq!(
-        e.restart(&other, fresh, &[Value::I32(9)]),
-        Err(RuntimeError::WrongStore)
-    );
-    e.restart(&store, trap, &[Value::I32(9)]).unwrap();
-    assert_eq!(e.fuel(), 0);
-    assert_eq!(e.source_offset(&store).unwrap(), None);
-    e.add_fuel(100).unwrap();
-    assert!(matches!(
-        e.run(&mut store),
-        Outcome::Failed(RuntimeError::Trap(Trap::IntegerDivideByZero))
-    ));
-    let offset = e.source_offset(&store).unwrap();
-    let fuel = e.fuel();
-    assert!(offset.is_some());
-    assert_eq!(
-        e.restart(&store, fresh, &[]),
-        Err(RuntimeError::TypeMismatch)
-    );
-    assert_eq!(e.source_offset(&store).unwrap(), offset);
-    assert_eq!(e.fuel(), fuel);
-    // Restart after a trap clears the still-live frames, operands and locals.
-    e.restart(&store, fresh, &[Value::I32(11)]).unwrap();
-    e.add_fuel(100).unwrap();
-    let Outcome::Returned(second) = e.run(&mut store) else {
-        panic!()
-    };
-    assert_eq!(second, [Value::I32(0), Value::I32(11)]);
-    assert_eq!(first, [Value::I32(0), Value::I32(7)]);
 }
 
 #[test]
-fn restart_rejects_pending_host_and_rechecks_reference_ownership() {
+fn frame_exhaustion_is_distinct_from_interrupt_termination() {
+    let mut store = Store::with_limits(StoreLimits {
+        max_frames: 3,
+        ..Default::default()
+    });
+    let i = instance(
+        &mut store,
+        r#"(module (func $f (export "f") call $f))"#,
+        &[],
+    );
+    let f = func(&store, i, "f");
+    assert_eq!(
+        invoke(&mut store, f, &[]),
+        Err(ExecError::Exhausted(ResourceLimit::CallStack))
+    );
+    let mut results = Vec::new();
+    assert_eq!(
+        Execution::new().invoke(
+            &mut store,
+            &mut Hooks { remaining: 0 },
+            f,
+            &[],
+            &mut results
+        ),
+        Err(ExecError::Terminated)
+    );
+}
+
+#[test]
+fn loop_interrupt_retains_completed_memory_effects() {
+    let mut store = Store::new();
+    let i = instance(
+        &mut store,
+        r#"(module (memory (export "m") 1)
+        (func (export "run") i32.const 0 i32.const 42 i32.store8 loop br 0 end))"#,
+        &[],
+    );
+    let f = func(&store, i, "run");
+    let mut results = Vec::new();
+    assert_eq!(
+        Execution::new().invoke(
+            &mut store,
+            &mut Hooks { remaining: 3 },
+            f,
+            &[],
+            &mut results
+        ),
+        Err(ExecError::Terminated)
+    );
+    let Extern::Memory(m) = store.export(i, b"m").unwrap().unwrap() else {
+        panic!()
+    };
+    assert_eq!(store.memory(m).unwrap()[0], 42);
+}
+
+struct Reenter {
+    nested: FuncAddr,
+    calls: usize,
+}
+impl Platform<VecMemory> for Reenter {
+    fn interrupt(&mut self) -> InterruptAction {
+        InterruptAction::Continue
+    }
+    fn call_host(
+        &mut self,
+        store: &mut Store,
+        id: u64,
+        args: &[Value],
+        results: &mut [Value],
+    ) -> Result<(), HostError> {
+        self.calls += 1;
+        assert_eq!(id, 5);
+        assert_eq!(args, [Value::I32(3)]);
+        let mut nested = Vec::new();
+        Execution::new()
+            .invoke(store, self, self.nested, &[Value::I32(9)], &mut nested)
+            .unwrap();
+        assert_eq!(nested, [Value::I32(10)]);
+        results[0] = Value::I32(6);
+        Ok(())
+    }
+}
+#[test]
+fn host_calls_reenter_without_replaying_outer_effects() {
     let mut store = Store::new();
     let host = store
         .define_host(
             FuncType {
-                params: vec![ValueType::ExternRef],
-                results: vec![ValueType::ExternRef],
+                params: vec![ValueType::I32],
+                results: vec![ValueType::I32],
             },
-            7,
+            5,
         )
         .unwrap();
-    let mut e = Execution::new(&store, host, &[Value::ExternRef(None)]).unwrap();
-    e.add_fuel(100).unwrap();
-    assert!(matches!(e.run(&mut store), Outcome::NeedsHostCall(_)));
-    assert_eq!(
-        e.restart(&store, host, &[Value::ExternRef(None)]),
-        Err(RuntimeError::InvalidState)
+    let i = instance(
+        &mut store,
+        r#"(module
+        (import "h" "f" (func $host (param i32) (result i32)))
+        (func (export "nested") (param i32) (result i32) local.get 0 i32.const 1 i32.add)
+        (func (export "run") (result i32) i32.const 3 call $host i32.const 1 i32.add))"#,
+        &[Extern::Func(host)],
     );
-    e.resume_host(&store, Err(RuntimeError::HostFailure))
+    let mut hooks = Reenter {
+        nested: func(&store, i, "nested"),
+        calls: 0,
+    };
+    let f = func(&store, i, "run");
+    let mut results = Vec::new();
+    Execution::new()
+        .invoke(&mut store, &mut hooks, f, &[], &mut results)
         .unwrap();
-    assert_eq!(
-        e.restart(&store, host, &[Value::ExternRef(None)]),
-        Err(RuntimeError::InvalidState)
-    );
+    assert_eq!(results, [Value::I32(7)]);
+    assert_eq!(hooks.calls, 1);
+}
+
+struct HostReply {
+    value: Value,
+    overflow: bool,
+}
+impl Platform<VecMemory> for HostReply {
+    fn interrupt(&mut self) -> InterruptAction {
+        InterruptAction::Continue
+    }
+    fn call_host(
+        &mut self,
+        _: &mut Store,
+        _: u64,
+        _: &[Value],
+        results: &mut [Value],
+    ) -> Result<(), HostError> {
+        if self.overflow {
+            return Err(HostError::StackOverflow);
+        }
+        results[0] = self.value;
+        Ok(())
+    }
+}
+#[test]
+fn host_results_are_checked_and_stack_overflow_is_exhaustion() {
+    let mut store = Store::new();
+    let host = store
+        .define_host(
+            FuncType {
+                params: vec![],
+                results: vec![ValueType::I32],
+            },
+            0,
+        )
+        .unwrap();
+    let mut results = Vec::new();
+    let mut hooks = HostReply {
+        value: Value::I64(0),
+        overflow: false,
+    };
     assert!(matches!(
-        e.run(&mut store),
-        Outcome::Failed(RuntimeError::HostFailure)
+        Execution::new().invoke(&mut store, &mut hooks, host, &[], &mut results),
+        Err(ExecError::Trap(_))
     ));
-    let mut other = Store::new();
-    let foreign = other.define_extern(1).unwrap();
-    assert_eq!(
-        e.restart(&store, host, &[Value::ExternRef(Some(foreign))]),
-        Err(RuntimeError::WrongStore)
-    );
-    let own = store.define_extern(2).unwrap();
-    e.restart(&store, host, &[Value::ExternRef(Some(own))])
+    hooks.overflow = true;
+    assert!(matches!(
+        Execution::new().invoke(&mut store, &mut hooks, host, &[], &mut results),
+        Err(ExecError::Exhausted(_))
+    ));
+}
+
+struct FixedMemory(Vec<u8>);
+impl MemoryBuffer for FixedMemory {
+    fn new_zeroed(len: usize) -> Option<Self> {
+        Some(Self(vec![0; len]))
+    }
+    fn bytes(&self) -> &[u8] {
+        &self.0
+    }
+    fn bytes_mut(&mut self) -> &mut [u8] {
+        &mut self.0
+    }
+    fn grow(&mut self, new_len: usize) -> bool {
+        if new_len > 2 * 65536 {
+            return false;
+        }
+        self.0.resize(new_len, 0);
+        true
+    }
+}
+#[test]
+fn embedder_memory_growth_preserves_bytes_and_zero_fills() {
+    let mut store = Store::<FixedMemory>::new();
+    let m = store
+        .define_memory(
+            MemType {
+                limits: Limits { min: 1, max: None },
+            },
+            FixedMemory::new_zeroed(65536).unwrap(),
+        )
         .unwrap();
-    e.add_fuel(100).unwrap();
-    let Outcome::NeedsHostCall(request) = e.run(&mut store) else {
+    store.memory_mut(m).unwrap()[0] = 99;
+    let i = store
+        .instantiate(
+            module(
+                r#"(module (import "h" "m" (memory 1))
+        (func (export "grow") (result i32) i32.const 1 memory.grow))"#,
+                ValidationProfile::Wasm2,
+            ),
+            &[Extern::Memory(m)],
+            &mut Hooks::new(),
+        )
+        .unwrap();
+    let f = func(&store, i, "grow");
+    let mut results = Vec::new();
+    let mut e = Execution::new();
+    e.invoke(&mut store, &mut Hooks::new(), f, &[], &mut results)
+        .unwrap();
+    assert_eq!(results, [Value::I32(1)]);
+    assert_eq!(store.memory(m).unwrap()[0], 99);
+    assert!(store.memory(m).unwrap()[65536..].iter().all(|b| *b == 0));
+    e.invoke(&mut store, &mut Hooks::new(), f, &[], &mut results)
+        .unwrap();
+    assert_eq!(results, [Value::I32(u32::MAX)]);
+    assert_eq!(store.memory(m).unwrap().len(), 2 * 65536);
+}
+
+#[test]
+fn synchronous_start_calls_host_once_after_segment_initialization() {
+    struct Start {
+        memory: MemoryAddr,
+        calls: usize,
+    }
+    impl Platform<VecMemory> for Start {
+        fn interrupt(&mut self) -> InterruptAction {
+            InterruptAction::Continue
+        }
+        fn call_host(
+            &mut self,
+            store: &mut Store,
+            _: u64,
+            _: &[Value],
+            _: &mut [Value],
+        ) -> Result<(), HostError> {
+            self.calls += 1;
+            assert_eq!(store.memory(self.memory).unwrap()[0], b'A');
+            store.memory_mut(self.memory).unwrap()[1] = b'B';
+            Ok(())
+        }
+    }
+    let mut store = Store::new();
+    let memory = store
+        .define_memory(
+            MemType {
+                limits: Limits { min: 1, max: None },
+            },
+            VecMemory::new_zeroed(65536).unwrap(),
+        )
+        .unwrap();
+    let host = store
+        .define_host(
+            FuncType {
+                params: vec![],
+                results: vec![],
+            },
+            0,
+        )
+        .unwrap();
+    let mut platform = Start { memory, calls: 0 };
+    store
+        .instantiate(
+            module(
+                r#"(module (import "h" "m" (memory 1))
+        (import "h" "start" (func $start)) (data (i32.const 0) "A") (start $start))"#,
+                ValidationProfile::Wasm2,
+            ),
+            &[Extern::Memory(memory), Extern::Func(host)],
+            &mut platform,
+        )
+        .unwrap();
+    assert_eq!(platform.calls, 1);
+    assert_eq!(&store.memory(memory).unwrap()[..2], b"AB");
+}
+
+#[test]
+fn execution_storage_is_reusable_after_traps_and_argument_rejection() {
+    let mut store = Store::new();
+    let i = instance(
+        &mut store,
+        r#"(module
+        (func (export "id") (param i32) (result i32) local.get 0)
+        (func (export "trap") unreachable))"#,
+        &[],
+    );
+    let id = func(&store, i, "id");
+    let trap = func(&store, i, "trap");
+    let mut e = Execution::new();
+    let mut result = Vec::new();
+    assert_eq!(
+        e.invoke(&mut store, &mut Hooks::new(), trap, &[], &mut result),
+        Err(ExecError::Trap(Trap::Unreachable))
+    );
+    assert_eq!(
+        e.invoke(
+            &mut store,
+            &mut Hooks::new(),
+            id,
+            &[Value::I64(4)],
+            &mut result
+        ),
+        Err(ExecError::BadArguments)
+    );
+    e.invoke(
+        &mut store,
+        &mut Hooks::new(),
+        id,
+        &[Value::I32(7)],
+        &mut result,
+    )
+    .unwrap();
+    assert_eq!(result, [Value::I32(7)]);
+}
+
+#[test]
+fn host_table_changes_are_observed_by_subsequent_indirect_calls() {
+    struct Replace {
+        table: TableAddr,
+        target: FuncAddr,
+    }
+    impl Platform<VecMemory> for Replace {
+        fn interrupt(&mut self) -> InterruptAction {
+            InterruptAction::Continue
+        }
+        fn call_host(
+            &mut self,
+            store: &mut Store,
+            _: u64,
+            _: &[Value],
+            _: &mut [Value],
+        ) -> Result<(), HostError> {
+            store
+                .set_table(self.table, 0, Value::FuncRef(Some(self.target)))
+                .unwrap();
+            Ok(())
+        }
+    }
+    let mut store = Store::new();
+    let host = store
+        .define_host(
+            FuncType {
+                params: vec![],
+                results: vec![],
+            },
+            0,
+        )
+        .unwrap();
+    let i = instance(
+        &mut store,
+        r#"(module
+        (type $t (func (result i32))) (import "h" "replace" (func $replace))
+        (table (export "table") 1 funcref)
+        (func $old (type $t) i32.const 99)
+        (func $new (export "new") (type $t) i32.const 17)
+        (elem (i32.const 0) $old)
+        (func (export "run") (result i32) call $replace i32.const 0 call_indirect (type $t)))"#,
+        &[Extern::Func(host)],
+    );
+    let Extern::Table(table) = store.export(i, b"table").unwrap().unwrap() else {
         panic!()
     };
-    assert_eq!(request.arguments, [Value::ExternRef(Some(own))]);
-    e.resume_host(&store, Ok(&request.arguments)).unwrap();
-    let Outcome::Returned(values) = e.run(&mut store) else {
-        panic!()
+    let f = func(&store, i, "run");
+    let mut platform = Replace {
+        table,
+        target: func(&store, i, "new"),
     };
-    assert_eq!(values, [Value::ExternRef(Some(own))]);
+    let mut results = Vec::new();
+    Execution::new()
+        .invoke(&mut store, &mut platform, f, &[], &mut results)
+        .unwrap();
+    assert_eq!(results, [Value::I32(17)]);
 }

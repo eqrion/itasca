@@ -1,8 +1,9 @@
 # Active verification pipeline: Rust -> Charon -> Aeneas -> Lean.
 .DEFAULT_GOAL := prove
 
-.PHONY: all build test tools extract extract-check prove check profile trust spec-check \
-        spec-update regressions verify clean
+.PHONY: all build test tools extract extract-check prove prove-exec audit-imports check profile trust spec-check \
+        spec-update regressions verify clean extract-primary extract-check-primary \
+        llbc-exec extract-exec extract-check-exec
 
 all: prove
 
@@ -13,7 +14,7 @@ test:
 	cargo test
 	cargo test --no-default-features
 
-tools extract extract-check prove trust spec-check spec-update regressions clean:
+tools extract extract-check extract-primary extract-check-primary llbc-exec extract-exec extract-check-exec prove prove-exec audit-imports trust spec-check spec-update regressions clean:
 	$(MAKE) -C lean $@
 
 # Example: make check MODULE=Itasca.Module.Validation
@@ -33,3 +34,4 @@ verify:
 	$(MAKE) -C lean spec-compare
 	$(MAKE) regressions
 	$(MAKE) prove
+	$(MAKE) prove-exec

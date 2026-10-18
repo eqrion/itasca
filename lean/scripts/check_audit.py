@@ -1,81 +1,201 @@
 #!/usr/bin/env python3
-"""Check that every Itasca module is audited and that proof layers import downward.
+"""Check audit coverage and import layers for each independently audited library.
 
-`Itasca.Audit` must import exactly the sink modules of the import graph, which
-makes every other module reachable. Pass `--write` to regenerate those imports.
+Each Audit imports exactly its library's sink modules. Pass --write to refresh
+those imports, or --root to check a single library. The complete builtin policy
+rejects opaque placeholders; earlier stage modes remain for regression tests.
 """
+import argparse
 from pathlib import Path
 import sys
 
-from lean_source import header_imports
+from lean_source import Token, header_imports, tokens
 
 ROOT = Path(__file__).resolve().parents[1]
-AUDIT = "Itasca.Audit"
-TEMPLATE = "Itasca.Generated.FunsExternal_Template"
+LIBRARIES = ("Itasca", "SpecExt", "Exec")
+# All builtin bodies now have definitions. This does not mark their runtime
+# simulation proofs complete. The checked-in policy prevents opaque regressions.
+BUILTIN_STAGE = "complete"
 
-# Lower layers must stay readable without the validator proofs above them.
-LAYERS = {
+VALIDATOR_LAYERS = {
     "Support": {"Support", "Generated"},
     "Spec": {"Spec", "Support", "Generated"},
     "Binary": {"Binary", "Spec", "Support", "Generated"},
     "Handler": {"Handler", "Binary", "Spec", "Support", "Generated", "Visitor"},
 }
+# Representation owns shared certificates; no compiler, interpreter or store
+# construction proof can enter through that foundation.
+EXEC_LAYERS = {
+    "Spec": {"Exec.Spec", "SpecExt", "Itasca.Spec", "Itasca.Support"},
+    "Abs": {"Exec.Abs", "Exec.Spec", "SpecExt", "Itasca.Spec"},
+    "Generated": {"Exec.Generated", "Aeneas"},
+    "Platform": {"Exec.Platform", "Exec.Generated", "Exec.Spec", "SpecExt"},
+    "Representation": {"Exec.Representation", "Exec.Generated", "Exec.Platform", "Exec.Spec", "Exec.Abs", "SpecExt.Builtins", "Itasca"},
+    "Code": {"Exec.Code", "Exec.Representation", "Exec.Generated", "Exec.Platform", "Exec.Abs", "Exec.Spec", "SpecExt.Builtins", "Itasca"},
+    "Interp": {"Exec.Interp", "Exec.Representation", "Exec.Generated", "Exec.Platform", "Exec.Abs", "Exec.Code", "Exec.Spec", "SpecExt.Builtins", "Itasca.Support"},
+    "Store": {"Exec.Store", "Exec.Representation", "Exec.Generated", "Exec.Platform", "Exec.Spec", "Exec.Interp", "Exec.Code"},
+    "Theorems": {"Exec", "SpecExt", "Itasca", "Aeneas"},
+    "Examples": {"Exec", "SpecExt", "Itasca", "Aeneas"},
+}
+# Integration stages can use local proofs, but never flow back into them.
+COMPILER_STAGES = {"Local": 0, "Body": 1, "Module": 2}
+FOUNDATIONS = {"Init", "Lean", "Std", "Batteries", "Mathlib"}
+SPEC_MODULES = {"wasm2.0", "Wasm2Prefix", "Wasm2Builtins"}
 
 
-def load(root: Path) -> dict[str, list[str]]:
-    modules = {}
-    for path in (root / "Itasca").rglob("*.lean"):
-        name = ".".join(path.relative_to(root).with_suffix("").parts)
-        modules[name] = header_imports(path.read_text())
-    return modules
+def under(name: str, prefix: str) -> bool:
+    return name == prefix or name.startswith(prefix + ".")
 
 
-def sinks(modules: dict[str, list[str]]) -> list[str]:
-    imported = {i for name, imports in modules.items() if name != AUDIT for i in imports}
-    return sorted(m for m in modules if m not in imported and m not in (AUDIT, TEMPLATE))
+def template(name: str) -> bool:
+    return name.rsplit(".", 1)[-1] in {"FunsExternal_Template", "TypesExternal_Template"}
 
 
-def write_audit(root: Path, modules: dict[str, list[str]]) -> None:
-    path = root / "Itasca" / "Audit.lean"
+def load(root: Path, library: str = "Itasca") -> dict[str, list[str]]:
+    return {
+        ".".join(path.relative_to(root).with_suffix("").parts): header_imports(path.read_text())
+        for path in (root / library).rglob("*.lean")
+    }
+
+
+def sinks(modules: dict[str, list[str]], library: str = "Itasca") -> list[str]:
+    audit = library + ".Audit"
+    imported = {i for name, imports in modules.items() if name != audit for i in imports}
+    return sorted(m for m in modules if m not in imported and m != audit and not template(m))
+
+
+def write_audit(root: Path, modules: dict[str, list[str]], library: str = "Itasca") -> None:
+    path = root / library / "Audit.lean"
     lines = path.read_text().split("\n")
-    others = [l for l in lines if l.startswith("import ") and not l.startswith("import Itasca.")]
+    others = [l for l in lines if l.startswith("import ") and not l.startswith(f"import {library}.")]
     body = [l for l in lines if not l.startswith("import ")]
     while body and body[0] == "":
         body.pop(0)
-    path.write_text("\n".join([f"import {m}" for m in sinks(modules)] + others + [""] + body))
+    path.write_text("\n".join([f"import {m}" for m in sinks(modules, library)] + others + [""] + body))
 
 
-def check(root: Path) -> None:
-    modules = load(root)
+def check_layer(name: str, imported: str, library: str) -> None:
+    if name == library + ".Audit":
+        return
+    layer = name.split(".")[1]
+    if library == "Itasca":
+        if any(under(imported, other) for other in ("Exec", "SpecExt")):
+            raise ValueError(f"{name} imports {imported}; validator imports must stay independent")
+        if layer in VALIDATOR_LAYERS and under(imported, "Itasca"):
+            if imported.split(".")[1] not in VALIDATOR_LAYERS[layer]:
+                raise ValueError(f"{name} imports {imported}, above the {layer}/ layer")
+        return
+    if library == "SpecExt":
+        if layer == "Builtins":
+            allowed = {"SpecExt.Builtins", "Wasm2Prefix", "Lean", "Batteries", "Mathlib"}
+        elif layer in {"Host", "Wasm1"}:
+            allowed = FOUNDATIONS | {"wasm2.0", "SpecExt.Builtins"}
+        else:
+            raise ValueError(f"{name} has no declared SpecExt import layer")
+    else:
+        if layer not in EXEC_LAYERS:
+            raise ValueError(f"{name} has no declared Exec import layer")
+        allowed = EXEC_LAYERS[layer] | FOUNDATIONS
+        if layer in {"Spec", "Theorems", "Examples"}:
+            allowed = allowed | SPEC_MODULES
+        if name in {"Exec.Generated.FunsExternal", "Exec.Generated.TypesExternal"}:
+            allowed = allowed | {"Itasca.Generated"}
+    if library == "Exec" and layer == "Code" and under(imported, "Exec.Code"):
+        source_stage = name.split(".")[2]
+        target_stage = imported.split(".")[2]
+        if source_stage not in COMPILER_STAGES or target_stage not in COMPILER_STAGES:
+            raise ValueError(f"{name} or {imported} has no declared compiler stage")
+        if COMPILER_STAGES[target_stage] > COMPILER_STAGES[source_stage]:
+            raise ValueError(f"{name} imports {imported}, above its compiler stage")
+    for owner, final in (("Interp", "Invocation"), ("Store", "Instantiation")):
+        if library == "Exec" and layer == owner and under(imported, f"Exec.{owner}.{final}"):
+            if not under(name, f"Exec.{owner}.{final}"):
+                raise ValueError(f"{name} imports {imported}, above its integration stage")
+    if library == "Exec" and under(imported, "Itasca.Generated"):
+        if name not in {"Exec.Generated.FunsExternal", "Exec.Generated.TypesExternal"}:
+            raise ValueError(f"{name} imports {imported}, outside the Exec.{layer} layer; only external adapters may directly reuse validator generated declarations")
+    # Reuse canonical source typing, environment caches, and the abstract
+    # module-binding extension theorem without opening their entire hierarchies.
+    if name == "Exec.Spec.SegmentCopySlice" and imported == "Aeneas.Data.List.List":
+        return
+    if library == "Exec" and layer == "Store" and imported in {
+        "Itasca.Module.Const.Syntax", "Itasca.Module.Elab.SegmentSyntax",
+        "Itasca.Module.Env.Basic", "Itasca.Module.Elab.Metadata",
+        "Exec.Abs.ModuleBindingsExtension",
+        "Aeneas.Data.List.List", "SpecExt.Wasm1",
+    }:
+        return
+    if not any(under(imported, prefix) for prefix in allowed):
+        raise ValueError(f"{name} imports {imported}, outside the {library}.{layer} layer")
+
+
+def check_builtins(root: Path, stage: str = BUILTIN_STAGE) -> None:
+    if stage not in {"placeholders", "lanes", "complete"}:
+        raise ValueError(f"Unknown builtin audit stage: {stage}")
+    if stage == "placeholders":
+        return
+    paths = list((root / "SpecExt" / "Builtins").rglob("*.lean"))
+    umbrella = root / "SpecExt" / "Builtins.lean"
+    if umbrella.exists():
+        paths.append(umbrella)
+    for path in paths:
+        stream = list(tokens(path.read_text()))
+        for i, tok in enumerate(stream):
+            if tok == Token("ident", "opaque"):
+                name = stream[i + 1].value if i + 1 < len(stream) else "<missing>"
+                if stage == "lanes" and name in {"lanes_", "inv_lanes_"}:
+                    continue
+                raise ValueError(f"{path.relative_to(root)} contains opaque builtin {name} ({stage} stage)")
+
+
+def check(root: Path, library: str = "Itasca") -> None:
+    modules = load(root, library)
+    audit = library + ".Audit"
+    if audit not in modules:
+        raise ValueError(f"Missing audit module {audit}")
     for name, imports in sorted(modules.items()):
-        layer = name.split(".")[1]
-        for i in imports:
-            if i == TEMPLATE:
+        if template(name):
+            continue
+        for imported in imports:
+            if template(imported):
                 raise ValueError(f"{name} imports the generated external-model template")
-            if i.startswith("Itasca.") and i not in modules:
-                raise ValueError(f"{name} imports missing module {i}")
-            if layer in LAYERS and i.startswith("Itasca.") and i.split(".")[1] not in LAYERS[layer]:
-                raise ValueError(f"{name} imports {i}, above the {layer}/ layer")
-    audited = [i for i in modules[AUDIT] if i.startswith("Itasca.")]
-    if audited != sinks(modules):
-        raise ValueError("Itasca.Audit must import exactly the sink modules; run `just audit-imports`")
-    seen, pending = set(), [AUDIT]
+            owner = imported.split(".")[0]
+            if owner in LIBRARIES and not (root / Path(*imported.split("."))).with_suffix(".lean").is_file():
+                raise ValueError(f"{name} imports missing module {imported}")
+            if imported.endswith(".Audit"):
+                raise ValueError(f"{name} imports audit entry point {imported}")
+            check_layer(name, imported, library)
+    audited = [i for i in modules[audit] if under(i, library)]
+    if audited != sinks(modules, library):
+        raise ValueError(f"{audit} must import exactly the sink modules; run `just audit-imports`")
+    seen, pending = set(), [audit]
     while pending:
         name = pending.pop()
         if name in seen or name not in modules:
             continue
         seen.add(name)
         pending.extend(modules[name])
-    omitted = set(modules) - seen - {TEMPLATE}
+    omitted = {m for m in modules if not template(m)} - seen
     if omitted:
-        raise ValueError("Modules outside Itasca.Audit: " + ", ".join(sorted(omitted)))
-    print(f"Audit import coverage: {len(seen)} modules; layers import downward")
+        raise ValueError(f"Modules outside {audit}: " + ", ".join(sorted(omitted)))
+    if library == "SpecExt":
+        check_builtins(root)
+    print(f"{library} audit import coverage: {len(seen)} modules; layers import downward")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--write", action="store_true", help="refresh audit sink imports")
+    parser.add_argument("--root", choices=LIBRARIES, action="append", dest="libraries")
+    args = parser.parse_args()
+    for library in args.libraries or LIBRARIES:
+        if args.write:
+            write_audit(ROOT, load(ROOT, library), library)
+        check(ROOT, library)
 
 
 if __name__ == "__main__":
     try:
-        if sys.argv[1:] == ["--write"]:
-            write_audit(ROOT, load(ROOT))
-        check(ROOT)
-    except ValueError as error:
+        main()
+    except (ValueError, OSError) as error:
         sys.exit(str(error))

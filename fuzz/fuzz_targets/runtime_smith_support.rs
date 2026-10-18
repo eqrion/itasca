@@ -48,8 +48,8 @@ pub fn run(data: &[u8], profile: ValidationProfile) -> crate::differential::Cove
         crate::differential::record(crate::differential::Coverage::Invalid);
         return crate::differential::Coverage::Invalid;
     };
-    // Both engines execute the same source-level termination guard. Their own
-    // fuel is only an infrastructure backstop and is never compared numerically.
+    // Both engines execute the same source-level termination guard. The
+    // interpreter interrupt limit is an infrastructure backstop. Wasmi runs without fuel.
     module.ensure_termination(100).unwrap();
     let bytes = module.to_bytes();
     let status = crate::differential::compare(&bytes, profile, data);

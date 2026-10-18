@@ -1,15 +1,18 @@
+//! Store representation, issued handles, and object access.
+mod instantiate;
+
+use super::instantiate::{eval_const_exec, initialize_segments};
+use super::platform::Alloc;
 use super::*;
 use crate::{
-    ConstExpr, DataMode, ElemType, ElementMode, ExportDesc, FuncType, GlobalType, ImportDesc,
-    Limits, MemType, Mut, TableType, ValidationProfile,
+    DataMode, ElemType, ElementMode, ExportDesc, FuncType, GlobalType, ImportDesc, Limits, MemType,
+    Mut, TableType, ValidationProfile,
 };
-use alloc::{rc::Rc, vec::Vec};
-use core::sync::atomic::{AtomicUsize, Ordering};
-
-static NEXT_STORE: AtomicUsize = AtomicUsize::new(1);
+use alloc::vec::Vec;
 
 /// Limits on retained store objects and live interpreter storage.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
+#[cfg_attr(not(charon), derive(Debug))]
 pub struct StoreLimits {
     /// Total functions, signatures, tables, memories, globals, and external identities.
     pub max_objects: usize,
@@ -25,7 +28,10 @@ pub struct StoreLimits {
     pub max_table_elements: usize,
     /// Call frames in one execution.
     pub max_frames: usize,
-    /// Locals and operands in one execution.
+    /// Highest active frame extent in 64-bit slots in one execution.
+    ///
+    /// Each frame reserves its locals and statically computed peak operand
+    /// storage at entry. A `v128` occupies two slots; other values occupy one.
     pub max_values: usize,
 }
 impl Default for StoreLimits {
@@ -50,68 +56,60 @@ pub(super) struct Function {
     pub signature: usize,
     pub code: FunctionCode,
 }
-pub(super) struct Memory {
-    pub bytes: Vec<u8>,
+pub(super) struct Memory<M> {
+    pub buf: M,
     pub maximum: Option<u32>,
 }
 pub(super) struct Table {
-    pub elements: Vec<Value>,
+    pub elements: Vec<u64>,
     pub ty: ElemType,
     pub maximum: Option<u32>,
 }
 pub(super) struct GlobalInstance {
-    pub value: Value,
+    pub lo: u64,
+    pub hi: u64,
     pub ty: GlobalType,
 }
+pub(super) struct ElemInstance {
+    pub ty: ElemType,
+    pub refs: Vec<u64>,
+}
+pub(super) struct DataInstance {
+    pub bytes: Vec<u8>,
+}
 pub(super) struct Instance {
-    pub module: Rc<ExecutableModule>,
+    pub module: ExecutableModule,
     pub types: Vec<usize>,
     pub funcs: Vec<FuncAddr>,
     pub tables: Vec<TableAddr>,
     pub memories: Vec<MemoryAddr>,
     pub globals: Vec<GlobalAddr>,
-    pub elements: Vec<Vec<Value>>,
-    pub data: Vec<bool>,
+    pub elements: Vec<usize>,
+    pub data: Vec<usize>,
 }
 /// An append-only owner of runtime objects and their defining module instances.
 ///
 /// Dropping a failed instantiation does not undo observable imported-object writes.
 /// Objects retained by such an instance remain valid until this store is dropped.
-pub struct Store {
+pub struct Store<M = VecMemory> {
     pub(super) id: usize,
     pub(super) limits: StoreLimits,
     pub(super) funcs: Vec<Function>,
     pub(super) types: Vec<FuncType>,
     pub(super) tables: Vec<Table>,
-    pub(super) memories: Vec<Memory>,
+    pub(super) memories: Vec<Memory<M>>,
     pub(super) globals: Vec<GlobalInstance>,
     pub(super) instances: Vec<Instance>,
+    pub(super) elems: Vec<ElemInstance>,
+    pub(super) datas: Vec<DataInstance>,
     externs: Vec<u64>,
     instance_items: usize,
     signature_values: usize,
     memory_bytes: usize,
     table_elements: usize,
 }
-impl Default for Store {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-impl Store {
-    /// Creates an empty store with the documented default resource limits.
-    pub fn new() -> Self {
-        Self::with_limits(StoreLimits::default())
-    }
-    /// Creates an empty store with explicit resource limits.
-    pub fn with_limits(limits: StoreLimits) -> Self {
-        let mut id = NEXT_STORE.load(Ordering::Relaxed);
-        loop {
-            let next = id.checked_add(1).expect("store identity space exhausted");
-            match NEXT_STORE.compare_exchange_weak(id, next, Ordering::Relaxed, Ordering::Relaxed) {
-                Ok(_) => break,
-                Err(now) => id = now,
-            }
-        }
+impl<M: MemoryBuffer> Store<M> {
+    pub(crate) fn with_identity(id: usize, limits: StoreLimits) -> Self {
         Self {
             id,
             limits,
@@ -121,6 +119,8 @@ impl Store {
             memories: Vec::new(),
             globals: Vec::new(),
             instances: Vec::new(),
+            elems: Vec::new(),
+            datas: Vec::new(),
             externs: Vec::new(),
             instance_items: 0,
             signature_values: 0,
@@ -128,14 +128,14 @@ impl Store {
             table_elements: 0,
         }
     }
-    pub(super) fn check(&self, id: usize) -> Result<(), RuntimeError> {
+    pub(super) fn check(&self, id: usize) -> Result<(), ExecError> {
         if id == self.id {
             Ok(())
         } else {
-            Err(RuntimeError::WrongStore)
+            Err(ExecError::WrongStore)
         }
     }
-    fn room(&self) -> Result<(), RuntimeError> {
+    fn room(&self) -> Result<(), ExecError> {
         let n = self.funcs.len()
             + self.tables.len()
             + self.memories.len()
@@ -143,23 +143,27 @@ impl Store {
             + self.externs.len()
             + self.types.len();
         if n >= self.limits.max_objects {
-            Err(RuntimeError::Resource(ResourceLimit::Objects))
+            Err(ExecError::Exhausted(ResourceLimit::Objects))
         } else {
             Ok(())
         }
     }
-    pub(super) fn check_value(&self, v: Value) -> Result<(), RuntimeError> {
+    pub(super) fn check_value(&self, v: Value) -> Result<(), ExecError> {
         match v {
             Value::FuncRef(Some(a)) => self.check(a.store),
             Value::ExternRef(Some(a)) => self.check(a.store),
             _ => Ok(()),
         }
     }
-    /// Allocates a typed host-function identity. Callbacks are driven by `Outcome`.
-    pub fn define_host(&mut self, ty: FuncType, host_id: u64) -> Result<FuncAddr, RuntimeError> {
-        let signature = self.intern_type(&ty)?;
+    /// Allocates a typed synchronous host-function identity.
+    pub(crate) fn define_host_with<A: Alloc>(
+        &mut self,
+        ty: FuncType,
+        host_id: u64,
+    ) -> Result<FuncAddr, ExecError> {
+        let signature = self.intern_type::<A>(&ty)?;
         self.room()?;
-        reserve(&mut self.funcs, 1)?;
+        reserve::<A, _>(&mut self.funcs, 1)?;
         let a = FuncAddr {
             store: self.id,
             index: self.funcs.len(),
@@ -171,9 +175,12 @@ impl Store {
         Ok(a)
     }
     /// Allocates an opaque embedding identity, retained for the store's lifetime.
-    pub fn define_extern(&mut self, identity: u64) -> Result<ExternAddr, RuntimeError> {
+    pub(crate) fn define_extern_with<A: Alloc>(
+        &mut self,
+        identity: u64,
+    ) -> Result<ExternAddr, ExecError> {
         self.room()?;
-        reserve(&mut self.externs, 1)?;
+        reserve::<A, _>(&mut self.externs, 1)?;
         let a = ExternAddr {
             store: self.id,
             index: self.externs.len(),
@@ -182,41 +189,46 @@ impl Store {
         Ok(a)
     }
     /// Returns the embedding identity associated with an external reference.
-    pub fn extern_identity(&self, a: ExternAddr) -> Result<u64, RuntimeError> {
+    pub fn extern_identity(&self, a: ExternAddr) -> Result<u64, ExecError> {
         self.check(a.store)?;
         Ok(self.externs[a.index])
     }
-    /// Allocates a zero-initialized memory, enforcing specification and store limits.
-    pub fn define_memory(&mut self, ty: MemType) -> Result<MemoryAddr, RuntimeError> {
+    /// Defines a memory using an embedding-owned buffer of its initial size.
+    pub(crate) fn define_memory_with<A: Alloc>(
+        &mut self,
+        ty: MemType,
+        buf: M,
+    ) -> Result<MemoryAddr, ExecError> {
         self.room()?;
         check_limits(ty.limits, 65536)?;
-        let size = (ty.limits.min as u64) * 65536;
-        if size > self.limits.max_memory_bytes as u64
-            || !within(
-                self.memory_bytes(),
-                size as usize,
-                self.limits.max_memory_bytes,
-            )
-        {
-            return Err(RuntimeError::Resource(ResourceLimit::Allocation));
+        let size = ty.limits.min as u64 * 65536;
+        if buf.bytes().len() as u64 != size {
+            return Err(ExecError::BadArguments);
         }
-        let mut bytes = Vec::new();
-        reserve(&mut bytes, size as usize)?;
-        bytes.resize(size as usize, 0);
-        reserve(&mut self.memories, 1)?;
+        if !within(
+            self.memory_bytes,
+            buf.bytes().len(),
+            self.limits.max_memory_bytes,
+        ) {
+            return Err(ExecError::Exhausted(ResourceLimit::Allocation));
+        }
+        reserve::<A, _>(&mut self.memories, 1)?;
         let a = MemoryAddr {
             store: self.id,
             index: self.memories.len(),
         };
         self.memories.push(Memory {
-            bytes,
+            buf,
             maximum: ty.limits.max,
         });
         self.memory_bytes += size as usize;
         Ok(a)
     }
     /// Allocates a table initially filled with null references of its element type.
-    pub fn define_table(&mut self, ty: TableType) -> Result<TableAddr, RuntimeError> {
+    pub(crate) fn define_table_with<A: Alloc>(
+        &mut self,
+        ty: TableType,
+    ) -> Result<TableAddr, ExecError> {
         self.room()?;
         check_limits(ty.limits, u32::MAX)?;
         if !within(
@@ -224,12 +236,16 @@ impl Store {
             ty.limits.min as usize,
             self.limits.max_table_elements,
         ) {
-            return Err(RuntimeError::Resource(ResourceLimit::Allocation));
+            return Err(ExecError::Exhausted(ResourceLimit::Allocation));
         }
         let mut elements = Vec::new();
-        reserve(&mut elements, ty.limits.min as usize)?;
-        elements.resize(ty.limits.min as usize, Value::zero(ty.elem.value_type()));
-        reserve(&mut self.tables, 1)?;
+        reserve::<A, _>(&mut elements, ty.limits.min as usize)?;
+        let mut i = 0;
+        while i < ty.limits.min {
+            elements.push(0);
+            i += 1;
+        }
+        reserve::<A, _>(&mut self.tables, 1)?;
         let a = TableAddr {
             store: self.id,
             index: self.tables.len(),
@@ -243,121 +259,141 @@ impl Store {
         Ok(a)
     }
     /// Allocates a global with a matching, store-owned value.
-    pub fn define_global(
+    pub(crate) fn define_global_with<A: Alloc>(
         &mut self,
         ty: GlobalType,
         value: Value,
-    ) -> Result<GlobalAddr, RuntimeError> {
+    ) -> Result<GlobalAddr, ExecError> {
         self.room()?;
         self.check_value(value)?;
         if ty.valtype != value.value_type() {
-            return Err(RuntimeError::TypeMismatch);
+            return Err(ExecError::BadArguments);
         }
-        reserve(&mut self.globals, 1)?;
+        reserve::<A, _>(&mut self.globals, 1)?;
         let a = GlobalAddr {
             store: self.id,
             index: self.globals.len(),
         };
-        self.globals.push(GlobalInstance { value, ty });
+        let (lo, hi) = value::encode(value);
+        self.globals.push(GlobalInstance { lo, hi, ty });
         Ok(a)
     }
     /// Returns the structural signature of a function in this store.
-    pub fn func_type(&self, a: FuncAddr) -> Result<&FuncType, RuntimeError> {
+    pub fn func_type(&self, a: FuncAddr) -> Result<&FuncType, ExecError> {
         self.check(a.store)?;
         Ok(&self.types[self.funcs[a.index].signature])
     }
 
-    fn intern_type(&mut self, ty: &FuncType) -> Result<usize, RuntimeError> {
+    fn intern_type<A: Alloc>(&mut self, ty: &FuncType) -> Result<usize, ExecError> {
         let mut i = 0;
-        while i < self.types.len() {
-            if &self.types[i] == ty {
-                return Ok(i);
-            }
+        while i < self.types.len() && !same_func_type(&self.types[i], ty) {
             i += 1;
+        }
+        if i < self.types.len() {
+            return Ok(i);
         }
         let count = ty
             .params
             .len()
             .checked_add(ty.results.len())
-            .ok_or(RuntimeError::Resource(ResourceLimit::Objects))?;
+            .ok_or(ExecError::Exhausted(ResourceLimit::Objects))?;
         if !within(
             self.signature_values,
             count,
             self.limits.max_signature_values,
         ) {
-            return Err(RuntimeError::Resource(ResourceLimit::Objects));
+            return Err(ExecError::Exhausted(ResourceLimit::Objects));
         }
         self.room()?;
-        reserve(&mut self.types, 1)?;
-        self.types.push(copy_type(ty)?);
+        reserve::<A, _>(&mut self.types, 1)?;
+        self.types.push(copy_type::<A>(ty)?);
         self.signature_values += count;
         Ok(i)
     }
     /// Reads a global belonging to this store.
-    pub fn global(&self, a: GlobalAddr) -> Result<Value, RuntimeError> {
+    pub fn global(&self, a: GlobalAddr) -> Result<Value, ExecError> {
         self.check(a.store)?;
-        Ok(self.globals[a.index].value)
+        let g = &self.globals[a.index];
+        Ok(value::decode(g.ty.valtype, g.lo, g.hi, self.id))
     }
     /// Writes a mutable global with a value of its declared type.
-    pub fn set_global(&mut self, a: GlobalAddr, v: Value) -> Result<(), RuntimeError> {
+    pub fn set_global(&mut self, a: GlobalAddr, v: Value) -> Result<(), ExecError> {
         self.check(a.store)?;
         self.check_value(v)?;
         let g = &mut self.globals[a.index];
         if g.ty.mutability != Mut::Var || g.ty.valtype != v.value_type() {
-            return Err(RuntimeError::TypeMismatch);
+            return Err(ExecError::BadArguments);
         }
-        g.value = v;
+        let (lo, hi) = value::encode(v);
+        g.lo = lo;
+        g.hi = hi;
         Ok(())
     }
     /// Borrows the current bytes of a memory in this store.
-    pub fn memory(&self, a: MemoryAddr) -> Result<&[u8], RuntimeError> {
+    pub fn memory(&self, a: MemoryAddr) -> Result<&[u8], ExecError> {
         self.check(a.store)?;
-        Ok(&self.memories[a.index].bytes)
+        Ok(self.memories[a.index].buf.bytes())
     }
     /// Borrows memory bytes for embedding mutation without changing its size.
-    pub fn memory_mut(&mut self, a: MemoryAddr) -> Result<&mut [u8], RuntimeError> {
-        self.check(a.store)?;
-        Ok(&mut self.memories[a.index].bytes)
+    pub fn memory_mut(&mut self, a: MemoryAddr) -> Result<&mut [u8], ExecError> {
+        if a.store != self.id {
+            return Err(ExecError::WrongStore);
+        }
+        Ok(self.memories[a.index].buf.bytes_mut())
     }
-    /// Borrows the reference elements of a table.
-    pub fn table(&self, a: TableAddr) -> Result<&[Value], RuntimeError> {
+    /// Returns the number of elements in a table.
+    pub fn table_size(&self, a: TableAddr) -> Result<u32, ExecError> {
         self.check(a.store)?;
-        Ok(&self.tables[a.index].elements)
+        Ok(self.tables[a.index].elements.len() as u32)
+    }
+    /// Reads a typed reference from a table.
+    pub fn table_get(&self, a: TableAddr, index: u32) -> Result<Value, ExecError> {
+        self.check(a.store)?;
+        let t = &self.tables[a.index];
+        if index as usize >= t.elements.len() {
+            return Err(ExecError::Trap(Trap::TableOutOfBounds));
+        }
+        Ok(value::decode(
+            t.ty.value_type(),
+            t.elements[index as usize],
+            0,
+            self.id,
+        ))
     }
     /// Writes a table element after checking ownership, type, and bounds.
-    pub fn set_table(&mut self, a: TableAddr, index: u32, v: Value) -> Result<(), RuntimeError> {
+    pub fn set_table(&mut self, a: TableAddr, index: u32, v: Value) -> Result<(), ExecError> {
         self.check(a.store)?;
         self.check_value(v)?;
         let t = &mut self.tables[a.index];
         if t.ty.value_type() != v.value_type() {
-            return Err(RuntimeError::TypeMismatch);
+            return Err(ExecError::BadArguments);
         }
-        let x = t
-            .elements
-            .get_mut(index as usize)
-            .ok_or(RuntimeError::Trap(Trap::TableOutOfBounds))?;
-        *x = v;
+        if index as usize >= t.elements.len() {
+            return Err(ExecError::Trap(Trap::TableOutOfBounds));
+        }
+        t.elements[index as usize] = value::encode(v).0;
         Ok(())
     }
     /// Resolves an export by its UTF-8 byte name.
-    pub fn export(&self, a: InstanceAddr, name: &[u8]) -> Result<Option<Extern>, RuntimeError> {
+    pub fn export(&self, a: InstanceAddr, name: &[u8]) -> Result<Option<Extern>, ExecError> {
         self.check(a.store)?;
         let inst = &self.instances[a.index];
         let env = inst.module.env();
         let mut i = 0;
-        while i < env.exports().len() {
+        let mut found = None;
+        while i < env.exports().len() && found.is_none() {
             let ex = &env.exports()[i];
-            if ex.name == name {
-                return Ok(Some(match ex.desc {
+            if same_bytes(&ex.name, name) {
+                found = Some(match ex.desc {
                     ExportDesc::Func(n) => Extern::Func(inst.funcs[n as usize]),
                     ExportDesc::Table(n) => Extern::Table(inst.tables[n as usize]),
                     ExportDesc::Memory(n) => Extern::Memory(inst.memories[n as usize]),
                     ExportDesc::Global(n) => Extern::Global(inst.globals[n as usize]),
-                }));
+                });
             }
             i += 1;
         }
-        Ok(None)
+        Ok(found)
     }
     fn memory_bytes(&self) -> usize {
         self.memory_bytes
@@ -365,8 +401,29 @@ impl Store {
     fn table_elements(&self) -> usize {
         self.table_elements
     }
-    pub(super) fn grow_memory(&mut self, index: usize, delta: u32) -> u32 {
-        let old = self.memories[index].bytes.len() / 65536;
+    pub(crate) fn grow_memory_with(
+        &mut self,
+        addr: MemoryAddr,
+        delta: u32,
+    ) -> Result<u32, ExecError> {
+        self.check(addr.store)?;
+        Ok(self.grow_memory_index(addr.index, delta))
+    }
+    pub(crate) fn grow_table_with<A: Alloc>(
+        &mut self,
+        addr: TableAddr,
+        delta: u32,
+        v: Value,
+    ) -> Result<u32, ExecError> {
+        self.check(addr.store)?;
+        self.check_value(v)?;
+        if v.value_type() != self.tables[addr.index].ty.value_type() {
+            return Err(ExecError::BadArguments);
+        }
+        Ok(self.grow_table_index::<A>(addr.index, delta, value::encode(v).0))
+    }
+    pub(crate) fn grow_memory_index(&mut self, index: usize, delta: u32) -> u32 {
+        let old = self.memories[index].buf.bytes().len() / 65536;
         let pages = old as u64 + delta as u64;
         if pages > 65536 || pages > self.memories[index].maximum.unwrap_or(65536) as u64 {
             return u32::MAX;
@@ -383,14 +440,13 @@ impl Store {
             return u32::MAX;
         }
         let m = &mut self.memories[index];
-        if m.bytes.try_reserve(add as usize).is_err() {
+        if !m.buf.grow(pages as usize * 65536) {
             return u32::MAX;
         }
-        m.bytes.resize(pages as usize * 65536, 0);
         self.memory_bytes += add as usize;
         old as u32
     }
-    pub(super) fn grow_table(&mut self, index: usize, delta: u32, v: Value) -> u32 {
+    pub(crate) fn grow_table_index<A: Alloc>(&mut self, index: usize, delta: u32, v: u64) -> u32 {
         let old = self.tables[index].elements.len();
         let n = old as u64 + delta as u64;
         if n > u32::MAX as u64
@@ -404,17 +460,45 @@ impl Store {
             return u32::MAX;
         }
         let t = &mut self.tables[index];
-        if t.elements.try_reserve(delta as usize).is_err() {
+        if !A::reserve(&mut t.elements, delta as usize) {
             return u32::MAX;
         }
-        t.elements.resize(n as usize, v);
+        let mut i = old;
+        while i < n as usize {
+            t.elements.push(v);
+            i += 1;
+        }
         self.table_elements += delta as usize;
         old as u32
     }
 }
-fn check_limits(l: Limits, max: u32) -> Result<(), RuntimeError> {
+fn same_bytes(left: &[u8], right: &[u8]) -> bool {
+    if left.len() != right.len() {
+        return false;
+    }
+    let mut index = 0;
+    let mut same = true;
+    while index < left.len() && same {
+        same = left[index] == right[index];
+        index += 1;
+    }
+    same
+}
+fn instantiation_failed(result: &Result<InstanceAddr, ExecError>) -> bool {
+    match result {
+        Ok(_) => false,
+        Err(_) => true,
+    }
+}
+fn wasm1(profile: ValidationProfile) -> bool {
+    match profile {
+        ValidationProfile::Wasm1 => true,
+        ValidationProfile::Wasm2 => false,
+    }
+}
+fn check_limits(l: Limits, max: u32) -> Result<(), ExecError> {
     if l.min > max || l.max.unwrap_or(max) > max || l.min > l.max.unwrap_or(max) {
-        Err(RuntimeError::TypeMismatch)
+        Err(ExecError::BadArguments)
     } else {
         Ok(())
     }
@@ -429,396 +513,23 @@ fn matches_limits(size: u64, maximum: Option<u32>, required: Limits) -> bool {
             },
         }
 }
-impl Store {
-    /// Links and initializes a module, returning resumable start-function work.
-    ///
-    /// Imports are supplied in declaration order and share the provider's objects.
-    /// Wasm 1.0 checks every active segment before writes; Wasm 2.0 applies them
-    /// sequentially. A trap preserves prior effects and all allocated addresses.
-    pub fn instantiate(
-        &mut self,
-        module: Rc<ExecutableModule>,
-        imports: &[Extern],
-    ) -> Result<Instantiation, RuntimeError> {
-        let functions = self.funcs.len();
-        let tables = self.tables.len();
-        let memories = self.memories.len();
-        let globals = self.globals.len();
-        let types = self.types.len();
-        let signature_values = self.signature_values;
-        let memory_bytes = self.memory_bytes;
-        let table_elements = self.table_elements;
-        let instances = self.instances.len();
-        let result = self.instantiate_inner(module, imports);
-        // Before publication, no allocated address can have escaped and no
-        // imported object has been written. Discard provisional objects on
-        // failure so every retained Wasm function has a defining instance.
-        // After publication, traps preserve all objects and observable effects.
-        if result.is_err() && self.instances.len() == instances {
-            self.funcs.truncate(functions);
-            self.tables.truncate(tables);
-            self.memories.truncate(memories);
-            self.globals.truncate(globals);
-            self.types.truncate(types);
-            self.signature_values = signature_values;
-            self.memory_bytes = memory_bytes;
-            self.table_elements = table_elements;
-        }
-        result
+fn copy_bytes<A: Alloc>(source: &[u8]) -> Result<Vec<u8>, ExecError> {
+    let mut bytes = Vec::new();
+    reserve::<A, _>(&mut bytes, source.len())?;
+    let mut i = 0;
+    while i < source.len() {
+        bytes.push(source[i]);
+        i += 1;
     }
-
-    fn instantiate_inner(
-        &mut self,
-        module: Rc<ExecutableModule>,
-        imports: &[Extern],
-    ) -> Result<Instantiation, RuntimeError> {
-        let env = module.env();
-        if imports.len() != env.imports().len() {
-            return Err(RuntimeError::Link(LinkError::MissingImport));
-        }
-        if self.instances.len() >= self.limits.max_instances {
-            return Err(RuntimeError::Resource(ResourceLimit::Objects));
-        }
-        let mut items = 0usize;
-        let counts = [
-            env.types().len(),
-            env.func_types().len(),
-            env.table_types().len(),
-            env.mem_types().len(),
-            env.global_types().len(),
-            env.elements().len(),
-            module.tail().data.len(),
-        ];
-        let mut count_index = 0;
-        while count_index < counts.len() {
-            items = items
-                .checked_add(counts[count_index])
-                .ok_or(RuntimeError::Resource(ResourceLimit::Objects))?;
-            count_index += 1;
-        }
-        let mut element = 0;
-        while element < env.elements().len() {
-            items = items
-                .checked_add(env.elements()[element].init.len())
-                .ok_or(RuntimeError::Resource(ResourceLimit::Objects))?;
-            element += 1;
-        }
-        if !within(self.instance_items, items, self.limits.max_instance_items) {
-            return Err(RuntimeError::Resource(ResourceLimit::Objects));
-        }
-        let mut inst = Instance {
-            module: Rc::clone(&module),
-            types: Vec::new(),
-            funcs: Vec::new(),
-            tables: Vec::new(),
-            memories: Vec::new(),
-            globals: Vec::new(),
-            elements: Vec::new(),
-            data: Vec::new(),
-        };
-        reserve(&mut inst.funcs, env.func_types().len())?;
-        reserve(&mut inst.tables, env.table_types().len())?;
-        reserve(&mut inst.memories, env.mem_types().len())?;
-        reserve(&mut inst.globals, env.global_types().len())?;
-        let incompatible = RuntimeError::Link(LinkError::IncompatibleImportType);
-        let mut i = 0;
-        while i < imports.len() {
-            match (env.imports()[i].desc, imports[i]) {
-                (ImportDesc::Func(t), Extern::Func(a)) => {
-                    self.check(a.store)?;
-                    if self.types[self.funcs[a.index].signature] != env.types()[t as usize] {
-                        return Err(incompatible);
-                    }
-                    inst.funcs.push(a);
-                }
-                (ImportDesc::Table(t), Extern::Table(a)) => {
-                    self.check(a.store)?;
-                    let v = &self.tables[a.index];
-                    if t.elem != v.ty
-                        || !matches_limits(v.elements.len() as u64, v.maximum, t.limits)
-                    {
-                        return Err(incompatible);
-                    }
-                    inst.tables.push(a);
-                }
-                (ImportDesc::Memory(t), Extern::Memory(a)) => {
-                    self.check(a.store)?;
-                    let v = &self.memories[a.index];
-                    if !matches_limits((v.bytes.len() / 65536) as u64, v.maximum, t.limits) {
-                        return Err(incompatible);
-                    }
-                    inst.memories.push(a);
-                }
-                (ImportDesc::Global(t), Extern::Global(a)) => {
-                    self.check(a.store)?;
-                    if self.globals[a.index].ty != t {
-                        return Err(incompatible);
-                    }
-                    inst.globals.push(a);
-                }
-                _ => return Err(incompatible),
-            }
-            i += 1;
-        }
-        let identity = InstanceAddr {
-            store: self.id,
-            index: self.instances.len(),
-        };
-        reserve(&mut inst.types, env.types().len())?;
-        i = 0;
-        while i < env.types().len() {
-            inst.types.push(self.intern_type(&env.types()[i])?);
-            i += 1;
-        }
-        i = 0;
-        while i < env.func_type_indices().len() {
-            self.room()?;
-            reserve(&mut self.funcs, 1)?;
-            let a = FuncAddr {
-                store: self.id,
-                index: self.funcs.len(),
-            };
-            self.funcs.push(Function {
-                signature: inst.types[env.func_type_indices()[i] as usize],
-                code: FunctionCode::Wasm {
-                    instance: identity.index,
-                    function: i,
-                },
-            });
-            inst.funcs.push(a);
-            i += 1;
-        }
-        i = inst.tables.len();
-        while i < env.table_types().len() {
-            inst.tables.push(self.define_table(env.table_types()[i])?);
-            i += 1;
-        }
-        i = inst.memories.len();
-        while i < env.mem_types().len() {
-            inst.memories.push(self.define_memory(env.mem_types()[i])?);
-            i += 1;
-        }
-        i = 0;
-        while i < env.globals().len() {
-            let g = env.globals()[i];
-            let v = eval_const(self, &inst, g.init)?;
-            inst.globals.push(self.define_global(g.gtype, v)?);
-            i += 1;
-        }
-        reserve(&mut inst.elements, env.elements().len())?;
-        i = 0;
-        while i < env.elements().len() {
-            let segment = &env.elements()[i];
-            let mut values = Vec::new();
-            reserve(&mut values, segment.init.len())?;
-            let mut j = 0;
-            while j < segment.init.len() {
-                values.push(eval_const(self, &inst, segment.init[j])?);
-                j += 1;
-            }
-            inst.elements.push(values);
-            i += 1;
-        }
-        reserve(&mut inst.data, module.tail().data.len())?;
-        inst.data.resize(module.tail().data.len(), true);
-        // Publish the internal defining instance before any function can escape.
-        // The public handle is withheld until start succeeds.
-        reserve(&mut self.instances, 1)?;
-        self.instances.push(inst);
-        self.instance_items += items;
-        if module.profile() == ValidationProfile::Wasm1 {
-            i = 0;
-            while i < env.elements().len() {
-                self.element_range(identity.index, i)?;
-                i += 1;
-            }
-            i = 0;
-            while i < module.tail().data.len() {
-                self.data_range(identity.index, i)?;
-                i += 1;
-            }
-        }
-        i = 0;
-        while i < env.elements().len() {
-            match env.elements()[i].mode {
-                ElementMode::Active { table_idx, .. } => {
-                    let r = self
-                        .element_range(identity.index, i)?
-                        .ok_or(RuntimeError::InvalidState)?;
-                    let table = self.instances[identity.index].tables[table_idx as usize].index;
-                    let mut j = 0;
-                    while j < r.len() {
-                        self.tables[table].elements[r.start + j] =
-                            self.instances[identity.index].elements[i][j];
-                        j += 1;
-                    }
-                    self.instances[identity.index].elements[i].clear();
-                }
-                ElementMode::Declarative => self.instances[identity.index].elements[i].clear(),
-                ElementMode::Passive => (),
-            }
-            i += 1;
-        }
-        i = 0;
-        while i < module.tail().data.len() {
-            if let DataMode::Active { memory_idx, .. } = module.tail().data[i].mode {
-                let r = self
-                    .data_range(identity.index, i)?
-                    .ok_or(RuntimeError::InvalidState)?;
-                let memory = self.instances[identity.index].memories[memory_idx as usize].index;
-                self.memories[memory].bytes[r].copy_from_slice(&module.tail().data[i].init);
-                self.instances[identity.index].data[i] = false;
-            }
-            i += 1;
-        }
-        let execution = match env.start() {
-            Some(f) => Some(Execution::new(
-                self,
-                self.instances[identity.index].funcs[f as usize],
-                &[],
-            )?),
-            None => None,
-        };
-        Ok(Instantiation {
-            identity,
-            execution,
-            done: false,
-            failed: false,
-        })
-    }
-    fn element_range(
-        &self,
-        instance: usize,
-        index: usize,
-    ) -> Result<Option<core::ops::Range<usize>>, RuntimeError> {
-        let inst = &self.instances[instance];
-        let e = &inst.module.env().elements()[index];
-        match e.mode {
-            ElementMode::Active { table_idx, offset } => {
-                let start = eval_const(self, inst, offset)?.i32()?;
-                Ok(Some(range(
-                    start as u64,
-                    e.init.len() as u64,
-                    self.tables[inst.tables[table_idx as usize].index]
-                        .elements
-                        .len(),
-                    Trap::TableOutOfBounds,
-                )?))
-            }
-            _ => Ok(None),
-        }
-    }
-    fn data_range(
-        &self,
-        instance: usize,
-        index: usize,
-    ) -> Result<Option<core::ops::Range<usize>>, RuntimeError> {
-        let inst = &self.instances[instance];
-        let d = &inst.module.tail().data[index];
-        match d.mode {
-            DataMode::Active { memory_idx, offset } => {
-                let start = eval_const(self, inst, offset)?.i32()?;
-                Ok(Some(range(
-                    start as u64,
-                    d.init.len() as u64,
-                    self.memories[inst.memories[memory_idx as usize].index]
-                        .bytes
-                        .len(),
-                    Trap::MemoryOutOfBounds,
-                )?))
-            }
-            _ => Ok(None),
-        }
-    }
+    Ok(bytes)
 }
-fn eval_const(store: &Store, inst: &Instance, expr: ConstExpr) -> Result<Value, RuntimeError> {
-    Ok(match expr {
-        ConstExpr::I32(x) => Value::I32(x as u32),
-        ConstExpr::I64(x) => Value::I64(x as u64),
-        ConstExpr::F32(x) => Value::F32(x),
-        ConstExpr::F64(x) => Value::F64(x),
-        ConstExpr::V128(lo, hi) => Value::V128(lo as u128 | ((hi as u128) << 64)),
-        ConstExpr::RefNull(t) => Value::zero(t.value_type()),
-        ConstExpr::RefFunc(f) => Value::FuncRef(Some(inst.funcs[f as usize])),
-        ConstExpr::GlobalGet(g) => store.globals[inst.globals[g as usize].index].value,
-    })
-}
-/// A pending module instantiation, including a start-function continuation.
-///
-/// `instance` becomes available after successful completion. Suspending or
-/// resuming never repeats allocation, segment writes, or a host invocation.
-pub struct Instantiation {
-    identity: InstanceAddr,
-    execution: Option<Execution>,
-    done: bool,
-    failed: bool,
-}
-impl Instantiation {
-    /// Runs initialization synchronously through embedding host calls.
-    pub fn run_with_host<H: Host>(&mut self, store: &mut Store, host: &mut H) -> Outcome {
-        loop {
-            match self.run(store) {
-                Outcome::NeedsHostCall(request) => {
-                    let values = host.call(store, request);
-                    let result = match &values {
-                        Ok(values) => Ok(values.as_slice()),
-                        Err(error) => Err(*error),
-                    };
-                    if let Err(error) = self.resume_host(store, result) {
-                        return Outcome::Failed(error);
-                    }
-                }
-                outcome => return outcome,
-            }
+fn add_items(items: &mut usize, additional: usize) -> Result<(), ExecError> {
+    match items.checked_add(additional) {
+        Some(n) => {
+            *items = n;
+            Ok(())
         }
-    }
-    /// Returns the instance handle after start has completed successfully.
-    pub fn instance(&self) -> Option<InstanceAddr> {
-        if self.done {
-            Some(self.identity)
-        } else {
-            None
-        }
-    }
-    /// Adds fuel to the start function's retained budget.
-    pub fn add_fuel(&mut self, fuel: u64) -> Result<(), RuntimeError> {
-        if self.done || self.failed {
-            return Err(RuntimeError::InvalidState);
-        }
-        match &mut self.execution {
-            Some(e) => e.add_fuel(fuel),
-            None => Ok(()),
-        }
-    }
-    /// Advances the start function or completes an instance without a start.
-    pub fn run(&mut self, store: &mut Store) -> Outcome {
-        if self.done || self.failed {
-            return Outcome::Failed(RuntimeError::InvalidState);
-        }
-        if let Err(e) = store.check(self.identity.store) {
-            return Outcome::Failed(e);
-        }
-        let result = match &mut self.execution {
-            Some(e) => e.run(store),
-            None => Outcome::Returned(Vec::new()),
-        };
-        match &result {
-            Outcome::Returned(_) => self.done = true,
-            Outcome::Failed(_) => self.failed = true,
-            _ => (),
-        };
-        result
-    }
-    /// Supplies a checked result to the outstanding start-function host call.
-    pub fn resume_host(
-        &mut self,
-        store: &Store,
-        result: Result<&[Value], RuntimeError>,
-    ) -> Result<(), RuntimeError> {
-        match &mut self.execution {
-            Some(e) => e.resume_host(store, result),
-            None => Err(RuntimeError::InvalidState),
-        }
+        None => Err(ExecError::Exhausted(ResourceLimit::Objects)),
     }
 }
 
@@ -827,4 +538,22 @@ fn within(current: usize, additional: usize, limit: usize) -> bool {
         Some(total) => total <= limit,
         None => false,
     }
+}
+
+fn same_func_type(a: &FuncType, b: &FuncType) -> bool {
+    if a.params.len() != b.params.len() || a.results.len() != b.results.len() {
+        return false;
+    }
+    let mut i = 0;
+    let mut same = true;
+    while i < a.params.len() && same {
+        same = a.params[i] == b.params[i];
+        i += 1;
+    }
+    i = 0;
+    while i < a.results.len() && same {
+        same = a.results[i] == b.results[i];
+        i += 1;
+    }
+    same
 }

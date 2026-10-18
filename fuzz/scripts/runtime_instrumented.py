@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[2]
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cargo-fuzz", default="cargo-fuzz")
-    parser.add_argument("--seconds", type=int, default=10)
+    parser.add_argument("--seconds", type=int, default=60)
     parser.add_argument("--target-dir", type=Path)
     options = parser.parse_args()
     if options.seconds <= 0:
@@ -23,7 +23,9 @@ def main():
     target_dir = options.target_dir or (ROOT / "fuzz/target/instrumented")
     environment = dict(os.environ, RUSTUP_TOOLCHAIN="nightly-2026-09-17", ITASCA_FUZZ_REPORT_EACH="1")
     print(f"Instrumented inputs, logs, and failure artifacts: {work}", flush=True)
-    for number, target in enumerate(["wasm2_execute", "runtime_numeric", "runtime_stateful", "runtime_compile"], 1):
+    targets = ["wasm1_execute", "wasm2_execute", "runtime_linking",
+               "runtime_numeric", "runtime_stateful", "runtime_compile"]
+    for number, target in enumerate(targets, 1):
         corpus = work / target
         corpus.mkdir()
         if target == "runtime_compile":
@@ -53,7 +55,7 @@ def main():
             print(text[-16000:])
             raise SystemExit(f"{target} failed or did not finish; see {log}")
         print(f"{target}: {coverage[-1]}\n{counts[-1]}", flush=True)
-    print("All four short instrumented campaigns passed.")
+    print("All six instrumented campaigns passed.")
 
 
 if __name__ == "__main__":

@@ -16,13 +16,15 @@ to install the pinned tools.
 | `src/signature.rs` | Allocation-free block and result descriptors. |
 | `src/types.rs`, `error.rs` | Shared metadata and error vocabulary. |
 | `src/reader.rs`, `limits.rs` | Byte readers, specification bounds, and resource caps. |
-| `src/runtime/` | Unverified rewriting compiler, store, interpreter, and bit-oriented numeric primitives; excluded under `cfg(charon)`. |
-| `lean/Itasca/` | Extracted models, proof layers, checked examples, and axiom audit. |
+| `src/runtime/` | Slot compiler, store, synchronous interpreter, and bit-oriented numeric primitives, with conditional execution proofs. |
+| `lean/Itasca/` | Validator models, proof layers, checked examples, and axiom audit. |
+| `lean/Exec/` | Runtime models, representation certificates, execution proofs, and independent audit. |
+| `lean/SpecExt/` | Handwritten execution specification extensions and independent audit. |
 | `lean/SpecTec/` | Committed generated specification. |
 | `lean/scripts/` | Audit-import and concrete external-model checks, with their shared Lean tokenizer. |
 | `vendor/`, `patches/` | Pinned tool/specification sources and reproducible source repairs. |
 | `tests/spec_tests.rs`, `tests/spec2_tests.rs` | End-to-end specification corpus and metadata checks. |
-| `tests/runtime_wast.rs`, `tests/runtime_api.rs` | Full execution corpora and store/continuation regressions. |
+| `tests/runtime_wast.rs`, `tests/runtime_api.rs` | Full execution corpora and store/host/interrupt regressions. |
 | `tests/support/`, `examples/wast_extract.rs` | Fixture normalization and generation. |
 | `fuzz/` | Differential fuzzers against wasmparser. |
 
@@ -31,7 +33,7 @@ those boundaries unless a change improves the implementation enough to justify
 renaming extracted declarations and their proof references. Only explicit crate
 root exports form the public API; `stream` remains an internal implementation
 module. Raw component validators remain internal proof entry points; their local
-`dead_code` annotations preserve those proof checkpoints without exposing APIs
+`dead_code` annotations preserve those proof entry points without exposing APIs
 with extensive caller preconditions.
 
 ## Build and verification
@@ -46,7 +48,8 @@ just extract          # Refresh committed Rust models after source changes
 just extract-check    # Regenerate separately and compare
 just check Itasca.Module.Validation
 just profile Itasca.Wasm2.Step.ScalarContext  # Re-elaborate one module with timings
-just prove            # Build all proofs and check audit coverage and axioms
+just prove            # Build validator proofs and check audit coverage and axioms
+just prove-exec       # Build execution and specification-extension proofs
 just trust            # Rerun the transitive axiom report
 just spec-check       # Regenerate and compare the specification
 just regressions      # Run patched Aeneas extraction regressions
@@ -55,7 +58,7 @@ just verify           # Run the complete verification sequence
 
 | Change | Required checks |
 | --- | --- |
-| Handwritten Lean proofs or adapters | `just prove` |
+| Handwritten Lean proofs or adapters | `just prove`; execution/specification extensions also require `just prove-exec` |
 | Rust or extraction inputs, including source documentation | Both Cargo test configurations, `just extract`, `just extract-check`, and `just prove` |
 | Aeneas source patch or pin | Rust/extraction checks plus `just regressions` |
 | SpecTec source, patch, or pin | `just spec-update`, `just spec-check`, and `just prove` |
@@ -94,10 +97,12 @@ build to compile the compared specification and `Itasca.Spec.Checks`.
 The implementation stays within the verified extraction subset:
 
 These constraints apply to the validator and its extracted dependencies. The
-new runtime has an explicit separate [extraction boundary](docs/EXECUTION_NUMERICS.md)
-after probing the pinned tools. Its native numerics, fallible allocation, and
-ownership helpers are tested Rust, with no extracted correctness claim. Keep
-the boundary one-way: audited validator code must not depend on runtime code.
+[execution contracts](docs/EXECUTION_VERIFICATION.md)
+state the runtime premises. Runtime code additionally supports integer bitwise
+operations and generic platform traits. Runtime extraction and the conditional
+T1–T7 execution proofs are checked. Keep the boundary one-way: audited
+validator code must not depend on runtime code. Native rounding operations,
+allocation, and store identity issuance remain explicit embedding boundaries.
 
 - Use safe Rust, `core`, and `alloc::vec::Vec`.
 - Pass byte slices and cursors explicitly. Check extraction and proof effects
@@ -120,6 +125,22 @@ changes should improve the representation, not merely rename byte constants.
 Charon reads Cargo metadata; the Makefile supplies `cfg(charon)`, Clone/Copy
 exclusions, and `--sysroot=default` explicitly. Debug and convenience derives
 are disabled during extraction when their implementations are outside the model.
+
+### Runtime extraction
+
+Keep explicit loops and copy helpers in the runtime. Integer bitwise operations
+are supported there; the validator retains its arithmetic decoding model.
+Bounds-checked indexing is modeled and its safety is proved under the stated
+invariants. `Slice::last_mut` and `Vec::truncate` require additional external
+models before use. Read a branch-table index into a local before selecting the
+entry to keep its borrow join extractable. Keep native platform wrappers outside
+`cfg(charon)` extraction.
+
+Runtime implementation responsibilities are split between compiler callbacks,
+control and opcode lowering; interpreter operations and dispatch; store object
+access and staged instantiation; and native/platform boundaries. Proof layers
+and their import rules are documented in [Exec/README](lean/Exec/README.md).
+Execution proof changes require both `just prove` and `just prove-exec`.
 
 ## API and documentation
 

@@ -15,10 +15,16 @@ import Itasca.Examples.Wasm2.DeclaredReferences
 import Itasca.Examples.Wasm2.Module
 import Itasca.Module.Code.EntryTrace
 import Itasca.Profile.BinaryUnique
+import Itasca.Profile.ReachedBody
 import Itasca.Spec.Checks
 import Itasca.Stream.BatchBounds
+import Itasca.Stream.InvariantDriver
+import Itasca.Stream.ReachedBatch
+import Itasca.Visitor.ReachedTableLabels
+import Itasca.Visitor.ReaderAcceptedProgress
 import Itasca.Wasm1.Trace.Corollaries
 import Itasca.Wasm2.Trace.Correspondence
+import Itasca.Wasm2.Visitor.ReachedTableLoop
 import Lean.Elab.Command
 import Lean.Util.CollectAxioms
 

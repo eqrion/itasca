@@ -72,5 +72,5 @@ pub enum ValidationProfile {
 }
 
 /// Instantiation and execution. This component is not covered by the validator proofs.
-#[cfg(not(charon))]
+#[cfg(any(not(charon), charon_exec))]
 pub mod runtime;

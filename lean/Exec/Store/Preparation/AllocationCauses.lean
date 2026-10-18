@@ -1,0 +1,69 @@
+import Exec.Store.Invariant.CopyTypes
+namespace Exec.Store
+open Aeneas Aeneas.Std
+
+/-- The allocator's actual Boolean response is retained alongside the runtime
+error wrapper. Capacity changes cannot alter the vector's logical contents. -/
+theorem reserve_with_cause {A T : Type} (allocator : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect allocator) (values : alloc.vec.Vec T) (extra : Usize) :
+    ∃ answer : Bool, runtime.reserve allocator values extra = .ok
+      ((if answer then .Ok () else .Err (.Exhausted .Allocation)),values) ∧
+      allocator.reserve values extra = .ok (answer,values) := by
+  obtain ⟨answer,called⟩ := law.reserve_eq values extra
+  refine ⟨answer,?_,called⟩
+  cases answer <;> simp [runtime.reserve,called]
+
+/-- A reserve error proves the exact reached allocator request was refused. -/
+theorem reserve_error_cause {A T : Type} (allocator : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect allocator) (values : alloc.vec.Vec T) (extra : Usize)
+    (error : runtime.ExecError) (after : alloc.vec.Vec T)
+    (run : runtime.reserve allocator values extra = .ok (.Err error,after)) :
+    error = .Exhausted .Allocation ∧ after = values ∧
+      allocator.reserve values extra = .ok (false,values) := by
+  obtain ⟨answer,wrapped,called⟩ := reserve_with_cause allocator law values extra
+  rw [wrapped] at run
+  cases answer <;> simp_all
+
+/-- Object exhaustion at the actual object gate is a concrete quota witness. -/
+theorem room_error_cause {M : Type} (memory : runtime.platform.MemoryBuffer M)
+    (store : runtime.store.Store M) (bound : objectCount store ≤ Usize.max)
+    (error : runtime.ExecError)
+    (run : runtime.store.Store.room memory store = .ok (.Err error)) :
+    error = .Exhausted .Objects ∧ store.limits.max_objects.val ≤ objectCount store := by
+  have result := room_spec memory store bound
+  rw [run,WP.spec_ok] at result
+  split at result <;> simp_all
+
+/-- A signature copy may refuse either of its two exact empty-vector requests. -/
+def TypeCopyRefusal {A : Type} (allocator : runtime.platform.Alloc A)
+    (ty : Itasca.types.FuncType) : Prop :=
+  allocator.reserve (alloc.vec.Vec.new Itasca.types.ValueType) ty.params.len =
+    .ok (false,alloc.vec.Vec.new Itasca.types.ValueType) ∨
+  allocator.reserve (alloc.vec.Vec.new Itasca.types.ValueType) ty.results.len =
+    .ok (false,alloc.vec.Vec.new Itasca.types.ValueType)
+
+theorem copy_type_resource_causes {A : Type} (allocator : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect allocator) (ty : Itasca.types.FuncType) :
+    runtime.copy_type allocator ty ⦃ answer => answer = .Ok ty ∨
+      (answer = .Err (.Exhausted .Allocation) ∧ TypeCopyRefusal allocator ty) ⦄ := by
+  unfold runtime.copy_type
+  dsimp only
+  obtain ⟨answer,wrapped,called⟩ := reserve_with_cause allocator law
+    (alloc.vec.Vec.new Itasca.types.ValueType) ty.params.len
+  rw [wrapped]
+  cases answer
+  · simp [core.result.Result.Insts.CoreOpsTry.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,TypeCopyRefusal,called]
+  · simp [core.result.Result.Insts.CoreOpsTry.branch]
+    obtain ⟨answer,wrapped,called⟩ := reserve_with_cause allocator law
+      (alloc.vec.Vec.new Itasca.types.ValueType) ty.results.len
+    rw [wrapped]
+    cases answer
+    · simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,TypeCopyRefusal,called]
+    · simp
+      step with copy_type_loop ty.params (alloc.vec.Vec.new Itasca.types.ValueType) 0#usize
+        (by scalar_tac) (by simp) as ⟨params,hp⟩
+      step with copy_type_loop_results ty.results (alloc.vec.Vec.new Itasca.types.ValueType) 0#usize
+        (by scalar_tac) (by simp) as ⟨results,hr⟩
+      simp [hp,hr]
+end Exec.Store

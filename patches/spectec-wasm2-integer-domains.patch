@@ -1,0 +1,26 @@
+diff --git a/specification/wasm-2.0/3-numerics.spectec b/specification/wasm-2.0/3-numerics.spectec
+--- a/specification/wasm-2.0/3-numerics.spectec
++++ b/specification/wasm-2.0/3-numerics.spectec
+@@ -143,15 +143,19 @@
+ def $imul_(N, i_1, i_2) = $((i_1 * i_2) \ 2^N)
+ 
+ def $idiv_(N, U, i_1, 0)   = eps
+-def $idiv_(N, U, i_1, i_2) = $truncz($(i_1 / i_2))
++def $idiv_(N, U, i_1, i_2) = $truncz($(i_1 / i_2))  -- if i_2 =/= 0
+ def $idiv_(N, S, i_1, 0)   = eps
+-def $idiv_(N, S, i_1, i_2) = eps  -- if $($signed_(N, i_1) / $signed_(N, i_2)) = $rat$(2^(N-1))
++def $idiv_(N, S, i_1, i_2) = eps  -- if i_2 =/= 0
++                                  -- if $($signed_(N, i_1) / $signed_(N, i_2)) = $rat$(2^(N-1))
+ def $idiv_(N, S, i_1, i_2) = $inv_signed_(N, $truncz($($signed_(N, i_1) / $signed_(N, i_2))))
++                             -- if i_2 =/= 0
++                             -- if $($signed_(N, i_1) / $signed_(N, i_2)) =/= $rat$(2^(N-1))
+ 
+ def $irem_(N, U, i_1, 0)   = eps
+-def $irem_(N, U, i_1, i_2) = $(i_1 - i_2 * $truncz($(i_1 / i_2)))
++def $irem_(N, U, i_1, i_2) = $(i_1 - i_2 * $truncz($(i_1 / i_2)))  -- if i_2 =/= 0
+ def $irem_(N, S, i_1, 0)   = eps
+ def $irem_(N, S, i_1, i_2) = $inv_signed_(N, $(j_1 - j_2 * $truncz($(j_1 / j_2))))
++                             -- if i_2 =/= 0
+                              -- if j_1 = $signed_(N, i_1) /\ j_2 = $signed_(N, i_2)
+ 
+ def $inot_ hint(builtin)

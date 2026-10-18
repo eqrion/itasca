@@ -40,7 +40,7 @@ The execution oracle is pinned **Wasmi 2.0.0**, with `std`, `validate`, `simd`,
 and stable Rust enabled and optional text parsing disabled. Its
 [proposal support](https://github.com/wasmi-labs/wasmi/tree/v2.0.0) covers Core 2.0,
 including SIMD. The harness disables later proposals and uses its typed host
-functions, tables, memories, globals, and fuel controls. The separate
+functions, tables, memories, globals, and resource controls. The separate
 `runtime_wast` test runs itasca against both complete specification corpora;
 Wasmi does not replace those conformance expectations.
 
@@ -65,8 +65,9 @@ when updating the oracle. External references carry embedding-assigned symbols.
 Generated programs export all objects and receive a source-level termination
 guard with budget 100. They use at most one 16-page memory with a declared
 maximum, four bounded tables, eight functions, and small type/index spaces.
-Each action also has a five-million-unit engine-specific fuel allowance;
-the two engines' fuel counts are not compared. Source instruction count,
+Each itasca action permits five million interrupt checks at function entries
+and loop headers. Itasca runs first; an interrupted action is excluded before
+running Wasmi. Both engines run without fuel. Source instruction count,
 call/operand limits, and action counts bound the workloads. Host functions log
 their typed arguments and return zeros of their declared result types.
 
@@ -83,7 +84,7 @@ Such Wasm 1 instantiation failures are reported as `ProfileDifference`, with
 their historical effects checked separately by the pinned Wasm 1 WAST corpus.
 Mutable-global import/export support stays enabled in both oracle configurations
 to match itasca's existing profile. Declared growth maxima and embedding caps
-agree for generated workloads; unexpected fuel/stack/allocation exhaustion is a
+agree for generated workloads; unexpected interruption/stack/allocation exhaustion is a
 separate `ResourceLimit`, never an equivalence success or a semantic mismatch.
 
 Each target periodically reports counts for successful comparisons, invalid or
@@ -92,8 +93,6 @@ unmapped references, and numeric nondeterminism exclusions. Inspect these rates
 alongside libFuzzer coverage. The deterministic test
 `cargo test --test runtime_differential` also freezes minimum useful generated
 coverage and checks 4864 focused numeric/SIMD cases plus stateful/linking seeds.
-No optimized compiler exists yet; a baseline-versus-optimized rewriting target
-is deferred until there is a distinct optimized path to compare.
 
 For an instrumented campaign, install `cargo-fuzz` and run:
 
@@ -125,10 +124,27 @@ It retains inputs, logs, and failure artifacts in the printed temporary director
 cargo install cargo-fuzz --version 0.13.1 --locked --root /private/tmp/itasca-fuzz-tools
 python3 fuzz/scripts/runtime_instrumented.py \
   --cargo-fuzz /private/tmp/itasca-fuzz-tools/bin/cargo-fuzz \
-  --seconds 10
+  --seconds 60
 ```
 
-All four initial 10-second instrumented campaigns completed without a failure:
+The slot runtime's agreed 60-second campaigns all passed on 2026-10-16:
+
+| Target | Inputs | Comparisons | Invalid input | Resource exclusion | Profile exclusion | Numeric exclusion | Coverage |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `wasm1_execute` | 597 | 399 | 196 | 0 | 2 | 0 | 41228 |
+| `wasm2_execute` | 1487 | 804 | 683 | 0 | 0 | 0 | 39781 |
+| `runtime_linking` | 1675 | 1675 | 0 | 0 | 0 | 0 | 22231 |
+| `runtime_numeric` | 16199 | 16199 | 0 | 0 | 0 | 0 | 30465 |
+| `runtime_stateful` | 572 | 572 | 0 | 0 | 0 | 0 | 27857 |
+| `runtime_compile` | 33098 | 361 | 32538 | 3 | 0 | 196 | 25025 |
+
+There were no unmapped-reference exclusions. These runs use the rewritten slot
+runtime, synchronous hooks, and the no-fuel oracle configuration described above.
+The compiler target's accepted floating/SIMD programs are compilation evidence;
+its numeric exclusions are not counted as execution comparisons.
+
+The following historical results predate the slot runtime rewrite. All four
+initial 10-second instrumented campaigns completed without a failure:
 
 | Target | Inputs | Semantic comparisons | Invalid input | Resource exclusion | Numeric exclusion | Final coverage |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |

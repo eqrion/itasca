@@ -1,10 +1,10 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
 
 use itasca::runtime::{
-    compile, ExecutableModule, Execution, Extern, ExternAddr, InstanceAddr, LinkError, Outcome,
-    ResourceLimit, RuntimeError, Store, StoreLimits, Trap, Value,
+    compile, ExecError, ExecutableModule, Execution, Extern, ExternAddr, HostError, InstanceAddr,
+    InterruptAction, LinkError, MemoryBuffer, Platform, ResourceLimit, Store, StoreLimits, Trap,
+    Value, VecMemory,
 };
 use itasca::{
     ElemType, FuncType, GlobalType, Limits, MemType, Mut, TableType, ValidationProfile, ValueType,
@@ -15,10 +15,60 @@ use wast::core::{
 };
 use wast::{QuoteWat, Wast, WastArg, WastDirective, WastExecute, WastInvoke, WastRet, Wat};
 
-// These are harness limits, not semantic trap outcomes. In particular suspension
-// can never satisfy assert_trap or assert_exhaustion.
-const ACTION_FUEL: u64 = 1_000_000_000;
+// These harness limits are infrastructure failures, never Wasm traps or exhaustion.
+const ACTION_INTERRUPTS: u64 = 1_000_000_000;
 const MAX_HOST_CALLS: usize = 1_000_000;
+
+struct SpectestPlatform {
+    remaining: u64,
+    calls: usize,
+    failure: Option<&'static str>,
+}
+impl SpectestPlatform {
+    fn new() -> Self {
+        Self {
+            remaining: ACTION_INTERRUPTS,
+            calls: 0,
+            failure: None,
+        }
+    }
+    fn check(&self) -> Result<()> {
+        self.failure
+            .map_or(Ok(()), |why| Err(Failure::Infrastructure(why)))
+    }
+}
+impl Platform<VecMemory> for SpectestPlatform {
+    fn interrupt(&mut self) -> InterruptAction {
+        if self.remaining == 0 {
+            self.failure = Some("interrupt limit");
+            InterruptAction::Terminate
+        } else {
+            self.remaining -= 1;
+            InterruptAction::Continue
+        }
+    }
+    fn call_host(
+        &mut self,
+        _: &mut Store,
+        id: u64,
+        _: &[Value],
+        results: &mut [Value],
+    ) -> std::result::Result<(), HostError> {
+        self.calls += 1;
+        if self.calls > MAX_HOST_CALLS {
+            self.failure = Some("host call limit");
+        } else if id >= 7 {
+            self.failure = Some("unknown spectest host identifier");
+        } else if !results.is_empty() {
+            self.failure = Some("spectest print returned values");
+        }
+        if self.failure.is_some() {
+            Err(HostError::Trap)
+        } else {
+            Ok(())
+        }
+    }
+}
 
 #[derive(Debug, Default, PartialEq, Eq)]
 struct Counts {
@@ -40,7 +90,7 @@ struct Counts {
 enum Failure {
     Encoding(String),
     Validation(itasca::Error),
-    Runtime(RuntimeError),
+    Runtime(ExecError),
     Infrastructure(&'static str),
     Script(String),
 }
@@ -57,8 +107,8 @@ impl std::fmt::Debug for Failure {
     }
 }
 
-impl From<RuntimeError> for Failure {
-    fn from(error: RuntimeError) -> Self {
+impl From<ExecError> for Failure {
+    fn from(error: ExecError) -> Self {
         Self::Runtime(error)
     }
 }
@@ -145,12 +195,15 @@ impl Script {
         script
             .spectest
             .insert(b"table".to_vec(), Extern::Table(table));
-        let memory = script.store.define_memory(MemType {
-            limits: Limits {
-                min: 1,
-                max: Some(2),
+        let memory = script.store.define_memory(
+            MemType {
+                limits: Limits {
+                    min: 1,
+                    max: Some(2),
+                },
             },
-        })?;
+            VecMemory::new_zeroed(65536).expect("spectest memory allocation"),
+        )?;
         script
             .spectest
             .insert(b"memory".to_vec(), Extern::Memory(memory));
@@ -207,11 +260,9 @@ impl Script {
         }
     }
 
-    fn compile(&self, module: QuoteWat<'_>) -> Result<Rc<ExecutableModule>> {
+    fn compile(&self, module: QuoteWat<'_>) -> Result<ExecutableModule> {
         let bytes = self.encode(module)?;
-        compile(&bytes, self.profile)
-            .map(Rc::new)
-            .map_err(Failure::Validation)
+        compile(&bytes, self.profile).map_err(Failure::Validation)
     }
 
     fn instantiate(&mut self, module: QuoteWat<'_>) -> Result<InstanceAddr> {
@@ -225,37 +276,12 @@ impl Script {
             } else {
                 None
             };
-            imports.push(item.ok_or(RuntimeError::Link(LinkError::MissingImport))?);
+            imports.push(item.ok_or(ExecError::Link(LinkError::MissingImport))?);
         }
-        let mut pending = self.store.instantiate(code, &imports)?;
-        pending.add_fuel(ACTION_FUEL)?;
-        let mut host_calls = 0;
-        loop {
-            match pending.run(&mut self.store) {
-                Outcome::Returned(values) => {
-                    if !values.is_empty() {
-                        return Err(Failure::Infrastructure("start returned values"));
-                    }
-                    return pending.instance().ok_or(Failure::Infrastructure(
-                        "completed instantiation has no instance",
-                    ));
-                }
-                Outcome::Failed(error) => return Err(error.into()),
-                Outcome::Suspended => {
-                    return Err(Failure::Infrastructure("instantiation fuel limit"))
-                }
-                Outcome::NeedsHostCall(request) => {
-                    host_calls += 1;
-                    if host_calls > MAX_HOST_CALLS {
-                        return Err(Failure::Infrastructure("host call limit"));
-                    }
-                    if request.host_id >= 7 {
-                        return Err(Failure::Infrastructure("unknown spectest host identifier"));
-                    }
-                    pending.resume_host(&self.store, Ok(&[]))?;
-                }
-            }
-        }
+        let mut platform = SpectestPlatform::new();
+        let result = self.store.instantiate(code, &imports, &mut platform);
+        platform.check()?;
+        result.map_err(Failure::Runtime)
     }
 
     fn instance(&self, id: Option<wast::token::Id<'_>>) -> Result<InstanceAddr> {
@@ -312,26 +338,18 @@ impl Script {
             .iter()
             .map(|arg| self.argument(arg))
             .collect::<Result<Vec<_>>>()?;
-        let mut execution = Execution::new(&self.store, function, &arguments)?;
-        execution.add_fuel(ACTION_FUEL)?;
-        let mut host_calls = 0;
-        loop {
-            match execution.run(&mut self.store) {
-                Outcome::Returned(values) => return Ok(values),
-                Outcome::Failed(error) => return Err(error.into()),
-                Outcome::Suspended => return Err(Failure::Infrastructure("invocation fuel limit")),
-                Outcome::NeedsHostCall(request) => {
-                    host_calls += 1;
-                    if host_calls > MAX_HOST_CALLS {
-                        return Err(Failure::Infrastructure("host call limit"));
-                    }
-                    if request.host_id >= 7 {
-                        return Err(Failure::Infrastructure("unknown spectest host identifier"));
-                    }
-                    execution.resume_host(&self.store, Ok(&[]))?;
-                }
-            }
-        }
+        let mut platform = SpectestPlatform::new();
+        let mut values = Vec::new();
+        let result = Execution::new().invoke(
+            &mut self.store,
+            &mut platform,
+            function,
+            &arguments,
+            &mut values,
+        );
+        platform.check()?;
+        result.map_err(Failure::Runtime)?;
+        Ok(values)
     }
 
     fn execute(&mut self, action: WastExecute<'_>) -> Result<Vec<Value>> {
@@ -604,7 +622,7 @@ fn assertion(
             let Some(expected) = expected_trap(message) else {
                 return Err(format!("unmapped expected trap {message:?}"));
             };
-            if !matches!(&result, Err(Failure::Runtime(RuntimeError::Trap(actual))) if *actual == expected)
+            if !matches!(&result, Err(Failure::Runtime(ExecError::Trap(actual))) if *actual == expected)
             {
                 return Err(format!(
                     "expected Wasm trap {message:?} ({expected:?}), got {result:?}"
@@ -617,7 +635,7 @@ fn assertion(
             if message != "call stack exhausted"
                 || !matches!(
                     result,
-                    Err(Failure::Runtime(RuntimeError::Resource(
+                    Err(Failure::Runtime(ExecError::Exhausted(
                         ResourceLimit::CallStack
                     )))
                 )
@@ -641,7 +659,7 @@ fn assertion(
                 )
             {
                 let result = script.instantiate(QuoteWat::Wat(module));
-                if !matches!(&result, Err(Failure::Runtime(RuntimeError::Trap(actual))) if Some(*actual) == expected_trap(message))
+                if !matches!(&result, Err(Failure::Runtime(ExecError::Trap(actual))) if Some(*actual) == expected_trap(message))
                 {
                     return Err(format!(
                         "expected historical segment link failure {message:?}, got {result:?}"
@@ -656,7 +674,7 @@ fn assertion(
                 _ => return Err(format!("unmapped expected link failure {message:?}")),
             };
             let result = script.instantiate(QuoteWat::Wat(module));
-            if !matches!(&result, Err(Failure::Runtime(RuntimeError::Link(actual))) if *actual == expected)
+            if !matches!(&result, Err(Failure::Runtime(ExecError::Link(actual))) if *actual == expected)
             {
                 return Err(format!("expected link failure {message:?}, got {result:?}"));
             }

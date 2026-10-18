@@ -47,12 +47,15 @@ selects Lean 4.32, but its generated output compiles here on 4.31.
 ## Commands
 
 ```sh
-just extract          # Rust -> LLBC -> committed Lean program model
+just extract          # Rust -> LLBC -> validator and runtime Lean models
 just extract-check    # Regenerate separately and reject stale models
+just extract-primary  # Run only the canonical validator extraction pass
+just extract-exec     # Refresh validator dependencies, then the runtime model
 just check Itasca.Module.Validation  # Build specific modules
 just profile Itasca.Wasm2.Step.ScalarContext  # Profile one file's elaboration
-just prove            # Check audit coverage and build all proofs
-just audit-imports    # Regenerate Itasca.Audit's imports
+just prove            # Check audit coverage and build validator proofs
+just prove-exec       # Build execution and specification-extension proofs
+just audit-imports    # Refresh each library's audit imports
 just trust            # Rerun the detailed axiom report
 just spec-update      # Copy a regenerated specification into the source tree
 just spec-check       # Regenerate, compare, and compile the specification
@@ -69,6 +72,33 @@ Preserve the `.lake/` and `.build/` caches.
 by hand. [FunsExternal.lean](Itasca/Generated/FunsExternal.lean) is the
 handwritten model of `Vec.pop` and `Vec.is_empty`. The generated external
 template is ignored and must not be imported.
+
+Execution extraction uses both `--cfg=charon` and `--cfg=charon_exec`. The
+second selector includes the complete generic runtime; `charon` still excludes
+native platform wrappers. The validator pass uses only `charon`, so runtime
+changes do not regenerate its model. Both selectors are registered in Cargo's
+`check-cfg` list.
+`just extract` and `just extract-check` run both passes in order. The
+`extract-primary` and `extract-check-primary` targets retain the independent
+validator pass for bootstrap and byte-for-byte regression checks.
+
+The opt-in Aeneas `-reuse-definitions` patch reuses the validator's exact Lean
+types and trait dictionaries while retaining transparent Rust types for
+symbolic execution. `scripts/execution_reuse.py` derives the mapping from the
+validator LLBC and generated type declarations, checking declaration kinds and
+member names and counts. Only `Exec.Generated.TypesExternal` and `FunsExternal` may import
+`Itasca.Generated` directly. `scripts/probe_reuse.py` checks field projection,
+enum matching, callback dictionary identity, and transitive axioms across the
+two extraction passes; it runs with `just regressions`.
+The execution external adapter delegates reused validator functions to their
+canonical definitions. Exact external coverage includes both standard-library
+requests and local opaque requests identified by Aeneas's Rust documentation
+headers; every request requires a concrete attributed definition.
+The runtime pass also enables `-skip-bottom-storage-dead`, which omits only
+redundant interpreter updates for locals already represented by `VBottom`.
+Such locals contain no borrow or loan. The regression compares the complete
+generated files with and without this option before compiling and auditing them;
+the validator pass leaves the option disabled.
 
 [SpecTec/wasm2.0.lean](SpecTec/wasm2.0.lean) is generated from the pinned SpecTec
 sources and the patches below, and checked byte for byte by `just spec-check`.
@@ -180,6 +210,22 @@ Build targets apply these to the pinned checkouts:
   keeps both global mutabilities in typing.
 - [spectec-wasm2-module.patch](../patches/spectec-wasm2-module.patch)
   disambiguates import projections and fixes the four-byte UTF-8 upper bound.
+- [spectec-wasm2-hostfunc.patch](../patches/spectec-wasm2-hostfunc.patch)
+  introduces explicit host function codes for the execution extension.
+- [spectec-wasm2-integer-domains.patch](../patches/spectec-wasm2-integer-domains.patch)
+  makes integer division/remainder success exclude zero divisors and signed
+  division overflow. Without these explicit source guards, the generated
+  relations overlap trapping clauses because Lean rational division is total.
+  The checked `division_zero_only` and `remainder_zero_only` lemmas in
+  [Exec/Spec/IntegerDiv](Exec/Spec/IntegerDiv.lean) prevent that overlap from
+  returning. This repairs the execution specification; validator typing rules
+  are unchanged.
+- [spectec-wasm2-memory-boundary.patch](../patches/spectec-wasm2-memory-boundary.patch)
+  uses 32-bit addition for recursive bulk-memory successor addresses. This
+  repairs the invalid `i32.const 2^32` reached after writing the last byte of
+  a 4 GiB memory. Bounds checks remain unbounded; only a final zero-count
+  iteration can observe the wrapped address. This changes the trusted execution
+  target without changing validator typing rules or runtime behavior.
 
 ## Extending the profile
 
@@ -218,6 +264,72 @@ audit ensures the proofs do not depend on them.
 
 ## Execution boundary
 
-The Rust `runtime` module is excluded under `cfg(charon)` and has no
-correspondence proof. See the [execution guide](../docs/EXECUTION.md) and the
-[numeric extraction gaps](../docs/EXECUTION_NUMERICS.md).
+The slot runtime has checked public correspondence, invariant, resource-cause
+and progress theorems under explicit platform and callback contracts. The
+[execution verification reference](../docs/EXECUTION_VERIFICATION.md) records their
+premises and embedder obligations. `SpecExt.Builtins` supplies
+concrete definitions for all 64 pinned builtin signatures. Float rounding uses
+exact rationals and midpoint comparisons; the NaN sets retain permitted
+nondeterminism. The audit rejects any new opaque builtin placeholder.
+
+`SpecExt.Host` adds atomic host-call steps with explicit typed inputs/results,
+store extension, and well-formedness premises. Its omission of post-call
+`Store_ok` is an explicit weakening, pending a store-typing development.
+`Exec.Spec` provides checked context, depth, extension, and mutation lemmas.
+The execution proofs build on these foundations. Allocation/content
+preservation and callback normal-return laws are explicit premises, together
+with floating-point and memory laws. Host-capable proofs additionally require
+raw frame-metadata retention, nondecreasing extern counts, and issued callback
+values. These conditions are explicit parts of the indexed host contract; they are
+not inferred from decoded source-store extension.
+
+The retained compiler relation distinguishes normal exits from branch targets
+and records whether each exit is live. Empty source continuations require a
+live normal exit; branches require a live target. Dead scopes therefore need
+no certificate for source suffixes that the compiler omits. Outermost live
+continuations retain the actual typed Return epilogue, while a dead nonvoid
+body may have the compiler's zero-width epilogue. These are syntactic invariant
+conditions, not assumptions about machine execution. The complete-profile
+compiler body fold is checked for both profiles. Actual construction, entry
+validation, and finishing produce a certificate for the independently encoded
+source body. The
+[complete compilation theorem](Exec/Theorems/Compilation.lean) combines
+all-input normal return with independently encoded complete-profile function,
+initializer, metadata and capacity certificates. It has no accepted-body or
+opcode-subset premise.
+
+[Public world-aware invocation](Exec/Theorems/Invocation/PublicExecutableWorldInvocation.lean)
+covers issued Wasm and host handles, retains the full `ExecutableInv` with the
+chosen final code interpretation, proves unchanged-state API rejection, and
+relates returned values, errors and final stores to source runs.
+[Exact public recording](Exec/Theorems/Invocation/PublicExecutableWorldRecorded.lean)
+uses the same actual event log in those source runs.
+[Public divergence](Exec/Theorems/Invocation/PublicExecutableWorldDivergence.lean) yields
+coherent infinite source execution. [Actual finite prefixes](Exec/Theorems/Progress/ExecutableWorldFinite.lean)
+have a uniform source-progress bound independent of host-published code sizes.
+[World-aware instantiation](Exec/Theorems/Instantiation/InstantiateExecutableWorldSource.lean)
+retains rollback and committed initialization/start effects while callbacks may
+publish fresh code. These theorems require the explicit indexed callback and raw
+preservation laws. [Instantiation recording and resource causes](Exec/Theorems/Instantiation/InstantiateExecutableWorldRecordingResources.lean)
+retain the same final interpretation and actual recorded event list. The
+resource accounting and raw-host-retention obligations are recorded in the
+execution reference. Source correspondence is forward soundness, with no uniqueness claim.
+
+The reviewed [native wrappers](../src/runtime/native.rs) forward compilation,
+invocation, instantiation, definitions and growth to the corresponding generic
+functions. `StdAlloc` uses `Vec::try_reserve`; its content-preservation and
+normal-return laws remain in the Rust allocator boundary. `NativeFloat` uses
+native arithmetic/casts and `libm`; its agreement with `FloatOpsCorrect` depends
+on the documented floating-point environment. Store construction issues
+nonzero identities through checked atomic increments and panics if the identity
+space is exhausted. That constructor is outside the extracted no-panic claims
+for compilation, invocation and instantiation. None of this wrapper review is a
+kernel proof of native Rust, `libm`, allocator or atomic semantics.
+
+Execution import layers and compiler/invocation integration stages are enforced
+by the audit checker. The [execution proof guide](Exec/README.md) describes the
+layer order, certificate boundaries, and reading paths. Shared store decoding
+and capacity contracts live below compiler/interpreter/store correctness in
+`Exec.Representation`. Validator proofs remain independent of `Exec` and never
+import `SpecExt` directly. Generated external adapters alone directly import
+`Itasca.Generated` for exact type and function reuse.

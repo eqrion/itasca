@@ -1,0 +1,68 @@
+import Exec.Theorems.Composition.Cumulative.CumulativeReadExecution
+import Exec.Theorems.Composition.Cumulative.CumulativeMemoryBulkExecution
+import Exec.Theorems.Composition.Cumulative.CumulativeTableBulkExecution
+import Exec.Theorems.Composition.Cumulative.CumulativeDropExecution
+import Exec.Theorems.Composition.Cumulative.CumulativeTableSetExecution
+import Exec.Theorems.Api.CumulativeMemoryGrowExecution
+import Exec.Theorems.Api.CumulativeTableGrowExecution
+namespace Exec.Theorems
+open Aeneas Aeneas.Std Exec.Interp
+theorem stateful_execution {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
+    (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+    (allocation : Platform.AllocCorrect allocator) (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
+    (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (index : Usize)
+    (raw : runtime.interp.Frame) (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
+    (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
+    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr) (op : Abs.Stateful.Instruction)
+    (last : index.val+1=exec.frames.length)
+    (frameFound : exec.frames.val[index.val]?=some raw)
+    (found : store.instances.val[raw.instance.val]?=some inst)
+    (codeFound : inst.module.functions.val[raw.function.val]?=some compiled)
+    (moduleEq : f.module=Store.decodeInstance store inst) (slots : FrameSlots exec raw f)
+    (point : Cumulative.FramePoint (Store.decodeStore view code store) raw {f with code:=op.source::after} compiled C targets next output)
+    (expected : List valtype)
+    (machine : Cumulative.Execution view code store exec
+      ⟨Store.decodeStore view code store,ambient,{f with code:=op.source::after}::rest,[]⟩ expected raw.pc.val false)
+    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (certified : CertifiedCumulativeStore view code store)
+    (owned : Abs.Ownership.StatefulOwned (Store.ownershipBounds store) ⟨Store.decodeStore view code store,ambient,{f with code:=op.source::after}::rest,[]⟩) :
+    runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
+      CumulativeStepOutcome allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false
+        ⟨Store.decodeStore view code store,ambient,{f with code:=op.source::after}::rest,[]⟩ out ⦄ := by
+  cases op with
+  | refNull type =>
+    exact stateful_read_execution memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after (.refNull type) rfl last frameFound found codeFound moduleEq slots point expected machine program certified
+  | refFunc function =>
+    exact stateful_read_execution memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after (.refFunc function) rfl last frameFound found codeFound moduleEq slots point expected machine program certified
+  | refIsNull  =>
+    exact stateful_read_execution memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after (.refIsNull) rfl last frameFound found codeFound moduleEq slots point expected machine program certified
+  | tableGet table =>
+    exact stateful_read_execution memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after (.tableGet table) rfl last frameFound found codeFound moduleEq slots point expected machine program certified
+  | tableSize table =>
+    exact stateful_read_execution memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after (.tableSize table) rfl last frameFound found codeFound moduleEq slots point expected machine program certified
+  | memorySize  =>
+    exact stateful_read_execution memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after (.memorySize) rfl last frameFound found codeFound moduleEq slots point expected machine program certified
+  | tableSet table =>
+    exact stateful_table_set_execution memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output ambient f rest after table last frameFound found codeFound moduleEq slots point expected machine program certified owned
+  | tableGrow table =>
+    exact stateful_table_grow_execution memory hooks floats allocator allocation view code exec store platform index raw inst compiled C targets next output ambient f rest after table last frameFound found codeFound moduleEq slots point expected machine program certified owned
+  | tableFill table =>
+    exact stateful_table_fill_execution memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output ambient f rest after table last frameFound found codeFound moduleEq slots point expected machine program certified owned
+  | tableCopy destination source =>
+    exact stateful_table_copy_execution memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output ambient f rest after destination source last frameFound found codeFound moduleEq slots point expected machine program certified
+  | tableInit table element =>
+    exact stateful_table_init_execution memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output ambient f rest after table element last frameFound found codeFound moduleEq slots point expected machine program certified
+  | memoryGrow  =>
+    exact stateful_memory_grow_execution memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after  last frameFound found codeFound moduleEq slots point expected machine program certified
+  | memoryFill  =>
+    exact stateful_memory_fill_execution memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after  last frameFound found codeFound moduleEq slots point expected machine program certified
+  | memoryCopy  =>
+    exact stateful_memory_copy_execution memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after  last frameFound found codeFound moduleEq slots point expected machine program certified
+  | memoryInit data =>
+    exact stateful_memory_init_execution memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after data last frameFound found codeFound moduleEq slots point expected machine program certified
+  | elemDrop element =>
+    exact stateful_drop_execution memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output ambient f rest after (.elemDrop element) rfl last frameFound found codeFound moduleEq slots point expected machine program certified
+  | dataDrop data =>
+    exact stateful_drop_execution memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output ambient f rest after (.dataDrop data) rfl last frameFound found codeFound moduleEq slots point expected machine program certified
+
+end Exec.Theorems

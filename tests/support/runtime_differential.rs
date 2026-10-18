@@ -5,12 +5,11 @@
 //! NaN results. The returned coverage distinguishes limits from equivalence.
 #![allow(dead_code)]
 
-use itasca::runtime::{self as rt, Extern, Outcome, RuntimeError, Store, Trap, Value};
+use itasca::runtime::{self as rt, ExecError, Extern, MemoryBuffer, Store, Trap, Value};
 use itasca::{ElemType, ImportDesc, Mut, ValidationProfile, ValueType};
-use std::rc::Rc;
 use wasmi::{Nullable, Val};
 
-const FUEL: u64 = 5_000_000;
+const INTERRUPTS: u64 = 5_000_000;
 const MEMORY_LIMIT: usize = 16 * 65536;
 const TABLE_LIMIT: usize = 4096;
 
@@ -71,6 +70,61 @@ pub struct Pair {
     trace: Vec<(u64, Vec<Symbol>)>,
     objects: Vec<(Extern, wasmi::Extern)>,
     instances: Vec<(rt::InstanceAddr, wasmi::Instance)>,
+}
+
+struct TracePlatform<'a> {
+    remaining: u64,
+    functions: &'a [rt::FuncAddr],
+    trace: &'a mut Vec<(u64, Vec<Symbol>)>,
+    unsupported: bool,
+}
+impl rt::Platform<rt::VecMemory> for TracePlatform<'_> {
+    fn interrupt(&mut self) -> rt::InterruptAction {
+        if self.remaining == 0 {
+            rt::InterruptAction::Terminate
+        } else {
+            self.remaining -= 1;
+            rt::InterruptAction::Continue
+        }
+    }
+    fn call_host(
+        &mut self,
+        store: &mut Store,
+        id: u64,
+        args: &[Value],
+        _: &mut [Value],
+    ) -> Result<(), rt::HostError> {
+        let args: Option<Vec<_>> = args
+            .iter()
+            .map(|v| {
+                Some(match *v {
+                    Value::I32(x) => Symbol::I32(x),
+                    Value::I64(x) => Symbol::I64(x),
+                    Value::F32(x) => Symbol::F32(x),
+                    Value::F64(x) => Symbol::F64(x),
+                    Value::V128(x) => Symbol::V128(x),
+                    Value::FuncRef(None) => Symbol::Func(None),
+                    Value::FuncRef(Some(f)) => {
+                        Symbol::Func(Some(self.functions.iter().position(|x| *x == f)?))
+                    }
+                    Value::ExternRef(None) => Symbol::Extern(None),
+                    Value::ExternRef(Some(r)) => {
+                        Symbol::Extern(Some(store.extern_identity(r).unwrap()))
+                    }
+                })
+            })
+            .collect();
+        match args {
+            Some(args) => {
+                self.trace.push((id, args));
+                Ok(())
+            }
+            None => {
+                self.unsupported = true;
+                Err(rt::HostError::Trap)
+            }
+        }
+    }
 }
 
 fn oracle_type(ty: ValueType) -> wasmi::ValType {
@@ -219,11 +273,11 @@ fn oracle_error(error: wasmi::Error) -> ResultKind {
     ResultKind::Trap(trap)
 }
 
-fn our_error(error: RuntimeError) -> ResultKind {
+fn our_error(error: ExecError) -> ResultKind {
     match error {
-        RuntimeError::Trap(trap) => ResultKind::Trap(trap),
-        RuntimeError::Link(_) => ResultKind::Link,
-        RuntimeError::Resource(_) => ResultKind::Resource,
+        ExecError::Trap(trap) => ResultKind::Trap(trap),
+        ExecError::Link(_) => ResultKind::Link,
+        ExecError::Exhausted(_) | ExecError::Terminated => ResultKind::Resource,
         other => panic!("unexpected itasca runtime failure: {other:?}"),
     }
 }
@@ -233,7 +287,6 @@ impl Pair {
         let wasm2 = profile == ValidationProfile::Wasm2;
         let mut config = wasmi::Config::default();
         config
-            .consume_fuel(true)
             .wasm_mutable_global(true)
             .wasm_sign_extension(wasm2)
             .wasm_saturating_float_to_int(wasm2)
@@ -311,16 +364,6 @@ impl Pair {
         self.objects.push((ours, oracle));
     }
 
-    fn host_results(&mut self, request: rt::HostRequest) -> Option<Vec<Value>> {
-        let args = request
-            .arguments
-            .into_iter()
-            .map(|v| self.symbol(v))
-            .collect::<Option<Vec<_>>>()?;
-        self.trace.push((request.host_id, args));
-        Some(request.results.into_iter().map(zero).collect())
-    }
-
     fn observe(&self) -> Coverage {
         if self.oracle.data().unknown_reference {
             return Coverage::UnsupportedReference;
@@ -349,7 +392,9 @@ impl Pair {
                     assert_eq!(a, b, "global effects differ");
                 }
                 (Extern::Table(a), wasmi::Extern::Table(b)) => {
-                    let values = self.ours.table(*a).unwrap();
+                    let values: Vec<_> = (0..self.ours.table_size(*a).unwrap())
+                        .map(|i| self.ours.table_get(*a, i).unwrap())
+                        .collect();
                     assert_eq!(
                         values.len() as u64,
                         b.size(&self.oracle),
@@ -394,7 +439,7 @@ impl Pair {
             bytes
         };
         let module = match rt::compile(input, profile) {
-            Ok(module) => Rc::new(module),
+            Ok(module) => module,
             Err(_) => return Coverage::Invalid,
         };
         let oracle_module = wasmi::Module::new(&self.engine, bytes)
@@ -447,7 +492,13 @@ impl Pair {
                         if ty.limits.min as usize > MEMORY_LIMIT / 65536 {
                             return Coverage::ResourceLimit;
                         }
-                        let a = self.ours.define_memory(ty).unwrap();
+                        let a = self
+                            .ours
+                            .define_memory(
+                                ty,
+                                rt::VecMemory::new_zeroed(ty.limits.min as usize * 65536).unwrap(),
+                            )
+                            .unwrap();
                         let b = wasmi::Memory::new(
                             &mut self.oracle,
                             wasmi::MemoryType::new(ty.limits.min, ty.limits.max),
@@ -506,7 +557,6 @@ impl Pair {
         {
             return Coverage::ResourceLimit;
         }
-        self.oracle.set_fuel(FUEL).unwrap();
         // The oracle's module iterator is authoritative for its import order.
         // Match names explicitly instead of relying on internal index grouping.
         let mut used = vec![false; oracle_imports.len()];
@@ -533,39 +583,35 @@ impl Pair {
                 oracle_imports[index]
             })
             .collect();
-        let oracle_result = wasmi::Instance::new(&mut self.oracle, &oracle_module, &oracle_imports);
-        let ours = self.ours.instantiate(Rc::clone(&module), &our_imports);
-        let mut our_instance = None;
-        let our_result = match ours {
-            Err(error) => our_error(error),
-            Ok(mut pending) => {
-                pending.add_fuel(FUEL).unwrap();
-                loop {
-                    match pending.run(&mut self.ours) {
-                        Outcome::Returned(_) => {
-                            our_instance = pending.instance();
-                            break ResultKind::Returned;
-                        }
-                        Outcome::Failed(e) => break our_error(e),
-                        Outcome::Suspended => break ResultKind::Resource,
-                        Outcome::NeedsHostCall(request) => {
-                            let Some(results) = self.host_results(request) else {
-                                return Coverage::UnsupportedReference;
-                            };
-                            pending.resume_host(&self.ours, Ok(&results)).unwrap();
-                        }
-                    }
-                }
-            }
+        let export_names: Vec<_> = module
+            .env()
+            .exports()
+            .iter()
+            .map(|e| e.name.clone())
+            .collect();
+        let mut platform = TracePlatform {
+            remaining: INTERRUPTS,
+            functions: &self.functions,
+            trace: &mut self.trace,
+            unsupported: false,
         };
+        let ours = self.ours.instantiate(module, &our_imports, &mut platform);
+        if platform.unsupported {
+            return Coverage::UnsupportedReference;
+        }
+        let (our_instance, our_result) = match ours {
+            Ok(instance) => (Some(instance), ResultKind::Returned),
+            Err(error) => (None, our_error(error)),
+        };
+        if our_result == ResultKind::Resource {
+            return Coverage::ResourceLimit;
+        }
+        let oracle_result = wasmi::Instance::new(&mut self.oracle, &oracle_module, &oracle_imports);
         let (oracle_instance, oracle_result) = match oracle_result {
             Ok(instance) => (Some(instance), ResultKind::Returned),
             Err(error) => {
                 if our_result == ResultKind::Returned {
-                    eprintln!(
-                        "oracle instantiation error: {error:?}; itasca imports={:?}",
-                        module.env().imports()
-                    );
+                    eprintln!("oracle instantiation error: {error:?}");
                 }
                 (None, oracle_error(error))
             }
@@ -576,10 +622,10 @@ impl Pair {
         assert_eq!(our_result, oracle_result, "instantiation outcomes differ");
         if let (Some(a), Some(b)) = (our_instance, oracle_instance) {
             self.instances.push((a, b));
-            for export in module.env().exports() {
-                let a = self.ours.export(a, &export.name).unwrap().unwrap();
+            for name in &export_names {
+                let a = self.ours.export(a, name).unwrap().unwrap();
                 let b = b
-                    .get_export(&self.oracle, std::str::from_utf8(&export.name).unwrap())
+                    .get_export(&self.oracle, std::str::from_utf8(name).unwrap())
                     .unwrap();
                 self.register_object(a, b);
             }
@@ -610,29 +656,31 @@ impl Pair {
             .copied()
             .map(Val::default_for_ty)
             .collect();
-        self.oracle.set_fuel(FUEL).unwrap();
+        let mut values = Vec::new();
+        let mut platform = TracePlatform {
+            remaining: INTERRUPTS,
+            functions: &self.functions,
+            trace: &mut self.trace,
+            unsupported: false,
+        };
+        let ours = rt::Execution::new()
+            .invoke(
+                &mut self.ours,
+                &mut platform,
+                function,
+                arguments,
+                &mut values,
+            )
+            .map_or_else(our_error, |_| ResultKind::Returned);
+        if platform.unsupported {
+            return Coverage::UnsupportedReference;
+        }
+        if ours == ResultKind::Resource {
+            return Coverage::ResourceLimit;
+        }
         let oracle_result = oracle_function
             .call(&mut self.oracle, &oracle_arguments, &mut oracle_values)
             .map_or_else(oracle_error, |_| ResultKind::Returned);
-        let mut execution = rt::Execution::new(&self.ours, function, arguments).unwrap();
-        execution.add_fuel(FUEL).unwrap();
-        let mut values = Vec::new();
-        let ours = loop {
-            match execution.run(&mut self.ours) {
-                Outcome::Returned(result) => {
-                    values = result;
-                    break ResultKind::Returned;
-                }
-                Outcome::Failed(e) => break our_error(e),
-                Outcome::Suspended => break ResultKind::Resource,
-                Outcome::NeedsHostCall(request) => {
-                    let Some(results) = self.host_results(request) else {
-                        return Coverage::UnsupportedReference;
-                    };
-                    execution.resume_host(&self.ours, Ok(&results)).unwrap();
-                }
-            }
-        };
         if ours == ResultKind::Resource || oracle_result == ResultKind::Resource {
             return Coverage::ResourceLimit;
         }
