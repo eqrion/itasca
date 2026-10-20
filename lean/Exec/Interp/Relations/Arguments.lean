@@ -16,6 +16,13 @@ def OwnedBy (id : Usize) : runtime.Value → Prop
 def ArgumentMatches (id : Usize) (value : runtime.Value) (ty : Itasca.types.ValueType) : Prop :=
   OwnedBy id value ∧ rawType value = ty
 
+/-- Accepted arguments retain exactly their runtime type tags. -/
+theorem argument_matches_rawtypes {id : Usize} {args : List runtime.Value} {types : List Itasca.types.ValueType}
+    (matched : List.Forall₂ (ArgumentMatches id) args types) : types = args.map rawType := by
+  induction matched with
+  | nil => rfl
+  | cons head tail ih => simp only [List.map_cons, head.2, ih]
+
 noncomputable def checkOwner (id : Usize) (value : runtime.Value) :
     core.result.Result Unit runtime.ExecError := by
   classical

@@ -103,6 +103,10 @@ theorem load_step (s : _root_.store) (f : frame) (op : PackedMemory) (sign : sx)
     · have encoded := integerBytes_ofBytes payload payloadWf
       rw [payloadLength] at encoded
       simpa only [ibytes_,inv_ibytes_,proj_uN_0,proj_num__0,byte_count,Option.get!_some,bytes,payload] using encoded
+    · have bounded := integerOfBytes_bound payload payloadWf
+      rw [payloadLength] at bounded
+      change Builtins.integerOfBytes payload < 2^op.bits
+      cases op <;> norm_num [bytes,bits] at bounded ⊢ <;> exact bounded
     · exact input
     · simpa only [size_eq,loaded] using wf_admininstr.admininstr_case_13 _ _ valueWf
     · exact Segment.index_wf 0 (by norm_num)
@@ -136,13 +140,15 @@ theorem store_step (s : _root_.store) (f : frame) (op : PackedMemory) (argument 
     · exact .admininstr_case_13 _ _ valueWf
     · exact operationWf)
   split
-  · have updatedWf := memoryPayloadWrite_wf s f (address+proj_uN_0 argument.OFFSET) (op.stored value)
+  · rename_i inside
+    have updatedWf := memoryPayloadWrite_wf s f (address+proj_uN_0 argument.OFFSET) (op.stored value)
       storeWf (integerBytes_wf op.bytes value)
     apply StepH.step
     apply Step.store_pack_val _ _ _ _ _ _ (op.stored value)
     · simp [proj_num__0]
     · exact .fun_with_mem_case_0 s f (.mk_uN 0) _ _ _ mapped
-        (.state_case_0 _ _ updatedWf frameWf)
+        (by simpa only [byte_count,proj_num__0,proj_uN_0,Option.get!_some] using inside)
+        (.state_case_0 _ _ updatedWf frameWf) (.state_case_0 _ _ storeWf frameWf)
     · exact op.size_present
     · simp [proj_num__0]
     · simp only [proj_num__0,Option.get!_some,size_eq,stored_wrap]

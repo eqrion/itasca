@@ -33,7 +33,8 @@ theorem memory_copy_byte_steps (s : store) (f : frame) (destination source : Nat
     (hs : wf_store s) (hf : wf_frame f) (hd : destination < 2^32) (hi : source < 2^32)
     (mapped : 0 < f.MODULE.MEMS.length)
     (bytesWf : Forall wf_byte (fun_mem ⟨s,f⟩ (.mk_uN 0)).BYTES)
-    (inside : source < (fun_mem ⟨s,f⟩ (.mk_uN 0)).BYTES.length) :
+    (inside : source < (fun_mem ⟨s,f⟩ (.mk_uN 0)).BYTES.length)
+    (destinationInside : destination < (fun_mem ⟨s,f⟩ (.mk_uN 0)).BYTES.length) :
     StepsH ⟨⟨s,f⟩,[i32 destination,i32 source,loadByte,storeByte]⟩ []
       ⟨⟨memoryWrite s f destination (fun_mem ⟨s,f⟩ (.mk_uN 0)).BYTES[source]!,f⟩,[]⟩ := by
   have byteWf := bytesWf ((fun_mem ⟨s,f⟩ (.mk_uN 0)).BYTES[source]!) (by simp [inside])
@@ -41,6 +42,6 @@ theorem memory_copy_byte_steps (s : store) (f : frame) (destination source : Nat
     [.CONST .I32 (.mk_num__0 .I32 (.mk_uN destination))] [storeByte]
     (by simpa [Forall] using wf_val.val_case_0 _ _ ((by cases i32_wf destination hd; assumption)))
     (by simpa [Forall] using storeByte_wf)
-  have stored := memory_write_step s f destination _ hs hf hd byteWf mapped
+  have stored := memory_write_step s f destination _ hs hf hd byteWf mapped destinationInside
   exact stepsH_trans (stepsH_single (by simpa [instrContext,vals,admininstr_val,i32] using loaded)) (stepsH_single stored)
 end Exec.Spec.Segment

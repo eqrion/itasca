@@ -1,17 +1,19 @@
 import Exec.Representation.StoreInvariant
 import Exec.Store.Preparation.Staging
 import Itasca.Module.Env.Basic
+import Itasca.Module.Elab.Metadata
 namespace Exec.Store
 open Aeneas Aeneas.Std
 
-/-- Static export descriptors address the corresponding validated namespace.
-This depends only on module metadata, so provisional instance maps may grow. -/
-def ModuleExportBounds (env : Itasca.module.Env) : Prop :=
-  ∀ entry ∈ env.exports.val, match entry.desc with
+/-- Static export descriptors address the validated namespace and retain
+unique source names. Both facts depend only on immutable module metadata. -/
+structure ModuleExportBounds (env : Itasca.module.Env) : Prop where
+  indices : ∀ entry ∈ env.exports.val, match entry.desc with
     | .Func index => index.val < env.func_types.length
     | .Table index => index.val < env.table_types.length
     | .Memory index => index.val < env.mem_types.length
     | .Global index => index.val < env.global_types.length
+  names : (env.exports.val.map (fun entry => Itasca.ModuleBinary.nameOfBytes entry.name.val)).Nodup
 
 /-- Every retained instance has bounded module export descriptors. -/
 def ExportBounds {M : Type} (store : runtime.store.Store M) : Prop :=
@@ -20,11 +22,13 @@ def ExportBounds {M : Type} (store : runtime.store.Store M) : Prop :=
 /-- Successful validation supplies export bounds without an API correctness premise. -/
 theorem module_export_bounds {env profile} (valid : Itasca.ModuleEnv.Valid env profile) :
     ModuleExportBounds env := by
-  intro entry member
-  obtain ⟨ty,resolved⟩ := valid.exports entry member
-  cases descriptor : entry.desc <;>
-    simp only [Itasca.ModuleExternals.ExportResolves,descriptor] at resolved ⊢ <;>
-    exact resolved.choose
+  constructor
+  · intro entry member
+    obtain ⟨ty,resolved⟩ := valid.exports entry member
+    cases descriptor : entry.desc <;>
+      simp only [Itasca.ModuleExternals.ExportResolves,descriptor] at resolved ⊢ <;>
+      exact resolved.choose
+  · exact Itasca.ModuleElaboration.export_names_distinct valid
 
 /-- Combining retained export descriptors with completed instance map lengths
 makes every actual export address lookup safe. -/
@@ -38,7 +42,7 @@ theorem export_address_bounds {M : Type} {store : runtime.store.Store M}
     | .Memory index => index.val < inst.memories.length
     | .Global index => index.val < inst.globals.length := by
   obtain ⟨_,functions,tables,memories,globals,_⟩ := shape
-  have bounded := bounds entry member
+  have bounded := bounds.indices entry member
   cases descriptor : entry.desc <;> simp only [descriptor] at bounded ⊢
   · simpa only [functions] using bounded
   · simpa only [tables] using bounded

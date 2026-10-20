@@ -53,6 +53,9 @@ theorem extend_load_value (ty : WidenWidth) (signed : Bool) (s : store) (f : fra
         intro j member
         simpa only [id_eq,memory_extend_bytes,memory_extend_offset,proj_num__0,proj_uN_0,Option.get!_some] using bytesEq j (List.mem_range.mp member))
     simpa only [List.map_id_fun,id_eq,memory_extend_bytes,memory_extend_offset,proj_num__0,proj_uN_0,Option.get!_some] using relation
+  · intro word member
+    obtain ⟨index,_,rfl⟩ := List.mem_map.mp member
+    exact (laneWord (lanetype_Jnn ty.input) loaded index).isLt
   · cases ty <;> rfl
   · rw [packed]
     unfold widenResult widenWords Map

@@ -11,7 +11,8 @@ def HostWorldSound {M P : Type} (hooks : runtime.platform.Platform P M)
   ∀ code store, Inv code store → ∀ platform host args results,
     hooks.call_host platform store host args results ⦃ answer => ∃ afterCode,
       Store.CodeAgreesOn store code afterCode ∧ Inv afterCode answer.2.2.1 ∧
-      Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ⦄
+      Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
+        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄
 
 /-- Fixed-world host soundness is a special case of the indexed contract;
 this lemma makes no claim that arbitrary hosts satisfy either contract. -/

@@ -21,14 +21,16 @@ theorem full_store_step (s : store) (f : frame) (argument : memarg) (address : N
     · exact const_wf value
     · exact operationWf)
   split
-  · have updatedWf := memoryPayloadWrite_wf s f (address+proj_uN_0 argument.OFFSET) (vbytes_ .V128 (.mk_uN value.toNat))
+  · rename_i inside
+    have updatedWf := memoryPayloadWrite_wf s f (address+proj_uN_0 argument.OFFSET) (vbytes_ .V128 (.mk_uN value.toNat))
       storeWf (by exact integerBytes_wf 16 value.toNat)
     apply StepH.step
     apply Step.vstore_val _ _ _ _ (vbytes_ .V128 (.mk_uN value.toNat))
     · simp [proj_num__0]
     · decide
     · exact .fun_with_mem_case_0 s f (.mk_uN 0) _ _ _ mapped
-        (.state_case_0 _ _ updatedWf frameWf)
+        (by simpa only [byteCount,proj_num__0,proj_uN_0,Option.get!_some] using inside)
+        (.state_case_0 _ _ updatedWf frameWf) (.state_case_0 _ _ storeWf frameWf)
     · rfl
     · exact input
     · exact wf_config_make updatedWf frameWf (forall_nil _)

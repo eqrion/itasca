@@ -44,7 +44,7 @@ theorem memory_copy_forward_steps (s : store) (f : frame) (destination source co
     have afterWf := (wf_config_parts (init_config_wf fresh f (next32 destination) (next32 source) count _ hw hf
       (next32_bound _) (next32_bound _) (by omega) .admininstr_case_65)).2
     have first := memory_copy_forward_expand s f destination source count hs hf hd hi hn inside order
-    have second := stepsH_instrs (memory_copy_byte_steps s f destination source hs hf hd hi mapped bytesWf srcInside) []
+    have second := stepsH_instrs (memory_copy_byte_steps s f destination source hs hf hd hi mapped bytesWf srcInside (by have := inside.2; omega)) []
       (operands (next32 destination) (next32 source) count ++ [.MEMORY_COPY]) (by simp [Forall]) afterWf
     have nextDirection : next32 destination ≤ next32 source ∨ count=0 := by
       by_cases done : count=0
@@ -83,7 +83,7 @@ theorem memory_copy_backward_steps (s : store) (f : frame) (destination source c
       (by omega) .admininstr_case_65)).2
     have first := memory_copy_backward_expand s f destination source count hs hf hd hi hn inside memoryBound order
     have second := stepsH_instrs (memory_copy_byte_steps s f (destination+count) (source+count) hs hf (by omega) (by omega)
-      mapped bytesWf srcInside) [] (operands destination source count ++ [.MEMORY_COPY]) (by simp [Forall]) afterWf
+      mapped bytesWf srcInside (by have := inside.2; omega)) [] (operands destination source count ++ [.MEMORY_COPY]) (by simp [Forall]) afterWf
     have rest := ih fresh hw (by omega) (by simpa [fresh,memoryWrite] using address)
       (by simpa only [fresh,lengthEq] using memoryBound)
       (by rw [show (fun_mem ⟨fresh,f⟩ (.mk_uN 0)).BYTES.length = (fun_mem ⟨s,f⟩ (.mk_uN 0)).BYTES.length from lengthEq]; omega)

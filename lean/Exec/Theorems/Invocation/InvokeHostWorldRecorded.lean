@@ -33,7 +33,8 @@ theorem invoke_host_world_recorded_outcomes {M P F A : Type}
     (callback : ∀ p arguments defaults,
       hooks.call_host p store identity arguments defaults ⦃ answer => ∃ afterCode,
         Store.CodeAgreesOn store code afterCode ∧ invariant afterCode answer.2.2.1 ∧
-        Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ⦄)
+        Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
+        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄)
     (preserve : ∀ p arguments defaults answer,
       hooks.call_host p store identity arguments defaults = .ok answer → FrameStorePrefix store answer.2.2.1)
     (externs : ∀ p arguments defaults answer,

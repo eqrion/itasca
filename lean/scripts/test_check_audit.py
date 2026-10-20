@@ -83,6 +83,9 @@ class AuditTests(unittest.TestCase):
             ('Exec.Store.Initialization.PrecheckSource', 'SpecExt.Wasm1', True),
             ('Exec.Store.Initialization.PrecheckSource', 'SpecExt.Wasm1.Extra', False),
             ('Exec.Store.Initialization.PrecheckSource', 'SpecExt.Host', False),
+            ('Exec.Store.Invariant.SourceStoreTyping', 'Exec.Abs.StoreTyping', True),
+            ('Exec.Store.Invariant.SourceStoreTyping', 'Exec.Abs.StoreTyping.Extra', False),
+            ('Exec.Spec.Wf', 'Exec.Abs.StoreTyping', False),
             ('Exec.Store.Initialization.SegmentCopySlice', 'Aeneas.Data.List.List', True),
             ('Exec.Store.Initialization.SegmentCopySlice', 'Aeneas', False),
             ('Exec.Store.Initialization.SegmentCopySlice', 'Aeneas.Data.List.List.Extra', False),
@@ -137,12 +140,64 @@ class AuditTests(unittest.TestCase):
                     audit.check_layer(source, dependency, 'Exec')
                 audit.check_layer(dependency, source, 'Exec')
 
+    def test_host_composition_stages(self):
+        for source_stage, source_rank in audit.HOST_STAGES.items():
+            for target_stage, target_rank in audit.HOST_STAGES.items():
+                source = f'Exec.Theorems.Host.{source_stage}.Program'
+                dependency = f'Exec.Theorems.Host.{target_stage}.Nested.Contract'
+                with self.subTest(source=source, dependency=dependency):
+                    if target_rank > source_rank:
+                        with self.assertRaisesRegex(ValueError, 'host composition stage'):
+                            audit.check_layer(source, dependency, 'Exec')
+                    else:
+                        audit.check_layer(source, dependency, 'Exec')
+        # Atomic host proofs and callers outside this hierarchy keep their
+        # existing library rules; these are not artificial integration stages.
+        audit.check_layer('Exec.Theorems.Host.Callbacks.Program', 'Exec.Theorems.Host.HostResume', 'Exec')
+        audit.check_layer('Exec.Theorems.Invocation.Public', 'Exec.Theorems.Host.Open.Driver.Model', 'Exec')
+
     def test_builtin_layers(self):
         for dependency in ['Wasm2Prefix', 'Mathlib.Data.Nat.Basic', 'SpecExt.Builtins.Bits']:
             audit.check_layer('SpecExt.Builtins.Int', dependency, 'SpecExt')
         for dependency in ['wasm2.0', 'Exec.Spec.Steps', 'Itasca.Generated.Types', 'SpecExt.Host']:
             with self.assertRaises(ValueError):
                 audit.check_layer('SpecExt.Builtins.Int', dependency, 'SpecExt')
+
+    def builtin_review(self, signatures, reviewed, suffix=''):
+        self.put('SpecTec.Wasm2Builtins', '\n'.join(
+            f'example : Nat := @{name}' for name in signatures))
+        self.put('SpecExt.Builtins.Inventory', 'def inventory := [\n' + ',\n'.join(
+            f'  ⟨``{name}, .storage, .deterministic, .storageWidths⟩' for name in reviewed)
+            + '\n]\ntheorem inventory_count : True := by trivial\n' + suffix)
+
+    def test_builtin_review_exact_coverage(self):
+        self.builtin_review(['ibytes_', 'fbytes_'], ['fbytes_', 'ibytes_'])
+        audit.check_builtin_inventory(self.root)
+
+    def test_builtin_review_rejects_missing_extra_and_duplicate_symbols(self):
+        for reviewed, message in [(['ibytes_'], 'missing'),
+                                  (['ibytes_', 'fbytes_', 'other'], 'extra'),
+                                  (['ibytes_', 'fbytes_', 'ibytes_'], 'Duplicate')]:
+            with self.subTest(reviewed=reviewed):
+                self.builtin_review(['ibytes_', 'fbytes_'], reviewed)
+                with self.assertRaisesRegex(ValueError, message):
+                    audit.check_builtin_inventory(self.root)
+
+    def test_builtin_review_ignores_comments_strings_and_later_quotations(self):
+        self.builtin_review(['ibytes_', 'fbytes_'], ['ibytes_'],
+                            '-- ``fbytes_\ndef later := ``fbytes_\n')
+        path = self.root / 'SpecExt/Builtins/Inventory.lean'
+        path.write_text(path.read_text().replace('def inventory := [',
+                        '/- def inventory := [``fbytes_] -/\ndef decoy := "``fbytes_"\ndef inventory := ['))
+        with self.assertRaisesRegex(ValueError, 'missing'):
+            audit.check_builtin_inventory(self.root)
+
+    def test_builtin_review_rejects_invalid_generated_symbol_sets(self):
+        for signatures in [[], ['ibytes_', 'ibytes_']]:
+            with self.subTest(signatures=signatures):
+                self.builtin_review(signatures, ['ibytes_'])
+                with self.assertRaisesRegex(ValueError, 'distinct builtin symbols'):
+                    audit.check_builtin_inventory(self.root)
 
     def test_validator_mapping_only_in_external_adapters(self):
         for name in ['Exec.Generated.FunsExternal', 'Exec.Generated.TypesExternal']:

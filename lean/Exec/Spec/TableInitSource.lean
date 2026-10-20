@@ -57,7 +57,9 @@ theorem table_write_step (s : store) (f : frame) (index position : Nat) (value :
   · simp [proj_num__0]
   · apply fun_with_table.fun_with_table_case_0
     · exact mapped
+    · exact inside
     · exact .state_case_0 _ _ fresh hf
+    · exact .state_case_0 _ _ hs hf
   · exact inside
   · apply wf_config_make hs hf
     simp only [Forall, List.mem_cons, List.not_mem_nil, false_implies, forall_const, and_true, forall_eq_or_imp]

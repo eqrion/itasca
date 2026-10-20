@@ -8987,6 +8987,7 @@ inductive fun_with_global : state → globalidx → val → state → Prop where
 inductive fun_with_table : state → tableidx → Nat → ref → state → Prop where
   | fun_with_table_case_0 (s : store) (f : frame) (x : uN) (i : Nat) (r : ref) :
     (proj_uN_0 x) < (List.length (f.MODULE.TABLES)) →
+    i < (List.length ((fun_table (state.mk_state s f) x).REFS)) →
     wf_state (state.mk_state ({
       s with
       TABLES := List.modify (s.TABLES) ((f.MODULE.TABLES)[proj_uN_0 x]!) (fun elem_1 => {
@@ -8994,6 +8995,7 @@ inductive fun_with_table : state → tableidx → Nat → ref → state → Prop
         REFS := List.modify (elem_1.REFS) i (fun elem_2 => r)
       })
     }) f) →
+    wf_state (state.mk_state s f) →
     fun_with_table (state.mk_state s f) x i r (state.mk_state ({
       s with
       TABLES := List.modify (s.TABLES) ((f.MODULE.TABLES)[proj_uN_0 x]!) (fun elem_1 => {
@@ -9021,6 +9023,7 @@ inductive fun_with_tableinst : state → tableidx → tableinst → state → Pr
 inductive fun_with_mem : state → memidx → Nat → Nat → List byte → state → Prop where
   | fun_with_mem_case_0 (s : store) (f : frame) (x : uN) (i : Nat) (j : Nat) (b_lst : List byte) :
     (proj_uN_0 x) < (List.length (f.MODULE.MEMS)) →
+    (i + j) ≤ (List.length ((fun_mem (state.mk_state s f) x).BYTES)) →
     wf_state (state.mk_state ({
       s with
       MEMS := List.modify (s.MEMS) ((f.MODULE.MEMS)[proj_uN_0 x]!) (fun elem_1 => {
@@ -9028,6 +9031,7 @@ inductive fun_with_mem : state → memidx → Nat → Nat → List byte → stat
         BYTES := splice (elem_1.BYTES) b_lst i
       })
     }) f) →
+    wf_state (state.mk_state s f) →
     fun_with_mem (state.mk_state s f) x i j b_lst (state.mk_state ({
       s with
       MEMS := List.modify (s.MEMS) ((f.MODULE.MEMS)[proj_uN_0 x]!) (fun elem_1 => {
@@ -9091,7 +9095,7 @@ inductive fun_with_data : state → dataidx → List byte → state → Prop whe
     }) f)
 
 
-/- Inductive Relations Definition at: ../specification/wasm-2.0/5-runtime-aux.spectec:116.6-116.16 -/
+/- Inductive Relations Definition at: ../specification/wasm-2.0/5-runtime-aux.spectec:118.6-118.16 -/
 inductive fun_growtable_before_fun_growtable_case_1 : tableinst → Nat → ref → Prop where
   | fun_growtable_case_0 (ti : tableinst) (v_n : Nat) (r : ref) (ti' : tableinst) (i : u32) (j_opt : Option u32) (rt : reftype) (r'_lst : List ref) (i' : Nat) :
     ({
@@ -9116,7 +9120,7 @@ inductive fun_growtable_before_fun_growtable_case_1 : tableinst → Nat → ref 
     fun_growtable_before_fun_growtable_case_1 ti v_n r
 
 
-/- Inductive Relations Definition at: ../specification/wasm-2.0/5-runtime-aux.spectec:116.6-116.16 -/
+/- Inductive Relations Definition at: ../specification/wasm-2.0/5-runtime-aux.spectec:118.6-118.16 -/
 inductive fun_growtable : tableinst → Nat → ref → Option tableinst → Prop where
   | fun_growtable_case_0 (ti : tableinst) (v_n : Nat) (r : ref) (ti' : tableinst) (i : u32) (j_opt : Option u32) (rt : reftype) (r'_lst : List ref) (i' : Nat) :
     ({
@@ -9144,7 +9148,7 @@ inductive fun_growtable : tableinst → Nat → ref → Option tableinst → Pro
     fun_growtable x0 x1 x2 none
 
 
-/- Inductive Relations Definition at: ../specification/wasm-2.0/5-runtime-aux.spectec:117.6-117.17 -/
+/- Inductive Relations Definition at: ../specification/wasm-2.0/5-runtime-aux.spectec:119.6-119.17 -/
 inductive fun_growmemory_before_fun_growmemory_case_1 : meminst → Nat → Prop where
   | fun_growmemory_case_0 (mi : meminst) (v_n : Nat) (mi' : meminst) (i : u32) (j_opt : Option u32) (b_lst : List byte) (i' : Rat) :
     ({
@@ -9170,7 +9174,7 @@ inductive fun_growmemory_before_fun_growmemory_case_1 : meminst → Nat → Prop
     fun_growmemory_before_fun_growmemory_case_1 mi v_n
 
 
-/- Inductive Relations Definition at: ../specification/wasm-2.0/5-runtime-aux.spectec:117.6-117.17 -/
+/- Inductive Relations Definition at: ../specification/wasm-2.0/5-runtime-aux.spectec:119.6-119.17 -/
 inductive fun_growmemory : meminst → Nat → Option meminst → Prop where
   | fun_growmemory_case_0 (mi : meminst) (v_n : Nat) (mi' : meminst) (i : u32) (j_opt : Option u32) (b_lst : List byte) (i' : Rat) :
     ({
@@ -10833,7 +10837,7 @@ inductive Step_read_before_table_init_zero : config → Prop where
     Step_read_before_table_init_zero (config.mk_config z [admininstr.CONST numtype.I32 j, admininstr.CONST numtype.I32 i, admininstr.CONST numtype.I32 (num_.mk_num__0 Inn.I32 (uN.mk_uN v_n)), admininstr.TABLE_INIT x y])
 
 
-/- Inductive Relations Definition at: ../specification/wasm-2.0/8-reduction.spectec:599.1-602.14 -/
+/- Inductive Relations Definition at: ../specification/wasm-2.0/8-reduction.spectec:602.1-605.14 -/
 inductive Step_read_before_memory_fill_zero : config → Prop where
   | memory_fill_trap_0 (z : state) (i : num_) (v_val : val) (v_n : n) :
     (proj_num__0 i) ≠ none →
@@ -10844,7 +10848,7 @@ inductive Step_read_before_memory_fill_zero : config → Prop where
     Step_read_before_memory_fill_zero (config.mk_config z [admininstr.CONST numtype.I32 i, admininstr_val v_val, admininstr.CONST numtype.I32 (num_.mk_num__0 Inn.I32 (uN.mk_uN v_n)), admininstr.MEMORY_FILL])
 
 
-/- Inductive Relations Definition at: ../specification/wasm-2.0/8-reduction.spectec:615.1-618.14 -/
+/- Inductive Relations Definition at: ../specification/wasm-2.0/8-reduction.spectec:618.1-621.14 -/
 inductive Step_read_before_memory_copy_zero : config → Prop where
   | memory_copy_trap_0 (z : state) (j : num_) (i : num_) (v_n : n) :
     (proj_num__0 i) ≠ none →
@@ -10856,7 +10860,7 @@ inductive Step_read_before_memory_copy_zero : config → Prop where
     Step_read_before_memory_copy_zero (config.mk_config z [admininstr.CONST numtype.I32 j, admininstr.CONST numtype.I32 i, admininstr.CONST numtype.I32 (num_.mk_num__0 Inn.I32 (uN.mk_uN v_n)), admininstr.MEMORY_COPY])
 
 
-/- Inductive Relations Definition at: ../specification/wasm-2.0/8-reduction.spectec:620.1-625.15 -/
+/- Inductive Relations Definition at: ../specification/wasm-2.0/8-reduction.spectec:623.1-628.15 -/
 inductive Step_read_before_memory_copy_le : config → Prop where
   | memory_copy_zero_0 (z : state) (j : num_) (i : num_) (v_n : n) :
     ¬ Step_read_before_memory_copy_zero (config.mk_config z [admininstr.CONST numtype.I32 j, admininstr.CONST numtype.I32 i, admininstr.CONST numtype.I32 (num_.mk_num__0 Inn.I32 (uN.mk_uN v_n)), admininstr.MEMORY_COPY]) →
@@ -10873,7 +10877,7 @@ inductive Step_read_before_memory_copy_le : config → Prop where
     Step_read_before_memory_copy_le (config.mk_config z [admininstr.CONST numtype.I32 j, admininstr.CONST numtype.I32 i, admininstr.CONST numtype.I32 (num_.mk_num__0 Inn.I32 (uN.mk_uN v_n)), admininstr.MEMORY_COPY])
 
 
-/- Inductive Relations Definition at: ../specification/wasm-2.0/8-reduction.spectec:638.1-641.14 -/
+/- Inductive Relations Definition at: ../specification/wasm-2.0/8-reduction.spectec:641.1-644.14 -/
 inductive Step_read_before_memory_init_zero : config → Prop where
   | memory_init_trap_0 (z : state) (j : num_) (i : num_) (v_n : n) (x : idx) :
     (proj_num__0 i) ≠ none →
@@ -11104,6 +11108,7 @@ inductive Step_read : config → List admininstr → Prop where
     (size (valtype_Inn v_Inn)) ≠ none →
     (proj_num__0 i) ≠ none →
     (ibytes_ v_n c) = (List.take (rat_to_nat ((v_n : Rat) / (8 : Rat))) (List.drop ((proj_uN_0 (Option.get! (proj_num__0 i))) + (proj_uN_0 (ao.OFFSET))) ((fun_mem z (uN.mk_uN 0)).BYTES))) →
+    (proj_uN_0 c) < (2 ^ v_n) →
     wf_config (config.mk_config z [admininstr.CONST numtype.I32 i, admininstr.LOAD (numtype_Inn v_Inn) (some (loadop_.mk_loadop__0 v_Inn (loadop_Inn.mk_loadop_Inn (sz.mk_sz v_n) v_sx))) ao]) →
     wf_admininstr (admininstr.CONST (numtype_Inn v_Inn) (num_.mk_num__0 v_Inn (extend__ v_n (Option.get! (size (valtype_Inn v_Inn))) v_sx c))) →
     wf_uN 32 (uN.mk_uN 0) →
@@ -11134,6 +11139,7 @@ inductive Step_read : config → List admininstr → Prop where
   | vload_shape_val (z : state) (i : num_) (v_M : M) (v_N : N) (v_sx : sx) (ao : memarg) (c : vec_) (j_lst : List iN) (v_Jnn : Jnn) :
     Forall (fun (k : Nat) => (proj_num__0 i) ≠ none) (List.range v_N) →
     Forall₂ (fun (k : Nat) (j_elem : iN) => (ibytes_ v_M j_elem) = (List.take (rat_to_nat ((v_M : Rat) / (8 : Rat))) (List.drop (((proj_uN_0 (Option.get! (proj_num__0 i))) + (proj_uN_0 (ao.OFFSET))) + (rat_to_nat (((k * v_M) : Rat) / (8 : Rat)))) ((fun_mem z (uN.mk_uN 0)).BYTES)))) (List.range v_N) j_lst →
+    Forall (fun (j_elem : iN) => (proj_uN_0 j_elem) < (2 ^ v_M)) j_lst →
     (jsize v_Jnn) = (v_M * 2) →
     c = (inv_lanes_ (shape.X (lanetype_Jnn v_Jnn) (dim.mk_dim v_N)) (Map (fun (j_elem : iN) => lane_.mk_lane__0 v_Jnn (extend__ v_M (jsize v_Jnn) v_sx j_elem)) j_lst)) →
     wf_config (config.mk_config z [admininstr.CONST numtype.I32 i, admininstr.VLOAD vectype.V128 (some (vloadop_.SHAPEX_ (sz.mk_sz v_M) v_N v_sx)) ao]) →
@@ -11447,7 +11453,7 @@ inductive Step : config → config → Prop where
     Step (config.mk_config z [admininstr.CONST numtype.I32 i, admininstr.VCONST vectype.V128 c, admininstr.VSTORE vectype.V128 ao]) (config.mk_config var_0 [])
   | vstore_lane_oob (z : state) (i : num_) (c : vec_) (v_N : N) (ao : memarg) (j : laneidx) :
     (proj_num__0 i) ≠ none →
-    (((proj_uN_0 (Option.get! (proj_num__0 i))) + (proj_uN_0 (ao.OFFSET))) + v_N) > (List.length ((fun_mem z (uN.mk_uN 0)).BYTES)) →
+    (((proj_uN_0 (Option.get! (proj_num__0 i))) + (proj_uN_0 (ao.OFFSET))) + (rat_to_nat ((v_N : Rat) / (8 : Rat)))) > (List.length ((fun_mem z (uN.mk_uN 0)).BYTES)) →
     wf_config (config.mk_config z [admininstr.CONST numtype.I32 i, admininstr.VCONST vectype.V128 c, admininstr.VSTORE_LANE vectype.V128 (sz.mk_sz v_N) ao j]) →
     wf_config (config.mk_config z [admininstr.TRAP]) →
     wf_uN 32 (uN.mk_uN 0) →
@@ -11455,6 +11461,7 @@ inductive Step : config → config → Prop where
   | vstore_lane_val (z : state) (i : num_) (c : vec_) (v_N : N) (ao : memarg) (j : laneidx) (b_lst : List byte) (v_Jnn : Jnn) (v_M : M) (var_0 : state) :
     (proj_num__0 i) ≠ none →
     fun_with_mem z (uN.mk_uN 0) ((proj_uN_0 (Option.get! (proj_num__0 i))) + (proj_uN_0 (ao.OFFSET))) (rat_to_nat ((v_N : Rat) / (8 : Rat))) b_lst var_0 →
+    (((proj_uN_0 (Option.get! (proj_num__0 i))) + (proj_uN_0 (ao.OFFSET))) + (rat_to_nat ((v_N : Rat) / (8 : Rat)))) ≤ (List.length ((fun_mem z (uN.mk_uN 0)).BYTES)) →
     v_N = (jsize v_Jnn) →
     (v_M : Rat) = ((128 : Rat) / (v_N : Rat)) →
     (proj_lane__0 ((lanes_ (shape.X (lanetype_Jnn v_Jnn) (dim.mk_dim v_M)) c)[proj_uN_0 j]!)) ≠ none →
@@ -11462,6 +11469,7 @@ inductive Step : config → config → Prop where
     b_lst = (ibytes_ v_N (uN.mk_uN (proj_uN_0 (Option.get! (proj_lane__0 ((lanes_ (shape.X (lanetype_Jnn v_Jnn) (dim.mk_dim v_M)) c)[proj_uN_0 j]!)))))) →
     wf_config (config.mk_config z [admininstr.CONST numtype.I32 i, admininstr.VCONST vectype.V128 c, admininstr.VSTORE_LANE vectype.V128 (sz.mk_sz v_N) ao j]) →
     wf_config (config.mk_config var_0 []) →
+    wf_uN 32 (uN.mk_uN 0) →
     wf_uN v_N (uN.mk_uN (proj_uN_0 (Option.get! (proj_lane__0 ((lanes_ (shape.X (lanetype_Jnn v_Jnn) (dim.mk_dim v_M)) c)[proj_uN_0 j]!))))) →
     Step (config.mk_config z [admininstr.CONST numtype.I32 i, admininstr.VCONST vectype.V128 c, admininstr.VSTORE_LANE vectype.V128 (sz.mk_sz v_N) ao j]) (config.mk_config var_0 [])
   | memory_grow_succeed (z : state) (v_n : n) (mi : meminst) (var_1 : Option meminst) (var_0 : state) :
@@ -11894,16 +11902,16 @@ inductive fun_instantiate : store → module → List externaddr → config → 
     Forall₂ (fun (j_19 : Nat) (var_10_elem : Option (List instr)) => fun_rundata ((data_lst)[j_19]!) (uN.mk_uN j_19) var_10_elem) (List.range n_D) var_10_lst →
     Forall (fun (j_18 : Nat) => j_18 < (List.length data_lst)) (List.range n_D) →
     Forall₂ (fun (j_18 : Nat) (var_9_elem : Option (List instr)) => fun_rundata ((data_lst)[j_18]!) (uN.mk_uN j_18) var_9_elem) (List.range n_D) var_9_lst →
-    Forall (fun (i_90419 : Nat) => i_90419 < (List.length elem_lst)) (List.range n_E) →
-    Forall₂ (fun (i_90419 : Nat) (var_8_elem : List instr) => fun_runelem ((elem_lst)[i_90419]!) (uN.mk_uN i_90419) var_8_elem) (List.range n_E) var_8_lst →
-    Forall (fun (i_90417 : Nat) => i_90417 < (List.length elem_lst)) (List.range n_E) →
-    Forall₂ (fun (i_90417 : Nat) (var_7_elem : List instr) => fun_runelem ((elem_lst)[i_90417]!) (uN.mk_uN i_90417) var_7_elem) (List.range n_E) var_7_lst →
+    Forall (fun (i_90671 : Nat) => i_90671 < (List.length elem_lst)) (List.range n_E) →
+    Forall₂ (fun (i_90671 : Nat) (var_8_elem : List instr) => fun_runelem ((elem_lst)[i_90671]!) (uN.mk_uN i_90671) var_8_elem) (List.range n_E) var_8_lst →
+    Forall (fun (i_90669 : Nat) => i_90669 < (List.length elem_lst)) (List.range n_E) →
+    Forall₂ (fun (i_90669 : Nat) (var_7_elem : List instr) => fun_runelem ((elem_lst)[i_90669]!) (uN.mk_uN i_90669) var_7_elem) (List.range n_E) var_7_lst →
     fun_allocmodule s v_module externaddr_lst val_lst ref_lst_lst var_6 →
     fun_allocmodule s v_module externaddr_lst val_lst ref_lst_lst var_5 →
     Forall (fun (j_17 : Nat) => j_17 < (List.length data_lst)) (List.range n_D) →
     Forall₂ (fun (j_17 : Nat) (var_4_elem : Option (List instr)) => fun_rundata ((data_lst)[j_17]!) (uN.mk_uN j_17) var_4_elem) (List.range n_D) var_4_lst →
-    Forall (fun (i_90414 : Nat) => i_90414 < (List.length elem_lst)) (List.range n_E) →
-    Forall₂ (fun (i_90414 : Nat) (var_3_elem : List instr) => fun_runelem ((elem_lst)[i_90414]!) (uN.mk_uN i_90414) var_3_elem) (List.range n_E) var_3_lst →
+    Forall (fun (i_90666 : Nat) => i_90666 < (List.length elem_lst)) (List.range n_E) →
+    Forall₂ (fun (i_90666 : Nat) (var_3_elem : List instr) => fun_runelem ((elem_lst)[i_90666]!) (uN.mk_uN i_90666) var_3_elem) (List.range n_E) var_3_lst →
     fun_allocmodule s v_module externaddr_lst val_lst ref_lst_lst var_2 →
     fun_globals externaddr_lst var_1 →
     fun_funcs externaddr_lst var_0 →
@@ -11947,7 +11955,7 @@ inductive fun_instantiate : store → module → List externaddr → config → 
     wf_store (var_5.1) →
     wf_moduleinst (var_6.2) →
     Forall (fun (iter_25_elem : instr) => wf_instr iter_25_elem) (concat_ instr var_7_lst) →
-    Forall₂ (fun (i_90419 : Nat) (var_8_elem : List instr) => Forall (fun (iter_26_elem : instr) => wf_instr iter_26_elem) var_8_elem) (List.range n_E) var_8_lst →
+    Forall₂ (fun (i_90671 : Nat) (var_8_elem : List instr) => Forall (fun (iter_26_elem : instr) => wf_instr iter_26_elem) var_8_elem) (List.range n_E) var_8_lst →
     Forall (fun (iter_27_elem : instr) => wf_instr iter_27_elem) (concat_ instr (List.range n_D |>.map (fun (j_18 : Nat) (var_9_elem : Option (List instr)) => Option.get! var_9_elem) |>.ap var_9_lst)) →
     Forall₂ (fun (j_19 : Nat) (var_10_elem : Option (List instr)) => Forall (fun (iter_28_elem : instr) => wf_instr iter_28_elem) (Option.get! var_10_elem)) (List.range n_D) var_10_lst →
     wf_config (config.mk_config (state.mk_state s' f) ((Map (fun (instr_E_2_elem : instr) => admininstr_instr instr_E_2_elem) instr_E_lst) ++ ((Map (fun (instr_D_2_elem : instr) => admininstr_instr instr_D_2_elem) instr_D_lst) ++ (Option.toList (OMap (fun (x_2_elem : idx) => admininstr.CALL x_2_elem) x_opt))))) →
@@ -11977,7 +11985,7 @@ inductive fun_instantiate : store → module → List externaddr → config → 
       LOCALS := []
       MODULE := v_moduleinst : frame
     }) →
-    Forall (fun (i_90423 : Nat) => wf_uN 32 (uN.mk_uN i_90423)) (List.range n_E) →
+    Forall (fun (i_90675 : Nat) => wf_uN 32 (uN.mk_uN i_90675)) (List.range n_E) →
     Forall (fun (j_20 : Nat) => wf_uN 32 (uN.mk_uN j_20)) (List.range n_D) →
     fun_instantiate s v_module externaddr_lst (config.mk_config (state.mk_state s' f) ((Map (fun (instr_E_elem : instr) => admininstr_instr instr_E_elem) instr_E_lst) ++ ((Map (fun (instr_D_elem : instr) => admininstr_instr instr_D_elem) instr_D_lst) ++ (Option.toList (OMap (fun (x_elem : idx) => admininstr.CALL x_elem) x_opt)))))
 
@@ -12172,6 +12180,15 @@ inductive Eleminst_ok : store → eleminst → elemtype → Prop where
     }) rt
 
 
+/- Inductive Relations Definition at: ../specification/wasm-2.0/B-soundness.spectec:204.1-204.55 -/
+inductive Exportinst_in : List externaddr → exportinst → Prop where
+  | mk_Exportinst_in (externaddr_lst : List externaddr) (v_exportinst : exportinst) :
+    (List.length externaddr_lst) > 0 →
+    List.contains externaddr_lst (v_exportinst.ADDR) →
+    wf_exportinst v_exportinst →
+    Exportinst_in externaddr_lst v_exportinst
+
+
 /- Inductive Relations Definition at: ../specification/wasm-2.0/B-soundness.spectec:160.1-160.49 -/
 inductive Exportinst_ok : store → exportinst → Prop where
   | mk_Exportinst_ok (s : store) (nm : name) (xa : externaddr) (xt : externtype) :
@@ -12188,7 +12205,7 @@ inductive Exportinst_ok : store → exportinst → Prop where
     })
 
 
-/- Inductive Relations Definition at: ../specification/wasm-2.0/B-soundness.spectec:200.1-200.54 -/
+/- Inductive Relations Definition at: ../specification/wasm-2.0/B-soundness.spectec:210.1-210.54 -/
 inductive Moduleinst_ok : store → moduleinst → context → Prop where
   | mk_Moduleinst_ok (s : store) (functype_lst : List functype) (funcaddr_lst : List funcaddr) (globaladdr_lst : List globaladdr) (tableaddr_lst : List tableaddr) (memaddr_lst : List memaddr) (elemaddr_lst : List elemaddr) (dataaddr_lst : List dataaddr) (exportinst_lst : List exportinst) (functype_F_lst : List functype) (globaltype_lst : List globaltype) (tabletype_lst : List tabletype) (memtype_lst : List memtype) (elemtype_lst : List elemtype) (datatype_lst : List datatype) :
     Forall (fun (v_functype_elem : functype) => Functype_ok v_functype_elem) functype_lst →
@@ -12208,8 +12225,7 @@ inductive Moduleinst_ok : store → moduleinst → context → Prop where
     Forall (fun (v_elemaddr_elem : Nat) => v_elemaddr_elem < (List.length (s.ELEMS))) elemaddr_lst →
     Forall₂ (fun (v_elemaddr_elem : Nat) (v_elemtype_elem : elemtype) => Eleminst_ok s ((s.ELEMS)[v_elemaddr_elem]!) v_elemtype_elem) elemaddr_lst elemtype_lst →
     disjoint_ name (Map (fun (v_exportinst_elem : exportinst) => v_exportinst_elem.NAME) exportinst_lst) →
-    (List.length ((Map (fun (v_globaladdr_elem : globaladdr) => externaddr.GLOBAL v_globaladdr_elem) globaladdr_lst) ++ ((Map (fun (v_memaddr_elem : memaddr) => externaddr.MEM v_memaddr_elem) memaddr_lst) ++ ((Map (fun (v_tableaddr_elem : tableaddr) => externaddr.TABLE v_tableaddr_elem) tableaddr_lst) ++ (Map (fun (v_funcaddr_elem : funcaddr) => externaddr.FUNC v_funcaddr_elem) funcaddr_lst))))) > 0 →
-    Forall (fun (v_exportinst_elem : exportinst) => List.contains ((Map (fun (v_globaladdr_elem : globaladdr) => externaddr.GLOBAL v_globaladdr_elem) globaladdr_lst) ++ ((Map (fun (v_memaddr_elem : memaddr) => externaddr.MEM v_memaddr_elem) memaddr_lst) ++ ((Map (fun (v_tableaddr_elem : tableaddr) => externaddr.TABLE v_tableaddr_elem) tableaddr_lst) ++ (Map (fun (v_funcaddr_elem : funcaddr) => externaddr.FUNC v_funcaddr_elem) funcaddr_lst)))) (v_exportinst_elem.ADDR)) exportinst_lst →
+    Forall (fun (v_exportinst_elem : exportinst) => Exportinst_in ((Map (fun (v_globaladdr_elem : globaladdr) => externaddr.GLOBAL v_globaladdr_elem) globaladdr_lst) ++ ((Map (fun (v_memaddr_elem : memaddr) => externaddr.MEM v_memaddr_elem) memaddr_lst) ++ ((Map (fun (v_tableaddr_elem : tableaddr) => externaddr.TABLE v_tableaddr_elem) tableaddr_lst) ++ (Map (fun (v_funcaddr_elem : funcaddr) => externaddr.FUNC v_funcaddr_elem) funcaddr_lst)))) v_exportinst_elem) exportinst_lst →
     wf_store s →
     wf_moduleinst ({
       TYPES := functype_lst
@@ -12260,7 +12276,7 @@ inductive Moduleinst_ok : store → moduleinst → context → Prop where
     })
 
 
-/- Inductive Relations Definition at: ../specification/wasm-2.0/B-soundness.spectec:294.1-294.44 -/
+/- Inductive Relations Definition at: ../specification/wasm-2.0/B-soundness.spectec:304.1-304.44 -/
 inductive Frame_ok : store → frame → context → Prop where
   | mk_Frame_ok (s : store) (val_lst : List val) (v_moduleinst : moduleinst) (t_lst : List valtype) (C : context) :
     Moduleinst_ok s v_moduleinst C →
@@ -12507,9 +12523,22 @@ inductive Funcinst_ok : store → funcinst → functype → Prop where
       MODULE := v_moduleinst
       CODE := funccode_func v_func : funcinst
     }) ft
+  | host (s : store) (ft : functype) (v_moduleinst : moduleinst) (v_n : n) :
+    Functype_ok ft →
+    wf_store s →
+    wf_funcinst ({
+      TYPE := ft
+      MODULE := v_moduleinst
+      CODE := funccode.HOST v_n : funcinst
+    }) →
+    Funcinst_ok s ({
+      TYPE := ft
+      MODULE := v_moduleinst
+      CODE := funccode.HOST v_n : funcinst
+    }) ft
 
 
-/- Inductive Relations Definition at: ../specification/wasm-2.0/B-soundness.spectec:234.1-234.33 -/
+/- Inductive Relations Definition at: ../specification/wasm-2.0/B-soundness.spectec:244.1-244.33 -/
 inductive Store_ok : store → Prop where
   | mk_Store_ok (s : store) (globalinst_lst : List globalinst) (globaltype_lst : List globaltype) (meminst_lst : List meminst) (memtype_lst : List memtype) (tableinst_lst : List tableinst) (tabletype_lst : List tabletype) (funcinst_lst : List funcinst) (functype_lst : List functype) (datainst_lst : List datainst) (datatype_lst : List datatype) (eleminst_lst : List eleminst) (elemtype_lst : List elemtype) :
     (List.length globalinst_lst) = (List.length globaltype_lst) →
@@ -12546,7 +12575,7 @@ inductive Store_ok : store → Prop where
     Store_ok s
 
 
-/- Inductive Relations Definition at: ../specification/wasm-2.0/B-soundness.spectec:250.1-250.54 -/
+/- Inductive Relations Definition at: ../specification/wasm-2.0/B-soundness.spectec:260.1-260.54 -/
 inductive Extend_globalinst : globalinst → globalinst → Prop where
   | mk_Extend_globalinst (v_mut : «mut») (t : valtype) (v_val : val) (val' : val) :
     (v_mut = (some r_MUT.MUT)) ∨ (v_val = val') →
@@ -12567,7 +12596,7 @@ inductive Extend_globalinst : globalinst → globalinst → Prop where
     })
 
 
-/- Inductive Relations Definition at: ../specification/wasm-2.0/B-soundness.spectec:251.1-251.45 -/
+/- Inductive Relations Definition at: ../specification/wasm-2.0/B-soundness.spectec:261.1-261.45 -/
 inductive Extend_meminst : meminst → meminst → Prop where
   | mk_Extend_meminst (v_n : n) (m_opt : Option m) (b_lst : List byte) (n' : n) (b'_lst : List byte) :
     v_n ≤ n' →
@@ -12589,7 +12618,7 @@ inductive Extend_meminst : meminst → meminst → Prop where
     })
 
 
-/- Inductive Relations Definition at: ../specification/wasm-2.0/B-soundness.spectec:252.1-252.51 -/
+/- Inductive Relations Definition at: ../specification/wasm-2.0/B-soundness.spectec:262.1-262.51 -/
 inductive Extend_tableinst : tableinst → tableinst → Prop where
   | mk_Extend_tableinst (v_n : n) (m_opt : Option m) (rt : reftype) (ref_lst : List ref) (n' : n) (ref'_lst : List ref) :
     v_n ≤ n' →
@@ -12611,7 +12640,7 @@ inductive Extend_tableinst : tableinst → tableinst → Prop where
     })
 
 
-/- Inductive Relations Definition at: ../specification/wasm-2.0/B-soundness.spectec:253.1-253.48 -/
+/- Inductive Relations Definition at: ../specification/wasm-2.0/B-soundness.spectec:263.1-263.48 -/
 inductive Extend_funcinst : funcinst → funcinst → Prop where
   | mk_Extend_funcinst (ft : functype) (mm : moduleinst) (fc : funccode) :
     wf_funcinst ({
@@ -12630,7 +12659,7 @@ inductive Extend_funcinst : funcinst → funcinst → Prop where
     })
 
 
-/- Inductive Relations Definition at: ../specification/wasm-2.0/B-soundness.spectec:254.1-254.48 -/
+/- Inductive Relations Definition at: ../specification/wasm-2.0/B-soundness.spectec:264.1-264.48 -/
 inductive Extend_datainst : datainst → datainst → Prop where
   | mk_Extend_datainst (b_lst : List byte) (b'_lst : List byte) :
     (b_lst = b'_lst) ∨ (b'_lst = []) →
@@ -12647,7 +12676,7 @@ inductive Extend_datainst : datainst → datainst → Prop where
     })
 
 
-/- Inductive Relations Definition at: ../specification/wasm-2.0/B-soundness.spectec:255.1-255.48 -/
+/- Inductive Relations Definition at: ../specification/wasm-2.0/B-soundness.spectec:265.1-265.48 -/
 inductive Extend_eleminst : eleminst → eleminst → Prop where
   | mk_Extend_eleminst (rt : reftype) (ref_lst : List ref) (ref'_lst : List ref) :
     (ref_lst = ref'_lst) ∨ (ref'_lst = []) →
@@ -12660,7 +12689,7 @@ inductive Extend_eleminst : eleminst → eleminst → Prop where
     })
 
 
-/- Inductive Relations Definition at: ../specification/wasm-2.0/B-soundness.spectec:256.1-256.39 -/
+/- Inductive Relations Definition at: ../specification/wasm-2.0/B-soundness.spectec:266.1-266.39 -/
 inductive Extend_store : store → store → Prop where
   | mk_Extend_store (s : store) (s' : store) :
     Forall (fun (a : Nat) => a < (List.length (s.GLOBALS))) (List.range (List.length (s.GLOBALS))) →
@@ -12686,7 +12715,7 @@ inductive Extend_store : store → store → Prop where
     Extend_store s s'
 
 
-/- Inductive Relations Definition at: ../specification/wasm-2.0/B-soundness.spectec:295.1-295.38 -/
+/- Inductive Relations Definition at: ../specification/wasm-2.0/B-soundness.spectec:305.1-305.38 -/
 inductive State_ok : state → context → Prop where
   | mk_State_ok (s : store) (f : frame) (C : context) :
     Store_ok s →
@@ -12696,7 +12725,7 @@ inductive State_ok : state → context → Prop where
     State_ok (state.mk_state s f) C
 
 
-/- Inductive Relations Definition at: ../specification/wasm-2.0/B-soundness.spectec:296.1-296.43 -/
+/- Inductive Relations Definition at: ../specification/wasm-2.0/B-soundness.spectec:306.1-306.43 -/
 inductive Config_ok : config → resulttype → Prop where
   | mk_Config_ok (s : store) (f : frame) (admininstr_lst : List admininstr) (t_lst : List valtype) (C : context) :
     State_ok (state.mk_state s f) C →

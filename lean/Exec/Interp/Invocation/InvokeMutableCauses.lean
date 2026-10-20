@@ -10,12 +10,6 @@ import Exec.Interp.Relations.ExecutionLoop
 namespace Exec.Interp
 open Aeneas Aeneas.Std
 
-private theorem rawtypes_of_matches {id : Usize} {args : List runtime.Value} {types : List Itasca.types.ValueType}
-    (matched : List.Forall₂ (ArgumentMatches id) args types) : types = args.map rawType := by
-  induction matched with
-  | nil => rfl
-  | cons head tail ih => simp only [List.map_cons, head.2, ih]
-
 private theorem reserve_result {A T : Type} (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator) (values : alloc.vec.Vec T) (extra : Usize) :
     ∃ answer : Bool, runtime.reserve allocator values extra = .ok
@@ -78,7 +72,7 @@ theorem invoke_with_mutable_causes_composition_mode {M P F A : Type}
     simp only [WP.spec_ok] at checked
     have matched : List.Forall₂ (ArgumentMatches store.id) args.val signature.params.val := by
       simpa only [alloc.vec.Vec.deref, Slice.from_val] using checked.mp trivial
-    exact rawtypes_of_matches matched
+    exact argument_matches_rawtypes matched
   cases allowDivergence
   all_goals
     simp only [InvocationWP, Bool.false_eq_true, ite_false, ite_true] at executed ⊢

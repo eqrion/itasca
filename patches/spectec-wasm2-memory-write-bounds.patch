@@ -1,0 +1,6 @@
+--- a/specification/wasm-2.0/5-runtime-aux.spectec
++++ b/specification/wasm-2.0/5-runtime-aux.spectec
+@@ -108,2 +108,3 @@
+ def $with_mem((s; f), x, i, j, b*) = s[.MEMS[f.MODULE.MEMS[x]].BYTES[i : j] = b*]; f
++  -- if $(i + j) <= |$mem((s; f), x).BYTES|
+ def $with_meminst((s; f), x, mi) = s[.MEMS[f.MODULE.MEMS[x]] = mi]; f

@@ -65,15 +65,16 @@ theorem memoryWrite_wf (s : store) (f : frame) (position : Nat) (value : byte)
 
 theorem memory_write_step (s : store) (f : frame) (position : Nat) (value : byte)
     (hs : wf_store s) (hf : wf_frame f) (hp : position < 2^32) (hb : wf_byte value)
-    (mapped : 0 < f.MODULE.MEMS.length) :
+    (mapped : 0 < f.MODULE.MEMS.length)
+    (inside : position < (fun_mem ⟨s,f⟩ (.mk_uN 0)).BYTES.length) :
     StepH ⟨⟨s,f⟩,[i32 position,i32 (proj_byte_0 value),storeByte]⟩ []
       ⟨⟨memoryWrite s f position value,f⟩,[]⟩ := by
   have fresh := memoryWrite_wf s f position value hs hb
   apply StepH.step
   apply Step.store_pack_val _ _ .I32 _ 8 zeroMemarg [value] _
   · simp [proj_num__0]
-  · have write := fun_with_mem.fun_with_mem_case_0 s f (.mk_uN 0) position 1 [value] mapped
-      (by simpa only [splice_singleton_eq_set,memoryWrite,proj_uN_0] using wf_state.state_case_0 _ _ fresh hf)
+  · have write := fun_with_mem.fun_with_mem_case_0 s f (.mk_uN 0) position 1 [value] mapped (by omega)
+      (by simpa only [splice_singleton_eq_set,memoryWrite,proj_uN_0] using wf_state.state_case_0 _ _ fresh hf) (.state_case_0 _ _ hs hf)
     norm_num [proj_num__0,proj_uN_0,zeroMemarg,rat_to_nat,splice_singleton_eq_set,memoryWrite] at write ⊢
     exact write
   · simp [size,valtype_Inn]
@@ -160,7 +161,7 @@ theorem memory_init_steps (s : store) (f : frame) (destination source count data
     have afterWf := (wf_config_parts (init_config_wf fresh f (next32 destination) (next32 source) count _ hw hf (next32_bound _) (next32_bound _)
       (by omega) (.admininstr_case_66 _ (index_wf _ he)))).2
     have first := memory_init_expand s f destination source count dataIndex hs hf hd hi hn he bytesWf inside
-    have second := stepH_instrs (memory_write_step s f destination value hs hf hd valueWf mapped) []
+    have second := stepH_instrs (memory_write_step s f destination value hs hf hd valueWf mapped (by have := inside.2; omega)) []
       (operands (next32 destination) (next32 source) count ++ [.MEMORY_INIT (.mk_uN dataIndex)])
       (by simp [Forall]) afterWf
     have rest := ih fresh (next32 destination) (next32 source) hw (next32_bound _) (next32_bound _) (by omega)

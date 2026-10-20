@@ -31,7 +31,8 @@ theorem call_host_source_world_causes {M P F A : Type}
     (callback : ∀ p args results,
       hooks.call_host p store identity args results ⦃ answer => ∃ afterCode,
         Store.CodeAgreesOn store code afterCode ∧ invariant afterCode answer.2.2.1 ∧
-        Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ⦄)
+        Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
+        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄)
     (issued : ∀ p args results answer,
       hooks.call_host p store identity args results = .ok answer →
       ∀ value ∈ answer.2.2.2.val, Store.IssuedValue answer.2.2.1 value) :
@@ -54,7 +55,7 @@ theorem call_host_source_world_causes {M P F A : Type}
     · obtain ⟨⟨afterCode,agrees,fresh,event⟩,causes⟩ := observed
       exact ⟨⟨afterCode,agrees,fresh,Or.inr event⟩,causes⟩
   · intro ready p args defaults preparation frames capacity argsEq defaultsEq
-    obtain ⟨⟨status,nextPlatform,nextStore,returned⟩,called,afterCode,agrees,fresh,crossExtension⟩ :=
+    obtain ⟨⟨status,nextPlatform,nextStore,returned⟩,called,afterCode,agrees,fresh,crossExtension,sourceTyped⟩ :=
       WP.spec_imp_exists (callback p args.slice defaults.slice)
     rw [called,bind_ok]
     have same := Store.decodeStore_code_agrees view agrees
@@ -68,7 +69,7 @@ theorem call_host_source_world_causes {M P F A : Type}
     have returnedIssued : ∀ value ∈ returned.val, Store.IssuedValue nextStore value := issued _ _ _ _ called
     step with host_resume_source memory view afterCode store nextStore ambient {ready with host_args := args}
       address base nextFunction signature identity.val (signature.params.val.map sourceType) values
-      ⟨returned⟩ status hostSource arguments extension wfAmbient nextFound nextSignature returnedIssued capacity
+      ⟨returned⟩ status hostSource arguments extension sourceTyped wfAmbient nextFound nextSignature returnedIssued capacity
       as ⟨result,finished,hostArgs,hostResults,frameEq,executionIdentity,effect⟩
     have causes : HostCallCauses allocator hooks exec store platform signature base identity
         (result,finished,nextStore,nextPlatform) := by

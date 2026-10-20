@@ -21,9 +21,9 @@ mod simd;
 
 /// Bounds on the input and aggregate compiler artifacts for one module.
 ///
-/// Counts include defined functions and synthetic initialization code. The validator's temporary metadata
-/// allocations retain its documented allocator-failure limitation; these bounds
-/// constrain input size and the compiler's additional storage.
+/// Defined-function and type caps bound input declarations. Instruction and control counts include synthetic
+/// initialization code. The validator's temporary metadata allocations retain its documented
+/// allocator-failure limitation; compiler-owned storage uses fallible reserves.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
 pub struct CompileLimits {

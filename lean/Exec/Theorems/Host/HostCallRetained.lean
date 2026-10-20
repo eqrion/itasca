@@ -64,7 +64,7 @@ theorem call_host_source_retained {M P F A : Type}
         by rw [unchanged],Or.inl ⟨error,status,cause,unchanged⟩,HostCallCauses.of_preparation status cause⟩
     · exact ⟨observed.1,observed.2.1,observed.2.2.1,observed.2.2.2.1,Or.inr observed.2.2.2.2.1,observed.2.2.2.2.2⟩
   · intro ready p args defaults preparation frames capacity argsEq defaultsEq
-    obtain ⟨⟨status,nextPlatform,nextStore,returned⟩,callback,fresh,extension⟩ :=
+    obtain ⟨⟨status,nextPlatform,nextStore,returned⟩,callback,fresh,extension,sourceTyped⟩ :=
       sound.returned p store identity args.slice defaults.slice valid
     rw [callback,bind_ok]
     obtain ⟨nextFunction,nextFound,nextSignature⟩ := Store.host_signature_extension view code store nextStore
@@ -72,7 +72,7 @@ theorem call_host_source_retained {M P F A : Type}
     have returnedIssued : ∀ value ∈ returned.val, Store.IssuedValue nextStore value := issued _ _ _ _ callback
     step with host_resume_source_owned memory view code store nextStore ambient {ready with host_args := args}
       address base nextFunction signature identity.val (signature.params.val.map sourceType) values
-      ⟨returned⟩ status hostSource arguments extension wfAmbient nextFound nextSignature returnedIssued capacity
+      ⟨returned⟩ status hostSource arguments extension sourceTyped wfAmbient nextFound nextSignature returnedIssued capacity
       as ⟨result,finished,hostArgs,hostResults,frameEq,executionIdentity,effect⟩
     have causes : HostCallCauses allocator hooks exec store platform signature base identity
         (result,finished,nextStore,nextPlatform) := by

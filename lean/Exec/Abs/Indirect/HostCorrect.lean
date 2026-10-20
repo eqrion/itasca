@@ -12,7 +12,7 @@ theorem host_return_correct (s : store) (ambient : frame) (f : AFrame) (rest : L
     (typed : ATyped ⟨s,ambient,{f with code := .CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after}::rest,[]⟩)
     (stepped : step ⟨s,ambient,{f with code := .CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after}::rest,[]⟩
       f rest table type after = .host address args results resume)
-    (fresh : store) (extension : Extend_store s fresh) (functions : FunctionsTyped fresh)
+    (fresh : store) (extension : Extend_store s fresh) (sourceTyped : Store_ok fresh) (functions : FunctionsTyped fresh)
     (returned : List val) (checked : ResultsTyped fresh results returned) :
     ATyped (finishHost resume fresh returned) ∧
       StepsHN 2 (decode ⟨s,ambient,{f with code := .CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after}::rest,[]⟩)
@@ -21,7 +21,7 @@ theorem host_return_correct (s : store) (ambient : frame) (f : AFrame) (rest : L
       positionBound,frameWf,labels,frontWf,tail,callers,heights⟩ :=
     host_preparation s ambient f rest table type after address args results resume typed stepped
   refine ⟨pending.finish_typed (by simpa only [resumeEq] using extension) functions checked,?_⟩
-  have atomic := host_return_step host arguments extension checked frameWf
+  have atomic := host_return_step host arguments extension sourceTyped checked frameWf
   have source := host_return_simulation s fresh ambient f rest after table type position address front args returned
     _ typed.store typed.ambient frameWf labels frontWf tail callers heights target tableBound typeBound positionBound
     (resultsTyped_wf arguments) atomic
@@ -35,14 +35,14 @@ theorem host_trap_correct (s : store) (ambient : frame) (f : AFrame) (rest : Lis
     (typed : ATyped ⟨s,ambient,{f with code := .CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after}::rest,[]⟩)
     (stepped : step ⟨s,ambient,{f with code := .CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after}::rest,[]⟩
       f rest table type after = .host address args results resume)
-    (fresh : store) (extension : Extend_store s fresh) :
+    (fresh : store) (extension : Extend_store s fresh) (sourceTyped : Store_ok fresh) :
     ∃ n, 2 ≤ n ∧ StepsHN n
       (decode ⟨s,ambient,{f with code := .CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after}::rest,[]⟩)
       [.call address args none] ⟨⟨fresh,ambient⟩,[.TRAP]⟩ := by
   obtain ⟨pending,identity,params,front,position,host,arguments,split,resumeEq,target,tableBound,typeBound,
       positionBound,frameWf,labels,frontWf,tail,callers,heights⟩ :=
     host_preparation s ambient f rest table type after address args results resume typed stepped
-  have atomic := host_trap_step host arguments extension frameWf
+  have atomic := host_trap_step host arguments extension sourceTyped frameWf
   have source := host_trap_simulation s fresh ambient f rest after table type position address front args _
     typed.store (extend_store_wf extension).2 typed.ambient frameWf labels frontWf tail callers heights
     target tableBound typeBound positionBound (resultsTyped_wf arguments) atomic

@@ -1,0 +1,6 @@
+--- a/specification/wasm-2.0/5-runtime-aux.spectec
++++ b/specification/wasm-2.0/5-runtime-aux.spectec
+@@ -106,2 +106,3 @@
+ def $with_table((s; f), x, i, r) = s[.TABLES[f.MODULE.TABLES[x]].REFS[i] = r]; f
++  -- if i < |$table((s; f), x).REFS|
+ def $with_tableinst((s; f), x, ti) = s[.TABLES[f.MODULE.TABLES[x]] = ti]; f

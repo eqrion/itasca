@@ -21,11 +21,12 @@ theorem host_return_step {s s' : store} {f : frame} {fa : funcaddr} {id : Nat}
     {params results : List valtype} {args returned : List val}
     (host : HostFunction s fa id params results)
     (arguments : ResultsTyped s params args) (extension : Extend_store s s')
+    (sourceTyped : Store_ok s')
     (typed : ResultsTyped s' results returned) (ambient : wf_frame f) :
     StepH ⟨⟨s, f⟩, vals args ++ [.CALL_ADDR fa]⟩ [.call fa args (some returned)]
       ⟨⟨s', f⟩, vals returned⟩ := by
   have stores := extend_store_wf extension
-  exact .host_return host arguments extension typed
+  exact .host_return host arguments extension sourceTyped typed
     (host_call_wf stores.1 ambient arguments)
     (wf_config_vals stores.2 ambient (resultsTyped_wf typed))
 
@@ -35,10 +36,11 @@ theorem host_trap_step {s s' : store} {f : frame} {fa : funcaddr} {id : Nat}
     {params results : List valtype} {args : List val}
     (host : HostFunction s fa id params results)
     (arguments : ResultsTyped s params args) (extension : Extend_store s s')
+    (sourceTyped : Store_ok s')
     (ambient : wf_frame f) :
     StepH ⟨⟨s, f⟩, vals args ++ [.CALL_ADDR fa]⟩ [.call fa args none]
       ⟨⟨s', f⟩, [.TRAP]⟩ := by
   have stores := extend_store_wf extension
-  exact .host_trap host arguments extension (host_call_wf stores.1 ambient arguments)
+  exact .host_trap host arguments extension sourceTyped (host_call_wf stores.1 ambient arguments)
     (wf_config_trap stores.2 ambient)
 end Exec.Spec

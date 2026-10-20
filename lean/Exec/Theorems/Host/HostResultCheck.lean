@@ -14,6 +14,7 @@ theorem host_result_check_source {M : Type} (memory : runtime.platform.MemoryBuf
       params (types.val.map Interp.sourceType))
     (arguments : ResultsTyped (Store.decodeStore view code before) params args)
     (extension : Extend_store (Store.decodeStore view code before) (Store.decodeStore view code after))
+    (sourceTyped : Store_ok (Store.decodeStore view code after))
     (ambient : wf_frame frame)
     (issued : ∀ value ∈ results.val, Store.IssuedValue after value) :
     (do
@@ -36,8 +37,8 @@ theorem host_result_check_source {M : Type} (memory : runtime.platform.MemoryBuf
     cases token
     obtain ⟨typed, owned, tags⟩ := accepted rfl
     simp only [runtime.interp.check_failed, bind_ok, Bool.false_eq_true, ite_false, WP.spec_ok]
-    exact Or.inl ⟨trivial, Spec.host_return_step host arguments extension typed ambient, owned, tags⟩
+    exact Or.inl ⟨trivial, Spec.host_return_step host arguments extension sourceTyped typed ambient, owned, tags⟩
   | Err error =>
     simp only [runtime.interp.check_failed, bind_ok, ite_true, WP.spec_ok]
-    exact Or.inr ⟨trivial, Spec.host_trap_step host arguments extension ambient⟩
+    exact Or.inr ⟨trivial, Spec.host_trap_step host arguments extension sourceTyped ambient⟩
 end Exec.Theorems

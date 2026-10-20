@@ -17,4 +17,18 @@ theorem AllocCorrect.reserve_eq {A T : Type} {ops : runtime.platform.Alloc A}
   subst after
   exact ⟨answer, hr⟩
 
+/-- Every reserve request whose resulting logical length is within `bound`
+succeeds. The bound is independent of any client computation or its result;
+clients must prove that their requests fit it. Native capacity is unmodeled. -/
+def AllocationAvailable {A : Type} (ops : runtime.platform.Alloc A) (bound : Nat) : Prop :=
+  ∀ (T : Type) (values : alloc.vec.Vec T) (additional : Usize),
+    values.val.length + additional.val ≤ bound →
+    ops.reserve values additional = .ok (true, values)
+
+theorem AllocationAvailable.mono {A : Type} {ops : runtime.platform.Alloc A}
+    {small large : Nat} (available : AllocationAvailable ops large) (bound : small ≤ large) :
+    AllocationAvailable ops small := by
+  intro T values additional request
+  exact available T values additional (Nat.le_trans request bound)
+
 end Exec.Platform

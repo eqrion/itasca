@@ -1,0 +1,24 @@
+--- a/specification/wasm-2.0/B-soundness.spectec
++++ b/specification/wasm-2.0/B-soundness.spectec
+@@ -200,6 +200,12 @@
+ 
+ 
+ ;; Modules
++
++relation Exportinst_in: externaddr* |- exportinst : OK
++
++rule Exportinst_in:
++  externaddr* |- exportinst : OK
++  -- if exportinst.ADDR <- externaddr*
+ 
+ relation Moduleinst_ok: store |- moduleinst : context
+ 
+@@ -231,7 +237,7 @@
+   -- (Eleminst_ok: s |- s.ELEMS[elemaddr] : elemtype)*
+   ----
+   -- if $disjoint_(name, (exportinst.NAME)*)
+-  -- (if exportinst.ADDR <- (GLOBAL globaladdr)* (MEM memaddr)* (TABLE tableaddr)* (FUNC funcaddr)*)*
++  -- (Exportinst_in: (GLOBAL globaladdr)* (MEM memaddr)* (TABLE tableaddr)* (FUNC funcaddr)* |- exportinst : OK)*
+ 
+ ;; Store
+ 

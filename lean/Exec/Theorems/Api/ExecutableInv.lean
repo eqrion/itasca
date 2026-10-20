@@ -18,6 +18,13 @@ theorem well_formed {M : Type} {view : M → Slice U8} {code : Store.CodeInterpr
     wf_store (Store.decodeStore view code store) :=
   Store.decodeStore_wf view code store held.shape held.storeSyntax
 
+/-- Every store satisfying the public invariant has the generated semantic
+store typing, including host functions. -/
+theorem source_typed {M : Type} {view : M → Slice U8} {code : Store.CodeInterpretation}
+    {store : runtime.store.Store M} (held : ExecutableInv view code store) :
+    Store_ok (Store.decodeStore view code store) :=
+  held.toCertifiedApiStore.source_typed
+
 theorem content_update {M : Type} {view : M → Slice U8} {code : Store.CodeInterpretation}
     {before after : runtime.store.Store M} (held : ExecutableInv view code before)
     (identity : after.id = before.id) (functions : after.funcs = before.funcs)

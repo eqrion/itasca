@@ -87,6 +87,7 @@ Raw extern/result issuance laws remain separate from this source-store law. -/
 theorem HostWorldSound.of_returned_actions {M P : Type}
     {hooks : runtime.platform.Platform P M} {view : M → Slice U8}
     {Inv : Store.CodeInterpretation → runtime.store.Store M → Prop}
+    (sourceTyped : ∀code store, Inv code store → Store_ok (Store.decodeStore view code store))
     (normal : ∀code store, Inv code store → ∀platform host args results,
       hooks.call_host platform store host args results ⦃_ => True⦄)
     (decomposes : ∀code store, Inv code store → ∀platform host args results answer,
@@ -97,5 +98,5 @@ theorem HostWorldSound.of_returned_actions {M P : Type}
   obtain ⟨answer,actual,_⟩ := WP.spec_imp_exists (normal code store valid platform host args results)
   obtain ⟨afterCode,trace⟩ := decomposes code store valid platform host args results answer actual
   rw [actual]
-  exact WP.spec.ret ⟨afterCode,trace.effect.agrees,trace.effect.invariant,trace.effect.extension⟩
+  exact WP.spec.ret ⟨afterCode,trace.effect.agrees,trace.effect.invariant,trace.effect.extension,sourceTyped _ _ trace.effect.invariant⟩
 end Exec.Theorems

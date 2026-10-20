@@ -113,15 +113,27 @@ Handwritten Lean proofs ----------> validator guarantees
 | `validate_module` | Total, sound, and complete. |
 | `validate_streaming` | Total, if callbacks are total. Sound, if source views are coherent and if Rust field-privacy of `CodeBatch` is respected. Complete, if source views spans are correct and `poll_code_batch` eventually receives all dispatched `CodeBatch`. |
 
-The extracted execution runtime also has checked all-input compilation and
-conditional public invocation and instantiation correspondence. The
+The extracted execution runtime also has checked all-input compilation,
+compiler completeness under conservative source eligibility and allocation
+availability, and conditional public invocation and instantiation correspondence. The
 [execution guarantees](docs/EXECUTION_VERIFICATION.md#public-theorem-map) records the
 exact theorem scope and embedder obligations. Host-capable theorems require
 allocator, floating-point, memory and callback laws, including explicit raw
 metadata and reference-preservation premises. Public invocation and instantiation
 recording, evolving-code invariant preservation and classified resource causes
 are checked under those premises. The resource accounting, callback
-obligations and forward-only source guarantee are documented explicitly.
+obligations are documented explicitly. Public invocation additionally matches a
+selected terminating source run under explicit choice compatibility, source
+capacities, allocation availability, continuing interrupts and returning-host
+resource laws.
+For the certified combined host driver, this includes unbounded reentrancy:
+one terminating chosen Wasm/host execution yields the corresponding synchronous
+invocation outcome, decoded store and expanded call history. Primitive growth,
+numeric, API and publication choices must match the implementation, and source
+prefixes must fit the configured limits. Divergent callbacks have separate
+productive combined-source traces; callback normality is not a premise of
+these driver theorems. Arbitrary Rust callbacks still require an explicit
+implementation refinement contract.
 
 ### Trust boundary
 
@@ -134,8 +146,9 @@ The proofs depend on:
   6. Lean's kernel and standard logical foundations.
 
 Execution additionally uses the handwritten specification extensions in
-[`lean/SpecExt`](lean/SpecExt), including an explicit host-rule weakening that
-omits post-call `Store_ok`. The native wrappers, standard allocator, native/libm
+[`lean/SpecExt`](lean/SpecExt). Atomic host return and trap require post-call
+`Store_ok`; the public invariant's checked typing bridge discharges that
+condition for invariant-preserving callbacks. The native wrappers, standard allocator, native/libm
 floating-point operations, and globally issued store identities remain reviewed
 boundaries outside extraction; the generic proofs do not establish their
 platform laws. See the [Lean execution boundary](lean/README.md#execution-boundary).

@@ -20,6 +20,7 @@ theorem host_resume_source_owned {M : Type} (memory : runtime.platform.MemoryBuf
       params (signature.results.val.map sourceType))
     (arguments : ResultsTyped (Store.decodeStore view code before) params args)
     (extension : Extend_store (Store.decodeStore view code before) (Store.decodeStore view code after))
+    (sourceTyped : Store_ok (Store.decodeStore view code after))
     (wfAmbient : wf_frame ambient)
     (functionAt : after.funcs.val[address.index.val]? = some function)
     (signatureAt : after.types.val[function.signature.val]? = some signature)
@@ -46,8 +47,8 @@ theorem host_resume_source_owned {M : Type} (memory : runtime.platform.MemoryBuf
   cases status with
   | Err error =>
     cases error <;> simp only [hostResume,WP.spec_ok]
-    · exact ⟨by trivial,by trivial,by trivial,by trivial,Or.inr ⟨Or.inl (by trivial),by trivial,Spec.host_trap_step host arguments extension wfAmbient⟩⟩
-    · exact ⟨by trivial,by trivial,by trivial,by trivial,Or.inr ⟨Or.inr ⟨by trivial,by trivial⟩,by trivial,Spec.host_trap_step host arguments extension wfAmbient⟩⟩
+    · exact ⟨by trivial,by trivial,by trivial,by trivial,Or.inr ⟨Or.inl (by trivial),by trivial,Spec.host_trap_step host arguments extension sourceTyped wfAmbient⟩⟩
+    · exact ⟨by trivial,by trivial,by trivial,by trivial,Or.inr ⟨Or.inr ⟨by trivial,by trivial⟩,by trivial,Spec.host_trap_step host arguments extension sourceTyped wfAmbient⟩⟩
   | Ok unitValue =>
     cases unitValue
     unfold hostResume
@@ -60,7 +61,7 @@ theorem host_resume_source_owned {M : Type} (memory : runtime.platform.MemoryBuf
     cases checked with
     | Err error =>
       simp only [runtime.interp.check_failed,bind_ok,ite_true,WP.spec_ok]
-      exact ⟨by trivial,by trivial,by trivial,by trivial,Or.inr ⟨Or.inl (by trivial),by trivial,Spec.host_trap_step host arguments extension wfAmbient⟩⟩
+      exact ⟨by trivial,by trivial,by trivial,by trivial,Or.inr ⟨Or.inl (by trivial),by trivial,Spec.host_trap_step host arguments extension sourceTyped wfAmbient⟩⟩
     | Ok unitValue =>
       cases unitValue
       obtain ⟨typed,owned,tags⟩ := accepted rfl
@@ -75,6 +76,6 @@ theorem host_resume_source_owned {M : Type} (memory : runtime.platform.MemoryBuf
       step with host_results_encode exec.slots results signature.results after.id base tags
         (fun value member => (owned value member).1) (by rw [widths]; exact capacity)
         as ⟨words,length,represented,preserved⟩
-      exact Or.inl ⟨Spec.host_return_step host arguments extension typed wfAmbient,
+      exact Or.inl ⟨Spec.host_return_step host arguments extension sourceTyped typed wfAmbient,
         typed,Store.source_values_owned after results.val owned,represented,length,by simpa only [widths] using preserved⟩
 end Exec.Theorems

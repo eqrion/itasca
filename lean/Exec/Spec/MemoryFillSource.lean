@@ -14,15 +14,16 @@ theorem fill_byte_encoding (value : Nat) : ibytes_ 8 (wrap__ 32 8 (.mk_uN value)
 
 theorem memory_write_i32_step (s : store) (f : frame) (position value : Nat)
     (hs : wf_store s) (hf : wf_frame f) (hp : position < 2^32) (hv : value < 2^32)
-    (mapped : 0 < f.MODULE.MEMS.length) :
+    (mapped : 0 < f.MODULE.MEMS.length)
+    (inside : position < (fun_mem ⟨s,f⟩ (.mk_uN 0)).BYTES.length) :
     StepH ⟨⟨s,f⟩,[i32 position,i32 value,storeByte]⟩ []
       ⟨⟨memoryWrite s f position (fillByte value),f⟩,[]⟩ := by
   have fresh := memoryWrite_wf s f position (fillByte value) hs (fillByte_wf value)
   apply StepH.step
   apply Step.store_pack_val _ _ .I32 _ 8 zeroMemarg [fillByte value] _
   · simp [proj_num__0]
-  · have write := fun_with_mem.fun_with_mem_case_0 s f (.mk_uN 0) position 1 [fillByte value] mapped
-      (by simpa only [splice_singleton_eq_set,memoryWrite,proj_uN_0] using wf_state.state_case_0 _ _ fresh hf)
+  · have write := fun_with_mem.fun_with_mem_case_0 s f (.mk_uN 0) position 1 [fillByte value] mapped (by omega)
+      (by simpa only [splice_singleton_eq_set,memoryWrite,proj_uN_0] using wf_state.state_case_0 _ _ fresh hf) (.state_case_0 _ _ hs hf)
     norm_num [proj_num__0,proj_uN_0,zeroMemarg,rat_to_nat,splice_singleton_eq_set,memoryWrite] at write ⊢
     exact write
   · simp [size,valtype_Inn]
@@ -97,7 +98,7 @@ theorem memory_fill_steps (s : store) (f : frame) (destination value count : Nat
     have afterWf := (wf_config_parts (init_config_wf fresh f (next32 destination) value count _ hw hf (next32_bound _) hv
       (by omega) .admininstr_case_64)).2
     have first := memory_fill_expand s f destination value count hs hf hd hv hn inside
-    have second := stepH_instrs (memory_write_i32_step s f destination value hs hf hd hv mapped) []
+    have second := stepH_instrs (memory_write_i32_step s f destination value hs hf hd hv mapped (by omega)) []
       (operands (next32 destination) value count ++ [.MEMORY_FILL]) (by simp [Forall]) afterWf
     have rest := ih fresh (next32 destination) hw (next32_bound _) (by omega)
       (by simpa [fresh,memoryWrite] using address)

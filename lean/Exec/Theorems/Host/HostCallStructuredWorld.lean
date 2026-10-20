@@ -40,7 +40,8 @@ theorem step_host_call_structured_world_provenance {M P F A : Type} {emission : 
     (callback : ∀ p args results,
       hooks.call_host p store host args results ⦃ answer => ∃ afterCode,
         Store.CodeAgreesOn store code afterCode ∧ Inv afterCode answer.2.2.1 ∧
-        Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ⦄)
+        Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
+        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄)
     (preserve : ∀ p args results answer,
       hooks.call_host p store host args results=.ok answer → FrameStorePrefix store answer.2.2.1)
     (externs : ∀ p args results answer,

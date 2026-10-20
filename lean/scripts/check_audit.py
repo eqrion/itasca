@@ -39,6 +39,9 @@ EXEC_LAYERS = {
 }
 # Integration stages can use local proofs, but never flow back into them.
 COMPILER_STAGES = {"Local": 0, "Body": 1, "Module": 2}
+# Basic checked programs cannot acquire reentrant or combined-driver contracts
+# through their implementation dependencies.
+HOST_STAGES = {"Callbacks": 0, "Chosen": 1, "Reentrant": 2, "Open": 3}
 FOUNDATIONS = {"Init", "Lean", "Std", "Batteries", "Mathlib"}
 SPEC_MODULES = {"wasm2.0", "Wasm2Prefix", "Wasm2Builtins"}
 
@@ -107,6 +110,12 @@ def check_layer(name: str, imported: str, library: str) -> None:
             raise ValueError(f"{name} or {imported} has no declared compiler stage")
         if COMPILER_STAGES[target_stage] > COMPILER_STAGES[source_stage]:
             raise ValueError(f"{name} imports {imported}, above its compiler stage")
+    if library == "Exec" and under(name, "Exec.Theorems.Host") and under(imported, "Exec.Theorems.Host"):
+        source_parts, target_parts = name.split("."), imported.split(".")
+        source_stage = HOST_STAGES.get(source_parts[3]) if len(source_parts) > 4 else None
+        target_stage = HOST_STAGES.get(target_parts[3]) if len(target_parts) > 4 else None
+        if source_stage is not None and target_stage is not None and target_stage > source_stage:
+            raise ValueError(f"{name} imports {imported}, above its host composition stage")
     for owner, final in (("Interp", "Invocation"), ("Store", "Instantiation")):
         if library == "Exec" and layer == owner and under(imported, f"Exec.{owner}.{final}"):
             if not under(name, f"Exec.{owner}.{final}"):
@@ -121,7 +130,7 @@ def check_layer(name: str, imported: str, library: str) -> None:
     if library == "Exec" and layer == "Store" and imported in {
         "Itasca.Module.Const.Syntax", "Itasca.Module.Elab.SegmentSyntax",
         "Itasca.Module.Env.Basic", "Itasca.Module.Elab.Metadata",
-        "Exec.Abs.ModuleBindingsExtension",
+        "Exec.Abs.ModuleBindingsExtension", "Exec.Abs.StoreTyping",
         "Aeneas.Data.List.List", "SpecExt.Wasm1",
     }:
         return
@@ -146,6 +155,37 @@ def check_builtins(root: Path, stage: str = BUILTIN_STAGE) -> None:
                 if stage == "lanes" and name in {"lanes_", "inv_lanes_"}:
                     continue
                 raise ValueError(f"{path.relative_to(root)} contains opaque builtin {name} ({stage} stage)")
+    if stage == "complete":
+        check_builtin_inventory(root)
+
+
+def check_builtin_inventory(root: Path) -> None:
+    signatures = root / "SpecTec" / "Wasm2Builtins.lean"
+    # Small audit-layer fixtures need not contain a generated specification.
+    if not signatures.exists():
+        return
+    stream = list(tokens(signatures.read_text()))
+    expected = [stream[i + 3].value for i in range(len(stream) - 3)
+                if stream[i:i + 3] == [Token("symbol", ":"), Token("symbol", "="), Token("symbol", "@")]
+                and stream[i + 3].kind == "ident"]
+    if not expected or len(expected) != len(set(expected)):
+        raise ValueError("Generated builtin signatures must name distinct builtin symbols")
+    path = root / "SpecExt" / "Builtins" / "Inventory.lean"
+    stream = list(tokens(path.read_text()))
+    start = next((i + 2 for i in range(len(stream) - 1)
+                  if stream[i:i + 2] == [Token("ident", "def"), Token("ident", "inventory")]), None)
+    if start is None:
+        raise ValueError("Missing builtin review inventory definition")
+    end = next((i for i in range(start, len(stream)) if stream[i] == Token("ident", "theorem")), len(stream))
+    reviewed = [stream[i + 2].value for i in range(start, end - 2)
+                if stream[i:i + 2] == [Token("symbol", "`"), Token("symbol", "`")]
+                and stream[i + 2].kind == "ident"]
+    if len(reviewed) != len(set(reviewed)):
+        raise ValueError("Duplicate builtin review inventory symbol")
+    missing, extra = set(expected) - set(reviewed), set(reviewed) - set(expected)
+    if missing or extra:
+        raise ValueError("Builtin review inventory differs from generated signatures: "
+                         f"missing {sorted(missing)}, extra {sorted(extra)}")
 
 
 def check(root: Path, library: str = "Itasca") -> None:

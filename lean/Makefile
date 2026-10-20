@@ -13,6 +13,12 @@ SPECTEC_PATCH := $(ROOT)/patches/spectec-wasm2-global-mutability.patch
 SPECTEC_MODULE_PATCH := $(ROOT)/patches/spectec-wasm2-module.patch
 SPECTEC_HOSTFUNC_PATCH := $(ROOT)/patches/spectec-wasm2-hostfunc.patch
 SPECTEC_INTEGER_PATCH := $(ROOT)/patches/spectec-wasm2-integer-domains.patch
+SPECTEC_HOST_TYPING_PATCH := $(ROOT)/patches/spectec-wasm2-host-typing.patch
+SPECTEC_LANE_PATCH := $(ROOT)/patches/spectec-wasm2-lane-store.patch
+SPECTEC_LOAD_VALUE_BOUNDS_PATCH := $(ROOT)/patches/spectec-wasm2-load-value-bounds.patch
+SPECTEC_WRITE_BOUNDS_PATCH := $(ROOT)/patches/spectec-wasm2-memory-write-bounds.patch
+SPECTEC_TABLE_WRITE_BOUNDS_PATCH := $(ROOT)/patches/spectec-wasm2-table-write-bounds.patch
+SPECTEC_EXPORT_MEMBERSHIP_PATCH := $(ROOT)/patches/spectec-wasm2-export-membership.patch
 SPECTEC_MEMORY_PATCH := $(ROOT)/patches/spectec-wasm2-memory-boundary.patch
 TEST_RUNNER := $(AENEAS_DIR)/tests/test_runner/_build/default/run_test.exe
 # Current Charon reads Cargo metadata rather than the retired Charon.toml.
@@ -37,6 +43,12 @@ patch-spectec:
 	cd $(ROOT)/vendor/spectec && { git apply --reverse --check $(SPECTEC_HOSTFUNC_PATCH) 2>/dev/null || git apply $(SPECTEC_HOSTFUNC_PATCH); }
 	cd $(ROOT)/vendor/spectec && { git apply --reverse --check $(SPECTEC_INTEGER_PATCH) 2>/dev/null || git apply $(SPECTEC_INTEGER_PATCH); }
 	cd $(ROOT)/vendor/spectec && { git apply --reverse --check $(SPECTEC_MEMORY_PATCH) 2>/dev/null || git apply $(SPECTEC_MEMORY_PATCH); }
+	cd $(ROOT)/vendor/spectec && { git apply --reverse --check $(SPECTEC_LANE_PATCH) 2>/dev/null || git apply $(SPECTEC_LANE_PATCH); }
+	cd $(ROOT)/vendor/spectec && { git apply --reverse --check $(SPECTEC_HOST_TYPING_PATCH) 2>/dev/null || git apply $(SPECTEC_HOST_TYPING_PATCH); }
+	cd $(ROOT)/vendor/spectec && { git apply --reverse --check $(SPECTEC_WRITE_BOUNDS_PATCH) 2>/dev/null || git apply $(SPECTEC_WRITE_BOUNDS_PATCH); }
+	cd $(ROOT)/vendor/spectec && { git apply --reverse --check $(SPECTEC_EXPORT_MEMBERSHIP_PATCH) 2>/dev/null || git apply $(SPECTEC_EXPORT_MEMBERSHIP_PATCH); }
+	cd $(ROOT)/vendor/spectec && { git apply --reverse --check $(SPECTEC_TABLE_WRITE_BOUNDS_PATCH) 2>/dev/null || git apply $(SPECTEC_TABLE_WRITE_BOUNDS_PATCH); }
+	cd $(ROOT)/vendor/spectec && { git apply --reverse --check $(SPECTEC_LOAD_VALUE_BOUNDS_PATCH) 2>/dev/null || git apply $(SPECTEC_LOAD_VALUE_BOUNDS_PATCH); }
 
 tools: patch-aeneas
 	cd $(AENEAS_DIR)/charon/charon && RUSTUP_TOOLCHAIN=$(RUST_TOOLCHAIN) cargo build --release --locked --bin charon --bin charon-driver

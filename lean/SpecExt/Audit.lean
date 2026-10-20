@@ -1,13 +1,13 @@
-import SpecExt.Builtins
 import SpecExt.Builtins.BitwiseVector
 import SpecExt.Builtins.Counts
 import SpecExt.Builtins.Examples
 import SpecExt.Builtins.Float.Examples
-import SpecExt.Builtins.Float.MinMax
-import SpecExt.Builtins.Float.Promotion
+import SpecExt.Builtins.Float.MinMaxFirst
+import SpecExt.Builtins.Float.PromotionFirst
 import SpecExt.Builtins.Float.Storage
 import SpecExt.Builtins.Float.TruncBounds
 import SpecExt.Builtins.Float.Wf
+import SpecExt.Builtins.Inventory
 import SpecExt.Builtins.LaneMap
 import SpecExt.Builtins.LaneView
 import SpecExt.Host

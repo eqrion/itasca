@@ -1,21 +1,9 @@
 import Exec.Code.Local.Source.SourceFunctionTyping
 import Exec.Store.Invariant.FunctionTables
 import Exec.Store.Invariant.Syntax
+import Exec.Representation.NameSource
 namespace Exec.Store
 open Aeneas Aeneas.Std Itasca
-
-theorem decodeNameChars_source (bytes : List U8) :
-    decodeNameChars bytes = ModuleBinary.decodeChars bytes := by
-  induction bytes using decodeNameChars.induct <;>
-    (try simp only [decodeNameChars, ModuleBinary.decodeChars]) <;>
-    (try simp_all only [ite_false])
-  all_goals
-    unfold decodeNameChars ModuleBinary.decodeChars
-    simp_all only [ite_true, ite_false]
-
-theorem decodeName_source (bytes : List U8) :
-    decodeName bytes = ModuleBinary.nameOfBytes bytes := by
-  simp only [decodeName, ModuleBinary.nameOfBytes, decodeNameChars_source]
 
 /-- Canonical source typing supplies the syntax for an installed instance. -/
 theorem instance_syntax_source (oldCode : CodeInterpretation) (fresh : Nat)

@@ -3,6 +3,7 @@ import Exec.Theorems.Composition.Certified.CertifiedSupportedCode
 import Exec.Theorems.Composition.Certified.CertifiedExecutable
 import Exec.Theorems.Api.SupportedApiHost
 import Exec.Store.Api.ExportBounds
+import Exec.Store.Invariant.SourceStoreTyping
 namespace Exec.Theorems
 open Aeneas Aeneas.Std
 
@@ -18,6 +19,15 @@ abbrev CertifiedExecutableApiStore {M : Type} :=
   @CertifiedApiStore Interp.Executable.emission Abs.ExecutableInstr M
 
 variable {emission : Interp.StructuredMachine.FunctionEmission} {allowed : instr → Prop}
+
+/-- The retained component, body, module-map and export certificates imply
+full generated source store typing; it is not an invariant field. -/
+theorem CertifiedApiStore.source_typed {M : Type} {view : M → Slice U8}
+    {code : Store.CodeInterpretation} {store : runtime.store.Store M}
+    (certified : CertifiedApiStore emission allowed view code store) :
+    Store_ok (Store.decodeStore view code store) :=
+  Store.decodeStore_typed view code store certified.shape certified.storeSyntax
+    certified.typed certified.segmentBounds certified.exportBounds
 
 theorem CertifiedApiStore.content_update {M : Type} {view : M → Slice U8}
     {code : Store.CodeInterpretation} {before after : runtime.store.Store M}

@@ -9,9 +9,8 @@ a separate invocation has its own trace.
 
 The host representation follows the pinned SpecTec 3.0 funccode backport.
 The host behavior follows the Wasm execution prose: typed inputs and outputs,
-unchanged function instances, and store extension. As recorded in the execution
-verification plan, the additional Store_ok premise is deliberately omitted.
-This is a weakening of the host specification, not a type-soundness theorem.
+unchanged function instances, and store extension. Every completed callback must leave a source-typed store, including a callback
+that traps after committing effects.
 -/
 
 namespace SpecExt
@@ -44,6 +43,7 @@ inductive StepH : config → List HostEvent → config → Prop where
       HostFunction s fa id params results →
       ResultsTyped s params args →
       Extend_store s s' →
+      Store_ok s' →
       ResultsTyped s' results res →
       wf_config (.mk_config (.mk_state s f) (vals args ++ [.CALL_ADDR fa])) →
       wf_config (.mk_config (.mk_state s' f) (vals res)) →
@@ -54,6 +54,7 @@ inductive StepH : config → List HostEvent → config → Prop where
       HostFunction s fa id params results →
       ResultsTyped s params args →
       Extend_store s s' →
+      Store_ok s' →
       wf_config (.mk_config (.mk_state s f) (vals args ++ [.CALL_ADDR fa])) →
       wf_config (.mk_config (.mk_state s' f) [.TRAP]) →
       StepH (.mk_config (.mk_state s f) (vals args ++ [.CALL_ADDR fa]))

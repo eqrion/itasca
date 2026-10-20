@@ -1,0 +1,13 @@
+--- a/specification/wasm-2.0/B-soundness.spectec
++++ b/specification/wasm-2.0/B-soundness.spectec
+@@ -180,6 +180,10 @@
+   -- Functype_ok: |- ft : OK
+   -- Moduleinst_ok: s |- moduleinst : C
+   -- Func_ok: C |- func : ft
++
++rule Funcinst_ok/host:
++  s |- {TYPE ft, MODULE moduleinst, CODE HOST n} : ft
++  -- Functype_ok: |- ft : OK
+ 
+ rule Datainst_ok:
+   s |- {BYTES b*} : OK

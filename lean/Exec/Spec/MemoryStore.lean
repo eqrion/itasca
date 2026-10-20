@@ -82,14 +82,16 @@ theorem numeric_store_step (s : store) (f : frame) (ty : numtype) (argument : me
     · exact .admininstr_case_13 _ _ valueWf
     · exact operationWf)
   split
-  · have updatedWf := memoryPayloadWrite_wf s f (address+proj_uN_0 argument.OFFSET) (nbytes_ ty value)
+  · rename_i inside
+    have updatedWf := memoryPayloadWrite_wf s f (address+proj_uN_0 argument.OFFSET) (nbytes_ ty value)
       storeWf (numericBytes_payload_wf ty value)
     apply StepH.step
     apply Step.store_num_val _ _ _ _ _ (nbytes_ ty value)
     · simp [proj_num__0]
     · exact numeric_size_present ty
     · exact .fun_with_mem_case_0 s f (.mk_uN 0) _ _ _ mapped
-        (.state_case_0 _ _ updatedWf frameWf)
+        (by simpa only [numeric_byte_count,proj_num__0,proj_uN_0,Option.get!_some] using inside)
+        (.state_case_0 _ _ updatedWf frameWf) (.state_case_0 _ _ storeWf frameWf)
     · rfl
     · exact input
     · exact wf_config_make updatedWf frameWf (forall_nil _)

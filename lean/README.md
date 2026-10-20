@@ -212,6 +212,37 @@ Build targets apply these to the pinned checkouts:
   disambiguates import projections and fixes the four-byte UTF-8 upper bound.
 - [spectec-wasm2-hostfunc.patch](../patches/spectec-wasm2-hostfunc.patch)
   introduces explicit host function codes for the execution extension.
+- [spectec-wasm2-host-typing.patch](../patches/spectec-wasm2-host-typing.patch)
+  adds function-instance typing for host code with a valid signature and a
+  well-formed module representation, without a Wasm body. The source lemmas in
+  [Exec/Spec/HostTyping](Exec/Spec/Typing/HostTyping.lean) construct a typed host-only
+  store using the decoder's empty module environment and recover exactly the
+  original premises for Wasm function instances. This extends the execution
+  typing target; it does not establish callback store-typing preservation.
+- [spectec-wasm2-lane-store.patch](../patches/spectec-wasm2-lane-store.patch)
+  checks lane stores in bytes and adds an explicit success bound. Generated
+  memory splicing alone does not enforce that bound. General guard partition
+  and boundary lemmas in [Exec/Spec/SimdMemoryLaneStore](Exec/Spec/SimdMemoryLaneStore.lean)
+  cover all supported widths and unbounded effective addresses. This repairs
+  the execution target without changing validator typing or runtime behavior.
+- [spectec-wasm2-memory-write-bounds.patch](../patches/spectec-wasm2-memory-write-bounds.patch)
+  requires the shared source memory update to stay within the original byte
+  range. This covers scalar, packed, vector and bulk stores as well as lanes;
+  [Exec/Spec/MemoryBounds](Exec/Spec/MemoryBounds.lean) derives the bound from
+  the generated judgment. Concrete bulk-write helpers now require destination
+  bounds obtained from their enclosing source operation.
+- [spectec-wasm2-export-membership.patch](../patches/spectec-wasm2-export-membership.patch)
+  keeps membership inside per-export iteration, avoiding a generated global
+  nonempty-namespace premise on empty exports. The source membership judgment
+  is characterized in [Exec/Spec/ModuleMembership](Exec/Spec/ModuleMembership.lean).
+  This changes execution instance typing without changing validator typing.
+- [spectec-wasm2-load-value-bounds.patch](../patches/spectec-wasm2-load-value-bounds.patch)
+  bounds words decoded by packed scalar and widening SIMD loads before
+  extension. Byte equality alone truncates higher bits and admitted distinct
+  results. [Exec/Spec/ByteEncoding](Exec/Spec/ByteEncoding.lean) proves bounded
+  decoding is unique; [Exec/Spec/SimdReadBounds](Exec/Spec/SimdReadBounds.lean)
+  extends this to widening lanes. This repairs execution rules without changing
+  validator typing or runtime decoding.
 - [spectec-wasm2-integer-domains.patch](../patches/spectec-wasm2-integer-domains.patch)
   makes integer division/remainder success exclude zero divisors and signed
   division overflow. Without these explicit source guards, the generated
@@ -273,8 +304,15 @@ exact rationals and midpoint comparisons; the NaN sets retain permitted
 nondeterminism. The audit rejects any new opaque builtin placeholder.
 
 `SpecExt.Host` adds atomic host-call steps with explicit typed inputs/results,
-store extension, and well-formedness premises. Its omission of post-call
-`Store_ok` is an explicit weakening, pending a store-typing development.
+store extension, post-call `Store_ok`, and well-formedness premises. The checked
+[decoded-store bridge](Exec/Store/Invariant/SourceStoreTyping.lean) now derives
+source store typing from the public API certificate, including host functions,
+without adding `Store_ok` as a certificate field. It retains source-name
+uniqueness from validation alongside export bounds. Fixed and evolving-world
+callback contracts retain the stronger source-typing postcondition, including
+traps with committed effects. [Source configuration preservation](Exec/Spec/Typing/HostStepPreservation.lean)
+covers every Wasm and host step, all evaluation contexts, and finite reduction
+sequences.
 `Exec.Spec` provides checked context, depth, extension, and mutation lemmas.
 The execution proofs build on these foundations. Allocation/content
 preservation and callback normal-return laws are explicit premises, together
@@ -296,7 +334,12 @@ source body. The
 [complete compilation theorem](Exec/Theorems/Compilation.lean) combines
 all-input normal return with independently encoded complete-profile function,
 initializer, metadata and capacity certificates. It has no accepted-body or
-opcode-subset premise.
+opcode-subset premise. [Compiler completeness](Exec/Theorems/CompilationComplete.lean)
+constructs actual successful compilation and that certificate from independent
+source validity, conservative source-only `CompileEligible` bounds, allocator
+correctness, and bounded allocation availability. The envelope uses uniform
+source body/local/operand maxima and aggregates function and initializer costs;
+it need not accept every module exactly at a configured output limit.
 
 [Public world-aware invocation](Exec/Theorems/Invocation/PublicExecutableWorldInvocation.lean)
 covers issued Wasm and host handles, retains the full `ExecutableInv` with the
@@ -313,7 +356,25 @@ publish fresh code. These theorems require the explicit indexed callback and raw
 preservation laws. [Instantiation recording and resource causes](Exec/Theorems/Instantiation/InstantiateExecutableWorldRecordingResources.lean)
 retain the same final interpretation and actual recorded event list. The
 resource accounting and raw-host-retention obligations are recorded in the
-execution reference. Source correspondence is forward soundness, with no uniqueness claim.
+execution reference. [Chosen-world completeness](Exec/Theorems/Invocation/PublicWorldChosenMatches.lean)
+additionally matches one terminating selected source run, including its final
+store and exact recorder events, under explicit source capacities, allocation
+availability, choice compatibility, continuing interrupts and returning-host
+resource laws. It covers both complete profiles and issued Wasm/host functions;
+it does not assert global source-step determinism.
+
+[Combined chosen completeness](Exec/Theorems/Host/Open/Completeness/ChosenSourceCompleteness.lean)
+establishes the corresponding outcome for the synchronous certified host driver
+from one terminating combined Wasm/host source run, including unbounded
+reentrancy and expanded nesting observations. Its premises require owned
+inputs, source-prefix capacities at the initial store limits, allocation
+availability and matching numeric, vector, growth, API and publication choices.
+The driver supplies continuing interrupts and excludes host stack exhaustion.
+[Selected divergence reflection](Exec/Theorems/Host/Open/Native/NativeChosenSourceInvocation.lean)
+separately constructs productive combined execution under the same policy.
+[Returning recovery](Exec/Theorems/Host/Open/Completeness/ReturningRecovery.lean) proves that
+finite checked-action callbacks in this driver recover the original callback
+package and absence-of-source-divergence invocation contract.
 
 The reviewed [native wrappers](../src/runtime/native.rs) forward compilation,
 invocation, instantiation, definitions and growth to the corresponding generic
