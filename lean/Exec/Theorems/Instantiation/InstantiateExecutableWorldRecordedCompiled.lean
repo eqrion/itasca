@@ -1,5 +1,9 @@
 import Exec.Theorems.Instantiation.InstantiateExecutableWorldRecordedSource
 import Exec.Code.Module.CompileTotal
+import Exec.Theorems.Instantiation.CompiledWorldInstantiationOutcome
+
+/-! Compiler-selected recorded instantiation packages and ordinary package erasure.
+The source witness is fixed before universally quantified callback laws are supplied. -/
 namespace Exec.Theorems
 open Aeneas Aeneas.Std Itasca Store SpecExt
 
@@ -28,6 +32,28 @@ def CompiledWorldRecordedInstantiation {M P F A : Type}
           Extend_store (decodeStore view oldCode before) (decodeStore view afterCode out.2.1) ∧
           RecordedInstantiationSourceOutcome view oldCode afterCode before module imports raw platform
             events out.1 out.2.1 out.2.2 ⦄div
+
+/-- Erase recording once, preserving the compiler-selected source witness and
+all final-code, rollback and committed-effect guarantees. -/
+theorem CompiledWorldRecordedInstantiation.erase {M P F A : Type}
+    {memory : runtime.platform.MemoryBuffer M} {hooks : runtime.platform.Platform P M}
+    {floats : runtime.platform.FloatOps F} {allocator : runtime.platform.Alloc A}
+    {view : M → Slice U8} {before : runtime.store.Store M}
+    {module : runtime.compiler.ExecutableModule} {imports : Slice runtime.Extern}
+    {platform : P} {oldCode : CodeInterpretation} {bytes : Slice U8}
+    {profile : ValidationProfile}
+    (package : CompiledWorldRecordedInstantiation memory hooks floats allocator view before module imports platform oldCode bytes profile) :
+    CompiledWorldInstantiation memory hooks floats allocator view before module imports platform oldCode bytes profile := by
+  obtain ⟨raw,encoded,typed,run⟩ := package
+  refine ⟨raw,encoded,typed,?_⟩
+  intro sound preserve externs issued
+  have actual := Platform.Recording.erase_dspec _ _ _
+    (recordedInstantiateWith_erase memory hooks floats allocator before module imports platform [])
+    (run sound preserve externs issued)
+  apply WP.dspec_mono actual
+  intro out post
+  obtain ⟨events,recorded,afterCode,agrees,valid,retained,extension,outcome⟩ := post
+  exact ⟨afterCode,agrees,valid,retained,extension,outcome.erase⟩
 
 /-- The source package follows from the actual accepted compiler result;
 no separately supplied raw module or encoding premise is required. -/

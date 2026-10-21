@@ -6,6 +6,27 @@ The [Lean guide](../README.md) covers tool setup and the independent validator.
 The [review map](../../docs/EXECUTION_REVIEW.md) gives an order for reviewing
 the execution-proof addition.
 
+The [maintenance plan](MAINTENANCE_PLAN.md) sequences theorem consolidation and
+changes to make the execution proofs easier to maintain.
+
+## Canonical public constructions
+
+Evolving-world invocation is constructed in
+[PublicExecutableWorldResources](Theorems/Invocation/PublicExecutableWorldResources.lean).
+It establishes correspondence, exact recording, the retained invariant and
+resource causes together. Shared
+[outcomes and erasure](Theorems/Invocation/ExecutableWorldOutcomes.lean) sit below
+that construction; ordinary invocation is a short projection. Generic weaker
+contracts remain available when capacities or recording-head evidence are absent.
+
+Evolving-world instantiation correspondence is constructed by
+[recorded source execution](Theorems/Instantiation/InstantiateExecutableWorldRecordedSource.lean).
+The actual-API recording adapter supplies ordinary correspondence by erasure.
+The [compiled package erasure](Theorems/Instantiation/InstantiateExecutableWorldRecordedCompiled.lean)
+is shared by accepted and all-input ordinary wrappers. Resource causes remain a
+supporting construction below the combined recording/resource theorem, avoiding
+a cycle back through ordinary source correspondence.
+
 ## Dependency layers
 
 Each layer may use earlier foundations. The extracted model and the abstract

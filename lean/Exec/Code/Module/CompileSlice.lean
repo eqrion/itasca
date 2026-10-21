@@ -1,5 +1,9 @@
+import Exec.Code.Module.CompileSourceSetup
 import Exec.Code.Module.CompileSchedulerAssembly
 import Exec.Code.Module.SchedulerSlice
+
+/-! Source-ordered slice certificates from the actual compiler driver.
+Shared setup fixes reader coordinates; this module discharges its own submission fold. -/
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
 
@@ -33,23 +37,11 @@ theorem CompileSourceCertificate.slice_functions {A : Type} {ops : runtime.platf
     {bytes profile limits executable} {w : CompileWitness ops bytes profile limits executable}
     (c : CompileSourceCertificate w) (law : Platform.AllocCorrect ops) (subset : ModuleSlice c.raw) :
     ModuleFunctions executable (sourceFunctions c.raw) ∧ InitializerMappings executable := by
-  have prepared := compiler_driver_configured ops law c.run
-    (by simp [initialScheduler, alloc.vec.Vec.new])
-    (by simp [initialScheduler, alloc.vec.Vec.new])
-    (by simp [initialScheduler, alloc.vec.Vec.new])
-  have bounds := code_region_spec bytes
-  rw [w.region, WP.spec_ok] at bounds
-  have origin : c.run.remaining.configured.code_start.val ≤ Itasca.limits.MAX_MODULE_BYTES.val := by
-    rw [prepared.2.2.2]
-    change w.codeStart.val ≤ _
-    exact bounds.1.trans (bounds.2.trans c.moduleBound)
+  obtain ⟨signatures,slots,origin⟩ := c.scheduler_setup law
   have initial : SchedulerSlice w.env (sourceFunctions c.raw) c.run.remaining.configured :=
-    ⟨prepared.1, prepared.2.1, origin, c.initial_functions law⟩
-  have length : c.run.remaining.codeLength = Slice.len c.code := by
-    apply UScalar.eq_of_val_eq
-    exact c.coherent.code_len_eq _ c.run.remaining.length_call
+    ⟨signatures, slots, origin, c.initial_functions law⟩
   have submitted := c.run.remaining.submit_call
-  rw [length] at submitted
+  rw [c.code_length] at submitted
   have certified := compiler_submit_source_functions ops law
     runtime.compiler.CompileSource.Insts.ItascaStreamSource
     {bytes, code_start := w.codeStart, code_end := w.codeEnd} 0#u64

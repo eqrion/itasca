@@ -1,5 +1,9 @@
-import Exec.Theorems.Instantiation.InstantiateExecutableWorldSource
+import Exec.Theorems.Instantiation.InstantiateExecutableWorldTail
+import Exec.Theorems.Instantiation.InstantiateExecutableEventfulOrigin
 import Exec.Theorems.Instantiation.InstantiateNoLink
+
+/-! Exclusion of Link rejection from source-typed imports and actual start execution.
+Origin and ordinary tail projections are explicit dependencies of this client. -/
 namespace Exec.Theorems
 open Aeneas Aeneas.Std Itasca Store SpecExt
 

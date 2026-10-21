@@ -1,8 +1,14 @@
+import Exec.Interp.Invocation.InvokeCheckedMutable
+import Exec.Theorems.Invocation.InvokeHostWorld
+import Exec.Theorems.Api.ExecutableCallEntry
 import Exec.Theorems.Invocation.PublicExecutableWorldInvocation
 import Exec.Theorems.Invocation.InvokeWorld
 import Exec.Theorems.Composition.Core.CoreInstantiationResult
 import Exec.Store.Api.ApiMetadata
 import Exec.Interp.Relations.TypedArgumentsRejection
+
+/-! Typed public invocation excludes BadArguments while retaining general outcomes.
+Typed checker evidence is additional to the canonical correspondence projection. -/
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Interp
 
@@ -39,18 +45,13 @@ theorem invoke_executable_world_typed {M P F A : Type}
   · intro out post
     exact post
   by_cases owner : address.store = store.id
-  · have bound : address.index.val < store.funcs.val.length := issued owner
-    let function := store.funcs.val[address.index.val]
-    have hf : store.funcs.val[address.index.val]? = some function := List.getElem?_eq_getElem bound
-    have signatureBound : function.signature.val < store.types.val.length :=
-      (valid.shape.functions function (List.mem_of_getElem? hf)).1
-    let signature := store.types.val[function.signature.val]
-    have hs : store.types.val[function.signature.val]? = some signature := List.getElem?_eq_getElem signatureBound
+  · obtain ⟨function,signature,hf,hs,signatureBound⟩ := valid.call_entry address issued owner
     have decoded : Store.decodeFunction code store function = sourceFunction := by
       simpa only [Store.decodeStore,List.getElem?_map,hf,Option.map_some,Option.some.injEq] using sourceAt
     have typeEq : Store.decodeFuncType signature = .mk_functype (.mk_list params) (.mk_list resultsTypes) := by
       rw [←decoded,Store.decodeFunction_type code store function signatureBound] at sourceType
-      exact sourceType
+      have signatureEq := Option.some.inj ((List.getElem?_eq_getElem signatureBound).symm.trans hs)
+      simpa only [signatureEq] using sourceType
     have paramsEq : signature.params.val.map Interp.sourceType = params := by
       have eqs := typeEq
       simp only [Store.decodeFuncType,functype.mk_functype.injEq,list.mk_list.injEq] at eqs

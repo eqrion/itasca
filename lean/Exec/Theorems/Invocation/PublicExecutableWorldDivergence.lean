@@ -1,6 +1,11 @@
+import Exec.Theorems.Invocation.InvokeHostWorld
+import Exec.Theorems.Api.ExecutableCallEntry
 import Exec.Theorems.Invocation.PublicExecutableWorldInvocation
-import Exec.Theorems.Invocation.PublicExecutableWorldRecorded
+import Exec.Theorems.Invocation.PublicExecutableWorldResources
 import Exec.Theorems.Invocation.InvokeWorldDivergence
+
+/-! Public evolving-world divergence reflection and normal-return recovery.
+Lookup evidence is shared with terminal correspondence; source productivity remains separate. -/
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Interp
 
@@ -31,13 +36,7 @@ theorem invoke_executable_world_infinite_source {M P F A : Type}
   have ambientWf := Spec.invocation_frame_wf invoked
   have sourceEq := Spec.invocation_config invoked
   by_cases owner : address.store=store.id
-  · have bound : address.index.val<store.funcs.val.length := issued owner
-    let function := store.funcs.val[address.index.val]
-    have hf : store.funcs.val[address.index.val]?=some function := List.getElem?_eq_getElem bound
-    have signatureBound : function.signature.val<store.types.val.length :=
-      (valid.shape.functions function (List.mem_of_getElem? hf)).1
-    let signature := store.types.val[function.signature.val]
-    have hs : store.types.val[function.signature.val]?=some signature := List.getElem?_eq_getElem signatureBound
+  · obtain ⟨function,signature,hf,hs,signatureBound⟩ := valid.call_entry address issued owner
     have accepted := invoke_divergent_arguments memory hooks floats allocator exec store platform address function signature args results owner hf hs divergent
     have owned := Store.checked_arguments_owned memory view code store valid.well_formed
       args (alloc.vec.Vec.deref signature.params) argumentIssued accepted
@@ -94,11 +93,13 @@ theorem invoke_executable_world_terminates {M P F A : Type}
     exact finite (invoke_executable_world_infinite_source memory hooks floats allocator correct allocation
       interrupts view laws code sound preserve externs issuedResults exec store platform valid address args results
       issued argumentIssued initial invoked divergent)
-  have safe := invoke_executable_world_recording_source memory hooks floats allocator correct allocation
+  have safe := invoke_executable_world_source_resources memory hooks floats allocator correct allocation
     interrupts view laws code sound preserve externs issuedResults exec store platform valid address args results
     issued argumentIssued initial invoked
   generalize answerEq : runtime.interp.invoke_with memory hooks floats allocator exec store platform address args results = answer at safe notdiv ⊢
   cases safe with
-  | ret post => exact .ret post
+  | ret post =>
+    obtain ⟨events,recorded,outcome,causes⟩ := post
+    exact .ret ⟨events,recorded,outcome⟩
   | div => exact False.elim (notdiv rfl)
 end Exec.Theorems

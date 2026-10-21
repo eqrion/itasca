@@ -1,7 +1,11 @@
+import Exec.Theorems.Invocation.InvokeHostWorld
 import Exec.Theorems.Invocation.PublicExecutableWorldInvocation
-import Exec.Theorems.Invocation.PublicExecutableWorldRecorded
+import Exec.Theorems.Invocation.PublicExecutableWorldResources
 import Exec.Theorems.Invocation.InvokeWorldDivergence
 import Exec.Theorems.Invocation.InvokeWorldChosenDivergence
+
+/-! Divergence reflection for a specified compatible choice policy.
+Its compatibility obligations are stronger than existential source choices. -/
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Interp
 

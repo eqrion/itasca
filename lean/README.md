@@ -345,7 +345,7 @@ it need not accept every module exactly at a configured output limit.
 covers issued Wasm and host handles, retains the full `ExecutableInv` with the
 chosen final code interpretation, proves unchanged-state API rejection, and
 relates returned values, errors and final stores to source runs.
-[Exact public recording](Exec/Theorems/Invocation/PublicExecutableWorldRecorded.lean)
+[Exact public recording](Exec/Theorems/Invocation/PublicExecutableWorldResources.lean)
 uses the same actual event log in those source runs.
 [Public divergence](Exec/Theorems/Invocation/PublicExecutableWorldDivergence.lean) yields
 coherent infinite source execution. [Actual finite prefixes](Exec/Theorems/Progress/ExecutableWorldFinite.lean)

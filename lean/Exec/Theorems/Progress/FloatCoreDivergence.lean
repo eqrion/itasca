@@ -1,6 +1,10 @@
+import Exec.Theorems.Progress.SilentHistory
 import Exec.Theorems.Composition.FloatCore.FloatCoreLoop
 import Exec.Theorems.Composition.FloatCore.FloatCoreQuantitative
 import Exec.Interp.Machines.Slice.SliceDivergence
+
+/-! FloatCore divergence reflection. Local step evidence feeds the shared silent-history
+induction, then quantitative simulation supplies positive source progress. -/
 namespace Exec.Theorems
 open Aeneas Aeneas.Std Exec.Interp
 
@@ -23,8 +27,8 @@ theorem float_core_divergent_next {M P F A : Type}
   simp [bind_ok] at divergent
   cases status with
   | Err error => rw [execution_loop_error memory hooks floats allocator] at divergent; simp at divergent
-  | Ok unit =>
-    cases unit
+  | Ok value =>
+    cases value
     obtain ⟨pc,pending,source,invariant,simulation,ownership,ambient,bounded⟩ := outcome
     have owned : Abs.Ownership.CoreOwned (Store.ownershipBounds nextStore) source := by
       rw [bounds]
@@ -44,12 +48,7 @@ theorem float_core_divergent_history {M P F A : Type}
     (divergent : runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ()) = .div) :
     ∃ final, Spec.Iterations (FloatCoreTransition memory hooks floats allocator) dispatches initial [] final ∧
       runtime.interp.invoke_with_loop2 memory hooks floats allocator final.exec final.store final.platform (.Ok ()) = .div := by
-  induction dispatches generalizing initial with
-  | zero => exact ⟨initial,.refl initial,divergent⟩
-  | succ count ih =>
-    obtain ⟨next,step,stillDivergent⟩ := float_core_divergent_next memory hooks floats allocator correct allocation interrupts view laws code initial divergent
-    obtain ⟨final,history,finalDivergent⟩ := ih next stillDivergent
-    exact ⟨final,Spec.Iterations.cons step history,finalDivergent⟩
+  exact silent_history (float_core_divergent_next memory hooks floats allocator correct allocation interrupts view laws code) dispatches initial divergent
 
 theorem float_core_no_silent_divergence {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)

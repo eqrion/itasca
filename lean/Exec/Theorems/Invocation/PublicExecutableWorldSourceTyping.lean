@@ -1,9 +1,12 @@
-import Exec.Theorems.Invocation.PublicExecutableWorldRecorded
+import Exec.Theorems.Invocation.PublicExecutableWorldResources
 import Exec.Spec.Typing.InvocationTyping
 import Exec.Spec.Typing.ChoiceTypingPreservation
 
 /-! Public typed invocation entries retain source configuration typing and
 admit coherent source policies for their entire recorded correspondence. -/
+
+/-! Source typing derived from the public invariant and recorded correspondence.
+No source-store typing certificate field is added. -/
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Interp
 

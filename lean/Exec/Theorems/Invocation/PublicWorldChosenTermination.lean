@@ -1,4 +1,7 @@
 import Exec.Theorems.Invocation.PublicWorldChosenDivergence
+
+/-! Normal return from one terminating compatible selected source run.
+Resource sufficiency is a separate obligation of selected-run completeness. -/
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Interp
 /-- One terminating selected source run yields ordinary public invocation
@@ -37,11 +40,13 @@ theorem invoke_executable_world_chosen_terminates {choices : Spec.SourceChoices}
     exact Spec.chosen_terminating_no_infinite admissible run terminal (invoke_executable_world_infinite_chosen admissible numericChoice vector memory hooks floats allocator correct allocation
       interrupts view laws code compatible sound preserve externs issuedResults exec store platform valid address args results
       issued argumentIssued initial invoked divergent)
-  have safe := invoke_executable_world_recording_source memory hooks floats allocator correct allocation
+  have safe := invoke_executable_world_source_resources memory hooks floats allocator correct allocation
     interrupts view laws code sound.erases preserve externs issuedResults exec store platform valid address args results
     issued argumentIssued initial invoked
   generalize answerEq : runtime.interp.invoke_with memory hooks floats allocator exec store platform address args results = answer at safe notdiv ⊢
   cases safe with
-  | ret post => exact .ret post
+  | ret post =>
+    obtain ⟨events,recorded,outcome,causes⟩ := post
+    exact .ret ⟨events,recorded,outcome⟩
   | div => exact False.elim (notdiv rfl)
 end Exec.Theorems

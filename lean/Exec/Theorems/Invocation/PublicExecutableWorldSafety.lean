@@ -1,5 +1,8 @@
 import Exec.Theorems.Invocation.PublicExecutableWorldInvocation
 import Exec.Spec.InvocationExists
+
+/-! Public invocation safety without a caller-supplied source configuration.
+The owned case projects canonical correspondence; foreign handles reject unchanged. -/
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Interp
 
@@ -39,8 +42,7 @@ theorem invoke_executable_world_safe {M P F A : Type}
     apply WP.dspec_mono (invoke_executable_world_issued memory hooks floats allocator correct allocation interrupts
       view laws code sound preserve externs issuedResults exec store platform valid address args results issued argumentIssued initial invoked)
     intro out post
-    obtain ⟨afterCode,agrees,fresh,kept,extension,rest⟩ := post
-    exact ⟨afterCode,agrees,fresh,kept,extension⟩
+    exact post.retained
   · rw [invoke_wrong_store memory hooks floats allocator exec store platform address args results owner]
     exact WP.dspec.ret ⟨code,(by intro index inst found fn; rfl),valid,.refl _,Spec.extend_store_refl _ valid.well_formed⟩
 end Exec.Theorems

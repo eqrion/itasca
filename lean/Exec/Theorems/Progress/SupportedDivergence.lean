@@ -1,6 +1,10 @@
+import Exec.Theorems.Progress.SilentHistory
 import Exec.Theorems.Composition.Supported.SupportedLoop
 import Exec.Theorems.Composition.Supported.SupportedQuantitative
 import Exec.Interp.Machines.Slice.SliceDivergence
+
+/-! Supported divergence reflection. Local step evidence feeds the shared silent-history
+induction, then quantitative simulation supplies positive source progress. -/
 namespace Exec.Theorems
 open Aeneas Aeneas.Std Exec.Interp
 variable {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
@@ -33,8 +37,8 @@ theorem supported_divergent_next
   simp [bind_ok] at divergent
   cases status with
   | Err error => rw [execution_loop_error memory hooks floats allocator] at divergent; simp at divergent
-  | Ok unit =>
-    cases unit
+  | Ok value =>
+    cases value
     obtain ⟨pc,pending,source,invariant,simulation,ownership,ambient,bounded⟩ := outcome
     have owned : Abs.Ownership.StatefulOwned (Store.ownershipBounds nextStore) source := by
       rw [bounds]
@@ -63,12 +67,7 @@ theorem supported_divergent_history
     (divergent : runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ()) = .div) :
     ∃ final, Spec.Iterations (SupportedTransition memory hooks floats allocator) dispatches initial [] final ∧
       runtime.interp.invoke_with_loop2 memory hooks floats allocator final.exec final.store final.platform (.Ok ()) = .div := by
-  induction dispatches generalizing initial with
-  | zero => exact ⟨initial,.refl initial,divergent⟩
-  | succ count ih =>
-    obtain ⟨next,step,stillDivergent⟩ := supported_divergent_next language memory hooks floats allocator correct allocation interrupts view laws code initial divergent
-    obtain ⟨final,history,finalDivergent⟩ := ih next stillDivergent
-    exact ⟨final,Spec.Iterations.cons step history,finalDivergent⟩
+  exact silent_history (supported_divergent_next language memory hooks floats allocator correct allocation interrupts view laws code) dispatches initial divergent
 
 theorem supported_no_silent_divergence
     [∀ compiled, StructuredMachine.FloatHeads (emission compiled)]
